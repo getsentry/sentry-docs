@@ -23,14 +23,18 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </SdkOption>
 
-<SdkOption name="orgId" type='`${number}` | number' categorySupported={["server", "serverless"]}>
+<SdkOption name="orgId" type='`${number}` | number'>
 
 The organization ID for your Sentry project.
 
 The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
-you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
+you can provide the ID with this option. The organization ID is used for trace propagation.
 
-The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+It is also used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
+
+</PlatformCategorySection>
 
 </SdkOption>
 
@@ -101,7 +105,64 @@ Set to `false` to opt out, for example, when using a custom `tunnel` or when run
 
 <SdkOption name="sendDefaultPii" type='boolean' defaultValue='false'>
 
+<Alert level="warning">
+  `sendDefaultPii` is deprecated and will be removed in the next major version
+  (v11). Use [`dataCollection`](#dataCollection) instead.
+</Alert>
+
 Set this option to `true` to send default PII data to Sentry. Among other things, enabling this will enable automatic IP address collection on events.
+
+For backwards compatibility, `sendDefaultPii: true` behaves like enabling all [`dataCollection`](#dataCollection) categories.
+If both options are set, `dataCollection` takes precedence.
+
+<Alert>
+  Passing [`dataCollection`](#dataCollection) opts you into the more permissive `dataCollection` defaults. To preserve the old `sendDefaultPii: false` behavior while using `dataCollection`, opt out of each category explicitly:
+
+```javascript
+Sentry.init({
+  dataCollection: {
+    userInfo: false,
+    genAI: { inputs: false, outputs: false },
+    httpBodies: [],
+    httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+  },
+});
+```
+
+Data you set explicitly (for example, via <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>) is always sent, regardless of `dataCollection`.
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="dataCollection" type='DataCollection' availableSince="10.57.0">
+
+Controls which categories of data the SDK collects automatically. All fields are optional.
+  By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
+
+| Key                   | Type                         | Default    | Description                                                                                                                              |
+| --------------------- | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`            | `boolean`                    | `true`     | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                                 |
+| `cookies`             | `CollectBehavior`            | `true`     | Collect cookies.                                                                                                                         |
+| `httpHeaders`         | `{ request?, response? }`    | both `true`| Collect HTTP request and response headers.                                                                                               |
+| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types  | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable.    |
+| `queryParams`         | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
+| `genAI`               | `{ inputs?, outputs? }`      | both `true`| Collect generative AI input/output content. Metadata is always collected.                                                                |
+| `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
+| `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
+
+The `cookies`, `httpHeaders`, and `queryParams` categories accept a `CollectBehavior` value:
+
+```typescript
+type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
+// true          → collect all (sensitive denylist still scrubs values)
+// false         → collect nothing
+// { deny: [] }  → collect all, extending the denylist with the given terms
+// { allow: [] } → only the listed keys send their real value
+```
 
 </SdkOption>
 
@@ -596,6 +657,18 @@ See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">De
 
 </PlatformSection>
 
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
+
+</SdkOption>
+
+<SdkOption name="streamGenAiSpans" type='boolean' defaultValue='true' defaultNote='since version 10.61.0' availableSince='10.53.0'>
+
+When enabled, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
+
+This is enabled by default starting with SDK version `10.61.0` (before that, it defaulted to `false`). Set it to `false` to send `gen_ai` spans as part of the transaction instead.
+
+Self-hosted Sentry users should set this option to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
+
 </SdkOption>
 
 ## Logs Options
@@ -614,6 +687,27 @@ Set this option to `true` to enable log capturing in Sentry. Only when this is e
 <SdkOption name="beforeSendLog" type='(log: Log) => Log | null'>
 
 This function is called with a log object, and can return a modified log object, or `null` to skip sending this log to Sentry. This can be used, for instance, for manual PII stripping before sending, or to add custom attributes to all logs.
+
+</SdkOption>
+
+## Metrics Options
+
+<PlatformSection supported={["javascript.electron"]}>
+  **Note:** For Electron, metric options apply to the process where these options
+  are set.
+</PlatformSection>
+
+<SdkOption name="enableMetrics" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable metric capturing in Sentry (enabled by default).
+Only when this option is enabled will the `metrics` APIs actually send metrics to Sentry.
+
+</SdkOption>
+
+<SdkOption name="beforeSendMetric" type='(metric: Metric) => Metric | null'>
+
+This function is called with a metric object, and can return a modified metric object, or `null` to skip sending this metric to Sentry.
+This can be used, for instance, for manual PII scrubbing before sending, or to add custom attributes to all metrics.
 
 </SdkOption>
 

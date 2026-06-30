@@ -14,11 +14,25 @@ For your AI agents data to show up in the [AI Agents Dashboards](https://sentry.
 
 Make sure that there's a transaction running when you create the spans. If you're using a web framework like Rails those transactions will be created for you automatically.
 
+## Span Hierarchy
+
+When instrumenting an agent loop, spans nest like this:
+
+```
+── invoke_agent My Agent          (gen_ai.invoke_agent)
+   ├── chat gpt-4o                (gen_ai.chat)         ← 1st LLM call
+   ├── execute_tool get_weather   (gen_ai.execute_tool)  ← tool run
+   ├── chat gpt-4o                (gen_ai.chat)         ← 2nd LLM call
+   └── ...
+```
+
+`gen_ai.invoke_agent` is the container. `gen_ai.chat` and `gen_ai.execute_tool` spans are its children (siblings of each other). A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
+
 ## Spans
 
 ### AI Request span
 
-This span represents a request to a LLM model or service that generates a response based on the input prompt.
+This span represents a request to an LLM model or service that generates a response based on the input prompt.
 
 <Expandable title="AI Request span attributes">
   <Include name="tracing/ai-agents-module/ai-client-span" />
@@ -29,18 +43,21 @@ This span represents a request to a LLM model or service that generates a respon
 ```ruby
 require 'json'
 
-messages = [{ role: 'user', content: 'Tell me a joke' }]
+messages = [{ role: 'user', parts: [{ type: 'text', content: 'Tell me a joke' }] }]
 
-Sentry.with_child_span(op: 'gen_ai.request', description: 'chat o3-mini') do |span|
+Sentry.with_child_span(op: 'gen_ai.chat', description: 'chat o3-mini') do |span|
+  span.set_data('gen_ai.operation.name', 'chat')
   span.set_data('gen_ai.request.model', 'o3-mini')
-  span.set_data('gen_ai.request.messages', messages.to_json)
-  span.set_data('gen_ai.operation.name', 'invoke_agent')
+  span.set_data('gen_ai.provider.name', 'openai')
+  span.set_data('gen_ai.input.messages', messages.to_json)
 
-  # Call your LLM here
   result = client.chat(model: 'o3-mini', messages: messages)
 
-  span.set_data('gen_ai.response.text', [result.choices[0].message.content].to_json)
-  # Set token usage
+  span.set_data('gen_ai.response.model', result.model)
+  span.set_data('gen_ai.output.messages', [
+    { role: 'assistant', parts: [{ type: 'text', content: result.choices[0].message.content }] }
+  ].to_json)
+  span.set_data('gen_ai.response.finish_reasons', [result.choices[0].finish_reason].to_json)
   span.set_data('gen_ai.usage.input_tokens', result.usage.prompt_tokens)
   span.set_data('gen_ai.usage.output_tokens', result.usage.completion_tokens)
 end
@@ -58,14 +75,15 @@ This span represents the execution of an AI agent, capturing the full lifecycle 
 
 ```ruby
 Sentry.with_child_span(op: 'gen_ai.invoke_agent', description: 'invoke_agent Weather Agent') do |span|
+  span.set_data('gen_ai.operation.name', 'invoke_agent')
   span.set_data('gen_ai.request.model', 'o3-mini')
   span.set_data('gen_ai.agent.name', 'Weather Agent')
 
-  # Run the agent
   result = my_agent.run
 
-  span.set_data('gen_ai.response.text', result.to_s)
-  # Set token usage
+  span.set_data('gen_ai.output.messages', [
+    { role: 'assistant', parts: [{ type: 'text', content: result.to_s }] }
+  ].to_json)
   span.set_data('gen_ai.usage.input_tokens', result.usage.input_tokens)
   span.set_data('gen_ai.usage.output_tokens', result.usage.output_tokens)
 end
@@ -79,19 +97,19 @@ This span represents the execution of a tool or function that was requested by a
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
 
-#### Example Execute Tool Span
+#### Example Execute Tool span
 
 ```ruby
 require 'json'
 
 Sentry.with_child_span(op: 'gen_ai.execute_tool', description: 'execute_tool get_weather') do |span|
+  span.set_data('gen_ai.operation.name', 'execute_tool')
   span.set_data('gen_ai.tool.name', 'get_weather')
-  span.set_data('gen_ai.tool.input', { location: 'Paris' }.to_json)
+  span.set_data('gen_ai.tool.call.arguments', { location: 'Paris' }.to_json)
 
-  # Call the tool
   result = get_weather(location: 'Paris')
 
-  span.set_data('gen_ai.tool.output', result.to_json)
+  span.set_data('gen_ai.tool.call.result', result.to_json)
 end
 ```
 

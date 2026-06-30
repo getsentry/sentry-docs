@@ -99,3 +99,67 @@ describe('middleware redirect set selection', () => {
     });
   });
 });
+
+describe('canonical Link header on .md responses', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('adds Link rel=canonical pointing to the HTML page for a deep path', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
+    expect(res.headers.get('Link')).toBe(
+      '<https://docs.sentry.io/platforms/apple/cocoa/>; rel="canonical"'
+    );
+  });
+
+  it('maps /index.md to the root canonical URL', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/index.md'));
+    expect(res.headers.get('Link')).toBe('<https://docs.sentry.io/>; rel="canonical"');
+  });
+
+  it('handles top-level .md paths', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms.md'));
+    expect(res.headers.get('Link')).toBe(
+      '<https://docs.sentry.io/platforms/>; rel="canonical"'
+    );
+  });
+
+  it('uses develop.sentry.dev origin in developer docs mode', async () => {
+    const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
+    const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
+    expect(res.headers.get('Link')).toBe(
+      '<https://develop.sentry.dev/platforms/apple/cocoa/>; rel="canonical"'
+    );
+  });
+
+  it('does not add Link header for non-.md paths', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/apple/cocoa/'));
+    expect(res.headers.get('Link')).toBeNull();
+  });
+});
+
+describe('wantsMarkdownViaAccept: text/plain no longer triggers markdown', () => {
+  it('does not serve markdown for Accept: application/json, text/plain, */*', async () => {
+    const {middleware} = await importMiddleware({});
+    const req = new NextRequest(new URL('/platforms/apple/cocoa/', 'http://localhost:3000'), {
+      headers: {'Accept': 'application/json, text/plain, */*'},
+    });
+    const res = middleware(req);
+    // Should not rewrite to .md — Next rewrite changes the URL; a plain next() keeps it
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+  });
+
+  it('still serves markdown for explicit text/markdown Accept header', async () => {
+    const {middleware} = await importMiddleware({});
+    const req = new NextRequest(new URL('/platforms/apple/cocoa/', 'http://localhost:3000'), {
+      headers: {'Accept': 'text/markdown'},
+    });
+    const res = middleware(req);
+    // A rewrite to .md will set x-middleware-rewrite
+    expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
+  });
+});

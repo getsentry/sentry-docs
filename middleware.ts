@@ -8,6 +8,8 @@ import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassif
 const isDeveloperDocs =
   process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
+const BASE_URL = isDeveloperDocs ? 'https://develop.sentry.dev' : 'https://docs.sentry.io';
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -90,13 +92,13 @@ function classifyTraffic(request: NextRequest): {
 }
 
 /**
- * Detects if client wants markdown via Accept header (standards-compliant)
+ * Detects if client wants markdown via Accept header (standards-compliant).
+ * Only matches explicit markdown MIME types — not text/plain, which is too broad
+ * and matches clients like Axios (`Accept: application/json, text/plain, *\/\/`).
  */
 function wantsMarkdownViaAccept(acceptHeader: string): boolean {
   return (
-    acceptHeader.includes('text/markdown') ||
-    acceptHeader.includes('text/x-markdown') ||
-    acceptHeader.includes('text/plain')
+    acceptHeader.includes('text/markdown') || acceptHeader.includes('text/x-markdown')
   );
 }
 
@@ -152,6 +154,19 @@ function rewriteWithClassification(request: NextRequest, destination: URL): Next
 }
 
 /**
+ * Derives the canonical HTML URL path from a .md pathname.
+ * Examples:
+ *   /platforms/apple/cocoa.md  →  /platforms/apple/cocoa/
+ *   /index.md                  →  /
+ *   /platforms.md              →  /platforms/
+ */
+function mdToCanonicalPath(mdPathname: string): string {
+  const withoutExt = mdPathname.replace(/\.md$/, '');
+  if (withoutExt === '/index') return '/';
+  return withoutExt.endsWith('/') ? withoutExt : `${withoutExt}/`;
+}
+
+/**
  * Handles redirection to markdown versions for AI/LLM clients
  */
 const handleAIClientRedirect = (request: NextRequest) => {
@@ -188,8 +203,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
   }
 
   // Skip if already requesting a markdown file - pass through with classification headers
+  // and set a Link rel=canonical header pointing to the rendered HTML page so that search
+  // engine crawlers consolidate ranking to the human-readable URL instead of indexing the
+  // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
-    return nextWithClassification(request);
+    const response = nextWithClassification(request);
+    response.headers.set('Link', `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`);
+    return response;
   }
 
   // Skip API routes and static assets (should already be filtered by matcher)
@@ -301,60 +321,20 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/integrations/notification-incidents/discord/',
   },
   {
+    from: '/integrations/slack/',
+    to: '/integrations/notification-incidents/slack/',
+  },
+  {
+    from: '/integrations/project-mgmt/jira/',
+    to: '/integrations/issue-tracking/jira/',
+  },
+  {
     from: '/platforms/python/migration/configuration/filtering/',
     to: '/platforms/python/configuration/filtering/',
   },
   {
-    from: '/organization/integrations/github/',
-    to: '/integrations/source-code-mgmt/github/',
-  },
-  {
-    from: '/organization/integrations/gitlab/',
-    to: '/integrations/source-code-mgmt/gitlab/',
-  },
-  {
-    from: '/organization/integrations/bitbucket/',
-    to: '/integrations/source-code-mgmt/bitbucket/',
-  },
-  {
-    from: '/organization/integrations/rookout/',
-    to: '/integrations/debugging/rookout/',
-  },
-  {
-    from: '/organization/integrations/split/',
-    to: '/integrations/feature-flag/split/',
-  },
-  {
-    from: '/organization/integrations/teamwork/',
-    to: '/integrations/issue-tracking/teamwork/',
-  },
-  {
-    from: '/organization/integrations/jira/',
-    to: '/integrations/issue-tracking/jira/',
-  },
-  {
-    from: '/organization/integrations/linear/',
-    to: '/integrations/issue-tracking/linear/',
-  },
-  {
-    from: '/organization/integrations/clickup/',
-    to: '/integrations/issue-tracking/clickup/',
-  },
-  {
     from: '/organization/integrations/project-mgmt/shortcut/',
     to: '/integrations/issue-tracking/shortcut/',
-  },
-  {
-    from: '/organization/integrations/slack/',
-    to: '/integrations/notification-incidents/slack/',
-  },
-  {
-    from: '/organization/integrations/pagerduty/',
-    to: '/integrations/notification-incidents/pagerduty/',
-  },
-  {
-    from: '/organization/integrations/vanta/',
-    to: '/integrations/compliance/vanta/',
   },
   {
     from: '/organization/integrations/jam/',
@@ -365,8 +345,24 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cloudflare/',
   },
   {
+    from: '/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/phoebeai/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/qckfx/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/sevvy/',
+    to: '/integrations/debugging/corelayer/',
+  },
+  {
     from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/insights/overview/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/data-management-settings/event-grouping/',
@@ -1866,67 +1862,67 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/alerts-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/',
-    to: '/product/alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/create-alerts/best-practices/',
-    to: '/product/alerts/create-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/best-practices/',
-    to: '/product/alerts/create-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/routing-alerts/',
-    to: '/product/alerts/create-alerts/routing-alerts/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/issue-alerts/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/alert-settings/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/alert-settings/',
-    to: '/product/alerts/create-alerts/issue-alert-config/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/sentry-basics/guides/alert-notifications/metric-alerts/',
-    to: '/product/alerts/create-alerts/metric-alert-config/',
+    to: '/product/monitors-and-alerts/monitors/',
   },
   {
     from: '/workflow/alerts-notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/workflow/notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/metric-alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts-notifications/issue-alerts/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/product/alerts/create-alerts/crash-rate-alert-config/',
-    to: '/product/alerts/alert-types/',
+    to: '/product/monitors-and-alerts/alerts/',
   },
   {
     from: '/workflow/alerts-notifications/notifications/',
@@ -2747,119 +2743,119 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/getting-started/',
-    to: '/product/insights/getting-started/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/filters-display/',
-    to: '/product/insights/overview/filters-display/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/filters-display/widgets/',
-    to: '/product/insights/overview/filters-display/widgets/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/trends/',
-    to: '/product/insights/overview/trends/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/transaction-summary/',
-    to: '/product/insights/overview/transaction-summary/',
+    to: '/product/dashboards/sentry-dashboards/transaction-summary/',
   },
   {
     from: '/product/performance/metrics/',
-    to: '/product/insights/overview/metrics/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/performance-overhead/',
-    to: '/product/insights/performance-overhead/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/database/',
-    to: '/product/insights/backend/queries/',
+    to: '/product/dashboards/sentry-dashboards/backend/queries/',
   },
   {
     from: '/product/performance/query-insights/',
-    to: '/product/insights/backend/queries/',
+    to: '/product/dashboards/sentry-dashboards/backend/queries/',
   },
   {
     from: '/product/sentry-basics/metrics/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/sentry-basics/sampling/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/getting-started/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/current-limitations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/sampling-configurations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/current-limitations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/performance/performance-at-scale/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/performance/performance-at-scale/getting-started/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/product/performance/performance-at-scale/benefits-performance-at-scale/',
-    to: '/product/insights/retention-priorities/',
+    to: '/organization/dynamic-sampling/',
   },
   {
     from: '/performance/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance/display/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/performance/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance/performance-tab/',
-    to: '/product/insights/overview',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance/performance-homepage/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/setup/',
-    to: '/product/insights/getting-started/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/getting-started/',
-    to: '/product/insights/getting-started/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/performance-monitoring/performance/metrics/',
-    to: '/product/insights/overview/metrics/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/performance/display/',
-    to: '/product/insights/overview/filters-display/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/product/issues/issue-owners/',
@@ -3044,7 +3040,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://sentry.zendesk.com/hc/en-us/',
+    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/clients/python/',
@@ -3476,7 +3472,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/sentry-mcp/',
-    to: '/ai/mcp/',
+    to: 'https://mcp.sentry.dev',
   },
   {
     from: '/product/metrics/',
@@ -3520,7 +3516,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/support/',
-    to: 'https://sentry.zendesk.com/hc/en-us/',
+    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/product/security-policy-reporting/',
@@ -3536,55 +3532,55 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/requests/',
-    to: '/product/insights/requests/',
+    to: '/product/dashboards/sentry-dashboards/outbound-api-requests/',
   },
   {
     from: '/product/performance/queries/',
-    to: '/product/insights/queries/',
+    to: '/product/dashboards/sentry-dashboards/backend/queries/',
   },
   {
     from: '/product/performance/resources/',
-    to: '/product/insights/assets/',
+    to: '/product/dashboards/sentry-dashboards/frontend/assets/',
   },
   {
     from: '/product/performance/assets/',
-    to: '/product/insights/assets/',
+    to: '/product/dashboards/sentry-dashboards/frontend/assets/',
   },
   {
     from: '/product/performance/mobile-vitals/',
-    to: '/product/insights/mobile-vitals/',
+    to: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/',
   },
   {
     from: '/product/performance/mobile-vitals/screen-loads/',
-    to: '/product/insights/mobile-vitals/screen-loads/',
+    to: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
   },
   {
     from: '/product/performance/mobile-vitals/app-starts/',
-    to: '/product/insights/mobile-vitals/app-starts/',
+    to: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/app-starts/',
   },
   {
     from: '/product/performance/web-vitals/',
-    to: '/product/insights/web-vitals/',
+    to: '/product/dashboards/sentry-dashboards/frontend/web-vitals/',
   },
   {
     from: '/product/performance/web-vitals/web-vitals-concepts/',
-    to: '/product/insights/web-vitals/web-vitals-concepts/',
+    to: '/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/',
   },
   {
     from: '/product/performance/caches/',
-    to: '/product/insights/caches/',
+    to: '/product/dashboards/sentry-dashboards/backend/caches/',
   },
   {
     from: '/product/performance/caches/cache-page/',
-    to: '/product/insights/caches/cache-page/',
+    to: '/product/dashboards/sentry-dashboards/backend/caches/',
   },
   {
     from: '/product/performance/queue-monitoring/',
-    to: '/product/insights/queue-monitoring/',
+    to: '/product/dashboards/sentry-dashboards/backend/queues/',
   },
   {
     from: '/product/performance/queue-monitoring/queues-page/',
-    to: '/product/insights/queue-monitoring/queues-page/',
+    to: '/product/dashboards/sentry-dashboards/backend/queues/',
   },
   {
     from: '/product/explore/session-replay/protecting-user-privacy/',
@@ -3684,7 +3680,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
-    to: '/product/insights/',
+    to: '/product/dashboards/sentry-dashboards/',
   },
   {
     from: '/platforms/javascript/guides/aws-lambda/container-image/',
@@ -3924,7 +3920,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/dynamic-sampling/fidelity-and-biases/',
-    to: '/application/dynamic-sampling/fidelity-and-biases/',
+    to: '/application/dynamic-sampling/biases/',
+  },
+  {
+    from: '/dynamic-sampling/biases/',
+    to: '/application/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/the-big-picture/',
@@ -4037,7 +4037,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/application/dynamic-sampling/fidelity-and-biases/',
-    to: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
+  },
+  {
+    from: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
+  },
+  {
+    from: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/application/dynamic-sampling/architecture/',
@@ -4352,7 +4360,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/revisedev/',
-    to: '/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/',
   },
   {
     from: '/organization/integrations/foamai/',

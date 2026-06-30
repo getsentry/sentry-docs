@@ -190,7 +190,22 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
       curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
         --header "Tus-Resumable: 1.0.0" \
         --header "Upload-Length: ${FILE_SIZE}" \
+        --header "Upload-Metadata: sentry $(echo -n '{"attachment_type":"event.attachment"}' | base64)"
       ```
+
+      The `Upload-Metadata` header follows the [TUS metadata format](https://tus.io/protocols/resumable-upload#upload-metadata). Sentry recognizes a single key, `sentry`, the value of which **MUST** be the Base64 encoding of a UTF-8 JSON object describing the attachment:
+
+      ```json
+      {
+        "attachment_type": "event.attachment"
+      }
+      ```
+
+      | Field             | Type   | Required     | Description                                                        |
+      | ----------------- | ------ | ------------ | -------------------------------------------------------------------|
+      | `attachment_type` | String | **REQUIRED** | One of the values listed in [Attachment Types](#attachment-types). |
+
+      
    1. Get the location response header:
       ```
       HTTP/1.1 201 Created

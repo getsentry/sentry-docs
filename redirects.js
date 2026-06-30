@@ -567,10 +567,326 @@ const developerDocsRedirects = [
     source: '/sdk/expected-features/setup-wizards/:path*',
     destination: '/sdk-setup-wizards/:path*',
   },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/api/guides/oauth/',
+    destination: '/api/auth/',
+  },
+  {
+    source: '/product/codecov/:path*',
+    destination: '/integrations/',
+  },
+  {
+    source: '/product/codecov/',
+    destination: '/integrations/',
+  },
+  {
+    source: '/integrations/code-coverage/:path*',
+    destination: '/integrations/',
+  },
+  {
+    source: '/integrations/incidentio/',
+    destination: '/integrations/issue-tracking/incidentio/',
+  },
+  {
+    source: '/integrations/aws-lambda/',
+    destination: '/integrations/cloud-monitoring/aws-lambda/',
+  },
+  {
+    source: '/integrations/cloudflare-workers/',
+    destination: '/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/integrations/gcp-cloud-run/',
+    destination: '/integrations/cloud-monitoring/gcp-cloud-run/',
+  },
+  {
+    source: '/integrations/claude/',
+    destination: '/integrations/coding-agents/claude/',
+  },
+  {
+    source: '/integrations/cloudeagle/',
+    destination: '/integrations/compliance/cloudeagle/',
+  },
+  {
+    source: '/integrations/elba/',
+    destination: '/integrations/compliance/elba/',
+  },
+  {
+    source: '/integrations/truto/',
+    destination: '/integrations/compliance/truto/',
+  },
+  {
+    source: '/integrations/vanta/',
+    destination: '/integrations/compliance/vanta/',
+  },
+  {
+    source: '/integrations/vanta-eu/',
+    destination: '/integrations/compliance/vanta-eu/',
+  },
+  {
+    source: '/integrations/amazon-sqs/',
+    destination: '/integrations/data-forwarding/amazon-sqs/',
+  },
+  {
+    source: '/integrations/grafana/',
+    destination: '/integrations/data-forwarding/grafana/',
+  },
+  {
+    source: '/integrations/segment/',
+    destination: '/integrations/data-forwarding/segment/',
+  },
+  {
+    source: '/integrations/splunk/',
+    destination: '/integrations/data-forwarding/splunk/',
+  },
+  {
+    source: '/integrations/apigene/',
+    destination: '/integrations/debugging/apigene/',
+  },
+  {
+    source: '/integrations/codecomet/',
+    destination: '/integrations/debugging/codecomet/',
+  },
+  {
+    source: '/integrations/foamai/',
+    destination: '/integrations/debugging/foamai/',
+  },
+  {
+    source: '/integrations/logicstar/',
+    destination: '/integrations/debugging/logicstar/',
+  },
+  {
+    source: '/integrations/phoebeai/',
+    destination: '/integrations/debugging/',
+  },
+  {
+    source: '/integrations/qckfx/',
+    destination: '/integrations/debugging/',
+  },
+  {
+    source: '/integrations/revisedev/',
+    destination: '/integrations/debugging/',
+  },
+  {
+    source: '/integrations/rookout/',
+    destination: '/integrations/debugging/rookout/',
+  },
+  {
+    source: '/integrations/sevvy/',
+    destination: '/integrations/debugging/corelayer/',
+  },
+  {
+    source: '/integrations/sourcery/',
+    destination: '/integrations/debugging/sourcery/',
+  },
+  {
+    source: '/integrations/tembo/',
+    destination: '/integrations/debugging/tembo/',
+  },
+  {
+    source: '/integrations/expo/',
+    destination: '/integrations/deployment/expo/',
+  },
+  {
+    source: '/integrations/heroku/',
+    destination: '/integrations/deployment/heroku/',
+  },
+  {
+    source: '/integrations/vercel/',
+    destination: '/integrations/deployment/vercel/',
+  },
+  {
+    source: '/integrations/flagsmith/',
+    destination: '/integrations/feature-flag/flagsmith/',
+  },
+  {
+    source: '/integrations/generic/',
+    destination: '/integrations/feature-flag/generic/',
+  },
+  {
+    source: '/integrations/keyflow/',
+    destination: '/integrations/feature-flag/keyflow/',
+  },
+  {
+    source: '/integrations/launchdarkly/',
+    destination: '/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/integrations/split/',
+    destination: '/integrations/feature-flag/split/',
+  },
+  {
+    source: '/integrations/statsig/',
+    destination: '/integrations/feature-flag/statsig/',
+  },
+  {
+    source: '/integrations/unleash/',
+    destination: '/integrations/feature-flag/unleash/',
+  },
+  {
+    source: '/integrations/ui-components/',
+    destination: '/integrations/integration-platform/ui-components/',
+  },
+  {
+    source: '/integrations/asana/',
+    destination: '/integrations/issue-tracking/asana/',
+  },
+  {
+    source: '/integrations/bugsniff/',
+    destination: '/integrations/issue-tracking/bugsniff/',
+  },
+  {
+    source: '/integrations/clickup/',
+    destination: '/integrations/issue-tracking/clickup/',
+  },
+  {
+    source: '/integrations/factory/',
+    destination: '/integrations/issue-tracking/factory/',
+  },
+  {
+    source: '/integrations/goast/',
+    destination: '/integrations/issue-tracking/goast/',
+  },
+  {
+    source: '/integrations/height/',
+    destination: '/integrations/issue-tracking/height/',
+  },
+  {
+    source: '/integrations/jira/',
+    destination: '/integrations/issue-tracking/jira/',
+  },
+  {
+    source: '/integrations/kitemaker/',
+    destination: '/integrations/issue-tracking/kitemaker/',
+  },
+  {
+    source: '/integrations/linear/',
+    destination: '/integrations/issue-tracking/linear/',
+  },
+  {
+    source: '/integrations/makeplane/',
+    destination: '/integrations/issue-tracking/makeplane/',
+  },
+  {
+    source: '/integrations/sentry-linear-agent/',
+    destination: '/integrations/issue-tracking/sentry-linear-agent/',
+  },
+  {
+    source: '/integrations/shortcut/',
+    destination: '/integrations/issue-tracking/shortcut/',
+  },
+  {
+    source: '/integrations/starsling/',
+    destination: '/integrations/issue-tracking/starsling/',
+  },
+  {
+    source: '/integrations/teamcamp/',
+    destination: '/integrations/issue-tracking/teamcamp/',
+  },
+  {
+    source: '/integrations/teamwork/',
+    destination: '/integrations/issue-tracking/teamwork/',
+  },
+  {
+    source: '/integrations/cased/',
+    destination: '/integrations/notification-incidents/cased/',
+  },
+  {
+    source: '/integrations/discord/',
+    destination: '/integrations/notification-incidents/discord/',
+  },
+  {
+    source: '/integrations/glueai/',
+    destination: '/integrations/notification-incidents/glueai/',
+  },
+  {
+    source: '/integrations/msteams/',
+    destination: '/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/integrations/opsgenie/',
+    destination: '/integrations/notification-incidents/opsgenie/',
+  },
+  {
+    source: '/integrations/pagerduty/',
+    destination: '/integrations/notification-incidents/pagerduty/',
+  },
+  {
+    source: '/integrations/pagertree/',
+    destination: '/integrations/notification-incidents/pagertree/',
+  },
+  {
+    source: '/integrations/rootly/',
+    destination: '/integrations/notification-incidents/rootly/',
+  },
+  {
+    source: '/integrations/signl4/',
+    destination: '/integrations/notification-incidents/signl4/',
+  },
+  {
+    source: '/integrations/slack/',
+    destination: '/integrations/notification-incidents/slack/',
+  },
+  {
+    source: '/integrations/spikesh/',
+    destination: '/integrations/notification-incidents/spikesh/',
+  },
+  {
+    source: '/integrations/telegram-alerts-bot/',
+    destination: '/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
+    source: '/integrations/atlas/',
+    destination: '/integrations/session-replay/atlas/',
+  },
+  {
+    source: '/integrations/azure-devops/',
+    destination: '/integrations/source-code-mgmt/azure-devops/',
+  },
+  {
+    source: '/integrations/bitbucket/',
+    destination: '/integrations/source-code-mgmt/bitbucket/',
+  },
+  {
+    source: '/integrations/continuedev/',
+    destination: '/integrations/source-code-mgmt/continuedev/',
+  },
+  {
+    source: '/integrations/github/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
+    source: '/integrations/gitlab/',
+    destination: '/integrations/source-code-mgmt/gitlab/',
+  },
+  {
+    source: '/integrations/perforce/',
+    destination: '/integrations/source-code-mgmt/perforce/',
+  },
+  {
+    source: '/integrations/source-context/',
+    destination: '/integrations/source-code-mgmt/source-context/',
+  },
   {
     source: '/integrations/cursor/',
     destination: '/integrations/coding-agents/cursor/',
@@ -646,6 +962,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/aws-lambda/cjs-npm__v9.x/',
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
+    destination: '/platforms/javascript/guides/react-router/manual-setup/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -755,6 +1075,11 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/flow-relay/',
     destination: '/integrations/third-party-integrations/',
+  },
+  // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
+  {
+    source: '/organization/integrations/workos/',
+    destination: '/organization/authentication/sso/',
   },
   // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
   // via the wildcard redirect at the bottom of this file
@@ -1478,71 +1803,139 @@ const userDocsRedirects = [
     source: '/platforms/react-native/manual-setup/codepush/',
     destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
   },
+  // Expo-specific pages moved under the Expo guide (/guides/expo/)
   {
-    source: '/organization/integrations/launchdarkly/',
-    destination: '/integrations/feature-flag/launchdarkly/',
+    source: '/platforms/react-native/manual-setup/expo/',
+    destination: '/platforms/react-native/guides/expo/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/expo-updates/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/gradle/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/gradle/',
+  },
+  {
+    source: '/platforms/react-native/migration/sentry-expo/',
+    destination: '/platforms/react-native/guides/expo/migration/sentry-expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo/',
+    destination: '/platforms/react-native/guides/expo/sourcemaps/uploading/expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo-advanced/',
+    destination:
+      '/platforms/react-native/guides/expo/sourcemaps/uploading/expo-advanced/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-router/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-router/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-resources/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
   },
   {
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
   },
-  // Redirects for prior Insights information architecture:
+  // Redirect MCP and CLI pages to their dedicated sites
   {
-    source: '/product/insights/requests/',
-    destination: '/product/insights/backend/requests/',
+    source: '/ai/mcp/',
+    destination: 'https://mcp.sentry.dev',
   },
   {
-    source: '/product/insights/queries/',
-    destination: '/product/insights/backend/queries/',
+    source: '/ai/sentry-cli/',
+    destination: 'https://cli.sentry.dev',
   },
-  {
-    source: '/product/insights/assets/',
-    destination: '/product/insights/frontend/assets/',
-  },
-  {
-    source: '/product/insights/mobile-vitals/',
-    destination: '/product/insights/mobile/',
-  },
-  {
-    source: '/product/insights/mobile-vitals/app-starts/',
-    destination: '/product/insights/mobile/mobile-screens/app-starts/',
-  },
-  {
-    source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/insights/mobile/mobile-screens/screen-loads/',
-  },
-  {
-    source: '/product/insights/web-vitals/',
-    destination: '/product/insights/frontend/web-vitals/',
-  },
-  {
-    source: '/product/insights/web-vitals/web-vitals-concepts/',
-    destination: '/product/insights/frontend/web-vitals/web-vitals-concepts/',
-  },
-  {
-    source: '/product/insights/caches/',
-    destination: '/product/insights/backend/caches/',
-  },
-  {
-    source: '/product/insights/caches/cache-page/',
-    destination: '/product/insights/backend/caches/cache-page/',
-  },
-  {
-    source: '/product/insights/queue-monitoring/',
-    destination: '/product/insights/backend/queue-monitoring/',
-  },
-  {
-    source: '/product/insights/queue-monitoring/queues-page/',
-    destination: '/product/insights/backend/queue-monitoring/queues-page/',
-  },
+  // Redirects for Insights → Sentry Dashboards migration
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/ai/monitoring/',
+    destination: '/ai/monitoring/:path*',
   },
   {
     source: '/product/insights/agents/:path*',
     destination: '/ai/monitoring/agents/:path*',
+  },
+  {
+    source: '/product/insights/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
+  {
+    source: '/product/insights/mcp/',
+    destination: '/ai/monitoring/mcp/',
+  },
+  {
+    source: '/product/insights/ai/:path*',
+    destination: '/ai/monitoring/:path*',
+  },
+  {
+    source: '/product/insights/requests/',
+    destination: '/product/dashboards/sentry-dashboards/outbound-api-requests/',
+  },
+  {
+    source: '/product/insights/backend/requests/',
+    destination: '/product/dashboards/sentry-dashboards/outbound-api-requests/',
+  },
+  {
+    source: '/product/insights/queries/',
+    destination: '/product/dashboards/sentry-dashboards/backend/queries/',
+  },
+  {
+    source: '/product/insights/assets/',
+    destination: '/product/dashboards/sentry-dashboards/frontend/assets/',
+  },
+  {
+    source: '/product/insights/web-vitals/:path*',
+    destination: '/product/dashboards/sentry-dashboards/frontend/web-vitals/:path*',
+  },
+  {
+    source: '/product/insights/caches/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/caches/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/queues/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/app-starts/',
+    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/app-starts/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/screen-loads/',
+    destination:
+      '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/:path*',
+    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/',
+  },
+  {
+    source: '/product/insights/backend/:path*',
+    destination: '/product/dashboards/sentry-dashboards/backend/',
+  },
+  {
+    source: '/product/insights/frontend/:path*',
+    destination: '/product/dashboards/sentry-dashboards/frontend/',
+  },
+  {
+    source: '/product/insights/mobile/:path*',
+    destination: '/product/dashboards/sentry-dashboards/mobile/',
+  },
+  {
+    source: '/product/insights/:path*',
+    destination: '/product/dashboards/sentry-dashboards/',
   },
   // AI Agent Monitoring moved to top-level feature
   {
@@ -1568,10 +1961,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/ai-agent-monitoring/',
     destination: '/platforms/javascript/ai-agent-monitoring-browser/',
-  },
-  {
-    source: '/product/insights/retention-priorities/',
-    destination: '/organization/dynamic-sampling/',
   },
   {
     source: '/product/dashboards/sentry-dashboards/performance-metrics/',
@@ -1866,10 +2255,6 @@ const userDocsRedirects = [
     source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
   },
-  {
-    source: '/product/insights/mcp/',
-    destination: '/ai/monitoring/mcp/',
-  },
   // Next.js usage -> capturing-errors rename
   {
     source: '/platforms/javascript/guides/nextjs/usage/',
@@ -1902,12 +2287,172 @@ const userDocsRedirects = [
   },
   // Notifications docs live at /product/notifications/ (no longer under alerts or monitors-and-alerts)
   {
+    source: '/product/monitors-and-alerts/alerts/notifications/:path*',
+    destination: '/product/notifications/:path*',
+  },
+  {
+    source: '/product/monitors-and-alerts/alerts/best-practices/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  // DOCS-2550: /product/logs/ moved under /product/explore/
+  {
+    source: '/product/logs/',
+    destination: '/product/explore/logs/',
+  },
+  {
+    source: '/product/logs/:path*',
+    destination: '/product/explore/logs/:path*',
+  },
+  // DOCS-2227: retention-priorities page removed; dynamic-sampling is the closest equivalent
+  {
+    source: '/product/performance/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
+  // DOCS-2229: Flutter uses Dart SDK, not JS
+  {
+    source: '/platforms/javascript/guides/flutter/sourcemaps/',
+    destination: '/platforms/dart/guides/flutter/',
+  },
+  {
+    source: '/platforms/javascript/guides/flutter/sourcemaps/:path*',
+    destination: '/platforms/dart/guides/flutter/',
+  },
+  // DOCS-2251: .NET is not a JS guide
+  {
+    source: '/platforms/javascript/guides/dotnet/sourcemaps/',
+    destination: '/platforms/dotnet/',
+  },
+  {
+    source: '/platforms/javascript/guides/dotnet/sourcemaps/:path*',
+    destination: '/platforms/dotnet/',
+  },
+  // DOCS-2319: iOS uses Apple SDK, not JS
+  {
+    source: '/platforms/javascript/guides/apple-ios/sourcemaps/',
+    destination: '/platforms/apple/guides/ios/',
+  },
+  {
+    source: '/platforms/javascript/guides/apple-ios/sourcemaps/:path*',
+    destination: '/platforms/apple/guides/ios/',
+  },
+  // DOCS-2355: ASP.NET Core uses .NET SDK, not JS
+  {
+    source: '/platforms/javascript/guides/dotnet-aspnetcore/sourcemaps/',
+    destination: '/platforms/dotnet/guides/aspnetcore/',
+  },
+  {
+    source: '/platforms/javascript/guides/dotnet-aspnetcore/sourcemaps/:path*',
+    destination: '/platforms/dotnet/guides/aspnetcore/',
+  },
+  // DOCS-2364: wrong prefix; react-router guide is valid under JS
+  {
+    source: '/platforms/javascript/guides/javascript-react-router/sourcemaps/',
+    destination: '/platforms/javascript/guides/react-router/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/javascript-react-router/sourcemaps/:path*',
+    destination: '/platforms/javascript/guides/react-router/sourcemaps/:path*',
+  },
+  // DOCS-2384/2390: python-fastapi is not a JS guide
+  {
+    source: '/platforms/javascript/guides/python-fastapi/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/python-fastapi/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2408: php-laravel is not a JS guide
+  {
+    source: '/platforms/javascript/guides/php-laravel/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/php-laravel/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2411: java is not a JS guide
+  {
+    source: '/platforms/javascript/guides/java/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/java/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2433: python is not a JS guide
+  {
+    source: '/platforms/javascript/guides/python/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/python/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2446: javascript-browser is not a valid guide name
+  {
+    source: '/platforms/javascript/guides/javascript-browser/sourcemaps/',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/guides/javascript-browser/sourcemaps/:path*',
+    destination: '/platforms/javascript/sourcemaps/',
+  },
+  // DOCS-2328: no uninstall page exists; root is the best fallback
+  {
+    source: '/platforms/react-native/uninstall/',
+    destination: '/platforms/react-native/',
+  },
+  // DOCS-2409: API alerts endpoint removed from docs; point to alerts product docs
+  {
+    source: '/api/alerts/create-an-issue-alert-rule-for-a-project/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  {
+    source: '/api/alerts/create-an-issue-alert-rule-for-a-project/:path*',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  // Legacy /product/alerts/ section → /product/monitors-and-alerts/ (GA)
+  // Notification paths must come before the catch-all so they route to /product/notifications/
+  {
+    source: '/product/alerts/notifications/notification-settings/',
+    destination: '/product/notifications/notification-settings/',
+  },
+  {
     source: '/product/alerts/notifications/:path*',
     destination: '/product/notifications/:path*',
   },
   {
-    source: '/product/monitors-and-alerts/alerts/notifications/:path*',
-    destination: '/product/notifications/:path*',
+    source: '/product/alerts/alert-types/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  {
+    source: '/product/alerts/create-alerts/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  {
+    source: '/product/alerts/create-alerts/issue-alert-config/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  {
+    source: '/product/alerts/create-alerts/metric-alert-config/',
+    destination: '/product/monitors-and-alerts/monitors/',
+  },
+  {
+    source: '/product/alerts/create-alerts/routing-alerts/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  {
+    source: '/product/alerts/create-alerts/uptime-alert-config/',
+    destination: '/product/monitors-and-alerts/monitors/uptime-monitoring/',
+  },
+  {
+    source: '/product/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/',
+  },
+  {
+    source: '/product/alerts/:path*',
+    destination: '/product/monitors-and-alerts/alerts/',
   },
 ];
 

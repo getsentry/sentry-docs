@@ -99,6 +99,12 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+     options.swizzleClassNameExcludes = [NSSet setWithObjects: @"RoomPlanWrapper", nil];
+}];
+```
+
 If you can't upgrade the Sentry Cocoa SDK to version `8.23.0`, you can also disable swizzling, as shown below.
 However, this would also disable some useful features, such as automatic tracing and network breadcrumbs.
 
@@ -114,6 +120,14 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.enableSwizzling = NO;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.enableSwizzling = NO;
 }];
 ```
@@ -173,21 +187,21 @@ While it seems to be related to Sentry, it is actually caused by the user script
 Since Cocoa SDK version [8.45.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8450) and above,
 you might see a compilation error `'required' initializer 'init(from:)' must be provided by subclass ...`, when you subclass any of the following classes:
 
-* `SentryBreadcrumb`
-* `SentryDebugMeta`
-* `SentryEvent`
-* `SentryException`
-* `SentryFrame`
-* `SentryGeo`
-* `SentryId`
-* `SentryMechanism`
-* `SentryMechanismMeta`
-* `SentryMessage`
-* `SentryNSError`
-* `SentryRequest`
-* `SentryStacktrace`
-* `SentryThread`
-* `SentryUser`
+- `SentryBreadcrumb`
+- `SentryDebugMeta`
+- `SentryEvent`
+- `SentryException`
+- `SentryFrame`
+- `SentryGeo`
+- `SentryId`
+- `SentryMechanism`
+- `SentryMechanismMeta`
+- `SentryMessage`
+- `SentryNSError`
+- `SentryRequest`
+- `SentryStacktrace`
+- `SentryThread`
+- `SentryUser`
 
 You can fix this by not subclassing the affected classes. Strictly speaking, this is a breaking change, but these classes are not intended to be subclassed. If you have a strong reason to subclass them, please open a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose).
 
@@ -213,6 +227,21 @@ To resolve this problem try the following:
 4. Restart Xcode
 5. Reset your package cache if using Swift Package Manager by going to **File > Packages > Reset Package Caches**
 6. Rebuild your project
+
+## "Could not parse the DSN" Error on SDK Start
+
+If you see a console error like:
+
+```
+[error] Could not parse the DSN: URL scheme of DSN is missing
+```
+
+This means the SDK received an invalid or empty DSN string. Common causes:
+
+- Setting `options.dsn` to an empty string or a malformed URL
+- A build configuration variable resolving to an empty value
+
+Verify that the DSN you pass to `options.dsn` is a valid Sentry DSN URL starting with `https://`.
 
 ## Troubleshooting Session Replay
 

@@ -20,6 +20,12 @@ Size Analysis works by comparing a head vs a base build, similar to how code rev
 
    a. If you have previously installed the Sentry App, ensure you have accepted the latest permissions in order to receive Status Checks.
 
+   b. **GitHub Enterprise users:** After [installing the GitHub Enterprise app](/integrations/source-code-mgmt/github/#installing-github-enterprise), navigate to **Settings > Developer Settings > GitHub Apps > [your Sentry app] > Edit > Permissions & events** and confirm the following are set:
+
+      - Repository permissions: **Checks** — Read & write
+      - Repository permissions: **Pull requests** — Read & write
+      - Subscribe to events: **Check run**
+
 2. Set up Size Analysis by following the guide for [iOS](/platforms/apple/guides/ios/size-analysis/) or [Android](/platforms/android/size-analysis/).
 
 3. Modify an existing workflow or create a new workflow to upload base builds from your main or default branch to Sentry:
@@ -43,8 +49,8 @@ jobs:
 
 **Example workflows:**
 
-- [Android main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) - Handles both push to main and pull requests in a single workflow
-- [iOS main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_main.yml) - Separate workflow for main branch
+- [Android main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_sentry_size_analysis.yml) - Handles both push to main and pull requests in a single workflow
+- [iOS main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_main.yml) - Separate workflow for main branch
 
 Confirm that builds uploaded from this workflow have the correct `sha` metadata value, as well as no `base_sha` being set.
 
@@ -64,8 +70,8 @@ jobs:
 
 **Example workflows:**
 
-- [Android pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) - Combined main and PR workflow
-- [iOS pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_pr.yml) - Separate PR workflow
+- [Android pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_sentry_size_analysis.yml) - Combined main and PR workflow
+- [iOS pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_pr.yml) - Separate PR workflow
 
 Confirm that builds uploaded from this workflow have the correct `sha` and `base_sha` metadata values.
 
@@ -151,6 +157,18 @@ Rules are evaluated independently. If any rule's threshold is exceeded, the stat
 - If status checks are **disabled**, no checks will appear on pull requests
 - If status checks are **enabled** but **no rules are configured**, checks will post as **neutral** (won't block PRs) but will still show size change information
 - If rules are configured, checks will pass or fail based on whether thresholds are exceeded
+
+### Fetching Status Check Rules for External CI
+
+If you're consuming the `preprod_artifact.size_analysis_completed` webhook in your own CI, you can fetch the project's current status check rule config from the [Size Analysis status check rules API](/api/mobile-builds/retrieve-size-analysis-status-check-rules-for-a-project/):
+
+```http
+GET /api/0/projects/{organization_id_or_slug}/{project_id_or_slug}/preprod/size-analysis/status-check-rules/
+```
+
+Use this when you want external CI to evaluate the same thresholds that Sentry uses for Size Analysis status checks, without duplicating rule configuration outside Sentry.
+
+The endpoint returns the **current project configuration**, not a historical snapshot from when the webhook was emitted. If rules change between webhook delivery and your API request, you'll receive the updated rules.
 
 ## Troubleshooting
 

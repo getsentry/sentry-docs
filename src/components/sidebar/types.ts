@@ -17,9 +17,16 @@ export type DefaultSidebarProps = SidebarProps & {
   path: string[];
 };
 
+export type ExternalSidebarLink = {
+  href: string;
+  order: number;
+  title: string;
+};
+
 export type ProductSidebarProps = {
   items: {root: string; title: string}[];
   rootNode: DocNode;
+  extraLinks?: ExternalSidebarLink[];
 };
 
 export type PlatformSidebarProps = {

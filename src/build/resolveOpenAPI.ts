@@ -6,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = 'd1c8b64784a7ce989e65610bc7384fdf803c2a44';
+const SENTRY_API_SCHEMA_SHA = '5d3dc955533a1e3a7004f871c15a75a35f87d7ae';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -130,8 +130,13 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
-      const isDeprecated = isDeprecatedOperationId(apiData.operationId);
-      const cleanOperationId = stripDeprecatedPrefix(apiData.operationId ?? '');
+      // Detect deprecation from either field independently — the (DEPRECATED)
+      // marker may sit on operationId even when a summary is present.
+      const isDeprecated =
+        isDeprecatedOperationId(apiData.operationId) ||
+        isDeprecatedOperationId(apiData.summary);
+      const titleSource = apiData.summary || apiData.operationId || '';
+      const cleanName = stripDeprecatedPrefix(titleSource);
 
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
@@ -141,11 +146,13 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: cleanOperationId,
+          name: cleanName,
           deprecated: isDeprecated,
           server,
-          slug: slugify(cleanOperationId),
-          summary: apiData.summary,
+          slug: slugify(cleanName),
+          summary: apiData.summary
+            ? stripDeprecatedPrefix(apiData.summary)
+            : apiData.summary,
           descriptionMarkdown: apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'

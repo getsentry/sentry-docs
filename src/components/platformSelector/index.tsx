@@ -87,10 +87,6 @@ export function PlatformSelector({
   // Auto-open selector when on /platforms/ index page (no SDK selected)
   const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
 
-  // Track if we're redirecting to prevent flash of selector
-  // Always initialize to false to avoid SSR hydration mismatch
-  // The useLayoutEffect below will set this to true before paint if redirecting
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
   const [searchValue, setSearchValue] = useState('');
 
@@ -144,8 +140,6 @@ export function PlatformSelector({
   const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-  // Check for stored platform and redirect if on /platforms/ index
-  // Use useLayoutEffect to redirect before paint for faster UX
   useLayoutEffect(() => {
     setHasMounted(true);
   }, []);
@@ -153,25 +147,10 @@ export function PlatformSelector({
   useLayoutEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
-      setIsRedirecting(false);
-    } else if (isOnPlatformsIndex) {
-      const stored = localStorage.getItem('active-platform');
-      setStoredPlatformKey(stored);
-
-      // If we have a stored platform, redirect to it immediately
-      if (stored) {
-        const storedPlatformData = platformsAndGuides.find(p => p.key === stored);
-        if (storedPlatformData) {
-          setIsRedirecting(true);
-          // Use hard navigation for instant redirect
-          window.location.replace(storedPlatformData.url);
-          return;
-        }
-      }
     } else {
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
-  }, [currentPlatformKey, isOnPlatformsIndex, platformsAndGuides]);
+  }, [currentPlatformKey]);
 
   const isPlatformPage = Boolean(
     pathname?.startsWith('/platforms/') &&
@@ -187,11 +166,6 @@ export function PlatformSelector({
     storedPlatformKey &&
     storedPlatform &&
     pathname !== '/platforms/';
-
-  // Don't render anything while redirecting to prevent flash
-  if (isRedirecting) {
-    return null;
-  }
 
   if (listOnly) {
     return (

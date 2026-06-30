@@ -43,7 +43,7 @@ Add `user_feedback_form.tscn` as a preview while editing the theme file to see y
 
 For custom UI integration, use `user_feedback_form.tscn` instead. This component scene provides a flexible panel that can be embedded into other UI controls. Unlike the standalone GUI, you'll need to manage its visibility manually. The form exposes two signals for handling user interactions: `feedback_submitted` (triggered when feedback is sent) and `feedback_cancelled` (triggered when the user cancels the operation). After you instantiate the form inside your UI scene, you can use the provided signals to hide the form when it's no longer needed (or perform some other action):
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 # Assuming you have already added the form to your scene with "UserFeedbackForm" unique name.
 @onready var user_feedback_form = %UserFeedbackForm
 
@@ -60,13 +60,37 @@ func _ready():
 	)
 ```
 
+```csharp {tabTitle:C#}
+// Assuming you have already added the form to your scene with "UserFeedbackForm" unique name.
+public partial class FeedbackMenu : Control
+{
+    public override void _Ready()
+    {
+        var userFeedbackForm = GetNode<Control>("%UserFeedbackForm");
+
+        // Connect the form's GDScript signals by name to hide it after the user submits or cancels.
+        // The submitted feedback is passed as a GodotObject.
+        userFeedbackForm.Connect("feedback_submitted", Callable.From((GodotObject feedback) =>
+        {
+            userFeedbackForm.Hide();
+            GD.Print("User feedback submitted.");
+        }));
+        userFeedbackForm.Connect("feedback_cancelled", Callable.From(() =>
+        {
+            userFeedbackForm.Hide();
+            GD.Print("User feedback cancelled.");
+        }));
+    }
+}
+```
+
 To customize the form's appearance, use the provided reference theme file (`sentry_theme.tres`), which can be duplicated to create a custom UI style. Simply assign your customized theme to the form's `theme` property in the Inspector to apply your styling changes.
 
 ## User Feedback API
 
 The User Feedback API allows you to collect user feedback while using your own UI controls. You can submit feedback directly by creating an instance of `SentryFeedback` class, setting the required `message` and optional fields, then submitting it using `SentrySDK.capture_feedback(feedback)`.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 var feedback := SentryFeedback.new()
 feedback.message = "I'm stuck in the wall!"
 feedback.contact_email = "bob@example.com"
@@ -75,10 +99,25 @@ feedback.name = "Bob"
 SentrySDK.capture_feedback(feedback)
 ```
 
+```csharp {tabTitle:C#}
+SentrySdk.CaptureFeedback(
+    "I'm stuck in the wall!",
+    contactEmail: "bob@example.com",
+    name: "Bob");
+```
+
 Sentry can optionally pair this feedback with an event, giving you additional insight into issues. Sentry needs the `event_id` to be able to associate the user feedback to the corresponding event. For example, to get the `event_id`, you can use <PlatformLink to="/configuration/options/#before_send">before_send</PlatformLink>, or the return value of the method capturing an event.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 var event_id = SentrySDK.capture_message("An event that will get user feedback.")
 # ...
 feedback.associated_event_id = event_id
+```
+
+```csharp {tabTitle:C#}
+SentryId eventId = SentrySdk.CaptureMessage("An event that will get user feedback.");
+// ...
+SentrySdk.CaptureFeedback(
+    "I'm stuck in the wall!",
+    associatedEventId: eventId);
 ```

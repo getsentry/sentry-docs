@@ -66,9 +66,23 @@ Whether Crashpad should delay application shutdown until the upload of the crash
 
 </SdkOption>
 
+<SdkOption name="crash_reporting_mode" type="sentry_crash_reporting_mode_t" defaultValue="SENTRY_CRASH_REPORTING_MODE_NATIVE_WITH_MINIDUMP" availableSince="0.13.2">
+
+Controls which crash report format the `native` backend sends when the application crashes. This setting only affects the `native` backend. See [Crash Reporting Modes](/platforms/native/configuration/backends/native/#crash-reporting-modes).
+
+</SdkOption>
+
+<SdkOption name="minidump_mode" type="sentry_minidump_mode_t" defaultValue="SENTRY_MINIDUMP_MODE_SMART" availableSince="0.13.2">
+
+Controls how much memory the `native` backend captures in minidumps. This setting only affects the `native` backend and crash reporting modes that send a minidump. See [Minidump Capture Modes](/platforms/native/configuration/backends/native/#minidump-capture-modes).
+
+</SdkOption>
+
 <SdkOption name="propagate_traceparent" type="bool" defaultValue="false" availableSince="0.11.3">
 
 Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` header for [distributed tracing](https://docs.sentry.io/platforms/native/tracing/trace-propagation/custom-instrumentation/).
+
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
 
 </SdkOption>
 
@@ -133,5 +147,23 @@ This function is called with an SDK-specific log object, and can return a modifi
 <SdkOption name="logs_with_attributes" type="bool" defaultValue="false">
 
 Whether calls to `sentry_log_X()` expect an attributes object as the second argument, allowing users to pass in custom log attributes. An example can be found on the [Logs page](/platforms/native/logs/#additional-attributes).
+
+</SdkOption>
+
+## App Hang Options
+
+These options control in-process app-hang detection. See the [App Hangs page](/platforms/native/usage/app-hangs/) for a full explanation and usage example.
+
+<SdkOption name="enable_app_hang_tracking" type="bool" defaultValue="false" availableSince="0.15.2">
+
+Enables or disables in-process app-hang detection. When enabled, a background watchdog thread monitors heartbeats from the watched thread. If no heartbeat is received within `app_hang_timeout`, an app-hang event is captured and sent to Sentry.
+
+Must be combined with regular calls to `sentry_app_hang_heartbeat()` from the thread you want monitored. The first heartbeat latches the calling thread as the monitored thread; heartbeats from any other thread are ignored.
+
+</SdkOption>
+
+<SdkOption name="app_hang_timeout" type="uint64_t" defaultValue="5000" defaultNote="milliseconds" availableSince="0.15.2">
+
+Sets the app-hang detection timeout, in milliseconds. If `enable_app_hang_tracking` is enabled and no heartbeat is received from the monitored thread within this window, an app-hang event is captured.
 
 </SdkOption>

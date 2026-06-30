@@ -17,6 +17,7 @@ notSupported:
   - javascript.hapi
   - javascript.hono
   - javascript.koa
+  - javascript.nitro
   - javascript.nestjs
   - javascript.cloudflare
 description: "Learn about customizing sessions with the Session Replay SDK."
@@ -126,6 +127,38 @@ await replay.flush();
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
 
 Calling `flush()` while Session Replay is stopped will start a new session recording.
+
+## Listening to Lifecycle Events
+
+<AvailableSince version="10.50.0" />
+
+You can listen to replay lifecycle events on the Sentry client to know when recording starts and stops. This is useful for wrapper libraries or custom UIs that need to stay in sync with replay state.
+
+```javascript
+const client = Sentry.getClient();
+
+client.on('replayStart', ({ sessionId, recordingMode }) => {
+  // recordingMode: 'session' | 'buffer'
+  console.log(`Replay ${sessionId} started in ${recordingMode} mode`);
+});
+
+client.on('replayEnd', ({ sessionId, reason }) => {
+  // reason: 'manual' | 'sessionExpired' | 'sendError' | 'mutationLimit'
+  //       | 'eventBufferError' | 'eventBufferOverflow'
+  console.log(`Replay ${sessionId} ended: ${reason}`);
+});
+```
+
+The `replayEnd` hook includes a typed `reason` so you can distinguish calling `replay.stop()` yourself from an internal stop:
+
+| Reason | Description |
+|--------|-------------|
+| `manual` | You called `replay.stop()` |
+| `sessionExpired` | The session exceeded max duration or idle timeout |
+| `sendError` | The SDK failed to send recording data to Sentry |
+| `mutationLimit` | The DOM mutation limit was exceeded |
+| `eventBufferError` | The event buffer hit an internal error |
+| `eventBufferOverflow` | The event buffer exceeded its size limit |
 
 ## Examples of Custom Sampling
 

@@ -1,6 +1,6 @@
 ---
 title: Using Custom Masking for Session Replay
-sidebar_order: 5501
+sidebar_order: 5502
 description: "Learn how to mask parts of your app's data in Session Replay."
 notSupported:
   - apple.macos
@@ -46,8 +46,8 @@ options.sessionReplay.unmaskedViewClasses = [MyCustomLabel.self]
 You can also choose to mask or unmask a specific view instance by using the replay API (`SentrySDK.replay`) or view extensions like this:
 
 ```swift
-SentrySDK.replay.maskView(view: view)
-SentrySDK.replay.unmaskView(view: label)
+SentrySDK.replay.maskView(view)
+SentrySDK.replay.unmaskView(label)
 ```
 
 or
@@ -58,6 +58,14 @@ label.sentryReplayUnmask()
 ```
 
 ## SwiftUI
+
+<Alert level="info">
+
+Session Replay masking for SwiftUI is best-effort. The SDK relies on view hierarchy information provided by the operating system, which is limited for SwiftUI. The SwiftUI rendering engine does not back every view with a UIKit view anymore. For example, `Text` views may be rendered directly into a graphics render surface rather than creating a corresponding `UILabel`.
+
+This is an operating system limitation, not a limitation of the Sentry SDK. As a result, some views may not be automatically maskable.
+
+</Alert>
 
 Because of the way SwiftUI is transformed into UIKit, it will often be over-masked. A modifier like `background` uses the same element as an `Image`.
 In order to control the SwiftUI masking process, you need to use the `sentryReplayUnmask` and/or `sentryReplayMask` modifiers.
