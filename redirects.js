@@ -2204,7 +2204,15 @@ const userDocsRedirects = [
     destination: '/product/trace-explorer/',
   },
   {
+    source: '/product/explore/traces/',
+    destination: '/product/trace-explorer/',
+  },
+  {
     source: '/product/explore/new-trace-explorer',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer/',
     destination: '/product/trace-explorer/',
   },
   {
