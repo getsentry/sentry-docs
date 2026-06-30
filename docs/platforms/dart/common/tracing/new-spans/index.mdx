@@ -20,6 +20,7 @@ Stream mode changes this by sending spans to Sentry in batches as they finish, i
 You can find the following span types mentioned throughout this page:
 
 - **Root span**: The topmost span in a trace. It has no parent span, and sampling decisions are made here.
+- **Service span**: A top-level span with no parent, created with `parentSpan: null`. It's the stream mode equivalent of a transaction. The first service span in a trace is also its root span.
 - **Child span**: Any span nested under a parent span within the same trace.
 
 This graph shows how these span types relate to each other within a trace:
@@ -215,7 +216,21 @@ When an ignored span has children, the children are re-parented to the nearest r
 
 ## Sampling (Optional)
 
-If you use `tracesSampleRate` or a custom `tracesSampler`, no changes are needed — both work the same way in stream mode. Only **root spans** are sampled; child spans inherit the root's decision. When a root span isn't sampled, its callback still executes with a no-op span.
+`tracesSampleRate` works the same way in stream mode, so no changes are needed if that's all you use.
+
+A custom `tracesSampler`, however, receives a different sampling context in stream mode. Instead of a transaction context, read the span's `name` and `attributes` from `samplingContext.spanContext`:
+
+```dart
+options.tracesSampler = (samplingContext) {
+  final spanContext = samplingContext.spanContext;
+  if (spanContext.name == 'health-check') {
+    return 0.0;
+  }
+  return 0.2;
+};
+```
+
+Only **root spans** are sampled; child spans inherit the root span's decision. When a root span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call.
 
 ## Flutter Auto-Instrumentation
 

@@ -79,8 +79,21 @@ Manual assignment is only needed to override the automatic default.
 + ];
 ```
 
-Note that `beforeSendSpan` is mutation-only and cannot drop spans — use `ignoreSpans` for that. Both only have access to the span name and attributes set at creation time, not attributes added later in the span's lifetime. Remove the `beforeSendTransaction` option after migrating its logic. See <PlatformLink to="/tracing/new-spans/#extended-configuration-optional">Extended Configuration</PlatformLink> for details.
+Note that `beforeSendSpan` is mutation-only and cannot drop spans — use `ignoreSpans` for that. `beforeSendSpan` runs when each span ends, so it sees the full set of attributes, including any added during the span's lifetime. `ignoreSpans`, by contrast, is evaluated when a span is created and matches on the span name only. Remove the `beforeSendTransaction` option after migrating its logic. See <PlatformLink to="/tracing/new-spans/#extended-configuration-optional">Extended Configuration</PlatformLink> for details.
 
 ## Sampling
 
-`tracesSampleRate` and `tracesSampler` work unchanged. Only **root spans** are sampled; child spans inherit the root's decision. When a root span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call.
+`tracesSampleRate` works unchanged. A custom `tracesSampler` still works, but the sampling context changes: read the span's `name` and `attributes` from `samplingContext.spanContext` instead of the transaction context.
+
+```dart diff
+- options.tracesSampler = (samplingContext) {
+-   final name = samplingContext.transactionContext.name;
+-   // ...
+- };
++ options.tracesSampler = (samplingContext) {
++   final name = samplingContext.spanContext.name;
++   // ...
++ };
+```
+
+Only **root spans** are sampled; child spans inherit the root span's decision. When a root span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call. See <PlatformLink to="/tracing/new-spans/#sampling-optional">Sampling</PlatformLink> for details.
