@@ -3,7 +3,14 @@ title: Instrument Caches
 sidebar_order: 1000
 description: "Learn how to manually instrument your code to use Sentry's Caches module. "
 ---
+
 A cache can be used to speed up data retrieval, thereby improving application performance. Because instead of getting data from a potentially slow data layer, your application will be getting data from memory (in a best case scenario). Caching can speed up read-heavy workloads for applications like Q&A portals, gaming, media sharing, and social networking.
+
+<Alert>
+
+This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/new-spans/">New Spans</PlatformLink> to learn more.
+
+</Alert>
 
 Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/) that can be auto-instrumented for popular Python caching setups (like <PlatformLink to="/integrations/django/">Django</PlatformLink> and <PlatformLink to="/integrations/redis/">Redis</PlatformLink>).
 
@@ -11,7 +18,7 @@ If you're using a custom caching solution that doesn't have auto instrumentation
 
 To make it possible for Sentry to give you an overview of your cache performance, you'll need to create two spans - one indicating that something is being put into the cache, and a second one indicating that something is being fetched from the cache.
 
-Make sure that there's a transaction running when you create the spans. If you're using a web framework those transactions will be created for you automatically. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
+In transaction mode, make sure that there's a transaction running when you create the spans. If you're using a web framework those transactions will be created for you automatically. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
 
 For detailed information about which data can be set, see the [Cache Module Developer Specification](https://develop.sentry.dev/sdk/performance/modules/caches/).
 
@@ -21,16 +28,16 @@ If you're using anything other than <PlatformLink to="/integrations/django/">Dja
 
 ### Add Span When Putting Data Into the Cache
 
-If the cache you’re using isn’t supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
+If the cache you're using isn't supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
 
 1. Set the cache value with whatever cache library you happen to be using.
-2. Wrap the part of your application that uses the cached value with  `with sentry_sdk.start_span(...)`
+2. Wrap the part of your application that uses the cached value with `with sentry_sdk.start_span(...)` (transaction mode) or `with sentry_sdk.traces.start_span(...)` (stream mode).
 3. Set `op` to `cache.put`.
 4. Set `cache.item_size` to an integer representing the size of the cached item.
 
 (The steps described above are documented in the snippet.)
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import my_caching
 import sentry_sdk
 
@@ -52,20 +59,43 @@ with sentry_sdk.start_span(op="cache.put") as span:
     span.set_data("cache.item_size", len(value))  # Warning: if value is very big this could use lots of memory
 ```
 
+```python {tabTitle:Stream Mode}
+import my_caching
+import sentry_sdk
+
+key = "myCacheKey123"
+value = "The value I want to cache."
+
+with sentry_sdk.traces.start_span(attributes={"sentry.op": "cache.put"}) as span:
+    # Set a key in your caching using your custom caching solution
+    my_caching.set(key, value)
+
+    # Describe the cache server you are accessing
+    span.set_attributes({
+        "network.peer.address": "cache.example.com/supercache",
+        "network.peer.port": 9000,
+
+        # Add the key(s) you want to set
+        "cache.key": [key],
+
+        # Add the size of the value you stored in the cache
+        "cache.item_size": len(value),  # Warning: if value is very big this could use lots of memory
+    })
+```
 
 ### Add Span When Retrieving Data From the Cache
 
-If the cache you’re using isn’t supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
+If the cache you're using isn't supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
 
 1. Fetch the cached value from whatever cache library you happen to be using.
-2. Wrap the part of your application that uses the cached value with  `with sentry_sdk.start_span(...)`
+2. Wrap the part of your application that uses the cached value with `with sentry_sdk.start_span(...)` (transaction mode) or `with sentry_sdk.traces.start_span(...)` (stream mode).
 3. Set `op` to `cache.get`.
 4. Set `cache.hit` to a boolean value representing whether the value was successfully fetched from the cache or not.
 5. Set `cache.item_size` to an integer representing the size of the cached item.
 
 (The steps described above are documented in the snippet.)
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import my_caching
 import sentry_sdk
 
@@ -92,6 +122,37 @@ with sentry_sdk.start_span(op="cache.get") as span:
     else:
         # If you could not retrieve a value, it was a miss
         span.set_data("cache.hit", False)
+```
+
+```python {tabTitle:Stream Mode}
+import my_caching
+import sentry_sdk
+
+key = "myCacheKey123"
+value = None
+
+with sentry_sdk.traces.start_span(attributes={"sentry.op": "cache.get"}) as span:
+    # Get a key from your caching solution
+    value = my_caching.get(key)
+
+    # Describe the cache server you are accessing
+    span.set_attributes({
+        "network.peer.address": "cache.example.com/supercache",
+        "network.peer.port": 9000,
+
+        # Add the key(s) you just retrieved from the cache
+        "cache.key": [key],
+    })
+
+    if value is not None:
+        # If you retrieved a value, the cache was hit
+        span.set_attribute("cache.hit", True)
+
+        # Optionally also add the size of the value you retrieved
+        span.set_attribute("cache.item_size", len(value))
+    else:
+        # If you could not retrieve a value, it was a miss
+        span.set_attribute("cache.hit", False)
 ```
 
 You should now have the right spans in place. Head over to the [Cache dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/) to see how your cache is performing.
