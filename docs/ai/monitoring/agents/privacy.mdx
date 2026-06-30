@@ -45,16 +45,14 @@ If you wish to enable Data Scrubbing for any of these fields you can add Organiz
 ## Stripping Images and Media from Messages
 
 AI messages can carry inline media: base64-encoded images, audio, or files
-embedded directly in the input and output. This media can hold sensitive
-information, so you might want to keep it out of Sentry while preserving the
-rest of the conversation — roles, text, and tool calls.
+embedded directly in the input and output. If this media might contain
+sensitive information, you can scrub it before it's sent to Sentry while
+keeping the rest of the conversation — roles, text, and tool calls — intact.
 
-The Sentry SDK does not strip media by default. You can remove it yourself in
-[`beforeSendSpan`](/platforms/javascript/configuration/options/#beforeSendSpan),
-which runs on every span before it's sent. The example below walks each AI
-message and replaces any inline media with a placeholder, leaving the
-surrounding structure intact. Adjust `isInlineMedia` to match how your AI
-provider embeds media.
+Use [`beforeSendSpan`](/platforms/javascript/configuration/options/#beforeSendSpan),
+which runs on every span before it's sent, to replace inline media with a
+placeholder. The example below walks each AI message and scrubs the media it
+finds. Adjust `isInlineMedia` to match how your AI provider embeds media.
 
 ```javascript
 const MEDIA_PLACEHOLDER = "[media stripped]";
