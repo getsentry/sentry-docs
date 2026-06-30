@@ -8,23 +8,29 @@ If you find that Sentry's tracing functionality is generating too much data, for
 
 Effective sampling is key to getting the most value from Sentry's performance monitoring while minimizing overhead. The Python SDK provides two ways to control the sampling rate. You can review the options and [examples](#traces-sampler-examples) below.
 
+<Alert>
+
+This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/new-spans/">New Spans</PlatformLink> to learn more.
+
+</Alert>
+
 ## Sampling Configuration Options
 
 ### 1. Uniform Sample Rate (`traces_sample_rate`)
 
-`traces_sample_rate` is a floating-point value between `0.0` and `1.0`, inclusive, which controls the probability with which each transaction will be sampled:
+`traces_sample_rate` is a floating-point value between `0.0` and `1.0`, inclusive, which controls the probability with which each transaction (or service spans in <PlatformLink to="/tracing/new-spans">stream mode</PlatformLink>) will be sampled. This works the same way in both transaction mode and stream mode:
 
 <PlatformContent includePath="/performance/traces-sample-rate" />
 
-With `traces_sample_rate` set to `0.25`, each transaction in your application is randomly sampled with a probability of `0.25`, so you can expect that one in every four transactions will be sent to Sentry.
+With `traces_sample_rate` set to `0.25`, each transaction/service span in your application is randomly sampled with a probability of `0.25`, so you can expect that one in every four transactions/service spans will be sent to Sentry.
 
 ### 2. Sampling Function (`traces_sampler`)
 
 For more granular control, you can provide a `traces_sampler` function. This approach allows you to:
 
-- Apply different sampling rates to different types of transactions
-- Filter out specific transactions entirely
-- Make sampling decisions based on transaction data
+- Apply different sampling rates to different types of transactions/service spans
+- Filter out specific transactions/service spans entirely
+- Make sampling decisions based on transaction/service span data
 - Control the inheritance of sampling decisions in distributed traces
 - Use custom attributes to modify sampling
 
@@ -38,14 +44,11 @@ In distributed systems, implementing inheritance logic when trace information is
 
 <PlatformContent includePath="/performance/traces-sampler-as-sampler" />
 
-<details>
-<summary className="text-xl font-semibold">Traces Sampler Examples</summary>
-
-#### Traces Sampler Examples
+<Expandable title="Traces Sampler Examples">
 
 1. Prioritizing Critical User Flows
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 from sentry_sdk.types import SamplingContext
 
@@ -73,14 +76,49 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     return 0.1
 
 sentry_sdk.init(
-    dsn="your-dsn",
+    # ...
     traces_sampler=traces_sampler,
+)
+```
+
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def traces_sampler(sampling_context: SamplingContext) -> float:
+    # Use the parent sampling decision if we have an incoming trace.
+    # Note: we strongly recommend respecting the parent sampling decision,
+    # as this ensures your traces will be complete!
+    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    if parent_sampling_decision is not None:
+        return float(parent_sampling_decision)
+
+    span_ctx = sampling_context["span_context"]
+    name = span_ctx["name"]
+    op = span_ctx["attributes"].get("sentry.op")
+
+    # Sample all checkout spans
+    if name and ('/checkout' in name or op == 'checkout'):
+        return 1.0
+
+    # Sample 50% of login spans
+    if name and ('/login' in name or op == 'login'):
+        return 0.5
+
+    # Sample 10% of everything else
+    return 0.1
+
+sentry_sdk.init(
+    # ...
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
 )
 ```
 
 2. Handling Different Environments and Error Rates
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
+import os
 import sentry_sdk
 from sentry_sdk.types import SamplingContext
 
@@ -92,7 +130,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    custom_sampling_ctx = sampling_context["custom_sampling_context"]
+    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
     environment = os.environ.get("ENVIRONMENT", "development")
 
     # Sample all transactions in development
@@ -115,7 +153,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
 # Initialize the SDK with the sampling function
 sentry_sdk.init(
-    dsn="your-dsn",
+    # ...
     traces_sampler=traces_sampler,
 )
 
@@ -130,9 +168,62 @@ with sentry_sdk.start_transaction(
     # your code here
 ```
 
+```python {tabTitle:Stream Mode}
+import os
+import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def traces_sampler(sampling_context: SamplingContext) -> float:
+    # Use the parent sampling decision if we have an incoming trace.
+    # Note: we strongly recommend respecting the parent sampling decision,
+    # as this ensures your traces will be complete!
+    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    if parent_sampling_decision is not None:
+        return float(parent_sampling_decision)
+
+    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
+    environment = os.environ.get("ENVIRONMENT", "development")
+
+    # Sample all spans in development
+    if environment == "development":
+        return 1.0
+
+    # Sample more spans if there are recent errors
+    # Note: hasRecentErrors is a custom attribute that needs to be set
+    if custom_sampling_ctx.get("hasRecentErrors") is True:
+        return 0.8
+
+    # Sample based on environment
+    if environment == "production":
+        return 0.05  # 5% in production
+    elif environment == "staging":
+        return 0.2   # 20% in staging
+
+    # Default sampling rate
+    return 0.1
+
+# Initialize the SDK with the sampling function
+sentry_sdk.init(
+    # ...
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+
+# Custom attributes need to be set on the scope, after continue_trace
+# (which resets the propagation context) and before start_span
+# (which is when sampling happens), in order to be available
+# in the traces_sampler
+sentry_sdk.Scope.set_custom_sampling_context({"hasRecentErrors": True})
+with sentry_sdk.traces.start_span(
+    name="GET /api/users",
+    attributes={"sentry.op": "http.request"},
+) as span:
+    # your code here
+```
+
 3. Controlling Sampling Based on User and Transaction Properties
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 from sentry_sdk.types import SamplingContext
 
@@ -144,7 +235,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    custom_sampling_ctx = sampling_context["custom_sampling_context"]
+    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
 
     # Always sample for premium users
     # Note: user.tier is a custom attribute that needs to be set
@@ -166,7 +257,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
 # Initialize the SDK with the sampling function
 sentry_sdk.init(
-    dsn="your-dsn",
+    # ...
     traces_sampler=traces_sampler,
 )
 
@@ -179,9 +270,59 @@ with sentry_sdk.start_transaction(
     # Your code here
 ```
 
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def traces_sampler(sampling_context: SamplingContext) -> float:
+    # Use the parent sampling decision if we have an incoming trace.
+    # Note: we strongly recommend respecting the parent sampling decision,
+    # as this ensures your traces will be complete!
+    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    if parent_sampling_decision is not None:
+        return float(parent_sampling_decision)
+
+    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
+
+    # Always sample for premium users
+    # Note: user.tier is a custom attribute that needs to be set
+    if custom_sampling_ctx.get("user", {}).get("tier") == "premium":
+        return 1.0
+
+    # Sample more spans for users experiencing errors
+    # Note: hasRecentErrors is a custom attribute
+    if custom_sampling_ctx.get("hasRecentErrors") is True:
+        return 0.8
+
+    # Sample less for high-volume, low-value paths
+    name = sampling_context["span_context"]["name"]
+    if name and name.startswith("/api/metrics"):
+        return 0.01
+
+    # Default sampling rate
+    return 0.2
+
+# Initialize the SDK with the sampling function
+sentry_sdk.init(
+    # ...
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+
+# To set custom attributes for this example:
+sentry_sdk.Scope.set_custom_sampling_context(
+    {"user": {"tier": "premium"}, "hasRecentErrors": True}
+)
+with sentry_sdk.traces.start_span(
+    name="GET /api/users",
+    attributes={"sentry.op": "http.request"},
+) as span:
+    # Your code here
+```
+
 4. Complex Business Logic Sampling
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 from sentry_sdk.types import SamplingContext
 
@@ -199,7 +340,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if transaction_ctx["op"] in ["payment.process", "order.create", "user.verify"]:
         return 1.0
 
-    custom_sampling_context = sampling_context["custom_sampling_context"]
+    custom_sampling_context = sampling_context.get("custom_sampling_context") or {}
 
     # Sample based on user segment
     # Note: user.segment is a custom attribute
@@ -226,7 +367,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
 # Initialize the SDK with the sampling function
 sentry_sdk.init(
-    dsn="your-dsn",
+    # ...
     traces_sampler=traces_sampler,
 )
 
@@ -237,12 +378,72 @@ with sentry_sdk.start_transaction(
     custom_sampling_context={"user": {"segment": "enterprise"}, "transaction": {"value": 1500}, "service": {"error_rate": 0.03}},
 ) as transaction:
     # Your code here
+```
 
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def traces_sampler(sampling_context: SamplingContext) -> float:
+    # Use the parent sampling decision if we have an incoming trace.
+    # Note: we strongly recommend respecting the parent sampling decision,
+    # as this ensures your traces will be complete!
+    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    if parent_sampling_decision is not None:
+        return float(parent_sampling_decision)
+
+    # Always sample critical business operations
+    # Note: sentry.op is an SDK-provided attribute
+    span_ctx = sampling_context["span_context"]
+    if span_ctx["attributes"].get("sentry.op") in ["payment.process", "order.create", "user.verify"]:
+        return 1.0
+
+    custom_sampling_context = sampling_context.get("custom_sampling_context") or {}
+
+    # Sample based on user segment
+    # Note: user.segment is a custom attribute
+    user_segment = custom_sampling_context.get("user", {}).get("segment")
+    if user_segment == "enterprise":
+        return 0.8
+    elif user_segment == "premium":
+        return 0.5
+
+    # Sample based on transaction value
+    # Note: transaction.value is a custom attribute
+    transaction_value = custom_sampling_context.get("transaction", {}).get("value")
+    if transaction_value is not None and transaction_value > 1000:  # High-value transactions
+        return 0.7
+
+    # Sample based on error rate in the service
+    # Note: service.error_rate is a custom attribute
+    error_rate = custom_sampling_context.get("service", {}).get("error_rate")
+    if error_rate is not None and error_rate > 0.05:  # Error rate above 5%
+        return 0.9
+
+    # Default sampling rate
+    return 0.1
+
+# Initialize the SDK with the sampling function
+sentry_sdk.init(
+    # ...
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+
+# To set custom attributes for this example:
+sentry_sdk.Scope.set_custom_sampling_context(
+    {"user": {"segment": "enterprise"}, "transaction": {"value": 1500}, "service": {"error_rate": 0.03}}
+)
+with sentry_sdk.traces.start_span(
+    name="Process Payment",
+    attributes={"sentry.op": "payment.process"},
+) as span:
+    # Your code here
 ```
 
 5. Performance-Based Sampling
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 from sentry_sdk.types import SamplingContext
 
@@ -254,7 +455,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    custom_sampling_ctx = sampling_context["custom_sampling_context"]
+    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
 
     # Sample more transactions with high memory usage
     # Note: memory_usage_mb is a custom attribute
@@ -279,7 +480,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
 # Initialize the SDK with the sampling function
 sentry_sdk.init(
-    dsn="your-dsn",
+    # ...
     traces_sampler=traces_sampler,
 )
 
@@ -291,11 +492,67 @@ with sentry_sdk.start_transaction(
 ) as transaction:
     # Your code here
 ```
-</details>
+
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def traces_sampler(sampling_context: SamplingContext) -> float:
+    # Use the parent sampling decision if we have an incoming trace.
+    # Note: we strongly recommend respecting the parent sampling decision,
+    # as this ensures your traces will be complete!
+    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    if parent_sampling_decision is not None:
+        return float(parent_sampling_decision)
+
+    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
+
+    # Sample more spans with high memory usage
+    # Note: memory_usage_mb is a custom attribute
+    memory_usage = custom_sampling_ctx.get("memory_usage_mb")
+    if memory_usage is not None and memory_usage > 500:
+        return 0.8
+
+    # Sample more spans with high CPU usage
+    # Note: cpu_percent is a custom attribute
+    cpu_percent = custom_sampling_ctx.get("cpu_percent")
+    if cpu_percent is not None and cpu_percent > 80:
+        return 0.8
+
+    # Sample more spans with high database load
+    # Note: db_connections is a custom attribute
+    db_connections = custom_sampling_ctx.get("db_connections")
+    if db_connections is not None and db_connections > 100:
+        return 0.7
+
+    # Default sampling rate
+    return 0.1
+
+# Initialize the SDK with the sampling function
+sentry_sdk.init(
+    # ...
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+
+# To set custom attributes for this example:
+sentry_sdk.Scope.set_custom_sampling_context(
+    {"memory_usage_mb": 600, "cpu_percent": 85, "db_connections": 120}
+)
+with sentry_sdk.traces.start_span(
+    name="Process Data",
+    attributes={"sentry.op": "data.process"},
+) as span:
+    # Your code here
+```
+
+</Expandable>
 
 ## The Sampling Context Object
 
 When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_context` object with information from the relevant span to help make sampling decisions:
+
+### Transaction Mode (Default)
 
 ```python
 {
@@ -310,28 +567,76 @@ When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_
 }
 ```
 
+### Stream Mode
+
+```python
+{
+    "span_context": {
+        "name": str,  # span title at creation time (SDK-provided)
+        "trace_id": str,  # the trace ID (SDK-provided)
+        "parent_span_id": Optional[str],  # the parent span's ID, if any (SDK-provided)
+        "parent_sampled": Optional[bool],  # whether the parent span was sampled (SDK-provided)
+        "parent_sample_rate": Optional[float],  # the sample rate used by the parent (SDK-provided)
+        "attributes": dict[str, Any]  # attributes set at span-creation time (SDK- and user-provided)
+    },
+    "custom_sampling_context": Optional[dict[str, Any]]  # additional custom data for sampling
+}
+```
+
 ### SDK-Provided vs. Custom Attributes
 
 The sampling context contains both SDK-provided attributes and custom attributes:
 
+#### Transaction Mode (Default)
+
 **SDK-Provided Attributes:**
+
 - `transaction_context.name`: The name of the transaction
 - `transaction_context.op`: The operation type
 - `parent_sampled`: Whether the parent transaction was sampled
 - `parent_sample_rate`: The sample rate used by the parent
 
 **Custom Attributes:**
+
 - Any data you add to the `custom_sampling_context` parameter in `start_transaction`. Use this for data that you want to use for sampling decisions but don't want to include in the transaction data that gets sent to Sentry. Read more about sampling context [here](/platforms/python/configuration/sampling/#sampling-context).
+
+#### Stream Mode
+
+**SDK-Provided Attributes:**
+
+- `span_context.name`: The name of the span
+- `span_context.attributes`: Attributes set on the span at creation time, including `sentry.op`
+- `span_context.parent_sampled`: Whether the parent span was sampled
+- `span_context.parent_sample_rate`: The sample rate used by the parent
+
+**Custom Attributes:**
+
+- Any data you add via `sentry_sdk.Scope.set_custom_sampling_context()`, called after `continue_trace` and before `start_span`. Use this for data that you want to use for sampling decisions but don't want to include in the span data that gets sent to Sentry. Read more about sampling context [here](/platforms/python/configuration/sampling/#sampling-context).
 
 ## Sampling Decision Precedence
 
 When multiple sampling mechanisms could apply, Sentry follows this order of precedence:
 
-1. If a sampling decision is passed to `start_transaction`, that decision is used
-2. If `traces_sampler` is defined, its decision is used. Although the `traces_sampler` can override the parent sampling decision, most users will want to ensure their `traces_sampler` respects the parent sampling decision
-3. If no `traces_sampler` is defined, but there is a parent sampling decision from an incoming distributed trace, we use the parent sampling decision
-4. If neither of the above, `traces_sample_rate` is used
-5. If none of the above are set, no transactions are sampled. This is equivalent to setting `traces_sample_rate=0.0`
+### Transaction Mode (Default)
+
+1. If a sampling decision is passed to `start_transaction`, that decision is used.
+2. If `traces_sampler` is defined, its decision is used. Although the `traces_sampler` can override the parent sampling decision, most users will want to ensure their `traces_sampler` respects the parent sampling decision.
+3. If no `traces_sampler` is defined, but there is a parent sampling decision from an incoming distributed trace, we use the parent sampling decision.
+4. If neither of the above, `traces_sample_rate` is used.
+5. If none of the above are set, no transactions are sampled. This is equivalent to setting `traces_sample_rate=0.0`.
+
+### Stream Mode
+
+1. If `traces_sampler` is defined, its decision is used. Although the `traces_sampler` can override the parent sampling decision, most users will want to ensure their `traces_sampler` respects the parent sampling decision.
+2. If no `traces_sampler` is defined, but there is a parent sampling decision from an incoming distributed trace, we use the parent sampling decision.
+3. If neither of the above, `traces_sample_rate` is used
+4. If none of the above are set, no spans are sampled. This is equivalent to setting `traces_sample_rate=0.0`.
+
+<Alert level="info">
+
+Sampling decisions are made when spans are created. Child spans inherit the sampling decision of their parent span unless filtered by `ignore_spans`.
+
+</Alert>
 
 ## How Sampling Propagates in Distributed Traces
 
@@ -341,7 +646,8 @@ Sentry uses a "head-based" sampling approach:
 - This decision is propagated to all downstream services
 
 The two key headers are:
+
 - `sentry-trace`: Contains trace ID, span ID, and sampling decision
 - `baggage`: Contains additional trace metadata including sample rate
 
-The Sentry Python SDK automatically attaches these headers to outgoing HTTP requests when using auto-instrumentation with libraries like `requests`, `urllib3`, or `httpx`. For other communication channels, you can manually propagate trace information. Learn more about customizing tracing in [custom trace propagation](/platforms/python/tracing/distributed-tracing/custom-trace-propagation/)
+The Sentry Python SDK automatically attaches these headers to outgoing HTTP requests when using auto-instrumentation with libraries like `requests`, `urllib3`, or `httpx`. For other communication channels, you can manually propagate trace information. Learn more about customizing tracing in [custom trace propagation](/platforms/python/tracing/distributed-tracing/custom-trace-propagation/).
