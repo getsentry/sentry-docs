@@ -708,10 +708,6 @@ const userDocsRedirects = [
     destination: '/integrations/deployment/expo/',
   },
   {
-    source: '/integrations/heroku/',
-    destination: '/integrations/deployment/heroku/',
-  },
-  {
     source: '/integrations/vercel/',
     destination: '/integrations/deployment/vercel/',
   },
@@ -746,10 +742,6 @@ const userDocsRedirects = [
   {
     source: '/integrations/ui-components/',
     destination: '/integrations/integration-platform/ui-components/',
-  },
-  {
-    source: '/integrations/asana/',
-    destination: '/integrations/issue-tracking/asana/',
   },
   {
     source: '/integrations/bugsniff/',
