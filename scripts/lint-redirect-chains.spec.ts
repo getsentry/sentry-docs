@@ -4,7 +4,6 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {parseMiddlewareTs, parseRedirectsJs} from './check-redirects-on-rename';
 import {
-  detectContentLinkIssues,
   detectRedirectChains,
   resolveToFinal,
   walkChain,
@@ -224,19 +223,7 @@ Check out the [old page](/old/path/) for more info.
 `;
     fs.writeFileSync(path.join(tempDir, 'docs', 'test.mdx'), mdxContent);
 
-    // Monkey-patch findAllMdxFiles to use our temp dir
-    const jsRedirects = {
-      developerDocsRedirects: [] as Array<{destination: string; source: string}>,
-      userDocsRedirects: [
-        {source: '/old/path/', destination: '/new/path/'},
-      ],
-    };
-    const mwRedirects = {
-      developerDocsRedirects: [] as Array<{destination: string; source: string}>,
-      userDocsRedirects: [] as Array<{destination: string; source: string}>,
-    };
-
-    // We test the link detection logic by checking the regex patterns directly
+    // Test the link detection logic by checking the regex patterns directly
     const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
     const matches = [...mdxContent.matchAll(markdownLinkRegex)];
     expect(matches).toHaveLength(1);
@@ -287,11 +274,21 @@ Check out the [old page](/old/path/) for more info.
     // Normalization adds trailing slash: /old/path -> /old/path/
   });
 
-  it('should detect PlatformLink to= attributes', () => {
+  it('should skip PlatformLink to= attributes (platform-relative paths)', () => {
     const mdxContent = `<PlatformLink to="/old/feature/">text</PlatformLink>`;
 
-    const jsxLinkRegex = /(?:href|to|url)="(\/[^"#]+?)(?:#[^"]+)?"/g;
-    const matches = [...mdxContent.matchAll(jsxLinkRegex)];
+    // PlatformLink to= should NOT be matched since PlatformLink prepends
+    // the platform base URL, making these platform-relative paths
+    const jsxToRegex = /(?<!PlatformLink\s+)to="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const matches = [...mdxContent.matchAll(jsxToRegex)];
+    expect(matches).toHaveLength(0);
+  });
+
+  it('should detect non-PlatformLink to= attributes', () => {
+    const mdxContent = `<Link to="/old/feature/">text</Link>`;
+
+    const jsxToRegex = /(?<!PlatformLink\s+)to="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const matches = [...mdxContent.matchAll(jsxToRegex)];
     expect(matches).toHaveLength(1);
     expect(matches[0][1]).toBe('/old/feature/');
   });

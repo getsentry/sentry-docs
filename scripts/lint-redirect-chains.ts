@@ -203,8 +203,11 @@ function detectContentLinkIssues(
   // Regex patterns for extracting internal links
   // Markdown: [text](/path/) or [text](/path/#anchor)
   const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
-  // JSX: href="/path/" or to="/path/" or url="/path/"
-  const jsxLinkRegex = /(?:href|to|url)="(\/[^"#]+?)(?:#[^"]+)?"/g;
+  // JSX: href="/path/" or url="/path/" (but NOT PlatformLink to="/path/" since
+  // PlatformLink prepends the platform base URL, making them platform-relative)
+  const jsxHrefUrlRegex = /(?:href|url)="(\/[^"#]+?)(?:#[^"]+)?"/g;
+  // For 'to' attributes, only match if NOT preceded by PlatformLink
+  const jsxToRegex = /(?<!PlatformLink\s+)to="(\/[^"#]+?)(?:#[^"]+)?"/g;
 
   const issues: ContentLinkIssue[] = [];
 
@@ -217,22 +220,30 @@ function detectContentLinkIssues(
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      for (const regex of [markdownLinkRegex, jsxLinkRegex]) {
+      for (const regex of [markdownLinkRegex, jsxHrefUrlRegex, jsxToRegex]) {
         regex.lastIndex = 0;
         let match;
         while ((match = regex.exec(line)) !== null) {
           let linkPath = match[1];
-          // Normalize: ensure trailing slash
-          if (!linkPath.endsWith('/')) {
-            linkPath += '/';
-          }
+          // Normalize: ensure trailing slash for lookup
+          const normalizedPath = linkPath.endsWith('/')
+            ? linkPath
+            : linkPath + '/';
 
-          if (map.has(linkPath)) {
-            const finalDest = resolveToFinal(linkPath, map);
+          // Check both with and without trailing slash, since some redirect
+          // sources in redirects.js omit trailing slashes
+          const matchedPath = map.has(normalizedPath)
+            ? normalizedPath
+            : map.has(linkPath)
+              ? linkPath
+              : null;
+
+          if (matchedPath) {
+            const finalDest = resolveToFinal(matchedPath, map);
             issues.push({
               filePath,
               line: i + 1,
-              linkPath,
+              linkPath: matchedPath,
               finalDest,
               isDeveloperDocs: isDevDocsFile,
             });
