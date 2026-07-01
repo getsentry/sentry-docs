@@ -2333,6 +2333,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/integrations/deployment/vercel/',
   },
   {
+    from: '/workflow/integrations/legacy-integrations/gitlab/',
+    to: '/product/integrations/source-code-mgmt//gitlab/',
+  },
+  {
     from: '/workflow/integrations/clubhouse/',
     to: '/product/integrations/issue-tracking/shortcut/',
   },
