@@ -125,8 +125,8 @@ jobs:
             comment += '---\n';
             comment += '*Each redirect hop loses ~15% of SEO link equity and adds latency for users.*\n';
 
-            // Check for existing comments from this action
-            const {data: comments} = await github.rest.issues.listComments({
+            // Check for existing comments from this action (paginate to handle PRs with 30+ comments)
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
@@ -134,7 +134,7 @@ jobs:
 
             const existingComment = comments.find(c =>
               c.user.type === 'Bot' &&
-              (c.user.login === 'github-actions[bot]' || c.user.login.includes('bot')) &&
+              c.user.login === 'github-actions[bot]' &&
               c.body.includes('Redirect Chain Issues Detected')
             );
 
