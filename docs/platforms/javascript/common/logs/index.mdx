@@ -101,26 +101,27 @@ Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
 <SplitSection>
 <SplitSectionText>
 
-## Scope Attributes
+## Shared Attributes
 
-Set attributes on a scope to automatically include them in all logs within that context. Requires SDK version `10.32.0` or above.
+Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all logs (as well as your metrics). These work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but they accept `string`, `number`, and `boolean` values or arrays of these. `Sentry.setAttribute(s)` requires SDK version `10.61.0` or above.
 
-Use global scope for app-wide attributes, and isolation scope for request-specific context. Only `string`, `number`, and `boolean` attribute values are supported.
+To attach attributes to a broader or narrower context, set them on a specific scope instead (requires SDK version `10.32.0` or above). Use the global scope for app-wide attributes and the current scope for a single operation.
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```javascript
+// Applied to all logs and metrics
+Sentry.setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
+Sentry.setAttribute("service", "checkout");
+
 // Global scope - shared across entire app
 Sentry.getGlobalScope().setAttributes({
   service: "checkout",
   version: "2.1.0",
-});
-
-// Isolation scope - unique per request
-Sentry.getIsolationScope().setAttributes({
-  org_id: user.orgId,
-  user_tier: user.tier,
 });
 
 // Current scope - single operation
@@ -216,6 +217,11 @@ Everything in Sentry is linked by trace. When you're viewing a log, you can jump
 ## Default Attributes
 
 <PlatformContent includePath="logs/default-attributes" />
+
+### Shared Attributes
+
+Any attributes set via `Sentry.setAttribute()` / `Sentry.setAttributes()` (or directly on a scope) are automatically included on all logs. The top-level APIs require SDK version `10.61.0` or above. See [Attributes](#shared-attributes) above for details.
+
 
 ## Related Features
 
