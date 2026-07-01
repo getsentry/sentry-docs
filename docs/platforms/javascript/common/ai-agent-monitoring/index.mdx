@@ -69,7 +69,6 @@ import { openAIIntegration } from "___SDK_PACKAGE___";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
-  streamGenAiSpans: true,
   integrations: [
     openAIIntegration(),
   ],
@@ -102,7 +101,6 @@ import { openAIIntegration } from "___SDK_PACKAGE___";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
-  streamGenAiSpans: true,
   integrations: [
     openAIIntegration({
       recordInputs: false, // Don't capture prompts
@@ -122,9 +120,9 @@ Sentry.init({
 
 ### Streaming Gen AI Spans
 
-Set `streamGenAiSpans` to `true` to send `gen_ai` spans as standalone envelope items instead of bundling them in the transaction. This is recommended for all AI monitoring setups and is required for <Link to="/ai/monitoring/conversations/">Conversations</Link> to work.
+`gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction by default (since SDK version `10.61.0`). This prevents AI spans with large inputs and outputs from hitting transaction payload size limits and being dropped, and is required for <Link to="/ai/monitoring/conversations/">Conversations</Link> to work.
 
-Without this option, AI spans with large inputs and outputs can hit transaction payload size limits and be dropped.
+To send `gen_ai` spans as part of the transaction instead, set `streamGenAiSpans` to `false`. Self-hosted Sentry users should set this to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -135,7 +133,7 @@ import * as Sentry from "___SDK_PACKAGE___";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
-  streamGenAiSpans: true,
+  streamGenAiSpans: false, // opt out of streaming gen_ai spans
 });
 ```
 
@@ -191,6 +189,18 @@ Sentry.setConversationId(null);
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+## Identifying Users in Conversations
+
+The [Conversations](/ai/monitoring/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the [setUser API reference](/platforms/javascript/apis/#setUser) for the full list of supported fields.
 
 ## Manual Instrumentation
 

@@ -17,7 +17,7 @@ sidebar_order: 1
   </PlatformSection>
 
 The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 <PlatformContent includePath="configuration/dsn" />
 
@@ -661,11 +661,13 @@ See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">De
 
 </SdkOption>
 
-<SdkOption name="streamGenAiSpans" type='boolean' defaultValue='false' availableSince='10.53.0'>
+<SdkOption name="streamGenAiSpans" type='boolean' defaultValue='true' defaultNote='since version 10.61.0' availableSince='10.53.0'>
 
-When set to `true`, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
+When enabled, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
 
-Enable this option if you are using <PlatformLink to="/ai-agent-monitoring/">AI Agent Monitoring</PlatformLink> or the <Link to="/ai/monitoring/conversations/">Conversations</Link> feature.
+This is enabled by default starting with SDK version `10.61.0` (before that, it defaulted to `false`). Set it to `false` to send `gen_ai` spans as part of the transaction instead.
+
+Self-hosted Sentry users should set this option to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
 
 </SdkOption>
 
@@ -697,14 +699,14 @@ This function is called with a log object, and can return a modified log object,
 
 <SdkOption name="enableMetrics" type='boolean' defaultValue='true'>
 
-Set this option to `false` to disable metric capturing in Sentry (enabled by default). 
+Set this option to `false` to disable metric capturing in Sentry (enabled by default).
 Only when this option is enabled will the `metrics` APIs actually send metrics to Sentry.
 
 </SdkOption>
 
 <SdkOption name="beforeSendMetric" type='(metric: Metric) => Metric | null'>
 
-This function is called with a metric object, and can return a modified metric object, or `null` to skip sending this metric to Sentry. 
+This function is called with a metric object, and can return a modified metric object, or `null` to skip sending this metric to Sentry.
 This can be used, for instance, for manual PII scrubbing before sending, or to add custom attributes to all metrics.
 
 </SdkOption>

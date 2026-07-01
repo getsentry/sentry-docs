@@ -708,10 +708,6 @@ const userDocsRedirects = [
     destination: '/integrations/deployment/expo/',
   },
   {
-    source: '/integrations/heroku/',
-    destination: '/integrations/deployment/heroku/',
-  },
-  {
     source: '/integrations/vercel/',
     destination: '/integrations/deployment/vercel/',
   },
@@ -746,10 +742,6 @@ const userDocsRedirects = [
   {
     source: '/integrations/ui-components/',
     destination: '/integrations/integration-platform/ui-components/',
-  },
-  {
-    source: '/integrations/asana/',
-    destination: '/integrations/issue-tracking/asana/',
   },
   {
     source: '/integrations/bugsniff/',
@@ -1377,7 +1369,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/:guide/integrations/plugin/',
-    destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/',
   },
   {
     source: '/platforms/javascript/configuration/environments/',
@@ -1646,21 +1638,47 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
+  // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
-    source: '/product/metrics/:path*',
-    destination: '/product/explore/metrics/:path*',
+    source: '/product/onboarding/',
+    destination: '/product/sentry-basics/',
   },
   {
-    source: '/product/profiling/:path*',
-    destination: '/product/explore/profiling/:path*',
+    source: '/product/onboarding/:path*',
+    destination: '/product/sentry-basics/',
+  },
+  // Flatten Explore: redirect old /product/explore/* paths to new /product/* paths
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/product/metrics/:path*',
   },
   {
-    source: '/product/discover-queries/:path*',
-    destination: '/product/explore/discover-queries/:path*',
+    source: '/product/explore/profiling/:path*',
+    destination: '/product/profiling/:path*',
   },
   {
-    source: '/product/session-replay/:path*',
-    destination: '/product/explore/session-replay/:path*',
+    source: '/product/explore/discover-queries/:path*',
+    destination: '/product/discover-queries/:path*',
+  },
+  {
+    source: '/product/explore/session-replay/:path*',
+    destination: '/product/session-replay/:path*',
+  },
+  {
+    source: '/product/explore/trace-explorer/:path*',
+    destination: '/product/trace-explorer/:path*',
+  },
+  {
+    source: '/product/explore/logs/:path*',
+    destination: '/product/logs/:path*',
+  },
+  {
+    source: '/product/explore',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/platforms/javascript/best-practices/browser-extensions/',
@@ -1802,6 +1820,48 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/codepush/',
     destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
+  },
+  // Expo-specific pages moved under the Expo guide (/guides/expo/)
+  {
+    source: '/platforms/react-native/manual-setup/expo/',
+    destination: '/platforms/react-native/guides/expo/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/expo-updates/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/gradle/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/gradle/',
+  },
+  {
+    source: '/platforms/react-native/migration/sentry-expo/',
+    destination: '/platforms/react-native/guides/expo/migration/sentry-expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo/',
+    destination: '/platforms/react-native/guides/expo/sourcemaps/uploading/expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo-advanced/',
+    destination:
+      '/platforms/react-native/guides/expo/sourcemaps/uploading/expo-advanced/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-router/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-router/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-resources/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
   },
   {
     source:
@@ -2133,11 +2193,23 @@ const userDocsRedirects = [
   // Redirects for Trace Explorer
   {
     source: '/product/explore/traces',
-    destination: '/product/explore/trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/traces/',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/product/explore/new-trace-explorer',
-    destination: '/product/explore/trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/traces',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/organization/integrations/expo/',
@@ -2252,15 +2324,7 @@ const userDocsRedirects = [
     source: '/product/monitors-and-alerts/alerts/best-practices/',
     destination: '/product/monitors-and-alerts/alerts/',
   },
-  // DOCS-2550: /product/logs/ moved under /product/explore/
-  {
-    source: '/product/logs/',
-    destination: '/product/explore/logs/',
-  },
-  {
-    source: '/product/logs/:path*',
-    destination: '/product/explore/logs/:path*',
-  },
+  // DOCS-2550: /product/logs/ redirects now handled in the flatten-explore block above
   // DOCS-2227: retention-priorities page removed; dynamic-sampling is the closest equivalent
   {
     source: '/product/performance/retention-priorities/',

@@ -1,8 +1,5 @@
 How you add data to every span depends on your tracing mode:
 
-- Transaction mode: `before_send_transaction` runs after the entire transaction finishes and has access to all data set during the span's lifetime.
-- Stream mode: `before_send_span` (set under `_experiments`) can only work with attributes set at span start time. Attributes added later during the span's lifetime are **not available**.
-
 ```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 from sentry_sdk.types import Event, Hint
@@ -41,7 +38,8 @@ import sentry_sdk
 
 def before_send_span(span, hint):
     # Runs once per span, as it's flushed.
-    # Only attributes set at span-creation time are available here.
+    if "attributes" not in span:
+        span["attributes"] = {}
     span["attributes"].update({
         "component_version": "2.0.0",
         "deployment_stage": "production",

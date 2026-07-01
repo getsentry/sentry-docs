@@ -51,18 +51,22 @@ def eat_pizza(pizza):
     with sentry_sdk.traces.start_span(
         name="Eat Pizza",
         attributes={"sentry.op": "task"},
-        # remove the parent span to create service span
+        # set parent span to None to create service span
         parent_span=None,
     ):
         while pizza.slices > 0:
+            span = sentry_sdk.traces.start_span(name="Eat Slice")
             eat_slice(pizza.slices.pop())
+            span.end()
 ```
 
 The [API reference](https://getsentry.github.io/sentry-python/api.html#performance-monitoring) documents `start_transaction` and `start_span`, along with their parameters.
 
 <Alert>
 
-Note that `sentry_sdk.start_transaction()` (transaction mode) and `sentry_sdk.traces.start_span()` (stream mode) are meant be used as context managers. This ensures that the transaction/service span will be properly set as active and any spans created within will be attached to it.
+Note that `sentry_sdk.start_transaction()` (transaction mode) is meant be used as a context manager. This ensures that the transaction/service span will be properly set as active and any spans created within will be attached to it.
+
+In stream mode, `sentry_sdk.traces.start_span()` can, but doesn't have to be, used as a context manager. If you don't use it as a context manager, make sure to call `span.end()` to finish the span.
 
 </Alert>
 
@@ -144,7 +148,7 @@ See the [@sentry_sdk.trace decoration section](#sentry_sdktrace-decorator) below
 
 <Alert level="warning" title="Static & class methods">
 
-When tracing a static or class method, you **must** add the `@sentry_sdk.trace` decorator **after** the `@staticmethod` or `@classmethod` decorator (i.e., **closer** to the function definition). Otherwise, your function will break! This applies in both transaction mode and stream mode.
+When tracing a static or class method, you **must** add the `@sentry_sdk.trace` (transaction mode)/`@sentry.sdk.traces.trace` (stream mode) decorator **after** the `@staticmethod` or `@classmethod` decorator (i.e., **closer** to the function definition). Otherwise, your function will break! This applies in both transaction mode and stream mode.
 
 </Alert>
 
@@ -182,11 +186,11 @@ def eat_pizza(pizza):
             span.finish()
 ```
 
-When you create your span manually, make sure to call `span.finish()` after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
+When you create your span manually, make sure to call `span.finish()` (transaction mode) or `span.end()` (stream mode) after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
 
 ## Nested Spans
 
-Spans can be nested to form a span tree. If you'd like to learn more, read our [distributed tracing](/product/sentry-basics/tracing/distributed-tracing/) documentation.
+Spans can be nested to form a span tree. If you'd like to learn more, read our [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/) documentation.
 
 ### Using a Context Manager
 
@@ -272,15 +276,15 @@ def eat_slice(slice):
     # pass the parent span via `parent_span` to create a child span
     child_span = sentry_sdk.traces.start_span(name="Chew", parent_span=parent_span)
     chew()
-    child_span.finish()
+    child_span.end()
 
-    parent_span.finish()
+    parent_span.end()
 ```
 
 In transaction mode, the parameters of `start_span()` and `start_child()` are the same. See the [API reference](https://getsentry.github.io/sentry-python/api.html#sentry_sdk.api.start_span) for more details.
-In stream mode, however, there's no separate `start_child()` method. Instead, pass the parent span explicitly via `parent_span` when starting the child (as shown in the example above).
+In stream mode, however, there's no separate `start_child()` method. Instead, the span will become the child of the currently active span. Alternatively, you can pass the parent span explicitly via `parent_span` when starting the child (as shown in the example above).
 
-When you create your span manually, make sure to call `span.finish()` after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
+When you create your span manually, make sure to call `span.finish()` (transaction mode) or `span.end()` (stream mode) after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
 
 ### Sibling Spans
 
@@ -323,33 +327,33 @@ When tracing a static or class method, you **must** add the decorator **after** 
 </Alert>
 
 ```python {tabTitle:Transaction Mode (Default)}
- import sentry_sdk
+import sentry_sdk
 
- @sentry_sdk.trace(op="my_op", name="Paul", attributes={"x": True})
- def my_function(i):
-     ...
+@sentry_sdk.trace(op="my_op", name="Paul", attributes={"x": True})
+def my_function(i):
+    ...
 
- @sentry_sdk.trace
- def root_function():
-     for i in range(3):
-         my_function(i)
+@sentry_sdk.trace
+def root_function():
+    for i in range(3):
+        my_function(i)
 
- root_function()
+root_function()
 ```
 
 ```python {tabTitle:Stream Mode}
 import sentry_sdk
 
- @sentry_sdk.traces.trace(name="Paul", attributes={"sentry.op": "my_op", "x": True})
- def my_function(i):
-     ...
+@sentry_sdk.traces.trace(name="Paul", attributes={"sentry.op": "my_op", "x": True})
+def my_function(i):
+    ...
 
- @sentry_sdk.traces.trace
- def root_function():
-     for i in range(3):
-         my_function(i)
+@sentry_sdk.traces.trace
+def root_function():
+    for i in range(3):
+        my_function(i)
 
- root_function()
+root_function()
 ```
 
 The code above will customize the `my_function` spans like this:
