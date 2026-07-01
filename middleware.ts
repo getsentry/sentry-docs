@@ -2334,7 +2334,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/integrations/legacy-integrations/gitlab/',
-    to: '/product/integrations/source-code-mgmt/gitlab/',
+    to: '/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/workflow/integrations/clubhouse/',
