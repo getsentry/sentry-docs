@@ -104,3 +104,28 @@ It also allows you to sample different transactions at different rates.
 If the transaction currently being processed has a parent transaction (from an upstream service calling this service), the parent (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
 
 Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
+
+### Filtering Spans in Stream Mode
+
+<Alert level="warning">
+
+The options above apply to transactions. In stream mode there are no transactions — use `ignoreSpans` to drop spans and `beforeSendSpan` to modify them. See <PlatformLink to="/tracing/new-spans/#extended-configuration-optional">New Spans</PlatformLink> for details.
+
+</Alert>
+
+To drop spans whose name matches a rule, use `ignoreSpans`:
+
+```dart
+options.ignoreSpans = [
+  IgnoreSpanRule.nameEquals('health-check'),
+  IgnoreSpanRule.nameStartsWith('internal.'),
+];
+```
+
+To modify (but not drop) span data before it's sent, use `beforeSendSpan`. It runs when each span ends and can't drop spans:
+
+```dart
+options.beforeSendSpan = (span) {
+  span.removeAttribute('http.request.body');
+};
+```
