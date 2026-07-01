@@ -38,20 +38,16 @@ graph LR
     kafka --> sentry-post-process-forwarder --> kafka
     sentry-post-process-forwarder -- Preventing concurrent processing of the same event --> redis
 
-    vroom-blob-storage@{ shape: cyl, label: "Blob Storage\n(default is filesystem)" }
-
-    kafka -- Profiling event processing --> vroom -- Republish to Kafka to be consumed by Snuba --> kafka
-    vroom --> snuba-api
-    vroom -- Store profiles data --> vroom-blob-storage
     kafka -- Fetch tasks --> taskbroker
     taskbroker -- Process and analyze mobile app --> launchpad
     taskworker -- Fetch tasks to execute --> taskbroker
     taskworker -- As a buffer and distributed lock --> redis
     taskworker --> postgres
     taskworker -- Alert & digest emails --> smtp
-    
+    taskworker -- Generate server-side charts --> chartcuterie
+
     launchpad -- Stores snapshot files --> objectstore
-    
+
     upstream-blob-storage@{ shape: win-pane, label: "Upstream Blob Storage"}
     objectstore --> upstream-blob-storage
 
@@ -69,6 +65,7 @@ graph LR
     web -- Queries on event (errors, spans, etc) data (to snuba-api) --> snuba-api
     web -- Avatars, attachments, etc --> sentry-blob-storage
     web -- Sending test emails --> smtp
+    web -- Render profiling call trees --> vroom
   end
 
   subgraph ingestion [Event Ingestion]
