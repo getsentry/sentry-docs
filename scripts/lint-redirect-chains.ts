@@ -140,13 +140,16 @@ function detectRedirectChains(
 
     for (const {file, redirects} of fileSources) {
       for (const r of redirects) {
-        // Use the unified map to check if this redirect's destination
-        // chains into another redirect from either file
+        // Check if this entry's own destination chains into another redirect
         if (redirectMap.has(r.destination)) {
-          const chain = walkChain(r.source, redirectMap);
-          // Use resolveToFinal for the correct final destination,
-          // since walkChain caps at maxDepth for display purposes
-          const finalDest = resolveToFinal(r.source, redirectMap);
+          // Walk from the entry's own destination (not source) to build a
+          // consistent chain: source -> currentDest -> ... -> finalDest.
+          // This avoids mismatches when the same source exists in both files
+          // with different destinations (the unified map would use the other
+          // file's destination for walkChain(r.source, ...) ).
+          const tailChain = walkChain(r.destination, redirectMap);
+          const chain = [r.source, ...tailChain];
+          const finalDest = resolveToFinal(r.destination, redirectMap);
 
           // Skip self-referencing cycles
           if (finalDest === r.source || chain.some(s => s.includes('(CYCLE)'))) {

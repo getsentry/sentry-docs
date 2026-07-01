@@ -140,8 +140,20 @@ describe('detectRedirectChains', () => {
     // Both entries for /dup/ should be reported with correct file attribution
     const dupChains = chains.filter(c => c.source === '/dup/');
     expect(dupChains).toHaveLength(2);
-    expect(dupChains.find(c => c.file === 'redirects.js')).toBeDefined();
-    expect(dupChains.find(c => c.file === 'middleware.ts')).toBeDefined();
+
+    const jsChain = dupChains.find(c => c.file === 'redirects.js');
+    const mwChain = dupChains.find(c => c.file === 'middleware.ts');
+    expect(jsChain).toBeDefined();
+    expect(mwChain).toBeDefined();
+
+    // Each entry's chain should be consistent with its own currentDest
+    expect(jsChain!.currentDest).toBe('/middle/');
+    expect(jsChain!.chain[1]).toBe('/middle/'); // chain starts source -> currentDest
+    expect(jsChain!.finalDest).toBe('/final/');
+
+    expect(mwChain!.currentDest).toBe('/other-middle/');
+    expect(mwChain!.chain[1]).toBe('/other-middle/');
+    expect(mwChain!.finalDest).toBe('/other-final/');
   });
 
   it('should return empty array when no chains exist', () => {
