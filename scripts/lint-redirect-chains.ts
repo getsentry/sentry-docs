@@ -31,6 +31,7 @@ interface RedirectChain {
 interface ContentLinkIssue {
   filePath: string;
   finalDest: string;
+  fragment: string;
   isDeveloperDocs: boolean;
   line: number;
   linkPath: string;
@@ -104,6 +105,9 @@ function resolveToFinal(source: string, map: Map<string, string>): string {
 
 /**
  * Phase 1: Detect redirect-to-redirect chains
+ *
+ * Processes each file's redirects separately to correctly attribute chains
+ * and handle cases where the same source exists in both files.
  */
 function detectRedirectChains(
   jsRedirects: {developerDocsRedirects: Redirect[]; userDocsRedirects: Redirect[]},
@@ -120,49 +124,52 @@ function detectRedirectChains(
       ? mwRedirects.developerDocsRedirects
       : mwRedirects.userDocsRedirects;
 
-    // Build unified map for chain detection
+    // Build unified map for chain resolution (last entry wins, matching runtime)
     const allRedirects = [...jsArr, ...mwArr];
     const redirectMap = new Map<string, string>();
     for (const r of allRedirects) {
       redirectMap.set(r.source, r.destination);
     }
 
-    // Track which file each source comes from
-    const jsSourceSet = new Set(jsArr.map(r => r.source));
+    // Process each file's redirects separately to get correct file attribution.
+    // Use the unified map for chain walking so cross-file chains are detected.
+    const fileSources: Array<{file: string; redirects: Redirect[]}> = [
+      {file: 'redirects.js', redirects: jsArr},
+      {file: 'middleware.ts', redirects: mwArr},
+    ];
 
-    // Find chains
-    const seenSources = new Set<string>();
-    for (const r of allRedirects) {
-      if (seenSources.has(r.source)) {
-        continue;
-      }
-      seenSources.add(r.source);
+    for (const {file, redirects} of fileSources) {
+      for (const r of redirects) {
+        // Use the unified map to check if this redirect's destination
+        // chains into another redirect from either file
+        if (redirectMap.has(r.destination)) {
+          const chain = walkChain(r.source, redirectMap);
+          // Use resolveToFinal for the correct final destination,
+          // since walkChain caps at maxDepth for display purposes
+          const finalDest = resolveToFinal(r.source, redirectMap);
 
-      if (redirectMap.has(r.destination)) {
-        const chain = walkChain(r.source, redirectMap);
-        const finalDest = chain[chain.length - 1];
+          // Skip self-referencing cycles
+          if (finalDest === r.source || chain.some(s => s.includes('(CYCLE)'))) {
+            chains.push({
+              source: r.source,
+              currentDest: r.destination,
+              finalDest: '(CYCLE DETECTED)',
+              chain,
+              file,
+              isDeveloperDocs: isDevDocs,
+            });
+            continue;
+          }
 
-        // Skip self-referencing cycles
-        if (finalDest === r.source || finalDest.includes('(CYCLE)')) {
           chains.push({
             source: r.source,
             currentDest: r.destination,
-            finalDest: '(CYCLE DETECTED)',
+            finalDest,
             chain,
-            file: jsSourceSet.has(r.source) ? 'redirects.js' : 'middleware.ts',
+            file,
             isDeveloperDocs: isDevDocs,
           });
-          continue;
         }
-
-        chains.push({
-          source: r.source,
-          currentDest: r.destination,
-          finalDest,
-          chain,
-          file: jsSourceSet.has(r.source) ? 'redirects.js' : 'middleware.ts',
-          isDeveloperDocs: isDevDocs,
-        });
       }
     }
   }
@@ -197,11 +204,11 @@ function detectContentLinkIssues(
     'platform-includes',
   ]);
 
-  // Regex patterns for extracting internal links
+  // Regex patterns for extracting internal links (capturing fragment separately)
   // Markdown: [text](/path/) or [text](/path/#anchor)
-  const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
+  const markdownLinkRegex = /\]\((\/[^)#\s]+?)(#[^)]+)?\)/g;
   // JSX: href="/path/", to="/path/", or url="/path/"
-  const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(?:#[^"]+)?"/g;
+  const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(#[^"]+)?"/g;
 
   const issues: ContentLinkIssue[] = [];
 
@@ -221,11 +228,12 @@ function detectContentLinkIssues(
         regex.lastIndex = 0;
         let match;
         while ((match = regex.exec(line)) !== null) {
-          // For jsxLinkRegex, capture group 1 is the attribute name, group 2 is the path
-          // For markdownLinkRegex, capture group 1 is the path
+          // For jsxLinkRegex: group 1 = attr name, group 2 = path, group 3 = fragment
+          // For markdownLinkRegex: group 1 = path, group 2 = fragment
           const isJsxMatch = regex === jsxLinkRegex;
           const attrName = isJsxMatch ? match[1] : null;
           let linkPath = isJsxMatch ? match[2] : match[1];
+          const fragment = (isJsxMatch ? match[3] : match[2]) || '';
 
           // Skip PlatformLink to= attributes since PlatformLink prepends
           // the platform base URL, making them platform-relative paths
@@ -248,8 +256,9 @@ function detectContentLinkIssues(
             issues.push({
               filePath,
               line: i + 1,
-              linkPath: matchedPath,
-              finalDest,
+              linkPath: matchedPath + fragment,
+              finalDest: finalDest + fragment,
+              fragment,
               isDeveloperDocs: isDevDocsFile,
             });
           }

@@ -122,6 +122,28 @@ describe('detectRedirectChains', () => {
     expect(chains[0].file).toBe('middleware.ts');
   });
 
+  it('should report duplicate sources from both files separately', () => {
+    const jsRedirects = {
+      developerDocsRedirects: [] as Array<{destination: string; source: string}>,
+      userDocsRedirects: [{source: '/dup/', destination: '/middle/'}],
+    };
+    const mwRedirects = {
+      developerDocsRedirects: [] as Array<{destination: string; source: string}>,
+      userDocsRedirects: [
+        {source: '/dup/', destination: '/other-middle/'},
+        {source: '/middle/', destination: '/final/'},
+        {source: '/other-middle/', destination: '/other-final/'},
+      ],
+    };
+
+    const chains = detectRedirectChains(jsRedirects, mwRedirects);
+    // Both entries for /dup/ should be reported with correct file attribution
+    const dupChains = chains.filter(c => c.source === '/dup/');
+    expect(dupChains).toHaveLength(2);
+    expect(dupChains.find(c => c.file === 'redirects.js')).toBeDefined();
+    expect(dupChains.find(c => c.file === 'middleware.ts')).toBeDefined();
+  });
+
   it('should return empty array when no chains exist', () => {
     const jsRedirects = {
       developerDocsRedirects: [] as Array<{destination: string; source: string}>,
@@ -214,7 +236,7 @@ Check out the [old page](/old/path/) for more info.
     fs.writeFileSync(path.join(tempDir, 'docs', 'test.mdx'), mdxContent);
 
     // Test the link detection logic by checking the regex patterns directly
-    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
+    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(#[^)]+)?\)/g;
     const matches = [...mdxContent.matchAll(markdownLinkRegex)];
     expect(matches).toHaveLength(1);
     expect(matches[0][1]).toBe('/old/path/');
@@ -223,25 +245,26 @@ Check out the [old page](/old/path/) for more info.
   it('should detect JSX links pointing to redirect sources', () => {
     const mdxContent = `<LinkCard href="/old/path/" title="Test" />`;
 
-    const jsxLinkRegex = /(?:href|to|url)="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(#[^"]+)?"/g;
     const matches = [...mdxContent.matchAll(jsxLinkRegex)];
     expect(matches).toHaveLength(1);
-    expect(matches[0][1]).toBe('/old/path/');
+    expect(matches[0][2]).toBe('/old/path/');
   });
 
-  it('should strip anchors from links', () => {
+  it('should extract path and fragment separately from anchored links', () => {
     const mdxContent = `[link](/old/path/#section)`;
 
-    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
+    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(#[^)]+)?\)/g;
     const matches = [...mdxContent.matchAll(markdownLinkRegex)];
     expect(matches).toHaveLength(1);
     expect(matches[0][1]).toBe('/old/path/');
+    expect(matches[0][2]).toBe('#section');
   });
 
   it('should skip external links', () => {
     const mdxContent = `[link](https://example.com/path/)`;
 
-    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
+    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(#[^)]+)?\)/g;
     const matches = [...mdxContent.matchAll(markdownLinkRegex)];
     expect(matches).toHaveLength(0);
   });
@@ -249,7 +272,7 @@ Check out the [old page](/old/path/) for more info.
   it('should skip hash-only links', () => {
     const mdxContent = `[link](#section)`;
 
-    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
+    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(#[^)]+)?\)/g;
     const matches = [...mdxContent.matchAll(markdownLinkRegex)];
     expect(matches).toHaveLength(0);
   });
@@ -257,7 +280,7 @@ Check out the [old page](/old/path/) for more info.
   it('should handle links without trailing slashes', () => {
     const mdxContent = `[link](/old/path)`;
 
-    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
+    const markdownLinkRegex = /\]\((\/[^)#\s]+?)(#[^)]+)?\)/g;
     const matches = [...mdxContent.matchAll(markdownLinkRegex)];
     expect(matches).toHaveLength(1);
     expect(matches[0][1]).toBe('/old/path');
@@ -273,7 +296,7 @@ Check out the [old page](/old/path/) for more info.
     expect(isPlatformLinkLine).toBe(true);
 
     // The to= attribute IS matched by the regex...
-    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(#[^"]+)?"/g;
     const matches = [...line.matchAll(jsxLinkRegex)];
     expect(matches).toHaveLength(1);
     expect(matches[0][1]).toBe('to'); // attribute name
@@ -293,7 +316,7 @@ Check out the [old page](/old/path/) for more info.
     const isPlatformLinkLine = line.includes('<PlatformLink');
     expect(isPlatformLinkLine).toBe(false);
 
-    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(#[^"]+)?"/g;
     const matches = [...line.matchAll(jsxLinkRegex)];
     expect(matches).toHaveLength(1);
     expect(matches[0][2]).toBe('/old/feature/');
