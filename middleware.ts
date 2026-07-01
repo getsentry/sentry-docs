@@ -2578,27 +2578,27 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/profiling/',
-    to: '/product/explore/profiling/',
+    to: '/product/profiling/',
   },
   {
     from: '/profiling/performance-overhead/',
-    to: '/product/explore/profiling/performance-overhead/',
+    to: '/product/profiling/performance-overhead/',
   },
   {
     from: '/profiling/setup/',
-    to: '/product/explore/profiling/getting-started/',
+    to: '/product/profiling/getting-started/',
   },
   {
     from: '/profiling/getting-started/',
-    to: '/product/explore/profiling/getting-started/',
+    to: '/product/profiling/getting-started/',
   },
   {
     from: '/profiling/mobile-app-profiling/',
-    to: '/product/explore/profiling/mobile-app-profiling/',
+    to: '/product/profiling/mobile-app-profiling/',
   },
   {
     from: '/profiling/mobile-app-profiling/metrics/',
-    to: '/product/explore/profiling/mobile-app-profiling/metrics/',
+    to: '/product/profiling/mobile-app-profiling/metrics/',
   },
 
   {
@@ -2663,39 +2663,39 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/explore/discover-queries/uncover-trends/',
+    to: '/product/discover-queries/uncover-trends/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/explore/discover-queries/uncover-trends/',
+    to: '/product/discover-queries/uncover-trends/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/explore/discover-queries/query-builder/',
+    to: '/product/discover-queries/query-builder/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/explore/discover-queries/query-builder/',
+    to: '/product/discover-queries/query-builder/',
   },
   {
     from: '/product/crons/alerts/',
@@ -3291,10 +3291,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/dotnet/',
   },
   {
-    from: '/product/session-replay/protecting-user-privacy/',
-    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
-  },
-  {
     from: '/platforms/javascript/guides/react/features/component-tracking/',
     to: '/platforms/javascript/guides/react/features/component-names/',
   },
@@ -3474,22 +3470,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/sentry-mcp/',
     to: 'https://mcp.sentry.dev',
   },
-  {
-    from: '/product/metrics/',
-    to: '/product/explore/metrics/',
-  },
-  {
-    from: '/product/profiling/',
-    to: '/product/explore/profiling/',
-  },
-  {
-    from: '/product/discover-queries/',
-    to: '/product/explore/discover-queries/',
-  },
-  {
-    from: '/product/session-replay/',
-    to: '/product/explore/session-replay/',
-  },
+  // Removed: /product/metrics/, /product/profiling/, /product/discover-queries/,
+  // /product/session-replay/ are now canonical paths (previously redirected to /product/explore/*)
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
@@ -3521,10 +3503,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
-  },
-  {
-    from: '/product/session-replay/protecting-user-privacy/',
-    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/product/data-management-settings/restrict-display/',
@@ -3583,7 +3561,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/dashboards/sentry-dashboards/backend/queues/',
   },
   {
-    from: '/product/explore/session-replay/protecting-user-privacy/',
+    from: '/product/session-replay/protecting-user-privacy/',
     to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
@@ -3627,8 +3605,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/concepts/data-management/event-grouping/',
   },
   {
-    from: '/product/explore/session-replay/performance-overhead/',
-    to: '/product/explore/session-replay/web/performance-overhead/',
+    from: '/product/session-replay/performance-overhead/',
+    to: '/product/session-replay/web/performance-overhead/',
   },
   {
     from: '/organization/integrations/project-mgmt/jira/',
@@ -3639,31 +3617,31 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/integrations/source-code-mgmt/',
   },
   {
-    from: '/product/explore/session-replay/getting-started/',
-    to: '/product/explore/session-replay/',
+    from: '/product/session-replay/getting-started/',
+    to: '/product/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/web/getting-started/',
-    to: '/product/explore/session-replay/web/',
+    from: '/product/session-replay/web/getting-started/',
+    to: '/product/session-replay/web/',
   },
   {
-    from: '/product/explore/session-replay/web/replay-page-and-filters/',
-    to: '/product/explore/session-replay/replay-page-and-filters/',
+    from: '/product/session-replay/web/replay-page-and-filters/',
+    to: '/product/session-replay/replay-page-and-filters/',
   },
   {
-    from: '/product/explore/session-replay/web/replay-details/',
-    to: '/product/explore/session-replay/replay-details/',
+    from: '/product/session-replay/web/replay-details/',
+    to: '/product/session-replay/replay-details/',
   },
   {
-    from: '/product/explore/session-replay/hydration-errors/',
+    from: '/product/session-replay/hydration-errors/',
     to: '/product/issues/issue-details/replay-issues/hydration-error/',
   },
   {
-    from: '/product/explore/session-replay/rage-dead-clicks/',
+    from: '/product/session-replay/rage-dead-clicks/',
     to: '/product/issues/issue-details/replay-issues/rage-clicks/',
   },
   {
-    from: '/product/explore/session-replay/privacy/',
+    from: '/product/session-replay/privacy/',
     to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {

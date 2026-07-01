@@ -1646,21 +1646,47 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
+  // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
-    source: '/product/metrics/:path*',
-    destination: '/product/explore/metrics/:path*',
+    source: '/product/onboarding/',
+    destination: '/product/sentry-basics/',
   },
   {
-    source: '/product/profiling/:path*',
-    destination: '/product/explore/profiling/:path*',
+    source: '/product/onboarding/:path*',
+    destination: '/product/sentry-basics/',
+  },
+  // Flatten Explore: redirect old /product/explore/* paths to new /product/* paths
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/product/metrics/:path*',
   },
   {
-    source: '/product/discover-queries/:path*',
-    destination: '/product/explore/discover-queries/:path*',
+    source: '/product/explore/profiling/:path*',
+    destination: '/product/profiling/:path*',
   },
   {
-    source: '/product/session-replay/:path*',
-    destination: '/product/explore/session-replay/:path*',
+    source: '/product/explore/discover-queries/:path*',
+    destination: '/product/discover-queries/:path*',
+  },
+  {
+    source: '/product/explore/session-replay/:path*',
+    destination: '/product/session-replay/:path*',
+  },
+  {
+    source: '/product/explore/trace-explorer/:path*',
+    destination: '/product/trace-explorer/:path*',
+  },
+  {
+    source: '/product/explore/logs/:path*',
+    destination: '/product/logs/:path*',
+  },
+  {
+    source: '/product/explore',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/platforms/javascript/best-practices/browser-extensions/',
@@ -2175,11 +2201,23 @@ const userDocsRedirects = [
   // Redirects for Trace Explorer
   {
     source: '/product/explore/traces',
-    destination: '/product/explore/trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/traces/',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/product/explore/new-trace-explorer',
-    destination: '/product/explore/trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/traces',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/organization/integrations/expo/',
@@ -2294,15 +2332,7 @@ const userDocsRedirects = [
     source: '/product/monitors-and-alerts/alerts/best-practices/',
     destination: '/product/monitors-and-alerts/alerts/',
   },
-  // DOCS-2550: /product/logs/ moved under /product/explore/
-  {
-    source: '/product/logs/',
-    destination: '/product/explore/logs/',
-  },
-  {
-    source: '/product/logs/:path*',
-    destination: '/product/explore/logs/:path*',
-  },
+  // DOCS-2550: /product/logs/ redirects now handled in the flatten-explore block above
   // DOCS-2227: retention-priorities page removed; dynamic-sampling is the closest equivalent
   {
     source: '/product/performance/retention-priorities/',

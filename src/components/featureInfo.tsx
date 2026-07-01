@@ -63,7 +63,7 @@ const FEATURE_DATA: Record<
   },
   sessionReplay: {
     title: 'Session Replay',
-    link: '/product/explore/session-replay/web',
+    link: '/product/session-replay/web',
     learnMore:
       "Get to the root cause of an issue faster by viewing a video-like reproduction of what was happening in the user's browser before, during, and after the problem.",
     findInSentry: (
@@ -79,7 +79,7 @@ const FEATURE_DATA: Record<
   },
   logs: {
     title: 'Logs',
-    link: '/product/explore/logs',
+    link: '/product/logs',
     learnMore:
       "Centralize and analyze your application logs to correlate them with errors and performance issues. Search, filter, and visualize log data to understand what's happening in your applications.",
     findInSentry: (
@@ -90,13 +90,13 @@ const FEATURE_DATA: Record<
         </ExternalLink>{' '}
         page and filter by service, environment, or search keywords to view log entries
         from your application. For an interactive UI walkthrough, click{' '}
-        <a href="/product/explore/logs/#overview">here</a>.
+        <a href="/product/logs/#overview">here</a>.
       </Fragment>
     ),
   },
   profiling: {
     title: 'Profiling',
-    link: '/product/explore/profiling/',
+    link: '/product/profiling/',
     learnMore:
       'Gain deeper insight than traditional tracing without custom instrumentation, letting you discover slow-to-execute or resource-intensive functions in your app.',
     findInSentry: (
@@ -106,8 +106,7 @@ const FEATURE_DATA: Record<
           <strong>Profiles</strong>
         </ExternalLink>{' '}
         page, select a transaction, and then a profile ID to view its flame graph. For
-        more information, click{' '}
-        <a href="/product/explore/profiling/profile-details/">here</a>.
+        more information, click <a href="/product/profiling/profile-details/">here</a>.
       </Fragment>
     ),
   },
@@ -129,7 +128,7 @@ const FEATURE_DATA: Record<
   },
   metrics: {
     title: 'Application Metrics',
-    link: '/product/explore/metrics',
+    link: '/product/metrics',
     learnMore:
       "Track and analyze custom application metrics, such as response times and database query durations, to understand trends and patterns in your application's performance and behavior over time.",
     findInSentry: (
@@ -139,7 +138,7 @@ const FEATURE_DATA: Record<
           <strong>Application Metrics</strong>
         </ExternalLink>{' '}
         page to view and analyze your metrics. For more details, see this{' '}
-        <a href="/product/explore/metrics/#overview">interactive walkthrough</a>.
+        <a href="/product/metrics/#overview">interactive walkthrough</a>.
       </Fragment>
     ),
   },
