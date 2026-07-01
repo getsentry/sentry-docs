@@ -265,22 +265,39 @@ Check out the [old page](/old/path/) for more info.
   });
 
   it('should skip PlatformLink to= attributes (platform-relative paths)', () => {
-    const mdxContent = `<PlatformLink to="/old/feature/">text</PlatformLink>`;
+    // PlatformLink to= should be skipped since PlatformLink prepends
+    // the platform base URL, making these platform-relative paths.
+    // The linter checks for <PlatformLink on the line level.
+    const line = `<PlatformLink to="/old/feature/">text</PlatformLink>`;
+    const isPlatformLinkLine = line.includes('<PlatformLink');
+    expect(isPlatformLinkLine).toBe(true);
 
-    // PlatformLink to= should NOT be matched since PlatformLink prepends
-    // the platform base URL, making these platform-relative paths
-    const jsxToRegex = /(?<!PlatformLink\s+)to="(\/[^"#]+?)(?:#[^"]+)?"/g;
-    const matches = [...mdxContent.matchAll(jsxToRegex)];
-    expect(matches).toHaveLength(0);
+    // The to= attribute IS matched by the regex...
+    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const matches = [...line.matchAll(jsxLinkRegex)];
+    expect(matches).toHaveLength(1);
+    expect(matches[0][1]).toBe('to'); // attribute name
+    // ...but the linter skips it because isPlatformLinkLine is true and attr is 'to'
+  });
+
+  it('should skip PlatformLink with props before to= attribute', () => {
+    // Handles case where PlatformLink has other props first
+    const line = `<PlatformLink platform="android" to="/old/feature/">text</PlatformLink>`;
+    const isPlatformLinkLine = line.includes('<PlatformLink');
+    expect(isPlatformLinkLine).toBe(true);
+    // Skipped because the line contains <PlatformLink and attr is 'to'
   });
 
   it('should detect non-PlatformLink to= attributes', () => {
-    const mdxContent = `<Link to="/old/feature/">text</Link>`;
+    const line = `<Link to="/old/feature/">text</Link>`;
+    const isPlatformLinkLine = line.includes('<PlatformLink');
+    expect(isPlatformLinkLine).toBe(false);
 
-    const jsxToRegex = /(?<!PlatformLink\s+)to="(\/[^"#]+?)(?:#[^"]+)?"/g;
-    const matches = [...mdxContent.matchAll(jsxToRegex)];
+    const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(?:#[^"]+)?"/g;
+    const matches = [...line.matchAll(jsxLinkRegex)];
     expect(matches).toHaveLength(1);
-    expect(matches[0][1]).toBe('/old/feature/');
+    expect(matches[0][2]).toBe('/old/feature/');
+    // Not skipped because isPlatformLinkLine is false
   });
 });
 

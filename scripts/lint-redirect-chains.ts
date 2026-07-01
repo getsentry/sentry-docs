@@ -200,11 +200,8 @@ function detectContentLinkIssues(
   // Regex patterns for extracting internal links
   // Markdown: [text](/path/) or [text](/path/#anchor)
   const markdownLinkRegex = /\]\((\/[^)#\s]+?)(?:#[^)]+)?\)/g;
-  // JSX: href="/path/" or url="/path/" (but NOT PlatformLink to="/path/" since
-  // PlatformLink prepends the platform base URL, making them platform-relative)
-  const jsxHrefUrlRegex = /(?:href|url)="(\/[^"#]+?)(?:#[^"]+)?"/g;
-  // For 'to' attributes, only match if NOT preceded by PlatformLink
-  const jsxToRegex = /(?<!PlatformLink\s+)to="(\/[^"#]+?)(?:#[^"]+)?"/g;
+  // JSX: href="/path/", to="/path/", or url="/path/"
+  const jsxLinkRegex = /((?:href|to|url))="(\/[^"#]+?)(?:#[^"]+)?"/g;
 
   const issues: ContentLinkIssue[] = [];
 
@@ -217,11 +214,24 @@ function detectContentLinkIssues(
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      for (const regex of [markdownLinkRegex, jsxHrefUrlRegex, jsxToRegex]) {
+      // Check if this line contains a PlatformLink tag (platform-relative paths)
+      const isPlatformLinkLine = line.includes('<PlatformLink');
+
+      for (const regex of [markdownLinkRegex, jsxLinkRegex]) {
         regex.lastIndex = 0;
         let match;
         while ((match = regex.exec(line)) !== null) {
-          let linkPath = match[1];
+          // For jsxLinkRegex, capture group 1 is the attribute name, group 2 is the path
+          // For markdownLinkRegex, capture group 1 is the path
+          const isJsxMatch = regex === jsxLinkRegex;
+          const attrName = isJsxMatch ? match[1] : null;
+          let linkPath = isJsxMatch ? match[2] : match[1];
+
+          // Skip PlatformLink to= attributes since PlatformLink prepends
+          // the platform base URL, making them platform-relative paths
+          if (isPlatformLinkLine && attrName === 'to') {
+            continue;
+          }
           // Normalize: ensure trailing slash for lookup
           const normalizedPath = linkPath.endsWith('/') ? linkPath : linkPath + '/';
 
