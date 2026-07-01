@@ -3136,7 +3136,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
   },
   {
     from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
@@ -3447,30 +3447,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
-  },
-  {
-    from: '/data-management/advanced-datascrubbing/',
-    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
-  },
-  {
-    from: '/platforms/javascript/guides/react/features/component-tracking/',
-    to: '/platforms/javascript/guides/react/features/component-names/',
-  },
-  {
-    from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
-  },
-  {
-    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
-    to: '/platforms/java/guides/spring/data-management/',
-  },
-  {
-    from: '/support/',
-    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/product/security-policy-reporting/',
@@ -3789,10 +3765,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/backend/application-domains/database-migrations/',
   },
   {
-    from: '/testing/',
-    to: '/development-infrastructure/testing/',
-  },
-  {
     from: '/analytics/',
     to: '/development-infrastructure/analytics/',
   },
@@ -3827,10 +3799,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/ab-testing/',
     to: '/backend/application-domains/ab-testing/',
-  },
-  {
-    from: '/options/',
-    to: '/application/options/',
   },
   {
     from: '/serializers/',
