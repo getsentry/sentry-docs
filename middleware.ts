@@ -370,7 +370,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/data-management-settings/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/product/data-management-settings/filtering/',
@@ -526,7 +526,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/react-native/codepush/',
-    to: '/platforms/react-native/manual-setup/codepush/',
+    to: '/platforms/react-native/sourcemaps/uploading/codepush/',
   },
   {
     from: '/platforms/react-native/hermes/',
@@ -1518,11 +1518,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
   {
     from: '/error-reporting/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
   {
     from: '/platforms/javascript/troubleshooting/session-replay/',
@@ -2631,11 +2631,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/product/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/data-management-settings/attachment-datascrubbing/',
@@ -2952,15 +2952,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/sentry-seer/',
+    to: '/product/ai-in-sentry/seer/',
   },
   {
     from: '/product/issues/issue-details/ai-suggested-solution/',
-    to: '/product/issues/issue-details/sentry-seer/',
+    to: '/product/ai-in-sentry/seer/',
   },
   {
     from: '/product/issues/issue-details/sentry-ai/',
-    to: '/product/issues/issue-details/sentry-seer/',
+    to: '/product/ai-in-sentry/seer/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',
@@ -3492,11 +3492,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
-    to: '/concepts/data-management/advanced-datascrubbing/',
+    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/data-management/advanced-datascrubbing/',
-    to: '/concepts/data-management/advanced-datascrubbing/',
+    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/platforms/javascript/guides/react/features/component-tracking/',
@@ -3520,7 +3520,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
   {
     from: '/product/session-replay/protecting-user-privacy/',

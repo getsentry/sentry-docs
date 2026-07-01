@@ -1377,7 +1377,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/:guide/integrations/plugin/',
-    destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/',
   },
   {
     source: '/platforms/javascript/configuration/environments/',
