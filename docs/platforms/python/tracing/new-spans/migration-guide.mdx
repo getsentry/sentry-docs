@@ -1,0 +1,238 @@
+---
+title: Migrate to Stream Mode
+sidebar_order: 10
+description: "Learn how to migrate your custom instrumentation from transaction mode to stream mode."
+---
+
+Stream mode requires the new Span API. If you use custom instrumentation (creating spans manually, setting span data, or filtering spans) you'll need to update that code before you can switch to stream mode. This guide walks through the changes.
+
+For an introduction to stream mode itself, see <PlatformLink to="/tracing/new-spans/">New Spans</PlatformLink>.
+
+## Enable Stream Mode
+
+Add `trace_lifecycle` to the `_experiments` option when initializing the SDK:
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
++   _experiments={
++       "trace_lifecycle": "stream",
++   },
+)
+```
+
+## Span Creation
+
+Replace `start_span`, `start_transaction`, and `start_child` with `sentry_sdk.traces.start_span()`. Whether the resulting span is a service span, a child span, or a sibling depends on the `parent_span` argument and what's currently active.
+
+```python diff
+import sentry_sdk
+
+# Starting a span
+- with sentry_sdk.start_span(op="http.client", description="GET /api/users") as span:
++ with sentry_sdk.traces.start_span(
++     name="GET /api/users",
++     attributes={"sentry.op": "http.client"},
++ ) as span:
+      ...
+
+# Starting what used to be a transaction: pass parent_span=None to force a service span
+- with sentry_sdk.start_transaction(name="flow.checkout") as transaction:
++ with sentry_sdk.traces.start_span(name="flow.checkout", parent_span=None) as span:
+      ...
+
+# Starting a child span: just start a span while the parent is active
+- with parent.start_child(op="db", description="SELECT") as child:
++ with sentry_sdk.traces.start_span(name="SELECT", attributes={"sentry.op": "db"}):
+      ...
+```
+
+A few argument changes come along with this:
+
+- `description` no longer exists — use `name` instead.
+- `op` is no longer a dedicated argument — set it as the `sentry.op` attribute instead.
+
+If you use the `@trace` decorator, only the import changes:
+
+```python diff
+- from sentry_sdk import trace
++ from sentry_sdk.traces import trace
+
+@trace
+def checkout():
+    ...
+```
+
+If your code imports `Span` or `Transaction` directly, for example for type annotations, replace both with `StreamedSpan`:
+
+```python diff
+- from sentry_sdk.tracing import Span, Transaction
++ from sentry_sdk.traces import StreamedSpan
+
+- def process(span: Span) -> None:
++ def process(span: StreamedSpan) -> None:
+      ...
+```
+
+## Span Data
+
+In stream mode, spans have no contexts, data, or tags. Instead, everything is an attribute.
+Replace `set_data()`, `set_tag()`, and `set_context()` with `set_attribute()` or `set_attributes()`:
+
+```python diff
+- span.set_data("flow.step", "submit_payment")
+- span.set_tag("http.status_code", 201)
++ span.set_attributes({
++     "flow.step": "submit_payment",
++     "http.response.status_code": 201,
++ })
+```
+
+Unlike the old methods, `set_attribute` only accepts primitive types (`str`, `int`, `float`, `bool`, or arrays of these). `None` isn't supported either. Flatten dictionaries into separate attributes, and stringify anything that can't be flattened:
+
+```python diff
+- span.set_data("request", {"method": "POST", "path": "/api/checkout"})
++ span.set_attributes({
++     "request.method": "POST",
++     "request.path": "/api/checkout",
++ })
+```
+
+Tags set on the scope with `sentry_sdk.set_tag()` aren't applied to spans in stream mode. Use `sentry_sdk.set_attribute()` to apply data to spans:
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_tag("region", "Europe")       # applied to errors and other tag-supporting telemetry
+sentry_sdk.set_attribute("region", "Europe")  # applied to spans, logs, metrics
+```
+
+## Accessing the Current Span
+
+A few ways of referencing the current span or transaction change in stream mode:
+
+```python diff
+import sentry_sdk
+
+# Getting the current span
+- span = sentry_sdk.get_current_span()
++ span = sentry_sdk.traces.get_current_span()
+
+# Getting the current span via the scope
+- scope = sentry_sdk.get_current_scope()
+- current_span = scope.span
++ current_span = sentry_sdk.traces.get_current_span()
+
+```
+
+If your code reads specific fields off the trace context, access them as direct properties instead of calling `get_trace_context()`, which no longer exists on streaming spans:
+
+```python diff
+- ctx = span.get_trace_context()
+- trace_id = ctx["trace_id"]
+- span_id = ctx["span_id"]
++ trace_id = span.trace_id
++ span_id = span.span_id
+```
+
+## Trace Propagation
+
+`sentry_sdk.traces.continue_trace()` replaces the legacy `continue_trace()`. It's no longer a context manager — it sets the propagation context, and the next span you start picks it up automatically:
+
+```python diff
+import sentry_sdk
+
+headers = {
+    "sentry-trace": "...",
+    "baggage": "...",
+}
+
+- with sentry_sdk.continue_trace(headers) as transaction:
+-     ...
++ sentry_sdk.traces.continue_trace(headers)
++ with sentry_sdk.traces.start_span(name="handle request"):
++     ...
+```
+
+## Span Status
+
+Status can only be `ok` (default) or `error` in stream mode:
+
+```python
+from sentry_sdk.traces import start_span
+
+with start_span(name="process") as span:
+    try:
+        ...
+    except Exception:
+        span.status = "error"
+```
+
+## Sampling
+
+If you use `traces_sample_rate`, no changes are needed.
+
+If you use a custom `traces_sampler`, the sampling context has a different structure in stream mode. Span details are available under `sampling_context["span_context"]`, which includes `name`, `trace_id`, `parent_span_id`, `parent_sampled`, and `attributes`:
+
+```python
+import sentry_sdk
+
+def traces_sampler(sampling_context):
+    if sampling_context["span_context"]["name"] in IGNORED_SPAN_NAMES:
+        return 0.0
+    return 1.0
+
+sentry_sdk.init(
+    traces_sampler=traces_sampler,
+    _experiments={"trace_lifecycle": "stream"},
+)
+```
+
+`custom_sampling_context` is no longer an argument to `start_span`. Set it on the scope instead, after `continue_trace` (which resets the propagation context) and before `start_span` (which is when sampling happens):
+
+```python diff
+import sentry_sdk
+
+- with sentry_sdk.start_span(
+-     name="handle request",
+-     custom_sampling_context={"asgi_scope": asgi_scope},
+- ):
+-     ...
++ sentry_sdk.Scope.set_custom_sampling_context({"asgi_scope": asgi_scope})
++ with sentry_sdk.traces.start_span(name="handle request"):
++     ...
+```
+
+## Filtering and Dropping Spans
+
+`before_send_transaction` has no effect in stream mode, since spans are sent individually rather than batched into a transaction. Replace it with `ignore_spans` (to drop spans) and `before_send_span` (to modify them), both configured under `_experiments`:
+
+```python diff
+import re
+import sentry_sdk
+
++ def my_span_processor(span, hint):
++     if span["attributes"].get("sentry.op") == "db.query":
++         span["name"] = "[filtered]"
++     return span
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+-   before_send_transaction=my_filter,
++   _experiments={
++       "trace_lifecycle": "stream",
++       "ignore_spans": [
++           "/health",
++           re.compile(r"^GET /api/v1/internal"),
++           {"attributes": {"service.id": "15def9a"}},
++       ],
++       "before_send_span": my_span_processor,
++   },
+)
+```
+
+Both `ignore_spans` and `before_send_span` only have access to the span name and attributes set at creation time — not attributes added later in the span's lifetime, like an HTTP status code set after the request completes. If your `before_send_transaction` logic depended on that kind of late-set data, it can't be replicated in stream mode. Consider server-side filtering with Sentry [inbound data filters](/concepts/data-management/filtering/) or [Relay](/product/relay/) rules instead.
