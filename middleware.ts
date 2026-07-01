@@ -3291,10 +3291,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/dotnet/',
   },
   {
-    from: '/product/session-replay/protecting-user-privacy/',
-    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
-  },
-  {
     from: '/platforms/javascript/guides/react/features/component-tracking/',
     to: '/platforms/javascript/guides/react/features/component-names/',
   },
@@ -3507,10 +3503,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
-  },
-  {
-    from: '/product/session-replay/protecting-user-privacy/',
-    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/product/data-management-settings/restrict-display/',
