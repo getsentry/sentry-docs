@@ -95,7 +95,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/miscellaneous/unified-api/tracing/:path*',
-    destination: '/sdk/performance/:path*',
+    destination: '/sdk/telemetry/traces/:path*',
   },
   {
     source: '/onpremise/:path*',
@@ -111,7 +111,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/api/:path*',
-    destination: '/application/api/:path*',
+    destination: '/backend/api/:path*',
   },
   // Context propagation consolidation (must be before the /sdk/performance/ wildcard)
   {
@@ -140,31 +140,31 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/',
-    destination: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/:path*',
-    destination: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
   {
     source: '/sdk/data-model/envelopes/',
-    destination: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
   },
   {
     source: '/sdk/data-model/envelope-items/',
-    destination: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     source: '/sdk/basics/:path*',
-    destination: '/sdk/foundations/overview/',
+    destination: '/sdk/foundations/',
   },
   {
     source: '/sdk/processes/basics/:path*',
-    destination: '/sdk/foundations/overview/',
+    destination: '/sdk/foundations/',
   },
   {
     source: '/sdk/data-handling/:path*',
@@ -208,27 +208,27 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/foundations/transport/envelopes/:path*',
+    destination: '/sdk/foundations/envelopes/:path*',
   },
   {
     source: '/sdk/foundations/data-model/envelopes/',
-    destination: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
   },
   {
     source: '/sdk/foundations/data-model/envelope-items/',
-    destination: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     source: '/sdk/foundations/data-model/event-payloads/',
-    destination: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/foundations/data-model/event-payloads/:path*',
-    destination: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
@@ -400,7 +400,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/application/ab-testing/',
-    destination: '/backend/ab-testing/',
+    destination: '/backend/application-domains/ab-testing/',
   },
   {
     source: '/application/api/:path*',
@@ -420,7 +420,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/application/grouping/',
-    destination: '/backend/grouping/',
+    destination: '/backend/application-domains/grouping/',
   },
   {
     source: '/application/issue-platform/',
@@ -428,11 +428,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/application/transaction-clustering/',
-    destination: '/backend/transaction-clustering/',
+    destination: '/backend/application-domains/transaction-clustering/',
   },
   {
     source: '/application/translations/',
-    destination: '/backend/translations/',
+    destination: '/backend/application-domains/translations/',
   },
   {
     source: '/application/pii/:path*',
@@ -440,23 +440,23 @@ const developerDocsRedirects = [
   },
   {
     source: '/backend/control-silo/',
-    destination: '/application/control-silo/',
+    destination: '/application-architecture/multi-region-deployment/control-silo/',
   },
   {
     source: '/backend/cross-region-replication/',
-    destination: '/application/cross-region-replication/',
+    destination: '/application-architecture/multi-region-deployment/cross-region-replication/',
   },
   {
     source: '/backend/cross-region-rpc/',
-    destination: '/application/cross-region-rpc/',
+    destination: '/application-architecture/multi-region-deployment/cross-region-rpc/',
   },
   {
     source: '/development/python-dependencies/',
-    destination: '/backend/python-dependencies/',
+    destination: '/development-infrastructure/python-dependencies/',
   },
   {
     source: '/development/docs/',
-    destination: '/development/documentation/',
+    destination: '/engineering-practices/documentation/',
   },
   {
     source: '/development/philosophy/',
@@ -464,43 +464,43 @@ const developerDocsRedirects = [
   },
   {
     source: '/development/database-migrations/',
-    destination: '/backend/database-migrations/',
+    destination: '/backend/application-domains/database-migrations/',
   },
   {
     source: '/services/metrics/',
-    destination: '/backend/metrics/',
+    destination: '/backend/application-domains/metrics/',
   },
   {
     source: '/services/nodestore/',
-    destination: '/backend/nodestore/',
+    destination: '/backend/application-domains/nodestore/',
   },
   {
     source: '/services/devservices/',
-    destination: '/development/devservices/',
+    destination: '/development-infrastructure/devservices/',
   },
   {
     source: '/services/queue/',
-    destination: '/backend/queue/',
+    destination: '/backend/application-domains/tasks/',
   },
   {
     source: '/services/quotas/',
-    destination: '/backend/quotas/',
+    destination: '/backend/application-domains/quotas/',
   },
   {
     source: '/services/tsdb/',
-    destination: '/services/tsdb/',
+    destination: '/backend/application-domains/tsdb/',
   },
   {
     source: '/services/ports/',
-    destination: '/development/environment/ports/',
+    destination: '/development-infrastructure/environment/ports/',
   },
   {
     source: '/services/buffers/',
-    destination: '/backend/buffers/',
+    destination: '/backend/application-domains/write-buffers/',
   },
   {
     source: '/services/digests/',
-    destination: '/backend/digests/',
+    destination: '/backend/application-domains/digests/',
   },
   {
     source: '/services/emails/',
@@ -1189,7 +1189,7 @@ const userDocsRedirects = [
   },
   {
     source: '/meta/:path*',
-    destination: '/product/security/:path*',
+    destination: '/security-legal-pii/security/:path*',
   },
   {
     source: '/:type(hosted|on-premise)/:path*',
@@ -1413,7 +1413,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/:platform/data-management/data-forwarding/',
-    destination: '/concepts/data-management/data-forwarding/',
+    destination: '/integrations/data-forwarding/',
   },
   {
     source: '/platforms/:platform/data-management/event-grouping/',
