@@ -3,11 +3,7 @@ import path from 'path';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {parseMiddlewareTs, parseRedirectsJs} from './check-redirects-on-rename';
-import {
-  detectRedirectChains,
-  resolveToFinal,
-  walkChain,
-} from './lint-redirect-chains';
+import {detectRedirectChains, resolveToFinal, walkChain} from './lint-redirect-chains';
 
 describe('walkChain', () => {
   it('should return just the source when no chain exists', () => {
@@ -112,15 +108,11 @@ describe('detectRedirectChains', () => {
   it('should detect cross-system chains (middleware -> redirects.js)', () => {
     const jsRedirects = {
       developerDocsRedirects: [] as Array<{destination: string; source: string}>,
-      userDocsRedirects: [
-        {source: '/middle/', destination: '/final/'},
-      ],
+      userDocsRedirects: [{source: '/middle/', destination: '/final/'}],
     };
     const mwRedirects = {
       developerDocsRedirects: [] as Array<{destination: string; source: string}>,
-      userDocsRedirects: [
-        {source: '/old/', destination: '/middle/'},
-      ],
+      userDocsRedirects: [{source: '/old/', destination: '/middle/'}],
     };
 
     const chains = detectRedirectChains(jsRedirects, mwRedirects);
@@ -149,9 +141,7 @@ describe('detectRedirectChains', () => {
 
   it('should handle self-redirect cycles', () => {
     const jsRedirects = {
-      developerDocsRedirects: [
-        {source: '/loop/', destination: '/loop/'},
-      ],
+      developerDocsRedirects: [{source: '/loop/', destination: '/loop/'}],
       userDocsRedirects: [] as Array<{destination: string; source: string}>,
     };
     const mwRedirects = {

@@ -179,10 +179,7 @@ function detectContentLinkIssues(
 ): ContentLinkIssue[] {
   // Build redirect maps
   const userRedirectMap = new Map<string, string>();
-  for (const r of [
-    ...jsRedirects.userDocsRedirects,
-    ...mwRedirects.userDocsRedirects,
-  ]) {
+  for (const r of [...jsRedirects.userDocsRedirects, ...mwRedirects.userDocsRedirects]) {
     userRedirectMap.set(r.source, r.destination);
   }
   const devRedirectMap = new Map<string, string>();
@@ -226,9 +223,7 @@ function detectContentLinkIssues(
         while ((match = regex.exec(line)) !== null) {
           let linkPath = match[1];
           // Normalize: ensure trailing slash for lookup
-          const normalizedPath = linkPath.endsWith('/')
-            ? linkPath
-            : linkPath + '/';
+          const normalizedPath = linkPath.endsWith('/') ? linkPath : linkPath + '/';
 
           // Check both with and without trailing slash, since some redirect
           // sources in redirects.js omit trailing slashes
@@ -274,9 +269,7 @@ if (require.main === module) {
     console.log(`\n❌ Found ${chains.length} redirect chain(s):\n`);
     for (const c of chains) {
       console.log(`  [${c.file}] ${c.chain.join(' -> ')}`);
-      console.log(
-        `    Fix: Change destination of "${c.source}" to "${c.finalDest}"`
-      );
+      console.log(`    Fix: Change destination of "${c.source}" to "${c.finalDest}"`);
     }
   } else {
     console.log('\n✅ No redirect chains found.');
