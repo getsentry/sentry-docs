@@ -124,11 +124,17 @@ function detectRedirectChains(
       ? mwRedirects.developerDocsRedirects
       : mwRedirects.userDocsRedirects;
 
-    // Build unified map for chain resolution (last entry wins, matching runtime)
+    // Build unified map for chain resolution (last entry wins, matching runtime).
+    // Store both with and without trailing slash so lookups catch mismatches.
     const allRedirects = [...jsArr, ...mwArr];
     const redirectMap = new Map<string, string>();
     for (const r of allRedirects) {
       redirectMap.set(r.source, r.destination);
+      // Also index the normalized form (with trailing slash) if different
+      const normalized = r.source.endsWith('/') ? r.source : r.source + '/';
+      if (normalized !== r.source) {
+        redirectMap.set(normalized, r.destination);
+      }
     }
 
     // Process each file's redirects separately to get correct file attribution.
@@ -140,16 +146,22 @@ function detectRedirectChains(
 
     for (const {file, redirects} of fileSources) {
       for (const r of redirects) {
-        // Check if this entry's own destination chains into another redirect
-        if (redirectMap.has(r.destination)) {
+        // Check if this entry's destination chains into another redirect,
+        // normalizing trailing slashes for the lookup
+        const dest = r.destination;
+        const destNormalized = dest.endsWith('/') ? dest : dest + '/';
+        const matchedDest = redirectMap.has(dest)
+          ? dest
+          : redirectMap.has(destNormalized)
+            ? destNormalized
+            : null;
+
+        if (matchedDest) {
           // Walk from the entry's own destination (not source) to build a
           // consistent chain: source -> currentDest -> ... -> finalDest.
-          // This avoids mismatches when the same source exists in both files
-          // with different destinations (the unified map would use the other
-          // file's destination for walkChain(r.source, ...) ).
-          const tailChain = walkChain(r.destination, redirectMap);
+          const tailChain = walkChain(matchedDest, redirectMap);
           const chain = [r.source, ...tailChain];
-          const finalDest = resolveToFinal(r.destination, redirectMap);
+          const finalDest = resolveToFinal(matchedDest, redirectMap);
 
           // Skip self-referencing cycles
           if (finalDest === r.source || chain.some(s => s.includes('(CYCLE)'))) {

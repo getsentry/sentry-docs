@@ -224,6 +224,25 @@ describe('detectRedirectChains', () => {
     expect(chains).toHaveLength(1);
     expect(chains[0].isDeveloperDocs).toBe(true);
   });
+
+  it('should detect chains with trailing slash mismatches', () => {
+    const jsRedirects = {
+      developerDocsRedirects: [] as Array<{destination: string; source: string}>,
+      userDocsRedirects: [
+        {source: '/old/', destination: '/middle'}, // no trailing slash on dest
+        {source: '/middle/', destination: '/new/'}, // source has trailing slash
+      ],
+    };
+    const mwRedirects = {
+      developerDocsRedirects: [] as Array<{destination: string; source: string}>,
+      userDocsRedirects: [] as Array<{destination: string; source: string}>,
+    };
+
+    const chains = detectRedirectChains(jsRedirects, mwRedirects);
+    expect(chains).toHaveLength(1);
+    expect(chains[0].source).toBe('/old/');
+    expect(chains[0].finalDest).toBe('/new/');
+  });
 });
 
 describe('detectContentLinkIssues', () => {
