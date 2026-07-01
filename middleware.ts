@@ -2333,18 +2333,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/integrations/deployment/vercel/',
   },
   {
-    from: '/workflow/integrations/heroku/',
-    to: '/product/integrations/deployment/heroku/',
-  },
-  {
-    from: '/workflow/integrations/legacy-integrations/gitlab/',
-    to: '/product/integrations/deployment/heroku/',
-  },
-  {
-    from: '/product/integrations/heroku/',
-    to: '/product/integrations/deployment/heroku/',
-  },
-  {
     from: '/workflow/integrations/clubhouse/',
     to: '/product/integrations/issue-tracking/shortcut/',
   },
@@ -2447,26 +2435,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/jira/',
     to: '/product/integrations/issue-tracking/jira/',
-  },
-  {
-    from: '/workflow/integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/workflow/integrations/legacy-integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/workflow/integrations/global-integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/product/integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/product/integrations/project-mgmt/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
   },
   {
     from: '/product/integrations/teamwork/',
