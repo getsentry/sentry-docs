@@ -1,16 +1,20 @@
 ---
-title: Alert Rule Action
+title: Alert Action
 sidebar_order: 2
-description: Learn about the alert rule action UI component.
+description: Learn about the alert action UI component.
 og_image: >-
   /og-images/organization-integrations-integration-platform-ui-components-alert-rule-action.png
 ---
 
-The alert rule action component gives you to access to parameters to define routing or configuration in alert rules for your service. When alert rules are triggered for a user, the configured service will receive [issue alert](/integrations/integration-platform/webhooks/issue-alerts) and [metric alert](/integrations/integration-platform/webhooks/metric-alerts) webhook events, with the specified settings for that service, to further route the alert.
+An alert action component allows users to specify details specific to your service that can help route alerts when they're triggered in Sentry. The schema is defined on the integration details page, and when users set up an alert action with your integration, the associated UI components will be presented to them. The details they provide will be included in the following alert webhook payloads, when the alerts fire:
 
-![Example of an alert rule UI component.](./img/alert-rule-component-action-example.png)
+- [Issue Alert](/integrations/integration-platform/webhooks/issue-alerts)
+- [Metric Alert](/integrations/integration-platform/webhooks/metric-alerts)
+- [Activity Alert](/integrations/integration-platform/webhooks/activity-alerts)
 
-![Example of an alert rule settings modal.](./img/alert-rule-component-modal-example.png)
+![Example of an alert UI component.](./img/alert-component-action-example.png)
+
+![Example of an alert settings modal.](./img/alert-component-modal-example.png)
 
 ## Schema
 
@@ -47,22 +51,32 @@ The alert rule action component gives you to access to parameters to define rout
   "elements": [
     {
       "type": "alert-rule-action",
-      "title": "Create a Rekall Inc task",
+      "title": "Create a ACME kanban item",
       "settings": {
         "type": "alert-rule-settings",
-        "uri": "/sentry/alert-rule",
+        "uri": "/sentry/alert-action",
         "required_fields": [
           {
             "type": "select",
-            "label": "Project",
-            "name": "project",
-            "options": [["1", "cornflakes"]]
+            "label": "Ticket Type",
+            "name": "ticket_type",
+            "options": [
+              ["feat", "Feature"],
+              ["bug", "Bug"],
+              ["task", "Task"]
+            ]
           },
+          {
+            "name": "runbook",
+            "type": "text",
+            "label": "Runbook"
+          },
+
           {
             "type": "select",
             "label": "Assignee",
             "name": "assignee",
-            "uri": "/sentry/alert-rule/options/users/"
+            "uri": "/sentry/alert-action/options/teams/"
           }
         ]
       }
@@ -84,13 +98,17 @@ When an issue alert fires, your service will need to read the settings from the 
       ...
       "settings": [
         {
-          "name": "title",
-          "value": "Ticket Title"
+          "name": "ticket_type",
+          "value": "feat"
         },
         {
-          "name": "description",
-          "value": "Ticket Description"
-        }
+          "name": "runbook",
+          "value": "Follow up in #triage-feature-requests with sales if this is actionable."
+        },
+        {
+          "name": "assignee",
+          "value": "team:789"
+        },
       ]
     }
   }
@@ -119,19 +137,53 @@ When a metric alert fires, your service will need to read the settings from the 
                 ...
                 "settings": [
                   {
-                    "name": "title",
-                    "value": "Critical Trigger"
+                    "name": "ticket_type",
+                    "value": "bug"
                   },
                   {
-                    "name": "description",
-                    "value": "Critical Description"
-                  }
+                    "name": "runbook",
+                    "value": "Check the docs (https://example.com/acme/runbook/456) before picking this one up."
+                  },
+                  {
+                    "name": "assignee",
+                    "value": "team:123"
+                  },
                 ]
               }
             ]
           }
         ]
       }
+    }
+  }
+}
+```
+
+## Activity Alert Request Format
+
+When an activity alert fires, your service will need to read the settings from the alert payload. The `settings` are in `data.alert.settings`. Check out the full [Activity Alert webhook documentation](/integrations/integration-platform/webhooks/activity-alerts) for more information.
+
+```json
+{
+  ...
+  "data": {
+    ...
+    "alert": {
+      ...
+      "settings": [
+        {
+          "name": "ticket_type",
+          "value": "task"
+        },
+        {
+          "name": "runbook",
+          "value": "Check if this issue is related to mobile exclusively."
+        },
+        {
+          "name": "assignee",
+          "value": "team:456"
+        },
+      ]
     }
   }
 }
