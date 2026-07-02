@@ -1,0 +1,232 @@
+---
+title: Laravel AI
+description: "Learn about using Sentry for Laravel AI agent monitoring."
+---
+
+<Alert>
+
+Laravel AI support is in beta. Test locally before using it in production.
+
+</Alert>
+
+This integration connects Sentry with the [Laravel AI](https://laravel.com/docs/ai) package.
+The integration has been confirmed to work with `sentry/sentry-laravel` version `4.27.0` and above.
+
+<AgentSkillsCallout skill="sentry-setup-ai-monitoring" platformName="PHP" />
+
+Once you've installed this SDK, you can use the [AI Agents Dashboards](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/?filter=onlyPrebuilt&query=agents&sort=mostPopular) to understand what's going on with your AI agents.
+
+Sentry AI Agents monitoring will automatically collect information about agents, tools, prompts, tokens, and models.
+
+## Prerequisites
+
+- Laravel 12.x or later
+- `sentry/sentry-laravel` version `4.27.0` or later
+- An AI provider configured for Laravel AI
+- <PlatformLink to="/tracing/">Tracing</PlatformLink> set up in your Sentry configuration
+
+## Install
+
+Install the `sentry/sentry-laravel` package:
+
+```bash
+composer require sentry/sentry-laravel
+```
+
+Install and configure `laravel/ai`:
+
+```bash
+composer require laravel/ai
+php artisan vendor:publish --provider="Laravel\Ai\AiServiceProvider"
+php artisan migrate
+```
+
+Add your AI provider API keys to your `.env` file:
+
+```shell {filename:.env}
+ANTHROPIC_API_KEY=your-anthropic-key
+OPENAI_API_KEY=your-openai-key
+...
+```
+
+## Configure
+
+The Laravel AI integration is enabled automatically when both `sentry/sentry-laravel` and `laravel/ai` are installed and tracing is active. No additional configuration is needed.
+
+Make sure tracing is enabled in your `.env`:
+
+```shell {filename:.env}
+SENTRY_TRACES_SAMPLE_RATE=1.0
+```
+
+To include LLM inputs and outputs (prompts, tool arguments, and responses), enable the `send_default_pii` option:
+
+```shell {filename:.env}
+SENTRY_SEND_DEFAULT_PII=true
+```
+
+<Alert>
+
+Sentry considers LLM and tool inputs/outputs as PII and doesn't include them by default. Set `send_default_pii` to `true` to capture this data for debugging. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for more info.
+
+</Alert>
+
+## Verify
+
+Verify that the integration works by creating an agent with a tool and prompting it. The resulting data should show up in your AI Agents dashboard.
+
+First, create an agent and a tool:
+
+```bash
+php artisan make:agent TimeAgent
+php artisan make:tool GetCurrentTime
+```
+
+Update the tool to return the current time:
+
+```php {filename:app/Ai/Tools/GetCurrentTime.php}
+<?php
+
+namespace App\Ai\Tools;
+
+use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Tools\Request;
+use Stringable;
+
+class GetCurrentTime implements Tool
+{
+    public function description(): Stringable|string
+    {
+        return 'Get the current date and time.';
+    }
+
+    public function handle(Request $request): Stringable|string
+    {
+        return now()->toDateTimeString();
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return [];
+    }
+}
+```
+
+Register the tool on the agent:
+
+```php {filename:app/Ai/Agents/TimeAgent.php}
+<?php
+
+namespace App\Ai\Agents;
+
+use App\Ai\Tools\GetCurrentTime;
+use Laravel\Ai\Concerns\RemembersConversations;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Contracts\HasTools;
+use Laravel\Ai\Promptable;
+use Stringable;
+
+class TimeAgent implements Agent, Conversational, HasTools
+{
+    use Promptable, RemembersConversations;
+
+    public function instructions(): Stringable|string
+    {
+        return 'You are a helpful assistant. Use your tools when asked about the time.';
+    }
+
+    public function messages(): iterable
+    {
+        return [];
+    }
+
+    public function tools(): iterable
+    {
+        return [
+            new GetCurrentTime,
+        ];
+    }
+}
+```
+
+Then prompt the agent, for example from a route:
+
+```php {filename:routes/web.php}
+use App\Ai\Agents\TimeAgent;
+
+Route::get('/debug-ai', function () {
+    $response = (new TimeAgent)->prompt('What time is it?');
+
+    return $response->text;
+});
+```
+
+Visiting this route will trigger an AI agent invocation that will be captured by Sentry. It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+The following data is captured automatically:
+
+- **Agent invocations** — `gen_ai.invoke_agent` spans for each agent prompt
+- **LLM requests** — `gen_ai.chat` spans for each HTTP request to an AI provider
+- **Tool executions** — `gen_ai.execute_tool` spans when agents call tools
+- **Embeddings** — `gen_ai.embeddings` spans for embedding generation
+- **Token usage** — input and output token counts per request
+- **Model and provider info** — which model and provider were used
+
+Streaming agent responses are also fully supported. The integration captures span data for both `prompt()` and `stream()` calls.
+
+### Conversations
+
+If your agent implements `Conversational` and uses the `RemembersConversations` trait, Sentry automatically tracks the `conversationId` returned by Laravel AI. The integration adds it to AI spans as `gen_ai.conversation.id`, which lets Sentry group multiple prompts into the same conversation in **Explore > Conversations**.
+
+To continue a conversation, pass the previous `$response->conversationId` back into Laravel AI with `continue()`:
+
+```php
+use App\Ai\Agents\TimeAgent;
+use App\Models\User;
+
+$user = User::firstOrFail();
+$conversationId = null;
+
+foreach (['Hello', 'What did I just ask you?'] as $message) {
+    $agent = $conversationId
+        ? (new TimeAgent)->continue($conversationId, as: $user)
+        : (new TimeAgent)->forUser($user);
+
+    $response = $agent->prompt($message);
+    $conversationId = $response->conversationId;
+}
+```
+
+Both prompts will appear under the same conversation because Laravel AI reuses the same `conversationId`. For CLI commands and other non-HTTP entry points, create a transaction around each agent call so the AI spans are captured.
+
+## Options
+
+You can selectively disable individual span types in `config/sentry.php` under the `tracing` > `features` key:
+
+```php {filename:config/sentry.php}
+'tracing' => [
+    'features' => [
+        // Master switch for all AI spans (requires laravel/ai)
+        'gen_ai' => env('SENTRY_TRACE_GEN_AI_ENABLED', true),
+
+        // Individual span types
+        'gen_ai_invoke_agent' => env('SENTRY_TRACE_GEN_AI_INVOKE_AGENT_ENABLED', true),
+        'gen_ai_chat' => env('SENTRY_TRACE_GEN_AI_CHAT_ENABLED', true),
+        'gen_ai_execute_tool' => env('SENTRY_TRACE_GEN_AI_EXECUTE_TOOL_ENABLED', true),
+        'gen_ai_embeddings' => env('SENTRY_TRACE_GEN_AI_EMBEDDINGS_ENABLED', true),
+    ],
+],
+```
+
+Setting `gen_ai` to `false` disables all AI tracing. The individual options let you turn off specific span types while keeping others active.
+
+## Supported Versions
+
+- Laravel: 12.x+
+- `sentry/sentry-laravel`: 4.27.0+
+- `laravel/ai`: 0.x+
+- PHP: 8.2+
