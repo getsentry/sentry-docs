@@ -53,7 +53,11 @@ export default defineConfig({
 
 The plugin passes through all options to the underlying [`@sentry/vite-plugin`](/platforms/javascript/sourcemaps/uploading/vite/). See the [Sentry Vite Plugin documentation](/platforms/javascript/sourcemaps/uploading/vite/) for the full list of available options.
 
-Additionally, the plugin automatically instruments all TanStack Start middlewares for tracing by default. To disable this behavior:
+### Automatic Middleware Instrumentation
+
+<AvailableSince version="10.37.0" />
+
+The plugin automatically instruments all TanStack Start middlewares for tracing by default. To disable this behavior:
 
 ```typescript {filename:vite.config.ts}
 sentryTanstackStart({
@@ -62,7 +66,34 @@ sentryTanstackStart({
 }),
 ```
 
-## Tunnel Route
+### Component Name Annotation
+
+<AvailableSince version="10.55.0" />
+
+The `reactComponentAnnotation` option annotates your React components with `data-sentry-component` and `data-sentry-source-file` attributes at build time. This lets you see component names instead of generic selectors in Session Replay, breadcrumbs, and performance monitoring.
+
+```typescript {filename:vite.config.ts}
+sentryTanstackStart({
+  // ...
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+}),
+```
+
+To exclude specific components from annotation:
+
+```typescript {filename:vite.config.ts}
+sentryTanstackStart({
+  // ...
+  reactComponentAnnotation: {
+    enabled: true,
+    ignoredComponents: ["MyInternalComponent"],
+  },
+}),
+```
+
+### Tunnel Route
 
 <AvailableSince version="10.51.0" />
 
@@ -70,7 +101,7 @@ The `tunnelRoute` option registers a same-origin TanStack Start server route tha
 
 `tunnelRoute` accepts three shapes:
 
-### `tunnelRoute: true` (recommended)
+#### `tunnelRoute: true` (recommended)
 
 Generates an opaque, unguessable route path for each dev session and production build. Because the path changes between builds, ad blockers can't reliably target it.
 
@@ -80,7 +111,7 @@ sentryTanstackStart({
 }),
 ```
 
-### Static path
+#### Static path
 
 Pass a string to use a fixed route path. This is easier to reason about, but a known path is easier for ad blockers to add to a list.
 
@@ -90,7 +121,7 @@ sentryTanstackStart({
 }),
 ```
 
-### Object form
+#### Object form
 
 Use the object form to control the DSN allowlist or set a static path explicitly:
 

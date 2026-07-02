@@ -235,7 +235,11 @@ export function updateElementsVisibilityForOptions(
       );
 
       dependencies.forEach(dep => {
-        dep.classList.remove('hidden');
+        // don't unhide content explicitly hidden for the dependency option
+        const hiddenForThisOption = dep.dataset.hideForThisOption === 'true';
+        if (!hiddenForThisOption) {
+          dep.classList.remove('hidden');
+        }
       });
     }
   });

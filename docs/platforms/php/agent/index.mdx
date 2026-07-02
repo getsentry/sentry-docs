@@ -1,0 +1,121 @@
+---
+title: Set Up PHP Agent
+sidebar_title: Agent
+description: "Learn how to configure the PHP SDK to send events through a local Sentry Agent process."
+sidebar_order: 3.2
+sidebar_section: configuration
+---
+
+<Alert>
+
+The PHP Agent is supported with Sentry PHP SDK version `4.26.0` and above.
+
+</Alert>
+
+The PHP Agent is a local binary that accepts envelopes from PHP applications.
+It can reduce application request latency by letting the SDK hand off envelopes
+to a local process instead of sending them directly to Sentry during the
+request.
+
+Application code uses `Sentry\Agent\Transport\AgentClientBuilder` from
+`sentry/sentry`. The `sentry/sentry-agent` package is only for installing and
+running the agent binary.
+
+The PHP Agent is focused on reducing request latency for PHP applications. If
+you need event filtering, data scrubbing, or a general ingestion proxy, use
+[Relay](/product/relay/getting-started/).
+
+## Requirements
+
+- Sentry PHP SDK version `4.26.0` or later
+- `sentry/sentry-agent` running on the same host as your PHP application
+
+## Installation
+
+The `sentry/sentry-agent` package can be installed independently of your PHP
+application. You don't need to add it to every application unless that
+application is also responsible for installing and running the agent binary.
+
+Using Composer:
+
+```bash
+composer require sentry/sentry-agent
+```
+
+Start the agent on the host:
+
+```bash
+vendor/bin/sentry-agent
+```
+
+The agent listens on `127.0.0.1:5148` by default.
+
+The agent is built with the assumption that it runs on the same machine as your
+PHP application. Running it on another machine can add enough latency for the
+SDK to use fallback delivery instead.
+
+The agent accepts named options. To change the listen address or port, pass
+the full address to `--listen`:
+
+```bash
+vendor/bin/sentry-agent --listen=127.0.0.1:5148
+```
+
+For other runtime settings, use the same `--name=value` form:
+
+```bash
+vendor/bin/sentry-agent --upstream-timeout=2.0 --queue-limit=1000
+```
+
+## Configure the SDK
+
+Your application needs to use `sentry/sentry` version `4.26.0` or later:
+
+```bash
+composer require sentry/sentry:^4.26.0
+```
+
+Configure the PHP SDK to use the agent client builder from `sentry/sentry`:
+
+```php
+use Sentry\Agent\Transport\AgentClientBuilder;
+
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'http_client' => AgentClientBuilder::create()->getClient(),
+]);
+```
+
+If the agent listens on a different address or port, pass those values to the
+builder:
+
+```php
+use Sentry\Agent\Transport\AgentClientBuilder;
+
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'http_client' => AgentClientBuilder::create()
+        ->setHost('127.0.0.1')
+        ->setPort(5148)
+        ->getClient(),
+]);
+```
+
+## Verify
+
+Send a test event from your application to confirm that events still arrive in
+Sentry:
+
+```php
+\Sentry\captureMessage('PHP Agent test event');
+```
+
+To confirm that the event was routed through the agent, check if a tag named
+`sentry.php.agent` exists and is `true`.
+
+## Fallback Delivery
+
+The default builder-created client includes fallback delivery. If the local
+agent handoff fails, the client sends the envelope directly to Sentry using the
+normal SDK HTTP client. This preserves delivery, but the request loses the
+latency benefit while the agent is unavailable.

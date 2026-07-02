@@ -25,6 +25,7 @@ Inbound filters include:
 - Events from certain IP addresses
 - Events with certain error messages
 - Events from specific release versions of your code
+- Events from non-allowed domains (origin-based; see [Allowed Domains](#allowed-domains))
 
 ### Legacy Browser Filters
 
@@ -55,6 +56,12 @@ The supported IP address formats are:
 - **IPv4 Network Ranges (CIDR Notation)**: IPv4 address with a subnet mask (e.g., 122.33.230.0/30, 127.0.0.0/8).
 - **IPv6 Network Ranges (CIDR Notation)**: IPv6 address with a subnet mask (e.g., a:b:c::0/126).
 
+### Allowed Domains
+
+Sentry checks the `Origin` or `Referer` HTTP header of each inbound request against your project's allowed domain list. Requests from unrecognized origins are rejected and appear as **Disallowed Domain** in your [Stats](/product/stats/).
+
+This filter only applies to requests that include an `Origin` or `Referer` header. Requests without one — common for server-side SDKs and direct API submissions — are always accepted, even when an allowed domain list is configured. To restrict server-side ingestion, use a [project rate limit](/pricing/quotas/#rate-limits) or an allowlist at the network level.
+
 ### Transactions Coming from Health Check
 
 In essence, the health check filter serves the purpose of excluding transactions that are generated as a part of health check procedures.
@@ -80,7 +87,7 @@ We consider a transaction to be a health check if its name matches one of the fo
 
 ## Session Replay Filtering
 
-Inbound data filters have partial support for [Session Replay](/product/explore/session-replay/). Only a subset of the available inbound filters apply to Session Replays.
+Inbound data filters have partial support for [Session Replay](/product/session-replay/). Only a subset of the available inbound filters apply to Session Replays.
 
 The following inbound filters **do** apply to Session Replays:
 
@@ -115,7 +122,7 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 ## Logs Filtering
 
-Inbound data filters have partial support for [Logs](/product/explore/logs/). Only a subset of the available inbound filters apply to Logs.
+Inbound data filters have partial support for [Logs](/product/logs/). Only a subset of the available inbound filters apply to Logs.
 
 The following inbound filters **do** apply to Logs:
 
@@ -137,7 +144,7 @@ The following inbound filters **do not** apply to Logs:
 
 ## Application Metrics Filtering
 
-Inbound data filters have partial support for [Application Metrics](/product/explore/metrics/). The following inbound filters **do** apply to Application Metrics:
+Inbound data filters have partial support for [Application Metrics](/product/metrics/). The following inbound filters **do** apply to Application Metrics:
 
 - **Application Metrics** - Filters Application Metrics by metric name (supports glob pattern matching, for example `my_metric.*`)
 - **Releases** - Filters Application Metrics from specific release versions

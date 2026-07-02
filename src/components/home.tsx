@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import AiInSentryHero from 'sentry-docs/imgs/AI-in-Sentry.jpeg';
@@ -118,7 +119,7 @@ export async function Home() {
                 <div>
                   <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
                     {mostViewedSDKs.map(platform => (
-                      <a
+                      <Link
                         key={platform.key}
                         href={platform.url}
                         className="sdk-tile flex flex-col items-center justify-center gap-1.5 bg-white dark:bg-[var(--gray-2)]"
@@ -147,7 +148,7 @@ export async function Home() {
                         >
                           {platform.title}
                         </span>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                   <a
@@ -178,8 +179,9 @@ export async function Home() {
                   '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
               }}
             >
-              <div
-                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              <Link
+                href="/product/"
+                className="card-image-link flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -196,45 +198,53 @@ export async function Home() {
                     objectPosition: 'center',
                   }}
                 />
-              </div>
+              </Link>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                  Debugging in Sentry
+                  <Link
+                    href="/product/"
+                    className="text-[var(--gray-12)] hover:underline"
+                  >
+                    Debugging in Sentry
+                  </Link>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Monitor, identify, and resolve errors and performance issues across your
                   applications using{' '}
-                  <a
+                  <Link
                     href="/product/error-monitoring/"
                     className="text-[#8b5cf6] underline"
                   >
                     Error Monitoring
-                  </a>
+                  </Link>
                   ,{' '}
-                  <a
-                    href="/product/explore/trace-explorer/"
+                  <Link
+                    href="/product/trace-explorer/"
                     className="text-[#8b5cf6] underline"
                   >
                     Tracing
-                  </a>
+                  </Link>
                   ,{' '}
-                  <a href="/product/session-replay/" className="text-[#8b5cf6] underline">
+                  <Link
+                    href="/product/session-replay/"
+                    className="text-[#8b5cf6] underline"
+                  >
                     Session Replay
-                  </a>
+                  </Link>
                   ,{' '}
-                  <a href="/product/drains/" className="text-[#8b5cf6] underline">
+                  <Link href="/product/drains/" className="text-[#8b5cf6] underline">
                     Logs
-                  </a>
+                  </Link>
                   , and{' '}
-                  <a href="/product/" className="text-[#8b5cf6] underline">
+                  <Link href="/product/" className="text-[#8b5cf6] underline">
                     more
-                  </a>
+                  </Link>
                   .
                 </p>
               </div>
             </div>
 
-            {/* Fix Bugs Faster with Seer */}
+            {/* Fix Faster with Seer */}
             <div
               className="bg-white dark:bg-[var(--gray-2)] rounded-xl p-6 flex items-start gap-4"
               style={{
@@ -242,8 +252,9 @@ export async function Home() {
                   '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
               }}
             >
-              <div
-                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              <Link
+                href="/product/ai-in-sentry/seer/"
+                className="card-image-link flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -252,7 +263,7 @@ export async function Home() {
               >
                 <img
                   src={AiSentryHero.src}
-                  alt="Fix Bugs Faster with Seer"
+                  alt="Fix Faster with Seer"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -260,40 +271,45 @@ export async function Home() {
                     objectPosition: 'center',
                   }}
                 />
-              </div>
+              </Link>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                  Fix Bugs Faster with Seer
+                  <Link
+                    href="/product/ai-in-sentry/seer/"
+                    className="text-[var(--gray-12)] hover:underline"
+                  >
+                    Fix Faster with Seer
+                  </Link>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Debug applications with{' '}
-                  <a
+                  <Link
                     href="/product/ai-in-sentry/seer/"
                     className="text-[#8b5cf6] underline"
                   >
                     Seer
-                  </a>
+                  </Link>
                   . Get{' '}
-                  <a
+                  <Link
                     href="/product/ai-in-sentry/seer/#seer-agent"
                     className="text-[#8b5cf6] underline"
                   >
                     AI-powered answers
-                  </a>{' '}
+                  </Link>{' '}
                   to questions using your application data in Sentry. Have{' '}
-                  <a
+                  <Link
                     href="/product/ai-in-sentry/seer/autofix/"
                     className="text-[#8b5cf6] underline"
                   >
                     Autofix
-                  </a>{' '}
+                  </Link>{' '}
                   generate fixes, and{' '}
-                  <a
+                  <Link
                     href="/product/ai-in-sentry/seer/code-review/"
                     className="text-[#8b5cf6] underline"
                   >
                     review code changes
-                  </a>{' '}
+                  </Link>{' '}
                   before merging PRs.
                 </p>
               </div>
@@ -307,8 +323,9 @@ export async function Home() {
                   '0 4px 20px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.05)',
               }}
             >
-              <div
-                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
+              <Link
+                href="/ai/"
+                className="card-image-link flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -325,16 +342,18 @@ export async function Home() {
                     objectPosition: 'center',
                   }}
                 />
-              </div>
+              </Link>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-2 text-[var(--gray-12)]">
-                  AI in Sentry
+                  <Link href="/ai/" className="text-[var(--gray-12)] hover:underline">
+                    AI in Sentry
+                  </Link>
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Integrate Sentry into your AI coding assistants using Sentry's{' '}
-                  <a href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
+                  <Link href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
                     Skills
-                  </a>{' '}
+                  </Link>{' '}
                   and{' '}
                   <a
                     href="https://mcp.sentry.dev"
@@ -345,9 +364,9 @@ export async function Home() {
                     MCP server
                   </a>{' '}
                   with your agents. Debug agents and MCP servers by{' '}
-                  <a href="/ai/monitoring/" className="text-[#8b5cf6] underline">
+                  <Link href="/ai/monitoring/" className="text-[#8b5cf6] underline">
                     monitoring your AI features
-                  </a>
+                  </Link>
                   .
                 </p>
               </div>
@@ -577,6 +596,14 @@ export async function Home() {
         .dark .home-search-bar input[type="text"]:focus, .dark .home-search-bar input:focus {
           border-color: #c4b5fd !important;
           box-shadow: 0 6px 32px 0 rgba(124,58,237,0.18), 0 2px 12px 0 rgba(124,58,237,0.12);
+        }
+        /* Linked card images */
+        .card-image-link {
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .card-image-link:hover {
+          opacity: 0.8;
+          transform: scale(1.05);
         }
       `}</style>
     </div>

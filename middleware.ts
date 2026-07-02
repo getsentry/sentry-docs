@@ -8,6 +8,8 @@ import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassif
 const isDeveloperDocs =
   process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
+const BASE_URL = isDeveloperDocs ? 'https://develop.sentry.dev' : 'https://docs.sentry.io';
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -90,13 +92,13 @@ function classifyTraffic(request: NextRequest): {
 }
 
 /**
- * Detects if client wants markdown via Accept header (standards-compliant)
+ * Detects if client wants markdown via Accept header (standards-compliant).
+ * Only matches explicit markdown MIME types — not text/plain, which is too broad
+ * and matches clients like Axios (`Accept: application/json, text/plain, *\/\/`).
  */
 function wantsMarkdownViaAccept(acceptHeader: string): boolean {
   return (
-    acceptHeader.includes('text/markdown') ||
-    acceptHeader.includes('text/x-markdown') ||
-    acceptHeader.includes('text/plain')
+    acceptHeader.includes('text/markdown') || acceptHeader.includes('text/x-markdown')
   );
 }
 
@@ -152,6 +154,19 @@ function rewriteWithClassification(request: NextRequest, destination: URL): Next
 }
 
 /**
+ * Derives the canonical HTML URL path from a .md pathname.
+ * Examples:
+ *   /platforms/apple/cocoa.md  →  /platforms/apple/cocoa/
+ *   /index.md                  →  /
+ *   /platforms.md              →  /platforms/
+ */
+function mdToCanonicalPath(mdPathname: string): string {
+  const withoutExt = mdPathname.replace(/\.md$/, '');
+  if (withoutExt === '/index') return '/';
+  return withoutExt.endsWith('/') ? withoutExt : `${withoutExt}/`;
+}
+
+/**
  * Handles redirection to markdown versions for AI/LLM clients
  */
 const handleAIClientRedirect = (request: NextRequest) => {
@@ -188,8 +203,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
   }
 
   // Skip if already requesting a markdown file - pass through with classification headers
+  // and set a Link rel=canonical header pointing to the rendered HTML page so that search
+  // engine crawlers consolidate ranking to the human-readable URL instead of indexing the
+  // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
-    return nextWithClassification(request);
+    const response = nextWithClassification(request);
+    response.headers.set('Link', `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`);
+    return response;
   }
 
   // Skip API routes and static assets (should already be filtered by matcher)
@@ -325,6 +345,22 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cloudflare/',
   },
   {
+    from: '/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/phoebeai/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/qckfx/',
+    to: '/integrations/debugging/',
+  },
+  {
+    from: '/integrations/debugging/sevvy/',
+    to: '/integrations/debugging/corelayer/',
+  },
+  {
     from: '/product/data-management-settings/dynamic-sampling/',
     to: '/product/dashboards/sentry-dashboards/',
   },
@@ -334,7 +370,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/data-management-settings/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/product/data-management-settings/filtering/',
@@ -490,7 +526,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/react-native/codepush/',
-    to: '/platforms/react-native/manual-setup/codepush/',
+    to: '/platforms/react-native/sourcemaps/uploading/codepush/',
   },
   {
     from: '/platforms/react-native/hermes/',
@@ -814,7 +850,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/java/context/',
-    to: '/platforms/java/scope/',
+    to: '/platforms/java/enriching-events/',
   },
   {
     from: '/clients/java/modules/jul/',
@@ -1482,11 +1518,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
   {
     from: '/error-reporting/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
   {
     from: '/platforms/javascript/troubleshooting/session-replay/',
@@ -1662,7 +1698,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/javascript/integrations/',
-    to: '/platforms/javascript/legacy-sdk/integrations/',
+    to: '/platforms/javascript/legacy-sdk/',
   },
   {
     from: '/clients/javascript/usage/',
@@ -2297,16 +2333,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/integrations/deployment/vercel/',
   },
   {
-    from: '/workflow/integrations/heroku/',
-    to: '/product/integrations/deployment/heroku/',
-  },
-  {
     from: '/workflow/integrations/legacy-integrations/gitlab/',
-    to: '/product/integrations/deployment/heroku/',
-  },
-  {
-    from: '/product/integrations/heroku/',
-    to: '/product/integrations/deployment/heroku/',
+    to: '/integrations/source-code-mgmt/gitlab/',
   },
   {
     from: '/workflow/integrations/clubhouse/',
@@ -2411,26 +2439,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/jira/',
     to: '/product/integrations/issue-tracking/jira/',
-  },
-  {
-    from: '/workflow/integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/workflow/integrations/legacy-integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/workflow/integrations/global-integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/product/integrations/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
-  },
-  {
-    from: '/product/integrations/project-mgmt/asana/',
-    to: '/product/integrations/issue-tracking/asana/',
   },
   {
     from: '/product/integrations/teamwork/',
@@ -2542,27 +2550,27 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/profiling/',
-    to: '/product/explore/profiling/',
+    to: '/product/profiling/',
   },
   {
     from: '/profiling/performance-overhead/',
-    to: '/product/explore/profiling/performance-overhead/',
+    to: '/product/profiling/performance-overhead/',
   },
   {
     from: '/profiling/setup/',
-    to: '/product/explore/profiling/getting-started/',
+    to: '/product/profiling/getting-started/',
   },
   {
     from: '/profiling/getting-started/',
-    to: '/product/explore/profiling/getting-started/',
+    to: '/product/profiling/getting-started/',
   },
   {
     from: '/profiling/mobile-app-profiling/',
-    to: '/product/explore/profiling/mobile-app-profiling/',
+    to: '/product/profiling/mobile-app-profiling/',
   },
   {
     from: '/profiling/mobile-app-profiling/metrics/',
-    to: '/product/explore/profiling/mobile-app-profiling/metrics/',
+    to: '/product/profiling/mobile-app-profiling/metrics/',
   },
 
   {
@@ -2595,11 +2603,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/product/data-forwarding/',
-    to: '/concepts/data-management/data-forwarding/',
+    to: '/integrations/data-forwarding/',
   },
   {
     from: '/data-management-settings/attachment-datascrubbing/',
@@ -2627,39 +2635,39 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/explore/discover-queries/',
+    to: '/product/discover-queries/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/explore/discover-queries/uncover-trends/',
+    to: '/product/discover-queries/uncover-trends/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/explore/discover-queries/uncover-trends/',
+    to: '/product/discover-queries/uncover-trends/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/explore/discover-queries/query-builder/',
+    to: '/product/discover-queries/query-builder/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/explore/discover-queries/query-builder/',
+    to: '/product/discover-queries/query-builder/',
   },
   {
     from: '/product/crons/alerts/',
@@ -2916,15 +2924,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/sentry-seer/',
+    to: '/product/ai-in-sentry/seer/',
   },
   {
     from: '/product/issues/issue-details/ai-suggested-solution/',
-    to: '/product/issues/issue-details/sentry-seer/',
+    to: '/product/ai-in-sentry/seer/',
   },
   {
     from: '/product/issues/issue-details/sentry-ai/',
-    to: '/product/issues/issue-details/sentry-seer/',
+    to: '/product/ai-in-sentry/seer/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',
@@ -3128,7 +3136,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
   },
   {
     from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
@@ -3253,10 +3261,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
-  },
-  {
-    from: '/product/session-replay/protecting-user-privacy/',
-    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/platforms/javascript/guides/react/features/component-tracking/',
@@ -3438,57 +3442,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/sentry-mcp/',
     to: 'https://mcp.sentry.dev',
   },
-  {
-    from: '/product/metrics/',
-    to: '/product/explore/metrics/',
-  },
-  {
-    from: '/product/profiling/',
-    to: '/product/explore/profiling/',
-  },
-  {
-    from: '/product/discover-queries/',
-    to: '/product/explore/discover-queries/',
-  },
-  {
-    from: '/product/session-replay/',
-    to: '/product/explore/session-replay/',
-  },
+  // Removed: /product/metrics/, /product/profiling/, /product/discover-queries/,
+  // /product/session-replay/ are now canonical paths (previously redirected to /product/explore/*)
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
-    to: '/concepts/data-management/advanced-datascrubbing/',
-  },
-  {
-    from: '/data-management/advanced-datascrubbing/',
-    to: '/concepts/data-management/advanced-datascrubbing/',
-  },
-  {
-    from: '/platforms/javascript/guides/react/features/component-tracking/',
-    to: '/platforms/javascript/guides/react/features/component-names/',
-  },
-  {
-    from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
-  },
-  {
-    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
-    to: '/platforms/java/guides/spring/data-management/',
-  },
-  {
-    from: '/support/',
-    to: 'https://www.sentry.help/en/',
+    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
     from: '/product/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
-  },
-  {
-    from: '/product/session-replay/protecting-user-privacy/',
-    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
   {
     from: '/product/data-management-settings/restrict-display/',
@@ -3547,7 +3509,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/dashboards/sentry-dashboards/backend/queues/',
   },
   {
-    from: '/product/explore/session-replay/protecting-user-privacy/',
+    from: '/product/session-replay/protecting-user-privacy/',
     to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
@@ -3591,8 +3553,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/concepts/data-management/event-grouping/',
   },
   {
-    from: '/product/explore/session-replay/performance-overhead/',
-    to: '/product/explore/session-replay/web/performance-overhead/',
+    from: '/product/session-replay/performance-overhead/',
+    to: '/product/session-replay/web/performance-overhead/',
   },
   {
     from: '/organization/integrations/project-mgmt/jira/',
@@ -3603,31 +3565,31 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/integrations/source-code-mgmt/',
   },
   {
-    from: '/product/explore/session-replay/getting-started/',
-    to: '/product/explore/session-replay/',
+    from: '/product/session-replay/getting-started/',
+    to: '/product/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/web/getting-started/',
-    to: '/product/explore/session-replay/web/',
+    from: '/product/session-replay/web/getting-started/',
+    to: '/product/session-replay/web/',
   },
   {
-    from: '/product/explore/session-replay/web/replay-page-and-filters/',
-    to: '/product/explore/session-replay/replay-page-and-filters/',
+    from: '/product/session-replay/web/replay-page-and-filters/',
+    to: '/product/session-replay/replay-page-and-filters/',
   },
   {
-    from: '/product/explore/session-replay/web/replay-details/',
-    to: '/product/explore/session-replay/replay-details/',
+    from: '/product/session-replay/web/replay-details/',
+    to: '/product/session-replay/replay-details/',
   },
   {
-    from: '/product/explore/session-replay/hydration-errors/',
+    from: '/product/session-replay/hydration-errors/',
     to: '/product/issues/issue-details/replay-issues/hydration-error/',
   },
   {
-    from: '/product/explore/session-replay/rage-dead-clicks/',
+    from: '/product/session-replay/rage-dead-clicks/',
     to: '/product/issues/issue-details/replay-issues/rage-clicks/',
   },
   {
-    from: '/product/explore/session-replay/privacy/',
+    from: '/product/session-replay/privacy/',
     to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
@@ -3740,11 +3702,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/docs-components/',
-    to: '/development/docs/',
+    to: '/engineering-practices/documentation/',
   },
   {
     from: '/docs/',
-    to: '/development/docs/',
+    to: '/engineering-practices/documentation/',
   },
   {
     from: '/inclusion/',
@@ -3756,59 +3718,55 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/environment/',
-    to: '/development/environment/',
+    to: '/development-infrastructure/environment/',
   },
   {
     from: '/environment/pycharm/',
-    to: '/development/environment/pycharm/',
+    to: '/development-infrastructure/environment/pycharm/',
   },
   {
     from: '/environment/u2f/',
-    to: '/development/environment/u2f/',
+    to: '/development-infrastructure/environment/u2f/',
   },
   {
     from: '/testing/',
-    to: '/development/testing/',
+    to: '/development-infrastructure/testing/',
   },
   {
     from: '/philosophy/',
-    to: '/development/philosophy/',
+    to: '/getting-started/philosophy/',
   },
   {
     from: '/commit-messages/',
-    to: '/development/commit-messages/',
+    to: '/engineering-practices/commit-messages/',
   },
   {
     from: '/code-review/',
-    to: '/development/code-review/',
+    to: '/engineering-practices/code-review/',
   },
   {
     from: '/workflow/',
-    to: '/development/workflow/',
+    to: '/development-infrastructure/workflow/',
   },
   {
     from: '/continuous-integration/',
-    to: '/development/continuous-integration/',
+    to: '/development-infrastructure/continuous-integration/',
   },
   {
     from: '/python-dependencies/',
-    to: '/development/python-dependencies/',
+    to: '/development-infrastructure/python-dependencies/',
   },
   {
     from: '/rust/',
-    to: '/development/rust/',
+    to: '/engineering-practices/rust/',
   },
   {
     from: '/database-migrations/',
-    to: '/development/database-migrations/',
-  },
-  {
-    from: '/testing/',
-    to: '/development/testing/',
+    to: '/backend/application-domains/database-migrations/',
   },
   {
     from: '/analytics/',
-    to: '/development/analytics/',
+    to: '/development-infrastructure/analytics/',
   },
   {
     from: '/architecture/',
@@ -3816,15 +3774,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sentry-vs-getsentry/',
-    to: '/application/sentry-vs-getsentry/',
+    to: '/application-architecture/sentry-vs-getsentry/',
   },
   {
     from: '/config/',
-    to: '/application/config/',
+    to: '/backend/config/',
   },
   {
     from: '/issue-platform/',
-    to: '/application/issue-platform/',
+    to: '/backend/issue-platform/',
   },
   {
     from: '/issue-platform-detectors/',
@@ -3840,19 +3798,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ab-testing/',
-    to: '/application/ab-testing/',
-  },
-  {
-    from: '/options/',
-    to: '/application/options/',
+    to: '/backend/application-domains/ab-testing/',
   },
   {
     from: '/serializers/',
-    to: '/application/serializers/',
+    to: '/backend/serializers/',
   },
   {
     from: '/grouping/',
-    to: '/application/grouping/',
+    to: '/backend/application-domains/grouping/',
   },
   {
     from: '/pii/',
@@ -3872,35 +3826,35 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/transaction-clustering/',
-    to: '/application/transaction-clustering/',
+    to: '/backend/application-domains/transaction-clustering/',
   },
   {
     from: '/dynamic-sampling/',
-    to: '/application/dynamic-sampling/',
+    to: '/application-architecture/dynamic-sampling/',
   },
   {
     from: '/dynamic-sampling/architecture/',
-    to: '/application/dynamic-sampling/architecture/',
+    to: '/application-architecture/dynamic-sampling/architecture/',
   },
   {
     from: '/dynamic-sampling/fidelity-and-biases/',
-    to: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/biases/',
-    to: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/the-big-picture/',
-    to: '/application/dynamic-sampling/the-big-picture/',
+    to: '/application-architecture/dynamic-sampling/the-big-picture/',
   },
   {
     from: '/feedback-architecture/',
-    to: '/application/feedback-architecture/',
+    to: '/application-architecture/feedback-architecture/',
   },
   {
     from: '/options/',
-    to: '/backend/options/',
+    to: '/backend/application-domains/options/',
   },
   {
     from: '/sdk/features/data-handling/',
@@ -3908,7 +3862,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/craft-quick-start/',
-    to: '/sdk/processes/releases/',
+    to: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     from: '/sdk/check-ins/',
@@ -3920,7 +3874,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/distributed-tracing/',
-    to: '/sdk/telemetry/traces/distributed-tracing/',
+    to: '/sdk/foundations/trace-propagation/',
   },
   // New Sidebar structure
   {
@@ -4037,7 +3991,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/application/config/',
-    to: '/application-architecture/config/',
+    to: '/backend/config/',
   },
   {
     from: '/application-architecture/config/',
@@ -4162,7 +4116,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/backend/queue/',
-    to: '/backend/application-domains/asynchronous-workers/',
+    to: '/backend/application-domains/tasks/',
   },
   {
     from: '/api-server/application-domains/asynchronous-workers/',
@@ -4324,7 +4278,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/revisedev/',
-    to: '/integrations/debugging/revisedev/',
+    to: '/integrations/debugging/',
   },
   {
     from: '/organization/integrations/foamai/',
@@ -4368,11 +4322,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/envelopes/',
-    to: '/sdk/foundations/transport/envelopes/',
+    to: '/sdk/foundations/envelopes/',
   },
   {
     from: '/sdk/data-model/envelope-items/',
-    to: '/sdk/foundations/transport/envelope-items/',
+    to: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     from: '/sdk/expected-features/rate-limiting/',
@@ -4380,7 +4334,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/overview/',
-    to: '/sdk/foundations/overview/',
+    to: '/sdk/foundations/',
   },
   {
     from: '/sdk/data-model/',
@@ -4388,19 +4342,19 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/',
-    to: '/sdk/foundations/transport/event-payloads/',
+    to: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     from: '/sdk/data-model/event-payloads/breadcrumbs/',
-    to: '/sdk/foundations/transport/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/envelopes/event-payloads/breadcrumbs/',
   },
   {
     from: '/sdk/data-model/event-payloads/contexts/',
-    to: '/sdk/foundations/transport/event-payloads/contexts/',
+    to: '/sdk/foundations/envelopes/event-payloads/contexts/',
   },
   {
     from: '/sdk/data-model/event-payloads/debugmeta/',
-    to: '/sdk/foundations/transport/event-payloads/debugmeta/',
+    to: '/sdk/foundations/envelopes/event-payloads/debugmeta/',
   },
   {
     from: '/sdk/data-model/event-payloads/exception/',
@@ -4412,47 +4366,47 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/lockreason/',
-    to: '/sdk/foundations/transport/event-payloads/lockreason/',
+    to: '/sdk/foundations/envelopes/event-payloads/lockreason/',
   },
   {
     from: '/sdk/data-model/event-payloads/message/',
-    to: '/sdk/foundations/transport/event-payloads/message/',
+    to: '/sdk/foundations/envelopes/event-payloads/message/',
   },
   {
     from: '/sdk/data-model/event-payloads/replay-recording/',
-    to: '/sdk/foundations/transport/event-payloads/replay-recording/',
+    to: '/sdk/foundations/envelopes/event-payloads/replay-recording/',
   },
   {
     from: '/sdk/data-model/event-payloads/request/',
-    to: '/sdk/foundations/transport/event-payloads/request/',
+    to: '/sdk/foundations/envelopes/event-payloads/request/',
   },
   {
     from: '/sdk/data-model/event-payloads/sdk/',
-    to: '/sdk/foundations/transport/event-payloads/sdk/',
+    to: '/sdk/foundations/envelopes/event-payloads/sdk/',
   },
   {
     from: '/sdk/data-model/event-payloads/span/',
-    to: '/sdk/foundations/transport/event-payloads/span/',
+    to: '/sdk/foundations/envelopes/event-payloads/span/',
   },
   {
     from: '/sdk/data-model/event-payloads/stacktrace/',
-    to: '/sdk/foundations/transport/event-payloads/stacktrace/',
+    to: '/sdk/foundations/envelopes/event-payloads/stacktrace/',
   },
   {
     from: '/sdk/data-model/event-payloads/template/',
-    to: '/sdk/foundations/transport/event-payloads/template/',
+    to: '/sdk/foundations/envelopes/event-payloads/template/',
   },
   {
     from: '/sdk/data-model/event-payloads/threads/',
-    to: '/sdk/foundations/transport/event-payloads/threads/',
+    to: '/sdk/foundations/envelopes/event-payloads/threads/',
   },
   {
     from: '/sdk/data-model/event-payloads/transaction/',
-    to: '/sdk/foundations/transport/event-payloads/transaction/',
+    to: '/sdk/foundations/envelopes/event-payloads/transaction/',
   },
   {
     from: '/sdk/data-model/event-payloads/user/',
-    to: '/sdk/foundations/transport/event-payloads/user/',
+    to: '/sdk/foundations/envelopes/event-payloads/user/',
   },
 ];
 

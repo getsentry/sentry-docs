@@ -25,22 +25,32 @@ const staticHtmlFilesPath = join(process.cwd(), '.next', 'server', 'app');
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID;
 const ALGOLIA_API_KEY = process.env.ALGOLIA_API_KEY;
 const DOCS_INDEX_NAME = process.env.DOCS_INDEX_NAME;
-const ALOGOLIA_SKIP_ON_ERROR = process.env.ALOGOLIA_SKIP_ON_ERROR === 'true';
+const ALGOLIA_SKIP_ON_ERROR = process.env.ALGOLIA_SKIP_ON_ERROR === 'true';
+// Dry run generates records but skips all Algolia API calls. Used by PR CI to exercise the
+// build + indexing import graph without secrets or mutating the production index.
+const DRY_RUN = process.env.ALGOLIA_DRY_RUN === 'true';
 
-if (!ALGOLIA_APP_ID) {
-  throw new Error('`ALGOLIA_APP_ID` env var must be configured in repo secrets');
-}
-if (!ALGOLIA_API_KEY) {
-  throw new Error('`ALGOLIA_API_KEY` env var must be configured in repo secrets');
-}
-if (!DOCS_INDEX_NAME) {
-  throw new Error('`DOCS_INDEX_NAME` env var must be configured in repo secrets');
+if (!DRY_RUN) {
+  if (!ALGOLIA_APP_ID) {
+    throw new Error('`ALGOLIA_APP_ID` env var must be configured in repo secrets');
+  }
+  if (!ALGOLIA_API_KEY) {
+    throw new Error('`ALGOLIA_API_KEY` env var must be configured in repo secrets');
+  }
+  if (!DOCS_INDEX_NAME) {
+    throw new Error('`DOCS_INDEX_NAME` env var must be configured in repo secrets');
+  }
 }
 
-const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
-const index = client.initIndex(DOCS_INDEX_NAME);
+const index =
+  ALGOLIA_APP_ID && ALGOLIA_API_KEY && DOCS_INDEX_NAME
+    ? algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY).initIndex(DOCS_INDEX_NAME)
+    : null;
 
 const CONCURRENCY = 50;
+// In dry-run we only need enough pages to exercise the build + import graph, not the full corpus.
+// Processing all ~10k pages cold (no warm cache) exhausts the heap, so cap it.
+const DRY_RUN_PAGE_LIMIT = 200;
 const CACHE_VERSION = 1;
 const CACHE_DIR = join(process.cwd(), '.next', 'cache', 'algolia-records');
 
@@ -64,10 +74,13 @@ async function indexAndUpload() {
     ? getDevDocsFrontMatter()
     : getDocsFrontMatter());
 
-  const pages = pageFrontMatters.filter(
+  const allPages = pageFrontMatters.filter(
     frontMatter => !frontMatter.draft && !frontMatter.noindex && frontMatter.title
   );
-  console.log(`📄 Processing ${pages.length} pages with concurrency ${CONCURRENCY}`);
+  const pages = DRY_RUN ? allPages.slice(0, DRY_RUN_PAGE_LIMIT) : allPages;
+  console.log(
+    `📄 Processing ${pages.length}${DRY_RUN ? ` of ${allPages.length} (dry-run cap)` : ''} pages with concurrency ${CONCURRENCY}`
+  );
 
   const {records, cacheHits, cacheMisses} = await generateAlgoliaRecords(pages);
   const generateTime = performance.now();
@@ -85,46 +98,52 @@ async function indexAndUpload() {
   Sentry.metrics.gauge('algolia.cache_hits', cacheHits, {attributes: metricTags});
   Sentry.metrics.gauge('algolia.cache_misses', cacheMisses, {attributes: metricTags});
 
-  const existingRecordIds = await fetchExistingRecordIds(index);
-  console.log(
-    `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
-  );
+  if (DRY_RUN || !index) {
+    console.log(
+      `🧪 Dry run: generated ${records.length} records, skipping Algolia upload`
+    );
+  } else {
+    const existingRecordIds = await fetchExistingRecordIds(index);
+    console.log(
+      `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
+    );
 
-  console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
-  const saveResult = await index.saveObjects(records, {
-    batchSize: 10000,
-    autoGenerateObjectIDIfNotExist: true,
-  });
-  const newRecordIDs = new Set(saveResult.objectIDs);
-  console.log(`🔥 Saved ${newRecordIDs.size} records`);
-
-  const recordsToDelete = existingRecordIds.filter(id => !newRecordIDs.has(id));
-  if (recordsToDelete.length > 0) {
-    console.log(`🔥 Deleting ${recordsToDelete.length} stale records...`);
-    await index.deleteObjects(recordsToDelete);
-  }
-
-  if (!isDeveloperDocs) {
-    await index.setSettings({
-      ...sentryAlgoliaIndexSettings,
-      searchableAttributes: [
-        'unordered(title)',
-        'unordered(section)',
-        'unordered(keywords)',
-        'text',
-      ],
-      ranking: [
-        'filters',
-        'typo',
-        'words',
-        'attribute',
-        'exact',
-        'proximity',
-        'desc(sectionRank)',
-        'asc(position)',
-        'asc(popularity)',
-      ],
+    console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
+    const saveResult = await index.saveObjects(records, {
+      batchSize: 10000,
+      autoGenerateObjectIDIfNotExist: true,
     });
+    const newRecordIDs = new Set(saveResult.objectIDs);
+    console.log(`🔥 Saved ${newRecordIDs.size} records`);
+
+    const recordsToDelete = existingRecordIds.filter(id => !newRecordIDs.has(id));
+    if (recordsToDelete.length > 0) {
+      console.log(`🔥 Deleting ${recordsToDelete.length} stale records...`);
+      await index.deleteObjects(recordsToDelete);
+    }
+
+    if (!isDeveloperDocs) {
+      await index.setSettings({
+        ...sentryAlgoliaIndexSettings,
+        searchableAttributes: [
+          'unordered(title)',
+          'unordered(section)',
+          'unordered(keywords)',
+          'text',
+        ],
+        ranking: [
+          'filters',
+          'typo',
+          'words',
+          'attribute',
+          'exact',
+          'proximity',
+          'desc(sectionRank)',
+          'asc(position)',
+          'asc(popularity)',
+        ],
+      });
+    }
   }
 
   const totalSeconds = (performance.now() - startTime) / 1000;
@@ -171,13 +190,17 @@ async function generateAlgoliaRecords(pages: FrontMatter[]) {
     )
   );
 
-  const allFiles = fs.readdirSync(CACHE_DIR);
-  const stale = allFiles.filter(f => !usedCacheFiles.has(f));
-  for (const f of stale) {
-    fs.unlinkSync(join(CACHE_DIR, f));
-  }
-  if (stale.length > 0) {
-    console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
+  // Skip cleanup in dry-run: we only processed a subset of pages, so most cache files would look
+  // "stale" and get wrongly deleted, poisoning the shared cache.
+  if (!DRY_RUN) {
+    const allFiles = fs.readdirSync(CACHE_DIR);
+    const stale = allFiles.filter(f => !usedCacheFiles.has(f));
+    for (const f of stale) {
+      fs.unlinkSync(join(CACHE_DIR, f));
+    }
+    if (stale.length > 0) {
+      console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
+    }
   }
 
   return {records: results.flat(), cacheHits, cacheMisses};
@@ -280,7 +303,7 @@ async function getRecords(
     const error = new Error(`🔴 Error processing ${pageFm.slug}: ${e.message}`, {
       cause: e,
     });
-    if (ALOGOLIA_SKIP_ON_ERROR) {
+    if (ALGOLIA_SKIP_ON_ERROR) {
       console.error(error);
       return {records: [], cached: false};
     }

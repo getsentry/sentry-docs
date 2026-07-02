@@ -4,10 +4,10 @@ sidebar_title: Snapshots
 sidebar_order: 4950
 sidebar_section: features
 description: Set up snapshots for any Apple app using Snapshot Previews or your preferred snapshot library.
-early_access: true
+beta: true
 ---
 
-<Include name="feature-available-for-user-group-early-adopter" />
+<Include name="feature-stage-beta.mdx" />
 
 Set up [Snapshots](/product/snapshots/) for your Apple app. Generate snapshots locally or in your own CI using your preferred snapshot library, then upload the generated images to Sentry for image diffing, visual review, and GitHub status checks.
 
@@ -36,11 +36,17 @@ class YourAppSnapshotTest: SnapshotTest {
 }
 ```
 
-Set `TEST_RUNNER_SNAPSHOTS_EXPORT_DIR` before running the tests so SnapshotPreviews writes images to disk instead of attaching them to the XCTest result bundle:
+Set `TEST_RUNNER_SNAPSHOTS_EXPORT_DIR` before running the tests so SnapshotPreviews writes images to disk instead of attaching them to the XCTest result bundle. When this is set, SnapshotPreviews also writes JSON metadata sidecars next to the images:
 
 ```bash
 export TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="$PWD/snapshot-images"
 ```
+
+SnapshotPreviews emits logical, unprefixed `.png` names. If you render the same logical snapshot on multiple simulators, prefix or directory-scope those files in CI before uploading them to Sentry.
+
+For large suites where you only want to render affected preview groups in a given CI run, see [Selective Testing with SnapshotPreviews](/platforms/apple/snapshots/selective-testing/).
+
+To customize per-preview metadata in those sidecars, see [SnapshotPreviews Metadata](/platforms/apple/snapshots/snapshotpreviews-metadata/).
 
 Continue to [Step 2](#step-2-test-locally).
 
@@ -86,7 +92,7 @@ xcodebuild test \
   -only-testing:YourAppTests/YourAppSnapshotTest \
   CODE_SIGNING_ALLOWED=NO
 
-sentry-cli build snapshots --app-id com.example.your-app $TEST_RUNNER_SNAPSHOTS_EXPORT_DIR
+sentry-cli snapshots upload --app-id com.example.your-app $TEST_RUNNER_SNAPSHOTS_EXPORT_DIR
 ```
 
 Replace the path with the directory your library writes to (for swift-snapshot-testing, that's `YourAppTests/__Snapshots__/YourSnapshotTests`). See [Uploading Snapshots](/product/snapshots/uploading-snapshots/) for the full CLI reference and metadata schema.
@@ -104,7 +110,7 @@ You have two options for uploading snapshots from CI. Pick the one that fits you
 
 ### Option A: Use the Sentry CLI
 
-Call `sentry-cli build snapshots` directly from your workflow — the same command you ran in [Step 2](#step-2-test-locally). This is the simplest option if you aren't already using Fastlane.
+Call `sentry-cli snapshots upload` directly from your workflow — the same command you ran in [Step 2](#step-2-test-locally). This is the simplest option if you aren't already using Fastlane.
 
 ### Option B: Use Fastlane
 
@@ -126,7 +132,8 @@ lane :upload_snapshots do |options|
     app_id: 'com.example.your-app',
     auth_token: ENV['SENTRY_AUTH_TOKEN'],
     org_slug: 'your-org',
-    project_slug: 'your-project'
+    project_slug: 'your-project',
+    # diff_threshold: 0.001 # optional: only flag images with >0.1% pixel change
   )
 end
 ```

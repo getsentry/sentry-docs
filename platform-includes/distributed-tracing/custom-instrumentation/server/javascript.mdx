@@ -87,3 +87,30 @@ function renderHtml() {
   `;
 }
 ```
+
+### Caching HTML That Contains Tracing Meta Tags
+
+The `sentry-trace` and `baggage` meta tags describe one specific trace, created when the server renders the response. If you cache that HTML, every visitor served the cached page gets the same tags and continues the same trace instead of starting their own.
+
+<Alert level="warning">
+
+Only inject tracing meta tags into responses that are rendered dynamically per request. Don't include them in HTML that is cached or statically generated.
+
+</Alert>
+
+This applies to any cached HTML, including:
+
+- CDN or edge caches
+- Reverse proxy or full-page caches
+- Statically generated or incrementally regenerated pages
+- Browser caches
+
+To avoid this, render any route that injects tracing meta tags dynamically. If a route must be cached, strip the `sentry-trace` and `baggage` meta tags before caching the response, or leave them out entirely — the browser SDK will start a fresh trace on page load.
+
+<Expandable title="Why Does Cached HTML Break Distributed Tracing?">
+
+The meta tags exist so the browser can continue the trace the server started, connecting your frontend and backend into one trace. That works because each rendered response carries the tags for that request.
+
+A cached response freezes one request's tags into the HTML and replays them to everyone who receives the cached copy. So instead of each page load getting its own trace, many unrelated visitors continue the same old trace, and a single trace fills up with page loads from different people for as long as the cache entry lives. That makes the affected traces hard to make sense of.
+
+</Expandable>

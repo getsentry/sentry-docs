@@ -20,7 +20,15 @@ App hang events will not have view hierarchy because the main thread is blocked 
 
 <Alert>
 
-Deobfuscation for view hierarchies is fully supported for native SDKs, and React Native, but is currently not supported for Flutter. View hierarchies are not supported for SwiftUI.
+Deobfuscation for view hierarchies is fully supported for native SDKs and React Native, but is currently not supported for Flutter.
+
+</Alert>
+
+<Alert>
+
+View hierarchy support for SwiftUI is highly limited, due to the SwiftUI rendering engine not backing every view with a UIKit view anymore.
+
+For example, `Text` views may be rendered directly into a graphics render surface rather than creating a corresponding `UILabel`. This is an operating system limitation, not a limitation of the Sentry SDK. As a result, the captured view hierarchy may not fully represent the SwiftUI view tree.
 
 </Alert>
 
@@ -52,6 +60,13 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+   options.attachViewHierarchy = YES;
+   options.reportAccessibilityIdentifier = NO;
+}];
+```
 
 ## Viewing View Hierarchy Attachments
 

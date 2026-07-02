@@ -4,7 +4,6 @@ sidebar_title: Logs
 description: "Send structured logs from your Next.js application to Sentry for debugging and observability."
 sidebar_order: 4
 sidebar_section: features
-new: true
 ---
 
 <AgentSkillsCallout skill="sentry-nextjs-sdk" platformName="Next.js" />
@@ -30,7 +29,7 @@ Logs work across all Next.js runtimes:
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {tabTitle:Client} {filename:instrumentation-client.ts}
+```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
@@ -132,13 +131,13 @@ Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
 <SplitSection>
 <SplitSectionText>
 
-### Scope Attributes
+### Shared Attributes
 
-Set attributes on a scope to automatically include them in all logs within that context.
+Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all logs (as well as your metrics). They work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but accept `string`, `number`, and `boolean` values. The top-level APIs require SDK version `10.61.0` or above. To target a specific scope, use the scope APIs (version `10.32.0`+).
 
 <Alert>
 
-Scopes don't propagate between Next.js runtimes. To include attributes on logs from all three runtimes, call `getIsolationScope().setAttribute()` in each (client, edge, server). Use isolation scope (not global) to prevent data leaking between concurrent requests. For server-side code, set context before any try/catch blocks so errors include it.
+Scopes don't propagate between Next.js runtimes. To include attributes on logs from all three runtimes, call `Sentry.setAttribute()` or `Sentry.setAttributes()` in each one (client, edge, server). Avoid `Sentry.getGlobalScope()` for request-specific data, since it's shared across concurrent requests. For server-side code, set context before any try/catch blocks so errors include it.
 
 </Alert>
 
@@ -148,17 +147,17 @@ See <PlatformLink to="/enriching-events/scopes/#different-kinds-of-scopes">Diffe
 <SplitSectionCode>
 
 ```typescript
-// setAttribute() or setAttributes()
+// Applied to all logs and metrics
+Sentry.setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
+Sentry.setAttribute("service", "checkout");
+
 // Global scope - shared across entire app
 Sentry.getGlobalScope().setAttributes({
   service: "checkout",
   version: "2.1.0",
-});
-
-// Isolation scope - unique per request
-Sentry.getIsolationScope().setAttributes({
-  org_id: user.orgId,
-  user_tier: user.tier,
 });
 
 // Current scope - single operation
@@ -385,6 +384,9 @@ Sentry automatically adds these attributes to every log:
   }
 }
 ```
+
+Any attributes set via `Sentry.setAttribute()` / `Sentry.setAttributes()` (or directly on a scope) are automatically included on all logs. The top-level APIs require SDK version `10.61.0` or above. See [Shared Attributes](#shared-attributes) above for details.
+
 
 ## Troubleshooting
 

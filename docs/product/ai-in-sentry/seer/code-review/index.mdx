@@ -10,19 +10,21 @@ keywords:
   - code review
   - ai code review
   - pull request
+  - merge request
   - github
+  - gitlab
   - error prediction
 ---
 
-**Code Review** helps you reviews your code changes, predicting errors and offering suggestions for improvement before merging pull requests.
+**Code Review** helps you review your code changes, predicting errors and offering suggestions for improvement before merging pull requests or merge requests.
 
 ![Code Review =700x](./img/code-review-comment.png)
 
 ## Getting Started
 
-Set up Code Review in your GitHub organization or on specific repositories:
+Set up Code Review in your Github or GitLab organization or on specific repositories:
 
-1. Connect to GitHub through the [Sentry GitHub integration](/integrations/source-code-mgmt/github/). You can follow the steps in [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to get started. **Note:** Seer can only be integrated with the cloud version of GitHub.
+1. Connect to GitHub through the [Sentry GitHub integration](/integrations/source-code-mgmt/github/) or Gitlab through the [Sentry GitLab integration](/integrations/source-code-mgmt/gitlab/). You can follow the steps in [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to get started. **Note:** Seer supports GitHub.com and GitLab.com (cloud versions only).
 
 2. Select which repositories you want to connect to Sentry, go to [Seer SCM Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/scm/) to make sure your repositories are connected.
 
@@ -31,7 +33,7 @@ Set up Code Review in your GitHub organization or on specific repositories:
 **Note:** Enabling Code Review for one a repository starts *active contributor pricing*. Learn more about [Seer pricing](/pricing/#seer-pricing).
 
 <Alert level="info">
-Currently Seer only supports the [GitHub integration](/integrations/source-code-mgmt/github/).
+Seer supports the [GitHub integration](/integrations/source-code-mgmt/github/) and the [GitLab integration](/integrations/source-code-mgmt/gitlab/) (GitLab.com only). Self-hosted instances and other SCM providers are not currently supported.
 </Alert>
 
 ### GitHub Permissions
@@ -49,13 +51,17 @@ If you've already installed the GitHub integration, you may need to update your 
   Denying or ignoring permission update requests won't affect your current Sentry usage, but will prevent Code Review and other features from working.
 </Alert>
 
+### GitLab Permissions
+
+For GitLab, Code Review uses the permissions granted during the [GitLab integration setup](/integrations/source-code-mgmt/gitlab/#install). The service account used for installation needs at least Maintainer access to the repositories you want Code Review to run on.
+
 ## Code Review Commands
 
 Ways Code Review can help you:
 
-1. **Error Prediction** - When you create a pull request and set it to `Ready for Review`, Code Review will check for errors in your code on every commit. Once the check is complete, you will see a 🎉 emoji as a reaction to your PR description. If errors are found, Code Review will add comments to your PR. **Note:** We skip reviews if you set your PR to `draft` at any time.
+1. **Error Prediction** - When you create a pull request on Github, or a merge request on GitLab and set it to `Ready for Review`, Code Review will check for errors in your code on every commit. Once the check is complete, you will see a 🎉 emoji as a reaction to your PR or merge request (MR) description. If errors are found, Code Review will add comments. **Note:** We skip reviews if you set your PR/MR to `draft` at any time.
 
-2. **`@sentry review`** - Use this command in a PR comment, and the assistant will review the PR and predict errors, as well as make suggestions. Head to [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to enable it.
+2. **`@sentry review`** - Use this command in a PR or MR comment, and the assistant will review the changes and predict errors, as well as make suggestions. Head to [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to enable it.
 
 ## GitHub Status Checks
 
@@ -82,15 +88,19 @@ The detailed code review comments are also visible to all users with repository 
  While you can add Code Review as a part of your branch protection, we recommend making the Code Review status check an **optional** check. Requiring it will block PR merges if the check fails due to service disruptions, and may conflict with future personal configuration options that allow users to opt out of code review.
 </Alert>
 
+### GitLab: No Status Checks
+
+GitLab does not have an equivalent to the GitHub Checks API. On GitLab, Code Review results appear as MR comments only — not as a pipeline status check. You cannot use Code Review as a required check in GitLab CI/CD merge request approvals.
+
 ## Frequently Asked Questions
 
 - **What data does AI Code Review need access to for the AI system to function, and what information is sent to third-party AI providers?**
 
   AI Code Review requires access to your pull requests, including PR metadata, repository information, file names, directory structures, and code diffs. Only file names, code diffs, and PR descriptions are sent to the AI provider for analysis.
 
-- **Does AI Code run anywhere outside of GitHub, and does it run in the background?**
+- **Which SCM providers does Code Review support?**
 
-  AI Code Review only runs on GitHub. It will run when a PR is marked `ready for review` (either when creating the PR, or after taking it out of draft), on every commit while in `ready for review` mode, and when triggered by a comment.
+  Code Review runs on GitHub.com and GitLab.com (cloud versions only). Self-hosted instances and other SCM providers are not currently supported. On GitHub, it runs when a PR is marked `ready for review`, on every commit while in that mode, and when triggered by a comment. On GitLab, it runs when a merge request is opened or updated, and when triggered by commenting `@sentry review` on the MR.
 
   You can learn more about AI privacy and security [here](/product/ai-in-sentry/ai-privacy-and-security/).
 
