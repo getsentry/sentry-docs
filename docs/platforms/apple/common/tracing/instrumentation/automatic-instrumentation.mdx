@@ -223,7 +223,7 @@ With this feature, the SDK differentiates between four different app start types
 - **Prewarmed cold start**
 - **Prewarmed warm start**
 
-You can filter for different app start types in [Discover](/product/explore/discover-queries/) with `app_start_type:cold.prewarmed`, `app_start_type:warm.prewarmed`, `app_start_type:cold`, and `app_start_type:warm`.
+You can filter for different app start types in [Discover](/product/discover-queries/) with `app_start_type:cold.prewarmed`, `app_start_type:warm.prewarmed`, `app_start_type:cold`, and `app_start_type:warm`.
 
 To disable prewarmed app start tracing:
 
@@ -356,9 +356,9 @@ Available since [version 9.15.0](https://github.com/getsentry/sentry-cocoa/blob/
 
 </Alert>
 
-By default, the standalone app start transaction ends when the `didFinishLaunchingNotification` notification is posted (after `application(_:didFinishLaunchingWithOptions:)` function returns). If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `SentrySDK.extendAppLaunch()`.
+By default, the standalone app start transaction ends when the `didFinishLaunchingNotification` notification is posted (after `application(_:didFinishLaunchingWithOptions:)` function returns). If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `SentrySDK.extendAppStart()`.
 
-Call `extendAppLaunch()` after `SentrySDK.start(options:)` and before `application(_:didFinishLaunchingWithOptions:)` returns, so the SDK doesn't automatically finish the app start transaction. The method returns the extended app launch span, which you can use to add child spans that break down the extended launch period. Call `finish()` on the returned span when your app is fully ready. This adds an "Extended App Start" child span covering the time between the two calls.
+Call `extendAppStart()` after `SentrySDK.start(options:)` and before `application(_:didFinishLaunchingWithOptions:)` returns, so the SDK doesn't automatically finish the app start transaction. Use `getExtendedAppStartSpan()` to retrieve the extended app start span and add child spans that break down the extended launch period. Call `finish()` on the span (or call `finishExtendedAppStart()`) when your app is fully ready. This adds an "Extended App Start" child span covering the time between the two calls.
 
 ![Extended App Start](./img/extended-app-start.png)
 
@@ -378,7 +378,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             options.dsn = "___PUBLIC_DSN___"
             options.experimental.enableStandaloneAppStartTracing = true
         }
-        appStartSpan = SentrySDK.extendAppLaunch()
+        SentrySDK.extendAppStart()
+        appStartSpan = SentrySDK.getExtendedAppStartSpan()
 
         let configSpan = appStartSpan?.startChild(
             operation: "app.init",
@@ -410,7 +411,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         options.dsn = @"___PUBLIC_DSN___";
         options.experimental.enableStandaloneAppStartTracing = YES;
     }];
-    self.appStartSpan = [SentrySDK extendAppLaunch];
+    [SentrySDK extendAppStart];
+    self.appStartSpan = [SentrySDK getExtendedAppStartSpan];
 
     id<SentrySpan> configSpan = [self.appStartSpan startChildWithOperation:@"app.init"
                                                                description:@"fetch remote config"];
@@ -439,7 +441,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         options.dsn = @"___PUBLIC_DSN___";
         options.experimental.enableStandaloneAppStartTracing = YES;
     }];
-    self.appStartSpan = [SentryObjCSDK extendAppLaunch];
+    [SentryObjCSDK extendAppStart];
+    self.appStartSpan = [SentryObjCSDK getExtendedAppStartSpan];
 
     id<SentryObjCSpan> configSpan = [self.appStartSpan startChildWithOperation:@"app.init"
                                                                description:@"fetch remote config"];
@@ -455,7 +458,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 ```
 
-You can also call `SentrySDK.finishExtendedAppLaunch()` instead of `finish()` on the span — both are equivalent.
+You can also call `SentrySDK.finishExtendedAppStart()` instead of calling `finish()` on the span returned by `getExtendedAppStartSpan()` — both are equivalent.
 
 **SwiftUI:**
 
@@ -471,7 +474,8 @@ struct MyApp: App {
             options.dsn = "___PUBLIC_DSN___"
             options.experimental.enableStandaloneAppStartTracing = true
         }
-        appStartSpan = SentrySDK.extendAppLaunch()
+        SentrySDK.extendAppStart()
+        appStartSpan = SentrySDK.getExtendedAppStartSpan()
 
         let configSpan = appStartSpan?.startChild(
             operation: "app.init",
@@ -493,11 +497,11 @@ struct MyApp: App {
 
 <Alert>
 
-`extendAppLaunch()` returns the extended app launch span, or `nil` if the SDK is not started or the app start transaction was already created. The return value is `@discardableResult`, so existing code that doesn't use the return value will continue to work.
+`extendAppStart()` must be called before the `didFinishLaunchingNotification` notification is posted. If called after the app start transaction has already been created, the SDK logs a warning.
 
-`extendAppLaunch()` must be called before the `didFinishLaunchingNotification` notification is posted. If called after the app start transaction has already been created, it returns `nil` and the SDK logs a warning.
+`getExtendedAppStartSpan()` returns the extended app start span, or `nil` if `extendAppStart()` was not called, the SDK is not started, or the app start transaction was already created.
 
-Calling `finishExtendedAppLaunch()` without a prior `extendAppLaunch()` call, or after the extended launch was already finished, is a no-op.
+Calling `finishExtendedAppStart()` without a prior `extendAppStart()` call, or after the extended launch was already finished, is a no-op.
 
 These APIs are only available on iOS, tvOS, and visionOS, and require `enableStandaloneAppStartTracing` to be enabled.
 
