@@ -1,0 +1,98 @@
+---
+title: OpenTelemetry (OTLP)
+description: "Learn about using OTLP to automatically send OpenTelemetry Traces to Sentry."
+sidebar_order: 22
+keywords: ["otlp", "otel", "opentelemetry"]
+---
+
+The OTLP exporter configures the Sentry SDK to automatically send trace data instrumented by an OpenTelemetry SDK to Sentry's [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/) [ingestion endpoint](/concepts/otlp).
+
+## Install
+
+Add the `Sentry.OpenTelemetry.Exporter` NuGet package to your project:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.OpenTelemetry.Exporter -v {{@inject packages.version('sentry.dotnet') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.OpenTelemetry.Exporter -Version {{@inject packages.version('sentry.dotnet') }}
+```
+
+```shell {tabTitle:Paket CLI}
+paket add Sentry.OpenTelemetry.Exporter --version {{@inject packages.version('sentry.dotnet') }}
+```
+
+This package includes the standard OpenTelemetry OTLP exporter as a transitive dependency.
+
+To instrument outgoing HTTP requests using OpenTelemetry, also install [`OpenTelemetry.Instrumentation.Http`](https://www.nuget.org/packages/OpenTelemetry.Instrumentation.Http):
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package OpenTelemetry.Instrumentation.Http
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package OpenTelemetry.Instrumentation.Http
+```
+
+## Configure
+
+You need to configure both the OpenTelemetry and Sentry SDKs to get trace data.
+
+### OpenTelemetry
+
+Set up a `TracerProvider` using `AddSentryOtlpExporter` with your DSN. This automatically configures the OTLP endpoint and authentication headers derived from the DSN.
+
+```csharp
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddSource("MyApp") // the name of your ActivitySource
+    .AddHttpClientInstrumentation()
+    .AddSentryOtlpExporter("___PUBLIC_DSN___")
+    .Build();
+```
+
+### Sentry
+
+Initialize Sentry and call `UseOtlp()` to disable Sentry's built-in span creation in favor of OpenTelemetry tracing.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.UseOtlp();
+});
+```
+
+## Behavior
+
+Under the hood, the OTLP exporter sets up the following parts:
+
+* An OTLP exporter that automatically configures the ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Sentry SDK (i.e. do not set `TracesSampleRate`).
+* A `SentryPropagator` that injects `sentry-trace` and `baggage` headers alongside the standard W3C `traceparent` for compatibility with services using Sentry's native tracing
+* Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
+
+<Alert level="warning" title="Planned Removal">
+
+The automatic propagator setup will be removed in the next major version. Configure propagators manually using the [OpenTelemetry propagation API](https://opentelemetry.io/docs/concepts/context-propagation/) instead.
+
+</Alert>
+
+Cross-service trace propagation uses OTel's default W3C `traceparent` headers and does not require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
+
+Calling `UseOtlp()` on `SentryOptions` sets `DisableSentryTracing = true`, which turns off Sentry's automatic span creation from `SentryHttpMessageHandler`, `DiagnosticSource` listener, and Entity Framework interception to avoid duplicate spans.
+
+## Options
+
+`AddSentryOtlpExporter` accepts the following parameters:
+
+- `dsnString` (string):
+
+  Your Sentry DSN. The OTLP endpoint and authentication headers are derived from this automatically.
+
+- `collectorUrl` (Uri, optional):
+
+  URL of your own OpenTelemetry collector. When set, the exporter will send traces to this URL instead of the Sentry OTLP endpoint derived from the DSN.
+
+- `defaultTextMapPropagator` (TextMapPropagator, optional):
+
+  Override the default propagator. Defaults to `SentryPropagator`, which propagates `sentry-trace`, `baggage`, and W3C `traceparent` headers. This option will be removed alongside the automatic propagator setup in the next major version.
