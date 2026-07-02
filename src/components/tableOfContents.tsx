@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useState} from 'react';
 
 type TreeItem = {
   children: TreeItem[];
@@ -71,42 +71,30 @@ export function TableOfContents({ignoreIds = []}: Props) {
     setTreeItems(_tocItems);
   }, [ignoreIds]);
 
-  // Re-scroll to hash anchor after TOC renders to compensate for layout shift.
-  // The TOC starts empty and populates client-side, which pushes content down
-  // and causes the browser's initial anchor scroll to land on the wrong section.
-  const hasScrolledToHash = useRef(false);
-  const lastHash = useRef<string>('');
+  // Track current hash to trigger scroll when it changes (e.g., browser back/forward)
+  const [currentHash, setCurrentHash] = useState('');
 
-  // Reset scroll flag when hash changes (e.g., via browser back/forward)
   useEffect(() => {
-    const handleHashChange = () => {
-      const currentHash = window.location.hash;
-      if (currentHash !== lastHash.current) {
-        hasScrolledToHash.current = false;
-        lastHash.current = currentHash;
-      }
-    };
-
-    // Listen for hash changes
+    // Initialize hash and listen for changes
+    setCurrentHash(window.location.hash);
+    const handleHashChange = () => setCurrentHash(window.location.hash);
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // Re-scroll to hash anchor after TOC renders to compensate for layout shift.
+  // The TOC starts empty and populates client-side, which pushes content down
+  // and causes the browser's initial anchor scroll to land on the wrong section.
+  // This effect re-runs whenever the hash or treeItems change.
   useEffect(() => {
-    if (hasScrolledToHash.current || treeItems.length === 0) {
+    if (treeItems.length === 0 || !currentHash) {
       return;
     }
-    const hash = window.location.hash;
-    if (!hash) {
-      return;
-    }
-    hasScrolledToHash.current = true;
-    lastHash.current = hash;
     requestAnimationFrame(() => {
-      const id = decodeURIComponent(hash.slice(1));
+      const id = decodeURIComponent(currentHash.slice(1));
       document.getElementById(id)?.scrollIntoView();
     });
-  }, [treeItems]);
+  }, [currentHash, treeItems]);
 
   return (
     <ul>
