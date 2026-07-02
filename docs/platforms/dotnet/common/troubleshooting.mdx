@@ -41,6 +41,40 @@ This issue affects:
 
 </PlatformSection>
 
+<PlatformSection supported={["dotnet.maui", "dotnet.apple", "dotnet.android"]}>
+
+## Duplicate events from native crashes
+
+On Android and iOS, a single managed exception that surfaces as a native signal — for example a `NullReferenceException` that the runtime raises as a `SIGSEGV` — can be reported to Sentry **twice**: once as the managed .NET exception, and once as a native crash. This happens because both the .NET runtime and Sentry's native layer handle the same fault.
+
+### iOS
+
+This is handled automatically as of **version 6.4.0** — no configuration is required. The SDK intercepts the managed exception first and tells the native layer to ignore the resulting signal, so you get a single event. If you're seeing duplicates on iOS, upgrade to 6.4.0 or later.
+
+### Android
+
+The preferred fix is to change the order in which the native and managed signal handlers run, so the .NET runtime handles the managed exception first. This is currently **experimental** and opt-in:
+
+```csharp
+options.Native.ExperimentalOptions.SignalHandlerStrategy =
+    Sentry.Android.SignalHandlerStrategy.ChainAtStart;
+```
+
+**Important Note:**
+- Requires Android 8.0 (API level 26) or later. On older versions, the SDK falls back to the default strategy automatically.
+- Only needed on the **Mono** runtime. On CoreCLR, the SDK already avoids the duplicate and keeps the default strategy.
+- Not compatible with .NET runtimes 10.0.0–10.0.3 (.NET SDKs 10.0.100–10.0.103). On those versions, the SDK falls back to the default strategy automatically. This was fixed in .NET runtime 10.0.4 (.NET SDK 10.0.200).
+
+As an alternative — or if you can't opt into the experimental strategy — you can suppress native segfault capture entirely:
+
+```csharp
+options.Android.SuppressSegfaults = true;
+```
+
+**Important Note**: This stops the native SDK from capturing `SIGSEGV` errors altogether, so it can also hide *genuine* native segfaults originating in native (non-managed) code. Prefer `SignalHandlerStrategy.ChainAtStart` where possible.
+
+</PlatformSection>
+
 ## Sentry CLI not configured
 
 The following message may appear in your build output:
