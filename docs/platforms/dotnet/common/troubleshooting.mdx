@@ -47,10 +47,14 @@ This issue affects:
 
 On Android and iOS, a single managed exception that surfaces as a native signal — for example a `NullReferenceException` that the runtime raises as a `SIGSEGV` — can be reported to Sentry **twice**: once as the managed .NET exception, and once as a native crash. This happens because both the .NET runtime and Sentry's native layer handle the same fault.
 
+</PlatformSection>
+<PlatformSection supported={["dotnet.maui", "dotnet.apple"]}>
 ### iOS
 
 This is handled automatically as of **version 6.4.0** — no configuration is required. The SDK intercepts the managed exception first and tells the native layer to ignore the resulting signal, so you get a single event. If you're seeing duplicates on iOS, upgrade to 6.4.0 or later.
 
+</PlatformSection>
+<PlatformSection supported={["dotnet.maui", "dotnet.android"]}>
 ### Android
 
 The preferred fix is to change the order in which the native and managed signal handlers run, so the .NET runtime handles the managed exception first. This is currently **experimental** and opt-in:
