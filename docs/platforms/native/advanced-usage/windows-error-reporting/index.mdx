@@ -1,0 +1,71 @@
+---
+title: Windows Error Reporting
+description: "Use the Native SDK to send minidumps captured by Windows Error Reporting (WER) to Sentry."
+sidebar_order: 2200
+---
+
+[Windows Error Reporting (WER)](https://learn.microsoft.com/en-us/windows/win32/wer/windows-error-reporting) is a Windows system service that detects process crashes and generates minidumps. If you already use WER and prefer to keep it as your primary crash reporter, you can use the Native SDK (built without a crash backend) to send those locally captured minidumps to Sentry.
+
+<Alert>
+
+This guide describes how to use the Native SDK solely as a client to upload WER-captured minidumps to Sentry. In this mode, the SDK is not responsible for capturing crashes, so features like attachments, logs, tags, and screenshots are not available. If you don't need WER specifically, we recommend using the [crashpad](/platforms/native/configuration/backends/crashpad/) or [native](/platforms/native/configuration/backends/native/) backend instead, which can capture WER / fast-fail crashes.
+
+</Alert>
+
+## Configure WER to Collect Local Dumps
+
+WER can be configured to store a minidump to a local directory when a process crashes. This requires setting registry keys under `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps`, which needs administrator privileges and is typically done at installation time.
+
+The following registry configuration enables local dump collection for your application:
+
+| Name | Type | Value |
+| ---- | ---- | ----- |
+| `DumpFolder` | `REG_EXPAND_SZ` | Path to a local directory (e.g., `%LOCALAPPDATA%\YourApp\CrashDumps`) |
+| `DumpType` (optional) | `REG_DWORD` | `0` ([custom dump](https://learn.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps)), `1` (mini dump, default), or `2` (full dump — includes heap, may contain sensitive data) |
+| `DumpCount` (optional) | `REG_DWORD` | Maximum number of dumps to keep (default `10`) |
+
+For example, you could deploy this from an installer by running:
+
+```batch
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpFolder /t REG_EXPAND_SZ /d "%%LOCALAPPDATA%%\YourApp\CrashDumps" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpType /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpCount /t REG_DWORD /d 10 /f
+```
+
+```powershell
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpFolder /t REG_EXPAND_SZ /d "%LOCALAPPDATA%\YourApp\CrashDumps" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpType /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpCount /t REG_DWORD /d 10 /f
+```
+
+For more details, see [Collecting User-Mode Dumps](https://learn.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps).
+
+## Build the Native SDK with Crash Reporting Disabled
+
+To prevent the Native SDK from capturing crashes (which would result in duplicate crash reports alongside WER), build it without a crash backend:
+
+```cmake
+cmake -DSENTRY_BACKEND=none ...
+```
+
+With `SENTRY_BACKEND=none`, the SDK will not capture crashes on its own, but you can still use its API to capture and send minidumps.
+
+## Capture and Send WER Dumps to Sentry
+
+On application startup, initialize the SDK and upload any minidumps WER has stored in the dump directory. For each minidump file, call `sentry_capture_minidumpw()` with its path:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_dsn(options, "___PUBLIC_DSN___");
+sentry_init(options);
+
+/* for each minidump_path in L"%LOCALAPPDATA%\\YourApp\\CrashDumps" */ {
+    sentry_uuid_t event_id = sentry_capture_minidumpw(minidump_path);
+    if (!sentry_uuid_is_nil(&event_id)) {
+        DeleteFileW(minidump_path);
+    }
+}
+sentry_close();
+```
+
+`sentry_capture_minidumpw()` processes the minidump and uploads it to Sentry as a crash event.
