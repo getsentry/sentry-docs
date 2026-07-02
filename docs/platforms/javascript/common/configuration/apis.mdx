@@ -134,10 +134,12 @@ Sentry.withScope((scope) => {
 });
 ```
 
-  <Expandable title='What is the difference to `beforeSend` / `beforeSendTransaction`?'>
-    `beforeSend` and `beforeSendTransaction` are guaranteed to be run last, after all other event processors, (which means they get the final version of the event right before it's sent, hence the name). Event processors added with `addEventProcessor` are run in an undetermined order, which means changes to the event may still be made after the event processor runs.
+  <Expandable title='What is the difference to `beforeSend`, `beforeSendTransaction`, and `beforeSendSpan`?'>
+    `beforeSend`, `beforeSendTransaction`, and `beforeSendSpan` are guaranteed to be run last, after all other event processors, (which means they get the final version of the event right before it's sent, hence the name). Event processors added with `addEventProcessor` are run in an undetermined order, which means changes to the event may still be made after the event processor runs.
 
-    There can only be a single `beforeSend` / `beforeSendTransaction` processor, but you can add multiple event processors via `addEventProcessor()`.
+    There can only be a single `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` callback, but you can add multiple event processors via `addEventProcessor()`.
+
+    If you're using <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>, use `beforeSendSpan`, since event processors are not applied to spans.
 
   </Expandable>
 </SdkApi>
@@ -574,7 +576,7 @@ parameters={[
         { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
         { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
         { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
-        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span.' },
+        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span. \n// Not available in stream mode. Use `parentSpan: null` instead to make this span show up as service span.' },
         { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
         { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
       ]
@@ -623,7 +625,7 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
         { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
         { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
         { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
-        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span.' },
+        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span. \n// Not available in stream mode. Use `parentSpan: null` instead to make this span show up as service span.' },
         { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
         { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
       ]
@@ -660,7 +662,7 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
         { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
         { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
         { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
-        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span.' },
+        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span. \n// Not available in stream mode. Use `parentSpan: null` instead to make this span show up as service span.' },
         { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
         { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
       ]
@@ -841,7 +843,17 @@ Sentry.reportPageLoaded();
 These utilities can be used for more advanced tracing use cases.
 
 <SdkApi name="spanToJSON" signature="function spanToJSON(span: Span): SpanJSON">
-  Convert a span to a JSON object.
+  Convert a span to a JSON object. If you're using{" "}
+  <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>, we
+  recommend using [`spanToStreamedSpanJSON`](#spanToStreamedSpanJSON) instead.
+</SdkApi>
+
+<SdkApi
+  name="spanToStreamedSpanJSON"
+  signature="function spanToStreamedSpanJSON(span: Span): StreamedSpanJSON"
+>
+  Convert a span to a JSON object. Only available in{" "}
+  <PlatformLink to="/tracing/new-spans/">stream mode</PlatformLink>.
 </SdkApi>
 
 <SdkApi
