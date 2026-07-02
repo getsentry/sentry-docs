@@ -48,6 +48,11 @@ import sentry_sdk
 - with parent.start_child(op="db", description="SELECT") as child:
 + with sentry_sdk.traces.start_span(name="SELECT", attributes={"sentry.op": "db"}):
       ...
+
+# Starting a child span: if the span's parent should be a span that's currently not active, you can provide it explicitly
+- with parent.start_child(op="db", description="SELECT") as child:
++ with sentry_sdk.traces.start_span(name="SELECT", attributes={"sentry.op": "db"}, parent_span=parent):
+      ...
 ```
 
 A few argument changes come along with this:
@@ -201,7 +206,7 @@ import sentry_sdk
 -     custom_sampling_context={"asgi_scope": asgi_scope},
 - ):
 -     ...
-+ sentry_sdk.Scope.set_custom_sampling_context({"asgi_scope": asgi_scope})
++ sentry_sdk.get_current_scope().set_custom_sampling_context({"asgi_scope": asgi_scope})
 + with sentry_sdk.traces.start_span(name="handle request"):
 +     ...
 ```
