@@ -3,7 +3,27 @@ If you use the current version of our .NET SDK, distributed tracing works automa
 - ASP.NET Core
 - Azure Functions Worker
 
-When using ASP.NET you will need to update your `Application_BeginRequest` method:
+When using ASP.NET (not ASP.NET Core), you have to hook into the request lifecycle in `Global.asax.cs` to propagate traces. There are two options, depending on whether you want this application to create its own transactions and spans.
+
+### Create transactions and continue the trace (recommended)
+
+In most cases you'll want your ASP.NET application to show up in your distributed traces with its own transactions and spans. Use `StartSentryTransaction` in `Application_BeginRequest` and `FinishSentryTransaction` in `Application_EndRequest`. `StartSentryTransaction` continues any incoming trace and creates a transaction for the request.
+
+```csharp
+protected void Application_BeginRequest()
+{
+    Context.StartSentryTransaction();
+}
+
+protected void Application_EndRequest()
+{
+    Context.FinishSentryTransaction();
+}
+```
+
+### Continue the trace without creating transactions
+
+If you only want to propagate an incoming trace to downstream services (for example, a database or another API) without your ASP.NET application creating any transactions or spans of its own, use `StartOrContinueTrace` instead:
 
 ```csharp
 protected void Application_BeginRequest()
@@ -11,3 +31,9 @@ protected void Application_BeginRequest()
     Context.StartOrContinueTrace();
 }
 ```
+
+<Alert level="warning">
+
+Use either `StartSentryTransaction` or `StartOrContinueTrace`, not both. `StartOrContinueTrace` only propagates the trace and does not create a transaction, so if you replace `StartSentryTransaction` with it, your ASP.NET application will stop sending transactions to Sentry. Since `StartSentryTransaction` already continues the incoming trace, most applications should use it on its own.
+
+</Alert>
