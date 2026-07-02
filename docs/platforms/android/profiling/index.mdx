@@ -9,20 +9,21 @@ sidebar_section: features
 <PlatformContent includePath="profiling/index/preface" />
 <PlatformContent includePath="profiling/index/why-profiling" />
 
-<Alert level="warning" title="Important">
-  Profiling uses the Android runtime's `tracer` under the hood to sample threads. There are known issues that this `tracer` can cause crashes in certain circumstances. See this <PlatformLink to="/profiling/troubleshooting#i-see-an-elevated-number-of-crashes-in-the-android-runtime-when-profiling-is-activated">troubleshooting</PlatformLink> entry for more information.
+On Android 15 (API level 35) and higher, Sentry's Android UI Profiling is built on top of the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager APIs</Link>, which capture stack samples as <Link to="https://perfetto.dev/">Perfetto</Link> traces. This is the recommended way to profile your Android app.
+
+<Alert level="info" title="Looking for the old profiler?">
+  On devices running below Android 15, the SDK automatically falls back to the legacy profiler, which samples threads using the Android runtime's `tracer`. That implementation, along with the transaction-based profiler, is now considered legacy. See <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink> for details, including how to disable it.
 </Alert>
 
-<Alert level="info" title="Improved Profiling Coming Soon">
-  We're working on a more stable profiling solution based on the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager APIs (Perfetto)</Link>. Follow the <Link to="https://github.com/getsentry/sentry-java/discussions/5560">discussion on GitHub</Link> for updates.
-</Alert>
+## Prerequisites
 
-## Installation
+UI Profiling is available starting in SDK version `8.7.0`. On **Android 15 (API level 35) or higher**, it uses the ProfilingManager (Perfetto) backend, available starting in SDK version `8.47.0`.
 
-Android UI Profiling is available starting in SDK version `8.7.0`.
-The transaction-based profiler is available on SDK versions `6.16.0` and higher through <PlatformLink to="/configuration/options/#transaction-based-profiling-options">its options</PlatformLink>.
+On devices running below Android 15, the SDK automatically falls back to the <PlatformLink to="/profiling/legacy">legacy profiler</PlatformLink>. You can turn this fallback off, and disable profiling on those devices entirely, with the <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> option.
 
 ## Enabling UI Profiling
+
+To enable UI Profiling, set a `profileSessionSampleRate` and choose a profile lifecycle. The SDK automatically uses the ProfilingManager (Perfetto) backend on Android 15 (API level 35) and higher, and the legacy profiler on older devices.
 
 UI Profiling supports two modes: `manual` and `trace`. These modes are mutually exclusive and cannot be used at the same time.
 
@@ -48,8 +49,6 @@ By default, some transactions will be created automatically for common operation
   <!-- Enable UI profiling, adjust in production env. This is evaluated only once per session -->
   <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="trace" />
-  <!-- Enable profiling on app start. The app start profile will be stopped automatically when the app start root span finishes -->
-  <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
 </application>
 ```
 
@@ -72,8 +71,6 @@ public class MyApplication extends Application {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.setProfileSessionSampleRate(1.0);
           options.setProfileLifecycle(ProfileLifecycle.TRACE);
-          // Enable profiling on app start. The app start profile will be stopped automatically when the app start root span finishes
-          options.setStartProfilerOnAppStart(true);
         });
   }
 }
@@ -97,8 +94,6 @@ class MyApplication : Application() {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.profileSessionSampleRate = 1.0
           options.profileLifecycle = ProfileLifecycle.TRACE
-          // Enable profiling on app start. The app start profile will be stopped automatically when the app start root span finishes
-          options.isStartProfilerOnAppStart = true
          })
   }
 }
@@ -114,8 +109,6 @@ To enable manual profiling, set the lifecycle to `manual`. Manual profiling does
   <!-- Enable UI profiling, adjust in production env. This is evaluated only once per session -->
   <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="manual" />
-  <!-- Enable profiling on app start. The app start profile has to be stopped through Sentry.stopProfiler() -->
-  <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
 </application>
 ```
 
@@ -137,13 +130,11 @@ public class MyApplication extends Application {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.setProfileSessionSampleRate(1.0);
           options.setProfileLifecycle(ProfileLifecycle.MANUAL);
-          // Enable profiling on app start. The app start profile has to be stopped through Sentry.stopProfiler()
-          options.setStartProfilerOnAppStart(true);
         });
-    // Start profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`
+    // Start profiling
     Sentry.startProfiler();
-    // Stop profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`.
-    // This call is optional. If you don't stop the profiler, it will keep profiling your application until the process exits.
+    // Stop profiling. This call is optional. If you don't stop the profiler, it will keep
+    // profiling your application until the process exits.
     Sentry.stopProfiler();
   }
 }
@@ -166,95 +157,28 @@ class MyApplication : Application() {
           // Enable UI profiling, adjust in production env. This is evaluated only once per session
           options.profileSessionSampleRate = 1.0
           options.profileLifecycle = ProfileLifecycle.MANUAL
-          // Enable profiling on app start. The app start profile has to be stopped through Sentry.stopProfiler()
-          options.isStartProfilerOnAppStart = true
          })
-    // Start profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`
+    // Start profiling
     Sentry.startProfiler()
-    // Stop profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`.
-    // This call is optional. If you don't stop the profiler, it will keep profiling your application until the process exits.
+    // Stop profiling. This call is optional. If you don't stop the profiler, it will keep
+    // profiling your application until the process exits.
     Sentry.stopProfiler()
   }
 }
 ```
 
-### Enabling Transaction-Based Profiling
+## Limitations
 
-<Alert>
+On Android 15 (API level 35) and higher, UI Profiling relies on the Android ProfilingManager, so the following limitations apply:
 
-This mode will eventually be deprecated, and it's recommended to upgrade to UI Profiling. The same behaviour, without the 30 seconds limitation, can be achieved with the <PlatformLink to="/profiling/#enabling-trace-lifecycle-ui-profiling">Trace Lifecycle UI Profiling</PlatformLink>. In order to upgrade to UI Profiling, you also need to remove the <PlatformLink to="/configuration/options/#transaction-based-profiling-options">transaction-based profiling options</PlatformLink> from your configuration.
-Android transaction-based profiling is available starting in SDK version `6.16.0` and is supported on API level 22 and up.
-App start profiling is available starting in SDK version `7.3.0`.
+- **Older devices use the legacy profiler.** On devices below Android 15, the SDK automatically falls back to <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink>, which has different characteristics. You can disable this fallback with the <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> option.
+- **App start profiling is not supported.** The `startProfilerOnAppStart` option has no effect with the ProfilingManager (Perfetto) backend. App start profiling is only supported by the legacy profiler used on devices below Android 15. To learn more, see <PlatformLink to="/profiling/legacy">Legacy Profiling</PlatformLink>.
+- **Profiling requests are rate limited and not guaranteed to be filled.** Apart from the SDK sampling rate, the Android Framework also restricts profiling, so not every request results in a profile. These limits are outside the SDK's control. To learn more, see the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> documentation.
 
-</Alert>
+<Alert level="info" title="Disabling Rate Limiting for Local Testing">
+  When testing locally, you can disable the Android Framework restrictions with the following shell command:
 
-The transaction-based profiling only runs in tandem with performance transactions that were started either automatically or manually with `Sentry.startTransaction`, and stops automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution.
-
-```xml {filename:AndroidManifest.xml}
-<application>
-  <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
-  <!-- Enable tracing, needed for legacy profiling, adjust in production env -->
-  <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-  <!-- Enable transaction-based profiling, adjust in production env. This is relative to traces sample rate -->
-  <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
-  <!-- Enable profiling on app start -->
-  <meta-data android:name="io.sentry.traces.profiling.enable-app-start" android:value="true" />
-</application>
-```
-
-```java
-import io.sentry.ProfileLifecycle;
-import io.sentry.Sentry;
-import io.sentry.android.core.SentryAndroid;
-
-// App main Application class
-public class MyApplication extends Application {
-
-  @Override
-  public void onCreate() {
-    super.onCreate();
-     SentryAndroid.init(
-        this,
-        options -> {
-          options.setDsn("___PUBLIC_DSN___");
-          // Enable tracing, needed for legacy profiling, adjust in production env
-          options.setTracesSampleRate(1.0);
-          // Enable transaction-based profiling, adjust in production env. This is relative to traces sample rate
-          options.setProfilesSampleRate(1.0);
-          // Enable profiling on app start
-          options.setEnableAppStartProfiling(true);
-        });
-  }
-}
-```
-
-```kotlin
-import io.sentry.ProfileLifecycle
-import io.sentry.Sentry
-import io.sentry.android.core.SentryAndroid
-
-// App main Application class
-class MyApplication : Application() {
-  override fun onCreate() {
-     super.onCreate()
-     SentryAndroid.init(
-        this,
-        { options ->
-          options.dsn = "___PUBLIC_DSN___"
-          // Enable tracing, needed for profiling `trace` mode, adjust in production env
-          options.tracesSampleRate = 1.0
-          // Enable transaction-based profiling, adjust in production env. This is relative to traces sample rate
-          options.profilesSampleRate = 1.0
-          // Enable profiling on app start
-          options.isEnableAppStartProfiling = true
-         })
-  }
-}
-```
-
-<Alert>
-
-The SDK won't run app start profiling the very first time the app runs, as the SDK won't have read the options by the time the profile should run.
-The SDK will set the `isForNextAppStart` flag in `TransactionContext` if app start profiling is enabled.
-
+  ```bash
+  adb shell device_config put profiling_testing rate_limiter.disabled true
+  ```
 </Alert>
