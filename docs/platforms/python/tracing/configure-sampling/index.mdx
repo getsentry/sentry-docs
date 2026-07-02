@@ -181,7 +181,6 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
     environment = os.environ.get("ENVIRONMENT", "development")
 
     # Sample all spans in development
@@ -190,7 +189,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample more spans if there are recent errors
     # Note: hasRecentErrors is a custom attribute that needs to be set
-    if custom_sampling_ctx.get("hasRecentErrors") is True:
+    if sampling_context.get("hasRecentErrors") is True:
         return 0.8
 
     # Sample based on environment
@@ -282,16 +281,14 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
-
     # Always sample for premium users
     # Note: user.tier is a custom attribute that needs to be set
-    if custom_sampling_ctx.get("user", {}).get("tier") == "premium":
+    if sampling_context.get("user", {}).get("tier") == "premium":
         return 1.0
 
     # Sample more spans for users experiencing errors
     # Note: hasRecentErrors is a custom attribute
-    if custom_sampling_ctx.get("hasRecentErrors") is True:
+    if sampling_context.get("hasRecentErrors") is True:
         return 0.8
 
     # Sample less for high-volume, low-value paths
@@ -398,11 +395,9 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if span_ctx["attributes"].get("sentry.op") in ["payment.process", "order.create", "user.verify"]:
         return 1.0
 
-    custom_sampling_context = sampling_context.get("custom_sampling_context") or {}
-
     # Sample based on user segment
     # Note: user.segment is a custom attribute
-    user_segment = custom_sampling_context.get("user", {}).get("segment")
+    user_segment = sampling_context.get("user", {}).get("segment")
     if user_segment == "enterprise":
         return 0.8
     elif user_segment == "premium":
@@ -410,13 +405,13 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample based on transaction value
     # Note: transaction.value is a custom attribute
-    transaction_value = custom_sampling_context.get("transaction", {}).get("value")
+    transaction_value = sampling_context.get("transaction", {}).get("value")
     if transaction_value is not None and transaction_value > 1000:  # High-value transactions
         return 0.7
 
     # Sample based on error rate in the service
     # Note: service.error_rate is a custom attribute
-    error_rate = custom_sampling_context.get("service", {}).get("error_rate")
+    error_rate = sampling_context.get("service", {}).get("error_rate")
     if error_rate is not None and error_rate > 0.05:  # Error rate above 5%
         return 0.9
 
@@ -505,23 +500,21 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    custom_sampling_ctx = sampling_context.get("custom_sampling_context") or {}
-
     # Sample more spans with high memory usage
     # Note: memory_usage_mb is a custom attribute
-    memory_usage = custom_sampling_ctx.get("memory_usage_mb")
+    memory_usage = sampling_context.get("memory_usage_mb")
     if memory_usage is not None and memory_usage > 500:
         return 0.8
 
     # Sample more spans with high CPU usage
     # Note: cpu_percent is a custom attribute
-    cpu_percent = custom_sampling_ctx.get("cpu_percent")
+    cpu_percent = sampling_context.get("cpu_percent")
     if cpu_percent is not None and cpu_percent > 80:
         return 0.8
 
     # Sample more spans with high database load
     # Note: db_connections is a custom attribute
-    db_connections = custom_sampling_ctx.get("db_connections")
+    db_connections = sampling_context.get("db_connections")
     if db_connections is not None and db_connections > 100:
         return 0.7
 
@@ -579,7 +572,7 @@ When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_
         "parent_sample_rate": Optional[float],  # the sample rate used by the parent (SDK-provided)
         "attributes": dict[str, Any]  # attributes set at span-creation time (SDK- and user-provided)
     },
-    "custom_sampling_context": Optional[dict[str, Any]]  # additional custom data for sampling
+    ... # additional custom key-value pairs for sampling set via custom sampling context
 }
 ```
 

@@ -13,8 +13,7 @@ These examples assume you have already <PlatformLink to="/tracing/">set up traci
 This guide provides practical examples of using span attributes and metrics to solve common monitoring and debugging challenges in Python applications. Each example demonstrates how to instrument different components, showing how they work together within a distributed trace to provide end-to-end visibility.
 
 <Alert>
-  This page covers both transaction mode (default) and stream mode. See{" "}
-  <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
+  This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
 </Alert>
 
 ## File Upload and Processing Pipeline
@@ -187,8 +186,10 @@ with sentry_sdk.start_span(
             'uploads/user-profile.jpg'
         )
 
-        span.set_data("storage.actual_upload_time_ms",
-                         (time.time() - upload_start) * 1000)
+        span.set_data(
+            "storage.actual_upload_time_ms",
+            (time.time() - upload_start) * 1000
+        )
 
     except Exception as e:
         span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
@@ -230,8 +231,10 @@ with sentry_sdk.traces.start_span(
             'uploads/user-profile.jpg'
         )
 
-        span.set_attribute("storage.actual_upload_time_ms",
-                         (time.time() - upload_start) * 1000)
+        span.set_attribute(
+            "storage.actual_upload_time_ms",
+            (time.time() - upload_start) * 1000
+        )
 
     except Exception as e:
         span.status = "error"
@@ -811,8 +814,10 @@ def process_data_file(file_path, priority="medium"):
 
             # Record resource utilization
             span.set_data("resource.cpu_percent", psutil.cpu_percent())
-            span.set_data("resource.memory_used_mb",
-                             psutil.Process().memory_info().rss / (1024 * 1024))
+            span.set_data(
+                "resource.memory_used_mb",
+                psutil.Process().memory_info().rss / (1024 * 1024)
+            )
 
             # Update final job outcome
             span.set_data("outcome.status", "completed")
@@ -899,8 +904,10 @@ def process_data_file(file_path, priority="medium"):
 
             # Record resource utilization
             span.set_attribute("resource.cpu_percent", psutil.cpu_percent())
-            span.set_attribute("resource.memory_used_mb",
-                             psutil.Process().memory_info().rss / (1024 * 1024))
+            span.set_attribute(
+                "resource.memory_used_mb",
+                psutil.Process().memory_info().rss / (1024 * 1024)
+            )
 
             # Update final job outcome
             span.set_attributes({
