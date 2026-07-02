@@ -90,10 +90,11 @@ export function TableOfContents({ignoreIds = []}: Props) {
     if (treeItems.length === 0 || !currentHash) {
       return;
     }
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const id = decodeURIComponent(currentHash.slice(1));
       document.getElementById(id)?.scrollIntoView();
     });
+    return () => cancelAnimationFrame(rafId);
   }, [currentHash, treeItems]);
 
   return (
