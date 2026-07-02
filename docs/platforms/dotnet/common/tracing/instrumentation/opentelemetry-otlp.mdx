@@ -68,8 +68,14 @@ SentrySdk.Init(options =>
 Under the hood, the OTLP exporter sets up the following parts:
 
 * An OTLP exporter that automatically configures the ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Sentry SDK (i.e. do not set `TracesSampleRate`).
-* A `SentryPropagator` that injects `sentry-trace` and `baggage` headers alongside the standard W3C `traceparent` for compatibility with services using Sentry's native tracing (see note below)
+* A `SentryPropagator` that injects `sentry-trace` and `baggage` headers alongside the standard W3C `traceparent` for compatibility with services using Sentry's native tracing
 * Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
+
+<Alert level="warning" title="Planned Removal">
+
+The automatic propagator setup will be removed in the next major version. Configure propagators manually using the [OpenTelemetry propagation API](https://opentelemetry.io/docs/concepts/context-propagation/) instead.
+
+</Alert>
 
 Cross-service trace propagation uses OTel's default W3C `traceparent` headers and does not require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
 
@@ -89,10 +95,4 @@ Calling `UseOtlp()` on `SentryOptions` sets `DisableSentryTracing = true`, which
 
 - `defaultTextMapPropagator` (TextMapPropagator, optional):
 
-  Override the default propagator. Defaults to `SentryPropagator`, which propagates `sentry-trace`, `baggage`, and W3C `traceparent` headers.
-
-  <Alert level="warning" title="Planned Removal">
-
-  The automatic propagator setup will be removed in the next major version. Configure propagators manually using the [OpenTelemetry propagation API](https://opentelemetry.io/docs/concepts/context-propagation/) instead.
-
-  </Alert>
+  Override the default propagator. Defaults to `SentryPropagator`, which propagates `sentry-trace`, `baggage`, and W3C `traceparent` headers. This option will be removed alongside the automatic propagator setup in the next major version.
