@@ -108,8 +108,9 @@ export function TableOfContents({ignoreIds = []}: Props) {
     if (scrolledHashRef.current === currentHash) {
       return undefined;
     }
-    scrolledHashRef.current = currentHash;
     const rafId = requestAnimationFrame(() => {
+      // Set the ref inside RAF to ensure we only mark as scrolled when it actually happens
+      scrolledHashRef.current = currentHash;
       const id = decodeURIComponent(currentHash.slice(1));
       document.getElementById(id)?.scrollIntoView();
     });
