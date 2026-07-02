@@ -88,13 +88,15 @@ export function TableOfContents({ignoreIds = []}: Props) {
   // This effect re-runs whenever the hash or treeItems change.
   useEffect(() => {
     if (treeItems.length === 0 || !currentHash) {
-      return;
+      return undefined;
     }
     const rafId = requestAnimationFrame(() => {
       const id = decodeURIComponent(currentHash.slice(1));
       document.getElementById(id)?.scrollIntoView();
     });
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
   }, [currentHash, treeItems]);
 
   return (
