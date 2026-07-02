@@ -43,7 +43,7 @@ options:
 
 ### Owner
 
-`team` 
+`team`
 
 : The name of the team that owns this feature flag
 
@@ -221,14 +221,27 @@ Once the option change is deployed, the feature checks will immediately be activ
 
 ## Using Flagpole in single-tenants
 
-To allow your flagpole feature configuration to be used in single-tenant
-environments, you'll need to add your feature name to the
-`flagpole.allowed_features` list for each tenant. For example, in
-`options/regions/acme.yml` add the following:
+By default, every Flagpole feature is evaluated in single-tenant environments. You only need to configure a tenant if a feature should never be available there by adding its name to the `flagpole.disallowed_features` denylist. For example, in `options/regions/acme.yml` add the following:
 
 ```yaml
 options:
-    flagpole.allowed_features: ["organizations:is_sentry"]
+    flagpole.disallowed_features: ["organizations:is_sentry"]
+```
+
+Features that aren't listed fall through to their normal flagpole.yml configuration. To roll a feature everywhere except single-tenant environments, add the following to flagpole.yml:
+
+```yaml
+feature.organizations:cool-new-feature:
+  created_at: "2026-06-25"
+  enabled: true
+  owner: my-team
+  segments:
+    - name: GA
+      rollout: 100
+      conditions:
+        - operator: equals
+          property: sentry_singletenant
+          value: false
 ```
 
 You can also use the `sentry_singletenant` and `sentry_cell` context values in
