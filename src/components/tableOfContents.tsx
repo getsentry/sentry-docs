@@ -86,6 +86,10 @@ export function TableOfContents({ignoreIds = []}: Props) {
   // The TOC starts empty and populates client-side, which pushes content down
   // and causes the browser's initial anchor scroll to land on the wrong section.
   // This effect re-runs whenever the hash or treeItems change.
+  //
+  // Note: This causes a redundant scroll when clicking TOC links (browser scrolls,
+  // then our effect scrolls again), but the performance impact is negligible and
+  // ensures correct behavior for initial page loads and browser back/forward navigation.
   useEffect(() => {
     if (treeItems.length === 0 || !currentHash) {
       return undefined;
