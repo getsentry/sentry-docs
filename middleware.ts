@@ -4408,11 +4408,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/data-model/event-payloads/user/',
     to: '/sdk/foundations/envelopes/event-payloads/user/',
   },
-  
   {
     from: '/integrations/integration-platform/ui-components/alert-rule-action/',
-    to: '/integrations/integration-platform/ui-components/alert-action', 
-  }
+    to: '/integrations/integration-platform/ui-components/alert-action/',
+  },
 ];
 
 const redirectMap = new Map(
