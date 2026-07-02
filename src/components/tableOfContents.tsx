@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 type TreeItem = {
   children: TreeItem[];
@@ -73,11 +73,18 @@ export function TableOfContents({ignoreIds = []}: Props) {
 
   // Track current hash to trigger scroll when it changes (e.g., browser back/forward)
   const [currentHash, setCurrentHash] = useState('');
+  // Track which hash we've scrolled to for this navigation, to avoid re-scrolling
+  // when treeItems rebuild due to parent re-renders
+  const scrolledHashRef = useRef<string>('');
 
   useEffect(() => {
     // Initialize hash and listen for changes
     setCurrentHash(window.location.hash);
-    const handleHashChange = () => setCurrentHash(window.location.hash);
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+      // Reset scroll tracking on navigation
+      scrolledHashRef.current = '';
+    };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -85,7 +92,10 @@ export function TableOfContents({ignoreIds = []}: Props) {
   // Re-scroll to hash anchor after TOC renders to compensate for layout shift.
   // The TOC starts empty and populates client-side, which pushes content down
   // and causes the browser's initial anchor scroll to land on the wrong section.
-  // This effect re-runs whenever the hash or treeItems change.
+  // This effect runs when:
+  // - treeItems populate initially (layout shift correction)
+  // - Hash changes (navigation, back/forward)
+  // BUT NOT when treeItems rebuild due to parent re-renders (tracked via ref).
   //
   // Note: This causes a redundant scroll when clicking TOC links (browser scrolls,
   // then our effect scrolls again), but the performance impact is negligible and
@@ -94,6 +104,11 @@ export function TableOfContents({ignoreIds = []}: Props) {
     if (treeItems.length === 0 || !currentHash) {
       return undefined;
     }
+    // Skip if we've already scrolled to this hash during this navigation
+    if (scrolledHashRef.current === currentHash) {
+      return undefined;
+    }
+    scrolledHashRef.current = currentHash;
     const rafId = requestAnimationFrame(() => {
       const id = decodeURIComponent(currentHash.slice(1));
       document.getElementById(id)?.scrollIntoView();
