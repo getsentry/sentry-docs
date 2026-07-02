@@ -1,0 +1,99 @@
+---
+title: Migrate to Stream Mode
+sidebar_order: 10
+description: "Learn how to migrate your custom instrumentation from transaction mode to stream mode."
+---
+
+Stream mode replaces the transaction-based APIs with new span APIs. If you use custom instrumentation (creating transactions manually, setting span data, or filtering spans) you'll need to update that code before switching to stream mode. This guide walks through the changes.
+
+For an introduction to stream mode itself, see <PlatformLink to="/tracing/new-spans/">New Spans</PlatformLink>.
+
+## Enable Stream Mode
+
+Set `traceLifecycle` to `SentryTraceLifecycle.stream` when initializing the SDK:
+
+<PlatformContent includePath="performance/span-streaming-enable-diff" />
+
+In `stream` mode, the transaction APIs (`Sentry.startTransaction`, `ISentrySpan.startChild`) become no-ops and log a warning, so you need to migrate any manual usage.
+
+## Span Creation
+
+Replace `Sentry.startTransaction` and `span.startChild` with `Sentry.startSpan`. `startSpan` runs a callback and ends the span when the returned future completes. Nested calls auto-parent through zones, so there's no `startChild` equivalent — just nest:
+
+```dart diff
+- final transaction = Sentry.startTransaction('checkout', 'task');
+- try {
+-   final child = transaction.startChild('db.query', description: 'load cart');
+-   final cart = await loadCart();
+-   await child.finish();
+-   transaction.setData('cart.item_count', cart.items.length);
+- } finally {
+-   await transaction.finish();
+- }
++ await Sentry.startSpan('checkout', (span) async {
++   final cart = await Sentry.startSpan('load cart', (_) => loadCart());
++   span.setAttribute('cart.item_count', SentryAttribute.int(cart.items.length));
++ });
+```
+
+For synchronous work, use `Sentry.startSpanSync` instead. When the work can't be wrapped in a single callback (widget lifecycles, stream subscriptions, platform channels), use `Sentry.startInactiveSpan` and call `end()` manually. See <PlatformLink to="/tracing/new-spans/#start-a-span">Start a Span</PlatformLink> for details.
+
+## Span Attributes
+
+Streamed spans have no untyped data or tags — everything is a typed attribute. Replace `setData` and `setTag` with `setAttribute` or `setAttributes`:
+
+```dart diff
+- span.setData('retry_count', 3);
+- span.setTag('payment.provider', 'stripe');
++ span.setAttribute('retry_count', SentryAttribute.int(3));
++ span.setAttribute('payment.provider', SentryAttribute.string('stripe'));
+```
+
+Attribute values must be created with a typed `SentryAttribute` factory (`string`, `int`, `bool`, or `double`). See <PlatformLink to="/tracing/new-spans/#add-span-attributes">Add Span Attributes</PlatformLink> for the full list.
+
+## Span Status
+
+In stream mode, status is set automatically — `error` if the callback throws, `ok` otherwise. Explicit statuses from the old API migrate to the typed `SentrySpanStatusV2`, which can only be `ok` or `error`:
+
+```dart diff
+- transaction.status = const SpanStatus.internalError();
++ span.status = SentrySpanStatusV2.error;
+```
+
+Manual assignment is only needed to override the automatic default.
+
+## Filtering and Dropping Spans
+
+`beforeSendTransaction` has **no effect** in stream mode — transactions are never created, so the callback is never invoked. Migrate its logic to `beforeSendSpan` (to modify spans) and `ignoreSpans` (to drop them):
+
+```dart diff
+- options.beforeSendTransaction = (transaction) {
+-   // scrub sensitive data, drop transactions by name, etc.
+-   return transaction;
+- };
++ options.beforeSendSpan = (span) {
++   span.removeAttribute('http.request.body');
++ };
++ options.ignoreSpans = [
++   IgnoreSpanRule.nameEquals('health-check'),
++ ];
+```
+
+Note that `beforeSendSpan` is mutation-only and cannot drop spans — use `ignoreSpans` for that. `beforeSendSpan` runs when each span ends, so it sees the full set of attributes, including any added during the span's lifetime. `ignoreSpans`, by contrast, is evaluated when a span is created and matches on the span name only. Remove the `beforeSendTransaction` option after migrating its logic. See <PlatformLink to="/tracing/new-spans/#extended-configuration-optional">Extended Configuration</PlatformLink> for details.
+
+## Sampling
+
+`tracesSampleRate` works unchanged. A custom `tracesSampler` still works, but the sampling context changes: read the span's `name` and `attributes` from `samplingContext.spanContext` instead of the transaction context.
+
+```dart diff
+- options.tracesSampler = (samplingContext) {
+-   final name = samplingContext.transactionContext.name;
+-   // ...
+- };
++ options.tracesSampler = (samplingContext) {
++   final name = samplingContext.spanContext.name;
++   // ...
++ };
+```
+
+Only **root spans** are sampled; child spans inherit the root span's decision. When a root span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call. See <PlatformLink to="/tracing/new-spans/#sampling-optional">Sampling</PlatformLink> for details.
