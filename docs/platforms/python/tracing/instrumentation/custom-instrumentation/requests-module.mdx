@@ -30,7 +30,7 @@ import sentry_sdk
 def make_request(method, url):
     span = sentry_sdk.start_span(
         op="http.client",
-        name="%s %s" % (method, url),
+        name=f"{method} {url}",
     )
 
     span.set_data("http.request.method", method)
@@ -58,7 +58,7 @@ import sentry_sdk
 
 def make_request(method, url):
     span = sentry_sdk.traces.start_span(
-        name="%s %s" % (method, url),
+        name=f"{method} {url}",
         attributes={"sentry.op": "http.client"},
     )
     parsed_url = urlparse(url)
@@ -74,7 +74,7 @@ def make_request(method, url):
 
     content_length = response.headers.get("content-length")
     if content_length is not None:
-        span.set_attribute("http.response_content_length", content_length)
+        span.set_attribute("http.response.header.content-length", content_length)
 
     span.finish()
     return response

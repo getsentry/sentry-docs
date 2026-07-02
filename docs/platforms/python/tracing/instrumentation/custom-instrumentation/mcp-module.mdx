@@ -155,7 +155,7 @@ with sentry_sdk.start_span(
     span.set_data("mcp.transport", "http")
     span.set_data("network.transport", "tcp")
 
-    # Set prompt arguments (optional, if send_default_pii=True)
+    # Set prompt arguments (keep in mind this might contain PII data, so only set if that's ok)
     for key, value in prompt_arguments.items():
         span.set_data(f"mcp.request.argument.{key}", value)
 
@@ -169,7 +169,7 @@ with sentry_sdk.start_span(
     # For single-message prompts, set role and content
     if len(messages) == 1:
         span.set_data("mcp.prompt.result.message_role", messages[0].get("role"))
-        # Content is PII, only set if send_default_pii=True
+        # Note that content might contain PII data
         span.set_data(
             "mcp.prompt.result.message_content",
             json.dumps(messages[0].get("content"))
@@ -202,7 +202,7 @@ with sentry_sdk.traces.start_span(
         "network.transport": "tcp",
     })
 
-    # Set prompt arguments (optional, if send_default_pii=True)
+    # Set prompt arguments (keep in mind this might contain PII data, so only set if that's ok)
     for key, value in prompt_arguments.items():
         span.set_attribute(f"mcp.request.argument.{key}", value)
 
@@ -216,7 +216,7 @@ with sentry_sdk.traces.start_span(
     # For single-message prompts, set role and content
     if len(messages) == 1:
         span.set_attribute("mcp.prompt.result.message_role", messages[0].get("role"))
-        # Content is PII, only set if send_default_pii=True
+        # Note that content might contain PII data
         span.set_attribute(
             "mcp.prompt.result.message_content",
             json.dumps(messages[0].get("content"))
