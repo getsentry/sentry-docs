@@ -137,21 +137,27 @@ Sentry.init({
   },
 });
 
+// Call extendAppStart() synchronously, right after init.
 Sentry.extendAppStart();
 
-// Break the extended launch period down into child spans:
-const parentSpan = Sentry.getExtendedAppStartSpan();
+// Metro doesn't support top-level await, so run the async launch work in a function.
+async function prepareApp() {
+  // Break the extended launch period down into child spans:
+  const parentSpan = Sentry.getExtendedAppStartSpan();
 
-const configSpan = Sentry.startInactiveSpan({
-  parentSpan,
-  op: "app.init",
-  name: "fetch remote config",
-});
-await fetchRemoteConfig();
-configSpan.end();
+  const configSpan = Sentry.startInactiveSpan({
+    parentSpan,
+    op: "app.init",
+    name: "fetch remote config",
+  });
+  await fetchRemoteConfig();
+  configSpan.end();
 
-// Later, when your app is fully ready:
-await Sentry.finishExtendedAppStart();
+  // When your app is fully ready:
+  await Sentry.finishExtendedAppStart();
+}
+
+prepareApp();
 ```
 
 <Alert>
