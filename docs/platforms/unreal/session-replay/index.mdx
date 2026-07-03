@@ -27,9 +27,9 @@ Unlike the [web](/platforms/javascript/session-replay/) and [mobile](/platforms/
 | **Xbox**    | An OS-captured gameplay clip, attached to crash reports.                        | Development kits only.                                                                               |
 | **Android** | A full-session replay via the Android SDK, with default text and image masking. | None beyond the standard Android setup.                                                             |
 
-\* See the [platform notes](#desktop-and-ios) below for the exact engine version, plugin, GPU, and driver requirements.
+\* See the [Platform Notes](#platform-notes) below for the exact engine version, plugin, GPU, and driver requirements.
 
-PlayStation and Nintendo Switch are not currently supported. On those platforms (and on iOS with engine versions older than 5.8) the setting is a no-op.
+PlayStation and Nintendo Switch are not currently supported. On those platforms the setting is a no-op.
 
 ## Enabling Session Replay
 
@@ -49,7 +49,7 @@ The following settings are available under the **Session Replay** section in the
 - **Enable session replay (experimental)** (`AttachSessionReplay`, default `False`) — Master toggle for the feature.
 - **Replay duration (ms)** (`SessionReplayDurationMs`, default `5000`, range `1000`–`60000`) — The requested length of the retroactive replay window. On Windows, Linux, macOS, and iOS this is the rolling clip length kept on disk for crash attachment; on Xbox it's the requested length of the OS-captured clip (which may be shorter if not enough frames are buffered). This value is ignored on Android, where the underlying SDK determines the duration.
 
-### Advanced Recording Options (Windows, macOS, Linux & iOS)
+### Advanced Recording Options (Windows, Linux, macOS & iOS)
 
 The **Advanced recording options** group (`SessionReplayOptions`) provides low-level encoder and muxer tuning for the desktop and iOS recorders. The defaults are sensible for most projects.
 
@@ -67,28 +67,32 @@ SessionReplayOptions=(FragmentSeconds=0.500000,RotationIntervalSeconds=1.000000,
 
 ## Platform Notes
 
-### Desktop and iOS
+### Desktop (Windows, macOS, and Linux)
 
-On desktop platforms and iOS, Session Replay continuously encodes the game's backbuffer into a rolling video clip that's attached to crash reports. Encoding is hardware-accelerated; the SDK automatically picks an encoder at runtime from the codec plugins enabled in your project:
+On desktop platforms, Session Replay continuously encodes the game's backbuffer into a rolling video clip that's attached to crash reports. Encoding is hardware-accelerated; the SDK automatically picks an encoder at runtime from the codec plugins enabled in your project:
 
-| Platform    | Encoder            | Engine plugins              | Requirements                                                                                     |
+| Platform    | Encoder            | Engine plugins              | GPU and driver requirements                                                                     |
 | ----------- | ------------------ | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | **Windows** | NVIDIA NVENC       | `AVCodecsCore`, `NVCodecs`  | NVIDIA GPU with driver **531.61** or newer.                                                      |
 | **Windows** | AMD AMF            | `AVCodecsCore`, `AMFCodecs` | AMD GPU with a recent Adrenalin driver. D3D11/D3D12 RHI only — not available when running with `-vulkan`. |
 | **Linux**   | NVIDIA NVENC       | `AVCodecsCore`, `NVCodecs`  | NVIDIA GPU with proprietary driver **530.41** or newer — NVENC isn't available with the open-source Nouveau driver. |
 | **macOS**   | Apple VideoToolbox | `AVCodecsCore`, `VTCodecs`  | None — uses the dedicated hardware media engine on Apple Silicon and a software fallback on Intel Macs. |
-| **iOS**     | Apple VideoToolbox | `AVCodecsCore`, `VTCodecs`  | Unreal Engine **5.8 or newer** — earlier engine versions don't ship the AVCodecs plugins for iOS. Hardware-accelerated on all devices. |
 
 - **Enable the codec plugins for every GPU vendor you want to cover.** The Sentry plugin only compiles the recorder when `AVCodecsCore` is present. On Windows, `NVCodecs` and `AMFCodecs` can be enabled side by side — the encoder matching the player's GPU is selected at runtime.
 - **A plugin rebuild is required after toggling the setting.** Whether Session Replay is compiled in is decided at build time from `AttachSessionReplay`, so after enabling or disabling it, delete your project's `Binaries` and `Intermediate` directories and rebuild.
 - **Machines without a compatible encoder fall back to no recording.** The feature self-disables for the session and logs a warning; crash reporting itself is unaffected.
-- **On macOS and iOS, the clip is uploaded on the next app launch.** The Windows and Linux crash handlers attach the clip at crash time, while on Apple platforms the crash of the previous run is detected during the next SDK initialization, which is when the recorded clip is attached and uploaded.
 
 <Alert>
 
 The most recent fraction of a second of footage (up to one fragment duration) may be missing from the attached clip, since the fragment being encoded at the moment of the crash isn't yet finalized.
 
 </Alert>
+
+### iOS
+
+On iOS, Session Replay uses the same recording pipeline as desktop, encoding the game's backbuffer with Apple VideoToolbox via the `AVCodecsCore` and `VTCodecs` engine plugins. Encoding is hardware-accelerated on all devices, and the desktop notes above (plugin rebuild, encoder fallback) apply equally.
+
+iOS requires **Unreal Engine 5.8 or newer** — earlier engine versions don't ship the AVCodecs plugins for iOS, and the setting is a no-op there.
 
 ### Xbox
 
