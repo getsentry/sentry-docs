@@ -129,7 +129,7 @@ The App Start Instrumentation provides insight into how long your application ta
 The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
 
 - **Cold start**: A cold start refers to an app's starting from scratch: the system's process has not, until this start, created the app's process. Cold starts happen in cases such as your app's being launched for the first time since the device booted, or since the system killed the app.
-- **Warm start**: A warm start encompasses some subset of the operations that take place during a cold start; at the same time, it represents more overhead than a hot start. For instance: The system evicts your app from memory, and then the user re-launches it. The process and the activity need to be restarted, but the task can benefit somewhat from the saved instance state bundle passed into `onCreate()`.
+- **Warm start**: Any start that isn't cold. This includes background returns (the app was in the background and the user re-launches it), activity recreation (for example, the system evicts your app from memory and the process and activity need to be restarted), and late launches (the activity is created after the main looper goes idle).
 
 <Alert>
 
@@ -141,7 +141,7 @@ For example, Sentry measures the duration from process start, including the time
 
 The SDK sets the Span operation to `app.start.cold` for _Cold start_ and `app.start.warm` for _Warm start_.
 
-The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first frame drawn as the end.
+The SDK uses the process fork time as the beginning of the app start (API 24+), with a fallback to the `SentryPerformanceProvider` (ContentProvider) creation time on older API levels. The measurement ends when the first frame is drawn.
 
 <Alert>
 
@@ -230,19 +230,19 @@ The span finishes once the request has been executed. The span `status` depends 
 
 When the Apollo request throws an `ApolloException`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
-For more information see our [Apollo integration](/platforms/android/integrations/apollo/).
+For more information see our [Apollo integration](/platforms/android/integrations/apollo4/).
 
-### SQLite and Room Instrumentation
+### SQLite Instrumentation
 
 The [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/) does tracing auto instrumentation using bytecode manipulation for `androidx.sqlite` and `androidx.room` libraries.
 
-The Plugin injects a code snippet that starts a span out of the active span bound to the scope for each `CRUD` operation. The SDK sets the span `operation` to `db` and `description` to the SQL Query if available.
+The Plugin injects a code snippet that starts a span out of the active span bound to the scope for each `CRUD` operation. The SDK sets the span `operation` to `db.sql.query` for SQLite calls (or `db.sql.room` for Room DAO methods), and the span `description` to the SQL query when available. (For Room DAOs, the description is the DAO class name.)
 
 The span finishes once the operation has been executed. The span `status` is set to `SpanStatus.OK` if successful or `SpanStatus.INTERNAL_ERROR` if there was any error.
 
-When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+When the operation throws an `Exception`, Sentry's SDK attaches the exception to the running span and rethrows it. If the exception isn't caught by your code and is captured by Sentry, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
-For more information see our [Room and SQLite integration](/platforms/android/integrations/room-and-sqlite/).
+For more information see our [SQLite instrumentation](/platforms/android/integrations/room-and-sqlite/).
 
 ### File I/O Instrumentation
 
