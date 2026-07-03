@@ -39,6 +39,8 @@ dependencies:
 
 Add `SentryGrpcInterceptor` to your gRPC client's interceptor list. This should happen once, when the client is created.
 
+<PlatformSection supported={["dart"]}>
+
 ```dart
 import 'package:grpc/grpc.dart';
 import 'package:sentry/sentry.dart';
@@ -68,6 +70,42 @@ Future<void> runApp() async {
   // All calls through this client are now automatically instrumented.
 }
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:grpc/grpc.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_grpc/sentry_grpc.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(MyApp()),
+  );
+}
+
+// Wherever you create your gRPC client:
+final channel = ClientChannel(
+  'api.example.com',
+  options: const ChannelOptions(credentials: ChannelCredentials.secure()),
+);
+
+final client = MyServiceClient(
+  channel,
+  interceptors: [SentryGrpcInterceptor()],
+);
+
+// All calls through this client are now automatically instrumented.
+```
+
+</PlatformSection>
 
 ## Capturing Failed Requests as Errors
 
@@ -123,6 +161,8 @@ Server-streaming and client-streaming calls receive distributed tracing header i
 
 By default, `sentry-trace` and `baggage` headers are injected for all gRPC method paths. Use `tracePropagationTargets` to restrict injection to specific services or methods. Targets are matched against the full method path (for example, `/helloworld.Greeter/SayHello`):
 
+<PlatformSection supported={["dart"]}>
+
 ```dart
 await Sentry.init((options) {
   options.dsn = '___PUBLIC_DSN___';
@@ -132,9 +172,26 @@ await Sentry.init((options) {
 });
 ```
 
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracePropagationTargets = [
+    'myservice.MyService', // Matches any method under this service
+  ];
+});
+```
+
+</PlatformSection>
+
 ### Sending Request Metadata (PII)
 
 When `sendDefaultPii` is enabled, the interceptor attaches the gRPC call's metadata headers to the span as `rpc.request.metadata.<key>` attributes. This is opt-in because metadata can contain sensitive values such as authorization tokens.
+
+<PlatformSection supported={["dart"]}>
 
 ```dart
 await Sentry.init((options) {
@@ -142,6 +199,19 @@ await Sentry.init((options) {
   options.sendDefaultPii = true; // Metadata headers will appear in span data
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.sendDefaultPii = true; // Metadata headers will appear in span data
+});
+```
+
+</PlatformSection>
 
 ### Prerequisites
 
