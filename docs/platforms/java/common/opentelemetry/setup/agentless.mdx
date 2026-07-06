@@ -11,6 +11,76 @@ If you do not want to use our recommended <PlatformLink to="/opentelemetry/setup
 
 <PlatformContent includePath="performance/opentelemetry-install/without-java-agent" />
 
+## OpenTelemetry Dependency Alignment
+
+Sentry's Java OpenTelemetry integrations are tested with a specific OpenTelemetry dependency set. If your application also imports a BOM that manages OpenTelemetry versions, such as Spring Boot dependency management, it can override transitive OpenTelemetry dependencies and create a mixed OpenTelemetry classpath.
+
+Import `io.sentry:sentry-opentelemetry-bom` manually when another BOM manages OpenTelemetry versions in your application.
+
+<PlatformSection notSupported={["java.spring", "java.spring-boot"]}>
+
+```groovy {tabTitle:Gradle}{filename:build.gradle}
+dependencies {
+    implementation platform('io.sentry:sentry-opentelemetry-bom:{{@inject packages.version('sentry.java.opentelemetry-bom', '8.46.0') }}')
+}
+```
+
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependencyManagement>
+    <dependencies>
+        <!-- If another Maven BOM also manages OpenTelemetry versions, import Sentry's OpenTelemetry BOM before that BOM. -->
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-opentelemetry-bom</artifactId>
+            <version>{{@inject packages.version('sentry.java.opentelemetry-bom', '8.46.0') }}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["java.spring", "java.spring-boot"]}>
+
+When using Gradle with Spring dependency management, import Sentry's OpenTelemetry BOM:
+
+```groovy {tabTitle:Gradle}{filename:build.gradle}
+dependencyManagement {
+    imports {
+        mavenBom 'io.sentry:sentry-opentelemetry-bom:{{@inject packages.version('sentry.java.opentelemetry-bom', '8.46.0') }}'
+    }
+}
+```
+
+When using Maven, import Sentry's OpenTelemetry BOM before `spring-boot-dependencies`:
+
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-opentelemetry-bom</artifactId>
+            <version>{{@inject packages.version('sentry.java.opentelemetry-bom', '8.46.0') }}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>${spring-boot.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+If you use `spring-boot-starter-parent`, import Sentry's OpenTelemetry BOM in the child POM's `dependencyManagement` section.
+
+</PlatformSection>
+
 ## Usage
 
 You'll have to configure both OpenTelemetry and Sentry to see transactions in Sentry and have errors linked to transactions created by OpenTelemetry.
