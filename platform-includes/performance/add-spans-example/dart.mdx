@@ -1,8 +1,8 @@
-## Add More Spans to the Transaction
+## Add More Spans to the Transaction/Service Span
 
-By default, transactions are not bound to the scope. Transaction has to be passed manually as a method parameter to enable attaching nested spans. When creating nested span, you can choose the value of `operation` and `description`.
+In transaction mode, transactions aren't bound to the scope, so the transaction has to be passed manually as a method parameter to attach nested spans. In stream mode, nested spans attach to the active span automatically — no manual passing needed. When creating a nested span, you can choose its name and `sentry.op`.
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 
 final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
@@ -31,6 +31,28 @@ Future<void> processOrderBatch(ISentrySpan span) async {
 }
 ```
 
-Keep in mind that each individual span also needs to be manually finished;
+```dart {tabTitle:Stream Mode}
+import 'package:sentry/sentry.dart';
 
-Spans are sent together with their parent transaction when the transaction is finished. Make sure to call `finish()` on transaction once all the child spans have finished.
+await Sentry.startSpan(
+  'processOrderBatch()',
+  (span) async {
+    span.setAttribute('sentry.op', SentryAttribute.string('task'));
+    await processOrderBatch();
+  },
+  parentSpan: null,
+);
+
+// No need to pass the parent span — nested spans attach to the active span.
+Future<void> processOrderBatch() async {
+  await Sentry.startSpan(
+    'operation',
+    (innerSpan) async {
+      innerSpan.setAttribute('sentry.op', SentryAttribute.string('task'));
+      // omitted code
+    },
+  );
+}
+```
+
+In transaction mode, keep in mind that each individual span also needs to be manually finished, and spans are sent together with their parent transaction when the transaction is finished. In stream mode, each span ends automatically when its callback completes, and spans are streamed as they finish.

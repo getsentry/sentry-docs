@@ -1,10 +1,10 @@
 ## Adding Data Attributes to Transactions and Spans
 
-You can add data attributes to your transactions and spans. This data is visible in the trace explorer in Sentry. Data attributes can be of type `String`, `int`, `double` or `bool`, as well as (non-mixed) arrays of these types:
+You can add data attributes to your transactions and spans. This data is visible in the trace explorer in Sentry. In transaction mode, use `setData` with `String`, `int`, `double` or `bool` values, as well as (non-mixed) arrays of these types. In stream mode, use `setAttribute` with a typed `SentryAttribute` factory.
 
 ### For Transactions
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 final transaction = Sentry.startTransaction('my-transaction', 'http.server');
 transaction.setData('data_attribute_1', 'value1');
 transaction.setData('data_attribute_2', 42);
@@ -15,9 +15,22 @@ transaction.setData('data_attribute_5', [42, 43]);
 transaction.setData('data_attribute_6', [true, false]);
 ```
 
+```dart {tabTitle:Stream Mode}
+Sentry.startSpanSync(
+  'my-transaction',
+  (span) {
+    span.setAttribute('sentry.op', SentryAttribute.string('http.server'));
+    span.setAttribute('data_attribute_1', SentryAttribute.string('value1'));
+    span.setAttribute('data_attribute_2', SentryAttribute.int(42));
+    span.setAttribute('data_attribute_3', SentryAttribute.bool(true));
+  },
+  parentSpan: null,
+);
+```
+
 ### For Spans
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 final span = parent.startChild('http.client');
 span.setData('data_attribute_1', 'value1');
 span.setData('data_attribute_2', 42);
@@ -26,4 +39,12 @@ span.setData('data_attribute_3', true);
 span.setData('data_attribute_4', ['value1', 'value2']);
 span.setData('data_attribute_5', [42, 43]);
 span.setData('data_attribute_6', [true, false]);
+```
+
+```dart {tabTitle:Stream Mode}
+Sentry.startSpanSync('http.client', (span) {
+  span.setAttribute('data_attribute_1', SentryAttribute.string('value1'));
+  span.setAttribute('data_attribute_2', SentryAttribute.int(42));
+  span.setAttribute('data_attribute_3', SentryAttribute.bool(true));
+});
 ```
