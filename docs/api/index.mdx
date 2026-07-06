@@ -26,14 +26,48 @@ The current version of the Sentry's web API is considered **v0**. Our public end
 
 ## Choosing the Right API Base Domain
 
-While many of Sentry's APIs use `sentry.io` as the host for API endpoints, if you want to indicate a specific [data storage location](/organization/data-storage-location/#what-types-of-data-are-stored-where), you can use your region-specific domain.
-Using your organization's region-specific domain will generally result in lower latency for most API calls. For example, if you are hosted in US2 region, you would use `us2.sentry.io`. You can check which region your organization is in by viewing your organization’s settings page.
+Sentry's API is served from two kinds of hosts:
 
-- US region is hosted on `us.sentry.io`
-- US2 region is hosted on `us2.sentry.io`
-- DE region is hosted on `de.sentry.io`.
+- `sentry.io` is the global domain. It serves account-level resources that are shared across your organizations, such as user settings, authentication tokens, and organization metadata.
+- Region-specific domains, such as `us.sentry.io` and `de.sentry.io`, serve the data that belongs to a single organization, such as issues, events, spans, releases, and replays. This data lives in the [region you selected](/organization/data-storage-location/) when the organization was created.
 
-To find out which API resources are available on region-based domains, see [what
-types of data are stored
-where](/organization/data-storage-location/#what-types-of-data-are-stored-where) for more information.
+Requests to `sentry.io` are routed to the correct region for you, so existing integrations keep working. For requests that read or write an organization's data, we recommend sending them directly to that organization's region-specific domain. This is the recommended practice and generally results in lower latency.
+
+As a rule of thumb:
+
+- Use `sentry.io` for **account-level resources** — authentication tokens, user settings, SSO configuration, and organization metadata.
+- Use your organization's **region-specific domain** for **organization data** — issues, events, spans, profiles, logs, metrics, releases, and replays.
+
+To see exactly which resources live in a region versus on the global domain, see [what types of data are stored where](/organization/data-storage-location/#what-types-of-data-are-stored-where).
+
+### Regional Domains
+
+| Region | API domain      |
+| ------ | --------------- |
+| US     | `us.sentry.io`  |
+| US2    | `us2.sentry.io` |
+| EU     | `de.sentry.io`  |
+
+You can check which region your organization is in by viewing your organization’s settings page.
+
+### Finding Your Organization's Region Programmatically
+
+If you're building an integration, CLI, or CI job, resolve the region at runtime instead of hardcoding a domain. Request the list of regions the authenticated user belongs to:
+
+```bash
+curl -H 'Authorization: Bearer <auth_token>' https://sentry.io/api/0/users/me/regions/
+```
+
+The response lists each region the user has organizations in, along with the base URL to use for that region. For example:
+
+```json
+{
+  "regions": [
+    { "name": "us", "url": "https://us.sentry.io" },
+    { "name": "de", "url": "https://de.sentry.io" }
+  ]
+}
+```
+
+Use the `url` value as the base domain for that organization's subsequent data requests. The organization details endpoint, `GET /api/0/organizations/{organization_slug}/`, also returns the region an individual organization belongs to.
 
