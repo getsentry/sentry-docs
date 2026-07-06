@@ -1,0 +1,140 @@
+---
+title: C#/.NET Support
+sidebar_title: C#/.NET
+sidebar_order: 15
+description: "Learn how to capture errors from your Godot game's C# (.NET) code with Sentry."
+---
+
+The SDK for Godot Engine can capture errors from your game's C# code, in addition to GDScript and the engine itself. C# support is available in version 2.0.0 and later.
+
+The SDK runs two layers side by side: the **native layer**, which reports GDScript and engine errors, and a **.NET layer**, which reports C# errors. You configure Sentry once, and your options, scope, and trace stay synchronized across both layers automatically. See [How the two layers work together](#how-the-two-layers-work-together) for what this means in practice.
+
+## Prerequisites
+
+- The **.NET build** of Godot Engine 4.5 or later. C# isn't available in the standard build.
+- A project with C# enabled. Godot generates a `.csproj` file when you add your first C# script.
+- C# error reporting is supported on **desktop** (Windows, Linux, and macOS), **Android**, and **iOS**. Godot doesn't support C# in web exports.
+
+## Install
+
+The Sentry addon already ships the .NET libraries in `addons/sentry/dotnet/`. When you open your project in the editor, the SDK adds an import to your `.csproj` that wires them in:
+
+```xml {filename:YourGame.csproj}
+<Import Project="addons/sentry/dotnet/Sentry.Godot.props" Condition="Exists('addons/sentry/dotnet/Sentry.Godot.props')" />
+```
+
+This references the `Sentry` NuGet package, the `Sentry.Godot.dll` wrapper, and a Roslyn analyzer that guides you toward the correct API (see [Use the SDK in C#](#use-the-sdk-in-c)). Build your project (for example, with the editor's **Build** button) to restore the NuGet package.
+
+<Alert>
+
+If the import isn't added the first time, restart the Godot editor.
+
+</Alert>
+
+## Configure
+
+Set your [DSN](/concepts/key-terms/dsn-explainer/) in **Project Settings > Sentry > Options**. With **Auto Init** enabled (the default), both the native and .NET layers initialize automatically when your game starts, so there's nothing else to do.
+
+### Manual Initialization
+
+If you need to set options from code — for example, to define a [`before_send`](/platforms/godot/configuration/options/#before_send) callback — disable **Auto Init** in **Project Settings > Sentry > Options** and initialize the SDK from C# code. See [Programmatic Configuration](/platforms/godot/configuration/options/#programmatic-configuration) for a complete C# example.
+
+Initializing Sentry from either language brings up both layers, so a single `Init()` call is all you need — there's no need to initialize it separately in C# and GDScript.
+
+Options come from `SentryGodotOptions`, which extends the .NET SDK's `SentryOptions` with Godot-specific settings such as `AttachLog`, `AttachSceneTree`, and `AttachScreenshot`. Shared options like the DSN, release, environment, and sample rate default to the values from your Project Settings, so you only need to set what you want to override.
+
+## Verify
+
+Throw an exception from any C# script to confirm that reporting works:
+
+```csharp
+using Godot;
+using System;
+
+public partial class SentryTest : Node
+{
+    public override void _Ready()
+    {
+        throw new Exception("Hello from Sentry .NET!");
+    }
+}
+```
+
+The SDK captures unhandled exceptions from your C# code automatically.
+
+## Use the SDK in C#
+
+Make your Sentry calls through `Sentry.Godot.SentrySdk`. The addon ships a global alias, so it resolves to the Godot wrapper automatically, even alongside `using Sentry;`:
+
+```csharp
+SentrySdk.CaptureMessage("Something went wrong");
+```
+
+<Alert level="warning" title="Use the Godot wrapper">
+
+Don't call `Sentry.SentrySdk` (the upstream .NET SDK) directly. It skips Godot-specific initialization and options. The bundled analyzer flags this with a warning (`SENTRYGD1001`) and offers a one-click fix.
+
+</Alert>
+
+`SentrySdk` exposes the full Sentry .NET SDK API. Here are a few common operations.
+
+### Capture an Exception
+
+Unhandled exceptions are captured automatically. To capture a handled one:
+
+```csharp
+try
+{
+    ProcessSave();
+}
+catch (Exception ex)
+{
+    SentrySdk.CaptureException(ex);
+}
+```
+
+### Add a Breadcrumb
+
+```csharp
+SentrySdk.AddBreadcrumb("Player respawned", category: "gameplay");
+```
+
+### Set the User and Tags
+
+There's no `SetUser` method on the SDK — configure the user through the scope instead:
+
+```csharp
+SentrySdk.SetTag("biome", "jungle");
+
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.User = new SentryUser
+    {
+        Id = "12345",
+        Username = "Jane",
+    };
+});
+```
+
+## How the Two Layers Work Together
+
+The native and .NET layers keep their state in sync, so you configure Sentry once and both report consistent data.
+
+- **Options are synchronized.** The DSN, release, environment, sample rate, and other shared options apply to both layers, so you only need to set them once — in Project Settings, or in a C# or GDScript init callback.
+- **Scope syncs both ways.** Tags, breadcrumbs, and the user you set in GDScript appear on C# events, and the ones you set in C# appear on GDScript and engine events. There's no need to set them twice.
+- **Events share a trace.** C# and GDScript events from the same session are linked, so you can follow an issue across both languages.
+- **Default attachments carry over.** The log file, screenshot, and scene tree attachments you've enabled are included on C# events too.
+- **Sessions are tracked once.** [Release Health](/platforms/godot/configuration/releases/#release-health) is handled for the whole game automatically. Don't enable session tracking in C# — it would double-count sessions.
+
+## Readable Stack Traces
+
+Getting file names and line numbers for C# stack frames depends on the platform: on desktop, the SDK resolves them at runtime from the debug symbols shipped with your game; on Android and iOS, you upload debug symbols to Sentry. See [Readable Stack Traces](/platforms/godot/configuration/stack-traces/#c-managed-code) for the details.
+
+## Limitations
+
+C# support has the following limitations:
+
+- Custom contexts and user-added attachments aren't synced between the native and .NET layers. They appear only on events captured by the layer that set them. Tags, breadcrumbs, and the user are synced.
+- The error throttling [limits](/platforms/godot/configuration/options/#godot_logger.limits) apply to GDScript and engine errors only, not to C# exceptions.
+- On mobile, C# events currently report the wrong operating system — `Linux` on Android and `Darwin` on iOS — instead of `Android` or `iOS`.
+- On Android, C# exceptions can't be captured while the Godot debugger is attached to the app. The debugger attaches when you deploy to a device from the editor with **Debug > Deploy with Remote Debug** enabled (the default). Turn that menu option off, or test with an exported build, to capture them.

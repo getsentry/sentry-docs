@@ -1,0 +1,70 @@
+---
+title: Native Initialization
+sidebar_order: 4
+description: "Learn how to manually initialize the native SDKs."
+---
+
+By default, the React Native SDK initializes the native SDK underneath the `init` method called on the JS layer. As a result, the SDK has a current limitation of not capturing native crashes that occur prior to the `init` method being called on the JS layer. You can initialize the native SDKs yourself to overcome this limitation or if you want to provide custom options above what the React Native SDK currently provides.
+
+<Alert level="info" title="Capture App Start Errors">
+
+If you're using Sentry React Native SDK version 8.0.0 or higher, see the [Capture App Start Errors](/platforms/react-native/manual-setup/app-start-error-capture/) guide for a simpler approach using `sentry.options.json` and native initialization APIs.
+
+</Alert>
+
+To do this, set [autoInitializeNativeSdk](/platforms/react-native/configuration/options/#autoInitializeNativeSdk) to `false` in the init options:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  autoInitializeNativeSdk: false,
+});
+```
+
+This will prevent the React Native SDK from initializing the native SDK automatically.
+
+<Alert level="info" title="Disabling the Native Layer Entirely">
+
+Do not use `autoInitializeNativeSdk` to disable the native layer, instead use [enableNative](/platforms/react-native/configuration/options/#enableNative)
+
+</Alert>
+
+Next, initialize the native SDKs for Android, which is documented below, or for iOS by following the [configuration guide to initialize the Sentry Cocoa SDK](/platforms/apple/guides/ios/#configure). Note that you do not need to install the native SDKs as they are already packaged with the React Native SDK.
+
+## Native and JavaScript Initialization
+
+When you initialize the native SDKs yourself with `autoInitializeNativeSdk: false`, the JavaScript and native layers are configured independently. Keep the following in mind:
+
+- **`Sentry.init()` is still required in JavaScript.** The native SDK only captures native errors and crashes (with native stack traces). To capture JavaScript errors and use APIs like `Sentry.captureException()`, you must still call `Sentry.init()` on the JS layer.
+- **The `dsn` is required on both sides.** Set it in both the native initialization and `Sentry.init()`. You can point each layer at a different project (for example, separate projects for JavaScript, iOS, and Android), but we recommend using a single project unless you specifically need them separated.
+- **Options are not merged.** With `autoInitializeNativeSdk: false`, the options you pass to `Sentry.init()` are not forwarded to the native SDKs. Each layer uses only the options it was initialized with, so any option you want applied natively must be set in the native initialization.
+- **Avoid enabling tracing on both layers.** If you enable performance tracing (for example, `tracesSampleRate` together with `enableAutoPerformanceTracing`) in both the native and JS layers, screen navigation and other instrumentation are captured independently by each layer, resulting in **duplicate transactions** in Sentry. When the native SDK is initialized automatically from JS (`autoInitializeNativeSdk: true`), the React Native SDK avoids this by not forwarding `tracesSampleRate` to the native layer.
+
+<Alert level="info" title="Capturing App Start Errors">
+
+If your goal is to capture crashes that happen before JavaScript loads, prefer the [Capture App Start Errors](/platforms/react-native/manual-setup/app-start-error-capture/) approach (SDK 8.0.0+). It uses a `sentry.options.json` file and, unlike the manual flow described here, merges your JavaScript options on top of the file options.
+
+</Alert>
+
+## iOS Configuration
+
+To enable App Start Instrumentation and Slow and Frozen Frames on iOS when initializing the Sentry Cocoa SDK manually,
+you have to [configure the sample rate](/platforms/apple/tracing/#configure-the-sample-rate/).
+
+## Android Configuration
+
+<Alert>
+
+Initializing with this method uses a Content Provider. Because the JavaScript engine for React Native is also initialized using a Content Provider, we cannot guarantee that Sentry will always initialize before the JavaScript engine.
+
+</Alert>
+
+To use auto-init, add the following to your `AndroidManifest.xml`:
+
+```xml
+<meta-data android:name="io.sentry.auto-init" tools:replace="android:value" android:value="true" />
+```
+
+Then follow [the guide on initializing Android](/platforms/android/#configure).
+
+If you want to manually initialize the Android SDK without using the content provider, you can then [follow the manual initialization guide](/platforms/android/manual-setup/#configuration-via-sentryoptions) without needing to add the tag since `io.sentry.auto-init` is set to `false` by the React Native SDK.

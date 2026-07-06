@@ -6,20 +6,17 @@ or override them programmatically when initializing the SDK in code.
 
 If **Auto Init** is enabled in **Project Settings**, the SDK initializes automatically when the game starts.
 However, if you need finer control — for example, to define callbacks like <PlatformLink to="/configuration/options/#before_send"><PlatformIdentifier name="before-send" /></PlatformLink> —
-you can disable **Auto Init** and manually initialize the SDK from code.
+disable **Auto Init** and initialize the SDK yourself. The main loop's `_initialize()` method is the earliest point you can do this in code:
 
-The earliest point to configure and initialize the SDK is `MainLoop._initialize()`.
+1. Disable **Auto Init** in **Project Settings → Sentry → Options**.
+2. Create a script that extends `SceneTree` with a global class name, then enter that name in **Project Settings → Application → Run → Main Loop Type**.
+3. Initialize the SDK in the script's `_initialize()` method.
 
-To do this:
-
-1. Disable **Auto Init** in **Project Settings -> Sentry -> Options**.
-2. Create a new script that extends `SceneTree` and add a `class_name`.
-3. Assign that `class_name` as your main loop type in **Project Settings → Application → Run → Main Loop Type**.
-4. Define `_initialize()` method in your script and call `SentrySDK.init()` there.
+A single `Init()` call from either language initializes both the native and .NET layers, so there's no need to initialize them separately.
 
 Here’s a complete example:
 
-```gdscript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 class_name ProjectMainLoop
 extends SceneTree
 ## Tip: Set "ProjectMainLoop" as your main loop type in the project settings
@@ -44,6 +41,50 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 		var redacted_message := error_message.replace("Bruno", "REDACTED")
 		event.set_exception_value(0, redacted_message)
 	return event
+```
+
+```csharp {tabTitle:C#}
+using Godot;
+using Sentry;
+using Sentry.Godot;
+
+// Tip: Set "ProjectMainLoop" as your main loop type in the project settings
+//      under `application/run/main_loop_type`.
+[GlobalClass]
+public partial class ProjectMainLoop : SceneTree
+{
+    public override void _Initialize()
+    {
+        SentrySdk.Init(options =>
+        {
+            if (OS.IsDebugBuild())
+            {
+                options.Environment = "debug";
+                options.Debug = true;
+            }
+            options.Release = "mygame@1.0.0";
+            options.SetBeforeSend((sentryEvent, hint) =>
+            {
+                if (sentryEvent.Environment?.Contains("editor") == true)
+                {
+                    // Discard the event if running from the editor.
+                    return null;
+                }
+
+                foreach (var exception in sentryEvent.SentryExceptions ?? [])
+                {
+                    if (exception.Value?.Contains("Bruno") == true)
+                    {
+                        // Remove sensitive information from the event.
+                        exception.Value = exception.Value.Replace("Bruno", "REDACTED");
+                    }
+                }
+
+                return sentryEvent;
+            });
+        });
+    }
+}
 ```
 
 <Alert>

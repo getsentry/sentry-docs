@@ -78,6 +78,41 @@ with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
     span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
 ```
 
+#### Thinking / reasoning messages
+
+Models with extended thinking (such as Anthropic's `thinking` blocks, Gemini's `thought`, or DeepSeek's `reasoning_content`) produce internal reasoning that isn't part of the user-visible reply. Represent this content as a `reasoning` part inside the assistant message, alongside the user-facing `text` part. Sentry surfaces reasoning parts separately and filters them out of the user-facing <Link to="/ai/monitoring/conversations/">Conversations</Link> view, so don't fold thinking into a `text` part.
+
+```python
+import json
+import sentry_sdk
+
+messages = [{"role": "user", "parts": [{"type": "text", "content": "What is 6 * 7?"}]}]
+
+with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
+    span.set_data("gen_ai.operation.name", "chat")
+    span.set_data("gen_ai.request.model", "o3-mini")
+    span.set_data("gen_ai.provider.name", "openai")
+    span.set_data("gen_ai.input.messages", json.dumps(messages))
+
+    result = client.chat.completions.create(model="o3-mini", messages=messages)
+
+    span.set_data("gen_ai.response.model", result.model)
+    span.set_data("gen_ai.output.messages", json.dumps([
+        {
+            "role": "assistant",
+            "parts": [
+                {"type": "reasoning", "content": "6 times 7 is 42."},
+                {"type": "text", "content": "The answer is 42."},
+            ],
+        }
+    ]))
+    span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
+    # If the provider reports reasoning tokens, record them as a subset of output tokens
+    span.set_data("gen_ai.usage.output_tokens.reasoning", result.usage.completion_tokens_details.reasoning_tokens)
+```
+
+When previous thinking is fed back into a multi-turn request, include the same `reasoning` parts in the assistant messages within `gen_ai.input.messages`.
+
 ### Invoke Agent Span
 
 This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
@@ -191,6 +226,18 @@ response = openai.responses.create(
     conversation=conversation.id  # this will automatically set `gen_ai.conversation.id` on the span
 )
 ```
+
+## Identifying Users in Conversations
+
+The [Conversations](/ai/monitoring/conversations/) view includes a **User** column. To populate it, call `sentry_sdk.set_user` once per request or session, before any AI calls:
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present.
 
 ## Common Span Attributes
 

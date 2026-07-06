@@ -1,0 +1,105 @@
+---
+title: User Interaction Instrumentation
+sidebar_order: 20
+sdk: sentry.javascript.react-native
+
+description: "Learn what kinds of user interactions can be captured"
+---
+
+The UI instrumentation captures transactions and adds breadcrumbs for touch interactions. Gesture support using React Native Gesture Handler, is also available with the `sentryTraceGesture` wrapper.
+
+## Touch Events
+
+Transaction names are composed from a combination of displayed screen names, (for example, `LoginScreen`), and the labels of the element users interacted with, (for example, `login_button`).
+
+<Alert>
+  To capture UI transactions, you have to first set up {<Link to="/platforms/react-native/tracing/instrumentation/automatic-instrumentation/#enable-routing-instrumentation">
+    routing instrumentation
+  </Link>}.
+</Alert>
+
+UI instrumentation tracing is disabled by default, but you can enable it by setting the `enableUserInteractionTracing` options to `true` and wrapping your root component:
+
+```javascript {3-3, 7-9}
+import * as Sentry from "@sentry/react-native";
+
+const navigationIntegration = Sentry.reactNavigationIntegration(); // Or any other navigation integration
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableUserInteractionTracing: true,
+  tracesSampleRate: 1.0,
+  integrations: [navigationIntegration],
+});
+
+const App = () => <View>Your App</View>;
+
+export default Sentry.wrap(App);
+```
+
+The SDK identifies UI elements by looking for `sentry-label`, then `accessibilityLabel`, `aria-label`, `testID`, and finally text content from children as fallbacks. You can also specify a custom prop name with the `labelName` option in `Sentry.wrap`, which takes priority over `accessibilityLabel`, `aria-label`, `testID`, and text extraction from children. If an element can't be identified, the transaction won't be captured.
+
+```javascript {2-2}
+export default Sentry.wrap(App, {
+  touchEventBoundaryProps: { labelName: "my-label" },
+});
+```
+
+### Adding Custom Attributes to User Interaction Spans
+
+<Alert level="warning">
+  The `sentry-span-attributes` prop is experimental and may change in future releases.
+</Alert>
+
+You can attach custom attributes to user interaction spans by passing the `sentry-span-attributes` prop to your components. This is useful for adding contextual information like user type, cart value, or feature flags that help you understand user behavior in performance monitoring.
+
+The `sentry-span-attributes` prop accepts an object with string keys and values that are strings, numbers, booleans, or arrays. These attributes will be attached to the user interaction span created when the component is interacted with.
+
+```javascript
+<Pressable
+  sentry-label="checkout"
+  sentry-span-attributes={{
+    'user.type': userType,
+    'cart.value': cartValue,
+    'feature.enabled': true,
+  }}
+  onPress={handleCheckout}
+>
+  <Text>Checkout</Text>
+</Pressable>
+```
+
+The SDK will traverse the component tree to find the `sentry-span-attributes` prop, so you can attach it to parent components if needed. The attributes work alongside `sentry-label` and will be included in the user interaction span.
+
+<Alert>
+  If the UI transaction idled, but didn't have any child spans, it'll be
+  dropped.
+</Alert>
+
+Because transactions are automatically bound to scope, you can create child spans using [custom instrumentation](/platforms/react-native/tracing/instrumentation/custom-instrumentation/#retrieve-a-transaction). Note, that the `idleTimeoout` for running UI transactions defaults to `1000` milliseconds (one second).
+
+## Gesture Events
+
+To create UI transactions from React Native Gesture Handler, you need to wrap individual gestures using `sentryTraceGesture`. This will also automatically create breadcrumbs. The wrapper `sentryTraceGesture(label, gesture)` accepts `string` labels that uniquely identify the gesture in a screen as well as the gesture object being wrapped.
+
+<Alert>
+  Only [RNGH API v2](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/gesture/) is supported.
+</Alert>
+
+```javascript {10-11}
+import React from "react";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { sentryTraceGesture } from "@sentry/react-native";
+
+export const GesturesTracingScreen = () => {
+  const pinch = Gesture.Pinch();
+  const longPress = Gesture.LongPress();
+
+  const gesture = Gesture.Race(
+    sentryTraceGesture("pinch-to-zoom", pinch),
+    sentryTraceGesture("long-press-to-cancel", longPress)
+  );
+
+  return <GestureDetector gesture={gesture}>// ...</GestureDetector>;
+};
+```

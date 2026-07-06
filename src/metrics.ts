@@ -79,6 +79,31 @@ export const DocMetrics = {
   },
 
   /**
+   * Track requests for Markdown exports that don't exist (agent-facing `.md` route).
+   *
+   * These are almost entirely AI agents guessing URLs. The route returns a soft-404
+   * helper with suggestions so the agent can recover; this metric surfaces exactly
+   * which URLs agents invent most, broken down by agent, plus whether recovery
+   * suggestions were available.
+   *
+   * The full path is intentional here (and safe): metrics are EAP-backed, so
+   * high-cardinality attributes are fine, and an agent-invented not-found path is a
+   * public docs-namespace path, not user PII — unlike the truncation other metrics use.
+   * @param path - Full requested path segments (the invented URL is the signal)
+   * @param hasSuggestions - Whether sibling/section suggestions were returned
+   * @param agent - Normalized agent name (e.g. "claude", "gptbot"), or "other"
+   */
+  mdExportNotFound: (path: string[], hasSuggestions: boolean, agent: string) => {
+    Sentry.metrics.count('docs.md_export.not_found', 1, {
+      attributes: {
+        requested_path: path.join('/'),
+        has_suggestions: hasSuggestions,
+        agent,
+      },
+    });
+  },
+
+  /**
    * Track search queries with zero results (indicates content gaps)
    * @param queryLength - Length of the search query
    * @param attributes - Additional context
@@ -132,6 +157,29 @@ export const DocMetrics = {
         page_path: pathname.split('/').slice(0, 3).join('/'), // First 3 segments
         language: language || 'unknown',
         has_filename: !!filename,
+      },
+    });
+  },
+
+  /**
+   * Track "Copy Prompt" button clicks in the Agent Skills Callout
+   * @param pathname - Page where the prompt was copied
+   * @param skill - Skill name if present (e.g., "sentry-nextjs-sdk")
+   * @param success - Whether the clipboard copy succeeded
+   * @param source - Where the copy was triggered from ('callout' for the full banner, 'inline_link' for platform list buttons)
+   */
+  copyAIPrompt: (
+    pathname: string,
+    skill: string | undefined,
+    success: boolean,
+    source: 'callout' | 'inline_link' = 'callout'
+  ) => {
+    Sentry.metrics.count('docs.copy_ai_prompt', 1, {
+      attributes: {
+        page_path: pathname.split('/').slice(0, 3).join('/'), // First 3 segments
+        skill: skill || 'generic',
+        success,
+        source,
       },
     });
   },

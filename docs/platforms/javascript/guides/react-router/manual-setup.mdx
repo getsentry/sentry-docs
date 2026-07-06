@@ -11,10 +11,7 @@ description: "Learn how to manually set up Sentry in your React Router v7 app an
   you have any feedback or concerns.
 </Alert>
 
-<Alert type="info">
-  For the fastest setup, we recommend using the [wizard
-  installer](/platforms/javascript/guides/react-router).
-</Alert>
+<PlatformContent includePath="sentry-init/manual-setup-callout" />
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
@@ -129,9 +126,12 @@ The `sentryOnError` handler integrates with React Router's [`onError` hook](http
 +Sentry.init({
 +  dsn: "___PUBLIC_DSN___",
 +
-+  // Adds request headers and IP for users, for more info visit:
-+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
-+  sendDefaultPii: true,
++  dataCollection: {
++    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
++    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
++    // userInfo: false,
++    // httpBodies: [],
++  },
 +
 +  integrations: [
 +    // ___PRODUCT_OPTION_START___ performance
@@ -196,49 +196,16 @@ startTransition(() => {
 
 ### Configure Server-Side Sentry
 
-<Expandable level="warning" title="Limited Node support for auto-instrumentation" permalink>
+<Expandable level="warning" title="Limited Node support for OpenTelemetry auto-instrumentation" permalink>
 
-Automatic server-side instrumentation is currently only supported on:
+Sentry's OpenTelemetry-based auto-instrumentation (loaded through `instrument.server.mjs`) is currently only supported on:
 
 - **Node 20:** Version \<20.19
 - **Node 22:** Version \<22.12
 
-If you're on a different version, you have two options:
+This restriction **doesn't** affect tracing for loaders, actions, middleware, and request handlers. Those are instrumented through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (the `instrumentations` export shown below, React Router 7.15+), which works on all Node versions.
 
-1. **Recommended**: Use the <PlatformLink to="/features/instrumentation-api/">Instrumentation API</PlatformLink> (React Router 7.9.5+) for automatic tracing without Node version restrictions
-2. **Alternative**: Use our manual server wrappers (shown below)
-
-For server loaders use `wrapServerLoader`:
-
-```ts
-import * as Sentry from "@sentry/react-router";
-
-export const loader = Sentry.wrapServerLoader(
-  {
-    name: "Load Some Data",
-    description: "Loads some data from the db",
-  },
-  async ({ params }) => {
-    // ... your loader logic
-  }
-);
-```
-
-For server actions use `wrapServerAction`:
-
-```ts
-import * as Sentry from "@sentry/react-router";
-
-export const action = Sentry.wrapServerAction(
-  {
-    name: "Submit Form Data",
-    description: "Processes form submission data",
-  },
-  async ({ request }) => {
-    // ... your action logic
-  }
-);
-```
+On unsupported Node versions, you'll only lose auto-instrumentation for lower-level operations such as outgoing HTTP requests and database queries.
 
 </Expandable>
 
@@ -260,9 +227,12 @@ import { nodeProfilingIntegration } from "@sentry/profiling-node";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // Adds request headers and IP for users, for more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
+  dataCollection: {
+    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
+    // userInfo: false,
+    // httpBodies: [],
+  },
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
@@ -296,7 +266,9 @@ Sentry.init({
 <SplitSection>
 <SplitSectionText>
 
-Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions:
+Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions, and export `instrumentations` to enable automatic tracing.
+
+Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (React Router 7.15+) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -319,6 +291,10 @@ Next, replace the default `handleRequest` and `handleError` functions in your `e
 +export const handleError = Sentry.createSentryHandleError({
 +  logErrors: false
 +});
+
++// Automatically instruments all server loaders, actions, middleware,
++// and request handlers. Requires React Router 7.15+.
++export const instrumentations = [Sentry.createSentryServerInstrumentation()];
 
 // ... rest of your server entry
 ```

@@ -1,200 +1,251 @@
 ---
 title: Configure User Feedback
 sidebar_order: 6900
-description: "Learn about general User Feedback configuration fields."
+description: "Learn about User Feedback configuration fields."
 fullWidth: true
 ---
 
 <PlatformSection notSupported={["apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
 
-## User Feedback Widget
+User Feedback configuration controls how the managed feedback form opens, what fields it shows, and how it looks. Set global configuration in `SentryOptions.configureUserFeedback` to install the User Feedback integration required by `SentrySDK.feedback.show()` and global shake and screenshot triggers, then override individual form presentations when needed.
 
-The User Feedback Widget offers many customization options, and if the available options are insufficient, you can [use your own UI](#bring-your-own-widget).
+## Global Configuration
 
-### General
+Use global configuration for behavior that should apply across your app, such as screenshot triggers, shake gestures, default form text, hooks, and theming. This is also where the SDK installs the User Feedback integration for automatic presentation. With global configuration, the SDK tracks the active managed form and won't present another form from SDK-managed presentation paths while one is already open.
 
-The following options can be configured for the integration in `SentryUserFeedbackConfiguration`:
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
 
-| Option                   | Type            | Default                | Description                                                                                                                                                                                                       |
-| ------------------------ | --------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations`             | `Bool`          | `true`                 | Whether or not to show animations, like for presenting and dismissing the form.                                                                                                                                   |
-| `useShakeGesture`        | `Bool`          | `false`                | Use a shake gesture to display the form. Only supported on iOS and iPadOS; this is a no-op on macOS, tvOS, watchOS, and visionOS.                                                                                 |
-| `showFormForScreenshots` | `Bool`          | `false`                | Any time a user takes a screenshot, bring up the form with the screenshot attached.                                                                                                                               |
-| `customButton`           | `UIButton?`     | `nil`                  | Install a hook for the specified button to show the form when it is pressed. If this is set, `configureWidget` is ignored.                                                                                        |
-| `tags`                   | `[String: Any]` | `nil`                  | Tags to set on the feedback event. This is a dictionary where keys are strings and values can be different data types such as `NSNumber`, `NSString`, etc.                                                        |
-
-Some hooks are available so you can react to the user opening and closing the form, when the user successfully submits the form or when there is an error:
-
-| Hook              | Type                      | Description                                                              |
-| ----------------- | ------------------------- | ------------------------------------------------------------------------ |
-| `onFormOpen`      | `() -> Void`              | Called when the feedback form is opened.                                 |
-| `onFormClose`     | `() -> Void`              | Called when the feedback form is closed.                                 |
-| `onSubmitSuccess` | `([String: Any]) -> Void` | Called when feedback is successfully submitted via the prepared form.    |
-| `onSubmitError`   | `(Error) -> Void`         | Called when there is an error submitting feedback via the prepared form. |
-
-`onSubmitSuccess` provides a dictionary with the following keys:
-
-- `message`: The message the user entered in the feedback form.
-- `name`: The name the user entered in the feedback form.
-- `email`: The email the user entered in the feedback form.
-- `attachments`: An array of attachments to be included with the feedback; currently only one screenshot is supported.
-
-Example:
-
-```swift
 SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
     options.configureUserFeedback = { config in
         config.showFormForScreenshots = true
-        config.onSubmitSuccess = { data in
-            print("Feedback submitted successfully from \(data["name"]) at \(data["email"]): \(data["message"])")
+        config.configureForm = { form in
+            form.formTitle = "Report Feedback"
+            form.submitButtonLabel = "Send Feedback"
         }
     }
 }
 ```
 
-### Widget
+```objc {tabTitle:Objective-C}
+@import SentryObjC;
 
-The following options can be configured for the integration in `SentryUserFeedbackWidgetConfiguration`:
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.configureUserFeedback = ^(SentryObjCUserFeedbackConfiguration *config) {
+        config.showFormForScreenshots = YES;
+        config.configureForm = ^(SentryObjCUserFeedbackFormConfiguration *form) {
+            form.formTitle = @"Report Feedback";
+            form.submitButtonLabel = @"Send Feedback";
+        };
+    };
+}];
+```
 
-| Option           | Type                      | Default                     | Description                                                                                                                                                                                                       |
-| ---------------- | ------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `location`       | `[NSDirectionalRectEdge]` | `[.bottom, .trailing]`      | The location of the widget on the screen.                                                                                                                                                                         |
-| `autoInject`     | `Bool`                    | `true`                      | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `SentrySDK.feedback.showWidget()` directly, e.g. to show the widget on certain views. |
-| `windowLevel`    | `UIWindow.Level`          | `UIWindow.Level.normal + 1` | The window level of the widget.                                                                                                                                                                                   |
-| `showIcon`       | `Bool`                    | `true`                      | Whether to show the widget icon.                                                                                                                                                                                  |
-| `labelText`      | `String?`                 | `"Report a Bug"`            | The text of the widget label. If `nil`, then only the icon is shown. It is an error to set both `labelText` to `nil` and `showIcon` to `false`.                                                                   |
-| `layoutUIOffset` | `UIOffset`                | `UIOffset.zero`             | The offset of the widget from edge(s) of the screen specified in `location`.                                                                                                                                      |
+The following options can be configured in `SentryUserFeedbackConfiguration`:
 
-### Form Configuration
+| Option                   | Type            | Default | Description                                                                                     |
+| ------------------------ | --------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `animations`             | `Bool`          | `true`  | Shows animations when presenting and dismissing the form.                                       |
+| `useShakeGesture`        | `Bool`          | `false` | Opens the form when the user shakes the device.                                                 |
+| `showFormForScreenshots` | `Bool`          | `false` | Opens the form when the user takes a screenshot and attaches that screenshot.                   |
+| `configureForm`          | Callback        | `nil`   | Configures the managed form fields and labels.                                                  |
+| `configureTheme`         | Callback        | `nil`   | Configures colors, fonts, and form element outlines.                                            |
+| `tags`                   | `[String: Any]` | `nil`   | Sets tags on the feedback event. Values can be strings, numbers, or other serializable objects. |
 
-You can customize which form elements are shown, whether they are required, and even prefill some info, in `SentryUserFeedbackFormConfiguration`:
+The following hooks let you react to the form lifecycle and submission result:
 
-| Option                        | Type     | Default                                  | Description                                                                                                               |
-| ----------------------------- | -------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `showBranding`                | `Bool`   | `true`                                   | Displays the Sentry logo inside of the form                                                                               |
-| `formTitle`                   | `String` | `"Report a Bug"`                         | The title of the feedback form.                                                                                           |
-| `messageLabel`                | `String` | `"Description"`                          | The label of the feedback description input field.                                                                        |
-| `messagePlaceholder`          | `String` | `"What's the bug? What did you expect?"` | The placeholder in the feedback description input field.                                                                  |
-| `isRequiredLabel`             | `String` | `"(Required)"`                           | The text to attach to the title label for a required field.                                                               |
-| `removeScreenshotButtonLabel` | `String` | `"Remove screenshot"`                    | The label of the remove screenshot button.                                                                                |
-| `isNameRequired`              | `Bool`   | `false`                                  | Requires the name field on the feedback form to be filled in.                                                             |
-| `showName`                    | `Bool`   | `true`                                   | Displays the name field on the feedback form. Ignored if `isNameRequired` is `true`.                                      |
-| `nameLabel`                   | `String` | `"Name"`                                 | The label next to the name input field.                                                                                   |
-| `namePlaceholder`             | `String` | `"Your Name"`                            | The placeholder in the name input field.                                                                                  |
-| `isEmailRequired`             | `Bool`   | `false`                                  | Requires the email field on the feedback form to be filled in.                                                            |
-| `showEmail`                   | `Bool`   | `true`                                   | Displays the email field on the feedback form. Ignored if `isEmailRequired` is `true`.                                    |
-| `emailLabel`                  | `String` | `"Email"`                                | The label next to the email input field.                                                                                  |
-| `emailPlaceholder`            | `String` | `"your.email@example.org"`               | The placeholder in the email input field.                                                                                 |
-| `submitButtonLabel`           | `String` | `"Send Bug Report"`                      | The label of the submit button.                                                                                           |
-| `cancelButtonLabel`           | `String` | `"Cancel"`                               | The label of the cancel button.                                                                                           |
-| `useSentryUser`               | `Bool`   | `true`                                   | Sets the `email` and `name` fields to the corresponding Sentry SDK user fields that were called with `SentrySDK.setUser`. |
+| Hook              | Type                      | Description                                                                       |
+| ----------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| `onFormOpen`      | `() -> Void`              | Called when the managed feedback form opens.                                      |
+| `onFormClose`     | `() -> Void`              | Called when the managed feedback form closes.                                     |
+| `onSubmitSuccess` | `([String: Any]) -> Void` | Called when feedback is successfully submitted through the managed form.          |
+| `onSubmitError`   | `(Error) -> Void`         | Called when the form fails validation or another client-side submit error occurs. |
 
-Example:
+`onSubmitSuccess` receives a dictionary with these keys:
 
-```swift
+- `message`: The feedback message.
+- `name`: The submitted name, when available.
+- `email`: The submitted email, when available.
+- `attachments`: The submitted attachments, when available. The managed form currently supports screenshot attachments.
+
+## Per-Presentation Configuration
+
+Use per-presentation configuration when one screen needs different labels, hooks, or theme values. The SDK copies the global configuration, applies your overrides, and uses the result only for that form presentation.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.feedback.show { config in
+    config.configureForm = { form in
+        form.formTitle = "Feedback for checkout"
+        form.submitButtonLabel = "Send Feedback"
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+[[SentryObjCSDK feedback] showWithConfigure:^(SentryObjCUserFeedbackConfiguration *config) {
+    config.configureForm = ^(SentryObjCUserFeedbackFormConfiguration *form) {
+        form.formTitle = @"Feedback for checkout";
+        form.submitButtonLabel = @"Send Feedback";
+    };
+}];
+```
+
+Per-presentation configuration doesn't apply to global-only settings. `useShakeGesture`, `showFormForScreenshots`, and deprecated widget or custom button settings must be set in `options.configureUserFeedback`.
+
+## Form Configuration
+
+Use `SentryUserFeedbackFormConfiguration` to customize the managed form. The message field is always required. Name and email are optional unless you mark them as required.
+
+| Option                                     | Type     | Default                                  | Description                                                             |
+| ------------------------------------------ | -------- | ---------------------------------------- | ----------------------------------------------------------------------- |
+| `useSentryUser`                            | `Bool`   | `true`                                   | Prefills name and email from the current Sentry user when available.    |
+| `showBranding`                             | `Bool`   | `true`                                   | Shows Sentry branding inside the form.                                  |
+| `formTitle`                                | `String` | `"Report a Bug"`                         | Title at the top of the form.                                           |
+| `messageLabel`                             | `String` | `"Description"`                          | Label for the feedback message field.                                   |
+| `messagePlaceholder`                       | `String` | `"What's the bug? What did you expect?"` | Placeholder for the feedback message field.                             |
+| `messageTextViewAccessibilityLabel`        | `String` | `messagePlaceholder`                     | Accessibility label for the feedback message field.                     |
+| `isRequiredLabel`                          | `String` | `"(Required)"`                           | Text shown next to required fields.                                     |
+| `removeScreenshotButtonLabel`              | `String` | `"Remove screenshot"`                    | Label for the remove screenshot button.                                 |
+| `removeScreenshotButtonAccessibilityLabel` | `String` | `removeScreenshotButtonLabel`            | Accessibility label for the remove screenshot button.                   |
+| `isNameRequired`                           | `Bool`   | `false`                                  | Requires the name field.                                                |
+| `showName`                                 | `Bool`   | `true`                                   | Shows the name field. Ignored when `isNameRequired` is `true`.          |
+| `nameLabel`                                | `String` | `"Name"`                                 | Label for the name field.                                               |
+| `namePlaceholder`                          | `String` | `"Your Name"`                            | Placeholder for the name field.                                         |
+| `nameTextFieldAccessibilityLabel`          | `String` | `namePlaceholder`                        | Accessibility label for the name field.                                 |
+| `isEmailRequired`                          | `Bool`   | `false`                                  | Requires the email field.                                               |
+| `showEmail`                                | `Bool`   | `true`                                   | Shows the email field. Ignored when `isEmailRequired` is `true`.        |
+| `emailLabel`                               | `String` | `"Email"`                                | Label for the email field.                                              |
+| `emailPlaceholder`                         | `String` | `"your.email@example.org"`               | Placeholder for the email field.                                        |
+| `emailTextFieldAccessibilityLabel`         | `String` | `"Your email address"`                   | Accessibility label for the email field.                                |
+| `submitButtonLabel`                        | `String` | `"Send Bug Report"`                      | Label for the submit button.                                            |
+| `submitButtonAccessibilityLabel`           | `String` | `submitButtonLabel`                      | Accessibility label for the submit button.                              |
+| `cancelButtonLabel`                        | `String` | `"Cancel"`                               | Label for cancel buttons.                                               |
+| `cancelButtonAccessibilityLabel`           | `String` | `cancelButtonLabel`                      | Accessibility label for cancel buttons.                                 |
+| `unexpectedErrorText`                      | `String` | `"Unexpected client error."`             | Message shown when an unexpected client error happens while submitting. |
+| `validationErrorMessage`                   | Callback | Default validation message               | Returns the message shown when required fields are missing.             |
+
+```swift {tabTitle:Swift} {mdExpandTabs}
 SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
     options.configureUserFeedback = { config in
         config.configureForm = { form in
-            form.isRequiredLabel = "*"
-            form.formTitle = "We want to hear from you!"
+            form.formTitle = "Tell us what happened"
+            form.messageLabel = "What happened?"
+            form.isEmailRequired = true
             form.useSentryUser = false
         }
     }
 }
 ```
 
-### Theme Customization
+```objc {tabTitle:Objective-C}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.configureUserFeedback = ^(SentryObjCUserFeedbackConfiguration *config) {
+        config.configureForm = ^(SentryObjCUserFeedbackFormConfiguration *form) {
+            form.formTitle = @"Tell us what happened";
+            form.messageLabel = @"What happened?";
+            form.isEmailRequired = YES;
+            form.useSentryUser = NO;
+        };
+    };
+}];
+```
 
-Colors can be customized via the top-level config object, configuring for both light and dark themes.
+## Theme Customization
 
-| Option             | Light                                       | Dark                                        | Description                                                  |
-| ------------------ | ------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------ |
-| `background`       | `rgb(255, 255, 255)`                        | `rgb(41, 35, 47)`                           | Background color of the widget and form.                     |
-| `foreground`       | `rgb(43, 34, 51)`                           | `rgb(235, 230, 239)`                        | Foreground text color of the widget and form.                |
-| `submitForeground` | `rgb(255, 255, 255)`                        | `rgb(255, 255, 255)`                        | Foreground color for the form submit button.                 |
-| `submitBackground` | `rgb(88, 74, 192)`                          | `rgb(88, 74, 192)`                          | Background color for the form submit button.                 |
-| `buttonForeground` | Same as `foreground`                        | Same as `foreground`                        | Foreground color for the cancel and screenshot buttons.      |
-| `buttonBackground` | `UIColor.clear`                             | `UIColor.clear`                             | Background color for the form cancel and screenshot buttons. |
-| `errorColor`       | `rgb(223, 51, 56)`                          | `rgb(245, 84, 89)`                          | Color used for error-related components.                     |
-| `inputBackground`  | `UIColor.`<br />`secondarySystemBackground` | `UIColor.`<br />`secondarySystemBackground` | Background color for form inputs.                            |
-| `inputForeground`  | `UIColor.darkText`                          | `UIColor.lightText`                         | Foreground color for form inputs.                            |
+Use `SentryUserFeedbackThemeConfiguration` to customize colors, fonts, and form element outlines. Use dynamic `UIColor` values when you need different light and dark mode colors. The SDK applies default theme values when you don't override them.
 
-Form element outlines can be configured via the `outlineStyle` property. By default, the color is `rgb(204, 204, 204)`, the width is `0.5`, and the corner radius is `5.0`.
+| Option             | Description                                         |
+| ------------------ | --------------------------------------------------- |
+| `fontFamily`       | Font family for form text.                          |
+| `foreground`       | Foreground text color.                              |
+| `background`       | Form background color.                              |
+| `submitForeground` | Foreground color for the submit button.             |
+| `submitBackground` | Background color for the submit button.             |
+| `buttonForeground` | Foreground color for cancel and screenshot buttons. |
+| `buttonBackground` | Background color for cancel and screenshot buttons. |
+| `errorColor`       | Color for validation and error UI.                  |
+| `outlineStyle`     | Outline style for inputs and buttons.               |
+| `inputBackground`  | Background color for text inputs.                   |
+| `inputForeground`  | Foreground color for text inputs.                   |
 
-Fonts can be directly customized, but by default they will scale with the user's preferred text size using predefined font styles:
-
-| Option       | Default Text Style          | Description                                                                 |
-| ------------ | --------------------------- | --------------------------------------------------------------------------- |
-| `font`       | `"UIFontTextStyleCallout"`  | The font family to use for form input elements and the widget button label. |
-| `headerFont` | `"UIFontTextStyleTitle1"`   | The font family to use for the main header title of the feedback form.      |
-| `titleFont`  | `"UIFontTextStyleHeadline"` | The font family to use for titles of text fields and buttons in the form.   |
-
-You can still configure the `fontFamily` setting and we will request an appropriately scaled font from the system.
-
-Here is an example of customizing only the background color for the light theme using the Feedback constructor configuration:
-
-```swift
+```swift {tabTitle:Swift} {mdExpandTabs}
 SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
     options.configureUserFeedback = { config in
-        // configureTheme is used for light themes on iOS versions that support dark mode, and as the sole theme configuration for earlier iOS versions that don't support dark mode
         config.configureTheme = { theme in
-            theme.background = .yellow
-        }
-        config.configureDarkTheme = { theme in
-            theme.background = .darkGray
-        }
-    }
-}
-```
-
-### Accessibility
-
-The Feedback widget is designed to be accessible, with a set of default accessibility labels that can be overridden. The following attributes are set to ensure the widget is accessible:
-
-#### `SentryUserFeedbackWidgetConfiguration`
-
-| Configuration Key          | Default Value                                      |
-| -------------------------- | -------------------------------------------------- |
-| `widgetAccessibilityLabel` | `labelText` or, if that is `nil`, `"Report a Bug"` |
-
-#### `SentryUserFeedbackFormConfiguration`
-
-| Configuration Key                          | Default Value                 |
-| ------------------------------------------ | ----------------------------- |
-| `messageTextViewAccessibilityLabel`        | `messagePlaceholder`          |
-| `removeScreenshotButtonAccessibilityLabel` | `removeScreenshotButtonLabel` |
-| `nameTextFieldAccessibilityLabel`          | `namePlaceholder`             |
-| `emailTextFieldAccessibilityLabel`         | `"Your email address"`        |
-| `submitButtonAccessibilityLabel`           | `submitButtonLabel`           |
-| `cancelButtonAccessibilityLabel`           | `cancelButtonLabel`           |
-
-Example:
-
-```swift
-SentrySDK.start { options in
-    options.configureUserFeedback = { config in
-        config.configureWidget = { widget in
-            widget.widgetAccessibilityLabel = "Report an Issue" // default: "Report a Bug"
-        }
-        config.configureForm = { form in
-            form.messageTextViewAccessibilityLabel = "What happened?" // default: "What's the bug? What did you expect?"
+            theme.background = UIColor { traits in
+                traits.userInterfaceStyle == .dark ? .darkGray : .yellow
+            }
+            theme.submitBackground = .systemPurple
         }
     }
 }
 ```
 
-### Bring Your Own Widget
-
-You can also use your own UI components to gather feedback and pass the feedback data object to the `SentrySDK.capture(feedback: SentryFeedback)` function.
-
-```swift
-SentrySDK.capture(feedback: .init(
-    message: "This is an example feedback", // required
-    name: "Jane Doe", // optional
-    email: "email@example.org", // optional
-    source: .custom,
-    attachments: [Attachment(data: somePngImageData, filename: "screenshot.png")] // optional
-));
+```objc {tabTitle:Objective-C}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.configureUserFeedback = ^(SentryObjCUserFeedbackConfiguration *config) {
+        config.configureTheme = ^(SentryObjCUserFeedbackThemeConfiguration *theme) {
+            theme.background = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traits) {
+                return traits.userInterfaceStyle == UIUserInterfaceStyleDark ? UIColor.darkGrayColor : UIColor.yellowColor;
+            }];
+            theme.submitBackground = UIColor.systemPurpleColor;
+        };
+    };
+}];
 ```
+
+`configureDarkTheme` is deprecated. Use dynamic `UIColor` values in `configureTheme` instead.
+
+## Deprecated Widget and Custom Button Configuration
+
+The Sentry-managed User Feedback widget and the SDK-installed custom button path are deprecated and will be removed in v10.
+
+Deprecated APIs and configuration include:
+
+- `SentrySDK.feedback.showWidget()` and `hideWidget()`
+- `SentryUserFeedbackConfiguration.configureWidget`
+- `SentryUserFeedbackWidgetConfiguration`
+- `SentryUserFeedbackConfiguration.customButton`
+- `SentryUserFeedbackConfiguration.configureDarkTheme`
+
+Instead of configuring Sentry to inject or hook up a button, add a button to your own UI and call a presentation API from its action.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+@IBAction private func feedbackButtonTapped(_ sender: UIButton) {
+    SentrySDK.feedback.show()
+}
+```
+
+```objc {tabTitle:Objective-C}
+- (IBAction)feedbackButtonTapped:(UIButton *)sender {
+    [[SentryObjCSDK feedback] show];
+}
+```
+
+If you need exact presenter control, create and present the form yourself:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+@IBAction private func feedbackButtonTapped(_ sender: UIButton) {
+    let form = SentrySDK.FeedbackForm()
+    present(form, animated: true)
+}
+```
+
+```objc {tabTitle:Objective-C}
+- (IBAction)feedbackButtonTapped:(UIButton *)sender {
+    UIViewController *form = [SentryObjCFeedbackForm viewController];
+    [self presentViewController:form animated:YES completion:nil];
+}
+```
+
+## Manual Feedback Capture
+
+If you build the entire feedback UI yourself, create a `SentryFeedback` object and send it with `SentrySDK.capture(feedback:)`. For an example, see [User Feedback API](../#user-feedback-api).
 
 </PlatformSection>

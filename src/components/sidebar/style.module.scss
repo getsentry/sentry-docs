@@ -68,6 +68,11 @@
   @media only screen and (max-width: 767px) {
     &:has(> #navbar-menu-toggle:checked) {
       display: flex;
+      // On mobile the whole sidebar is a single scroll container, so the
+      // expanded section menu and the page nav scroll together instead of
+      // fighting over the fixed height with a clipped inner scroll region.
+      overflow-y: auto;
+      overscroll-behavior: contain;
 
       & + :global(.main-content) {
         margin-left: 0;
@@ -92,6 +97,14 @@
 
     @media only screen and (min-width: 768px) {
       display: block;
+    }
+
+    // On mobile the outer .sidebar is the single scroll container, so let .toc
+    // grow naturally instead of nesting its own scroll region.
+    @media only screen and (max-width: 767px) {
+      flex: 0 0 auto;
+      overflow: visible;
+      min-height: auto;
     }
   }
 
@@ -155,6 +168,13 @@
   overflow: auto;
   min-height: 0; // Critical for flex children to allow shrinking and enable scrolling
   -webkit-overflow-scrolling: touch; // Smooth momentum scrolling on iOS
+
+  // On mobile the outer .sidebar is the single scroll container (see .sidebar).
+  @media only screen and (max-width: 767px) {
+    flex: 0 0 auto;
+    overflow: visible;
+    min-height: auto;
+  }
 }
 
 .sidebar-external-links {
@@ -229,7 +249,7 @@
     padding: 0.5rem 0 0.375rem;
     margin-top: 0.5rem;
     list-style: none;
-    
+
     &:first-child {
       margin-top: 0;
     }

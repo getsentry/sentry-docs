@@ -95,7 +95,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/miscellaneous/unified-api/tracing/:path*',
-    destination: '/sdk/performance/:path*',
+    destination: '/sdk/telemetry/traces/:path*',
   },
   {
     source: '/onpremise/:path*',
@@ -111,7 +111,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/api/:path*',
-    destination: '/application/api/:path*',
+    destination: '/backend/api/:path*',
   },
   // Context propagation consolidation (must be before the /sdk/performance/ wildcard)
   {
@@ -140,31 +140,31 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/data-model/event-payloads/types/',
-    destination: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/',
-    destination: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/data-model/event-payloads/:path*',
-    destination: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
   {
     source: '/sdk/data-model/envelopes/',
-    destination: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
   },
   {
     source: '/sdk/data-model/envelope-items/',
-    destination: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     source: '/sdk/basics/:path*',
-    destination: '/sdk/foundations/overview/',
+    destination: '/sdk/foundations/',
   },
   {
     source: '/sdk/processes/basics/:path*',
-    destination: '/sdk/foundations/overview/',
+    destination: '/sdk/foundations/',
   },
   {
     source: '/sdk/data-handling/:path*',
@@ -208,27 +208,27 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/envelopes/:path*',
-    destination: '/sdk/foundations/transport/envelopes/:path*',
+    destination: '/sdk/foundations/envelopes/:path*',
   },
   {
     source: '/sdk/foundations/data-model/envelopes/',
-    destination: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
   },
   {
     source: '/sdk/foundations/data-model/envelope-items/',
-    destination: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     source: '/sdk/foundations/data-model/event-payloads/',
-    destination: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     source: '/sdk/foundations/data-model/event-payloads/:path*',
-    destination: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
   {
     source: '/sdk/event-payloads/:path*',
-    destination: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
   },
   {
     source: '/sdk/hub_and_scope_refactoring/:path*',
@@ -400,7 +400,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/application/ab-testing/',
-    destination: '/backend/ab-testing/',
+    destination: '/backend/application-domains/ab-testing/',
   },
   {
     source: '/application/api/:path*',
@@ -420,7 +420,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/application/grouping/',
-    destination: '/backend/grouping/',
+    destination: '/backend/application-domains/grouping/',
   },
   {
     source: '/application/issue-platform/',
@@ -428,11 +428,11 @@ const developerDocsRedirects = [
   },
   {
     source: '/application/transaction-clustering/',
-    destination: '/backend/transaction-clustering/',
+    destination: '/backend/application-domains/transaction-clustering/',
   },
   {
     source: '/application/translations/',
-    destination: '/backend/translations/',
+    destination: '/backend/application-domains/translations/',
   },
   {
     source: '/application/pii/:path*',
@@ -440,23 +440,23 @@ const developerDocsRedirects = [
   },
   {
     source: '/backend/control-silo/',
-    destination: '/application/control-silo/',
+    destination: '/application-architecture/multi-region-deployment/control-silo/',
   },
   {
     source: '/backend/cross-region-replication/',
-    destination: '/application/cross-region-replication/',
+    destination: '/application-architecture/multi-region-deployment/cross-region-replication/',
   },
   {
     source: '/backend/cross-region-rpc/',
-    destination: '/application/cross-region-rpc/',
+    destination: '/application-architecture/multi-region-deployment/cross-region-rpc/',
   },
   {
     source: '/development/python-dependencies/',
-    destination: '/backend/python-dependencies/',
+    destination: '/development-infrastructure/python-dependencies/',
   },
   {
     source: '/development/docs/',
-    destination: '/development/documentation/',
+    destination: '/engineering-practices/documentation/',
   },
   {
     source: '/development/philosophy/',
@@ -464,43 +464,43 @@ const developerDocsRedirects = [
   },
   {
     source: '/development/database-migrations/',
-    destination: '/backend/database-migrations/',
+    destination: '/backend/application-domains/database-migrations/',
   },
   {
     source: '/services/metrics/',
-    destination: '/backend/metrics/',
+    destination: '/backend/application-domains/metrics/',
   },
   {
     source: '/services/nodestore/',
-    destination: '/backend/nodestore/',
+    destination: '/backend/application-domains/nodestore/',
   },
   {
     source: '/services/devservices/',
-    destination: '/development/devservices/',
+    destination: '/development-infrastructure/devservices/',
   },
   {
     source: '/services/queue/',
-    destination: '/backend/queue/',
+    destination: '/backend/application-domains/tasks/',
   },
   {
     source: '/services/quotas/',
-    destination: '/backend/quotas/',
+    destination: '/backend/application-domains/quotas/',
   },
   {
     source: '/services/tsdb/',
-    destination: '/services/tsdb/',
+    destination: '/backend/application-domains/tsdb/',
   },
   {
     source: '/services/ports/',
-    destination: '/development/environment/ports/',
+    destination: '/development-infrastructure/environment/ports/',
   },
   {
     source: '/services/buffers/',
-    destination: '/backend/buffers/',
+    destination: '/backend/application-domains/write-buffers/',
   },
   {
     source: '/services/digests/',
-    destination: '/backend/digests/',
+    destination: '/backend/application-domains/digests/',
   },
   {
     source: '/services/emails/',
@@ -567,6 +567,22 @@ const developerDocsRedirects = [
     source: '/sdk/expected-features/setup-wizards/:path*',
     destination: '/sdk-setup-wizards/:path*',
   },
+  {
+    source: '/sdk/foundations/transport/envelopes/',
+    destination: '/sdk/foundations/envelopes/',
+  },
+  {
+    source: '/sdk/foundations/transport/envelope-items/',
+    destination: '/sdk/foundations/envelopes/envelope-items/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/',
+    destination: '/sdk/foundations/envelopes/event-payloads/',
+  },
+  {
+    source: '/sdk/foundations/transport/event-payloads/:path*',
+    destination: '/sdk/foundations/envelopes/event-payloads/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -574,6 +590,18 @@ const userDocsRedirects = [
   {
     source: '/api/guides/oauth/',
     destination: '/api/auth/',
+  },
+  {
+    source: '/product/codecov/:path*',
+    destination: '/integrations/',
+  },
+  {
+    source: '/product/codecov/',
+    destination: '/integrations/',
+  },
+  {
+    source: '/integrations/code-coverage/:path*',
+    destination: '/integrations/',
   },
   {
     source: '/integrations/incidentio/',
@@ -649,15 +677,15 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/phoebeai/',
-    destination: '/integrations/debugging/phoebeai/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/qckfx/',
-    destination: '/integrations/debugging/qckfx/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/revisedev/',
-    destination: '/integrations/debugging/revisedev/',
+    destination: '/integrations/debugging/',
   },
   {
     source: '/integrations/rookout/',
@@ -665,7 +693,7 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/sevvy/',
-    destination: '/integrations/debugging/sevvy/',
+    destination: '/integrations/debugging/corelayer/',
   },
   {
     source: '/integrations/sourcery/',
@@ -678,10 +706,6 @@ const userDocsRedirects = [
   {
     source: '/integrations/expo/',
     destination: '/integrations/deployment/expo/',
-  },
-  {
-    source: '/integrations/heroku/',
-    destination: '/integrations/deployment/heroku/',
   },
   {
     source: '/integrations/vercel/',
@@ -718,10 +742,6 @@ const userDocsRedirects = [
   {
     source: '/integrations/ui-components/',
     destination: '/integrations/integration-platform/ui-components/',
-  },
-  {
-    source: '/integrations/asana/',
-    destination: '/integrations/issue-tracking/asana/',
   },
   {
     source: '/integrations/bugsniff/',
@@ -934,6 +954,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/aws-lambda/cjs-npm__v9.x/',
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
+  },
+  {
+    source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
+    destination: '/platforms/javascript/guides/react-router/manual-setup/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -1165,7 +1189,7 @@ const userDocsRedirects = [
   },
   {
     source: '/meta/:path*',
-    destination: '/product/security/:path*',
+    destination: '/security-legal-pii/security/:path*',
   },
   {
     source: '/:type(hosted|on-premise)/:path*',
@@ -1345,7 +1369,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/:guide/integrations/plugin/',
-    destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/',
   },
   {
     source: '/platforms/javascript/configuration/environments/',
@@ -1389,7 +1413,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/:platform/data-management/data-forwarding/',
-    destination: '/concepts/data-management/data-forwarding/',
+    destination: '/integrations/data-forwarding/',
   },
   {
     source: '/platforms/:platform/data-management/event-grouping/',
@@ -1614,21 +1638,47 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
+  // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
-    source: '/product/metrics/:path*',
-    destination: '/product/explore/metrics/:path*',
+    source: '/product/onboarding/',
+    destination: '/product/sentry-basics/',
   },
   {
-    source: '/product/profiling/:path*',
-    destination: '/product/explore/profiling/:path*',
+    source: '/product/onboarding/:path*',
+    destination: '/product/sentry-basics/',
+  },
+  // Flatten Explore: redirect old /product/explore/* paths to new /product/* paths
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/product/metrics/:path*',
   },
   {
-    source: '/product/discover-queries/:path*',
-    destination: '/product/explore/discover-queries/:path*',
+    source: '/product/explore/profiling/:path*',
+    destination: '/product/profiling/:path*',
   },
   {
-    source: '/product/session-replay/:path*',
-    destination: '/product/explore/session-replay/:path*',
+    source: '/product/explore/discover-queries/:path*',
+    destination: '/product/discover-queries/:path*',
+  },
+  {
+    source: '/product/explore/session-replay/:path*',
+    destination: '/product/session-replay/:path*',
+  },
+  {
+    source: '/product/explore/trace-explorer/:path*',
+    destination: '/product/trace-explorer/:path*',
+  },
+  {
+    source: '/product/explore/logs/:path*',
+    destination: '/product/logs/:path*',
+  },
+  {
+    source: '/product/explore',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/platforms/javascript/best-practices/browser-extensions/',
@@ -1771,6 +1821,48 @@ const userDocsRedirects = [
     source: '/platforms/react-native/manual-setup/codepush/',
     destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
   },
+  // Expo-specific pages moved under the Expo guide (/guides/expo/)
+  {
+    source: '/platforms/react-native/manual-setup/expo/',
+    destination: '/platforms/react-native/guides/expo/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/expo-updates/',
+    destination:
+      '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/expo/gradle/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/gradle/',
+  },
+  {
+    source: '/platforms/react-native/migration/sentry-expo/',
+    destination: '/platforms/react-native/guides/expo/migration/sentry-expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo/',
+    destination: '/platforms/react-native/guides/expo/sourcemaps/uploading/expo/',
+  },
+  {
+    source: '/platforms/react-native/sourcemaps/uploading/expo-advanced/',
+    destination:
+      '/platforms/react-native/guides/expo/sourcemaps/uploading/expo-advanced/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-router/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-router/',
+  },
+  {
+    source: '/platforms/react-native/tracing/instrumentation/expo-resources/',
+    destination:
+      '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
+  },
   {
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
@@ -1840,7 +1932,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
+    destination:
+      '/product/dashboards/sentry-dashboards/mobile/mobile-vitals/screen-loads/',
   },
   {
     source: '/product/insights/mobile-vitals/:path*',
@@ -2100,11 +2193,23 @@ const userDocsRedirects = [
   // Redirects for Trace Explorer
   {
     source: '/product/explore/traces',
-    destination: '/product/explore/trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/traces/',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/product/explore/new-trace-explorer',
-    destination: '/product/explore/trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer/',
+    destination: '/product/trace-explorer/',
+  },
+  {
+    source: '/product/traces',
+    destination: '/product/trace-explorer/',
   },
   {
     source: '/organization/integrations/expo/',
@@ -2219,15 +2324,7 @@ const userDocsRedirects = [
     source: '/product/monitors-and-alerts/alerts/best-practices/',
     destination: '/product/monitors-and-alerts/alerts/',
   },
-  // DOCS-2550: /product/logs/ moved under /product/explore/
-  {
-    source: '/product/logs/',
-    destination: '/product/explore/logs/',
-  },
-  {
-    source: '/product/logs/:path*',
-    destination: '/product/explore/logs/:path*',
-  },
+  // DOCS-2550: /product/logs/ redirects now handled in the flatten-explore block above
   // DOCS-2227: retention-priorities page removed; dynamic-sampling is the closest equivalent
   {
     source: '/product/performance/retention-priorities/',

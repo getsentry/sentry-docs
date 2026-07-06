@@ -9,8 +9,7 @@ In addition to the [configuration available in the PHP SDK](../options/), there 
 
 All configuration for Symfony is done in `config/packages/sentry.yaml`.
 
-
-{/* <!-- prettier-ignore --> */}
+{/* prettier-ignore */}
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     dsn: "___PUBLIC_DSN___"
@@ -71,8 +70,9 @@ sentry:
             App\User: "App\\Sentry\\Serializer\\UserSerializer"
     messenger:
         enabled: true
-        capture_soft_fails: false
+        capture_soft_fails: true
         isolate_breadcrumbs_by_message: false
+        isolate_context_by_message: false
 
     tracing:
         enabled: true
@@ -95,11 +95,39 @@ sentry:
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
 left empty, it disables Sentry reporting.
 
-All the possible configurations under the `options` key map directly to the correspondent options from the base SDK;
+All the possible configurations under the `options` key map directly to the corresponding options from the base SDK;
 you can read more about those in the [general configuration docs](../options/).
 
 Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
 values that you can use in some cases.
+
+## Messenger
+
+If the same worker process handles multiple messages, Sentry data can carry over from one message to the next. A full Messenger configuration looks like this:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  messenger:
+    enabled: true
+    capture_soft_fails: true
+    isolate_breadcrumbs_by_message: false
+    isolate_context_by_message: true
+```
+
+### Soft Fails
+
+Use `capture_soft_fails` to capture exceptions for messages that fail but will be retried. Leave it enabled if you want visibility into retrying failures. Defaults to `true`.
+
+### Isolation Levels
+
+If data from one handled message appears on another, you can choose between these isolation settings:
+
+- `isolate_breadcrumbs_by_message`: Push a fresh scope for each handled message so breadcrumbs from one message do not appear on the next one. Use this when breadcrumb leakage is the only problem. Defaults to `false`.
+- `isolate_context_by_message`: Wrap each handled message in its own runtime context to prevent scope data, logs, and metrics from leaking across messages in long-running workers. This also isolates breadcrumbs, so it generally supersedes `isolate_breadcrumbs_by_message`. Use it when tags, user context, logs, or metrics are also carrying over. Defaults to `false`.
+
+If `isolate_context_by_message` is enabled, `isolate_breadcrumbs_by_message` usually adds little value, though enabling both flags is harmless.
+
+`isolate_context_by_message` is available in `sentry/sentry-symfony` `5.10.0` and later.
 
 ## `environment`
 
@@ -118,6 +146,7 @@ In this bundle it has three default values:
 
 To flush buffered logs automatically, configure `log_flush_threshold` under `sentry.options`:
 
+{/* prettier-ignore */}
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     options:
@@ -134,7 +163,7 @@ This option is disabled by default (`null`).
 The `before_breadcrumb`, `before_send`, `before_send_transaction` and `traces_sampler` options accept a `callable`; so, you cannot provide it directly through
 a YAML file. The bundle accepts a service reference, which you can build in your DIC container like this:
 
-{/* <!-- prettier-ignore --> */}
+{/* prettier-ignore */}
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     options:

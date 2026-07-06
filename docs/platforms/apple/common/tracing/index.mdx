@@ -6,7 +6,7 @@ sidebar_order: 4000
 sidebar_section: features
 ---
 
-With [tracing](/product/dashboards/sentry-dashboards/), Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems. Sentry captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services. Learn more about our model in [Distributed Tracing](/product/sentry-basics/tracing/distributed-tracing/).
+With [tracing](/product/dashboards/sentry-dashboards/), Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems. Sentry captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services. Learn more about our model in [Distributed Tracing](/concepts/key-terms/tracing/distributed-tracing/).
 
 Automatic instrumentation for monitoring the performance of your application is currently in preview. You can also use custom instrumentation to capture transactions.
 
@@ -30,6 +30,42 @@ Verify that tracing is working correctly by using our <PlatformLink to="/tracing
 Test out tracing by starting and finishing a transaction, which you _must_ do so transactions can be sent to Sentry. Learn how in our <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> content.
 
 While you're testing, set <PlatformIdentifier name="traces-sample-rate" /> to `1.0`, as that ensures that every transaction will be sent to Sentry. Once testing is complete, you may want to set a lower <PlatformIdentifier name="traces-sample-rate" /> value, or switch to using <PlatformIdentifier name="traces-sampler" /> to selectively sample and filter your transactions, based on contextual data.
+
+## Standalone App Start Tracing
+
+<Alert level="info">
+
+This feature is experimental. The API is subject to change and may introduce breaking changes in future releases.
+
+</Alert>
+
+By default, app start data is attached as spans to the first transaction in your app. Standalone app start tracing sends app start data as its own separate transaction instead. This gives you more accurate app start measurements, since they aren't dependent on another transaction being started.
+
+To enable standalone app start tracing, add the following to your SDK configuration:
+
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.experimental.enableStandaloneAppStartTracing = true
+}
+```
+
+```objc
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.experimental.enableStandaloneAppStartTracing = YES;
+}];
+```
+
+<Alert level="warning">
+
+The SDK must be initialized before the `didFinishLaunchingNotification` is posted for standalone app start tracing to work. In practice, this means calling `SentrySDK.start` inside your `application(_:didFinishLaunchingWithOptions:)` method (UIKit) or your `App` conformer's `init()` (SwiftUI). If the SDK is started later, the standalone app start transaction may never finish.
+
+</Alert>
+
+For more details on app start instrumentation, see <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#app-start-tracing">App Start Tracing</PlatformLink>.
 
 ## Next Steps
 

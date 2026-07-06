@@ -12,7 +12,7 @@ Once metrics are enabled and the SDK is initialized, you can emit metrics using 
 
 Track the number of times something happens. Each increment adds to a cumulative total:
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 # Increment by 1 (default)
 SentrySDK.metrics.count("match_started")
 
@@ -20,35 +20,69 @@ SentrySDK.metrics.count("match_started")
 SentrySDK.metrics.count("in_app_purchase", 1, {"item": "sword_of_fire"})
 ```
 
+```csharp {tabTitle:C#}
+// Increment by 1
+SentrySdk.Metrics.EmitCounter("match_started", 1);
+
+// Increment by a specific amount with attributes
+SentrySdk.Metrics.EmitCounter("in_app_purchase", 1, new Dictionary<string, object>
+{
+    ["item"] = "sword_of_fire",
+});
+```
+
 ### Gauges
 
 Track current values at a point in time, like a snapshot. Sentry computes aggregates like min, max, avg, sum, and count:
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 SentrySDK.metrics.gauge("players_online", lobby.get_player_count())
 
 # With a unit
 SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), SentryUnit.byte)
 ```
 
+```csharp {tabTitle:C#}
+SentrySdk.Metrics.EmitGauge("players_online", lobby.GetPlayerCount());
+
+// With a unit
+SentrySdk.Metrics.EmitGauge("memory_usage", (long)OS.GetStaticMemoryUsage(), MeasurementUnit.Information.Byte);
+```
+
 ### Distributions
 
 Record numeric values to compute statistical aggregates such as p50, p95, avg, min, and max:
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 SentrySDK.metrics.distribution("level_load_time", load_time, SentryUnit.millisecond)
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Metrics.EmitDistribution("level_load_time", loadTime, MeasurementUnit.Duration.Millisecond);
 ```
 
 ### Custom Attributes
 
 Add attributes to filter and group metrics in Sentry:
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 SentrySDK.metrics.count("enemies_spawned", wave_size, {"level": "castle"})
 
 SentrySDK.metrics.distribution("level_load_time", load_time, SentryUnit.millisecond, {
 	"scene": get_tree().current_scene.name
 })
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Metrics.EmitCounter("enemies_spawned", waveSize, new Dictionary<string, object>
+{
+    ["level"] = "castle",
+});
+
+SentrySdk.Metrics.EmitDistribution("level_load_time", loadTime, MeasurementUnit.Duration.Millisecond, new Dictionary<string, object>
+{
+    ["scene"] = GetTree().CurrentScene.Name,
+});
 ```
 
 Attributes support `bool`, `int`, `float`, and `String` data types. Other types will be converted to strings.
@@ -57,7 +91,7 @@ Attributes support `bool`, `int`, `float`, and `String` data types. Other types 
 
 You can set global attributes that are automatically included in all metrics and logs. This is useful for attaching contextual information that should appear on every metric entry.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 # Set global attributes that apply to all metrics and logs
 SentrySDK.set_attribute("level", "castle")
 SentrySDK.set_attribute("difficulty", "hard")
@@ -69,11 +103,31 @@ SentrySDK.metrics.count("enemy_defeated")
 SentrySDK.remove_attribute("level")
 ```
 
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+    options.SetBeforeSendMetric(metric =>
+    {
+        metric.SetAttribute("level", "castle");
+        metric.SetAttribute("difficulty", "hard");
+        return metric;
+    });
+});
+
+// All subsequent metrics will include these attributes
+SentrySdk.Metrics.EmitCounter("enemy_defeated", 1);
+```
+
+<Alert>
+  The C# SDK doesn't have a scope-level attribute API yet. The before-send hook
+  is the closest equivalent: it applies attributes to every metric.
+</Alert>
+
 ### Units
 
 For gauge and distribution metrics, you can specify a unit to help Sentry display values in a human-readable format. The `SentryUnit` singleton provides predefined constants for common units. See [supported units](https://develop.sentry.dev/sdk/foundations/data-model/attributes/#units) for the full list.
 
-```GDScript
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
 # Duration units
 SentrySDK.metrics.distribution("level_load_time", load_time, SentryUnit.millisecond)
 
@@ -82,4 +136,12 @@ SentrySDK.metrics.gauge("memory_usage", OS.get_static_memory_usage(), SentryUnit
 
 # Custom units (as strings)
 SentrySDK.metrics.gauge("items_in_inventory", item_count, "item")
+```
+
+```csharp {tabTitle:C#}
+// Duration units
+SentrySdk.Metrics.EmitDistribution("level_load_time", loadTime, MeasurementUnit.Duration.Millisecond);
+
+// Information units
+SentrySdk.Metrics.EmitGauge("memory_usage", (long)OS.GetStaticMemoryUsage(), MeasurementUnit.Information.Byte);
 ```
