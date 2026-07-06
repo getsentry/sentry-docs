@@ -171,27 +171,6 @@ with sentry_sdk.start_span(op="gen_ai.execute_tool", name="execute_tool get_weat
     span.set_data("gen_ai.tool.call.result", json.dumps(result))
 ```
 
-### Handoff Span
-
-This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
-
-<Expandable title="Handoff span attributes">
-  <Include name="tracing/ai-agents-module/handoff-span" />
-</Expandable>
-
-#### Example of a Handoff Span
-
-```python
-import sentry_sdk
-
-with sentry_sdk.start_span(op="gen_ai.handoff", name="handoff from Weather Agent to Travel Agent"):
-    pass  # Handoff span just marks the transition
-
-with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel Agent"):
-    # Run the target agent here
-    pass
-```
-
 ## Tracking Conversations
 
 <Alert>
@@ -226,6 +205,18 @@ response = openai.responses.create(
     conversation=conversation.id  # this will automatically set `gen_ai.conversation.id` on the span
 )
 ```
+
+## Identifying Users in Conversations
+
+The [Conversations](/ai/monitoring/conversations/) view includes a **User** column. To populate it, call `sentry_sdk.set_user` once per request or session, before any AI calls:
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present.
 
 ## Common Span Attributes
 

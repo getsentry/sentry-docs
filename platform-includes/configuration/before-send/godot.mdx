@@ -46,3 +46,20 @@ SentrySdk.Init(options =>
     });
 });
 ```
+
+In C#, `options.SetBeforeSend` filters managed events, such as exceptions from your game's C# code and third-party .NET libraries. Native events are captured in the native layer; to filter them from C#, set `options.Native.SetBeforeSend` inside your `SentrySdk.Init`. This is most useful for engine, GDScript, and GDExtension errors. The callback receives a `SentryNativeEvent` that you can inspect, modify, or drop by returning `null`. Native crash events aren't passed to this callback.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Native.SetBeforeSend(nativeEvent =>
+    {
+        // Drop a noisy error that you can't fix.
+        if (nativeEvent.GetExceptionValue(0)?.Contains("Noisy error") == true)
+        {
+            return null;
+        }
+        return nativeEvent;
+    });
+});
+```

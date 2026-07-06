@@ -1,0 +1,111 @@
+---
+title: Sentry Conventions
+description: How to add, release, and deploy semantic convention attributes across sentry-conventions, Relay, Snuba, and Sentry.
+sidebar_order: 35
+---
+
+[Sentry Semantic Conventions](https://github.com/getsentry/sentry-conventions) is the single source of truth for attribute names, types, PII classification, and deprecation status across all of Sentry's systems. Changes to conventions flow through a defined pipeline before they take effect in production.
+
+For full contribution details (setup, policies, testing), see the [CONTRIBUTING.md](https://github.com/getsentry/sentry-conventions/blob/main/CONTRIBUTING.md) in the repo.
+
+## Overview
+
+Convention changes go through four stages:
+
+1. **Define** — Add or modify attributes in `sentry-conventions`
+2. **Release** — Publish a new version to npm and PyPI
+3. **Update downstream repos** — Bump the dependency in Relay, Snuba, and Sentry
+4. **Register** (if needed) — Make new attributes queryable or add ingestion logic in Sentry
+
+## sentry-conventions
+
+### Adding a new attribute
+
+```bash
+yarn create:attribute
+```
+
+This walks you through creating the attribute JSON file in `model/attributes/`. You can also use non-interactive mode:
+
+```bash
+yarn create:attribute \
+  --key my.attribute.name \
+  --description "What this attribute represents" \
+  --type string \
+  --apply_scrubbing manual \
+  --is_in_otel false \
+  --visibility public \
+  --example "example_value"
+```
+
+### Deprecating an attribute
+
+1. Modify the existing attribute JSON — add a `deprecation` block with `_status`, `replacement`, and `reason`.
+2. Create the replacement attribute if it doesn't already exist.
+3. Ensure **symmetric `alias` entries** — every member of an alias group must list every other member. The test suite enforces this.
+
+### Before opening a PR
+
+- Set `apply_scrubbing` appropriately:
+  - `"manual"` (default) — the attribute may contain PII; scrubbing is left to the user's data scrubbing settings.
+  - `"auto"` — the attribute is expected to contain PII in normal use; scrubbing is applied automatically.
+  - `"never"` — the attribute is not expected to contain PII, and scrubbing it would break product features.
+- Add a `changelog` entry with `"version": "next"`.
+- Run `yarn generate` to regenerate the JS and Python code.
+- Run `npx vitest run` to verify all tests pass (including alias symmetry, name template validation, etc.).
+
+### Merge process
+
+PRs require a **3 business day grace period** after the first approval before merging. This exists because attribute names, once shipped in an SDK release, are effectively permanent. See [CONTRIBUTING.md](https://github.com/getsentry/sentry-conventions/blob/main/CONTRIBUTING.md#process) for details.
+
+## Releasing
+
+1. Trigger the [Release workflow](https://github.com/getsentry/sentry-conventions/actions/workflows/release.yml) on GitHub Actions with the new version number. Almost always a **minor bump** (e.g. `0.12.0` → `0.13.0`).
+2. Craft creates a `release/x.y.z` branch and opens an issue on [`getsentry/publish`](https://github.com/getsentry/publish/issues).
+3. Add the **`accepted`** label on the publish issue to approve.
+4. CI publishes to npm, PyPI, and GitHub Releases.
+5. Wait **~20 minutes** for the internal PyPI mirror (`pypi.devinfra.sentry.io`) to sync before updating Sentry and Snuba.
+
+## Updating Downstream Repos
+
+Convention changes don't take effect in production until the downstream repos are updated and deployed.
+
+### Relay
+
+Relay uses `sentry-conventions` as a **git submodule**. The build script reads the JSON model files and generates Rust code at compile time.
+
+1. Update the submodule to the release tag:
+   ```bash
+   cd relay-conventions/sentry-conventions
+   git fetch --tags
+   git checkout <version>
+   cd ../..
+   git add relay-conventions/sentry-conventions
+   ```
+2. If the release **deprecates** attributes, check for Rust compilation errors — clippy treats deprecated constant usage as errors. Migrate to the new constant names.
+3. If the update includes user-observable changes, add a CHANGELOG entry.
+4. Open + merge PR at [`getsentry/relay`](https://github.com/getsentry/relay).
+
+### Snuba
+
+Snuba uses the **PyPI package**.
+
+1. Run the [`bump-version` workflow](https://github.com/getsentry/snuba/actions/workflows/bump-version.yml) with package `sentry-conventions` and the new version. This creates a PR updating `pyproject.toml` and the lockfile.
+2. Review and merge the PR. Self-approval is permitted for simple bumps.
+
+### Sentry
+
+Sentry uses the **PyPI package** and may require additional registration for new attributes.
+
+1. Run the [`bump-version` workflow](https://github.com/getsentry/sentry/actions/workflows/bump-version.yml) with package `sentry-conventions` and the new version. This creates a PR updating `pyproject.toml` and `uv.lock`.
+2. Review and merge the PR. Self-approval is permitted for simple bumps.
+3. If the new attribute needs to be **queryable** in the UI, add it to:
+   - [`SPAN_ATTRIBUTE_DEFINITIONS`](https://github.com/getsentry/sentry/blob/master/src/sentry/search/eap/spans/attributes.py) — maps public aliases to internal names for search resolution
+   - [`SPAN_EAP_COLUMN_MAP`](https://github.com/getsentry/sentry/blob/master/src/sentry/utils/snuba.py) — maps public aliases to ClickHouse column names
+4. If the new attribute needs to be **extracted or transformed** from incoming data (e.g. derived server-side, or a deprecation backfill requiring type conversion), add ingestion/normalization logic in the spans consumers.
+
+<Alert>
+
+Most new attributes don't need steps 3–4. They're set by SDKs and flow through as-is. Deprecation backfills with `backfill` or `normalize` status are handled automatically by Relay using the conventions metadata.
+
+</Alert>

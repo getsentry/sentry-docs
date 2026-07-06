@@ -214,3 +214,65 @@ fun BillingPagePreview() {
 ```
 
 Per-preview values take precedence over the global `diffThreshold`. See [Diff Thresholds](/product/snapshots/reviewing-snapshots/#diff-thresholds) for other ways to configure thresholds.
+
+### How Preview Annotations Map to Snapshot Metadata
+
+When you use the Compose previews path, the plugin renders one image per `@Preview` and writes a JSON metadata file next to it. The attributes you set on `@Preview` shape that metadata, which controls how the snapshot is named and grouped in Sentry. For the full schema, see [Uploading Snapshots](/product/snapshots/uploading-snapshots/#json-metadata).
+
+Look at this example preview:
+
+```kotlin
+@Preview(name = "Dark", group = "Checkout")
+@Composable
+fun BillingPagePreview() {
+  BillingPage()
+}
+```
+
+It produces the following metadata:
+
+```json
+{
+  "display_name": "BillingPagePreview.Dark_Checkout",
+  "group": "Checkout",
+  "tags": {
+    "preview_name": "Dark"
+  },
+  "context": {
+    "image_file_name": "com.example.billing.BillingScreenKt.BillingPagePreview.Dark_Checkout",
+    "class_name": "com.example.billing.BillingScreenKt",
+    "method_name": "BillingPagePreview"
+  }
+}
+```
+
+#### `group`
+
+`@Preview(group = "...")` sets the top-level `group` field, which Sentry uses to organize related snapshots in the review UI. Give previews that belong together the same `group` so they're reviewed as a set. The group also becomes part of the generated `display_name`.
+
+#### `name`
+
+`@Preview(name = "...")` distinguishes multiple previews of the same composable. It's recorded as the `preview_name` tag and appended to the `display_name`. This matters most when one composable has several previews — either multiple `@Preview` annotations or a multipreview annotation like `@PreviewLightDark` — since each variant becomes its own snapshot and `name` is what tells them apart.
+
+<Alert level="info">
+  Spaces in `name` and `group` are replaced with underscores in the generated
+  `display_name` and filename, but the `group` field and `preview_name` tag keep
+  the original value.
+</Alert>
+
+#### Tags
+
+The remaining `@Preview` attributes are captured as `tags` describing how the preview was rendered. Each tag is included only when the attribute differs from its default. Tag values are always serialized as strings, even for numeric and boolean attributes:
+
+| Tag               | `@Preview` attribute | Example value  |
+| ----------------- | -------------------- | -------------- |
+| `preview_name`    | `name`               | `"Dark"`       |
+| `locale`          | `locale`             | `"de"`         |
+| `device`          | `device`             | `"id:pixel_7"` |
+| `font_scale`      | `fontScale`          | `"1.5"`        |
+| `api_level`       | `apiLevel`           | `"34"`         |
+| `width_dp`        | `widthDp`            | `"320"`        |
+| `height_dp`       | `heightDp`           | `"640"`        |
+| `show_system_ui`  | `showSystemUi`       | `"true"`       |
+| `show_background` | `showBackground`     | `"true"`       |
+| `ui_mode`         | `uiMode` (night bit) | `"dark"`       |
