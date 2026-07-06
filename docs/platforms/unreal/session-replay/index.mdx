@@ -94,6 +94,19 @@ On iOS, Session Replay uses the same recording pipeline as desktop, encoding the
 
 iOS requires **Unreal Engine 5.8 or newer** — earlier engine versions don't ship the AVCodecs plugins for iOS, and the setting is a no-op there.
 
+Session Replay assumes your game runs in a **fixed screen orientation** (typical for games). The recording orientation is determined once when the SDK initializes; if your game supports both portrait and landscape and the device is rotated mid-session, the recording stays locked to the initial orientation and subsequent footage may appear squeezed or stretched. Crash reporting itself is unaffected.
+
+<Alert>
+
+The AVCodecs plugins link Apple's `AVFoundation` framework, which references camera and microphone APIs. App Store submissions will be rejected with `ITMS-90683: Missing purpose string in Info.plist` unless your `Info.plist` contains `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` entries — even though Session Replay never accesses the camera or microphone. Add them via **Project Settings > Platforms > iOS > Extra PList Data**, or in your `DefaultEngine.ini`:
+
+```ini
+[/Script/IOSRuntimeSettings.IOSRuntimeSettings]
+AdditionalPlistData=<key>NSCameraUsageDescription</key><string>This app does not use the camera. A system video-encoding framework used for crash replay recording references camera APIs.</string><key>NSMicrophoneUsageDescription</key><string>This app does not use the microphone. A system video-encoding framework used for crash replay recording references microphone APIs.</string>
+```
+
+</Alert>
+
 ### Xbox
 
 On Xbox, Session Replay uses the operating system's game-capture facility to grab a clip of recent gameplay at crash time. This is supported on **development kits only** and is not available in retail builds.
