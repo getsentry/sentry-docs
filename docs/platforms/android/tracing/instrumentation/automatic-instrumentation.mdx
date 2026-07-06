@@ -230,19 +230,19 @@ The span finishes once the request has been executed. The span `status` depends 
 
 When the Apollo request throws an `ApolloException`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
-For more information see our [Apollo integration](/platforms/android/integrations/apollo/).
+For more information see our [Apollo integration](/platforms/android/integrations/apollo4/).
 
-### SQLite and Room Instrumentation
+### SQLite Instrumentation
 
 The [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/) does tracing auto instrumentation using bytecode manipulation for `androidx.sqlite` and `androidx.room` libraries.
 
-The Plugin injects a code snippet that starts a span out of the active span bound to the scope for each `CRUD` operation. The SDK sets the span `operation` to `db` and `description` to the SQL Query if available.
+The Plugin injects a code snippet that starts a span out of the active span bound to the scope for each `CRUD` operation. The SDK sets the span `operation` to `db.sql.query` for SQLite calls (or `db.sql.room` for Room DAO methods), and the span `description` to the SQL query when available. (For Room DAOs, the description is the DAO class name.)
 
 The span finishes once the operation has been executed. The span `status` is set to `SpanStatus.OK` if successful or `SpanStatus.INTERNAL_ERROR` if there was any error.
 
-When the operation throws an `Exception`, Sentry's SDK associates this exception to the running span. If you haven't set the SDK to swallow the exception and capture it, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
+When the operation throws an `Exception`, Sentry's SDK attaches the exception to the running span and rethrows it. If the exception isn't caught by your code and is captured by Sentry, the span and SentryEvent will be linked when viewing it on the **Issue Details** page in sentry.io.
 
-For more information see our [Room and SQLite integration](/platforms/android/integrations/room-and-sqlite/).
+For more information see our [SQLite instrumentation](/platforms/android/integrations/room-and-sqlite/).
 
 ### File I/O Instrumentation
 
