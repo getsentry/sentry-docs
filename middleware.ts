@@ -850,7 +850,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/java/context/',
-    to: '/platforms/java/scope/',
+    to: '/platforms/java/enriching-events/',
   },
   {
     from: '/clients/java/modules/jul/',
@@ -1698,7 +1698,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/javascript/integrations/',
-    to: '/platforms/javascript/legacy-sdk/integrations/',
+    to: '/platforms/javascript/legacy-sdk/',
   },
   {
     from: '/clients/javascript/usage/',
@@ -3136,7 +3136,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
   },
   {
     from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
@@ -3449,30 +3449,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
-    from: '/data-management/advanced-datascrubbing/',
-    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
-  },
-  {
-    from: '/platforms/javascript/guides/react/features/component-tracking/',
-    to: '/platforms/javascript/guides/react/features/component-names/',
-  },
-  {
-    from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
-  },
-  {
-    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
-    to: '/platforms/java/guides/spring/data-management/',
-  },
-  {
-    from: '/support/',
-    to: 'https://www.sentry.help/en/',
-  },
-  {
     from: '/product/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
@@ -3726,11 +3702,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/docs-components/',
-    to: '/development/docs/',
+    to: '/engineering-practices/documentation/',
   },
   {
     from: '/docs/',
-    to: '/development/docs/',
+    to: '/engineering-practices/documentation/',
   },
   {
     from: '/inclusion/',
@@ -3742,59 +3718,55 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/environment/',
-    to: '/development/environment/',
+    to: '/development-infrastructure/environment/',
   },
   {
     from: '/environment/pycharm/',
-    to: '/development/environment/pycharm/',
+    to: '/development-infrastructure/environment/pycharm/',
   },
   {
     from: '/environment/u2f/',
-    to: '/development/environment/u2f/',
+    to: '/development-infrastructure/environment/u2f/',
   },
   {
     from: '/testing/',
-    to: '/development/testing/',
+    to: '/development-infrastructure/testing/',
   },
   {
     from: '/philosophy/',
-    to: '/development/philosophy/',
+    to: '/getting-started/philosophy/',
   },
   {
     from: '/commit-messages/',
-    to: '/development/commit-messages/',
+    to: '/engineering-practices/commit-messages/',
   },
   {
     from: '/code-review/',
-    to: '/development/code-review/',
+    to: '/engineering-practices/code-review/',
   },
   {
     from: '/workflow/',
-    to: '/development/workflow/',
+    to: '/development-infrastructure/workflow/',
   },
   {
     from: '/continuous-integration/',
-    to: '/development/continuous-integration/',
+    to: '/development-infrastructure/continuous-integration/',
   },
   {
     from: '/python-dependencies/',
-    to: '/development/python-dependencies/',
+    to: '/development-infrastructure/python-dependencies/',
   },
   {
     from: '/rust/',
-    to: '/development/rust/',
+    to: '/engineering-practices/rust/',
   },
   {
     from: '/database-migrations/',
-    to: '/development/database-migrations/',
-  },
-  {
-    from: '/testing/',
-    to: '/development/testing/',
+    to: '/backend/application-domains/database-migrations/',
   },
   {
     from: '/analytics/',
-    to: '/development/analytics/',
+    to: '/development-infrastructure/analytics/',
   },
   {
     from: '/architecture/',
@@ -3802,15 +3774,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sentry-vs-getsentry/',
-    to: '/application/sentry-vs-getsentry/',
+    to: '/application-architecture/sentry-vs-getsentry/',
   },
   {
     from: '/config/',
-    to: '/application/config/',
+    to: '/backend/config/',
   },
   {
     from: '/issue-platform/',
-    to: '/application/issue-platform/',
+    to: '/backend/issue-platform/',
   },
   {
     from: '/issue-platform-detectors/',
@@ -3826,19 +3798,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ab-testing/',
-    to: '/application/ab-testing/',
-  },
-  {
-    from: '/options/',
-    to: '/application/options/',
+    to: '/backend/application-domains/ab-testing/',
   },
   {
     from: '/serializers/',
-    to: '/application/serializers/',
+    to: '/backend/serializers/',
   },
   {
     from: '/grouping/',
-    to: '/application/grouping/',
+    to: '/backend/application-domains/grouping/',
   },
   {
     from: '/pii/',
@@ -3858,35 +3826,35 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/transaction-clustering/',
-    to: '/application/transaction-clustering/',
+    to: '/backend/application-domains/transaction-clustering/',
   },
   {
     from: '/dynamic-sampling/',
-    to: '/application/dynamic-sampling/',
+    to: '/application-architecture/dynamic-sampling/',
   },
   {
     from: '/dynamic-sampling/architecture/',
-    to: '/application/dynamic-sampling/architecture/',
+    to: '/application-architecture/dynamic-sampling/architecture/',
   },
   {
     from: '/dynamic-sampling/fidelity-and-biases/',
-    to: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/biases/',
-    to: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/the-big-picture/',
-    to: '/application/dynamic-sampling/the-big-picture/',
+    to: '/application-architecture/dynamic-sampling/the-big-picture/',
   },
   {
     from: '/feedback-architecture/',
-    to: '/application/feedback-architecture/',
+    to: '/application-architecture/feedback-architecture/',
   },
   {
     from: '/options/',
-    to: '/backend/options/',
+    to: '/backend/application-domains/options/',
   },
   {
     from: '/sdk/features/data-handling/',
@@ -3894,7 +3862,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/craft-quick-start/',
-    to: '/sdk/processes/releases/',
+    to: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     from: '/sdk/check-ins/',
@@ -3906,7 +3874,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/distributed-tracing/',
-    to: '/sdk/telemetry/traces/distributed-tracing/',
+    to: '/sdk/foundations/trace-propagation/',
   },
   // New Sidebar structure
   {
@@ -4023,7 +3991,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/application/config/',
-    to: '/application-architecture/config/',
+    to: '/backend/config/',
   },
   {
     from: '/application-architecture/config/',
@@ -4148,7 +4116,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/backend/queue/',
-    to: '/backend/application-domains/asynchronous-workers/',
+    to: '/backend/application-domains/tasks/',
   },
   {
     from: '/api-server/application-domains/asynchronous-workers/',
@@ -4354,11 +4322,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/envelopes/',
-    to: '/sdk/foundations/transport/envelopes/',
+    to: '/sdk/foundations/envelopes/',
   },
   {
     from: '/sdk/data-model/envelope-items/',
-    to: '/sdk/foundations/transport/envelope-items/',
+    to: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     from: '/sdk/expected-features/rate-limiting/',
@@ -4366,7 +4334,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/overview/',
-    to: '/sdk/foundations/overview/',
+    to: '/sdk/foundations/',
   },
   {
     from: '/sdk/data-model/',
@@ -4374,19 +4342,19 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/',
-    to: '/sdk/foundations/transport/event-payloads/',
+    to: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     from: '/sdk/data-model/event-payloads/breadcrumbs/',
-    to: '/sdk/foundations/transport/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/envelopes/event-payloads/breadcrumbs/',
   },
   {
     from: '/sdk/data-model/event-payloads/contexts/',
-    to: '/sdk/foundations/transport/event-payloads/contexts/',
+    to: '/sdk/foundations/envelopes/event-payloads/contexts/',
   },
   {
     from: '/sdk/data-model/event-payloads/debugmeta/',
-    to: '/sdk/foundations/transport/event-payloads/debugmeta/',
+    to: '/sdk/foundations/envelopes/event-payloads/debugmeta/',
   },
   {
     from: '/sdk/data-model/event-payloads/exception/',
@@ -4398,47 +4366,47 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/lockreason/',
-    to: '/sdk/foundations/transport/event-payloads/lockreason/',
+    to: '/sdk/foundations/envelopes/event-payloads/lockreason/',
   },
   {
     from: '/sdk/data-model/event-payloads/message/',
-    to: '/sdk/foundations/transport/event-payloads/message/',
+    to: '/sdk/foundations/envelopes/event-payloads/message/',
   },
   {
     from: '/sdk/data-model/event-payloads/replay-recording/',
-    to: '/sdk/foundations/transport/event-payloads/replay-recording/',
+    to: '/sdk/foundations/envelopes/event-payloads/replay-recording/',
   },
   {
     from: '/sdk/data-model/event-payloads/request/',
-    to: '/sdk/foundations/transport/event-payloads/request/',
+    to: '/sdk/foundations/envelopes/event-payloads/request/',
   },
   {
     from: '/sdk/data-model/event-payloads/sdk/',
-    to: '/sdk/foundations/transport/event-payloads/sdk/',
+    to: '/sdk/foundations/envelopes/event-payloads/sdk/',
   },
   {
     from: '/sdk/data-model/event-payloads/span/',
-    to: '/sdk/foundations/transport/event-payloads/span/',
+    to: '/sdk/foundations/envelopes/event-payloads/span/',
   },
   {
     from: '/sdk/data-model/event-payloads/stacktrace/',
-    to: '/sdk/foundations/transport/event-payloads/stacktrace/',
+    to: '/sdk/foundations/envelopes/event-payloads/stacktrace/',
   },
   {
     from: '/sdk/data-model/event-payloads/template/',
-    to: '/sdk/foundations/transport/event-payloads/template/',
+    to: '/sdk/foundations/envelopes/event-payloads/template/',
   },
   {
     from: '/sdk/data-model/event-payloads/threads/',
-    to: '/sdk/foundations/transport/event-payloads/threads/',
+    to: '/sdk/foundations/envelopes/event-payloads/threads/',
   },
   {
     from: '/sdk/data-model/event-payloads/transaction/',
-    to: '/sdk/foundations/transport/event-payloads/transaction/',
+    to: '/sdk/foundations/envelopes/event-payloads/transaction/',
   },
   {
     from: '/sdk/data-model/event-payloads/user/',
-    to: '/sdk/foundations/transport/event-payloads/user/',
+    to: '/sdk/foundations/envelopes/event-payloads/user/',
   },
 ];
 

@@ -200,7 +200,7 @@ import * as Sentry from "___SDK_PACKAGE___";
 Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
 ```
 
-Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the [setUser API reference](/platforms/javascript/apis/#setUser) for the full list of supported fields.
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the [setUser API reference](/platforms/javascript/configuration/apis/#setUser) for the full list of supported fields.
 
 ## Manual Instrumentation
 
@@ -397,42 +397,6 @@ await Sentry.startSpan(
 <Expandable title="Execute Tool span attributes">
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
-
-### Handoff Span
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
-
-**Requirements:**
-- `op` must be `"gen_ai.handoff"`
-- `name` should follow the pattern `"handoff from {source} to {target}"`
-- All [Common Span Attributes](#common-span-attributes) should be set
-
-The handoff span itself has no body — it just marks the transition point before the target agent starts.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-await Sentry.startSpan(
-  { op: "gen_ai.handoff", name: "handoff from Weather Agent to Travel Agent" },
-  () => {} // Handoff span just marks the transition
-);
-
-await Sentry.startSpan(
-  { op: "gen_ai.invoke_agent", name: "invoke_agent Travel Agent" },
-  async () => {
-    // Run the target agent here
-  }
-);
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Streaming Responses
 
