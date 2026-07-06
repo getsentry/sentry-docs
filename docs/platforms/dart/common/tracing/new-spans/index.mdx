@@ -80,7 +80,7 @@ await Sentry.startSpan('checkout', (span) async {
 
 Error handling is automatic: if the callback throws (or its future errors), the span status is set to `error` before the span ends and the error is rethrown. Otherwise the status defaults to `ok`.
 
-For synchronous work, use `Sentry.startSpanSync`. Both variants can be freely nested, and parent-child relationships resolve correctly across sync and async boundaries:
+`Sentry.startSpan` takes an asynchronous callback (returning `Future<T>`). For synchronous work, use `Sentry.startSpanSync`, which takes a synchronous callback (returning `T`). Both variants can be freely nested, and parent-child relationships resolve correctly across sync and async boundaries:
 
 ```dart
 final config = Sentry.startSpanSync('parse-config', (_) {
@@ -149,12 +149,16 @@ await Sentry.startSpan('process-order', (span) async {
 
 Each attribute value is created with a typed `SentryAttribute` factory:
 
-| Factory                     | Dart Type |
-| --------------------------- | --------- |
-| `SentryAttribute.string(v)` | `String`  |
-| `SentryAttribute.int(v)`    | `int`     |
-| `SentryAttribute.bool(v)`   | `bool`    |
-| `SentryAttribute.double(v)` | `double`  |
+| Factory                          | Dart Type      |
+| -------------------------------- | -------------- |
+| `SentryAttribute.string(v)`      | `String`       |
+| `SentryAttribute.int(v)`         | `int`          |
+| `SentryAttribute.bool(v)`        | `bool`         |
+| `SentryAttribute.double(v)`      | `double`       |
+| `SentryAttribute.stringArray(v)` | `List<String>` |
+| `SentryAttribute.intArray(v)`    | `List<int>`    |
+| `SentryAttribute.boolArray(v)`   | `List<bool>`   |
+| `SentryAttribute.doubleArray(v)` | `List<double>` |
 
 <Alert level="info">
 
