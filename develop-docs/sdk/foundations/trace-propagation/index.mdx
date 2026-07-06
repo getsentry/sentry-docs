@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.10.0
+    date: 2026-07-06
+    summary: Added sample_rate updating in baggage
   - version: 1.9.0
     date: 2026-02-24
     summary: Consolidated into foundations/trace-propagation
@@ -245,6 +248,20 @@ tracesSampler: ({ name, parentSampleRate }) => {
 ### Sampling Decision Propagation
 
 A transaction's sampling decision **MUST** be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `sentry-trace` header for children in a different service.
+
+</SpecSection>
+
+<SpecSection id="sampling-decision-propagation" status="stable" since="1.0.0">
+
+### Sampling Rate Propagation
+
+If there is an incoming `sample_rate`, it SHOULD be updated in the baggage if:
+- an explicit sampling decision is forced, e.g. `startTransaction(sampled: true)`
+- the `tracesSampler` is invoked
+- the `tracesSampleRate` is used
+- the SDK downsamples due to backpressure
+
+In other words, whenever the SDK's effective sampling rate overrides the incoming `sample_rate`, it needs to be updated, even if the baggage is considered immutable.
 
 </SpecSection>
 
