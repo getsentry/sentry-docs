@@ -383,12 +383,19 @@ final link = Link.from([
   ),
 ]);
 
+Map<String, dynamic>? _defaultHttpResponseDecoder(http.Response response) {
+  return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>?;
+}
+```
+
+The decoder itself creates the span. In transaction mode, it starts a child off the active transaction; in stream mode, `Sentry.startSpanSync` attaches the span to the active span automatically and sets its status based on whether the callback throws:
+
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 Map<String, dynamic>? sentryResponseDecoder(
   http.Response response, {
   Hub? hub,
 }) {
   final currentHub = hub ?? HubAdapter();
-  // or, in stream mode: await Sentry.startSpan('serialize.http.client', (span) async { ... })
   final span = currentHub.getSpan()?.startChild(
         'serialize.http.client',
         description: 'http response deserialization',
@@ -406,9 +413,17 @@ Map<String, dynamic>? sentryResponseDecoder(
   }
   return result;
 }
+```
 
-Map<String, dynamic>? _defaultHttpResponseDecoder(http.Response response) {
-  return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>?;
+```dart {tabTitle:Stream Mode}
+Map<String, dynamic>? sentryResponseDecoder(
+  http.Response response, {
+  Hub? hub,
+}) {
+  return Sentry.startSpanSync(
+    'serialize.http.client',
+    (span) => _defaultHttpResponseDecoder(response),
+  );
 }
 ```
 

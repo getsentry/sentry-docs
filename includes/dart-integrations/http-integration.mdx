@@ -186,12 +186,11 @@ Capturing transactions requires that you first <PlatformLink to="/tracing/">set 
 
 </Alert>
 
-The `SentryHttpClient` starts a span out of the active span bound to the scope for each HTTP Request.
+The `SentryHttpClient` starts a span off the active span for each HTTP request. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan`.
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 
-// or, in stream mode: await Sentry.startSpan('webrequest', (span) async { ... }, parentSpan: null)
 final transaction = Sentry.startTransaction(
   'webrequest',
   'request',
@@ -208,4 +207,20 @@ try {
 }
 
 await transaction.finish(status: SpanStatus.ok());
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry/sentry.dart';
+
+// Start a root span — a span is attached for each HTTP request
+await Sentry.startSpan('webrequest', (span) async {
+  var client = SentryHttpClient();
+  try {
+    var uriResponse = await client.post('https://example.com/whatsit/create',
+      body: {'name': 'doodle', 'color': 'blue'});
+    print(await client.get(uriResponse.bodyFields['uri']));
+  } finally {
+    client.close();
+  }
+}, parentSpan: null);
 ```

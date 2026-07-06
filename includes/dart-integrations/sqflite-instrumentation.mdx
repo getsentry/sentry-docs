@@ -20,7 +20,7 @@ The [sentry_sqflite](https://pub.dev/packages/sentry_sqflite) package provides `
 
 ## Instrumentation Behaviour
 
-- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the sqflite span will not be sent to Sentry.
+- The created spans attach to the active span. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan`. If no span is active, the sqflite span won't be sent to Sentry.
 - The spans' `operation` are either `db`, `db.sql.execute`, `db.sql.query` or `db.sql.transaction`. Its `description` is the SQL statement using placeholders instead of its values due to the possibility of containing PII.
 
 ## Prerequisites
@@ -96,12 +96,11 @@ final sentryDatabase = SentryDatabase(database);
 
 ### 1. Execute the Code
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry_sqflite/sentry_sqflite.dart';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> sqfliteTest() async {
-  // or, in stream mode: await Sentry.startSpan('sqfliteTest', (span) async { ... }, parentSpan: null)
   final tr = Sentry.startTransaction(
     'sqfliteTest',
     'db',
@@ -133,6 +132,39 @@ Future<void> sqfliteTest() async {
   await db.close();
 
   await tr.finish(status: const SpanStatus.ok());
+}
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+Future<void> sqfliteTest() async {
+  await Sentry.startSpan('sqfliteTest', (span) async {
+    // You can also use the other configuration methods
+    final db = await openDatabaseWithSentry(inMemoryDatabasePath);
+
+    await db.execute('''CREATE TABLE Product (id INTEGER PRIMARY KEY,title TEXT)''');
+    final dbTitles = <String>[];
+    for (int i = 1; i <= 20; i++) {
+      final title = 'Product $i';
+      dbTitles.add(title);
+      await db.insert('Product', <String, Object?>{'title': title});
+    }
+
+    await db.query('Product');
+
+    await db.transaction((txn) async {
+      await txn
+      .insert('Product', <String, Object?>{'title': 'Product Another one'});
+      await txn.delete('Product',
+      where: 'title = ?', whereArgs: ['Product Another one']);
+    });
+
+    await db.delete('Product', where: 'title = ?', whereArgs: ['Product 1']);
+
+    await db.close();
+  }, parentSpan: null);
 }
 ```
 

@@ -14,7 +14,7 @@ The `sentry_file` integration provides [File](https://api.dart.dev/stable/2.18.5
 
 ## Behavior
 
-- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the File I/O span will not be sent to Sentry.
+- The created spans attach to the active span. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan`. If no span is active, the File I/O span won't be sent to Sentry.
 - The File I/O integration is only available for the `dart:io:File` class, not for the `dart:html:File` class.
 - The SDK sets the span `operation` to `file.copy`, `file.write`, `file.delete`, `file.open`, `file.read` or `file.rename`, and `description` to `filename` (for example, `file.txt`).
 - The span finishes once the operation has been executed. The span `status` is then set to `SpanStatus.ok` if successful, or `SpanStatus.internalError` if there was an error.
@@ -47,7 +47,7 @@ final sentryFile = file.sentryTrace();
 
 ### 1. Execute the Code
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 import 'package:sentry_file/sentry_file.dart';
 import 'dart:io';
@@ -69,7 +69,6 @@ Future<void> runApp() async {
   final sentryFile = file.sentryTrace();
 
   // Start a transaction if there's no active transaction
-  // or, in stream mode: await Sentry.startSpan('MyFileExample', (span) async { ... }, parentSpan: null)
   final transaction = Sentry.startTransaction(
     'MyFileExample',
     'file',
@@ -90,6 +89,46 @@ Future<void> runApp() async {
 
   // Finish the transaction
   await transaction.finish(status: SpanStatus.ok());
+
+  await Sentry.close();
+}
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry/sentry.dart';
+import 'package:sentry_file/sentry_file.dart';
+import 'dart:io';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = 'https://example@sentry.io/example';
+      // To set a uniform sample rate
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: runApp, // Init your App.
+  );
+}
+
+Future<void> runApp() async {
+  final file = File('my_file.txt');
+  // Call the Sentry extension method to wrap up the File
+  final sentryFile = file.sentryTrace();
+
+  // Start a root span — file I/O spans attach to the active span
+  await Sentry.startSpan('MyFileExample', (span) async {
+    // create the File
+    await sentryFile.create();
+    // Write some content
+    await sentryFile.writeAsString('Hello World');
+    // Read the content
+    final text = await sentryFile.readAsString();
+
+    print(text);
+
+    // Delete the file
+    await sentryFile.delete();
+  }, parentSpan: null);
 
   await Sentry.close();
 }
