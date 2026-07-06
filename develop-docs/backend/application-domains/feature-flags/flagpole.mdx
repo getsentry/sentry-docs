@@ -221,14 +221,7 @@ Once the option change is deployed, the feature checks will immediately be activ
 
 ## Using Flagpole in single-tenants
 
-By default, every Flagpole feature is evaluated in single-tenant environments. You only need to configure a tenant if a feature should never be available there by adding its name to the `flagpole.disallowed_features` denylist. For example, in `options/regions/acme.yml` add the following:
-
-```yaml
-options:
-    flagpole.disallowed_features: ["organizations:is_sentry"]
-```
-
-Features that aren't listed fall through to their normal flagpole.yml configuration. To roll a feature everywhere except single-tenant environments, add the following to flagpole.yml:
+By default, every Flagpole feature is evaluated in single-tenant environments. To roll a feature everywhere except single-tenant environments, you can use the `sentry_singletenant` and `sentry_cell` context values in your feature conditions. For example:
 
 ```yaml
 feature.organizations:cool-new-feature:
@@ -244,19 +237,17 @@ feature.organizations:cool-new-feature:
           value: false
 ```
 
-You can also use the `sentry_singletenant` and `sentry_cell` context values in
-your feature conditions as required. For example, to roll out a feature to
-specific cells:
+Conversely, to roll a feature out to specific cells only, match on `sentry_cell`:
 
 ```yaml
-- conditions:
-  - operator: in
-    value:
-      - us
-      - de
-    property: sentry_cell
-  name: multi-region rollout
+- name: multi-region rollout
   rollout: 100
+  conditions:
+    - operator: in
+      property: sentry_cell
+      value:
+        - us
+        - de
 ```
 
 ## Testing a Flagpole feature locally
