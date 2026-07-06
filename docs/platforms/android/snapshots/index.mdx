@@ -43,10 +43,10 @@ Paparazzi and ComposePreviewScanner automatically turns every `@Preview` composa
 
 First, choose a Paparazzi version compatible with your project:
 
-| Version         | Gradle         | compileSdk | JDK | compose-bom  |
-| --------------- | -------------- | ---------- | --- | ------------ |
-| `2.0.0-alpha05` | 9.x+           | 36         | 21+ | > 2025.05.00 |
-| `1.3.5`         | 8.x or 9.x     | ≤ 35       | 17+ | ≤ 2025.04.00 |
+| Version         | Gradle     | compileSdk | JDK | compose-bom  |
+| --------------- | ---------- | ---------- | --- | ------------ |
+| `2.0.0-alpha05` | 9.x+       | 36         | 21+ | > 2025.05.00 |
+| `1.3.5`         | 8.x or 9.x | ≤ 35       | 17+ | ≤ 2025.04.00 |
 
 Then apply the plugin:
 
@@ -172,7 +172,10 @@ sentry {
 ```
 
 <Alert level="warning">
-  If `theme` references a style the renderer can't resolve (typo, wrong prefix, or a theme not on the classpath), neither Sentry nor Paparazzi raises an error or warning. Snapshots still generate, but with incorrect visuals. Double-check the theme string if rendered output looks unexpected.
+  If `theme` references a style the renderer can't resolve (typo, wrong prefix,
+  or a theme not on the classpath), neither Sentry nor Paparazzi raises an error
+  or warning. Snapshots still generate, but with incorrect visuals. Double-check
+  the theme string if rendered output looks unexpected.
 </Alert>
 
 ### Set a Global Diff Threshold
@@ -215,11 +218,36 @@ fun BillingPagePreview() {
 
 Per-preview values take precedence over the global `diffThreshold`. See [Diff Thresholds](/product/snapshots/reviewing-snapshots/#diff-thresholds) for other ways to configure thresholds.
 
-### How Preview Annotations Map to Snapshot Metadata
+### Preview Annotation Reference
 
-When you use the Compose previews path, the plugin renders one image per `@Preview` and writes a JSON metadata file next to it. The attributes you set on `@Preview` shape that metadata, which controls how the snapshot is named and grouped in Sentry. For the full schema, see [Uploading Snapshots](/product/snapshots/uploading-snapshots/#json-metadata).
+When you use the Compose previews path, the plugin renders one image per `@Preview` and writes a JSON metadata file next to it. The annotations on the composable control everything about the snapshot: how it's rendered, how it's named and grouped in Sentry, and how it's compared against its baseline.
 
-Look at this example preview:
+The table below lists all supported attributes across Google's [`@Preview`](https://developer.android.com/reference/kotlin/androidx/compose/ui/tooling/preview/Preview) annotation and Sentry's `@SentrySnapshot` annotation. The Metadata column shows how each attribute is recorded in the snapshot's [JSON metadata](/product/snapshots/uploading-snapshots/#json-metadata). Tags are only written when the attribute differs from its default, and tag values are always serialized as strings, even for numeric and boolean attributes.
+
+| Attribute         | Annotation        | Description                                                                                                                                                                                            | Metadata                          |
+| ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| `name`            | `@Preview`        | Distinguishes multiple previews of the same composable — several `@Preview` annotations or a multipreview annotation like `@PreviewLightDark`. Appended to the `display_name`.                         | `preview_name` tag                |
+| `group`           | `@Preview`        | Groups related snapshots so they're reviewed as a set in Sentry. Also becomes part of the `display_name`.                                                                                              | `group` field                     |
+| `device`          | `@Preview`        | Device spec (for example `id:pixel_7`) that sets the screen size, density, and shape used for rendering.                                                                                               | `device` tag                      |
+| `widthDp`         | `@Preview`        | Fixed render width in dp. Overrides the width of the device.                                                                                                                                           | `width_dp` tag                    |
+| `heightDp`        | `@Preview`        | Fixed render height in dp. Overrides the height of the device.                                                                                                                                         | `height_dp` tag                   |
+| `locale`          | `@Preview`        | Locale used for rendering. Defaults to `en`.                                                                                                                                                           | `locale` tag                      |
+| `fontScale`       | `@Preview`        | Font scale multiplier applied when rendering.                                                                                                                                                          | `font_scale` tag                  |
+| `apiLevel`        | `@Preview`        | Android API level to render against.                                                                                                                                                                   | `api_level` tag                   |
+| `uiMode`          | `@Preview`        | Only the night mode bit is honored: `UI_MODE_NIGHT_YES` renders the preview in dark mode.                                                                                                              | `ui_mode` tag (`dark` or `light`) |
+| `showSystemUi`    | `@Preview`        | Renders the preview at full device size.                                                                                                                                                               | `show_system_ui` tag              |
+| `showBackground`  | `@Preview`        | Draws a background behind the preview — white unless `backgroundColor` is set.                                                                                                                         | `show_background` tag             |
+| `backgroundColor` | `@Preview`        | ARGB color of the background when `showBackground` is `true`.                                                                                                                                          | —                                 |
+| `wallpaper`       | `@Preview`        | Ignored. Dynamic color wallpapers aren't applied when rendering.                                                                                                                                       | —                                 |
+| `diffThreshold`   | `@SentrySnapshot` | Minimum share of changed pixels (`0.0` to `1.0`) required to report the snapshot as changed. Overrides the global threshold — see [Set Diff Thresholds Per Preview](#set-diff-thresholds-per-preview). | `diff_threshold` field            |
+
+<Alert level="info">
+  Spaces in `name` and `group` are replaced with underscores in the generated
+  `display_name` and filename, but the `group` field and `preview_name` tag keep
+  the original value.
+</Alert>
+
+For example, this preview:
 
 ```kotlin
 @Preview(name = "Dark", group = "Checkout")
@@ -229,7 +257,7 @@ fun BillingPagePreview() {
 }
 ```
 
-It produces the following metadata:
+produces the following metadata:
 
 ```json
 {
@@ -245,34 +273,3 @@ It produces the following metadata:
   }
 }
 ```
-
-#### `group`
-
-`@Preview(group = "...")` sets the top-level `group` field, which Sentry uses to organize related snapshots in the review UI. Give previews that belong together the same `group` so they're reviewed as a set. The group also becomes part of the generated `display_name`.
-
-#### `name`
-
-`@Preview(name = "...")` distinguishes multiple previews of the same composable. It's recorded as the `preview_name` tag and appended to the `display_name`. This matters most when one composable has several previews — either multiple `@Preview` annotations or a multipreview annotation like `@PreviewLightDark` — since each variant becomes its own snapshot and `name` is what tells them apart.
-
-<Alert level="info">
-  Spaces in `name` and `group` are replaced with underscores in the generated
-  `display_name` and filename, but the `group` field and `preview_name` tag keep
-  the original value.
-</Alert>
-
-#### Tags
-
-The remaining `@Preview` attributes are captured as `tags` describing how the preview was rendered. Each tag is included only when the attribute differs from its default. Tag values are always serialized as strings, even for numeric and boolean attributes:
-
-| Tag               | `@Preview` attribute | Example value  |
-| ----------------- | -------------------- | -------------- |
-| `preview_name`    | `name`               | `"Dark"`       |
-| `locale`          | `locale`             | `"de"`         |
-| `device`          | `device`             | `"id:pixel_7"` |
-| `font_scale`      | `fontScale`          | `"1.5"`        |
-| `api_level`       | `apiLevel`           | `"34"`         |
-| `width_dp`        | `widthDp`            | `"320"`        |
-| `height_dp`       | `heightDp`           | `"640"`        |
-| `show_system_ui`  | `showSystemUi`       | `"true"`       |
-| `show_background` | `showBackground`     | `"true"`       |
-| `ui_mode`         | `uiMode` (night bit) | `"dark"`       |
