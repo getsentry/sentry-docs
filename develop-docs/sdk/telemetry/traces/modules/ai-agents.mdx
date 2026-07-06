@@ -23,7 +23,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` SHOULD be `"gen_ai.invoke_agent"`.
-- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)  **[7]**
+- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)  **[6]**
 - Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
 - If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
@@ -35,7 +35,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[5]**, **[6]**, **[8]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                            | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                          | `500`                                                                 |
@@ -89,8 +89,8 @@ This span represents a request to an AI model or service that generates a respon
 - Span `op` SHOULD be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - Span `name` SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
 - Attribute `gen_ai.operation.name` MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`. **[4]**
+- Attribute `gen_ai.provider.name` MUST be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
 - Attribute `gen_ai.request.model` MUST be the requested model. (e.g. `"gpt-4o"`)
-| `gen_ai.system`         | string | optional          | The Generative AI product as identified by the client or server instrumentation.         | `"openai"`            |
 - Attribute `gen_ai.response.model` MUST be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
 - If the request originates from an agent, the `gen_ai.agent.name` attribute SHOULD be set to the name of the agent. (e.g. `"Weather Agent"`)
 - If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
@@ -101,7 +101,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[5]**, **[6]**, **[8]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[4]**, **[5]**, **[8]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
@@ -178,31 +178,20 @@ Additional attributes on the span:
 | `gen_ai.tool.input`          | string | optional          | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input that was given to the executed tool as string. | `'{"max":10}'`                             |
 | `gen_ai.tool.output`         | string | optional          | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                               | `"7"`                                      |
 
-**[4]** Well defined values for data attribute `gen_ai.operation.name`:
-
-| Value                | Description                                                  |
-| :------------------- | :----------------------------------------------------------- |
-| `"chat"`             | Chat completion operation (e.g. OpenAI Chat API)             |
-| `"embeddings"`       | Embeddings operation (e.g. OpenAI Create Embeddings API)     |
-| `"execute_tool"`     | Execute a tool                                               |
-| `"generate_content"` | Multimodal content generation (e.g. Gemini Generate Content) |
-| `"invoke_agent"`     | Invoke GenAI agent                                           |
-| `"text_completion"`  | Text completion operation                                    |
-
-**[5]**
+**[4]**
 
 The input list should include the most recent messages up to and including the most recent previous model response. The previous model response is identified with an "assistant" or "model" role in common frameworks. If there is no previous model response in the input list, then all input items which are not system instructions should be included. System instructions must be added in `gen_ai.system_instructions`, and are not included in the `gen_ai.input.messages` list.
 
-**[6]**
+**[5]**
 
 Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.
 
-**[7]**
+**[6]**
 
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
 In these cases, the span name SHOULD be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
 
-**[8]**
+**[7]**
 
 Image URLs in the data URL format in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected. For example, data URLs like `data:image/png;base64` will be redacted, but HTTP URLs like `example.com/data?<a-base64-string>` will not be.
 
