@@ -181,7 +181,7 @@ with sentry_sdk.start_transaction(transaction):
         span.set_data("messaging.message.id", message["message_id"])
         span.set_data("messaging.destination.name", queue)
         span.set_data("messaging.message.body.size", len(message["body"].encode("utf-8")))
-        span.set_data("messaging.message.receive.latency", latency)
+        span.set_data("messaging.message.receive.latency", latency.total_seconds() * 1000)
         span.set_data("messaging.message.retry.count", 0)
 
         try:
@@ -231,7 +231,7 @@ with sentry_sdk.traces.start_span(
             "messaging.message.id": message["message_id"],
             "messaging.destination.name": queue,
             "messaging.message.body.size": len(message["body"].encode("utf-8")),
-            "messaging.message.receive.latency": latency,
+            "messaging.message.receive.latency": latency.total_seconds() * 1000,
             "messaging.message.retry.count": 0,
         })
 
