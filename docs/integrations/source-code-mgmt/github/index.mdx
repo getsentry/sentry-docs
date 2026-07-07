@@ -11,6 +11,7 @@ og_image: /og-images/organization-integrations-source-code-mgmt-github.png
 The GitHub integration connects your repositories to Sentry to bring [commit tracking](#commit-tracking), [suspect commits](#suspect-commits-and-suggested-assignees), [stack trace linking](#stack-trace-linking), [issue management](#issue-management), and [PR comments](#get-sentry-comments-on-pull-requests), into the contexts that Sentry uses to help debug issues and power [Seer AI features](#configure-github-integration) like Autofix and Code Review. It also supports [resolving issues via commit or PR](#resolve-via-commit-or-pull-request) and [Code Owners](#code-owners) for automatic issue routing.
 
 There are three types of GitHub integrations, so make sure you're choosing the correct one:
+
 - [GitHub](#installing-github) - For individual GitHub users/organizations (as well as most GitHub Enterprise Cloud customers), so long as they are hosted on `github.com`. Follow the '[Installing GitHub](#installing-github)' instructions, **Please begin the installation from Sentry**.
 
 - [GitHub Enterprise](#installing-github-enterprise) - For GitHub Enterprise instances that **cannot be accessed from `github.com`**. Usually these will have a custom domain, for example:
@@ -36,7 +37,6 @@ Sentry owner, manager, or admin permissions, and GitHub owner permissions are re
 </Alert>
 
 ## Installing GitHub
-
 
 1. In Sentry, navigate to **Settings > Integrations > [GitHub](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/github)**.
 
@@ -70,17 +70,17 @@ While you can install the GitHub integration from [GitHub](https://github.com/ap
 
 The following permissions are required for the GitHub integration to work correctly. You must fully opt in to these permissions to use the app. All permissions listed are repo-level permissions, unless otherwise indicated.
 
-| Permission Category | Access Level   | Why Sentry Needs It |
-|--------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| Administration     | Read-only     | To respect branch protection rules, determine default branches, and enhance automation.                                            |
-| Checks             | Read & Write  | To show detailed pass/fail results (e.g. test coverage, release health, AI Code Review) as GitHub Checks on PRs or commits.                        |
-| Commit Statuses    | Read & Write  | To post status checks to commits in GitHub and integrate with branch protection rules.                  |
-| Contents           | Read & Write  | To fetch source files, commits, and blame data for Suspect Commits, track files in Releases, and create branches and pull requests.|
-| Issues             | Read & Write  | To create GitHub issues from Sentry events and update linked issues.                                                               |
-| <span>Members<br/><em>_[Org-level]_</em></span>          | Read-only     | To map organization users to GitHub identities for improved issue attribution and collaboration.                                   |
-| Metadata           | Read-only     | To identify repository structure, names, default branches, and visibility.                                                        |
-| Pull Requests      | Read & Write  | To write comments on pull requests for (1) issues caused by the pull request, (2) to highlight existing issues in the code diff, and (3) AI Code Review feedback.|
-| Webhooks           | Read & Write  | To subscribe to real-time updates like push events, PRs, and issues.
+| Permission Category                             | Access Level | Why Sentry Needs It                                                                                                                                               |
+| ----------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Administration                                  | Read-only    | To respect branch protection rules, determine default branches, and enhance automation.                                                                           |
+| Checks                                          | Read & Write | To show detailed pass/fail results (e.g. test coverage, release health, AI Code Review) as GitHub Checks on PRs or commits.                                       |
+| Commit Statuses                                 | Read & Write | To post status checks to commits in GitHub and integrate with branch protection rules.                                                                            |
+| Contents                                        | Read & Write | To fetch source files, commits, and blame data for Suspect Commits, track files in Releases, and create branches and pull requests.                               |
+| Issues                                          | Read & Write | To create GitHub issues from Sentry events and update linked issues.                                                                                              |
+| <span>Members<br/><em>_[Org-level]_</em></span> | Read-only    | To map organization users to GitHub identities for improved issue attribution and collaboration.                                                                  |
+| Metadata                                        | Read-only    | To identify repository structure, names, default branches, and visibility.                                                                                        |
+| Pull Requests                                   | Read & Write | To write comments on pull requests for (1) issues caused by the pull request, (2) to highlight existing issues in the code diff, and (3) AI Code Review feedback. |
+| Webhooks                                        | Read & Write | To subscribe to real-time updates like push events, PRs, and issues.                                                                                              |
 
 Occasionally, Sentry will request additional permissions to your GitHub account as new features are introduced. Denying or ignoring the request to update will not affect your current Sentry usage, but may prevent access to future features.
 
@@ -104,143 +104,147 @@ Occasionally, Sentry will request additional permissions to your GitHub account 
 2. Then in GitHub, fill out the form as follows and click "Create GitHub App".
 
    <table>
-    <tbody>
-      <tr>
-        <th>GitHub App Name </th>
-        <td>sentry-app </td>
-      </tr>
-      <tr>
-        <th>Homepage URL </th>
-        <td>https://sentry.io </td>
-      </tr>
-      <tr>
-        <th>User authorization callback URL </th>
-        <td>https://sentry.io/extensions/github-enterprise/setup/ </td>
-      </tr>
-      <tr>
-        <th>Setup URL </th>
-        <td>https://sentry.io/extensions/github-enterprise/setup/ </td>
-      </tr>
-      <tr>
-        <th>Webhook URL </th>
-        <td>
-          https://sentry.io/extensions/github-enterprise/webhook/
-          <br />
-          <small>If you're configuring a custom GitHub App on github.com (instead of GitHub Enterprise Server or GitHub Enterprise Cloud), use `https://sentry.io/extensions/github-enterprise/webhook/github-com/` instead.</small>
-        </td>
-      </tr>
-      <tr>
-        <th>Webhook secret </th>
-        <td>`Input your secret from the previous step` </td>
-      </tr>
-      <tr>
-        <th>Repository Administration </th>
-        <td>Read-only </td>
-      </tr>
-      <tr>
-        <th>Commit Statuses </th>
-        <td>No Access </td>
-      </tr>
-      <tr>
-        <th>Deployments </th>
-        <td>No Access </td>
-      </tr>
-      <tr>
-        <th>Issues </th>
-        <td>Read & Write </td>
-      </tr>
-      <tr>
-        <th>Pages </th>
-        <td>No Access </td>
-      </tr>
-      <tr>
-        <th>Pull Requests </th>
-        <td>Read & Write </td>
-      </tr>
-      <tr>
-        <th>Repository Contents </th>
-        <td>Read & Write </td>
-      </tr>
-      <tr>
-        <th>Single File </th>
-        <td>No Access </td>
-      </tr>
-      <tr>
-        <th>Repository Projects </th>
-        <td>No Access </td>
-      </tr>
-      <tr>
-        <th>Organization members </th>
-        <td>Read-only </td>
-      </tr>
-      <tr>
-        <th>Organization projects </th>
-        <td>No Access </td>
-      </tr>
+     <tbody>
+       <tr>
+         <th>GitHub App Name </th>
+         <td>sentry-app </td>
+       </tr>
+       <tr>
+         <th>Homepage URL </th>
+         <td>https://sentry.io </td>
+       </tr>
+       <tr>
+         <th>User authorization callback URL </th>
+         <td>https://sentry.io/extensions/github-enterprise/setup/ </td>
+       </tr>
+       <tr>
+         <th>Setup URL </th>
+         <td>https://sentry.io/extensions/github-enterprise/setup/ </td>
+       </tr>
+       <tr>
+         <th>Webhook URL </th>
+         <td>
+           https://sentry.io/extensions/github-enterprise/webhook/
+           <br />
+           <small>
+             If you're configuring a custom GitHub App on github.com (instead of GitHub Enterprise
+             Server or GitHub Enterprise Cloud), use
+             `https://sentry.io/extensions/github-enterprise/webhook/github-com/` instead.
+           </small>
+         </td>
+       </tr>
+       <tr>
+         <th>Webhook secret </th>
+         <td>`Input your secret from the previous step` </td>
+       </tr>
+       <tr>
+         <th>Repository Administration </th>
+         <td>Read-only </td>
+       </tr>
+       <tr>
+         <th>Commit Statuses </th>
+         <td>No Access </td>
+       </tr>
+       <tr>
+         <th>Deployments </th>
+         <td>No Access </td>
+       </tr>
+       <tr>
+         <th>Issues </th>
+         <td>Read & Write </td>
+       </tr>
+       <tr>
+         <th>Pages </th>
+         <td>No Access </td>
+       </tr>
+       <tr>
+         <th>Pull Requests </th>
+         <td>Read & Write </td>
+       </tr>
+       <tr>
+         <th>Repository Contents </th>
+         <td>Read & Write </td>
+       </tr>
+       <tr>
+         <th>Single File </th>
+         <td>No Access </td>
+       </tr>
+       <tr>
+         <th>Repository Projects </th>
+         <td>No Access </td>
+       </tr>
+       <tr>
+         <th>Organization members </th>
+         <td>Read-only </td>
+       </tr>
+       <tr>
+         <th>Organization projects </th>
+         <td>No Access </td>
+       </tr>
      </tbody>
    </table>
 
    **Subscribe to Events**
 
    <table>
-    <tbody>
-      <tr>
-        <th>Delete </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Fork </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Issue comment </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Issues </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Member </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Membership </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Organization </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Public </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Pull Request </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Push </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Release </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Repository </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Status </th>
-        <td>Yes </td>
-      </tr>
-      <tr>
-        <th>Team add </th>
-        <td>Yes </td>
-      </tr>
-    </tbody>
+     <tbody>
+       <tr>
+         <th>Delete </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Fork </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Issue comment </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Issues </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Member </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Membership </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Organization </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Public </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Pull Request </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Push </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Release </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Repository </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Status </th>
+         <td>Yes </td>
+       </tr>
+       <tr>
+         <th>Team add </th>
+         <td>Yes </td>
+       </tr>
+     </tbody>
    </table>
 
 ### Install your GitHub App
@@ -284,7 +288,9 @@ GitHub Enterprise should now be enabled for all projects under your Sentry organ
 ## Installing the Seer GitHub App
 
 <Alert level="warning">
-**Deprecated:** This GitHub app is no longer supported and will be removed in the future. Migrate to the [Seer GitHub integration](/integrations/source-code-mgmt/github/#installing-github) instead._
+  **Deprecated:** This GitHub app is no longer supported and will be removed in the future. Migrate
+  to the [Seer GitHub integration](/integrations/source-code-mgmt/github/#installing-github)
+  instead._
 </Alert>
 
 ## Configure GitHub Integration
@@ -314,12 +320,9 @@ Sentry issues to existing GitHub Issues.
 
 <Alert title="Note" level="info">
   <p>
-    Manual issue management is available to organizations on Team, Business, or
-    Enterprise plans.
+    Manual issue management is available to organizations on Team, Business, or Enterprise plans.
   </p>
-  <p>
-    Automatic issue management is available to organizations on Business or Enterprise plans.
-  </p>
+  <p>Automatic issue management is available to organizations on Business or Enterprise plans.</p>
 </Alert>
 
 Issue management can be configured in two ways - automatically or manually.
@@ -328,7 +331,7 @@ Issue management can be configured in two ways - automatically or manually.
 
 To configure issue management automatically, create an [**Alert**](/product/monitors-and-alerts/alerts/). When selecting the **action**, choose **Create a new GitHub issue**.
 
-![Create GitHub Issue alert rule action =700x](./img/github-ticket-rule.png)
+![Create GitHub Issue alert action =700x](./img/github-ticket-alert.png)
 
 A GitHub issue will be created automatically when the alert has been triggered.
 
@@ -347,8 +350,7 @@ Here, you'll be able to create or link GitHub issues.
 To minimize duplication in issue tracking, you can sync comments, assignees, and status updates for Sentry issues to Github issues and vice versa. When you delegate an issue to an assignee or update a status on Github, the updates will also populate in Sentry. When you resolve an issue in Sentry, the issue status will automatically update in Github. When Github issues are marked as closed, you can configure how the corresponding issue in Sentry should be resolved.
 
 <Alert title="Note">
-  Issue sync is available for organizations on the Team, Business, and
-  Enterprise plans.
+  Issue sync is available for organizations on the Team, Business, and Enterprise plans.
 </Alert>
 
 To configure Issue sync, navigate to **Organization Settings** > **Integrations**, and click "Configure" next to your Github instance. On the following page, you can configure how you want information to sync between Sentry and Github.
@@ -370,7 +372,8 @@ To set up user mappings:
 ![Configure GitHub user mappings](./img/github-user-mappings.png)
 
 <Alert title="Important">
-  Make sure there is a 1:1 mapping between a Github user and a Sentry user. If there is not, assignee syncing will not work.
+  Make sure there is a 1:1 mapping between a Github user and a Sentry user. If there is not,
+  assignee syncing will not work.
 </Alert>
 
 ### Resolve via Commit or Pull Request
@@ -446,7 +449,6 @@ Stack trace linking takes you from a file in your Sentry stack trace to that sam
 1. Set up a code mapping for each project for which you want to enable stack trace linking. To create a new code mapping, click **Add Mapping**.
 
 1. Fill out the form, then click **Save Changes**. Each form field is described below:
-
    - **Project** (required): This is the Sentry project.
    - **Repo** (required): This is the GitHub repository associated with the Sentry project above. If you have more than one GitHub repository being used per Sentry project, you'll need multiple code mappings.
    - **Branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
