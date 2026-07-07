@@ -2,12 +2,15 @@
 title: Feature Flags
 description: Guidelines for tracking feature flag evaluations — scope storage, span attributes, the add_feature_flag API, and third-party integrations.
 spec_id: sdk/foundations/client/integrations/feature-flags
-spec_version: 1.0.1
+spec_version: 1.0.2
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/client/integrations
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.0.2
+    date: 2026-07-07
+    summary: Added `clear_feature_flags` scope API
   - version: 1.0.1
     date: 2026-06-05
     summary: Fixed `add_feature_flag` API specifying unsupported feature flag value types
@@ -44,6 +47,16 @@ When tracking on error feature flag evaluations, we record the 100 most recent, 
 ### The `add_feature_flag` API
 
 If an SDK supports feature flags it MUST expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It MUST accept a key of type string and a value of type `boolean`. Non-boolean values MUST be rejected.
+
+</SpecSection>
+
+<SpecSection id="clear-feature-flags" status="stable" since="1.0.2">
+
+### The `clear_feature_flags` API
+
+SDKs **MAY** expose a `clear_feature_flags` function on the scope. When called, it **MUST** remove all feature flag evaluations stored on the current scope. It **MUST NOT** affect feature flags on parent or sibling scopes.
+
+This API mirrors the `remove_breadcrumbs` pattern and is useful when an application runs many experiments and needs to discard stale flag evaluations before capturing an event.
 
 </SpecSection>
 
