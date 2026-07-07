@@ -269,6 +269,10 @@ child?.finish()
 Sentry.finishExtendedAppStart()
 ```
 
+Make sure to call `Sentry.finishExtendedAppStart()` once your launch-time work is done. If the extended app start isn't finished within 30 seconds, the SDK finishes the span automatically and drops the app start measurement, so no app start is reported.
+
+If you finish the extended app start before the first frame is drawn (the natural end of the app start), the SDK uses the natural app start end instead, so the reported measurement is never shorter than the actual app start.
+
 <Alert>
 
 Extending the app start requires standalone app start tracing to be enabled. If `enableStandaloneAppStartTracing` is off, or the app start transaction was already created, `Sentry.getExtendedAppStartSpan()` returns `null` and `Sentry.finishExtendedAppStart()` is a no-op.
