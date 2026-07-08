@@ -5,6 +5,8 @@ description: "Upload snapshot images to Sentry with sentry-cli for visual diffin
 beta: true
 ---
 
+<Include name="cli-looking-for-sentry-cli" />
+
 <Include name="feature-stage-beta.mdx" />
 
 The `sentry-cli snapshots upload` command uploads a directory of images to [Snapshots](/product/snapshots/) for visual diffing against a base build.
@@ -58,17 +60,21 @@ If you only upload a subset of your snapshots per CI run — for example, becaus
 sentry-cli snapshots upload ./snapshots --app-id web-frontend --selective
 ```
 
-When an upload is marked as selective, Sentry only diffs the snapshots you uploaded. Any snapshot that exists in the base build but was not included in the upload is treated as unchanged rather than removed. Removals and renames cannot be detected when using `--selective`, because Sentry cannot distinguish a deliberately deleted snapshot from one that was not part of the subset.
+When an upload is marked as selective, Sentry only diffs the snapshots you uploaded. Any snapshot that exists in the base build but was not included in the upload is treated as unchanged (skipped) rather than removed.
+
+### Detecting Removals and Renames
+
+<Include name="snapshots/detecting-removals-renames" />
 
 ## Diff Threshold
 
-Use `--diff-threshold` to ignore sub-pixel or anti-aliasing noise. The value is a float between `0.0` and `1.0` representing the fraction of pixels that must change before Sentry reports an image as changed:
+Use `--diff-threshold` to ignore sub-pixel or anti-aliasing noise. The value is a float between `0.0` and `1.0` representing the share of pixels that must change before Sentry reports an image as changed:
 
 ```bash
 sentry-cli snapshots upload ./snapshots --app-id web-frontend --diff-threshold 0.01
 ```
 
-With a value of `0.01`, images with less than 1% of pixels changed are reported as unchanged.
+With a value of `0.01`, images with 1% or less of pixels changed are reported as unchanged.
 
 ## Flag Reference
 
@@ -76,27 +82,29 @@ With a value of `0.01`, images with less than 1% of pixels changed are reported 
 sentry-cli snapshots upload [OPTIONS] --app-id <APP_ID> <PATH>
 ```
 
-| Flag                            | Description                                                                                                                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `<PATH>`                        | Directory containing `.png` or `.jpeg` images (and optional `.json` sidecars).                                                                                                 |
-| `--app-id <APP_ID>`             | Identifier for the app or bundle (for example, `web-frontend`, `ios-app`). Must be consistent across uploads — Sentry uses it to match head and base snapshots. Max 255 chars. |
-| `--auth-token <TOKEN>`          | Sentry auth token. Can also be set via `SENTRY_AUTH_TOKEN`.                                                                                                                    |
-| `-o`, `--org <ORG>`             | Sentry organization slug. Can also be set via `SENTRY_ORG`.                                                                                                                    |
-| `-p`, `--project <PROJECT>`     | Sentry project slug. Can also be set via `SENTRY_PROJECT`.                                                                                                                     |
-| `--selective`                   | Mark the upload as a subset. Use when uploading only a portion of your snapshots (for example, affected tests only).                                                           |
-| `--diff-threshold <THRESHOLD>`  | Float between `0.0` and `1.0`. Sentry only reports images as changed if the percentage of changed pixels exceeds this value.                                                   |
-| `--head-sha <SHA>`              | Commit SHA for the upload. Auto-detected in CI.                                                                                                                                |
-| `--base-sha <SHA>`              | Base commit SHA for comparison (PR only). Auto-detected from merge-base.                                                                                                       |
-| `--vcs-provider <PROVIDER>`     | VCS provider (for example, `github`). Auto-detected from the git remote.                                                                                                       |
-| `--head-repo-name <OWNER/REPO>` | Repository in `owner/repo` format. Auto-detected from the git remote.                                                                                                          |
-| `--base-repo-name <OWNER/REPO>` | Base repository in `owner/repo` format (required for PRs from forks).                                                                                                          |
-| `--head-ref <BRANCH>`           | Head branch name. Auto-detected in CI.                                                                                                                                         |
-| `--base-ref <BRANCH>`           | Base branch name (PR only). Auto-detected from the remote tracking branch.                                                                                                     |
-| `--pr-number <NUMBER>`          | Pull request number. Auto-detected in GitHub Actions `pull_request` workflows.                                                                                                 |
-| `--no-git-metadata`             | Skip automatic git metadata detection.                                                                                                                                         |
-| `--force-git-metadata`          | Force git metadata collection outside CI.                                                                                                                                      |
-| `--log-level <LEVEL>`           | Logging verbosity: `trace`, `debug`, `info`, `warn`, or `error`.                                                                                                               |
-| `--quiet`                       | Suppress output while preserving exit codes. Alias: `--silent`.                                                                                                                |
+| Flag                                 | Description                                                                                                                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<PATH>`                             | Directory containing `.png` or `.jpeg` images (and optional `.json` sidecars).                                                                                                                          |
+| `--app-id <APP_ID>`                  | Identifier for the app or bundle (for example, `web-frontend`, `ios-app`). Must be consistent across uploads — Sentry uses it to match head and base snapshots. Max 255 chars.                          |
+| `--auth-token <TOKEN>`               | Sentry auth token. Can also be set via `SENTRY_AUTH_TOKEN`.                                                                                                                                             |
+| `-o`, `--org <ORG>`                  | Sentry organization slug. Can also be set via `SENTRY_ORG`.                                                                                                                                             |
+| `-p`, `--project <PROJECT>`          | Sentry project slug. Can also be set via `SENTRY_PROJECT`.                                                                                                                                              |
+| `--selective`                        | Mark the upload as a subset. Use when uploading only a portion of your snapshots (for example, affected tests only).                                                                                    |
+| `--all-image-file-names <NAMES>`     | Comma-separated list of all image file names in the full test suite. Enables removal and rename detection, and implicitly enables `--selective`. Mutually exclusive with `--all-image-file-names-file`. |
+| `--all-image-file-names-file <PATH>` | Same as `--all-image-file-names`, but reads the names from a file (`.txt`, `.csv`, etc.), one per line.                                                                                                 |
+| `--diff-threshold <THRESHOLD>`       | Float between `0.0` and `1.0`. Sentry only reports images as changed if the share of changed pixels exceeds this value.                                                                                 |
+| `--head-sha <SHA>`                   | Commit SHA for the upload. Auto-detected in CI.                                                                                                                                                         |
+| `--base-sha <SHA>`                   | Base commit SHA for comparison (PR only). Auto-detected from merge-base.                                                                                                                                |
+| `--vcs-provider <PROVIDER>`          | VCS provider (for example, `github`). Auto-detected from the git remote.                                                                                                                                |
+| `--head-repo-name <OWNER/REPO>`      | Repository in `owner/repo` format. Auto-detected from the git remote.                                                                                                                                   |
+| `--base-repo-name <OWNER/REPO>`      | Base repository in `owner/repo` format (required for PRs from forks).                                                                                                                                   |
+| `--head-ref <BRANCH>`                | Head branch name. Auto-detected in CI.                                                                                                                                                                  |
+| `--base-ref <BRANCH>`                | Base branch name (PR only). Auto-detected from the remote tracking branch.                                                                                                                              |
+| `--pr-number <NUMBER>`               | Pull request number. Auto-detected in GitHub Actions `pull_request` workflows.                                                                                                                          |
+| `--no-git-metadata`                  | Skip automatic git metadata detection.                                                                                                                                                                  |
+| `--force-git-metadata`               | Force git metadata collection outside CI.                                                                                                                                                               |
+| `--log-level <LEVEL>`                | Logging verbosity: `trace`, `debug`, `info`, `warn`, or `error`.                                                                                                                                        |
+| `--quiet`                            | Suppress output while preserving exit codes. Alias: `--silent`.                                                                                                                                         |
 
 ## Download Baselines
 
