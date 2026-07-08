@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 1.0.2
     date: 2026-07-07
-    summary: Added `clear_feature_flags` scope API
+    summary: Added `clear_feature_flags` scope API and clarified scope/span feature flag behavior
   - version: 1.0.1
     date: 2026-06-05
     summary: Fixed `add_feature_flag` API specifying unsupported feature flag value types
@@ -26,7 +26,7 @@ sidebar_order: 3
 
 ## Overview
 
-An SDK may optionally track feature flag evaluations. Feature flags can be attached to error events or to span events.
+An SDK **MAY** track feature flag evaluations. Feature flags can be attached to captured events through scopes, or to individual spans through span data. Scope and span feature flag buffers are independent.
 
 ---
 
@@ -36,9 +36,48 @@ An SDK may optionally track feature flag evaluations. Feature flags can be attac
 
 ### Tracking Feature Flag Evaluations
 
-When tracking feature flag evaluations on spans, we track the first 10 feature flags evaluated within the span's scope. Evaluations are span attributes and follow the existing span attribute schema.
+A feature flag evaluation consists of:
 
-When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations. Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope. Mutations to the child's copy of the feature flags object should not be propagated to the parent. Flag evaluations within a scope are considered local to the scope and do not propagate. Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/transport/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+- `flag` - a string key identifying the feature flag
+- `result` - the boolean result of evaluating the feature flag
+
+Feature flag buffers **MUST** contain at most one evaluation per `flag`.
+
+#### Scope Storage
+
+Scope feature flags provide context for captured events. SDKs that track feature flags on scopes **MUST** enforce a maximum number of unique evaluations per scope. A limit of 100 unique evaluations is recommended, but SDKs **MAY** choose a different limit when platform constraints or product requirements justify it.
+
+Scope feature flag buffers **MUST** preserve recency order. Adding a new flag or updating an existing flag **MUST** make that evaluation the most recent entry.
+
+When adding feature flags to a scope:
+
+- If the buffer has room, the SDK **MUST** add a new flag as the most recent entry.
+- If the buffer is full and the flag is new, the SDK **MUST** discard the oldest entry before adding the new flag.
+- If the flag already exists, the SDK **MUST** update its result and move it to the most recent position.
+
+When a scope is forked or cloned, the child scope **MUST** receive a copy of the feature flag buffer. Mutations to the child's feature flags **MUST NOT** affect the parent scope, and mutations to the parent **MUST NOT** affect the child. Feature flags added to one scope **MUST NOT** propagate to parent or sibling scopes.
+
+When applying feature flags from multiple scopes (e.g. global scope, isolation scope and current scope) to an event, the SDK **MUST** merge the applicable scope buffers and ensure the limit. If the same flag exists in more than one scope, the newest evaluation based on buffer recency **MUST** be kept. If the merged result contains more unique evaluations than the scope limit, the SDK **MUST** drop the oldest evaluations.
+
+#### Span Storage
+
+Span feature flags provide context for individual spans. SDKs that track feature flags on spans **MUST** enforce a maximum number of unique evaluations per span (e.g. 10).
+
+When adding feature flags to a span:
+
+- If the buffer has room, the SDK **MUST** add a new flag.
+- If the buffer is full and the flag is new, the SDK **MUST NOT** add the flag.
+- If the flag already exists, the SDK **MUST** update its result, even when the buffer is full.
+
+Child spans **MUST NOT** inherit feature flags from parent spans.
+
+If an SDK tracks both scope and span feature flags, adding a feature flag through a scope-level or top-level API while a span is active **MUST** also record the evaluation on the active span, subject to the span limit.
+
+#### Payloads
+
+Scope feature flags **MUST** be submitted to Sentry in `contexts.flags.values` following the schema specified in the <Link to="/sdk/foundations/transport/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation. Scope feature flags **MUST NOT** be submitted as span data.
+
+Span feature flags **MUST** be submitted to Sentry as span data using attributes named `flag.evaluation.<flag>` with the boolean result as the value, following the <Link to="/sdk/telemetry/traces/span-data-conventions/#flags">Span Data Conventions</Link>. Span feature flags **MUST NOT** be submitted in `contexts.flags.values`.
 
 </SpecSection>
 
@@ -46,7 +85,11 @@ When tracking on error feature flag evaluations, we record the 100 most recent, 
 
 ### The `add_feature_flag` API
 
-If an SDK supports feature flags it MUST expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It MUST accept a key of type string and a value of type `boolean`. Non-boolean values MUST be rejected.
+If an SDK supports feature flags, it **MUST** expose `add_feature_flag` on the scope with behavior similar to `set_tag`. It **MUST** accept a key of type `string` and a value of type `boolean`. Non-boolean values **MUST** be rejected.
+
+If an SDK supports feature flag tracking on spans, it **MUST** also expose `add_feature_flag` on spans with the same key and value requirements.
+
+SDKs **MAY** expose top-level convenience APIs for adding feature flags. If they do, those APIs **MUST** write to the same default scope as other top-level scope mutation APIs, such as `set_tag`.
 
 </SpecSection>
 
@@ -54,7 +97,7 @@ If an SDK supports feature flags it MUST expose a function `add_feature_flag` wh
 
 ### The `clear_feature_flags` API
 
-SDKs **MAY** expose a `clear_feature_flags` function on the scope. When called, it **MUST** remove all feature flag evaluations stored on the current scope. It **MUST NOT** affect feature flags on parent or sibling scopes.
+SDKs **MAY** expose a `clear_feature_flags` function on the scope. When called, it **MUST** remove all feature flag evaluations stored on that scope. It **MUST NOT** affect feature flags on parent, child, sibling, or span buffers.
 
 </SpecSection>
 
@@ -62,7 +105,7 @@ SDKs **MAY** expose a `clear_feature_flags` function on the scope. When called, 
 
 ### Integrations
 
-Integrations automate the work of tracking feature flag evaluations. An integration should hook into a third-party SDK and record feature flag evaluations using the current scope.
+Integrations automate the work of tracking feature flag evaluations. An integration **SHOULD** hook into a third-party SDK and record feature flag evaluations using the scope-level or top-level `add_feature_flag` API so active spans are updated consistently.
 
 </SpecSection>
 
