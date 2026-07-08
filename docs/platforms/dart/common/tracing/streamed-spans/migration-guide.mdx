@@ -1,0 +1,159 @@
+---
+title: Migrate to Stream Mode
+sidebar_order: 10
+description: "Learn how to migrate your custom instrumentation from transaction mode to stream mode."
+---
+
+Stream mode replaces the transaction-based APIs with new span APIs. If you use custom instrumentation (creating transactions manually, setting span data, or filtering spans) you'll need to update that code before switching to stream mode. This guide walks through the changes.
+
+For an introduction to stream mode itself, see <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink>.
+
+## Enable Stream Mode
+
+Set `traceLifecycle` to `SentryTraceLifecycle.stream` when initializing the SDK:
+
+<PlatformContent includePath="performance/span-streaming-enable-diff" />
+
+## Span Creation
+
+Replace `Sentry.startTransaction` and `span.startChild` with `Sentry.startSpan`. `startSpan` runs a callback and ends the span when the returned future completes. Whether the resulting span is a service span, a child span, or a sibling depends on the `parentSpan` argument and what's currently active.
+
+```dart diff
+// Starting what used to be a transaction: use parentSpan: null with startSpan to force a service span
+- final transaction = Sentry.startTransaction('checkout', 'task');
+- try {
+-   await runCheckout();
+- } finally {
+-   await transaction.finish();
+- }
++ await Sentry.startSpan('checkout', (span) async {
++   span.setAttribute('sentry.op', 'task');
++   await runCheckout();
++ },
++ parentSpan: null,
++);
+
+// Starting a child span: just start a span while the parent is active
+- final transaction = Sentry.startTransaction('checkout', 'task');
+- try {
+-   final chargeSpan = transaction.startChild('charge-card');
+-   try {
+-     await paymentService.charge();
+-   } finally {
+-     await chargeSpan.finish();
+-   }
+- } finally {
+-   await transaction.finish();
+- }
++ await Sentry.startSpan('checkout', (checkoutSpan) async {
++   checkoutSpan.setAttribute('sentry.op', 'task');
++   await Sentry.startSpan('charge-card', (chargeSpan) async {
++     await paymentService.charge();
++   });
++ });
+
+// Starting a child span: if the span's parent should be a span that's currently not active, you can provide it explicitly
+- final parent = Sentry.startTransaction('background-sync', 'task');
+- try {
+-   await someOtherAsyncBoundary();
+-   final child = parent.startChild('fetch-page');
+-   try {
+-     await api.fetchPage();
+-   } finally {
+-     await child.finish();
+-   }
+- } finally {
+-   await parent.finish();
+- }
++ final parent = Sentry.startInactiveSpan(
++   'background-sync',
++   parentSpan: null,
++ );
++
++ try {
++   await someOtherAsyncBoundary();
++   await Sentry.startSpan(
++     'fetch-page',
++     (child) async {
++       await api.fetchPage();
++     },
++     parentSpan: parent,
++   );
++ } finally {
++   parent.end();
++ }
+```
+
+<Alert>
+
+`op` is not a dedicated argument of `startSpan` — set it as the `sentry.op` attribute instead.
+
+</Alert>
+
+For synchronous work, use `Sentry.startSpanSync` instead. When the work can't be wrapped in a single callback (widget lifecycles, stream subscriptions, platform channels), use `Sentry.startInactiveSpan` and call `end()` manually. See <PlatformLink to="/tracing/streamed-spans/#start-a-span">Start a Span</PlatformLink> for details.
+
+## Span Attributes
+
+In stream mode, spans have no contexts, data, or tags — everything is a typed attribute. Replace `setData` and `setTag` with `setAttribute` or `setAttributes`:
+
+```dart diff
+- span.setData('retry_count', 3);
+- span.setTag('payment.provider', 'stripe');
++ span.setAttribute('retry_count', SentryAttribute.int(3));
++ span.setAttributes({
++  'payment.provider': SentryAttribute.string('stripe'),
++  'cache.hit': SentryAttribute.bool(true),
++  'response_time_ms': SentryAttribute.double(12.5),
++});
+```
+
+Attribute values must be created with a typed `SentryAttribute` factory (`string`, `int`, `bool`, or `double`). See <PlatformLink to="/tracing/streamed-spans/#add-span-attributes">Add Span Attributes</PlatformLink> for the full list.
+
+Tags set on the scope with (`Sentry.configureScope((scope) => scope.setTag(...))`) aren't applied to spans in stream mode. Use `Sentry.setAttributes(...)` to set attributes that apply to your spans instead.
+
+## Span Status
+
+In stream mode, status is set automatically — `error` if the callback throws, `ok` otherwise. Explicit statuses from the old API migrate to the typed `SentrySpanStatusV2`, which can only be `ok` or `error`:
+
+```dart diff
+- transaction.status = const SpanStatus.internalError();
++ span.status = SentrySpanStatusV2.error;
+```
+
+Manual assignment is only needed to override the automatic default.
+
+## Filtering and Dropping Spans
+
+`beforeSendTransaction` has **no effect** in stream mode — transactions are never created, so the callback is never invoked. Migrate its logic to `beforeSendSpan` to modify spans and `ignoreSpans` to drop them:
+
+```dart diff
+- options.beforeSendTransaction = (transaction) {
+-   // scrub sensitive data, drop transactions by name, etc.
+-   return transaction;
+- };
++ options.beforeSendSpan = (span) {
++   span.removeAttribute('http.request.body');
++ };
++ options.ignoreSpans = [
++   IgnoreSpanRule.nameEquals('health-check'),
++ ];
+```
+
+Note that `beforeSendSpan` is mutation-only and cannot drop spans — use `ignoreSpans` for that. `beforeSendSpan` runs when each span ends, so it sees the full set of attributes, including any added during the span's lifetime. `ignoreSpans`, by contrast, is evaluated when a span is created and matches on the span name only. Remove the `beforeSendTransaction` option after migrating its logic. See <PlatformLink to="/tracing/streamed-spans/#extended-configuration-optional">Extended Configuration</PlatformLink> for details.
+
+## Sampling
+
+`tracesSampleRate` works unchanged. A custom `tracesSampler` still works, but the sampling context changes: read the span's `name` and `attributes` from `samplingContext.spanContext` instead of the transaction context.
+
+```dart diff
+- options.tracesSampler = (samplingContext) {
+-   final name = samplingContext.transactionContext.name;
+-   // ...
+- };
++ options.tracesSampler = (samplingContext) {
++   final name = samplingContext.spanContext.name;
++   // ...
++ };
+```
+
+Only **root spans** are sampled; child spans inherit the root span's decision. When a root span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call.
