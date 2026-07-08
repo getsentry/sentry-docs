@@ -1,0 +1,134 @@
+---
+title: Instrument SQL
+description: "Instrument database/sql queries and execs in Go with Sentry spans."
+sidebar_order: 30
+---
+
+The `sentrysql` package wraps `database/sql` drivers and records SQL operations as tracing spans.
+
+<Alert>
+  Make sure that there's a transaction running when you create the spans. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
+</Alert>
+
+## Install
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/sql
+```
+
+## Configure
+
+Enable tracing, then wrap your SQL driver with `sentrysql`:
+
+```go
+import (
+    "github.com/getsentry/sentry-go"
+    sentrysql "github.com/getsentry/sentry-go/sql"
+)
+
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn:              "___PUBLIC_DSN___",
+    EnableTracing:    true,
+    TracesSampleRate: 1.0,
+}); err != nil {
+    panic(err)
+}
+
+// With well-known driver names, db.system can usually be inferred.
+db, err := sentrysql.Open("postgres", dsn,
+    sentrysql.WithDatabaseName("appdb"),
+    sentrysql.WithServerAddress("localhost", 5432),
+)
+if err != nil {
+    panic(err)
+}
+```
+
+### Connection Setup Paths
+
+Use the integration path that matches how your app opens database connections:
+
+- `sentrysql.Open(...)`: best when you already use `sql.Open(...)`
+- `sentrysql.OpenDB(...)`: use an existing `driver.Connector`
+- `sentrysql.WrapDriver(...)` or `sentrysql.WrapConnector(...)`: use for custom driver registration or custom connection setup
+
+### Required and Recommended Options
+
+- `WithDatabaseSystem(...)` is:
+  - optional with `sentrysql.Open(...)` for well-known driver names such as `postgres`, `pgx`, `mysql`, `sqlite`, and `sqlserver`
+  - required with `OpenDB`, `WrapDriver`, and `WrapConnector`
+  - required when `Open` uses an unknown driver registration name
+- `WithDatabaseName(...)` populates `db.namespace` and is recommended when you know the logical database name.
+- `WithDatabaseUser(...)` populates `db.user`, but only when `SendDefaultPII` is enabled.
+- `WithDriverName(...)`, `WithServerAddress(...)`, and `WithServerSocketAddress(...)` are useful for custom setups when you want fuller database metadata on spans.
+
+## Verify
+
+SQL spans are only created when the query runs with an active Sentry parent span in the context. If you're already using Sentry middleware for Gin, Echo, Fiber, `net/http`, or another supported framework, use the request context. Otherwise, start a transaction manually.
+
+<Alert>
+  When using this integration, it's recommended to always provide `WithDatabaseSystem(...)` to match your database connection. For well-known driver names such as `postgres`, `pgx`, `mysql`, `sqlite`, and `sqlserver`,
+  the integration can usually infer the database system automatically, but providing it explicitly is still a good practice.
+</Alert>
+
+```go
+import (
+    "context"
+    "time"
+
+    "github.com/getsentry/sentry-go"
+    sentrysql "github.com/getsentry/sentry-go/sql"
+    _ "modernc.org/sqlite"
+)
+
+func main() {
+    if err := sentry.Init(sentry.ClientOptions{
+        Dsn:              "___PUBLIC_DSN___",
+        EnableTracing:    true,
+        TracesSampleRate: 1.0,
+    }); err != nil {
+        panic(err)
+    }
+    defer sentry.Flush(2 * time.Second)
+
+    db, err := sentrysql.Open("sqlite", ":memory:",
+        sentrysql.WithDatabaseSystem(sentrysql.SystemSQLite),
+        sentrysql.WithDatabaseName("main"),
+    )
+    if err != nil {
+        panic(err)
+    }
+    defer db.Close()
+
+    txn := sentry.StartTransaction(context.Background(), "sql-demo")
+    defer txn.Finish()
+
+    ctx := txn.Context()
+
+    sqlTx, err := db.BeginTx(ctx, nil)
+    if err != nil {
+        panic(err)
+    }
+
+    if _, err := sqlTx.ExecContext(ctx, "CREATE TABLE users (id INTEGER, name TEXT)"); err != nil {
+        panic(err)
+    }
+
+    if _, err := sqlTx.ExecContext(ctx, "INSERT INTO users (id, name) VALUES (?, ?)", 1, "alice"); err != nil {
+        panic(err)
+    }
+
+    rows, err := sqlTx.QueryContext(ctx, "SELECT id, name FROM users WHERE id = ?", 1)
+    if err != nil {
+        panic(err)
+    }
+    _ = rows.Close()
+
+    if err := sqlTx.Commit(); err != nil {
+        panic(err)
+    }
+}
+```
+
+This creates `db.sql.exec` and `db.sql.query` child spans under the active transaction.

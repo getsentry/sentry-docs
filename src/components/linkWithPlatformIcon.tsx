@@ -1,13 +1,16 @@
+import {CopyPromptButton} from './copyPromptButton';
 import {PlatformIcon} from './platformIcon';
 import {SmartLink} from './smartLink';
 
 type Props = {
   label?: string;
   platform?: string;
+  /** Agent skill name, e.g. "sentry-react-sdk". When provided, renders an inline "Agent Setup" copy-prompt button. */
+  skill?: string;
   url?: string;
 };
 
-export function LinkWithPlatformIcon({platform, label, url}: Props) {
+export function LinkWithPlatformIcon({platform, label, url, skill}: Props) {
   if (!platform) {
     return null;
   }
@@ -27,6 +30,7 @@ export function LinkWithPlatformIcon({platform, label, url}: Props) {
         />
         {label ?? platform}
       </SmartLink>
+      {skill && <CopyPromptButton skill={skill} />}
     </span>
   );
 }

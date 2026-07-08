@@ -18,13 +18,13 @@ keywords:
   - github
 ---
 
-**Autofix** is a collaborative workflow to find the root cause of, and solution to, issues. It uses Sentry's context (issue details, tracing data, logs, and profiles), your codebases (integrated through GitHub), and its interactions with you to identify and reason through problems in your code. Autofix can propose a solution, or be configured to follow through and open a PR with the solution.
+**Autofix** is a collaborative workflow to find the root cause of, and solution to, issues. It uses Sentry's context (issue details, tracing data, logs, and profiles), your codebases (integrated through GitHub or GitLab), and its interactions with you to identify and reason through problems in your code. Autofix can propose a solution, or be configured to follow through and open a PR with the solution.
 
 ## Getting Started
 
 Set up Issue Autofix in your organization or on specific projects:
 
-1. Connect to GitHub through the [Sentry GitHub integration](/integrations/source-code-mgmt/github/). You can follow the steps in [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to get started. **Note:** Seer can only be integrated with the cloud version of GitHub.
+1. Connect to GitHub through the [Sentry GitHub integration](/integrations/source-code-mgmt/github/) or Gitlab through the [Sentry GitLab integration](/integrations/source-code-mgmt/gitlab/). You can follow the steps in [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/) to get started. **Note:** Seer supports GitLab.com and GitHub.com (cloud versions only).
 
 2. Select which repositories you want to connect to Sentry, go to [Seer SCM Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/scm/) to make sure your repositories are connected.
 
@@ -38,12 +38,35 @@ Seer's Issue Autofix flow follows a three step process:
 
 1. [Root Cause Analysis](#root-cause-analysis): Analyze the issue using Sentry's context and your codebases and determine the root cause
 2. [Solution Identification](#solution-identification): Identify a solution based on the analysis
-3. [Code Generation](#code-generation): Generate a code fix and (optionally) open a PR, or hand off to a coding agent
+3. [Code Generation](#code-generation): Generate a code fix and (optionally) open a PR, or [hand off to a coding agent](#handoff-to-coding-agents)
 
-You can always manually trigger the Autofix flow from the Issue Details page. Issues will automatically trigger the flow when an agent is configured for background handoff and the Issue is highly actionable with 10+ events captured and high medium or above fixability score.
+You can always manually trigger the Autofix flow from the Issue Details page.
+
+### When Autofix Runs Automatically
+
+When automation is enabled in your project's Seer settings, Sentry can also trigger Autofix automatically on issues that meet the following criteria:
+
+1. **The issue has 10 or more events** — Sentry waits until the issue has captured at least 10 events to ensure it's worth investigating.
+2. **The issue occurred within the last 14 days** — Only recent issues are eligible for automatic runs.
+3. **The issue has a sufficient fixability score** — Sentry's ML model must estimate the issue is reasonably fixable (see below).
+
+#### How Far Autofix Goes
+
+How far Autofix automatically goes depends on two factors:
+
+1. **Fixability confidence** — Sentry's ML model evaluates each issue and estimates how straightforward it is to resolve. Issues with higher confidence may proceed through more automation steps.
+2. **Your automation preferences** — In your project's [Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/projects), you can cap how far automation goes, regardless of the fixability confidence.
+
+Your automation settings decide the stopping point. Even if an issue has high fixability confidence, Autofix will only automate as far as you've set it. The available stopping points are:
+
+- **Stop after Root Cause** — Autofix identifies the cause but doesn't suggest code changes.
+- **Stop after Plan** — Autofix suggests a fix but doesn't open a PR.
+- **Stop after PR Drafted** — Autofix can open a PR to apply the suggested fix.
+
+For example, if you've set **Stop after Plan**, Autofix will perform root cause analysis and solution planning, but won't create a PR, even for issues with very high fixability confidence. 
 
 <Alert>
-If you've recently set up Seer, existing issues will need Autofix to be run manually. 
+If you've recently set up Seer, existing issues will need Autofix to be run manually.
 </Alert>
 
 ### Root Cause Analysis
@@ -83,14 +106,17 @@ snippets and examples, and does not affect workflows involving your own coding a
 
 ![Screenshot of Seer showing code it generated =800x](../img/coding-step.png)
 
-### Handoff to Claude Code or Cursor Cloud Agents
+### Handoff to Coding Agents
 
 Seer always performs root cause analysis and solution planning using its own internal tools and Sentry context. At the final code generation step, instead of having Seer generate the code fix directly, you can hand off to an external coding agent for implementation. Seer passes along the root cause and solution plan so the coding agent can act on them. This lets you leverage the strengths of specialized code generation tools while still benefiting from Seer's debugging and analysis.
 
+Coding agent handoff only works with GitHub.
+
 Supported coding agents for handoff:
 
-- **Claude Code** — Seer passes the root cause and solution as a structured prompt that Claude Code can act on directly in your terminal or CI environment.
-- **Cursor Cloud Agents** — Seer triggers a Cursor Cloud Agent to implement the fix asynchronously, without requiring your local IDE to be open.
+- **Claude Agent** — Seer passes the root cause and solution as a structured prompt that [Claude Code](/integrations/coding-agents/claude/) can act on directly in your terminal or CI environment.
+- **Cursor Cloud Agent** — Seer triggers a [Cursor Cloud Agent](/integrations/coding-agents/cursor/) to implement the fix asynchronously, without requiring your local IDE to be open.
+- **GitHub Copilot Cloud Agent** — Seer sends its root cause analysis to a [GitHub Copilot cloud agent](/integrations/coding-agents/copilot/), which runs in GitHub Actions to generate a fix and open a pull request.
 
 To enable coding agent handoff, connect a coding agent integration in [Integrations settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/?category=coding%20agent). Once connected, the handoff option will appear at the Code Generation step of the Autofix flow, alongside the standard "Create PR" and "Checkout locally" options.
 
@@ -107,7 +133,7 @@ This feature is available to organizations enrolled in the <strong>Early Adopter
 If you have the [Slack integration](/integrations/notification-incidents/slack/) enabled, you can trigger Autofix from a Slack message. 
 
 1. Invite Sentry to your Slack channel (@Sentry)
-2. Make sure you have [Issue Alerts](/integrations/notification-incidents/slack/#issue-alerts) configured to send alerts to the Slack channel
+2. Make sure you have [Alerts](/integrations/notification-incidents/slack/#alerting) configured to send alerts to the Slack channel
 3. When a new issue is shown on the channel, it will include an option to *Fix with Seer*
 
 Clicking *Fix with Seer* will trigger Autofix for the issue. You can wait to see the result posted in the issue thread, or go to Sentry to see the process. Seer will prompt you to take next steps once it has finished running, including planning a solution, generating code, and pushing it to your codebase.
@@ -118,8 +144,8 @@ Seer handles access to a wide variety of data sources and tools. While debugging
 
 - **Issue details**: Error messages, stack traces, and event metadata from your [Issues](/product/issues/)
 - **Tracing data**: Distributed [traces](/concepts/key-terms/tracing/#whats-a-trace) and span information
-- **Logs**: Structured [Logs](/product/explore/logs/) from your application (beta)
-- **Your codebases**: Relevant code from linked GitHub repositories, with support for multiple repos for distributed services
+- **Logs**: Structured [Logs](/product/logs/) from your application (beta)
+- **Your codebases**: Relevant code from linked GitHub or GitLab repositories, with support for multiple repos for distributed services
 - **Performance data**: Profiles and performance metrics
 - **Interactive feedback**: Your input and guidance during the process
 - **Sentry Docs**: Sentry's documentation site
@@ -144,5 +170,5 @@ Seer already automatically parses rules files from [Cursor](https://docs.cursor.
 - For JavaScript / TypeScript projects that are minified in production, upload [source maps](/platforms/javascript/sourcemaps/) to Sentry for the best results.
 
 <Alert level="info">
-Currently, the cloud version of GitHub is the only SCM supported by Seer.
+Seer supports GitHub.com and GitLab.com (cloud versions only). Self-hosted instances and other SCM providers (Bitbucket, Azure DevOps) are not currently supported.
 </Alert>

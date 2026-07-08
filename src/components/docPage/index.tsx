@@ -72,7 +72,7 @@ export async function DocPage({
   const leafNode = nodeForPath(rootNode, unversionedPath);
 
   return (
-    <div className="tw-app">
+    <div className={`tw-app${hasToc ? ' has-toc' : ''}`}>
       {isDeveloperDocs ? (
         <DevelopDocsHeader pathname={pathname} searchPlatforms={searchPlatforms} />
       ) : (
@@ -90,7 +90,7 @@ export async function DocPage({
           <div
             className={[
               'pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
-              'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
+              'prose-code:font-normal prose-code:font-mono marker:text-[var(--darkPurple)] marker:font-medium prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',
@@ -141,6 +141,7 @@ export async function DocPage({
           <aside
             data-layout-anchor="right"
             className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
+            style={{marginRight: 'var(--layout-offset, 0px)'}}
           >
             <div className="sidebar">
               <SidebarTableOfContents />
@@ -149,11 +150,27 @@ export async function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1100px; }`}</style>
       <style>{`
+        :root {
+          --doc-content-w: 1100px;
+          --toc-w: 250px;
+          --layout-total: calc(var(--sidebar-width, 300px) + var(--doc-content-w) + var(--toc-w));
+          /* Fluid centering offset: 0 when viewport <= total layout width,
+             grows equally on both sides when viewport > total layout width.
+             This shifts the entire sidebar+content+ToC assembly toward center. */
+          --layout-offset: max(0px, (100vw - var(--layout-total)) / 2);
+        }
         #doc-content {
-          max-width: none;
+          max-width: var(--doc-content-w);
           box-sizing: border-box;
+        }
+        /* When the TOC is visible but the full layout doesn't fit yet, shrink content
+           to fill available space rather than overflowing. Only applies when the TOC
+           is actually rendered (has-toc class). */
+        @media (min-width: 1490px) and (max-width: 1649px) {
+          .has-toc #doc-content {
+            max-width: calc(100vw - var(--sidebar-width, 300px) - var(--toc-w) - 2rem);
+          }
         }
         /* Mobile responsive styles */
         @media (max-width: 768px) {
@@ -166,42 +183,6 @@ export async function DocPage({
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
-          }
-        }
-        /* At toc breakpoint (1490px), constrain content to leave room for TOC */
-        @media (min-width: 1490px) {
-          #doc-content {
-            /* Calculate max width: viewport - sidebar - TOC */
-            max-width: calc(100vw - 300px - 250px);
-          }
-        }
-        @media (min-width: 2057px) {
-          :root {
-            --doc-content-w: 1100px;
-            --toc-w: 250px;
-            --gap: 24px;
-          }
-          /* Cap content width and center (reinforced at this breakpoint) */
-          #doc-content {
-            max-width: var(--doc-content-w);
-            padding-left: 2rem;
-            padding-right: 2rem;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          /* Cancel default push so content can center */
-          [data-layout-anchor="left"] + .main-content {
-            margin-left: 0 !important;
-            width: 100% !important;
-          }
-          /* Anchor sidebars to content edges */
-          [data-layout-anchor="left"] {
-            left: calc(50% - (var(--doc-content-w) / 2) - var(--gap) - var(--sidebar-width));
-          }
-          [data-layout-anchor="right"] {
-            position: fixed !important;
-            left: calc(50% + (var(--doc-content-w) / 2) + var(--gap));
-            width: var(--toc-w);
           }
         }
       `}</style>

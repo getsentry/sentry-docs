@@ -1,6 +1,5 @@
 We recommend initializing the SDK on the main thread as soon as possible, such as in your AppDelegate `application:didFinishLaunchingWithOptions` method:
 
-
 ```swift {tabTitle:Swift}
 import Sentry // Make sure you import Sentry
 
@@ -40,8 +39,25 @@ func application(_ application: UIApplication,
 }
 ```
 
-When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
 
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = @1.0;
+    }];
+
+    return YES;
+}
+```
+
+When using SwiftUI and your app doesn't implement an app delegate, initialize the SDK within the [App conformer's initializer](<https://developer.apple.com/documentation/swiftui/app/main()>):
 
 ```swift
 import Sentry
@@ -61,6 +77,6 @@ struct SwiftUIApp: App {
 }
 ```
 
-{/*<!-- You can't write SwiftUI in Objective-C. Therefore no code sample. -->*/}
+{/* <!-- You can't write SwiftUI in Objective-C. Therefore no code sample. --> */}
 
 <PlatformContent includePath="getting-started-config/basic-config" />

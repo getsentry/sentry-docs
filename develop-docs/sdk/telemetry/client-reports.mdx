@@ -2,12 +2,15 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.22.0
+spec_version: 1.23.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.23.0
+    date: 2026-06-22
+    summary: Added metric byte outcomes for tracking discarded metric data size
   - version: 1.22.0
     date: 2026-04-09
     summary: Added `no_parent_span` discard reason
@@ -95,8 +98,8 @@ Not to be confused with [User Feedback](https://docs.sentry.io/product/user-feed
 Due to a bug in Relay which discards envelopes containing unknown envelope items, the minimum required Sentry version for client reports is [21.9.0](https://github.com/getsentry/relay/blob/master/CHANGELOG.md#2190).
 
 Related specs:
-- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
-- [Envelope Items](/sdk/foundations/transport/envelope-items/) — envelope item types
+- [Envelopes](/sdk/foundations/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/envelopes/envelope-items/) — envelope item types
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — SDK processing architecture
 - [Rate Limiting](/sdk/foundations/transport/rate-limiting/) — data category definitions
 
@@ -222,6 +225,18 @@ The byte size does not need to be exact. SDKs **MAY** use an approximation, such
 
 </SpecSection>
 
+<SpecSection id="metric-byte-outcomes" status="candidate" since="1.23.0">
+
+### Metric Byte Outcomes
+
+When a metric is dropped, SDKs **MUST** record an additional `trace_metric_byte` category entry containing the byte size of the metric. This provides visibility into the volume of metric data being discarded, complementing the item count reported under the `trace_metric` category.
+
+Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped metric produces two entries in the map: one incrementing the `trace_metric` count by 1, and one incrementing the `trace_metric_byte` count by the metric's byte size.
+
+The byte size does not need to be exact. SDKs **MAY** use an approximation, such as the in-memory size of the metric object or the size of its serialized representation. The goal is to provide a useful signal, not a precise measurement.
+
+</SpecSection>
+
 <SpecSection id="aggregation" status="candidate" since="1.20.0">
 
 ### Aggregation
@@ -306,7 +321,7 @@ Item type `"client_report"` contains a client report payload encoded in JSON.
 - This Item **MAY** occur multiple times per Envelope, but SDKs **SHOULD** avoid sending more client reports than necessary.
 - This Item can either be included in an Envelope with other Items, or it **MAY** be sent by itself.
 - No envelope headers are required.
-- Size limit: 4 KiB (see [Envelopes — Size Limits](/sdk/foundations/transport/envelopes/)).
+- Size limit: 4 KiB (see [Envelopes — Size Limits](/sdk/foundations/envelopes/)).
 
 </SpecSection>
 
@@ -457,6 +472,29 @@ When 5 logs totaling approximately 12,400 bytes are dropped due to buffer overfl
 ```
 
 The `log_item` entry counts the number of dropped logs, while the `log_byte` entry tracks the total byte size of those logs.
+
+### Metric Byte Outcome Example
+
+When 3 metrics totaling approximately 4,800 bytes are dropped due to rate limiting:
+
+```json
+{
+  "discarded_events": [
+    {
+      "reason": "ratelimit_backoff",
+      "category": "trace_metric",
+      "quantity": 3
+    },
+    {
+      "reason": "ratelimit_backoff",
+      "category": "trace_metric_byte",
+      "quantity": 4800
+    }
+  ]
+}
+```
+
+The `trace_metric` entry counts the number of dropped metrics, while the `trace_metric_byte` entry tracks the total byte size of those metrics.
 
 ---
 

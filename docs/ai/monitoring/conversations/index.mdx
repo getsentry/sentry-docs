@@ -12,11 +12,13 @@ keywords:
   - gen_ai.conversation.id
   - conversation tracking
   - LLM conversations
+  - setUser
+  - user attribution
 ---
 
-<Alert level="info">
+<Alert>
 
-Conversations is currently in **closed beta**. To participate, reach out at [support@sentry.io](mailto:support@sentry.io).
+Conversations is currently in beta. Features and user experience are subject to change.
 
 </Alert>
 
@@ -47,6 +49,26 @@ Conversations and traces are independent concepts. A single conversation can spa
 
 The reverse is also true: a single trace can contain spans from different conversations. For example, if a user starts a new chat session without refreshing the page, the new conversation's spans appear in the same trace as the previous one.
 
+## User Attribution
+
+The Conversations view includes a **User** column that shows which user initiated each conversation. To populate it, call `setUser` (JavaScript) or `set_user` (Python) once per request or session, before any AI calls:
+
+```javascript
+// JavaScript / Node.js
+import * as Sentry from "@sentry/node";
+
+Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+```
+
+```python
+# Python
+import sentry_sdk
+
+sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
+```
+
+Any of `id`, `email`, or `username` is sufficient. If no user is set, the column displays "Unknown".
+
 ## Conversations List
 
 The [Conversations](https://sentry.io/orgredirect/organizations/:orgslug/explore/conversations/) page shows the most recent conversations that match your filters.
@@ -55,6 +77,7 @@ The [Conversations](https://sentry.io/orgredirect/organizations/:orgslug/explore
 
 Each row in the list displays:
 
+- **User** — the user who initiated the conversation, populated by `setUser` / `set_user`
 - **First input** — the first user message in the conversation
 - **Last output** — the most recent assistant response
 - **Cost** — estimated dollar cost and token usage

@@ -75,6 +75,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
       '/platform-redirect': ['public/doctree-dev.json'],
       '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+      '/md-exports/\\[\\.\\.\\.path\\]': ['public/doctree-dev.json'],
       'sitemap.xml': ['public/doctree-dev.json'],
     }
   : {
@@ -84,6 +85,7 @@ const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'docs/changelog.mdx',
         'docs/platforms/index.mdx',
       ],
+      '/md-exports/\\[\\.\\.\\.path\\]': ['public/doctree.json'],
       'sitemap.xml': ['public/doctree.json'],
     };
 

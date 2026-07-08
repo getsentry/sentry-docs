@@ -1,0 +1,82 @@
+---
+title: Agentic Workflow
+sidebar_order: 30
+description: Connect an AI agent to Sentry's MCP server to inspect snapshot diffs, images, and baselines.
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+Connect an AI coding assistant to Sentry's MCP server so it can pull snapshot diffs, images, and baselines on your behalf. This lets you investigate snapshot failures by asking the agent, instead of clicking through the Sentry UI or downloading images by hand. It complements the [local CLI workflow](/product/snapshots/local-testing/): MCP is built for agent-assisted investigation and review, while `sentry-cli` is built for local downloads and diffing.
+
+## Set Up Sentry MCP
+
+Sentry's [MCP server](https://mcp.sentry.dev) connects your AI assistant to Sentry over the Model Context Protocol. Follow the setup and authentication instructions there for your client (Claude Code, Cursor, VS Code, and others).
+
+<Alert level="info">
+  The Sentry MCP has been optimized to retrieve Snapshot results for agentic
+  workflows. If you'd like, you can also fetch the data via the [REST
+  API](/api/snapshots/) and expose scripts to agents.
+</Alert>
+
+Connect using one of these endpoints:
+
+- `https://mcp.sentry.dev/mcp`: base endpoint
+- `https://mcp.sentry.dev/mcp/{organizationSlug}`: scoped to one organization
+- `https://mcp.sentry.dev/mcp/{organizationSlug}/{projectSlug}`: scoped to one project (recommended)
+
+The first connection starts an OAuth flow to link your Sentry account.
+
+### Advanced Snapshot Tools (Optional)
+
+For most investigations the agent needs no extra setup. By default, it can read any snapshot URL and return the diff summary plus a changed image's current, base, and diff-mask previews.
+
+<Alert level="info">
+  To go further, grant the agent the advanced snapshot tools by enabling the
+  **Preprod Snapshots** capability on the MCP authorization screen (it's off by
+  default; check it when you first connect, or re-authorize to add it later).
+  These tools let the agent fetch full-resolution images, list unchanged images,
+  and look up an app's latest baseline. They give the agent more options but
+  take up more of its context window while enabled.
+</Alert>
+
+## Agent Workflow Examples
+
+You describe what you want in natural language; the agent picks the right tool, inspects the results, and reports back. The exchanges below are representative; your agent's exact wording will vary.
+
+### Investigate a Failed CI Snapshot Check
+
+Paste the snapshot URL from the failing GitHub status check:
+
+> **You:** This snapshot check failed: `https://my-org.sentry.io/preprod/snapshots/231949/`. What changed?
+
+> **Agent:** 12 of 340 snapshots changed on PR #4821 (`feat/new-nav` vs `main`), all in the navigation sidebar. The biggest diffs are:
+>
+> - `sidebar-expanded-dark.png`: 18% changed
+> - `sidebar-collapsed-dark.png`: 14% changed
+> - `sidebar-expanded-light.png`: 11% changed
+>
+> Want me to inspect the largest change and tell you what's different?
+
+### Inspect a Changed Image
+
+> **You:** Yes, please.
+
+> **Agent:** _[fetches and compares the current, base, and diff-mask images for `sidebar-expanded-dark.png`]_
+>
+> This one is `changed` at 18% (group `Sidebar/dark`, from `navigationSidebar.snapshots.tsx`). The sidebar is wider and each nav item has more horizontal padding, which pushes the labels to the right. That matches the spacing work in your `feat/new-nav` PR. If the extra width wasn't intended, the likely cause is the new container `width` on the sidebar wrapper. Want me to open that component and take a look?
+
+### Triage Before Approving
+
+> **You:** Are these changes all from my nav refactor, or did anything else regress?
+
+> **Agent:** All 12 changed snapshots are navigation sidebar screens, which matches your `feat/new-nav` PR. Nothing changed outside that component.
+
+### Look Up the Current Baseline for an App
+
+> **You:** Which settings screens do we have baselines for in `web-frontend`?
+
+> **Agent:** The latest baseline on `main` includes three settings screens: `settings-profile-light.png`, `settings-profile-dark.png`, and `settings-billing-light.png` (group `Settings`).
+
+## CLI and Local Workflows
+
+For downloading images in bulk and local diffing, use `sentry-cli`. See [Local Testing](/product/snapshots/local-testing/) and the [Snapshots CLI reference](/cli/snapshots/).

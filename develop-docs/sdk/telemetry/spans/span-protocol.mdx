@@ -26,7 +26,7 @@ There are no special requirements for the Span v2 envelope header.
 }
 ```
 
-Unlike transactions, envelope headers for spans **require** [Dynamic sampling context](/sdk/telemetry/traces/dynamic-sampling-context/). Also see [Envelope Headers](/sdk/foundations/transport/envelopes/#headers).
+Unlike transactions, envelope headers for spans **require** [Dynamic sampling context](/sdk/foundations/trace-propagation/dynamic-sampling-context/). Also see [Envelope Headers](/sdk/foundations/envelopes/#headers).
 
 ## Span v2 Envelope Item Header
 
@@ -61,16 +61,7 @@ The container is defined as follows:
 
 ### `version` and `ingest_settings` properties
 
-The span envelope item `ingest_settings` property is an optional JSON object that contains ingestion settings for Relay, for example, to infer certain data from the incoming request.
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `infer_ip` | String | **OPTIONAL** | The setting to infer the IP address from the incoming request. One of `auto` or `never` (default). |
-| `infer_user_agent` | String | **OPTIONAL** | The setting to infer the user agent from the incoming request. One of `auto` or `never` (default). |
-
-SDKs like Browser or React Native **MAY** set these to `"auto"` to instruct Relay to infer the IP address or user agent from the incoming request and put it onto the span as an attribute.
-
-For ingestion settings to take effect, the SDK **MUST** also set the `version` property to `2` (`number`) or higher. If `version` is omitted, Relay treats the payload as version `1` and doesn't apply `ingest_settings`.
+The span envelope item **SHOULD** include `version` and `ingest_settings` properties to instruct Relay to infer IP address and user agent from the incoming request. See the [Ingest Settings](/sdk/foundations/envelopes/envelope-items/#ingest-settings) spec for the full definition, field reference, and behavior.
 
 </SpecSection>
 
@@ -90,6 +81,14 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
       "start_timestamp": 1742921669.158209,
       "end_timestamp": 1742921669.180536,
       "attributes": {
+        "sentry.segment.name": {
+          "type": "string",
+          "value": "GET /users"
+        },
+        "sentry.segment.id": {
+          "type": "string",
+          "value": "438f40bd3b4a41ee"
+        },
         "sentry.release": {
           "type": "string",
           "value": "1.0.0"
@@ -97,6 +96,10 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
         "sentry.environment": {
           "type": "string",
           "value": "local"
+        },
+        "sentry.op": {
+          "type": "string",
+          "value": "http.server"
         },
         "sentry.platform": {
           "type": "string",
@@ -110,7 +113,7 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
           "type": "string",
           "value": "4.10.0"
         },
-        "sentry.transaction_info.source": {
+        "sentry.span.source": {
           "type": "string",
           "value": "route"
         },
@@ -156,6 +159,34 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
       "start_timestamp": 1742921669.178306,
       "end_timestamp": 1742921669.180484,
       "attributes": {
+        "sentry.segment.name": {
+          "type": "string",
+          "value": "GET /users"
+        },
+        "sentry.segment.id": {
+          "type": "string",
+          "value": "438f40bd3b4a41ee"
+        },
+        "sentry.op": {
+          "type": "string",
+          "value": "middleware"
+        },
+        "sentry.release": {
+          "type": "string",
+          "value": "1.0.0"
+        },
+        "sentry.environment": {
+          "type": "string",
+          "value": "local"
+        },
+        "sentry.sdk.name": {
+          "type": "string",
+          "value": "sentry.php"
+        },
+        "sentry.sdk.version": {
+          "type": "string",
+          "value": "4.10.0"
+        },
         "sentry.origin": {
           "type": "string",
           "value": "auto"
@@ -193,31 +224,39 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
 
 #### Common Attribute Keys
 
-All attributes mentioned below must be attached to every span being emitted from the SDK, depending on the platform.
-Empty attributes must be omitted.
+All attributes mentioned below MUST be attached to every span being emitted from the SDK, depending on the platform and availability of the information.
 
-| Attribute Key | Type | Description |
-|---------------|------|-------------|
-| `sentry.op` | string | The [span op](../../traces/span-operations/) (e.g., "http.client", "db.query") of the span |
-| `sentry.release` | string | The release version of the application |
-| `sentry.environment` | string | The environment name (e.g., "production", "staging", "development") |
-| `sentry.segment.name` | string | The segment name (e.g., "GET /users") |
-| `sentry.segment.id` | string | The segment span id |
-| `sentry.span.source` | string | The source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. <br/> See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json) for all supported sources. <br/>See [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) and [Clustering](/backend/application-domains/transaction-clustering/#automatic-transaction-clustering) for more information.|
-| `sentry.profiler_id` | string | The id of the currently running profiler (continuous profiling) |
-| `sentry.replay_id` | string | The id of the currently running replay (if available) |
-| `os.name` | string | The operating system name (e.g., "Linux", "Windows", "macOS") |
-| `browser.name` | string | The browser name (e.g., "Chrome", "Firefox", "Safari") |
-| `user.id` | string | The user ID |
-| `user.email` | string | The user email |
-| `user.ip_address` | string | The user IP address |
-| `user.name` | string | The user username |
-| `thread.id` | string | The thread ID |
-| `thread.name` | string | The thread name |
-| `sentry.sdk.name` | string | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
-| `sentry.sdk.version` | string | Version of the Sentry SDK |
+| Attribute Key | Type | Required | Description |
+|---------------|------|----------|-------------|
+| `sentry.segment.name` | string | **Strictly Required** | The segment name (e.g., `"GET /users"`) |
+| `sentry.segment.id` | string | **Strictly Required** | The segment span id |
+| `sentry.trace_lifecycle` | string | Required | The trace lifecycle mode. MUST be set to `"stream"`. |
+| `sentry.op` | string | Required, see note | The [span op](../../traces/span-operations/) (e.g., `"http.client"`, `"db.query"`) of the span. MUST be set on spans from auto instrumentation, MAY be set by manually started spans. |
+| `sentry.release` | string | Required | The release version of the application |
+| `sentry.environment` | string | Required | The environment name (e.g., `"production"`, `"staging"`, `"development"`) |
+| `sentry.span.source` | string | Required, see note | The source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. <br/> See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json) for all supported sources. <br/>See [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) and [Clustering](/backend/application-domains/transaction-clustering/#automatic-transaction-clustering) for more information.|
+| `sentry.profiler_id` | string | Required | The id of the currently running profiler (continuous profiling) |
+| `sentry.replay_id` | string | Required | The id of the currently running replay (if available) |
+| `os.name` | string | Required | The operating system name (e.g., "Linux", "Windows", "macOS") |
+| `browser.name` | string | Required | The browser name (e.g., "Chrome", "Firefox", "Safari") |
+| `user.id` | string | Required | The user ID |
+| `user.email` | string | Required | The user email |
+| `user.ip_address` | string | Required | The user IP address |
+| `user.name` | string | Required | The user username |
+| `thread.id` | string | Required | The thread ID |
+| `thread.name` | string | Required | The thread name |
+| `sentry.sdk.name` | string | Required  | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
+| `sentry.sdk.version` | string | Required | Version of the Sentry SDK |
 
-Attributes outside of the above list MUST only be attached to the span they conceptually belong on, and not propagated to children spans. For instance, attributes mirroring transaction context data should only be set on the segment span. See also [the implementation guidelines](/sdk/telemetry/spans/implementation/#how-to-approach-span-first-in-sdks).
+Spans missing **Strictly Required** attributes MAY be rejected by Relay.
+All other attributes in the table are required _if_ they are available to the SDK.
+For example, `sentry.release` MUST be sent, if and only if the SDK has a `release` value set (or auto-detected it).
+
+Attributes outside of the above list MUST only be attached to the span they conceptually belong on, and not propagated to children spans. 
+For instance, attributes mirroring transaction context data should only be set on the segment span. 
+See also [the implementation guidelines](/sdk/telemetry/spans/implementation/#how-to-approach-span-first-in-sdks).
+
+Empty attributes MUST be omitted.
 
 See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for a full list of supported attributes.
 

@@ -1,0 +1,38 @@
+`@sentry/nitro` automatically generates and uploads source maps when you build your Nitro application for production, so that errors in Sentry contain readable stack traces.
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+To configure source map uploads, provide your Sentry auth token, organization, and project slugs to the `withSentryConfig` wrapper:
+
+
+```typescript {filename:nitro.config.ts}
+import { defineNitroConfig } from "nitro/config";
+import { withSentryConfig } from "@sentry/nitro";
+
+const config = defineNitroConfig({
+  // your Nitro options...
+});
+
+export default withSentryConfig(config, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
+```
+
+<Alert level="info">
+  Source maps are only uploaded during production builds. Development builds
+  (`nitro dev`) skip the upload.
+</Alert>
+
+See how uploading source maps lets you see the exact line of code that caused an error:
+
+<Arcade src="https://demo.arcade.software/OFrHpZUU739XKR8qUiEP?embed" />

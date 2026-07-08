@@ -14,7 +14,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that's also missing, no events will be sent.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -116,8 +116,6 @@ By default, no errors are ignored.
 
 </SdkOption>
 
-
-
 <SdkOption name="MaxErrorDepth" type="int" defaultValue="100">
 
 This is the maximum number of errors reported in a chain of errors. This protects the SDK from an arbitrarily long chain of wrapped errors.
@@ -128,9 +126,9 @@ In practice, reporting very long chains usually provides little value when debug
 
 ## Logging Options
 
-<SdkOption name="EnableLogs" type="bool" defaultValue="false">
+<SdkOption name="DisableLogs" type="bool" defaultValue="false">
 
-Set this option to `true` to enable log capturing in Sentry. The SDK will only capture and send log messages to Sentry if this option is enabled.
+When set to `true`, the SDK does not capture or send log messages to Sentry. By default, logs are enabled.
 
 </SdkOption>
 
@@ -178,7 +176,6 @@ See https://develop.sentry.dev/sdk/envelopes/#size-limits for size limits applie
 
 </SdkOption>
 
-
 <SdkOption name="IgnoreTransactions" type="[]string">
 
 A list of regexp strings that will be used to match against a transaction's name. If a match is found, then the transaction will be dropped.
@@ -196,6 +193,8 @@ Controls which URLs will have trace propagation enabled. Does not support regex 
 <SdkOption name="PropagateTraceparent" type="bool" defaultValue="false">
 
 When set to `true`, the W3C Trace Context HTTP `traceparent` header is propagated on outgoing HTTP requests.
+
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
 
 </SdkOption>
 
@@ -331,7 +330,6 @@ When set to `true`, disables the telemetry buffer layer for prioritizing events 
 
 By default, TLS uses the host's root CA set. If you don't have `ca-certificates` (which should be your go-to way of fixing the issue of the missing certificates) and want to use `gocertifi` instead, you can provide pre-loaded cert files as one of the options to the `sentry.Init` call:
 
-
 ```go
 sentryClientOptions := sentry.ClientOptions{
 	Dsn: "___PUBLIC_DSN___",
@@ -361,7 +359,7 @@ sentry.Init(sentry.ClientOptions{
 	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
 		var filteredIntegrations []sentry.Integration
 		for _, integration := range integrations {
-			if integration.Name() == "ContextifyFrames" {
+			if integration.Name() == "GlobalTags" {
 				continue
 			}
 			filteredIntegrations = append(filteredIntegrations, integration)
