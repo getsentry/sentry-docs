@@ -283,7 +283,7 @@ In your Dockerfile, add a [syntax directive](https://docs.docker.com/reference/d
 # syntax=docker/dockerfile:1
 ...
 RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
-    dotnet build "MyWebApp.csproj" --no-restore -c Release -o /app/build
+    dotnet build "MyWebApp.csproj" --no-restore -c Release
 ```
 
 The `env=` option (available since Dockerfile syntax v1.10) exposes the secret as the `SENTRY_AUTH_TOKEN` environment variable for the duration of that `RUN` instruction only — exactly what the Sentry CLI needs — without persisting it to a layer. The `# syntax=` directive ensures Docker uses a frontend that supports `env=`, regardless of the Docker Engine version.
@@ -296,12 +296,12 @@ BuildKit is enabled by default in Docker 23.0 and later. For older versions, set
 
 ### Multi-Stage Dockerfiles
 
-If your Dockerfile has separate stages for `dotnet build` and `dotnet publish` (a common pattern for ASP.NET Core apps), Sentry CLI only needs to run during the **build** stage. The publish stage copies compiled output and doesn't have access to the full project source, so running Sentry CLI there will fail.
+If your Dockerfile has separate stages for `dotnet build` and `dotnet publish` (a common pattern for ASP.NET Core apps), Sentry CLI only needs to run during the **build** stage, where the auth token is mounted.
 
-Disable Sentry CLI in the publish stage by passing `-p:UseSentryCLI=false` to `dotnet publish`:
+By default, `dotnet publish` runs its own implicit build. That would invoke Sentry CLI again — and because the auth token is deliberately scoped to the build stage's `RUN` (so it never reaches the publish stage or the final image), the second run would fail. Pass `--no-build --no-restore` so `dotnet publish` reuses the build stage's output instead of recompiling, plus `-p:UseSentryCLI=false` as an extra safeguard:
 
 ```dockerfile
-RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish -p:UseAppHost=false -p:UseSentryCLI=false
+RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish --no-build --no-restore -p:UseAppHost=false -p:UseSentryCLI=false
 ```
 
 ### Complete Example
@@ -311,23 +311,24 @@ The following is a complete multi-stage Dockerfile for an ASP.NET Core app. It a
 ```dockerfile
 # syntax=docker/dockerfile:1
 # Build: docker build --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN .
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY ["MyWebApp.csproj", "./"]
 RUN dotnet restore "MyWebApp.csproj"
 COPY . .
 
 # The secret is available only for this RUN instruction and is never written to a layer.
+# Sentry CLI runs here and uploads debug symbols as part of the build.
 RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
-    dotnet build "MyWebApp.csproj" --no-restore -c Release -o /app/build
+    dotnet build "MyWebApp.csproj" --no-restore -c Release
 
-# Sentry CLI already ran during the build stage, so disable it here.
+# Reuse the build output; --no-build avoids recompiling, which would re-run Sentry CLI without the auth token.
 FROM build AS publish
-RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish -p:UseAppHost=false -p:UseSentryCLI=false
+RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish --no-build --no-restore -p:UseAppHost=false -p:UseSentryCLI=false
 
 FROM base AS final
 WORKDIR /app
