@@ -59,7 +59,7 @@ jobs:
 
       - name: Post comment if redirects are missing
         if: steps.validate.outputs.exit_code == '1' && steps.validate.outputs.has_results == 'true'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -140,17 +140,17 @@ jobs:
             comment += '---\n';
             comment += '_Note: `middleware.ts` is recommended for simple exact-match redirects. Use `redirects.js` for redirects with path parameters (e.g., `:path*`)._\n';
 
-            // Check for existing comments from this action
-            const {data: comments} = await github.rest.issues.listComments({
+            // Check for existing comments from this action (paginate to handle PRs with 30+ comments)
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const existingComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              (comment.user.login === 'github-actions[bot]' || comment.user.login.includes('bot')) &&
-              comment.body.includes('Missing Redirects Detected')
+            const existingComment = comments.find(c => 
+              c.user.type === 'Bot' && 
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Missing Redirects Detected')
             );
 
             if (existingComment) {

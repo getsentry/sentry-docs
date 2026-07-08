@@ -1,0 +1,258 @@
+---
+title: gRPC Integration
+description: "Learn more about the Sentry gRPC integration for the Dart SDK."
+platforms:
+  - dart
+  - flutter
+sidebar_order: 4
+---
+
+The `sentry_grpc` package provides [gRPC](https://pub.dev/packages/grpc) support for Sentry. It instruments outgoing unary calls with spans, records breadcrumbs, injects distributed tracing headers into gRPC metadata, and can capture failed calls as Sentry errors.
+
+## Install
+
+Add `sentry_grpc` to your dependencies:
+
+<PlatformSection supported={["dart"]}>
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '9.23.0') }}
+  sentry_grpc: ^{{@inject packages.version('sentry.dart.grpc', '9.23.0') }}
+  grpc: '>=4.0.4 <6.0.0'
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter', '9.23.0') }}
+  sentry_grpc: ^{{@inject packages.version('sentry.dart.grpc', '9.23.0') }}
+  grpc: '>=4.0.4 <6.0.0'
+```
+
+</PlatformSection>
+
+## Configure
+
+Add `SentryGrpcInterceptor` to your gRPC client's interceptor list. This should happen once, when the client is created.
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+import 'package:grpc/grpc.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_grpc/sentry_grpc.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: runApp,
+  );
+}
+
+Future<void> runApp() async {
+  final channel = ClientChannel(
+    'api.example.com',
+    options: const ChannelOptions(credentials: ChannelCredentials.secure()),
+  );
+
+  final client = MyServiceClient(
+    channel,
+    interceptors: [SentryGrpcInterceptor()],
+  );
+
+  // All calls through this client are now automatically instrumented.
+}
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:grpc/grpc.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_grpc/sentry_grpc.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(MyApp()),
+  );
+}
+
+// Wherever you create your gRPC client:
+final channel = ClientChannel(
+  'api.example.com',
+  options: const ChannelOptions(credentials: ChannelCredentials.secure()),
+);
+
+final client = MyServiceClient(
+  channel,
+  interceptors: [SentryGrpcInterceptor()],
+);
+
+// All calls through this client are now automatically instrumented.
+```
+
+</PlatformSection>
+
+## Capturing Failed Requests as Errors
+
+When a gRPC call fails, either because the server returns a non-OK status code or because a transport error occurs, the interceptor can capture it as a Sentry error.
+
+This feature is controlled by `captureFailedRequests`. By default, the interceptor respects the global `SentryOptions.captureFailedRequests` setting. You can override this per-interceptor:
+
+```dart
+// Capture failed gRPC calls regardless of the global setting
+final interceptor = SentryGrpcInterceptor(captureFailedRequests: true);
+
+// Disable for this client only
+final interceptor = SentryGrpcInterceptor(captureFailedRequests: false);
+```
+
+When a failed call is captured, Sentry attaches the gRPC method path, status code, status name, and error message as context on the event.
+
+## Breadcrumbs
+
+The interceptor automatically records a breadcrumb for every unary call. Successful calls are recorded at the `info` level; failed calls at the `error` level. Each breadcrumb includes the method path, gRPC status code and name, and call duration in milliseconds.
+
+To disable breadcrumbs:
+
+```dart
+final interceptor = SentryGrpcInterceptor(enableBreadcrumbs: false);
+```
+
+## Tracing for gRPC Calls
+
+### Instrumentation Behaviour
+
+For each unary call, the interceptor:
+
+- Creates a child span under the active transaction with operation `grpc.client` and a description set to the full method path (for example, `/helloworld.Greeter/SayHello`).
+- Sets span data following OpenTelemetry gRPC semantic conventions:
+  - `rpc.system` = `grpc`
+  - `rpc.service` = the service portion of the method path (for example, `helloworld.Greeter`)
+  - `rpc.method` = the method name (for example, `SayHello`)
+  - `rpc.response.status_code` = the gRPC status name (for example, `OK`, `NOT_FOUND`)
+- Injects `sentry-trace` and `baggage` headers into the call's gRPC metadata for distributed tracing.
+- Finishes the span and sets its status when the call completes.
+- Associates any thrown exception with the span.
+
+<Alert>
+Spans are only created when there is an active transaction on the scope. If no transaction is active, the interceptor still injects trace headers and records breadcrumbs.
+</Alert>
+
+<Alert>
+Server-streaming and client-streaming calls receive distributed tracing header injection only. Full span lifecycle tracking for streaming RPCs will be added in a future release.
+</Alert>
+
+### Controlling Trace Header Propagation
+
+By default, `sentry-trace` and `baggage` headers are injected for all gRPC method paths. Use `tracePropagationTargets` to restrict injection to specific services or methods. Targets are matched against the full method path (for example, `/helloworld.Greeter/SayHello`):
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+await Sentry.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracePropagationTargets = [
+    'myservice.MyService', // Matches any method under this service
+  ];
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracePropagationTargets = [
+    'myservice.MyService', // Matches any method under this service
+  ];
+});
+```
+
+</PlatformSection>
+
+### Sending Request Metadata (PII)
+
+When `sendDefaultPii` is enabled, the interceptor attaches the gRPC call's metadata headers to the span as `rpc.request.metadata.<key>` attributes. This is opt-in because metadata can contain sensitive values such as authorization tokens.
+
+<PlatformSection supported={["dart"]}>
+
+```dart
+await Sentry.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.sendDefaultPii = true; // Metadata headers will appear in span data
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dart.flutter"]}>
+
+```dart
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.sendDefaultPii = true; // Metadata headers will appear in span data
+});
+```
+
+</PlatformSection>
+
+### Prerequisites
+
+Before enabling tracing:
+
+1. Initialize the Sentry SDK. Learn more <PlatformLink to="/#configure">here</PlatformLink>.
+2. Set up tracing. Learn more <PlatformLink to="/tracing/">here</PlatformLink>.
+
+### Verify
+
+```dart
+import 'package:grpc/grpc.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_grpc/sentry_grpc.dart';
+
+Future<void> makeGrpcRequest() async {
+  final channel = ClientChannel('api.example.com');
+  final client = GreeterClient(
+    channel,
+    interceptors: [SentryGrpcInterceptor()],
+  );
+
+  // Start a transaction so the interceptor has a parent span to attach to.
+  final transaction = Sentry.startTransaction(
+    'grpc-example',
+    'grpc.client',
+    bindToScope: true,
+  );
+
+  try {
+    final response = await client.sayHello(HelloRequest(name: 'Sentry'));
+    transaction.status = const SpanStatus.ok();
+    print(response.message);
+  } catch (exception, stackTrace) {
+    transaction.throwable = exception;
+    transaction.status = const SpanStatus.internalError();
+    await Sentry.captureException(exception, stackTrace: stackTrace);
+  } finally {
+    await transaction.finish();
+  }
+}
+```
+
+To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project. Clicking **Performance** will open a page with transactions, where you can select the transaction with the name `grpc-example` and see the `grpc.client` child span for the `/helloworld.Greeter/SayHello` call.

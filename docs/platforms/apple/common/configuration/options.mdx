@@ -16,7 +16,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable on macOS. On iOS, tvOS, watchOS, and visionOS, the environment variable fallback does not apply. If neither is set, the SDK will not send any events.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -106,8 +106,7 @@ You can also override this option on a per-call basis by passing the `attachAllT
 
 When enabled, the SDK reports SIGTERM signals to Sentry.
 
-It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as  CPU or disk overuse, watchdog terminations, or when the OS updates your app.
-
+It's crucial for developers to understand that the OS sends a SIGTERM to their app as a prelude to a graceful shutdown, before resorting to a SIGKILL. This SIGKILL, which your app can't catch or ignore, is a direct order to terminate your app's process immediately. Developers should be aware that their app can receive a SIGTERM in various scenarios, such as CPU or disk overuse, watchdog terminations, or when the OS updates your app.
 
 </SdkOption>
 
@@ -191,6 +190,13 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    [options addInAppInclude:@"MyFramework"];
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="inAppExclude" type="array" removedSince="9.0.0">
@@ -204,7 +210,6 @@ This option can be overridden using <PlatformIdentifier name="inAppInclude" />.
 <SdkOption name="initialScope" type="function" availableSince="8.7.0">
 
 A block that configures the initial scope when starting the SDK.
-
 
 ```swift
 import Sentry
@@ -224,6 +229,18 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.initialScope = ^(SentryScope *scope) {
+        [scope setTagValue:@"my value" forKey:@"my-tag"];
+        return scope;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.initialScope = ^(SentryObjCScope *scope) {
         [scope setTagValue:@"my value" forKey:@"my-tag"];
         return scope;
     };
@@ -301,6 +318,7 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 When enabled, the SDK adds breadcrumbs for each network request. This feature uses swizzling, so disabling <PlatformLink to="/configuration/swizzling/">`enableSwizzling`</PlatformLink> also disables this feature.
 
 If you want to enable or disable network tracking for performance monitoring, use <PlatformLink to="/configuration/options/#enableNetworkTracking">`enableNetworkTracking`</PlatformLink> instead.
+
 </SdkOption>
 
 <SdkOption name="enableCaptureFailedRequests" type="bool" defaultValue="true">
@@ -432,6 +450,21 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSendSpan = ^SentryObjCSpan * _Nullable(SentryObjCSpan * _Nonnull span) {
+        // Filter out spans with certain operations
+        if ([span.operation isEqualToString:@"db.query"]) {
+            return nil;
+        }
+        return span;
+    };
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="beforeSendLog" type="function">
@@ -463,6 +496,22 @@ SentrySDK.start { options in
     options.beforeSendLog = ^SentryLog * _Nullable(SentryLog * _Nonnull log) {
         // Filter out info level logs
         if (log.level == SentryLogLevelInfo) {
+            return nil;
+        }
+        return log;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableLogs = YES;
+    options.beforeSendLog = ^SentryObjCLog * _Nullable(SentryObjCLog * _Nonnull log) {
+        // Filter out info level logs
+        if (log.level == SentryObjCLogLevelInfo) {
             return nil;
         }
         return log;
@@ -504,6 +553,19 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.attachScreenshot = YES;
+    options.beforeCaptureScreenshot = ^BOOL(SentryObjCEvent * _Nonnull event) {
+        // Prevent screenshots in certain views
+        return !isSensitiveView();
+    };
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="beforeCaptureViewHierarchy" type="function">
@@ -536,6 +598,19 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.attachViewHierarchy = YES;
+    options.beforeCaptureViewHierarchy = ^BOOL(SentryObjCEvent * _Nonnull event) {
+        // Prevent view hierarchy capture in certain views
+        return !isSensitiveView();
+    };
+}];
+```
+
 </SdkOption>
 
 <SdkOption name="onCrashedLastRun" type="function">
@@ -562,6 +637,18 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.onCrashedLastRun = ^(SentryEvent * _Nonnull event) {
+        // Perform actions when a crash was detected on last run
+        NSLog(@"App crashed on last run");
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onCrashedLastRun = ^(SentryObjCEvent * _Nonnull event) {
         // Perform actions when a crash was detected on last run
         NSLog(@"App crashed on last run");
     };
@@ -612,6 +699,21 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.onLastRunStatusDetermined = ^(SentryObjCLastRunStatus status, SentryObjCEvent * _Nullable crashEvent) {
+        if (status == SentryObjCLastRunStatusDidCrash) {
+            NSLog(@"App crashed on last run: %@", crashEvent);
+        } else {
+            NSLog(@"App did not crash on last run");
+        }
+    };
+}];
+```
+
 </SdkOption>
 
 ## Tracing Options
@@ -639,7 +741,6 @@ String entries do not have to be full matches, meaning the URL of a request is m
 If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
 
 </SdkOption>
-
 
 <SdkOption name="strictTraceContinuation" type="Bool" defaultValue="false">
 
@@ -669,10 +770,11 @@ Set this option to `true` if your backend services are instrumented with a W3C T
 
 Use <PlatformIdentifier name="tracePropagationTargets" /> to control which requests the `traceparent` header is attached to.
 
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
+
 </SdkOption>
 
 <SdkOption name="enablePersistingTracesWhenCrashing" type="bool" defaultValue="false" availableSince="8.41.0">
-
 
 <Alert>
 
@@ -852,8 +954,6 @@ When enabled, request and response bodies are captured for URLs matching `networ
 
 Requires `options.experimental.enableReplayNetworkDetailsCapturing = true`.
 
-
-
 </SdkOption>
 
 <SdkOption name="sessionReplay.networkRequestHeaders" type="array" defaultValue='["Content-Type", "Content-Length", "Accept"]' availableSince="9.12.0">
@@ -905,7 +1005,7 @@ The mode for starting and stopping the profiler:
 
 The percentage of profile sessions to sample. Specifying `0` means no profiles are collected, `1.0` means all sessions are profiled.
 
-The sample decision is evaluated when the SDK starts and on each subsequent foreground event. Backgrounding and foregrounding the app starts a new profile session.
+The SDK evaluates the sample decision when profiling is configured at SDK start, and then only when a new Sentry user session starts. Foregrounding the app keeps the same profile sampling decision unless it starts a new session.
 
 </SdkOption>
 
@@ -1101,13 +1201,12 @@ This feature is only available from Xcode 13 and from macOS 12.0, iOS 15.0, tvOS
 
 This is an experimental feature and may still have bugs. When enabled, the SDK stitches the call to Swift Async functions in one consecutive stack trace.
 
-Learn more in the <PlatformLink to="/features/experimental-features/">Experimental Features</PlatformLink> documentation.
-
 </SdkOption>
 
 <SdkOption name="cacheDirectoryPath" type="string">
 
 The path where the SDK stores data before sending it to Sentry. By default, the SDK uses `NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)`, which resolves to:
+
 - `~/Library/Caches/` for non-sandboxed macOS apps
 - `~/Library/Containers/{BundleID}/Data/Library/Caches/` for sandboxed macOS apps
 - `~/Library/Caches/` (within the app's sandbox) for iOS apps
@@ -1183,6 +1282,28 @@ SentrySDK.start { options in
 When enabled, the SDK can capture request and response headers and bodies for network requests during session replay. You must also configure `options.sessionReplay.networkDetailAllowUrls` to specify which requests are captured.
 
 Learn more in the <PlatformLink to="/session-replay/configuration/#network-details">Network Details</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.enableStandaloneAppStartTracing" type="bool" defaultValue="false" availableSince="9.14.0">
+
+When enabled, the SDK sends app start data as a standalone `app.start` transaction instead of attaching it as spans to the first UIViewController transaction. This makes app starts easier to find, sample, and analyze independently.
+
+Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#standalone-app-start-tracing">Standalone App Start Tracing</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.enableUnhandledCPPExceptionsV2" type="bool" defaultValue="false">
+
+When enabled, the SDK captures fatal C++ exceptions using a more reliable mechanism that hooks into all `__cxa_throw` calls. This provides more comprehensive and consistent exception handling across your app's runtime, regardless of the number of C++ modules or how they're linked.
+
+**Note:** The mechanism of hooking into `__cxa_throw` could cause issues with symbolication on iOS due to caching of symbol references.
+
+</SdkOption>
+
+<SdkOption name="experimental.enableWatchdogTerminationsV2" type="bool" defaultValue="false">
+
+When enabled, the SDK uses a more efficient mechanism for detecting watchdog terminations.
 
 </SdkOption>
 

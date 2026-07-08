@@ -2,12 +2,30 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.1.0
-spec_status: draft
+spec_version: 0.7.0
+spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.7.0
+    date: 2026-07-08
+    summary: Include configuration for queue/tasks data. Modify database config to accept a boolean value instead of a map of key/values. Update name of `graphql` to `graphQL`
+  - version: 0.6.0
+    date: 2026-06-29
+    summary: Include configuration for database queries.
+  - version: 0.5.0
+    date: 2026-06-26
+    summary: Include configuration options for controlling the inclusion of graphql documents and variables.
+  - version: 0.4.0
+    date: 2026-06-12
+    summary: Added documentation requirements for default behavior and setup snippet opt-out comment with link to full dataCollection docs.
+  - version: 0.3.0
+    date: 2026-06-05
+    summary: Promoted to candidate following the initial JavaScript SDK implementation. Version stays `0.x` until the contract is frozen at `stable`.
+  - version: 0.2.0
+    date: 2026-06-05
+    summary: Collect more data by default. `userInfo` now defaults to `true` and `httpBodies` now defaults to all valid body types. Both can be disabled to opt out.
   - version: 0.1.0
     date: 2025-03-05
     summary: Initial spec; dataCollection config, three data sensitivity levels, cookies/headers denylist, replace sendDefaultPii.
@@ -23,7 +41,7 @@ sidebar_order: 1
 This spec defines how SDKs control **what data is collected automatically** from the runtime (device, requests, responses, user context). It replaces the single `sendDefaultPii` (or platform-equivalent) flag with a structured `dataCollection` configuration so users can enable or restrict collection by category and by field.
 
 Previously, `sendDefaultPii` acted as a broad binary toggle that controlled a wide range of data types without offering granular control.
-The new `dataCollection` configuration allows SDKs to include rich context for debugging by default, while keeping user identity collection gated behind an explicit option.
+The new `dataCollection` configuration collects rich context for debugging by default — including user identity and HTTP bodies — while giving users granular control to opt out of any category or field.
 
 Related specs:
 
@@ -35,7 +53,7 @@ Related specs:
 
 ## Concepts
 
-<SpecSection id="data-sensitivity-levels" status="draft" since="0.1.0">
+<SpecSection id="data-sensitivity-levels" status="candidate" since="0.1.0">
 
 ### Data Sensitivity Levels
 
@@ -61,7 +79,8 @@ Personally Identifiable Information (PII) or user-linked data. Examples include,
 - Contact (email, phone number, address)
 - IP address
 - Cookies and headers that identify the user or session
-- HTTP request data (TBD)
+- HTTP request data or database query parameters (TBD)
+- Arguments passed to tasks within a queue
 
 For context types that may carry PII fields (e.g. `device_unique_identifier` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context), or fields in the [User Interface](/sdk/foundations/transport/event-payloads/user/)), see the linked specs.
 
@@ -80,7 +99,7 @@ For the canonical list of terms used to detect sensitive values at collection ti
 
 ## Behavior
 
-<SpecSection id="configuration-surface" status="draft" since="0.1.0">
+<SpecSection id="configuration-surface" status="candidate" since="0.1.0">
 
 ### Configuration Requirements
 
@@ -90,19 +109,39 @@ SDKs **MUST** support at least the `userInfo` option, key-value collection modes
 
 </SpecSection>
 
-<SpecSection id="collection-defaults" status="draft" since="0.1.0">
+<SpecSection id="collection-defaults" status="candidate" since="0.2.0">
 
 ### Default Collection Behavior
 
 The three sensitivity levels determine whether data is collected by default:
 
 - **Technical Context Data**: SDKs **SHOULD** collect this data automatically. This level is not gated by any `dataCollection` option.
-- **PII Data**: The `userInfo` option controls whether the SDK automatically populates user identity fields (`user.*`). See [`dataCollection` Options](#datacollection-options).
+- **PII Data**: SDKs **SHOULD** automatically populate user identity fields (`user.*`) by default. Users can set the `userInfo` option to `false` to opt out. See [`dataCollection` Options](#datacollection-options).
 - **Sensitive Data**: SDKs **MUST** never send sensitive values through automatic instrumentation. Values for keys matching the denylist **MUST** be replaced with `"[Filtered]"`; key names are always retained. Users can use `beforeSend` (or equivalent) to remove or redact keys if needed. See [Sensitive Denylist](#sensitive-denylist).
+
+SDK documentation **MUST** document the default value and behavior of each `dataCollection` option.
 
 </SpecSection>
 
-<SpecSection id="sensitive-denylist" status="draft" since="0.1.0">
+<SpecSection id="setup-snippet-opt-out" status="candidate" since="0.4.0">
+
+### Setup Snippet Opt-Out Comment
+
+All SDK initialization code snippets (including documentation examples, onboarding flows, and CLI wizard output) **MUST** include a commented-out `dataCollection` override that disables `userInfo` and `httpBodies`.
+The comment **MUST** include a URL linking to the full `dataCollection` documentation matching the specific platform or guide.
+
+```pseudocode
+init({
+  dsn: "...",
+  // To disable sending user data and HTTP bodies, uncomment the line below. For more info visit:
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection
+  // dataCollection: { userInfo: false, httpBodies: [] },
+})
+```
+
+</SpecSection>
+
+<SpecSection id="sensitive-denylist" status="candidate" since="0.1.0">
 
 ### Sensitive Denylist
 
@@ -144,6 +183,22 @@ init({
 })
 ```
 
+#### URLs
+
+URL strings in span descriptions follow the format defined in [Structuring Data](/sdk/telemetry/traces/structuring-data/): `METHOD scheme://host/path` — query strings and fragments are excluded.
+
+The `queryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
+
+**Example:** Given a request to `https://example.com/api/users?token=abc123&page=5`:
+
+| Attribute | `queryParams` enabled | `queryParams` off |
+|---|---|---|
+| Span description | `GET https://example.com/api/users` | same |
+| `url.full` | `https://example.com/api/users?token=[Filtered]&page=5` | `https://example.com/api/users` |
+| `url.path` | `/api/users` | same |
+| `url.query` | `token=[Filtered]&page=5` | not collected |
+| `request.query_string` | `token=[Filtered]&page=5` | not collected |
+
 #### Cookies and Query Params
 
 Cookies and query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
@@ -168,7 +223,7 @@ Unfiltered, raw cookie header values **MUST NOT** be sent. When in doubt, treat 
 
 #### Request and Response Bodies
 
-When body collection is enabled via the `httpBodies` option (a non-empty array listing one or more body types):
+When bodies are collected via the `httpBodies` option (enabled by default; see [Body Type Collection](#body-type-collection)):
 
 - **Parseable as JSON or form data:** SDKs **MAY** extract key-value pairs and apply the same denylist rules to keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`. This allows selective scrubbing while retaining non-sensitive fields.
 - **Not parseable (raw bodies):** The body **MUST NOT** be attached to the event. When the SDK cannot parse the body into a key-value structure, the entire body **MUST** be replaced with `"[Filtered]"`.
@@ -177,7 +232,7 @@ No built-in option scrubs **keys**; users who need to hide header or cookie name
 
 </SpecSection>
 
-<SpecSection id="integration-overrides" status="draft" since="0.1.0">
+<SpecSection id="integration-overrides" status="candidate" since="0.1.0">
 
 ### Integration-Level Overrides
 
@@ -195,7 +250,7 @@ corresponding global `dataCollection` values for the data that integration colle
 
 </SpecSection>
 
-<SpecSection id="user-set-data-scrubbing" status="draft" since="0.1.0">
+<SpecSection id="user-set-data-scrubbing" status="candidate" since="0.1.0">
 
 ### User-Set Data and Scrubbing
 
@@ -223,7 +278,7 @@ This means if a user calls `Sentry.setUser({ email: "jane@example.com" })`, that
 
 ## Public API
 
-<SpecSection id="option-types" status="draft" since="0.1.0">
+<SpecSection id="option-types" status="candidate" since="0.2.0">
 
 ### Option Types
 
@@ -395,7 +450,7 @@ SDKs **MAY** additionally accept a single `KeyValueCollectionBehavior` for `http
 
 #### Body Type Collection
 
-SDKs **MUST** support enabling body collection for specific body types. The option accepts an array of body type strings. An empty or omitted array means no bodies are collected (default).
+SDKs **MUST** support configuring body collection for specific body types. The option accepts an array of body type strings. An **omitted** array defaults to all body types valid for the platform; an **empty** array (`[]`) collects no bodies and is the explicit opt-out.
 
 Valid body type values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`.
 
@@ -428,13 +483,13 @@ const (
     BodyOutgoingResponse BodyType = "outgoingResponse"
 )
 
-// HttpBodies: []BodyType — nil/empty = off
+// HttpBodies: []BodyType — nil = all valid types (default); empty slice = off
 ```
 
 **Python**
 
 ```python
-# http_bodies: list[str] — e.g., ["incomingRequest"]; empty = off
+# http_bodies: list[str] | None — None = all valid types (default); [] = off; e.g., ["incomingRequest"]
 ```
 
 **Java**
@@ -446,20 +501,20 @@ public enum BodyType {
     INCOMING_RESPONSE("incomingResponse"),
     OUTGOING_RESPONSE("outgoingResponse");
 }
-// httpBodies: List<BodyType> — empty = off
+// httpBodies: List<BodyType> — null = all valid types (default); empty = off
 ```
 
 **PHP**
 
 ```php
-// httpBodies: string[] — e.g., ['incomingRequest']; empty = off
+// httpBodies: ?string[] — null = all valid types (default); [] = off; e.g., ['incomingRequest']
 ```
 
 </Expandable>
 
 </SpecSection>
 
-<SpecSection id="datacollection-options" status="draft" since="0.1.0">
+<SpecSection id="datacollection-options" status="candidate" since="0.2.0">
 
 ### `dataCollection` Options
 
@@ -473,18 +528,24 @@ struct KeyValueCollectionBehavior {
 
 init({
   dataCollection: {
-    userInfo?: boolean,                            // default: false
+    userInfo?: boolean,                            // default: true
     cookies?: KeyValueCollectionBehavior,          // default: { mode: "denyList" }
     httpHeaders?: {
       request?: KeyValueCollectionBehavior,        // default: { mode: "denyList" }
       response?: KeyValueCollectionBehavior,       // default: { mode: "denyList" }
     },
-    httpBodies?: string[],                         // default: [] (off)
+    httpBodies?: string[],                         // default: all valid body types
     queryParams?: KeyValueCollectionBehavior,      // default: { mode: "denyList" }
-    genAI?: {
-      inputs?: boolean                              // default: true
-      outputs?: boolean                             // default: true
+    graphQL?: {
+      document?: boolean,                          // default: true
+      variables?: boolean,                         // default: true
     },
+    genAI?: {
+      inputs?: boolean,                              // default: true
+      outputs?: boolean,                             // default: true
+    },
+    databaseQueryData?: boolean,                     // default: true
+    queues?: boolean,                               // default: true
     stackFrameVariables?: boolean,                 // default: true
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
   },
@@ -493,12 +554,15 @@ init({
 
   | Key | Option Type | Default | Since | Description |
 |-----|-------------|---------|-------|-------------|
-| `userInfo` | Boolean | `false` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from instrumentation sources (typically set by `Sentry.setUser()`). Does not affect any other data category. |
+| `userInfo` | Boolean | `true` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from auto-instrumentation (e.g., inferring `user.ip_address` from an incoming HTTP request, or deriving user identity from framework session/auth context). Does **not** gate data explicitly set via `Sentry.setUser()`, which is always attached (see [User-Set Data and Scrubbing](#user-set-data-scrubbing)). Does not affect any other data category. Default changed to `true` in 0.2.0. |
 | `cookies` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
-| `httpBodies` | `string[]` (body types) | `[]` (off) | 0.1.0 | List of body types to collect. Empty or omitted = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. |
+| `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
 | `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
+| `graphQL` | `{ document?, variables? }` | Both `true` | 0.5.0 | For `document`: Collect the GraphQL document. <br /><br /> For `variables`: Collect the variables that are passed to GraphQL operations. |
 | `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
+| `databaseQueryData` | Boolean | `true` | 0.6.0 | Include data that's associated with database queries. This can include parameters provided to a query, statement values, or the returned results of a query.<br /><br />Structural metadata such as the database system, a query summary, or the table being acted upon in the operation are **not** controlled by this property, and are **always** collected. |
+| `queues` | Boolean | `true` | 0.7.0 | Include arguments passed to tasks within queues. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
@@ -518,27 +582,38 @@ Omitting `dataCollection` entirely is equivalent to passing an empty object — 
 init({ dsn: "..." });
 ```
 
-**Result:** Cookies, headers, query params, generative AI inputs/outputs, and stack frame variables are all collected. The sensitive denylist scrubs sensitive values. HTTP bodies are not collected and user identity fields (`user.*`) are not automatically populated.
+**Result:** Cookies, headers, query params, HTTP bodies, generative AI inputs/outputs, stack frame variables, and user identity fields (`user.*`) are all collected. The sensitive denylist scrubs sensitive values.
 
-### Enable User Identity
+### Disable User Identity
 
-Opt in to automatic population of `user.*` fields from instrumentation:
+Opt out of automatic population of `user.*` fields from instrumentation:
 
 ```typescript
 init({
   dsn: "...",
-  dataCollection: { userInfo: true },
+  dataCollection: { userInfo: false },
 });
 ```
 
-**Result:** The SDK automatically populates `user.id`, `user.email`, `user.username`, and `user.ip_address` from instrumentation sources. All other options use their defaults.
+**Result:** The SDK no longer populates `user.id`, `user.email`, `user.username`, or `user.ip_address` from instrumentation sources. User data explicitly set via `Sentry.setUser()` is still attached. All other options use their defaults.
 
-### Collect Only Specific Body Types
+### Restrict Body Collection
+
+All valid body types are collected by default. Pass a narrower list to collect only specific body types:
 
 ```typescript
 init({
   dsn: "...",
   dataCollection: { httpBodies: ["incomingRequest"] },
+});
+```
+
+To disable body collection entirely, pass an empty array:
+
+```typescript
+init({
+  dsn: "...",
+  dataCollection: { httpBodies: [] },
 });
 ```
 
@@ -572,19 +647,27 @@ init({
 
 ### Migration from `sendDefaultPii`
 
-- **`sendDefaultPii: true`** (legacy) → `dataCollection: { userInfo: true }` plus any additional overrides needed
-- **`sendDefaultPii: false`** (legacy) → omit `dataCollection` entirely, or pass `{}` to use all defaults
+- **`sendDefaultPii: true`** (legacy) → omit `dataCollection` entirely; the new defaults already populate `user.*` and collect HTTP bodies. Add overrides only to restrict collection.
+- **`sendDefaultPii: false`** (legacy) → opt out of the categories the new defaults collect.
 
-The new defaults collect **more** than `sendDefaultPii: false` did. Generative AI content are now on by default and more HTTP headers and cookies are collected. This config would match the previous behavior of `sendDefaultPii: false`:
+The new defaults collect **more data** than either legacy setting did. User identity, generative AI content, and HTTP request/response bodies are now on by default, and more HTTP headers and cookies are collected. This config restricts collection to roughly match the previous behavior of `sendDefaultPii: false`:
 
 ```typescript
 init({
   dsn: "...",
   dataCollection: {
+    userInfo: false,
+    httpBodies: [],
+    graphQL: {
+      document: false,
+      variables: false,
+    },
     genAI: {
       inputs: false,
       outputs: false,
     },
+    databaseQueryData: false,
+    queues: false,
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
