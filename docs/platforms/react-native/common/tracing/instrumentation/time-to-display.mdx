@@ -59,7 +59,11 @@ function MyComponent() {
 
 ## Time To Full Display
 
-To measure the time when a screen is fully displayed, you can use the `Sentry.TimeToFullDisplay` component.
+To measure the time when a screen is fully displayed, you can use the `Sentry.TimeToFullDisplay` component or the imperative `Sentry.reportFullyDisplayed()` API.
+
+### Using the Component
+
+The `Sentry.TimeToFullDisplay` component records TTFD when its `record` prop becomes `true`. This is ideal when the fully-displayed state is tied to the component tree.
 
 ```jsx {17} {tabTitle: <TimeToFullDisplay />}
 import * as Sentry from "@sentry/react-native";
@@ -84,6 +88,19 @@ function MyComponent() {
   );
 }
 ```
+
+### Using the Imperative API
+
+`Sentry.reportFullyDisplayed()` signals TTFD from anywhere in your code — stores, hooks, or callbacks — without needing to be inside the component tree.
+
+```javascript {tabTitle: reportFullyDisplayed()}
+import * as Sentry from "@sentry/react-native";
+
+// Call after your screen's content has fully loaded
+Sentry.reportFullyDisplayed();
+```
+
+If `reportFullyDisplayed()` is called before Time to Initial Display completes, the reported TTFD time is adjusted to match the TTID end time. If it isn't called within the 30-second deadline, the TTFD span is marked as `deadline_exceeded`. Subsequent calls for the same navigation are ignored.
 
 
 ## Notes
