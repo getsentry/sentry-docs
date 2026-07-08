@@ -90,21 +90,22 @@ Relay uses `sentry-conventions` as a **git submodule**. The build script reads t
 
 Snuba uses the **PyPI package**.
 
-1. Bump the dependency using the [`bump-version` workflow](https://github.com/getsentry/snuba/actions/workflows/bump-version.yml) with package `sentry-conventions` and the new version. Self-approval is permitted for simple bumps.
-2. Alternatively, update `pyproject.toml` manually and run `uv lock`.
+1. Run the [`bump-version` workflow](https://github.com/getsentry/snuba/actions/workflows/bump-version.yml) with package `sentry-conventions` and the new version. This creates a PR updating `pyproject.toml` and the lockfile.
+2. Review and merge the PR. Self-approval is permitted for simple bumps.
 
 ### Sentry
 
 Sentry uses the **PyPI package** and may require additional registration for new attributes.
 
-1. Bump the dependency using the [`bump-version` workflow](https://github.com/getsentry/sentry/actions/workflows/bump-version.yml) with package `sentry-conventions` and the new version. This creates a PR that updates `pyproject.toml` and `uv.lock` automatically — self-approval is permitted for simple bumps.
-2. If the new attribute needs to be **queryable** in the UI, add it to:
+1. Run the [`bump-version` workflow](https://github.com/getsentry/sentry/actions/workflows/bump-version.yml) with package `sentry-conventions` and the new version. This creates a PR updating `pyproject.toml` and `uv.lock`.
+2. Review and merge the PR. Self-approval is permitted for simple bumps.
+3. If the new attribute needs to be **queryable** in the UI, add it to:
    - [`SPAN_ATTRIBUTE_DEFINITIONS`](https://github.com/getsentry/sentry/blob/master/src/sentry/search/eap/spans/attributes.py) — maps public aliases to internal names for search resolution
    - [`SPAN_EAP_COLUMN_MAP`](https://github.com/getsentry/sentry/blob/master/src/sentry/utils/snuba.py) — maps public aliases to ClickHouse column names
-3. If the new attribute needs to be **extracted or transformed** from incoming data (e.g. derived server-side, or a deprecation backfill requiring type conversion), add ingestion/normalization logic in the spans consumers.
+4. If the new attribute needs to be **extracted or transformed** from incoming data (e.g. derived server-side, or a deprecation backfill requiring type conversion), add ingestion/normalization logic in the spans consumers.
 
 <Alert>
 
-Most new attributes don't need steps 3-4. They're set by SDKs and flow through as-is. Deprecation backfills with `backfill` or `normalize` status are handled automatically by Relay using the conventions metadata.
+Most new attributes don't need steps 3–4. They're set by SDKs and flow through as-is. Deprecation backfills with `backfill` or `normalize` status are handled automatically by Relay using the conventions metadata.
 
 </Alert>

@@ -107,6 +107,21 @@ SentrySdk.Logger.LogInfo("Level loaded");
 
 ### Godot Logging Integration
 
-When the feature is enabled, the SDK automatically captures Godot messages, warnings, and errors as logs. You can use
-`print()`, `push_warning()`, and `push_error()` as usual. These show up as `info`, `warning`, and `error` logs. The SDK
-also turns runtime errors and warnings into events based on your configuration.
+Godot logger events can also be captured automatically as [Sentry Logs](/product/logs/). The <PlatformLink to="/configuration/options/#godot_logger.log_mask">`godot_logger.log_mask`</PlatformLink> option controls which events are captured — engine errors, script errors, shader errors, warnings, and `print()` output. This mask is empty by default, so no Godot logger events are captured as logs unless you configure it:
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.godot_logger.log_mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_WARNING | SentryOptions.MASK_SCRIPT | SentryOptions.MASK_SHADER | SentryOptions.MASK_MESSAGE
+)
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+	options.GodotLogger.LogMask =
+		GodotLoggerEventMask.Error | GodotLoggerEventMask.Warning | GodotLoggerEventMask.Script | GodotLoggerEventMask.Shader | GodotLoggerEventMask.Message;
+});
+```
+
+These appear as `error`, `warning`, and `info` logs in Sentry. The SDK can also capture the same logger events as
+events and breadcrumbs — see <PlatformLink to="/configuration/options/#godot_logger.event_mask">`godot_logger.event_mask`</PlatformLink> and <PlatformLink to="/configuration/options/#godot_logger.breadcrumb_mask">`godot_logger.breadcrumb_mask`</PlatformLink>.
