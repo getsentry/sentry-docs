@@ -1,6 +1,7 @@
 ## Add More Spans to the Transaction/Service Span
 
-In transaction mode, transactions aren't bound to the scope, so the transaction has to be passed manually as a method parameter to attach nested spans. In stream mode, nested spans attach to the active span automatically — no manual passing needed. When creating a nested span, you can choose its name and `sentry.op`.
+- Transaction mode: Transactions aren't bound to the scope, so they have to be passed manually as a method parameter to attach nested spans. Keep in mind that each individual span also needs to be manually finished, and spans are sent together with their parent transaction when the transaction is finished.
+- Stream mode: Nested spans attach to the active span automatically — no manual passing needed. When creating a nested span, you can choose its name and `sentry.op` (see example below). Each span ends automatically when its callback completes, and spans are streamed as they finish.
 
 ```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
@@ -54,5 +55,3 @@ Future<void> processOrderBatch() async {
   );
 }
 ```
-
-In transaction mode, keep in mind that each individual span also needs to be manually finished, and spans are sent together with their parent transaction when the transaction is finished. In stream mode, each span ends automatically when its callback completes, and spans are streamed as they finish.
