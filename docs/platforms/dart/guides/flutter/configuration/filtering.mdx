@@ -36,7 +36,8 @@ When the SDK creates an event or breadcrumb for transmission, that transmission 
 
 Hints are available in two places:
 
-1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
+1. <PlatformIdentifier name="before-send" /> /
+   <PlatformIdentifier name="before-breadcrumb" />
 2. `eventProcessors`
 
 Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
@@ -87,33 +88,37 @@ If used on a platform other than Web, this setting will be ignored.
 
 <PlatformContent includePath="configuration/deny-urls" />
 
-## Filtering Transaction Events
+## Filtering Transactions and Spans
 
-To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
+To prevent certain transactions (or spans in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>) from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" />, <PlatformIdentifier name="before-send-transaction" /> (for transaction mode), or <PlatformIdentifier name="ignore-spans" /> (for stream mode) configuration option. These allow you to provide a function to evaluate the current transaction/service span and drop it if it's not one you want.
+
+You can also use <PlatformIdentifier name="before-send-transaction" /> (for transaction mode) or <PlatformIdentifier name="before-send-span" /> (for stream mode) to modify transaction/span data.
 
 ### Using <PlatformIdentifier name="traces-sampler" />
 
-**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
+**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions/service spans, you must also handle the case of non-filtered transactions/service spans by returning the rate at which you'd like them sampled.
 
-In its simplest form, used just for filtering the transaction, it looks like this:
+In its simplest form, used just for filtering the transaction/service span, it looks like this:
 
 <PlatformContent includePath="performance/traces-sampler-as-filter" />
 
-It also allows you to sample different transactions at different rates.
+It also allows you to sample different transactions/service spans at different rates.
 
-If the transaction currently being processed has a parent transaction (from an upstream service calling this service), the parent (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
+If the transaction or span currently being processed has a parent (from an upstream service calling this service), the parent's (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
 
-Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
+Learn more about <PlatformLink to="/configuration/sampling/">configuring sampling</PlatformLink>.
 
-### Filtering Spans in Stream Mode
+### Using <PlatformIdentifier name="before-send-span" />
 
-<Alert level="warning">
+<Alert>
 
-The options above apply to transactions. In stream mode there are no transactions — use `ignoreSpans` to drop spans and `beforeSendSpan` to modify them. See <PlatformLink to="/tracing/new-spans/#extended-configuration-optional">New Spans</PlatformLink> for details.
+Only available in stream mode.
 
 </Alert>
 
-To drop spans whose name matches a rule, use `ignoreSpans`:
+Use the <PlatformIdentifier name="before-send-span" /> configuration option to modify a span. It runs when each span ends.
+
+If you want to drop spans, use [<PlatformIdentifier name="ignore-spans" />](#using-ignore-spans).
 
 ```dart
 options.ignoreSpans = [
@@ -122,7 +127,17 @@ options.ignoreSpans = [
 ];
 ```
 
-To modify (but not drop) span data before it's sent, use `beforeSendSpan`. It runs when each span ends and can't drop spans:
+See <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> for details.
+
+### Using <PlatformIdentifier name="ignore-spans" />
+
+<Alert>
+
+Only available in stream mode.
+
+</Alert>
+
+You can use the <PlatformIdentifier name="ignore-spans" /> option to filter out spans by name:
 
 ```dart
 options.beforeSendSpan = (span) {

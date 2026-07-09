@@ -225,6 +225,28 @@ By the time <PlatformIdentifier name="beforeSend" /> is executed, all scope data
 
 </SdkOption>
 
+<SdkOption name="beforeSendSpan" type="function" availableSince="9.23.0">
+
+<Alert>
+
+Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
+
+</Alert>
+
+This function is called with a span event object `SentrySpanV2` and can return a modified span object. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
+
+<Expandable title="Examples">
+
+```dart
+options.beforeSendSpan = (span) {
+  span.removeAttribute('http.request.body');
+};
+```
+
+</Expandable>
+
+</SdkOption>
+
 <SdkOption name="beforeBreadcrumb" type="function">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
@@ -254,8 +276,52 @@ A number between `0` and `1`, controlling the percentage chance a given transact
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="tracesSampleRate" /> must be defined to enable tracing.
 
-In stream mode, the sampling context is different: read the span's `name` and `attributes` from `samplingContext.spanContext` instead of the transaction context. See <PlatformLink to="/tracing/new-spans/#sampling-optional">New Spans</PlatformLink>.
+<Alert>
 
+In stream mode, the sampling context is different: read the span's `name` and `attributes` from `samplingContext.spanContext` instead of the transaction context. See <PlatformLink to="/tracing/streamed-spans/#sampling-optional">Streamed Spans</PlatformLink> for details.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="traceLifecycle" type="enum" defaultValue="static" availableSince="9.23.0">
+
+Controls how spans are collected and sent to Sentry.
+
+- In transaction mode (`SentryTraceLifecycle.static`, the default), spans are buffered and sent together as a transaction.
+- In <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink> (`SentryTraceLifecycle.stream`), spans are sent to Sentry in batches as they finish.
+
+</SdkOption>
+
+<SdkOption name="ignoreSpans" type="array" availableSince="9.23.0">
+
+<Alert>
+
+Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
+
+</Alert>
+
+A list of `IgnoreSpanRule`s that drop spans whose name matches a rule (`nameEquals`, `nameStartsWith`, `nameContains`, or `nameEndsWith`). `ignoreSpans` is evaluated at span start, so only the span names available at that point are taken into account. When an ignored span has children, the children are re-parented to the nearest recording ancestor rather than dropped.
+
+| Factory                                  | Matches                           |
+| ---------------------------------------- | --------------------------------- |
+| `IgnoreSpanRule.nameEquals(String)`      | Exact span name                   |
+| `IgnoreSpanRule.nameStartsWith(Pattern)` | Name prefix (String or RegExp)    |
+| `IgnoreSpanRule.nameContains(Pattern)`   | Name substring (String or RegExp) |
+| `IgnoreSpanRule.nameEndsWith(String)`    | Name suffix                       |
+
+<Expandable title="Examples">
+
+```dart
+options.ignoreSpans = [
+  IgnoreSpanRule.nameEquals('health-check'),
+  IgnoreSpanRule.nameStartsWith('internal.'),
+  IgnoreSpanRule.nameContains('metrics'),
+  IgnoreSpanRule.nameEndsWith('.bg'),
+];
+```
+
+</Expandable>
 </SdkOption>
 
 <SdkOption name="tracePropagationTargets" type="array">
@@ -275,32 +341,6 @@ If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace 
 Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` and `baggage` headers for outgoing HTTP requests.
 
 <Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
-
-</SdkOption>
-
-### Stream Mode
-
-<Alert>
-
-Stream mode is opt-in. The classic transaction-based mode (`SentryTraceLifecycle.static`) remains the default. See <PlatformLink to="/tracing/new-spans/">New Spans</PlatformLink> for the full guide.
-
-</Alert>
-
-<SdkOption name="traceLifecycle" type="enum" defaultValue="static" availableSince="9.23.0">
-
-Controls how spans are collected and sent. With `SentryTraceLifecycle.static` (the default), spans are buffered and sent together as a transaction. With `SentryTraceLifecycle.stream`, spans are sent to Sentry as they finish, which removes the 1,000-span limit and makes trace data visible sooner. Stream mode requires the new span APIs (`Sentry.startSpan`).
-
-</SdkOption>
-
-<SdkOption name="beforeSendSpan" type="function" availableSince="9.23.0">
-
-Only used in stream mode. Called when each span ends, receiving a `SentrySpanV2`. Use it to scrub or modify span attributes before the span is sent. Unlike other `beforeSend` callbacks, it can't drop spans — use `ignoreSpans` for that.
-
-</SdkOption>
-
-<SdkOption name="ignoreSpans" type="array" availableSince="9.23.0">
-
-Only used in stream mode. A list of `IgnoreSpanRule`s that drop spans whose name matches a rule (`nameEquals`, `nameStartsWith`, `nameContains`, or `nameEndsWith`). See <PlatformLink to="/tracing/new-spans/#drop-spans">Drop Spans</PlatformLink>.
 
 </SdkOption>
 
