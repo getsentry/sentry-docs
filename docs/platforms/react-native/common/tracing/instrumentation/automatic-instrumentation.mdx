@@ -61,6 +61,117 @@ Sentry's App Start instrumentation aims to be as comprehensive and representativ
 
 </Alert>
 
+### Standalone App Start Tracing
+
+<Alert>
+
+This feature is experimental and available since version `8.17.2`.
+
+</Alert>
+
+By default, the SDK attaches app start data to your first navigation transaction, or to an `App Start` transaction with the `ui.load` operation when no [routing instrumentation](#enable-routing-instrumentation) is used. If no qualifying transaction is created, the app start data can be lost.
+
+With standalone app start tracing enabled, the SDK sends a dedicated `app.start` transaction instead. App starts get their own transaction — decoupled from navigation — which makes them easier to find, sample, and analyze independently, and lets the SDK capture app starts even when no screen transaction is created.
+
+To enable standalone app start tracing:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  _experiments: {
+    enableStandaloneAppStartTracing: true,
+  },
+});
+```
+
+The standalone transaction is named `App Start` and uses the `app.start` operation. The app start duration and type (`cold` or `warm`) are carried as `app.vitals.start` attributes on the transaction, and it includes the same breakdown spans as the attached version (JavaScript bundle execution and native initialization).
+
+<Alert>
+
+Initialize the SDK as early as possible (and [wrap your root component](#wrap-your-root-component)) so the standalone app start transaction can be created and bounded to the app start window. This feature relies on the native app start data, so it is not available on the web.
+
+</Alert>
+
+Standalone app start transactions are named `App Start`, so you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without changing your overall sample rate:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  _experiments: {
+    enableStandaloneAppStartTracing: true,
+  },
+  tracesSampler: (samplingContext) => {
+    if (samplingContext.name === "App Start") {
+      return 1.0;
+    }
+    return 0.1;
+  },
+});
+```
+
+#### Extending the App Launch
+
+<Alert>
+
+Available since version `8.18.0`.
+
+</Alert>
+
+By default, the standalone app start transaction ends when your root component mounts (or when the JavaScript bundle finishes loading if you don't [wrap your root component](#wrap-your-root-component)). If your app performs additional work after that — such as loading remote config, restoring a session, or keeping the splash screen visible — you can extend the app start transaction to include that time by calling `Sentry.extendAppStart()`.
+
+Call `extendAppStart()` right after `Sentry.init()` and before the app start transaction is created (before your root component mounts), so the SDK doesn't automatically finish it. Use `getExtendedAppStartSpan()` to retrieve the extended app start span and add child spans that break down the extended launch period with `Sentry.startInactiveSpan({ parentSpan })`. Call `Sentry.finishExtendedAppStart()` when your app is fully ready. This adds an `Extended App Start` child span covering the time between the two calls.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  _experiments: {
+    enableStandaloneAppStartTracing: true,
+  },
+});
+
+// Call extendAppStart() synchronously, right after init.
+Sentry.extendAppStart();
+
+// Metro doesn't support top-level await, so run the async launch work in a function.
+async function prepareApp() {
+  // Break the extended launch period down into child spans:
+  const parentSpan = Sentry.getExtendedAppStartSpan();
+
+  const configSpan = Sentry.startInactiveSpan({
+    parentSpan,
+    op: "app.init",
+    name: "fetch remote config",
+  });
+  await fetchRemoteConfig();
+  configSpan.end();
+
+  // When your app is fully ready:
+  await Sentry.finishExtendedAppStart();
+}
+
+prepareApp();
+```
+
+<Alert>
+
+`extendAppStart()` must be called after `Sentry.init()` and before the app start transaction is created. If called after the transaction was already created, the SDK logs a warning and ignores the call. Calling it before `Sentry.init()` is also ignored.
+
+`getExtendedAppStartSpan()` returns the extended app start span, or a no-op span if `extendAppStart()` wasn't called, the SDK isn't started, or the app start transaction was already created.
+
+`finishExtendedAppStart()` is a no-op if there is no active extension. It returns a promise you can `await` before `Sentry.flush()` (for example, before a code push or Expo update) to make sure the app start transaction is queued.
+
+If `finishExtendedAppStart()` is never called, the extended app start automatically finishes after 30 seconds. In that case the transaction is still sent, but without an `app.vitals.start` measurement, so a hanging launch never reports a bogus ~30s app start.
+
+These APIs require `enableStandaloneAppStartTracing` to be enabled.
+
+</Alert>
+
 ### Slow and Frozen Frames
 
 Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are slow frames and frozen frames. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
@@ -99,7 +210,7 @@ We track stalls that occur in your React Native app during a transaction and pro
 
 ### Fetch/XML Request Instrumentation
 
-The tracing integration creates a child span for every `XMLHttpRequest` or `fetch` request on the JavaScript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/sentry-basics/tracing/distributed-tracing/).
+The tracing integration creates a child span for every `XMLHttpRequest` or `fetch` request on the JavaScript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/concepts/key-terms/tracing/distributed-tracing/).
 
 ## Configuration Options
 
