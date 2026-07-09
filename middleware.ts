@@ -3533,10 +3533,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/authentication/two-factor-authentication/',
   },
   {
-    from: '/platforms/go/guides/fiber/user-feedback/configuration/',
-    to: '/platforms/go/user-feedback/',
-  },
-  {
     from: '/platforms/javascript/guides/',
     to: '/platforms/javascript/',
   },
