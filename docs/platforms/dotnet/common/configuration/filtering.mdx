@@ -22,6 +22,45 @@ The SDK supports the <PlatformIdentifier name="before-send" /> callback method. 
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/issues/issue-details/breadcrumbs/).
 
+#### Filtering by Unhandled or Terminal Exceptions
+
+When filtering events in <PlatformIdentifier name="before-send" />, you'll often want to treat unhandled exceptions differently from handled ones. For example, you might drop noisy handled exceptions (like network timeouts) while always sending exceptions that went unhandled and crashed your app.
+
+The SDK provides two extension methods on `SentryEvent` to make this decision:
+
+- `IsFromUnhandledException()` returns `true` when the event came from an exception that wasn't caught by your application code, but was instead captured through an unhandled exception hook (such as `AppDomain.UnhandledException`, ASP.NET Core middleware, or another integration).
+- `IsFromTerminalException()` returns `true` only when the unhandled exception caused the application to crash. Some integrations capture unhandled exceptions that don't terminate the process (for example, unobserved task exceptions) and mark them as non-terminal.
+
+```csharp
+options.SetBeforeSend((sentryEvent, hint) =>
+{
+    // Always send unhandled exceptions, even if they'd be filtered below
+    if (sentryEvent.IsFromUnhandledException())
+    {
+        return sentryEvent;
+    }
+
+    // Drop noisy handled exceptions
+    if (sentryEvent.Exception is HttpRequestException)
+    {
+        return null; // Don't send this event to Sentry
+    }
+
+    return sentryEvent;
+});
+```
+
+```fsharp
+options.SetBeforeSend(fun sentryEvent hint ->
+    if sentryEvent.IsFromUnhandledException() then
+        sentryEvent // Always send unhandled exceptions, even if filtered below
+    elif (sentryEvent.Exception :? HttpRequestException) then
+        null // Drop noisy handled exceptions
+    else
+        sentryEvent
+    )
+```
+
 ### Using <PlatformIdentifier name="add-exception-filter" /> and <PlatformIdentifier name="add-exception-filter-for-type" />
 
 The SDK also allows you to provide your own, custom exception filters. These have to inherit from <PlatformIdentifier name="IExceptionFilter" />
