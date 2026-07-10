@@ -203,7 +203,9 @@ The `queryParams` option controls query parameter filtering wherever query strin
 
 Cookies and query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
 
-**When the string can be parsed into individual key-value pairs**, apply the denylist per-key — the same matching rule and terms used for headers apply to cookie names and query param keys. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
+**When the string can be parsed into individual key-value pairs**, apply the denylist per-key.
+
+For cookies: the rules and terms as specified in `cookies` in the `dataCollection` configuration apply to cookie names. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
 
 For example, a `Cookie` header parsed into individual cookies:
 
@@ -212,6 +214,9 @@ http.request.header.cookie.user_session: "[Filtered]"   // matches "session" in 
 http.request.header.cookie.theme: "dark-mode"           // not sensitive — value sent as-is
 http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
 ```
+
+For query parameters: the rules and terms as specified in `queryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is.
+
 
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
 
