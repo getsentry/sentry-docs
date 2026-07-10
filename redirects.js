@@ -1868,6 +1868,10 @@ const userDocsRedirects = [
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
   },
+  {
+    source: '/ai/agent-skills/',
+    destination: '/ai/agent-plugin/',
+  },
   // Redirect MCP and CLI pages to their dedicated sites
   {
     source: '/ai/mcp/',
