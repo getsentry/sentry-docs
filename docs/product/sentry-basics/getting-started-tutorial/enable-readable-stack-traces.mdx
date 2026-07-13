@@ -1,0 +1,130 @@
+---
+title: Enable Readable Stack Traces
+sidebar_order: 6
+description: "Learn how to upload source maps to Sentry so your stack traces show real source code instead of minified output."
+---
+
+<Alert title="Optional step">
+
+You've already set up distributed tracing across your stack in the previous steps. This step and the [next one](/product/sentry-basics/getting-started-tutorial/configure-suspect-commits/) are optional enhancements — worth doing, but not required.
+
+</Alert>
+
+When you ship JavaScript to production, your code is transformed — bundled, minified, and sometimes transpiled — to make it smaller and faster in the browser. That transformation makes stack traces unreadable: instead of the line of code that failed, you see something like `a.b.c at index-J_blQJy.js:1:21834`.
+
+Source maps are the bridge back. They tell Sentry how to map the minified output to your original source. In this step, you'll generate source maps for the frontend app, upload them to Sentry, and trigger another error to see the difference.
+
+{/* TODO: Screenshot showing a minified "before" stack trace next to a readable "after" stack trace. */}
+
+The sample frontend app uses [Vite](https://vite.dev/) as its build tool, and the [Sentry Vite plugin](/platforms/javascript/guides/react/sourcemaps/uploading/vite/) both generates source maps and uploads them as part of your production build.
+
+> Using a different bundler? Use the [Sentry Wizard](/platforms/javascript/sourcemaps/#uploading-source-maps) to configure source maps for webpack, Rollup, esbuild, Next.js, and others, then skip to step 3.
+
+## 1. Install the Sentry Vite Plugin
+
+In the `tracing-tutorial-frontend` project folder, install the plugin as a dev dependency:
+
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/vite-plugin --save-dev
+```
+
+## 2. Add an Auth Token
+
+The plugin needs a Sentry auth token to upload source maps. Auth tokens must stay secret, so store yours in an environment variable and don't commit it.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+## 3. Configure the Plugin
+
+Add `sentryVitePlugin` to `vite.config.js` and turn on source map generation. You can find your `org` slug in your Sentry URL (`https://<organization_slug>.sentry.io/`) or under **Organization Settings**.
+
+```javascript {filename:vite.config.js}
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  build: {
+    sourcemap: true,
+  },
+  plugins: [
+    react(),
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+  server: {
+    port: 3000,
+  },
+});
+```
+
+By default, the plugin deletes the source map files from your build output after uploading them, so they're not served to your users in production.
+
+## 4. Trigger the Error Again
+
+1. Stop your dev server with `Ctrl + C` and create a production build:
+
+   ```bash {tabTitle:npm}
+   npm run build
+   ```
+
+   ```bash {tabTitle:yarn}
+   yarn build
+   ```
+
+   ```bash {tabTitle:pnpm}
+   pnpm build
+   ```
+
+   Look for the `Source Map Upload Report` in the output — it confirms the maps reached Sentry and lists each file by debug ID:
+
+   ```bash
+   > Analyzing 2 sources
+   > Adding source map references
+   > Bundling files for upload
+   > Uploaded files to Sentry
+   > Successfully uploaded source maps to Sentry
+   ```
+
+2. Serve the production build:
+
+   ```bash {tabTitle:npm}
+   npm run preview
+   ```
+
+   ```bash {tabTitle:yarn}
+   yarn preview
+   ```
+
+   ```bash {tabTitle:pnpm}
+   pnpm preview
+   ```
+
+3. Open the app (make sure the backend is still running on `http://localhost:3001`), open your browser's dev console, and perform an "Empty Cache and Hard Reload" so the new build is served. Then trigger the cross-project error again by clicking the **Nonfat Water** button.
+
+4. Go to the **Issues** page in Sentry and open the new issue.
+
+{/* TODO: Arcade walking through the rebuilt error and the un-minified stack trace. */}
+
+The stack trace should now include file names, function names, line numbers, and surrounding source code — the actual code that failed.
+
+{/* TODO: Screenshot of the un-minified stack trace alongside the source code panel. */}
+
+## Next
+
+Now Sentry can show you _where_ in your code an error happened. Next, [Configure Suspect Commits & Stack Trace Linking](/product/sentry-basics/getting-started-tutorial/configure-suspect-commits/) so it can also tell you _who_ likely introduced it and let you jump straight to the line on GitHub.

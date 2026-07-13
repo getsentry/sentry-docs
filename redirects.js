@@ -1219,6 +1219,40 @@ const userDocsRedirects = [
     source: '/product/sentry-basics/concepts/:path*',
     destination: '/concepts/key-terms/:path*',
   },
+  // The distributed-tracing, integrate-frontend, and integrate-backend
+  // tutorials were consolidated into the single getting-started-tutorial.
+  {
+    source: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    destination: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
+  },
+  {
+    source: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    destination: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
+  },
+  {
+    source: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    destination: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
+  },
+  {
+    source: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    destination: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
+  },
+  {
+    source: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    destination: '/product/sentry-basics/getting-started-tutorial/configure-suspect-commits/',
+  },
+  {
+    source: '/product/sentry-basics/integrate-frontend/:path*',
+    destination: '/product/sentry-basics/getting-started-tutorial/',
+  },
+  {
+    source: '/product/sentry-basics/integrate-backend/:path*',
+    destination: '/product/sentry-basics/getting-started-tutorial/',
+  },
+  {
+    source: '/product/sentry-basics/distributed-tracing/:path*',
+    destination: '/product/sentry-basics/getting-started-tutorial/:path*',
+  },
   {
     source: '/security-legal-pii/security/ai-ml-policy/',
     destination: '/security-legal-pii/security/service-data-usage/',
