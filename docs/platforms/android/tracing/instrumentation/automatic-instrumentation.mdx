@@ -195,7 +195,7 @@ SentryAndroid.init(this) { options ->
 }
 ```
 
-Since standalone app start transactions use the `app.start` operation, you can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
+Unlike the `app.start.cold` and `app.start.warm` spans described above, standalone app start tracing uses the `app.start` operation for its transaction. You can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
 
 ```java
 import io.sentry.android.core.SentryAndroid;
@@ -265,7 +265,7 @@ child?.finish()
 Sentry.finishExtendedAppStart()
 ```
 
-Make sure to call `Sentry.finishExtendedAppStart()` once your launch-time work is done. If the extended app start isn't finished within 30 seconds, the SDK finishes the span automatically and drops the app start measurement, so no app start is reported.
+Make sure to call `Sentry.finishExtendedAppStart()` once your launch-time work is done. By default, if the extended app start isn't finished within the 30-second [deadline timeout](/platforms/android/configuration/options/#deadlineTimeout), the SDK finishes the extended span with `DEADLINE_EXCEEDED` and suppresses the cold or warm app start measurement. The standalone `app.start` transaction and its spans are still sent.
 
 If you finish the extended app start before the first frame is drawn (the natural end of the app start), the SDK uses the natural app start end instead, so the reported measurement is never shorter than the actual app start.
 
