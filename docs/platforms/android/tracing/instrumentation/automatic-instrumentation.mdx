@@ -173,7 +173,7 @@ To enable standalone app start tracing, add the following to your `AndroidManife
 
 ```xml {filename:AndroidManifest.xml}
 <application>
-  <meta-data android:name="io.sentry.standalone-app-start-tracing.enable" android:value="true" />
+    <meta-data android:name="io.sentry.standalone-app-start-tracing.enable" android:value="true" />
 </application>
 ```
 
@@ -183,7 +183,7 @@ Or, configure it manually in code:
 import io.sentry.android.core.SentryAndroid;
 
 SentryAndroid.init(this, options -> {
-    options.setEnableStandaloneAppStartTracing(true);
+  options.setEnableStandaloneAppStartTracing(true);
 });
 ```
 
@@ -191,7 +191,7 @@ SentryAndroid.init(this, options -> {
 import io.sentry.android.core.SentryAndroid
 
 SentryAndroid.init(this) { options ->
-    options.isEnableStandaloneAppStartTracing = true
+  options.isEnableStandaloneAppStartTracing = true
 }
 ```
 
@@ -201,13 +201,13 @@ Since standalone app start transactions use the `app.start` operation, you can u
 import io.sentry.android.core.SentryAndroid;
 
 SentryAndroid.init(this, options -> {
-    options.setEnableStandaloneAppStartTracing(true);
-    options.setTracesSampler(context -> {
-        if ("app.start".equals(context.getTransactionContext().getOperation())) {
-            return 1.0;
-        }
-        return 0.1;
-    });
+  options.setEnableStandaloneAppStartTracing(true);
+  options.setTracesSampler(context -> {
+    if ("app.start".equals(context.getTransactionContext().getOperation())) {
+      return 1.0;
+    }
+    return 0.1;
+  });
 });
 ```
 
@@ -216,24 +216,20 @@ import io.sentry.SentryOptions.TracesSamplerCallback
 import io.sentry.android.core.SentryAndroid
 
 SentryAndroid.init(this) { options ->
-    options.isEnableStandaloneAppStartTracing = true
-    options.tracesSampler = TracesSamplerCallback { context ->
-        if (context.transactionContext.operation == "app.start") {
-            1.0
-        } else {
-            0.1
-        }
+  options.isEnableStandaloneAppStartTracing = true
+  options.tracesSampler = TracesSamplerCallback { context ->
+    if (context.transactionContext.operation == "app.start") {
+      1.0
+    } else {
+      0.1
     }
+  }
 }
 ```
 
 #### Extending the App Start
 
-<Alert>
-
-Available since version `8.48.0`.
-
-</Alert>
+_(New in version 8.48.0)_
 
 By default, the standalone app start transaction ends when the first frame is drawn. If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `Sentry.extendAppStart()`.
 
@@ -250,7 +246,7 @@ ISpan extendedSpan = Sentry.getExtendedAppStartSpan();
 ISpan child = extendedSpan != null ? extendedSpan.startChild("preload", "Preload resources") : null;
 // ... extra launch-time work ...
 if (child != null) {
-    child.finish();
+  child.finish();
 }
 
 Sentry.finishExtendedAppStart();
