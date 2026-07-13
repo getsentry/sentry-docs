@@ -235,7 +235,7 @@ By default, the standalone app start transaction ends when the first frame is dr
 
 Call `Sentry.extendAppStart()` in `Application.onCreate`, after the SDK is initialized, so the SDK doesn't automatically finish the app start transaction when the first frame is drawn. With automatic initialization, the SDK is ready before `Application.onCreate` runs. If you initialize the SDK manually, call `SentryAndroid.init()` before `Sentry.extendAppStart()`.
 
-Retrieve the extended app start span with `Sentry.getExtendedAppStartSpan()` to optionally add child spans that break down the extended launch period. Perform your launch-time work, finish any child spans, and finish the extended app start when your app is fully ready.
+Optionally, retrieve the extended app start span with `Sentry.getExtendedAppStartSpan()` to add child spans that break down the extended launch period. Perform your launch-time work, finish any child spans, and call `Sentry.finishExtendedAppStart()` when your app is fully ready.
 
 ```java {filename:MyApplication.java}
 import android.app.Application;
@@ -262,9 +262,7 @@ public final class MyApplication extends Application {
       child.finish();
     }
 
-    if (extendedSpan != null) {
-      extendedSpan.finish();
-    }
+    Sentry.finishExtendedAppStart();
   }
 }
 ```
@@ -287,12 +285,12 @@ class MyApplication : Application() {
 
     child?.finish()
 
-    extendedSpan?.finish()
+    Sentry.finishExtendedAppStart()
   }
 }
 ```
 
-These examples finish the extended app start by calling `finish()` on the span returned by `Sentry.getExtendedAppStartSpan()`. Alternatively, call `Sentry.finishExtendedAppStart()` if you don't need the span reference. Both methods finish the same extension, so use only one.
+These examples use `Sentry.finishExtendedAppStart()` to finish the extended app start. Alternatively, if you retrieved the extended span, you can call `finish()` on it directly. Both methods finish the same extension, so use only one.
 
 Finish any child spans first, then finish the extended app start once your launch-time work is done. By default, if the extended app start isn't finished within the 30-second [deadline timeout](/platforms/android/configuration/options/#deadlineTimeout), the SDK finishes the extended span with `DEADLINE_EXCEEDED` and suppresses the cold or warm app start measurement. The standalone `app.start` transaction and its spans are still sent.
 
