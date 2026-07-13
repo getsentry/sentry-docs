@@ -1,0 +1,172 @@
+---
+title: Expo Router
+description: "Learn how to use Sentry's Expo Router instrumentation."
+sidebar_order: 65
+---
+
+Sentry's React Native SDK ships first-class instrumentation for [Expo Router](https://docs.expo.dev/router/introduction/): navigation transactions with route context, prefetch and method spans, and per-route render-error capture. This page walks through the canonical setup and the surfaces it covers.
+
+## Initialization
+
+Add `expoRouterIntegration` to your `Sentry.init` integrations. No `useNavigationContainerRef` wiring is required — the integration reads Expo Router's internal navigation ref for you.
+
+```javascript {filename: app/_layout.tsx} {7}
+import { isRunningInExpoGo } from 'expo';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.expoRouterIntegration({
+    enableTimeToInitialDisplay: !isRunningInExpoGo(),
+  })],
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+});
+```
+
+That's the whole setup. You don't need to add `reactNavigationIntegration` separately or call `registerNavigationContainer` — `expoRouterIntegration` resolves Expo Router's navigation container and configures route reporting on your behalf. If you already use `reactNavigationIntegration` directly, `expoRouterIntegration` will reuse it.
+
+<Alert level="info">
+
+`expoRouterIntegration` requires Expo Router to be installed in your project. On non-Expo-Router projects it no-ops cleanly.
+
+</Alert>
+
+## Options
+
+`expoRouterIntegration` accepts the same options as [`reactNavigationIntegration`](/platforms/react-native/guides/expo/tracing/instrumentation/react-navigation/#options) and forwards them through. The most common ones:
+
+### `enableTimeToInitialDisplay`
+
+Enables automatic [Time to Initial Display](/platforms/react-native/guides/expo/tracing/instrumentation/time-to-display) measurement for each navigation. Not supported in Expo Go. Default: `false`.
+
+### `routeChangeTimeoutMs`
+
+How long the instrumentation waits for the destination route to mount before discarding the navigation transaction. Default: `1000`.
+
+### `ignoreEmptyBackNavigationTransactions`
+
+Drops back-navigation transactions that have no spans, which removes a lot of empty-transaction clutter in Sentry. Default: `true`.
+
+### `enablePrefetchTracking`
+
+Creates a separate span for `PRELOAD` actions so you can see prefetch timing alongside navigation. Especially useful with Expo Router's `router.prefetch()`. Default: `false`.
+
+## Route and Parameter Attributes
+
+The integration attaches a structured representation of the active route to every navigation transaction:
+
+| Attribute             | Example              | PII-gated |
+|-----------------------|----------------------|-----------|
+| `route.name`          | `/users/[id]`        | No — templated, structural |
+| `route.path`          | `/users/42`          | Yes — concrete, may contain identifiers |
+| `route.params`        | `{ id: '42' }`       | Yes |
+
+`route.name` is built from Expo Router's `segments`, with grouping segments (e.g. `(tabs)`, `(auth)`) stripped so it matches what users see in the URL bar. It's always safe to send.
+
+`route.path` and `route.params` may contain user identifiers, so they're sent **only when [`sendDefaultPii`](/platforms/react-native/guides/expo/configuration/options/#sendDefaultPii) is `true`**. Without `sendDefaultPii`, only the templated `route.name` is attached, so navigations are still groupable in Sentry without leaking concrete IDs.
+
+## Wrapped Router Methods
+
+`Sentry.wrapExpoRouter` instruments the imperative router methods returned by `useRouter()`. Each wrapped call emits a navigation breadcrumb, opens a short-lived span around the dispatch, and tags the next idle navigation span with the initiating method so the navigation transaction can be attributed back to the call site.
+
+```javascript {filename: app/(tabs)/index.tsx}
+import { useRouter } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
+
+function HomeScreen() {
+  const router = Sentry.wrapExpoRouter(useRouter());
+
+  return (
+    <>
+      <Button title="Open profile" onPress={() => router.push('/users/42')} />
+      <Button title="Prefetch details" onPress={() => router.prefetch('/details')} />
+    </>
+  );
+}
+```
+
+Wraps `push`, `replace`, `navigate`, `back`, `dismiss`, and `prefetch`. The wrapper is idempotent — calling `wrapExpoRouter` on an already-wrapped router is a no-op.
+
+### Prefetch Instrumentation
+
+<Alert level="info">
+
+`router.prefetch()` requires **Expo Router v5 (Expo SDK 53) or later**. On older versions the method does not exist; calling it will throw a runtime error.
+
+</Alert>
+
+`router.prefetch()` preloads a route before the user navigates to it. By default these calls are invisible in traces. The wrapped router adds a `navigation.prefetch` span named `Prefetch /details` (or `Prefetch unknown` for unresolvable hrefs) with `route.href` and `route.name` attributes.
+
+## Capturing Errors From Expo Router's `ErrorBoundary`
+
+Expo Router supports a per-route [`ErrorBoundary`](https://docs.expo.dev/router/error-handling/) export that renders a fallback when a route's component subtree throws during render. The most common shape is:
+
+```tsx {filename: app/_layout.tsx}
+export { ErrorBoundary } from 'expo-router';
+```
+
+Because React considers the error handled once the boundary renders the fallback, **Sentry never sees the error** unless the SDK is wired into the boundary. The React Native SDK provides two ways to do that.
+
+### Automatic Wrapping (Recommended)
+
+If you use `getSentryExpoConfig` in your `metro.config.js`, the SDK can auto-wrap `export { ErrorBoundary } from 'expo-router'` re-exports at build time. This is opt-in — enable it with `autoWrapExpoRouterErrorBoundary: true` (requires SDK `8.17.2` or later):
+
+```javascript {filename: metro.config.js}
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
+
+module.exports = getSentryExpoConfig(__dirname, {
+  autoWrapExpoRouterErrorBoundary: true,
+});
+```
+
+For non-Expo Metro setups (`withSentryConfig`), the option is off by default but available:
+
+```javascript {filename: metro.config.js}
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+module.exports = withSentryConfig(config, {
+  autoWrapExpoRouterErrorBoundary: true,
+});
+```
+
+### Manual Wrapping
+
+If you'd rather not rely on the Babel transform, wrap the boundary yourself with `Sentry.wrapExpoRouterErrorBoundary`:
+
+```tsx {filename: app/_layout.tsx}
+import { ErrorBoundary as ExpoErrorBoundary } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
+
+export const ErrorBoundary = Sentry.wrapExpoRouterErrorBoundary(ExpoErrorBoundary);
+```
+
+You can also pass your own custom boundary component — anything matching `{ error: Error; retry: () => Promise<void> }` works:
+
+```tsx {filename: app/_layout.tsx}
+import * as Sentry from '@sentry/react-native';
+
+function MyErrorBoundary({ error, retry }) {
+  return /* your fallback UI */;
+}
+
+export const ErrorBoundary = Sentry.wrapExpoRouterErrorBoundary(MyErrorBoundary);
+```
+
+### What Gets Captured
+
+For each new error instance that hits the boundary, the wrapper:
+
+- **Captures the error to Sentry** with the route attached as context (`route.name`, `route.path` if `sendDefaultPii`, `route.params` if `sendDefaultPii`, and `route.segments`).
+- **Tags the in-flight navigation transaction as errored** so the broken render shows up as a failed transaction. Only navigation-origin spans are touched — user-started custom spans are left alone.
+- **Adds a breadcrumb** under the `expo-router.error_boundary` category describing the boundary render.
+- **Tags the exception** with the `expo_router_error_boundary` mechanism so you can filter on it.
+
+Then control is handed to the original boundary so the user-visible fallback UI is unchanged.
+
+Reporting is deduplicated per error instance (across re-renders and unmount/remount cycles), and the boundary always renders the fallback even if Sentry instrumentation itself throws.
+
+## Notes
+
+- Slow and Frozen frames, Time To Initial Display, and Time To Full Display are only available in native builds, not in Expo Go.
+- `expoRouterIntegration` reads Expo Router's internal `router-store` module. The integration logs a warning and no-ops if the installed Expo Router version doesn't expose the expected shape.

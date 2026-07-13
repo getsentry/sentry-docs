@@ -12,6 +12,11 @@ import type {ExternalSidebarLink} from './types';
 const SECTION_LABELS: Record<string, string> = {
   features: 'Features',
   configuration: 'Configuration',
+  detect: 'Detect',
+  debug: 'Debug',
+  measure: 'Measure',
+  automate: 'Automate',
+  platform: 'Platform',
 };
 
 // Section links configuration - sections that should be clickable headers
@@ -19,7 +24,15 @@ const SECTION_LINKS: Record<string, string> = {
   features: 'features',
 };
 
-const SECTION_ORDER = ['features', 'configuration'] as const;
+const SECTION_ORDER = [
+  'features',
+  'configuration',
+  'detect',
+  'debug',
+  'measure',
+  'automate',
+  'platform',
+] as const;
 
 type Node = {
   [key: string]: any;
@@ -31,7 +44,14 @@ type Node = {
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
-    sidebar_section?: 'features' | 'configuration';
+    sidebar_section?:
+      | 'features'
+      | 'configuration'
+      | 'detect'
+      | 'debug'
+      | 'measure'
+      | 'automate'
+      | 'platform';
     sidebar_title?: string;
     title?: string;
   };

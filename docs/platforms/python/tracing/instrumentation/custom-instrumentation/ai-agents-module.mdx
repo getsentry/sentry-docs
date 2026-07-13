@@ -6,7 +6,7 @@ description: "Learn how to manually instrument your code to use Sentry's Agents 
 
 With <Link to="/ai/monitoring/agents/dashboards/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
 
-<AgentSkillsCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
+<AgentSetupCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
 
 As a prerequisite to setting up AI Agent Monitoring with Python, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument AI agents created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
 
@@ -171,27 +171,6 @@ with sentry_sdk.start_span(op="gen_ai.execute_tool", name="execute_tool get_weat
     span.set_data("gen_ai.tool.call.result", json.dumps(result))
 ```
 
-### Handoff Span
-
-This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
-
-<Expandable title="Handoff span attributes">
-  <Include name="tracing/ai-agents-module/handoff-span" />
-</Expandable>
-
-#### Example of a Handoff Span
-
-```python
-import sentry_sdk
-
-with sentry_sdk.start_span(op="gen_ai.handoff", name="handoff from Weather Agent to Travel Agent"):
-    pass  # Handoff span just marks the transition
-
-with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel Agent"):
-    # Run the target agent here
-    pass
-```
-
 ## Tracking Conversations
 
 <Alert>
@@ -227,8 +206,16 @@ response = openai.responses.create(
 )
 ```
 
-## Common Span Attributes
+## Identifying Users in Conversations
 
-<Include name="tracing/ai-agents-module/common-span-attributes" />
+The [Conversations](/ai/monitoring/conversations/) view includes a **User** column. To populate it, call `sentry_sdk.set_user` once per request or session, before any AI calls:
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present.
 
 <Include name="tracing/ai-agents-module/token-cost-gotchas" />

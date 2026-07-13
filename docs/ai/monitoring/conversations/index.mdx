@@ -12,6 +12,8 @@ keywords:
   - gen_ai.conversation.id
   - conversation tracking
   - LLM conversations
+  - setUser
+  - user attribution
 ---
 
 <Alert>
@@ -42,11 +44,40 @@ Some SDK integrations (such as OpenAI Agents SDK for Python and OpenAI SDK for N
 - [Python](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#tracking-conversations)
 - [Laravel](/platforms/php/guides/laravel/ai-monitoring/#conversations)
 
+### Choosing a Conversation ID
+
+Use a short, opaque identifier — alphanumeric characters with dashes or underscores only. Don't use a URL, email address, or other free-form text as the conversation ID.
+
+Good examples:
+
+- A UUID: `48e35936-82ab-4f1a-beaf-b2fa4273ac5e`
+- A prefixed ID: `conv_5j66UpCpwteGg4YSxUnt7lPYU`, `asst_abc12345`, `sess_987654`
+
 ### Conversations and Traces
 
 Conversations and traces are independent concepts. A single conversation can span multiple traces. For example, if a user refreshes the page mid-conversation, the browser starts a new trace, but the conversation continues with the same ID.
 
 The reverse is also true: a single trace can contain spans from different conversations. For example, if a user starts a new chat session without refreshing the page, the new conversation's spans appear in the same trace as the previous one.
+
+## User Attribution
+
+The Conversations view includes a **User** column that shows which user initiated each conversation. To populate it, call `setUser` (JavaScript) or `set_user` (Python) once per request or session, before any AI calls:
+
+```javascript
+// JavaScript / Node.js
+import * as Sentry from "@sentry/node";
+
+Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+```
+
+```python
+# Python
+import sentry_sdk
+
+sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
+```
+
+Any of `id`, `email`, or `username` is sufficient. If no user is set, the column displays "Unknown".
 
 ## Conversations List
 
@@ -56,6 +87,7 @@ The [Conversations](https://sentry.io/orgredirect/organizations/:orgslug/explore
 
 Each row in the list displays:
 
+- **User** — the user who initiated the conversation, populated by `setUser` / `set_user`
 - **First input** — the first user message in the conversation
 - **Last output** — the most recent assistant response
 - **Cost** — estimated dollar cost and token usage

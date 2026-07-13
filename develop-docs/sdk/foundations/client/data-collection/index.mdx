@@ -2,12 +2,21 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.4.0
+spec_version: 0.7.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.7.0
+    date: 2026-07-08
+    summary: Include configuration for queue/tasks data. Modify database config to accept a boolean value instead of a map of key/values. Update name of `graphql` to `graphQL`
+  - version: 0.6.0
+    date: 2026-06-29
+    summary: Include configuration for database queries.
+  - version: 0.5.0
+    date: 2026-06-26
+    summary: Include configuration options for controlling the inclusion of graphql documents and variables.
   - version: 0.4.0
     date: 2026-06-12
     summary: Added documentation requirements for default behavior and setup snippet opt-out comment with link to full dataCollection docs.
@@ -70,7 +79,8 @@ Personally Identifiable Information (PII) or user-linked data. Examples include,
 - Contact (email, phone number, address)
 - IP address
 - Cookies and headers that identify the user or session
-- HTTP request data (TBD)
+- HTTP request data or database query parameters (TBD)
+- Arguments passed to tasks within a queue
 
 For context types that may carry PII fields (e.g. `device_unique_identifier` in [Device Context](/sdk/foundations/transport/event-payloads/contexts/#device-context), or fields in the [User Interface](/sdk/foundations/transport/event-payloads/user/)), see the linked specs.
 
@@ -193,7 +203,9 @@ The `queryParams` option controls query parameter filtering wherever query strin
 
 Cookies and query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
 
-**When the string can be parsed into individual key-value pairs**, apply the denylist per-key — the same matching rule and terms used for headers apply to cookie names and query param keys. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
+**When the string can be parsed into individual key-value pairs**, apply the denylist per-key.
+
+For cookies: the rules and terms as specified in `cookies` in the `dataCollection` configuration apply to cookie names. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
 
 For example, a `Cookie` header parsed into individual cookies:
 
@@ -202,6 +214,9 @@ http.request.header.cookie.user_session: "[Filtered]"   // matches "session" in 
 http.request.header.cookie.theme: "dark-mode"           // not sensitive — value sent as-is
 http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
 ```
+
+For query parameters: the rules and terms as specified in `queryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is.
+
 
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
 
@@ -526,10 +541,16 @@ init({
     },
     httpBodies?: string[],                         // default: all valid body types
     queryParams?: KeyValueCollectionBehavior,      // default: { mode: "denyList" }
-    genAI?: {
-      inputs?: boolean                              // default: true
-      outputs?: boolean                             // default: true
+    graphQL?: {
+      document?: boolean,                          // default: true
+      variables?: boolean,                         // default: true
     },
+    genAI?: {
+      inputs?: boolean,                              // default: true
+      outputs?: boolean,                             // default: true
+    },
+    databaseQueryData?: boolean,                     // default: true
+    queues?: boolean,                               // default: true
     stackFrameVariables?: boolean,                 // default: true
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
   },
@@ -543,7 +564,10 @@ init({
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
 | `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
 | `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
+| `graphQL` | `{ document?, variables? }` | Both `true` | 0.5.0 | For `document`: Collect the GraphQL document. <br /><br /> For `variables`: Collect the variables that are passed to GraphQL operations. |
 | `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
+| `databaseQueryData` | Boolean | `true` | 0.6.0 | Include data that's associated with database queries. This can include parameters provided to a query, statement values, or the returned results of a query.<br /><br />Structural metadata such as the database system, a query summary, or the table being acted upon in the operation are **not** controlled by this property, and are **always** collected. |
+| `queues` | Boolean | `true` | 0.7.0 | Include arguments passed to tasks within queues. |
 | `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
@@ -639,10 +663,16 @@ init({
   dataCollection: {
     userInfo: false,
     httpBodies: [],
+    graphQL: {
+      document: false,
+      variables: false,
+    },
     genAI: {
       inputs: false,
       outputs: false,
     },
+    databaseQueryData: false,
+    queues: false,
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
