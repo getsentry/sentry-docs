@@ -233,36 +233,56 @@ _(New in version 8.48.0)_
 
 By default, the standalone app start transaction ends when the first frame is drawn. If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `Sentry.extendAppStart()`.
 
-Call `Sentry.extendAppStart()` in `Application.onCreate`, after the SDK is initialized, so the SDK doesn't automatically finish the app start transaction when the first frame is drawn. Retrieve the extended app start span with `Sentry.getExtendedAppStartSpan()` to add child spans that break down the extended launch period, and call `Sentry.finishExtendedAppStart()` when your app is fully ready.
+Call `Sentry.extendAppStart()` in `Application.onCreate`, after the SDK is initialized, so the SDK doesn't automatically finish the app start transaction when the first frame is drawn. With automatic initialization, the SDK is ready before `Application.onCreate` runs. If you initialize the SDK manually, call `SentryAndroid.init()` before `Sentry.extendAppStart()`.
 
-```java
+Retrieve the extended app start span with `Sentry.getExtendedAppStartSpan()` to add child spans that break down the extended launch period, and call `Sentry.finishExtendedAppStart()` when your app is fully ready.
+
+```java {filename:MyApplication.java}
+import android.app.Application;
 import io.sentry.ISpan;
 import io.sentry.Sentry;
 
-Sentry.extendAppStart();
+public final class MyApplication extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
 
-// Optionally, retrieve the extended app start span to attach your own child spans
-ISpan extendedSpan = Sentry.getExtendedAppStartSpan();
-ISpan child = extendedSpan != null ? extendedSpan.startChild("preload", "Preload resources") : null;
-// ... extra launch-time work ...
-if (child != null) {
-  child.finish();
+    Sentry.extendAppStart();
+
+    // Optionally, retrieve the extended app start span to attach your own child spans
+    ISpan extendedSpan = Sentry.getExtendedAppStartSpan();
+    ISpan child =
+        extendedSpan != null
+            ? extendedSpan.startChild("preload", "Preload resources")
+            : null;
+    // ... extra launch-time work ...
+    if (child != null) {
+      child.finish();
+    }
+
+    Sentry.finishExtendedAppStart();
+  }
 }
-
-Sentry.finishExtendedAppStart();
 ```
 
-```kotlin
+```kotlin {filename:MyApplication.kt}
+import android.app.Application
 import io.sentry.Sentry
 
-Sentry.extendAppStart()
+class MyApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
 
-// Optionally, retrieve the extended app start span to attach your own child spans
-val child = Sentry.getExtendedAppStartSpan()?.startChild("preload", "Preload resources")
-// ... extra launch-time work ...
-child?.finish()
+    Sentry.extendAppStart()
 
-Sentry.finishExtendedAppStart()
+    // Optionally, retrieve the extended app start span to attach your own child spans
+    val child = Sentry.getExtendedAppStartSpan()?.startChild("preload", "Preload resources")
+    // ... extra launch-time work ...
+    child?.finish()
+
+    Sentry.finishExtendedAppStart()
+  }
+}
 ```
 
 Make sure to call `Sentry.finishExtendedAppStart()` once your launch-time work is done. By default, if the extended app start isn't finished within the 30-second [deadline timeout](/platforms/android/configuration/options/#deadlineTimeout), the SDK finishes the extended span with `DEADLINE_EXCEEDED` and suppresses the cold or warm app start measurement. The standalone `app.start` transaction and its spans are still sent.
