@@ -68,11 +68,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
-            const lintResultJsonString = ${{ toJSON(steps.lint.outputs.lint_result) }};
+            const lintResultRaw = ${{ toJSON(steps.lint.outputs.lint_result) }};
             let lintResult;
             try {
-              const jsonString = JSON.parse(lintResultJsonString);
-              lintResult = JSON.parse(jsonString);
+              lintResult = typeof lintResultRaw === 'string' ? JSON.parse(lintResultRaw) : lintResultRaw;
             } catch (e) {
               console.error('Failed to parse lint result:', e);
               core.setFailed('Failed to parse redirect chain lint output');
