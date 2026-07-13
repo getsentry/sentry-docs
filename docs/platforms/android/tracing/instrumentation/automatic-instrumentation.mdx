@@ -262,7 +262,9 @@ public final class MyApplication extends Application {
       child.finish();
     }
 
-    Sentry.finishExtendedAppStart();
+    if (extendedSpan != null) {
+      extendedSpan.finish();
+    }
   }
 }
 ```
@@ -278,18 +280,21 @@ class MyApplication : Application() {
     Sentry.extendAppStart()
 
     // Optionally, retrieve the extended app start span to attach your own child spans
-    val child = Sentry.getExtendedAppStartSpan()?.startChild("preload", "Preload resources")
+    val extendedSpan = Sentry.getExtendedAppStartSpan()
+    val child = extendedSpan?.startChild("preload", "Preload resources")
 
     preloadResources()
 
     child?.finish()
 
-    Sentry.finishExtendedAppStart()
+    extendedSpan?.finish()
   }
 }
 ```
 
-Make sure to call `Sentry.finishExtendedAppStart()` once your launch-time work is done. By default, if the extended app start isn't finished within the 30-second [deadline timeout](/platforms/android/configuration/options/#deadlineTimeout), the SDK finishes the extended span with `DEADLINE_EXCEEDED` and suppresses the cold or warm app start measurement. The standalone `app.start` transaction and its spans are still sent.
+These examples finish the extended app start by calling `finish()` on the span returned by `Sentry.getExtendedAppStartSpan()`. Alternatively, call `Sentry.finishExtendedAppStart()` if you don't need the span reference. Both methods finish the same extension, so use only one.
+
+Finish any child spans first, then finish the extended app start once your launch-time work is done. By default, if the extended app start isn't finished within the 30-second [deadline timeout](/platforms/android/configuration/options/#deadlineTimeout), the SDK finishes the extended span with `DEADLINE_EXCEEDED` and suppresses the cold or warm app start measurement. The standalone `app.start` transaction and its spans are still sent.
 
 If you finish the extended app start before the first frame is drawn (the natural end of the app start), the SDK uses the natural app start end instead, so the reported measurement is never shorter than the actual app start.
 
