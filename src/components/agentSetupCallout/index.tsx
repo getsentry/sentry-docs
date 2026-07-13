@@ -8,8 +8,7 @@ import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 import {CodeBlock} from '../codeBlock';
-import {CodeTabs} from '../codeTabs';
-import {buildDotagentsCommand, buildNpxSkillsCommand, buildPrompt} from './shared';
+import {buildPrompt} from './shared';
 import styles from './style.module.scss';
 
 type Props = {
@@ -19,12 +18,12 @@ type Props = {
   skill?: string;
 };
 
-export function AgentSkillsCallout({skill, platformName}: Props) {
+export function AgentSetupCallout({skill, platformName}: Props) {
   const [copied, setCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const {emit} = usePlausibleEvent();
 
-  const prompt = buildPrompt(skill);
+  const prompt = buildPrompt(platformName);
 
   const copyPrompt = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -32,7 +31,7 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
       event.preventDefault();
 
       emit('Copy AI Prompt', {
-        props: {page: window.location.pathname, title: 'Agent Skills Callout'},
+        props: {page: window.location.pathname, title: 'Agent Setup Callout'},
       });
 
       try {
@@ -73,7 +72,7 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
         <span className={styles.description}>
           {description} Works with Cursor, Claude Code, Codex, and more.
         </span>
-        <Link href="/ai/agent-skills/" className={styles.viewDocs}>
+        <Link href="/ai/agent-plugin/" className={styles.viewDocs}>
           View docs ↗
         </Link>
       </div>
@@ -89,25 +88,18 @@ export function AgentSkillsCallout({skill, platformName}: Props) {
           ) : (
             <ChevronRightIcon className={styles.expandIcon} />
           )}
-          <span>Install the full skills package</span>
+          <span>Install the full plugin</span>
         </summary>
         <div className={styles.expandBody}>
           <p>
-            Run this in your project to add Sentry agent skills. See the{' '}
-            <Link href="/ai/agent-skills/">installation docs</Link> for more details.
+            Install the Sentry plugin to give your assistant every skill. See the{' '}
+            <Link href="/ai/agent-plugin/">installation docs</Link> for more details.
           </p>
-          <CodeTabs>
-            <CodeBlock language="bash" title="dotagents">
-              <pre className="language-bash">
-                <code>{buildDotagentsCommand(skill)}</code>
-              </pre>
-            </CodeBlock>
-            <CodeBlock language="bash" title="npx skills">
-              <pre className="language-bash">
-                <code>{buildNpxSkillsCommand(skill)}</code>
-              </pre>
-            </CodeBlock>
-          </CodeTabs>
+          <CodeBlock language="bash">
+            <pre className="language-bash">
+              <code>npx @sentry/ai install</code>
+            </pre>
+          </CodeBlock>
         </div>
       </details>
     </div>
