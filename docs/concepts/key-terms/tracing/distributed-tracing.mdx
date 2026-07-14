@@ -20,10 +20,10 @@ Distributed tracing provides a connected view of your application from frontend 
 
 A tracing tool focuses on what happened (and when), logging events during a program's execution across multiple systems. Traces often include timestamps, allowing durations to be calculated, but their purpose is broader, showing how interconnected systems interact and how problems in one can affect another. While tracing can be useful if instrumented in just the frontend or backend, it's most powerful when set up for your full stack (distributed tracing).
 
-It's important to note that tracing is not [profiling](/product/explore/profiling/). A profiler measures various aspects of an application's operation, resulting in a statistical summary. While both diagnose application problems, they differ in what they measure and how data is recorded.
+It's important to note that tracing is not [profiling](/product/profiling/). A profiler measures various aspects of an application's operation, resulting in a statistical summary. While both diagnose application problems, they differ in what they measure and how data is recorded.
 
 
-Learn more in our [tracing documentation](/product/sentry-basics/tracing/).
+Learn more in our [tracing documentation](/concepts/key-terms/tracing/).
 
 ### The Tracing Data Model
 
@@ -34,6 +34,12 @@ Ultimately, any data structure is defined by the kind of data it contains, and r
 Traces are defined as the collection of all transactions that share a `trace_id` value.
 
 #### Transactions
+
+<Alert level="info">
+
+Transactions are a legacy data model concept. Sentry's newer span-based model represents all operations as spans; the root span of a trace replaces what was previously called a transaction. When working with Sentry's current tools, use [Trace Explorer](/product/trace-explorer/) and the [Spans](/product/dashboards/widget-builder/#spans) dataset.
+
+</Alert>
 
 Transactions share most properties (start and end time, tags, and so on) with their root spans. They also have a `transaction_name` property, used in the UI to identify the transaction. Common examples include endpoint paths for backend request transactions, task names for cron job transactions, and URLs for page-load transactions.
 
@@ -211,7 +217,13 @@ Collecting transactions from multiple machines may result in **clock skew**, whe
 
 #### How Data is Sent
 
-Individual spans aren't sent to Sentry; the entire transaction is sent as one unit. No span data is recorded by Sentry's servers until the transaction is closed and dispatched. Transactions are still valid and sent even if they only contain their root span.
+<Alert level="info">
+
+In Sentry's current span-based SDKs, individual spans are sent directly to Sentry as they complete, without waiting for a parent transaction to close. The description below applies to the legacy transaction-based model.
+
+</Alert>
+
+In the legacy model, individual spans aren't sent to Sentry; the entire transaction is sent as one unit. No span data is recorded by Sentry's servers until the transaction is closed and dispatched. Transactions are still valid and sent even if they only contain their root span.
 
 ## Data Sampling
 
@@ -229,6 +241,6 @@ Dynamic sampling ensures complete traces by retaining all transactions associate
 
 ## Viewing Trace Data
 
-Use the [Trace Explorer](/product/explore/traces/) to search for traces containing spans that meet your specific query conditions. This helps you find distributed traces that give you a connected view of your application and can help you debug and optimize your code.
+Use the [Trace Explorer](/product/trace-explorer/) to search for traces containing spans that meet your specific query conditions. This helps you find distributed traces that give you a connected view of your application and can help you debug and optimize your code.
 
-Through [Performance](/product/dashboards/sentry-dashboards/) and [Discover](/product/explore/discover-queries/), you can also view trace data in the [Trace View](/concepts/key-terms/tracing/trace-view/) page.
+Through [Performance](/product/dashboards/sentry-dashboards/) and [Discover](/product/discover-queries/), you can also view trace data in the [Trace View](/concepts/key-terms/tracing/trace-view/) page.

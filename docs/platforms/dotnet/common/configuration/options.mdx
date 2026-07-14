@@ -18,7 +18,7 @@ The DSN tells the SDK where to send the events. If this value is not provided, t
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -206,6 +206,30 @@ This parameter controls whether integrations should capture HTTP request bodies.
 
 </PlatformSection>
 
+<PlatformSection supported={["dotnet.aspnetcore"]}>
+
+<SdkOption name="TransactionNameProvider" type="function">
+
+A callback used to name transactions for requests that the routing system doesn't resolve to a route template (for example, requests that don't match any endpoint). It receives the current `HttpContext` and returns the route portion of the name; Sentry prepends the uppercased HTTP method, so returning `orders/list` produces a transaction named `GET orders/list`. Return `null` or `string.Empty` to fall back to the URL path.
+
+```csharp
+options.TransactionNameProvider = context => context.Request.Path;
+```
+
+By default the provider is only invoked as a fallback for unresolved routes. To have it run on every request, enable <PlatformIdentifier name="PreferTransactionNameProvider" />.
+
+</SdkOption>
+
+<SdkOption name="PreferTransactionNameProvider" type="bool" defaultValue="false" availableSince="6.7.0">
+
+Controls when <PlatformIdentifier name="TransactionNameProvider" /> is invoked.
+
+When `false` (the default), the provider only runs as a fallback for requests whose route can't be resolved to a template. When `true`, the provider runs on every request after routing, and a non-empty return value overrides the route-derived transaction name. If the provider returns `null` or `string.Empty`, the routed name is kept (or the URL-path fallback applies when no route was resolved).
+
+</SdkOption>
+
+</PlatformSection>
+
 <PlatformSection supported={["dotnet.xamarin", "dotnet.maui"]}>
 
 <SdkOption name="AttachScreenshot" type="bool" defaultValue="false">
@@ -343,5 +367,15 @@ A function responsible for determining the percentage chance a given transaction
 Disables the `SentryHttpMessageHandler`, which normally instruments outgoing HTTP requests to create spans and propagate trace headers. Set this to `true` when using `OpenTelemetry.Instrumentation.Http` with `AddHttpClientInstrumentation()` to avoid duplicate spans — in that scenario, OpenTelemetry handles HTTP instrumentation and Sentry's handler is not needed. See <PlatformLink to="/tracing/instrumentation/opentelemetry/#usage">OpenTelemetry Support</PlatformLink> for more details.
 
 This option was added in SDK version 5.1.0.
+
+</SdkOption>
+
+<SdkOption name="PropagateTraceparent" type="bool" defaultValue="false" availableSince="6.0.0">
+
+If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing HTTP requests, in addition to the `sentry-trace` and `baggage` headers. Enable this when your backend services are instrumented with a W3C Trace Context compatible library, such as OpenTelemetry, and you want to continue the trace from the client.
+
+The `traceparent` header is only attached to requests whose URLs match `TracePropagationTargets`.
+
+This option was added in SDK version 6.0.0.
 
 </SdkOption>
