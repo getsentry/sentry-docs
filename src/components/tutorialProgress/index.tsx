@@ -30,8 +30,8 @@ export function TutorialProgress({step, total = 5}: TutorialProgressProps) {
           <span className={styles.marker} aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g
-                stroke="currentColor"
-                strokeWidth="1.6"
+                stroke="#2b2240"
+                strokeWidth="2.2"
                 strokeLinecap="round"
               >
                 {/* antennae */}
@@ -46,8 +46,23 @@ export function TutorialProgress({step, total = 5}: TutorialProgressProps) {
                 <path d="M17.4 17 L21.4 19.6" />
               </g>
               {/* head + body */}
-              <circle cx="12" cy="5.4" r="2.4" fill="currentColor" />
-              <ellipse cx="12" cy="13.5" rx="6" ry="7.6" fill="currentColor" />
+              <circle
+                cx="12"
+                cy="5.4"
+                r="2.6"
+                fill="currentColor"
+                stroke="#2b2240"
+                strokeWidth="1.6"
+              />
+              <ellipse
+                cx="12"
+                cy="13.5"
+                rx="6.2"
+                ry="7.8"
+                fill="currentColor"
+                stroke="#2b2240"
+                strokeWidth="1.6"
+              />
             </svg>
           </span>
         </div>
