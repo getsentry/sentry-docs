@@ -1239,7 +1239,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/sentry-basics/integrate-frontend/configure-scms/',
-    destination: '/product/sentry-basics/getting-started-tutorial/configure-suspect-commits/',
+    destination: '/integrations/source-code-mgmt/github/',
   },
   {
     source: '/product/sentry-basics/integrate-frontend/:path*',
