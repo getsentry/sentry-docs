@@ -38,17 +38,32 @@ pnpm add @sentry/vite-plugin --save-dev
 
 ## 2. Add an Auth Token
 
-The plugin needs a Sentry auth token to upload source maps. Auth tokens must stay secret, so store yours in an environment variable and don't commit it.
+To upload source maps, the plugin needs an _auth token_ — a secret key that tells Sentry the upload is coming from you. You'll keep this token in a separate file instead of writing it directly into your code, so it stays private.
 
 <OrgAuthTokenNote />
 
-```bash {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
+The Sentry Vite plugin automatically reads your token from a file named exactly `.env.sentry-build-plugin`. Create that file now:
+
+1. In the **root** of the `tracing-tutorial-frontend` folder (the same folder that contains `package.json`), create a new file named exactly `.env.sentry-build-plugin` — including the leading dot.
+
+1. Add your auth token to the file, replacing `___ORG_AUTH_TOKEN___` with the token you generated above:
+
+   ```bash {filename:.env.sentry-build-plugin}
+   SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+   ```
+
+1. Save the file. The sample project's `.gitignore` already lists `.env.sentry-build-plugin`, so your token won't be committed to git — keep it that way. Auth tokens should never be shared or pushed to a repository.
 
 ## 3. Configure the Plugin
 
-Add `sentryVitePlugin` to `vite.config.js` and turn on source map generation. You can find your `org` slug in your Sentry URL (`https://<organization_slug>.sentry.io/`) or under **Organization Settings**.
+Next, tell the plugin which Sentry **organization** and **project** to upload your source maps to. You'll need two values, both of which are _slugs_ — the short, lowercase names Sentry uses in URLs.
+
+Here's how to find each one in Sentry:
+
+- **Organization slug**: look at your Sentry URL — it's the part right before `.sentry.io`. For example, in `https://acme-inc.sentry.io/`, the organization slug is `acme-inc`. You can also find it under **Settings > General Settings**.
+- **Project slug**: in the left sidebar, go to **Settings > Projects**, then click the **frontend** project you created earlier (not the backend one). The project slug is shown at the top of that project's settings page and in the page's URL.
+
+Now open `vite.config.js` and add `sentryVitePlugin` as shown below, replacing `___ORG_SLUG___` and `___PROJECT_SLUG___` with the two values you just found:
 
 ```javascript {filename:vite.config.js}
 import { defineConfig } from "vite";
@@ -64,7 +79,6 @@ export default defineConfig({
     sentryVitePlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
   server: {
@@ -72,6 +86,12 @@ export default defineConfig({
   },
 });
 ```
+
+<Alert>
+
+Your `org` and `project` here must point to the **same frontend project** as the DSN in `src/main.jsx`. Source maps are matched within a project — if your maps upload to one project but your errors report to another, Sentry won't be able to un-minify them.
+
+</Alert>
 
 By default, the plugin deletes the source map files from your build output after uploading them, so they're not served to your users in production.
 
@@ -121,9 +141,9 @@ By default, the plugin deletes the source map files from your build output after
 
 {/* TODO: Arcade walking through the rebuilt error and the un-minified stack trace. */}
 
-The stack trace should now include file names, function names, line numbers, and surrounding source code — the actual code that failed.
+The stack trace should now include file names, function names, line numbers, and the surrounding source code — the actual code that failed, instead of minified output.
 
-{/* TODO: Screenshot of the un-minified stack trace alongside the source code panel. */}
+![A readable stack trace in Sentry showing the exact file, line number, and source code that threw the error.](img/readable-stack-trace.png)
 
 ## Next
 
