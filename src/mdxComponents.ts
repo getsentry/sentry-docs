@@ -66,6 +66,7 @@ import {
 import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
+import {TutorialProgress} from './components/tutorialProgress';
 import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
@@ -137,6 +138,7 @@ export function mdxComponents(
     StatusBadge,
     StepComponent,
     StepConnector,
+    TutorialProgress,
     VimeoEmbed,
     VersionRequirement,
     a: SmartLink,
