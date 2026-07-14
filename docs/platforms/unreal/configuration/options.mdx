@@ -20,7 +20,7 @@ The DSN tells the SDK where to send the events. If this value is not provided, t
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -94,6 +94,12 @@ This option is turned off by default.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
+<Alert>
+
+On Android, only crash events contain the full callstack. Non-fatal events captured manually won't include the native C++ portion of the stack trace.
+
+</Alert>
+
 </SdkOption>
 
 <SdkOption name="SendDefaultPii" type="bool" defaultValue="false">
@@ -145,6 +151,12 @@ When enabled, game log file is automatically attached to all events captured if 
 
 This option is turned off by default.
 
+<Alert>
+
+The game log attached to crash events may be truncated. Crash reports can be sent to Sentry right away, while Unreal Engine is still writing the last bits of information to the log file.
+
+</Alert>
+
 </SdkOption>
 
 <SdkOption name="EnableLargeAttachments" type="bool" defaultValue="false">
@@ -189,7 +201,7 @@ See <PlatformLink to="/configuration/native-backend/">Native Backend</PlatformLi
 
 <Alert level="warning">
 
-This feature is experimental and under active development. Supported on Windows and Linux only.
+This feature is experimental and under active development. Supported on Windows, Linux, and macOS.
 
 </Alert>
 
@@ -225,13 +237,13 @@ This feature is supported on Windows and Linux only.
 
 <SdkOption name="EnableHangTracking" type="bool" defaultValue="false">
 
-Tracks application hangs (unresponsive threads) using Unreal Engine's built-in `FThreadHeartBeat`. When enabled, the SDK launches a watchdog thread that monitors engine heartbeat delegates and captures a hang event if a thread remains unresponsive for longer than the configured timeout.
+Tracks application hangs (unresponsive game thread) and captures a hang event when the thread stays unresponsive for longer than the configured timeout. By default, detection uses Unreal Engine's built-in `FThreadHeartBeat` watcher; enable <PlatformIdentifier name="UseNativeHangTracking" /> to use the sentry-native SDK's app-hang detector instead.
 
 This option is turned off by default.
 
 <Alert>
 
-This feature is available on Windows and Linux only, and only works in packaged non-debug builds. See <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> for setup details and prerequisites.
+The default engine-based detection is available on Windows and Linux only, and only works in packaged non-debug builds. See <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> for setup details and prerequisites.
 
 </Alert>
 
@@ -239,9 +251,23 @@ This feature is available on Windows and Linux only, and only works in packaged 
 
 <SdkOption name="HangTimeoutDuration" type="float" defaultValue="5.0">
 
-Duration in seconds that a thread must be unresponsive before a hang event is captured. The minimum value is `1.0` second. If set below the engine's `StuckDuration` (default 1 second), it is automatically adjusted upward.
+Duration in seconds that a thread must be unresponsive before a hang event is captured. The minimum value is `1.0` second. With the engine-based detector, if set below the engine's `StuckDuration` (default 1 second), it is automatically adjusted upward.
 
 Only takes effect when <PlatformIdentifier name="EnableHangTracking" /> is enabled.
+
+</SdkOption>
+
+<SdkOption name="UseNativeHangTracking" type="bool" defaultValue="false">
+
+Detects hangs using the sentry-native SDK's built-in app-hang watchdog instead of Unreal Engine's `FThreadHeartBeat` watcher. It doesn't depend on the engine's heartbeat configuration.
+
+Only takes effect when <PlatformIdentifier name="EnableHangTracking" /> is enabled.
+
+<Alert>
+
+This feature is available on Windows, Linux, and macOS. On macOS it requires the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>. See <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> for details.
+
+</Alert>
 
 </SdkOption>
 
