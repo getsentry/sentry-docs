@@ -20,7 +20,7 @@ Stream mode changes this by sending spans to Sentry in batches as they finish, i
 You can find the following span types mentioned throughout this page:
 
 - **Root span**: The topmost span in a trace. It has no parent span, and sampling decisions are made here.
-- **Service span**: A top-level span with no parent, created with `parentSpan: null`. It's the stream mode equivalent of a transaction. The first service span in a trace is also its root span.
+- **Service span**: The top-level span within a service boundary. It has no local parent, but it can have a remote parent in another service. Pass `parentSpan: null` to create one. It's the stream mode equivalent of a transaction. The first service span in a trace is also its root span.
 - **Child span**: Any span nested under a parent span within the same trace.
 
 This graph shows how these span types relate to each other within a trace:
@@ -145,14 +145,13 @@ await Sentry.startSpan('checkout', (span) async {
 
 By default, a span inherits the currently active span as its parent. To change this, pass `parentSpan`:
 
-- `parentSpan: null` forces a service span with no parent.
+- `parentSpan: null` forces a service span with no local parent.
 - `parentSpan: someSpan` parents the new span under a specific span.
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```dart
-
 // force a new service span
 await Sentry.startSpan(
   'checkout-flow',
