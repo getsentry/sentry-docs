@@ -7,7 +7,7 @@ interface TutorialProgressProps {
   total?: number;
 }
 
-/** The upright bug that rides the tip of the fill on steps 1..n-1. */
+/** The bug that rides the tip of the fill. */
 function Bug() {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -38,51 +38,13 @@ function Bug() {
   );
 }
 
-/** A little headstone shown once the tutorial is complete — RIP bugs. */
-function Tombstone() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* headstone: arched top on a rectangular body */}
-      <path
-        d="M5 23 L5 10 A7 7 0 0 1 19 10 L19 23 Z"
-        fill="currentColor"
-        stroke="#2b2240"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <text
-        x="12"
-        y="12.6"
-        textAnchor="middle"
-        fontSize="5"
-        fontWeight="700"
-        fill="#fff"
-      >
-        RIP
-      </text>
-      <text
-        x="12"
-        y="18.6"
-        textAnchor="middle"
-        fontSize="4.3"
-        fontWeight="700"
-        fill="#fff"
-      >
-        BUGS
-      </text>
-    </svg>
-  );
-}
-
 /**
  * A slim progress bar for multi-page tutorials. Fills with Sentry purple in
- * proportion to `step / total`, with a bug riding the tip of the fill — which
- * is replaced by a "RIP BUGS" headstone once you reach the final step.
+ * proportion to `step / total`, with a bug riding the tip of the fill.
  */
 export function TutorialProgress({step, total = 5}: TutorialProgressProps) {
   const clamped = Math.max(0, Math.min(step, total));
   const pct = total > 0 ? (clamped / total) * 100 : 0;
-  const squashed = clamped >= total;
 
   return (
     <div
@@ -96,7 +58,7 @@ export function TutorialProgress({step, total = 5}: TutorialProgressProps) {
       <div className={styles.track}>
         <div className={styles.fill} style={{width: `${pct}%`}}>
           <span className={styles.marker} aria-hidden="true">
-            {squashed ? <Tombstone /> : <Bug />}
+            <Bug />
           </span>
         </div>
       </div>
