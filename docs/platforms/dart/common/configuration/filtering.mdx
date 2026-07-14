@@ -74,9 +74,9 @@ When a string or a non-error object is raised, Sentry creates a synthetic except
 
 ## Filtering Transactions and Spans
 
-To prevent certain transactions (or spans in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>) from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" />, <PlatformIdentifier name="before-send-transaction" /> (for transaction mode), or <PlatformIdentifier name="ignore-spans" /> (for stream mode) configuration option. These allow you to provide a function to evaluate the current transaction/service span and drop it if it's not one you want.
+Use <PlatformIdentifier name="traces-sampler" /> to make a sampling decision when a transaction or service span starts. Return `0` to drop it.
 
-You can also use <PlatformIdentifier name="before-send-transaction" /> (for transaction mode) or <PlatformIdentifier name="before-send-span" /> (for stream mode) to modify transaction/span data.
+In transaction mode, use <PlatformIdentifier name="ignore-transactions" /> to drop transactions by name or <PlatformIdentifier name="before-send-transaction" /> to modify or drop them with custom logic. In <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>, use <PlatformIdentifier name="ignore-spans" /> to drop spans by name or <PlatformIdentifier name="before-send-span" /> to modify them.
 
 ### Using <PlatformIdentifier name="ignore-transactions" />
 
@@ -86,9 +86,21 @@ Not available in stream mode. Use <PlatformIdentifier name="ignore-spans" /> ins
 
 </Alert>
 
-You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of strings and regular expressions to match against the transaction name. When using strings, partial matches will be filtered out. If you need to filter by exact match, use regex patterns instead.
+You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of string patterns, treats them as case-insensitive regular expressions, and matches them against the transaction name. Patterns match substrings by default. Use `^` and `$` to match the full transaction name.
 
 <PlatformContent includePath="configuration/ignore-transactions" />
+
+### Using <PlatformIdentifier name="before-send-transaction" />
+
+<Alert>
+
+Only available in transaction mode. In stream mode, use <PlatformIdentifier name="before-send-span" /> to modify spans and <PlatformIdentifier name="ignore-spans" /> to drop them.
+
+</Alert>
+
+Use the <PlatformIdentifier name="before-send-transaction" /> callback to modify or drop a transaction immediately before it's sent. Return the transaction to send it, or return `null` to drop it.
+
+<PlatformContent includePath="configuration/before-send-transaction" />
 
 ### Using <PlatformIdentifier name="before-send-span" />
 
@@ -103,10 +115,9 @@ Use the <PlatformIdentifier name="before-send-span" /> configuration option to m
 If you want to drop spans, use [<PlatformIdentifier name="ignore-spans" />](#using-ignore-spans).
 
 ```dart
-options.ignoreSpans = [
-  IgnoreSpanRule.nameEquals('health-check'),
-  IgnoreSpanRule.nameStartsWith('internal.'),
-];
+options.beforeSendSpan = (span) {
+  span.removeAttribute('http.request.body');
+};
 ```
 
 See <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> for details.
@@ -122,9 +133,10 @@ Only available in stream mode.
 You can use the <PlatformIdentifier name="ignore-spans" /> option to filter out spans by name:
 
 ```dart
-options.beforeSendSpan = (span) {
-  span.removeAttribute('http.request.body');
-};
+options.ignoreSpans = [
+  IgnoreSpanRule.nameEquals('health-check'),
+  IgnoreSpanRule.nameStartsWith('internal.'),
+];
 ```
 
 See <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> for details.
