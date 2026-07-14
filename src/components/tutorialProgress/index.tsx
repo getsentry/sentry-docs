@@ -38,38 +38,38 @@ function Bug() {
   );
 }
 
-/** The flattened, legs-splayed bug shown once the tutorial is complete. */
-function SquashedBug() {
+/** A little headstone shown once the tutorial is complete — RIP bugs. */
+function Tombstone() {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g stroke="#2b2240" strokeWidth="2.2" strokeLinecap="round">
-        {/* droopy antennae */}
-        <path d="M9.6 10.2 L6.6 8.6" />
-        <path d="M14.4 10.2 L17.4 8.6" />
-        {/* splayed legs */}
-        <path d="M7 15.5 L1.8 14.4" />
-        <path d="M7.4 17 L2.6 18.9" />
-        <path d="M9 18 L5 21.2" />
-        <path d="M17 15.5 L22.2 14.4" />
-        <path d="M16.6 17 L21.4 18.9" />
-        <path d="M15 18 L19 21.2" />
-      </g>
-      {/* little impact marks */}
-      <g stroke="#2b2240" strokeWidth="1.4" strokeLinecap="round">
-        <path d="M3.6 9 L5.1 10" />
-        <path d="M20.4 9 L18.9 10" />
-      </g>
-      {/* flattened head + body */}
-      <ellipse cx="12" cy="10.6" rx="2.7" ry="1.9" fill="currentColor" stroke="#2b2240" strokeWidth="1.6" />
-      <ellipse
-        cx="12"
-        cy="15.4"
-        rx="7.6"
-        ry="3.9"
+      {/* headstone: arched top on a rectangular body */}
+      <path
+        d="M5 23 L5 10 A7 7 0 0 1 19 10 L19 23 Z"
         fill="currentColor"
         stroke="#2b2240"
         strokeWidth="1.6"
+        strokeLinejoin="round"
       />
+      <text
+        x="12"
+        y="12.6"
+        textAnchor="middle"
+        fontSize="5"
+        fontWeight="700"
+        fill="#fff"
+      >
+        RIP
+      </text>
+      <text
+        x="12"
+        y="18.6"
+        textAnchor="middle"
+        fontSize="4.3"
+        fontWeight="700"
+        fill="#fff"
+      >
+        BUGS
+      </text>
     </svg>
   );
 }
@@ -77,7 +77,7 @@ function SquashedBug() {
 /**
  * A slim progress bar for multi-page tutorials. Fills with Sentry purple in
  * proportion to `step / total`, with a bug riding the tip of the fill — which
- * ends up squashed once you reach the final step.
+ * is replaced by a "RIP BUGS" headstone once you reach the final step.
  */
 export function TutorialProgress({step, total = 5}: TutorialProgressProps) {
   const clamped = Math.max(0, Math.min(step, total));
@@ -96,7 +96,7 @@ export function TutorialProgress({step, total = 5}: TutorialProgressProps) {
       <div className={styles.track}>
         <div className={styles.fill} style={{width: `${pct}%`}}>
           <span className={styles.marker} aria-hidden="true">
-            {squashed ? <SquashedBug /> : <Bug />}
+            {squashed ? <Tombstone /> : <Bug />}
           </span>
         </div>
       </div>
