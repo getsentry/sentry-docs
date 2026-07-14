@@ -100,34 +100,7 @@ For backwards compatibility, `SendDefaultPII: true` behaves like enabling all [`
 If both options are set, `DataCollection` takes precedence.
 
 <Alert>
-  Passing [`DataCollection`](#DataCollection) opts you into the more permissive `DataCollection` defaults. To preserve the old `SendDefaultPII: false` behavior while using `DataCollection`, opt out of each category explicitly:
-
-```go
-sensitiveTerms := []string{"forwarded", "-ip", "remote-", "via", "-user"}
-
-err := sentry.Init(sentry.ClientOptions{
-    Dsn: "___PUBLIC_DSN___",
-    DataCollection: &sentry.DataCollection{
-        UserInfo: sentry.Set(false),
-        Cookies:  &sentry.KeyValueCollectionBehavior{Mode: sentry.CollectionOff},
-        HTTPBodies: []sentry.BodyType{},
-        HTTPHeaders: &sentry.HeaderCollectionConfig{
-            Request: &sentry.KeyValueCollectionBehavior{
-                Mode:  sentry.CollectionDenyList,
-                Terms: sensitiveTerms,
-            },
-            Response: &sentry.KeyValueCollectionBehavior{
-                Mode:  sentry.CollectionDenyList,
-                Terms: sensitiveTerms,
-            },
-        },
-        QueryParams: &sentry.KeyValueCollectionBehavior{
-            Mode:  sentry.CollectionDenyList,
-            Terms: sensitiveTerms,
-        },
-    },
-})
-```
+  Passing [`DataCollection`](#DataCollection) opts you into the more permissive `DataCollection` defaults. To preserve the old `SendDefaultPII: false` behavior while using `DataCollection`, explicitly disable or filter each category. See the [`DataCollection`](#DataCollection) example below.
 
 Data you set explicitly, for example with `Scope.SetUser`, is always sent regardless of `DataCollection`.
 
