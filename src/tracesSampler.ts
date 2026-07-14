@@ -70,6 +70,15 @@ function getMiddlewareClassification(headers?: Record<string, string>): {
  * AI agents are checked first; if something matches both AI and bot patterns, we sample it.
  */
 export function tracesSampler(samplingContext: SamplingContext): number {
+  const spanName = samplingContext.name || '';
+
+  // Middleware spans don't receive normalizedRequest in Sentry's Edge runtime instrumentation,
+  // so they can't be classified. Skip sampling them entirely - the corresponding page span
+  // (e.g., "GET /path") will capture the same request with full classification data.
+  if (spanName.startsWith('middleware ')) {
+    return 0;
+  }
+
   const headers = samplingContext.normalizedRequest?.headers;
 
   // Check for middleware classification headers first (most reliable)
