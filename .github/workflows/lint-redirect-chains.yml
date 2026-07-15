@@ -66,12 +66,14 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINT_RESULT: ${{ toJSON(steps.lint.outputs.lint_result) }}
         with:
           script: |
-            const lintResultRaw = ${{ toJSON(steps.lint.outputs.lint_result) }};
             let lintResult;
             try {
-              lintResult = typeof lintResultRaw === 'string' ? JSON.parse(lintResultRaw) : lintResultRaw;
+              // First parse unwraps the toJSON() encoding, second parse converts the JSON string to an object
+              const jsonString = JSON.parse(process.env.LINT_RESULT);
+              lintResult = JSON.parse(jsonString);
             } catch (e) {
               console.error('Failed to parse lint result:', e);
               core.setFailed('Failed to parse redirect chain lint output');
