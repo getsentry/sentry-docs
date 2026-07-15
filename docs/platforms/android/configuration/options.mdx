@@ -357,6 +357,8 @@ UI Profiling requires SDK versions `8.7.0` or higher. Lower versions can use the
 
 On devices running Android 15 (API level 35) or higher, UI Profiling always uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, this option controls whether the SDK falls back to the <PlatformLink to="/profiling/legacy">legacy `tracer` backend</PlatformLink>. When `true` (the default), the legacy profiler runs on devices below API level 35. Set it to `false` to disable profiling on those devices entirely.
 
+Setting this option to `false` also disables <PlatformLink to="/configuration/options/#transaction-based-profiling-options">transaction-based profiling</PlatformLink> (`profilesSampleRate`/`profilesSampler`) on all devices, since transaction-based profiling always relies on the legacy profiler and is not supported by the ProfilingManager (Perfetto) backend.
+
 This option is deprecated and will be removed in the next major release, when only the ProfilingManager (Perfetto) backend will remain.
 
 </SdkOption>
@@ -402,6 +404,12 @@ When enabled, the SDK assigns a static fingerprint to ANR events whose stack tra
 ## Transaction-Based Profiling Options
 
 This mode will eventually be deprecated, and it's recommended to upgrade to <PlatformLink to="/configuration/options/#ui-profiling-options">UI Profiling</PlatformLink>. The same behaviour, without the 30 seconds limitation, can be achieved with the `trace` <PlatformLink to="/configuration/options/#profile-lifecycle">profile lifecycle</PlatformLink> option. In order to upgrade to UI Profiling, you also need to remove the transaction-based options from your configuration.
+
+<Alert level="warning">
+
+Transaction-based profiling always uses the legacy profiler and is not supported by the ProfilingManager (Perfetto) backend. Setting <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> to `false` therefore disables transaction-based profiling on all devices, and no profiling data will be collected. Use <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> for UI (continuous) Profiling instead.
+
+</Alert>
 
 <SdkOption name="profilesSampleRate" type="float">
 
