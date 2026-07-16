@@ -1,34 +1,35 @@
 ---
 title: Set Up Session Replay
 sidebar_title: Session Replay
-description: "Learn how to capture gameplay video and attach it to crash reports with Sentry's Unreal Engine SDK."
+description: "Learn how to capture gameplay video of the moments leading up to a crash with Sentry's Unreal Engine SDK."
 sidebar_order: 5500
 sidebar_section: features
 ---
 
 <Alert level="warning">
 
-Session Replay for Unreal Engine is **experimental** and currently limited to a small set of platforms (see [Platform Support](#platform-support)). The API and behavior may change in future releases.
+Session Replay for Unreal Engine is **experimental**. The API and behavior may change in future releases.
 
 </Alert>
 
 Session Replay records what was happening on screen in the moments leading up to a crash, giving you a visual reproduction to pair with the captured event.
 
-Unlike the [web](/platforms/javascript/session-replay/) and [mobile](/platforms/android/session-replay/) Session Replay experiences, which reconstruct the UI from the view hierarchy and aggressively mask text and images by default, the Unreal Engine SDK captures the rendered output of your game directly. On desktop and console, it continuously encodes the rendered frames into a short rolling video clip and attaches that clip to crash reports. On Android, the feature delegates to the underlying [Android SDK's Session Replay](/platforms/android/session-replay/).
+Unlike the [web](/platforms/javascript/session-replay/) and [mobile](/platforms/android/session-replay/) Session Replay experiences, which reconstruct the UI from the view hierarchy and aggressively mask text and images by default, the Unreal Engine SDK captures the rendered output of your game directly. When a crash occurs, the recording is sent to Sentry as a session replay that's linked to the crash event and viewable on the [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) page. Capture and delivery differ per platform — see [Platform Notes](#platform-notes) for the details.
 
 ## Platform Support
 
-| Platform    | What gets captured                                                              | Requirements                                                                                        |
-| ----------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Windows** | A rolling video clip of the game's backbuffer, attached to crash reports.       | Engine codec plugins matching the GPU vendor (NVIDIA or AMD) and a plugin rebuild.\*                |
-| **Linux**   | A rolling video clip of the game's backbuffer, attached to crash reports.       | Engine codec plugins, an NVIDIA GPU, and a plugin rebuild.\*                                        |
-| **macOS**   | A rolling video clip of the game's backbuffer, attached to crash reports.       | Engine codec plugins and a plugin rebuild.\*                                                        |
-| **Xbox**    | An OS-captured gameplay clip, attached to crash reports.                        | Development kits only.                                                                               |
-| **Android** | A full-session replay via the Android SDK, with default text and image masking. | None beyond the standard Android setup.                                                             |
+| Platform    | What gets captured                                               | Requirements                                                                           |
+| ----------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Windows** | A rolling video clip of the game's backbuffer.                   | Engine codec plugins matching the GPU vendor (NVIDIA or AMD) and a plugin rebuild.\*   |
+| **Linux**   | A rolling video clip of the game's backbuffer.                   | Engine codec plugins, an NVIDIA GPU, and a plugin rebuild.\*                           |
+| **macOS**   | A rolling video clip of the game's backbuffer.                   | Engine codec plugins and a plugin rebuild.\*                                           |
+| **iOS**     | A rolling video clip of the game's backbuffer.                   | Unreal Engine **5.8 or newer**, engine codec plugins, and a plugin rebuild.\*          |
+| **Android** | A sequence of periodic screenshots stitched into a video.        | None beyond the standard Android setup.                                                |
+| **Xbox**    | An OS-captured gameplay clip, attached to crash reports only.    | Development kits only.                                                                 |
 
-\* See the [Desktop platform notes](#desktop-windows-macos-and-linux) below for the exact plugin, GPU, and driver requirements.
+\* See the [Platform Notes](#platform-notes) below for the exact engine version, plugin, GPU, and driver requirements.
 
-All other platforms (iOS, PlayStation, and Nintendo Switch) are not currently supported. On those platforms the setting is a no-op.
+PlayStation and Nintendo Switch are not currently supported. On those platforms the setting is a no-op.
 
 ## Enabling Session Replay
 
@@ -46,11 +47,11 @@ AttachSessionReplay=True
 The following settings are available under the **Session Replay** section in the plugin settings:
 
 - **Enable session replay (experimental)** (`AttachSessionReplay`, default `False`) — Master toggle for the feature.
-- **Replay duration (ms)** (`SessionReplayDurationMs`, default `5000`, range `1000`–`60000`) — The requested length of the retroactive replay window. On Windows, Linux, and macOS this is the rolling clip length kept on disk for crash attachment; on Xbox it's the requested length of the OS-captured clip (which may be shorter if not enough frames are buffered). This value is ignored on Android, where the underlying SDK determines the duration.
+- **Replay duration (ms)** (`SessionReplayDurationMs`, default `5000`, range `1000`–`20000`) — The requested length of the retroactive replay window. On Windows, Linux, macOS, and iOS this is the rolling clip length kept on disk for crash attachment; on Xbox it's the requested length of the OS-captured clip (which may be shorter if not enough frames are buffered). This value is ignored on Android, where the underlying SDK determines the duration.
 
-### Advanced Recording Options (Windows, macOS & Linux)
+### Advanced Recording Options (Windows, Linux, macOS & iOS)
 
-The **Advanced recording options** group (`SessionReplayOptions`) provides low-level encoder and muxer tuning for the desktop recorders. The defaults are sensible for most projects.
+The **Advanced recording options** group (`SessionReplayOptions`) provides low-level encoder and muxer tuning for the desktop and iOS recorders. The defaults are sensible for most projects.
 
 - **Fragment duration (seconds)** (`FragmentSeconds`, default `0.5`, range `0.1`–`2.0`) — Length of each video fragment. Shorter values reduce the worst-case amount of footage lost at crash time, but increase keyframe frequency and lower compression efficiency.
 - **Rotation interval (seconds)** (`RotationIntervalSeconds`, default `1.0`, range `0.25`–`5.0`) — How often the on-disk attachment file is refreshed.
@@ -64,11 +65,17 @@ SessionReplayDurationMs=5000
 SessionReplayOptions=(FragmentSeconds=0.500000,RotationIntervalSeconds=1.000000,Framerate=30,BitrateKbps=2000)
 ```
 
+<Alert level="warning">
+
+Sentry rejects replay videos larger than **10 MiB**; oversized replays are dropped server-side without any client-visible error. Clip size grows with duration, bitrate, and framerate, and at high rendering resolutions (such as 4K) the encoder can significantly exceed its target bitrate — for example, a 20-second 4K clip at 60 fps can reach roughly twice the size of the same clip at the default 30 fps. The duration setting is capped at 20 seconds to keep clips within the limit at default settings — if you raise the bitrate or framerate, reduce the duration accordingly.
+
+</Alert>
+
 ## Platform Notes
 
 ### Desktop (Windows, macOS, and Linux)
 
-On desktop platforms, Session Replay continuously encodes the game's backbuffer into a rolling video clip that's attached to crash reports captured by the native crash handler. Encoding is hardware-accelerated; the SDK automatically picks an encoder at runtime from the codec plugins enabled in your project:
+On desktop platforms, Session Replay continuously encodes the game's backbuffer into a rolling video clip that's delivered to Sentry when a crash occurs. Encoding is hardware-accelerated; the SDK automatically picks an encoder at runtime from the codec plugins enabled in your project:
 
 | Platform    | Encoder            | Engine plugins              | GPU and driver requirements                                                                     |
 | ----------- | ------------------ | --------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -80,6 +87,7 @@ On desktop platforms, Session Replay continuously encodes the game's backbuffer 
 - **Enable the codec plugins for every GPU vendor you want to cover.** The Sentry plugin only compiles the recorder when `AVCodecsCore` is present. On Windows, `NVCodecs` and `AMFCodecs` can be enabled side by side — the encoder matching the player's GPU is selected at runtime.
 - **A plugin rebuild is required after toggling the setting.** Whether Session Replay is compiled in is decided at build time from `AttachSessionReplay`, so after enabling or disabling it, delete your project's `Binaries` and `Intermediate` directories and rebuild.
 - **Machines without a compatible encoder fall back to no recording.** The feature self-disables for the session and logs a warning; crash reporting itself is unaffected.
+- **The replay may arrive after the next app launch.** With the default backends (Crashpad on Windows and Linux, sentry-cocoa on macOS), the replay is uploaded on the next application launch after the crash. With the opt-in native backend, it's uploaded during the crashed session.
 
 <Alert>
 
@@ -87,22 +95,43 @@ The most recent fraction of a second of footage (up to one fragment duration) ma
 
 </Alert>
 
-### Xbox
+### iOS
 
-On Xbox, Session Replay uses the operating system's game-capture facility to grab a clip of recent gameplay at crash time. This is supported on **development kits only** and is not available in retail builds.
+On iOS, Session Replay uses the same recording pipeline as desktop, encoding the game's backbuffer with Apple VideoToolbox via the `AVCodecsCore` and `VTCodecs` engine plugins. Encoding is hardware-accelerated on all devices, and the desktop notes above (plugin rebuild, encoder fallback) apply equally.
+
+iOS requires **Unreal Engine 5.8 or newer** — earlier engine versions don't ship the AVCodecs plugins for iOS, and the setting is a no-op there.
+
+The replay is uploaded on the next app launch, together with the crash report.
+
+Session Replay assumes your game runs in a **fixed screen orientation** (typical for games). The recording orientation is determined once when the SDK initializes; if your game supports both portrait and landscape and the device is rotated mid-session, the recording stays locked to the initial orientation and subsequent footage may appear squeezed or stretched. Crash reporting itself is unaffected.
+
+<Alert>
+
+The AVCodecs plugins link Apple's `AVFoundation` framework, which references camera and microphone APIs. App Store submissions will be rejected with `ITMS-90683: Missing purpose string in Info.plist` unless your `Info.plist` contains `NSCameraUsageDescription` and `NSMicrophoneUsageDescription` entries — even though Session Replay never accesses the camera or microphone. Add them via **Project Settings > Platforms > iOS > Extra PList Data**, or in your `DefaultEngine.ini`:
+
+```ini
+[/Script/IOSRuntimeSettings.IOSRuntimeSettings]
+AdditionalPlistData=<key>NSCameraUsageDescription</key><string>This app does not use the camera. A system video-encoding framework used for crash replay recording references camera APIs.</string><key>NSMicrophoneUsageDescription</key><string>This app does not use the microphone. A system video-encoding framework used for crash replay recording references microphone APIs.</string>
+```
+
+</Alert>
 
 ### Android
 
-On Android, enabling the setting turns on the [Android SDK's Session Replay](/platforms/android/session-replay/), recording the full session rather than a crash-attached clip. As with the standalone Android SDK, all text and images are masked by default. See the [Android Session Replay docs](/platforms/android/session-replay/) for details on masking, sampling, and privacy.
+On Android, enabling the setting turns on the [Android SDK's Session Replay](/platforms/android/session-replay/), which records the full session rather than a short pre-crash clip. It works differently from the desktop and iOS recorders: instead of encoding the game's rendered frames, it periodically captures screenshots of the game surface and stitches them into a video. See the [Android Session Replay docs](/platforms/android/session-replay/) for details on sampling and configuration.
+
+### Xbox
+
+On Xbox, Session Replay uses the operating system's game-capture facility to grab a clip of recent gameplay at crash time. This is supported on **development kits only** and is not available in retail builds.
 
 ## Privacy
 
 <Alert level="warning">
 
-On Windows, Linux, macOS, and Xbox, Session Replay records the rendered game frames as-is — there is **no automatic masking**. Any sensitive information shown on screen (player names, chat, email addresses, in-game purchases, and so on) will be present in the captured video. Only enable this feature if the content rendered by your game is safe to record, and make sure your data-handling and privacy policies account for it.
+On Windows, Linux, macOS, iOS, Android, and Xbox, Session Replay records the rendered game frames as-is — there is **no automatic masking**. Any sensitive information shown on screen (player names, chat, email addresses, in-game purchases, and so on) will be present in the captured video. Only enable this feature if the content rendered by your game is safe to record, and make sure your data-handling and privacy policies account for it.
 
 </Alert>
 
-On Android, the underlying SDK masks all text and images by default. Review the [Android Session Replay privacy documentation](/platforms/android/session-replay/privacy/) before adjusting those defaults.
+On Android, the SDK's default text and image masking applies to the native Android view hierarchy, not to the game's rendering surface, which is captured directly. Review the [Android Session Replay privacy documentation](/platforms/android/session-replay/privacy/) for details on masking any native UI your game overlays.
 
 If you run into issues or have feedback about Session Replay on Unreal Engine, please open a [GitHub issue](https://github.com/getsentry/sentry-unreal/issues).
