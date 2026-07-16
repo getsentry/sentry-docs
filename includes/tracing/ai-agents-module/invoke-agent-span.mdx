@@ -1,10 +1,12 @@
 Describes AI agent invocation.
 
 <PlatformSection supported={["python"]}>
-The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create this span.
+
+In transaction mode, the [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create this span using its `template` parameter. The stream-mode decorator doesn't have a `template` option.
+
 </PlatformSection>
 
-- The span `op` MUST be `"gen_ai.invoke_agent"`.
+- The span `op` (transaction mode) or the span's `sentry.op` attribute (stream mode) MUST be `"gen_ai.invoke_agent"`.
 - The span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`.
 - The `gen_ai.operation.name` attribute MUST be `"invoke_agent"`.
 - The `gen_ai.agent.name` attribute SHOULD be set to the agent's name. (e.g. `"Weather Agent"`)
@@ -19,7 +21,7 @@ Additional attributes on the span:
 | `gen_ai.input.messages`          | string | optional          | List of message objects given to the agent. **[0]**, **[1]**                                                   | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`        | string | optional          | List of objects describing the available tools. **[0]**                                                        | `'[{"name": "random_number", "description": "..."}]'`                 |
 | `gen_ai.system_instructions`     | string | optional          | The system instructions passed to the model.                                                                   | `"You are a helpful assistant."`                                      |
-| `gen_ai.pipeline.name`           | string | optional          | The name of the AI workflow or pipeline the agent belongs to.                                                   | `"weather-pipeline"`                                                  |
+| `gen_ai.pipeline.name`           | string | optional          | The name of the AI workflow or pipeline the agent belongs to.                                                  | `"weather-pipeline"`                                                  |
 | `gen_ai.request.messages`        | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of message objects given to the agent. **[0]**       | `'[{"role": "system", "content": "..."}]'`                            |
 | `gen_ai.request.available_tools` | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of objects describing the available tools. **[0]** | `'[{"name": "random_number", "description": "..."}]'`                 |
 
