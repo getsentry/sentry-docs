@@ -68,8 +68,7 @@ When the SDK creates an event or breadcrumb for transmission, that transmission 
 
 Hints are available in two places:
 
-1. <PlatformIdentifier name="before-send" /> /
-   <PlatformIdentifier name="before-breadcrumb" />
+1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
 2. `eventProcessors`
 
 Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
@@ -102,97 +101,24 @@ When a string or a non-error object is raised, Sentry creates a synthetic except
 
 <PlatformContent includePath="configuration/decluttering" />
 
-## Filtering Transactions and Spans
+## Filtering Transaction Events
 
-To prevent certain transactions (or spans in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>) from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" />, <PlatformIdentifier name="before-send-transaction" /> (for transaction mode), or <PlatformIdentifier name="ignore-spans" /> (for stream mode) configuration options. These allow you to provide a function to evaluate the current transaction or span and drop it if it's not one you want.
-
-You can also use <PlatformIdentifier name="before-send-transaction" /> (for transaction mode) or <PlatformIdentifier name="before-send-span" /> (for stream mode) to modify transaction/span data.
+To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
 
 ### Using <PlatformIdentifier name="traces-sampler" />
 
-**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions/service spans, you must also handle the case of non-filtered transactions/service spans by returning the rate at which you'd like them sampled.
+**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
 
-In its simplest form, used just for filtering the transaction/service span, it looks like this:
+In its simplest form, used just for filtering the transaction, it looks like this:
 
 <PlatformContent includePath="performance/traces-sampler-as-filter" />
 
-It also allows you to sample different transactions/service spans at different rates.
+It also allows you to sample different transactions at different rates.
 
-If the transaction or span currently being processed has a parent (from an upstream service calling this service), the parent's (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
+If the transaction currently being processed has a parent transaction (from an upstream service calling this service), the parent (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
 
-Learn more about <PlatformLink to="/tracing/configure-sampling/">configuring sampling</PlatformLink>.
+Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
 
 ### Using <PlatformIdentifier name="before-send-transaction" />
 
-<Alert>
-
-Not available in stream mode. Use <PlatformIdentifier name="before-send-span" /> instead.
-
-</Alert>
-
 <PlatformContent includePath="configuration/before-send-transaction" />
-
-### Using <PlatformIdentifier name="before-send-span" />
-
-<Alert>
-
-Only available in stream mode.
-
-</Alert>
-
-Use the <PlatformIdentifier name="before-send-span" /> configuration option, which lets you provide a function to modify a span.
-This function is called for the service span and all child spans.
-
-If you want to drop the service span, including its child spans, use [`ignore_spans`](#using-ignore-spans).
-
-<PlatformContent includePath="configuration/before-send-span" />
-
-See <PlatformLink to="/configuration/options/#_experiments.before_send_span">`before_send_span`</PlatformLink> for details.
-
-### Using <PlatformIdentifier name="ignore-spans" />
-
-<Alert>
-
-Only available in stream mode.
-
-</Alert>
-
-You can use the <PlatformIdentifier name="ignore-spans" /> option to filter out spans that match a certain pattern by providing a list of strings, compiled regular expressions, or dictionaries. When using strings, a span name containing the string will be filtered out. For exact or more complex pattern matching, use compiled regular expressions instead.
-
-You can also provide a dictionary with `name` and/or `attributes` keys to match on multiple conditions. At least one key must be provided.
-
-```python
-import re
-import sentry_sdk
-
-sentry_sdk.init(
-    _experiments={
-        "trace_lifecycle": "stream",
-        "ignore_spans": [
-            # String match against span name
-            "/health",
-
-            # Regex match against span name
-            re.compile(r"/flow/.*"),
-
-            # Match by attributes (all must match)
-            {
-                "attributes": {
-                    "service.id": "15def9a",
-                    "flow.pipeline": "legacy",
-                }
-            },
-
-            # Match by name and attributes
-            {
-                "name": re.compile(r"/flow/.*"),
-                "attributes": {
-                    "service.id": re.compile(r".*\.facade"),
-                },
-            },
-        ],
-    },
-)
-```
-
-See <PlatformLink to="/configuration/options/#_experiments.ignore_spans">`ignore_spans`</PlatformLink> for details.

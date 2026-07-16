@@ -12,38 +12,17 @@ To capture transactions and spans customized to your organization's needs, you m
 
 To add custom performance data to your application, you need to add custom instrumentation in the form of [spans](/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans). Spans are a way to measure the time it takes for a specific action to occur. For example, you can create a span to measure the time it takes for a function to execute.
 
-<Alert>
-
-This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
-
-</Alert>
-
 <PlatformContent includePath="enriching-events/import" />
 
 ## Span Lifecycle
 
 In Python, spans are typically created using a context manager, which automatically manages the span's lifecycle. When you create a span using a context manager, the span automatically starts when entering the context and ends when exiting it. This is the recommended approach for most scenarios.
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 # Start a span for a task
 with sentry_sdk.start_span(op="task", name="Create User"):
-    # Your code here
-    # The span will automatically end when exiting this block
-    user = create_user(email="user@example.com")
-    send_welcome_email(user)
-    # The span automatically ends here when the 'with' block exits
-```
-
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-# Start a span for a task
-with sentry_sdk.traces.start_span(
-    name="Create User",
-    attributes={"sentry.op": "task"},
-):
     # Your code here
     # The span will automatically end when exiting this block
     user = create_user(email="user@example.com")
@@ -57,7 +36,7 @@ You can call the context manager's `__enter__` and `__exit__` methods to more ex
 
 When you create a span, it becomes the child of the current active span. This allows you to build a hierarchy of spans that represent the execution path of your application:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 with sentry_sdk.start_span(op="process", name="Process Data"):
@@ -72,61 +51,21 @@ with sentry_sdk.start_span(op="process", name="Process Data"):
         transform_data()
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-with sentry_sdk.traces.start_span(
-    name="Process Data",
-    attributes={"sentry.op": "process"},
-):
-    # This code is tracked in the "Process Data" span
-
-    with sentry_sdk.traces.start_span(
-        name="Validate Input",
-        attributes={"sentry.op": "task"},
-    ):
-        # This is now a child span of "Process Data"
-        validate_data()
-
-    with sentry_sdk.traces.start_span(
-        name="Transform Data",
-        attributes={"sentry.op": "task"},
-    ):
-        # Another child span
-        transform_data()
-```
-
 ## Span Starting Options
 
 The following options can be used when creating spans:
 
-### Transaction Mode (Default)
-
-| Option            | Type             | Description                 |
-| ----------------- | ---------------- | --------------------------- |
-| `op`              | `string`         | The operation of the span.  |
-| `name`            | `string`         | The name of the span.       |
-| `start_timestamp` | `datetime/float` | The start time of the span. |
-
-### Stream mode
-
-| Option            | Type             | Description                                                                |
-| ----------------- | ---------------- | -------------------------------------------------------------------------- |
-| `name`            | `string`         | The name of the span.                                                      |
-| `attributes`      | `dict`           | Structured metadata for the span, including `sentry.op` for the operation. |
-| `start_timestamp` | `datetime/float` | The start time of the span.                                                |
-| `parent_span`     | `StreamedSpan/None` | The parent to attach to. Pass None to force a service span.                |
-
-<Alert level="warning">
-  `op` is not a dedicated argument in stream mode. Set it as the `sentry.op`
-  attribute instead.
-</Alert>
+| Option        | Type            | Description                                     |
+| ------------- | --------------- | ----------------------------------------------- |
+| `op`          | `string`        | The operation of the span.                      |
+| `name`        | `string`        | The name of the span.                           |
+| `start_timestamp`  | `datetime/float`| The start time of the span.                     |
 
 ## Using the Context Manager
 
-For most scenarios, we recommend using the context manager approach. This creates a new span that automatically starts when entering the context and ends when exiting it.
+For most scenarios, we recommend using the context manager approach with `sentry_sdk.start_span()`. This creates a new span that automatically starts when entering the context and ends when exiting it.
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 with sentry_sdk.start_span(op="db", name="Query Users") as span:
@@ -137,23 +76,9 @@ with sentry_sdk.start_span(op="db", name="Query Users") as span:
     span.set_data("user_count", len(users))
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-with sentry_sdk.traces.start_span(
-    name="Query Users",
-    attributes={"sentry.op": "db"},
-) as span:
-    # Perform a database query
-    users = db.query("SELECT * FROM users")
-
-    # You can set attributes on the span
-    span.set_attribute("user_count", len(users))
-```
-
 The context manager also correctly handles exceptions, marking the span as failed if an exception occurs:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 try:
@@ -166,27 +91,11 @@ except Exception:
     pass
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-try:
-    with sentry_sdk.traces.start_span(
-        name="Call External API",
-        attributes={"sentry.op": "http"},
-    ):
-        # If this raises an exception, the span will be marked as failed
-        response = requests.get("https://api.example.com/data")
-        response.raise_for_status()
-except Exception:
-    # The span is already marked as failed and has ended
-    pass
-```
-
 ## Getting the Current Span
 
-You can access the currently active span:
+You can access the currently active span using `sentry_sdk.get_current_span()`:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 # Get the current active span
@@ -195,18 +104,7 @@ if current_span:
     current_span.set_data("key", "value")
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-# Get the current active span
-current_span = sentry_sdk.traces.get_current_span()
-if current_span:
-    current_span.set_attribute("key", "value")
-```
-
 ## Working with Transactions
-
-<Alert>`start_transaction` is only available in transaction mode.</Alert>
 
 [Transactions](/product/dashboards/sentry-dashboards/transaction-summary/#what-is-a-transaction) are a special type of span that represent a complete operation in your application, such as a web request. You can create transactions explicitly:
 
@@ -222,38 +120,13 @@ with sentry_sdk.start_transaction(name="Background Task", op="task") as transact
         pass
 ```
 
-## Working with Service Spans
-
-<Alert>Service spans are only available in stream mode.</Alert>
-
-In stream mode, a service span (the equivalent of a transaction) is just a span started with no parent in the current application. Pass `parent_span=None` to force this, even if a span is currently active:
-
-```python
-import sentry_sdk
-
-with sentry_sdk.traces.start_span(
-    name="Background Task",
-    attributes={"sentry.op": "task"},
-    parent_span=None,
-) as service_span:
-    # Your code here
-
-    # You can add child spans to the service span
-    with sentry_sdk.traces.start_span(
-        name="Data Processing",
-        attributes={"sentry.op": "subtask"},
-    ):
-        # Process data
-        pass
-```
-
 ## Improving Span Data
 
 ### Adding Span Attributes
 
 Span attributes customize information you can get through tracing. This information can be found in the traces views in Sentry, once you drill into a span. You can capture additional context with span attributes. These can be key-value pairs of various Python types.
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 with sentry_sdk.start_span(op="db", name="Query Users") as span:
@@ -264,23 +137,9 @@ with sentry_sdk.start_span(op="db", name="Query Users") as span:
     span.set_data("result_count", len(users))
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-with sentry_sdk.traces.start_span(
-    name="Query Users",
-    attributes={"sentry.op": "db"},
-) as span:
-    # Execute the query
-    users = db.query("SELECT * FROM users WHERE active = true")
-
-    # You can add more attributes during execution
-    span.set_attribute("result_count", len(users))
-```
-
 You can also add attributes to an existing span:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 # Get the current span
@@ -291,22 +150,42 @@ if span:
     span.set_data("request_size", len(request.body))
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-# Get the current span
-span = sentry_sdk.traces.get_current_span()
-if span:
-    # Set individual attributes
-    span.set_attribute("user_id", user.id)
-    span.set_attribute("request_size", len(request.body))
-```
-
 ### Adding Attributes to All Spans
 
-<PlatformContent includePath="tracing/span-metrics/add-all-spans" />
+To add attributes to all spans, use the `before_send_transaction` callback:
 
-Note that `before_send_span` can only modify span data and not drop spans – use [`ignore_spans`](#dropping-spans) instead.
+```python
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
+
+def before_send_transaction(event: Event, hint: Hint) -> Event | None:
+    # Add attributes to the root span (transaction)
+    if "trace" in event.get("contexts", {}):
+        if "data" not in event["contexts"]["trace"]:
+            event["contexts"]["trace"]["data"] = {}
+
+        event["contexts"]["trace"]["data"].update({
+            "app_version": "1.2.3",
+            "environment_region": "us-west-2"
+        })
+
+    # Add attributes to all child spans
+    for span in event.get("spans", []):
+        if "data" not in span:
+            span["data"] = {}
+
+        span["data"].update({
+            "component_version": "2.0.0",
+            "deployment_stage": "production"
+        })
+
+    return event
+
+sentry_sdk.init(
+    # ...
+    before_send_transaction=before_send_transaction
+)
+```
 
 ### Adding Span Operations ("op")
 
@@ -314,7 +193,7 @@ Spans can have an operation associated with them, which helps Sentry understand 
 
 Sentry maintains a [list of well-known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) that you should use when applicable:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 # HTTP client operation
@@ -334,41 +213,11 @@ with sentry_sdk.start_span(op="file.read", name="Read Config"):
         config = json.load(f)
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-# HTTP client operation
-with sentry_sdk.traces.start_span(
-    name="Fetch User Data",
-    attributes={"sentry.op": "http.client"},
-):
-    response = requests.get("https://api.example.com/users")
-
-# Database operation
-with sentry_sdk.traces.start_span(
-    name="Save User",
-    attributes={"sentry.op": "db"},
-):
-    db.execute(
-        "INSERT INTO users (name, email) VALUES (%s, %s)",
-        (user.name, user.email),
-    )
-
-# File I/O operation
-with sentry_sdk.traces.start_span(
-    name="Read Config",
-    attributes={"sentry.op": "file.read"},
-):
-    with open("config.json", "r") as f:
-        config = json.load(f)
-```
-
 ### Updating the Span Status
 
-You can update the status of a span to indicate whether it succeeded or failed.
-In stream mode, status can only be `ok` (default) or `error`.
+You can update the status of a span to indicate whether it succeeded or failed:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 with sentry_sdk.start_span(op="task", name="Process Payment") as span:
@@ -385,28 +234,3 @@ with sentry_sdk.start_span(op="task", name="Process Payment") as span:
         # Span will automatically be marked as failed when an exception occurs
         raise
 ```
-
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-with sentry_sdk.traces.start_span(
-    name="Process Payment",
-    attributes={"sentry.op": "task"},
-) as span:
-    try:
-        result = process_payment(payment_id)
-        if result.success:
-            # Mark the span as successful (this is also the default)
-            span.status = "ok"
-        else:
-            # Mark the span as failed
-            span.status = "error"
-            span.set_attribute("error_reason", result.error)
-    except Exception:
-        # Span will automatically be marked as failed when an exception occurs
-        raise
-```
-
-## Dropping Spans
-
-<PlatformContent includePath="performance/dropping-spans" />

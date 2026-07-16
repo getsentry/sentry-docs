@@ -1,4 +1,4 @@
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 from sentry_sdk.types import SamplingContext
 
@@ -28,39 +28,5 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 sentry_sdk.init(
     # ...
     traces_sampler=traces_sampler,
-)
-```
-
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-from sentry_sdk.types import SamplingContext
-
-def traces_sampler(sampling_context: SamplingContext) -> float:
-    # Use the parent sampling decision if we have an incoming trace.
-    # Note: we strongly recommend respecting the parent sampling decision,
-    # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
-    if parent_sampling_decision is not None:
-        return float(parent_sampling_decision)
-
-    # Examine provided sampling context along with anything in the
-    # global namespace to compute the sample rate for this span
-    if "...":
-        # These are important - take a big sample
-        return 0.5
-    elif "...":
-        # These are less important - only take 1%
-        return 0.01
-    elif "...":
-        # These aren't worth tracking - drop these spans
-        return 0
-
-    # Default sample rate
-    return 0.1
-
-sentry_sdk.init(
-    # ...
-    traces_sampler=traces_sampler,
-    _experiments={"trace_lifecycle": "stream"},
 )
 ```

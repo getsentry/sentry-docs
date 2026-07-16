@@ -12,10 +12,6 @@ These examples assume you have already <PlatformLink to="/tracing/">set up traci
 
 This guide provides practical examples of using span attributes and metrics to solve common monitoring and debugging challenges in Python applications. Each example demonstrates how to instrument different components, showing how they work together within a distributed trace to provide end-to-end visibility.
 
-<Alert>
-  This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
-</Alert>
-
 ## File Upload and Processing Pipeline
 
 **Challenge:** Understanding bottlenecks and failures in multi-step file processing operations across request handling and processing services.
@@ -23,8 +19,7 @@ This guide provides practical examples of using span attributes and metrics to s
 **Solution:** Track the entire file processing pipeline with detailed metrics at each stage, from initial file handling through processing and storage.
 
 **Client Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # File upload request handling
 import sentry_sdk
 import time
@@ -32,134 +27,63 @@ from pathlib import Path
 import requests
 from contextlib import contextmanager
 
-def upload_file():
-    with sentry_sdk.start_span(op="upload", name="Upload File") as span:
-        try:
-            # Begin upload process with the requests library
-            file_path = Path("/path/to/uploads/user-profile.jpg")
-
-            # Track progress with a context manager
-            @contextmanager
-            def track_progress(total_size):
-                start = time.time()
-                bytes_sent = 0
-
-                class ProgressTracker:
-                    def __call__(self, monitor):
-                        nonlocal bytes_sent
-                        bytes_sent = monitor.bytes_read
-                        progress_percent = (bytes_sent / total_size) * 100
-                        span.set_data("upload.percent_complete", progress_percent)
-                        span.set_data("upload.bytes_transferred", bytes_sent)
-
-                yield ProgressTracker()
-
-                # Record total time after context exits
-                span.set_data("upload.total_time_ms", (time.time() - start) * 1000)
-
-            # Use the progress tracker with requests
-            with track_progress(file_path.stat().st_size) as progress_callback:
-                with open(file_path, "rb") as f:
-                    response = requests.post(
-                        "https://api.example.com/upload",
-                        files={"file": f},
-                        headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
-                        stream=True,
-                        hooks={"response": progress_callback}
-                    )
-
-                # Set final data after completion
-                span.set_data("upload.success", response.ok)
-                if response.ok:
-                    result = response.json()
-                    span.set_data("upload.server_file_id", result["file_id"])
-
-                return response
-
-        except Exception as error:
-            # Record failure information
-            span.set_data("upload.success", False)
-            span.set_data("upload.error_type", error.__class__.__name__)
-            span.set_data("upload.error_message", str(error))
-            span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
-            raise
-
-upload_file()
-```
-
-```python {tabTitle:Stream Mode}
-# File upload request handling
-import sentry_sdk
-import time
-from pathlib import Path
-import requests
-from contextlib import contextmanager
-
-def upload_file():
-    with sentry_sdk.traces.start_span(
-        name="Upload File",
-        attributes={"sentry.op": "upload"},
-    ) as span:
-        try:
-            # Begin upload process with the requests library
-            file_path = Path("/path/to/uploads/user-profile.jpg")
-
-            # Track progress with a context manager
-            @contextmanager
-            def track_progress(total_size):
-                start = time.time()
-                bytes_sent = 0
-
-                class ProgressTracker:
-                    def __call__(self, monitor):
-                        nonlocal bytes_sent
-                        bytes_sent = monitor.bytes_read
-                        progress_percent = (bytes_sent / total_size) * 100
-                        span.set_attribute("upload.percent_complete", progress_percent)
-                        span.set_attribute("upload.bytes_transferred", bytes_sent)
-
-                yield ProgressTracker()
-
-                # Record total time after context exits
-                span.set_attribute("upload.total_time_ms", (time.time() - start) * 1000)
-
-            # Use the progress tracker with requests
-            with track_progress(file_path.stat().st_size) as progress_callback:
-                with open(file_path, "rb") as f:
-                    response = requests.post(
-                        "https://api.example.com/upload",
-                        files={"file": f},
-                        headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
-                        stream=True,
-                        hooks={"response": progress_callback}
-                    )
-
-                # Set final data after completion
-                span.set_attribute("upload.success", response.ok)
-                if response.ok:
-                    result = response.json()
-                    span.set_attribute("upload.server_file_id", result["file_id"])
-
-                return response
-
-        except Exception as error:
-            # Record failure information
-            span.set_attribute("upload.success", False)
-            span.set_attribute("upload.error_type", error.__class__.__name__)
-            span.set_attribute("upload.error_message", str(error))
-            span.status = "error"
-            raise
-
-upload_file()
+with sentry_sdk.start_span(op="upload", name="Upload File") as span:
+    try:
+        # Begin upload process with the requests library
+        file_path = Path("/path/to/uploads/user-profile.jpg")
+        
+        # Track progress with a context manager
+        @contextmanager
+        def track_progress(total_size):
+            start = time.time()
+            bytes_sent = 0
+            
+            class ProgressTracker:
+                def __call__(self, monitor):
+                    nonlocal bytes_sent
+                    bytes_sent = monitor.bytes_read
+                    progress_percent = (bytes_sent / total_size) * 100
+                    span.set_data("upload.percent_complete", progress_percent)
+                    span.set_data("upload.bytes_transferred", bytes_sent)
+            
+            yield ProgressTracker()
+            
+            # Record total time after context exits
+            span.set_data("upload.total_time_ms", (time.time() - start) * 1000)
+        
+        # Use the progress tracker with requests
+        with track_progress(file_path.stat().st_size) as progress_callback:
+            with open(file_path, "rb") as f:
+                response = requests.post(
+                    "https://api.example.com/upload",
+                    files={"file": f},
+                    headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagate trace context
+                    stream=True,
+                    hooks={"response": progress_callback}
+                )
+            
+            # Set final data after completion
+            span.set_data("upload.success", response.ok)
+            if response.ok:
+                result = response.json()
+                span.set_data("upload.server_file_id", result["file_id"])
+            
+            return response
+        
+    except Exception as error:
+        # Record failure information
+        span.set_data("upload.success", False)
+        span.set_data("upload.error_type", error.__class__.__name__)
+        span.set_data("upload.error_message", str(error))
+        span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
+        raise
 ```
 
 **Server Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # File processing service
 import sentry_sdk
 from pathlib import Path
-import time
 import boto3
 
 with sentry_sdk.start_span(
@@ -168,7 +92,7 @@ with sentry_sdk.start_span(
 ) as span:
     # File processing implementation
     file_path = Path("/tmp/uploads/user-profile.jpg")
-
+    
     # Process the file
     try:
         # Track individual processing steps
@@ -176,7 +100,7 @@ with sentry_sdk.start_span(
             # Virus scan implementation
             scan_span.set_data("scan.engine", "clamav")
             scan_span.set_data("scan.result", "clean")
-
+        
         # Upload to S3
         s3_client = boto3.client('s3', region_name='us-west-2')
         upload_start = time.time()
@@ -185,60 +109,13 @@ with sentry_sdk.start_span(
             'my-bucket',
             'uploads/user-profile.jpg'
         )
-
-        span.set_data(
-            "storage.actual_upload_time_ms",
-            (time.time() - upload_start) * 1000
-        )
-
+        
+        span.set_data("storage.actual_upload_time_ms", 
+                         (time.time() - upload_start) * 1000)
+    
     except Exception as e:
         span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
         span.set_data("error.message", str(e))
-        raise
-```
-
-```python {tabTitle:Stream Mode}
-# File processing service
-import sentry_sdk
-from pathlib import Path
-import time
-import boto3
-
-with sentry_sdk.traces.start_span(
-    name="File Processing Service",
-    attributes={"sentry.op": "file.process.service"},
-) as span:
-    # File processing implementation
-    file_path = Path("/tmp/uploads/user-profile.jpg")
-
-    # Process the file
-    try:
-        # Track individual processing steps
-        with sentry_sdk.traces.start_span(
-            name="Virus Scan",
-            attributes={"sentry.op": "scan"},
-        ) as scan_span:
-            # Virus scan implementation
-            scan_span.set_attribute("scan.engine", "clamav")
-            scan_span.set_attribute("scan.result", "clean")
-
-        # Upload to S3
-        s3_client = boto3.client('s3', region_name='us-west-2')
-        upload_start = time.time()
-        s3_client.upload_file(
-            str(file_path),
-            'my-bucket',
-            'uploads/user-profile.jpg'
-        )
-
-        span.set_attribute(
-            "storage.actual_upload_time_ms",
-            (time.time() - upload_start) * 1000
-        )
-
-    except Exception as e:
-        span.status = "error"
-        span.set_attribute("error.message", str(e))
         raise
 ```
 
@@ -257,26 +134,25 @@ The client application span initiates the trace and handles the file upload. It 
 **Solution:** Tracking of the entire LLM interaction flow, from initial request through response processing.
 
 **Client Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # LLM request handling in a Flask application
 import sentry_sdk
 import time
 import openai
-from flask import jsonify, request
+from flask import jsonify
 
 @app.route("/ask", methods=["POST"])
 def handle_llm_request():
     with sentry_sdk.start_span(op="gen_ai.chat", name="Generate Text") as span:
         start_time = time.time() * 1000  # Convert to milliseconds
-
+        
         # Begin streaming response from LLM API
         user_input = request.json["question"]
-
+        
         response_chunks = []
         first_token_received = False
         tokens_received = 0
-
+        
         # Using OpenAI's streaming API
         try:
             for chunk in openai.ChatCompletion.create(
@@ -287,25 +163,25 @@ def handle_llm_request():
                 tokens_received += 1
                 content = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
                 response_chunks.append(content)
-
+                
                 # Record time to first token
                 if not first_token_received and content:
                     first_token_received = True
                     time_to_first_token = (time.time() * 1000) - start_time
                     span.set_data("response.time_to_first_token_ms", time_to_first_token)
-
+            
             # Record final metrics after stream completes
             total_request_time = (time.time() * 1000) - start_time
-
+            
             span.set_data("response.total_time_ms", total_request_time)
             span.set_data("response.format", "text")
             span.set_data("response.tokens_received", tokens_received)
-
+            
             return jsonify({
                 "response": "".join(response_chunks),
                 "tokens": tokens_received
             })
-
+            
         except Exception as error:
             span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
             span.set_data("error.type", error.__class__.__name__)
@@ -313,69 +189,8 @@ def handle_llm_request():
             return jsonify({"error": str(error)}), 500
 ```
 
-```python {tabTitle:Stream Mode}
-# LLM request handling in a Flask application
-import sentry_sdk
-import time
-import openai
-from flask import jsonify, request
-
-@app.route("/ask", methods=["POST"])
-def handle_llm_request():
-    with sentry_sdk.traces.start_span(
-        name="Generate Text",
-        attributes={"sentry.op": "gen_ai.chat"},
-    ) as span:
-        start_time = time.time() * 1000  # Convert to milliseconds
-
-        # Begin streaming response from LLM API
-        user_input = request.json["question"]
-
-        response_chunks = []
-        first_token_received = False
-        tokens_received = 0
-
-        # Using OpenAI's streaming API
-        try:
-            for chunk in openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": user_input}],
-                stream=True
-            ):
-                tokens_received += 1
-                content = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
-                response_chunks.append(content)
-
-                # Record time to first token
-                if not first_token_received and content:
-                    first_token_received = True
-                    time_to_first_token = (time.time() * 1000) - start_time
-                    span.set_attribute("response.time_to_first_token_ms", time_to_first_token)
-
-            # Record final metrics after stream completes
-            total_request_time = (time.time() * 1000) - start_time
-
-            span.set_attributes({
-                "response.total_time_ms": total_request_time,
-                "response.format": "text",
-                "response.tokens_received": tokens_received
-            })
-
-            return jsonify({
-                "response": "".join(response_chunks),
-                "tokens": tokens_received
-            })
-
-        except Exception as error:
-            span.status = "error"
-            span.set_attribute("error.type", error.__class__.__name__)
-            span.set_attribute("error.message", str(error))
-            return jsonify({"error": str(error)}), 500
-```
-
 **Server Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # LLM processing service (e.g., in a separate microservice)
 import sentry_sdk
 import time
@@ -387,15 +202,15 @@ def process_llm_request(request_data):
         name="Generate Text"
     ) as span:
         start_time = int(time.time() * 1000)  # Current time in milliseconds
-
+        
         try:
             # Check rate limits before processing
             rate_limits = check_rate_limits()
             span.set_data("llm.rate_limit_remaining", rate_limits["remaining"])
-
+            
             # Prepare the prompt with additional context
             prepared_prompt = enhance_prompt(request_data["question"])
-
+            
             # Make the actual API call to the LLM provider
             response = openai.ChatCompletion.create(
                 model="gpt-4",
@@ -404,13 +219,13 @@ def process_llm_request(request_data):
                 temperature=0.7,
                 max_tokens=4096
             )
-
+            
             # Track token usage and performance metrics
             span.set_data("llm.prompt_tokens", response.usage.prompt_tokens)
             span.set_data("llm.completion_tokens", response.usage.completion_tokens)
             span.set_data("llm.total_tokens", response.usage.total_tokens)
             span.set_data("llm.api_latency_ms", int(time.time() * 1000) - start_time)
-
+            
             # Calculate and record cost based on token usage
             cost = calculate_cost(
                 response.usage.prompt_tokens,
@@ -418,88 +233,23 @@ def process_llm_request(request_data):
                 "gpt-4"
             )
             span.set_data("llm.cost_usd", cost)
-
+            
             return {
                 "response": response.choices[0].message.content,
                 "usage": response.usage
             }
-
+            
         except Exception as error:
             # Track error information
             span.set_data("error", True)
             span.set_data("error.type", error.__class__.__name__)
             span.set_data("error.message", str(error))
-
+            
             # Check if it's a rate limit error
             is_rate_limit = "rate_limit" in str(error).lower()
             span.set_data("error.is_rate_limit", is_rate_limit)
             span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
-
-            raise
-```
-
-```python {tabTitle:Stream Mode}
-# LLM processing service (e.g., in a separate microservice)
-import sentry_sdk
-import time
-import openai
-
-def process_llm_request(request_data):
-    with sentry_sdk.traces.start_span(
-        name="Generate Text",
-        attributes={"sentry.op": "gen_ai.chat"},
-    ) as span:
-        start_time = int(time.time() * 1000)  # Current time in milliseconds
-
-        try:
-            # Check rate limits before processing
-            rate_limits = check_rate_limits()
-            span.set_attribute("llm.rate_limit_remaining", rate_limits["remaining"])
-
-            # Prepare the prompt with additional context
-            prepared_prompt = enhance_prompt(request_data["question"])
-
-            # Make the actual API call to the LLM provider
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "system", "content": "You are a helpful assistant."},
-                         {"role": "user", "content": prepared_prompt}],
-                temperature=0.7,
-                max_tokens=4096
-            )
-
-            # Track token usage and performance metrics
-            span.set_attributes({
-                "llm.prompt_tokens": response.usage.prompt_tokens,
-                "llm.completion_tokens": response.usage.completion_tokens,
-                "llm.total_tokens": response.usage.total_tokens,
-                "llm.api_latency_ms": int(time.time() * 1000) - start_time
-            })
-
-            # Calculate and record cost based on token usage
-            cost = calculate_cost(
-                response.usage.prompt_tokens,
-                response.usage.completion_tokens,
-                "gpt-4"
-            )
-            span.set_attribute("llm.cost_usd", cost)
-
-            return {
-                "response": response.choices[0].message.content,
-                "usage": response.usage
-            }
-
-        except Exception as error:
-            # Track error information
-            span.set_attribute("error", True)
-            span.set_attribute("error.type", error.__class__.__name__)
-            span.set_attribute("error.message", str(error))
-
-            # Check if it's a rate limit error
-            is_rate_limit = "rate_limit" in str(error).lower()
-            span.set_attribute("error.is_rate_limit", is_rate_limit)
-            span.status = "error"
-
+            
             raise
 ```
 
@@ -519,8 +269,7 @@ The client application span captures the initial request handling, while the ser
 **Solution:** Track the full transaction process from API request to order fulfillment.
 
 **Client Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # Django view handling checkout request
 import sentry_sdk
 import time
@@ -533,28 +282,28 @@ class CheckoutView(View):
             # Validate the checkout request
             validation_start = time.time()
             validation_result = self.validate_checkout_data(request.POST)
-            span.set_data("request.validation_time_ms",
+            span.set_data("request.validation_time_ms", 
                              (time.time() - validation_start) * 1000)
-
+            
             if not validation_result["valid"]:
                 span.set_data("request.validation_success", False)
                 span.set_data("request.validation_errors", validation_result["errors"])
                 return JsonResponse({"errors": validation_result["errors"]}, status=400)
-
+            
             # Process the order
             try:
                 order_result = self.process_order(request)
-
+                
                 # Update span with order results
                 span.set_data("order.id", order_result["order_id"])
                 span.set_data("order.success", True)
-
+                
                 # Clear the cart and return success
                 request.session["cart"] = []
                 request.session["cart_total"] = 0
-
+                
                 return JsonResponse({"order_id": order_result["order_id"]})
-
+                
             except Exception as e:
                 span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
                 span.set_data("order.success", False)
@@ -562,58 +311,11 @@ class CheckoutView(View):
                 return JsonResponse({"error": str(e)}, status=500)
 ```
 
-```python {tabTitle:Stream Mode}
-# Django view handling checkout request
-import sentry_sdk
-import time
-from django.views import View
-from django.http import JsonResponse
-
-class CheckoutView(View):
-    def post(self, request):
-        with sentry_sdk.traces.start_span(
-            name="Process Order",
-            attributes={"sentry.op": "order"},
-        ) as span:
-            # Validate the checkout request
-            validation_start = time.time()
-            validation_result = self.validate_checkout_data(request.POST)
-            span.set_attribute("request.validation_time_ms",
-                             (time.time() - validation_start) * 1000)
-
-            if not validation_result["valid"]:
-                span.set_attribute("request.validation_success", False)
-                span.set_attribute("request.validation_errors", validation_result["errors"])
-                return JsonResponse({"errors": validation_result["errors"]}, status=400)
-
-            # Process the order
-            try:
-                order_result = self.process_order(request)
-
-                # Update span with order results
-                span.set_attribute("order.id", order_result["order_id"])
-                span.set_attribute("order.success", True)
-
-                # Clear the cart and return success
-                request.session["cart"] = []
-                request.session["cart_total"] = 0
-
-                return JsonResponse({"order_id": order_result["order_id"]})
-
-            except Exception as e:
-                span.status = "error"
-                span.set_attribute("order.success", False)
-                span.set_attribute("error.message", str(e))
-                return JsonResponse({"error": str(e)}, status=500)
-```
-
 **Server Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # Order processing service
 import sentry_sdk
 import stripe
-import time
 from decimal import Decimal
 
 def process_order(order_data):
@@ -625,15 +327,15 @@ def process_order(order_data):
             # Check inventory availability
             inventory_start = time.time()
             inventory_result = check_inventory(order_data["items"])
-            span.set_data("inventory.check_time_ms",
+            span.set_data("inventory.check_time_ms", 
                              (time.time() - inventory_start) * 1000)
             span.set_data("inventory.all_available", inventory_result["all_available"])
-
+            
             if not inventory_result["all_available"]:
-                span.set_data("inventory.unavailable_items",
+                span.set_data("inventory.unavailable_items", 
                                  inventory_result["unavailable_items"])
                 raise ValueError("Some items are out of stock")
-
+            
             # Process payment via Stripe
             payment_start = time.time()
             stripe.api_key = "sk_test_..."
@@ -643,95 +345,31 @@ def process_order(order_data):
                 payment_method=order_data["payment_method_id"],
                 confirm=True
             )
-
-            span.set_data("payment.processing_time_ms",
+            
+            span.set_data("payment.processing_time_ms", 
                              (time.time() - payment_start) * 1000)
             span.set_data("payment.transaction_id", payment_intent.id)
             span.set_data("payment.success", payment_intent.status == "succeeded")
-
+            
             # Create fulfillment record
             fulfillment = create_fulfillment(order_data["order_id"])
             span.set_data("fulfillment.id", fulfillment["id"])
             span.set_data("fulfillment.warehouse", fulfillment["warehouse"])
             span.set_data("fulfillment.shipping_method", fulfillment["shipping_method"])
-            span.set_data("fulfillment.estimated_delivery",
+            span.set_data("fulfillment.estimated_delivery", 
                              fulfillment["estimated_delivery"].isoformat())
-
+            
             return {
                 "success": True,
                 "order_id": order_data["order_id"],
                 "payment_id": payment_intent.id,
                 "fulfillment_id": fulfillment["id"]
             }
-
+            
         except Exception as e:
             span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
             span.set_data("error.message", str(e))
             span.set_data("order.success", False)
-            raise
-```
-
-```python {tabTitle:Stream Mode}
-# Order processing service
-import sentry_sdk
-import stripe
-import time
-from decimal import Decimal
-
-def process_order(order_data):
-    with sentry_sdk.traces.start_span(
-        name="Check Inventory",
-        attributes={"sentry.op": "inventory"},
-    ) as span:
-        try:
-            # Check inventory availability
-            inventory_start = time.time()
-            inventory_result = check_inventory(order_data["items"])
-            span.set_attribute("inventory.check_time_ms",
-                             (time.time() - inventory_start) * 1000)
-            span.set_attribute("inventory.all_available", inventory_result["all_available"])
-
-            if not inventory_result["all_available"]:
-                span.set_attribute("inventory.unavailable_items",
-                                 inventory_result["unavailable_items"])
-                raise ValueError("Some items are out of stock")
-
-            # Process payment via Stripe
-            payment_start = time.time()
-            stripe.api_key = "sk_test_..."
-            payment_intent = stripe.PaymentIntent.create(
-                amount=int(Decimal(order_data["total"]) * 100),  # Convert to cents
-                currency="usd",
-                payment_method=order_data["payment_method_id"],
-                confirm=True
-            )
-
-            span.set_attributes({
-                "payment.processing_time_ms": (time.time() - payment_start) * 1000,
-                "payment.transaction_id": payment_intent.id,
-                "payment.success": payment_intent.status == "succeeded"
-            })
-
-            # Create fulfillment record
-            fulfillment = create_fulfillment(order_data["order_id"])
-            span.set_attributes({
-                "fulfillment.id": fulfillment["id"],
-                "fulfillment.warehouse": fulfillment["warehouse"],
-                "fulfillment.shipping_method": fulfillment["shipping_method"],
-                "fulfillment.estimated_delivery": fulfillment["estimated_delivery"].isoformat()
-            })
-
-            return {
-                "success": True,
-                "order_id": order_data["order_id"],
-                "payment_id": payment_intent.id,
-                "fulfillment_id": fulfillment["id"]
-            }
-
-        except Exception as e:
-            span.status = "error"
-            span.set_attribute("error.message", str(e))
-            span.set_attribute("order.success", False)
             raise
 ```
 
@@ -751,14 +389,11 @@ The client application span tracks the initial order request, while the server s
 **Solution:** Comprehensive tracking of job lifecycle across queue management, processing stages, and worker performance.
 
 **Client Application Instrumentation:**
-
-```python {tabTitle:Transaction Mode (Default)}
+```python
 # Celery task submission
 import sentry_sdk
 from celery import shared_task
 import time
-import psutil
-import os
 from datetime import datetime, timedelta
 
 def submit_processing_job(data_file_path, priority="medium"):
@@ -771,20 +406,20 @@ def submit_processing_job(data_file_path, priority="medium"):
                 kwargs={"priority": priority},
                 queue="data_processing"
             )
-
+            
             span.set_data("job.id", task.id)
             span.set_data("job.submission_success", True)
-
+            
             # Start monitoring task progress
             monitoring_result = setup_task_monitoring(task.id)
             span.set_data("monitor.callback_url", monitoring_result["callback_url"])
-
+            
             return {
                 "job_id": task.id,
                 "status": "submitted",
                 "monitoring_url": monitoring_result["status_url"]
             }
-
+            
         except Exception as e:
             span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
             span.set_data("job.submission_success", False)
@@ -801,131 +436,39 @@ def process_data_file(file_path, priority="medium"):
             # Processing implementation with stage tracking
             span.set_data("processing.current_stage", "parse")
             data = parse_data_file(file_path)
-
+            
             span.set_data("processing.current_stage", "transform")
             transformed_data = transform_data(data)
-
+            
             span.set_data("processing.current_stage", "validate")
             validation_result = validate_data(transformed_data)
             span.set_data("validation.errors_count", len(validation_result["errors"]))
-
+            
             span.set_data("processing.current_stage", "export")
             export_result = export_processed_data(transformed_data)
-
+            
             # Record resource utilization
             span.set_data("resource.cpu_percent", psutil.cpu_percent())
-            span.set_data(
-                "resource.memory_used_mb",
-                psutil.Process().memory_info().rss / (1024 * 1024)
-            )
-
+            span.set_data("resource.memory_used_mb", 
+                             psutil.Process().memory_info().rss / (1024 * 1024))
+            
             # Update final job outcome
             span.set_data("outcome.status", "completed")
             span.set_data("outcome.records_processed", len(data))
-            span.set_data("outcome.output_size_bytes",
+            span.set_data("outcome.output_size_bytes", 
                              os.path.getsize(export_result["output_path"]))
-
+            
             return {
                 "success": True,
                 "records_processed": len(data),
                 "output_path": export_result["output_path"]
             }
-
+            
         except Exception as e:
             span.set_status(sentry_sdk.consts.SPANSTATUS.INTERNAL_ERROR)
             span.set_data("outcome.status", "failed")
             span.set_data("error.message", str(e))
             span.set_data("error.stage", span.get_data("processing.current_stage"))
-            raise
-```
-
-```python {tabTitle:Stream Mode}
-# Celery task submission
-import sentry_sdk
-from celery import shared_task
-import time
-import psutil
-import os
-from datetime import datetime, timedelta
-
-def submit_processing_job(data_file_path, priority="medium"):
-    with sentry_sdk.traces.start_span(
-        name="Process Job",
-        attributes={"sentry.op": "job"},
-    ) as span:
-        # Submit job to Celery
-        try:
-            # Configure task and submit
-            task = process_data_file.apply_async(
-                args=[str(data_file_path)],
-                kwargs={"priority": priority},
-                queue="data_processing"
-            )
-
-            span.set_attribute("job.id", task.id)
-            span.set_attribute("job.submission_success", True)
-
-            # Start monitoring task progress
-            monitoring_result = setup_task_monitoring(task.id)
-            span.set_attribute("monitor.callback_url", monitoring_result["callback_url"])
-
-            return {
-                "job_id": task.id,
-                "status": "submitted",
-                "monitoring_url": monitoring_result["status_url"]
-            }
-
-        except Exception as e:
-            span.status = "error"
-            span.set_attribute("job.submission_success", False)
-            span.set_attribute("error.message", str(e))
-            raise
-
-@shared_task(name="tasks.process_data_file")
-def process_data_file(file_path, priority="medium"):
-    with sentry_sdk.traces.start_span(
-        name="Process Data",
-        attributes={"sentry.op": "process"},
-    ) as span:
-        try:
-            # Processing implementation with stage tracking
-            span.set_attribute("processing.current_stage", "parse")
-            data = parse_data_file(file_path)
-
-            span.set_attribute("processing.current_stage", "transform")
-            transformed_data = transform_data(data)
-
-            span.set_attribute("processing.current_stage", "validate")
-            validation_result = validate_data(transformed_data)
-            span.set_attribute("validation.errors_count", len(validation_result["errors"]))
-
-            span.set_attribute("processing.current_stage", "export")
-            export_result = export_processed_data(transformed_data)
-
-            # Record resource utilization
-            span.set_attribute("resource.cpu_percent", psutil.cpu_percent())
-            span.set_attribute(
-                "resource.memory_used_mb",
-                psutil.Process().memory_info().rss / (1024 * 1024)
-            )
-
-            # Update final job outcome
-            span.set_attributes({
-                "outcome.status": "completed",
-                "outcome.records_processed": len(data),
-                "outcome.output_size_bytes": os.path.getsize(export_result["output_path"])
-            })
-
-            return {
-                "success": True,
-                "records_processed": len(data),
-                "output_path": export_result["output_path"]
-            }
-
-        except Exception as e:
-            span.status = "error"
-            span.set_attribute("outcome.status", "failed")
-            span.set_attribute("error.message", str(e))
             raise
 ```
 
