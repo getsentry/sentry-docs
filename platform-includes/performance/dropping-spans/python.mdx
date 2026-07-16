@@ -1,0 +1,37 @@
+<Alert>`ignore_span` is only available in stream mode.</Alert>
+
+In stream mode, you can prevent specific spans from being created using `ignore_spans`, set under `_experiments`. It evaluates rules at span start, which can be strings, compiled regexes, or dictionaries with `name` and/or `attributes` conditions. If the dropped span is a service span, its children are dropped too. If it's a child span, only that span is dropped and its children are reparented to the nearest ancestor.
+
+```python
+import re
+import sentry_sdk
+
+sentry_sdk.init(
+    _experiments={
+        "trace_lifecycle": "stream",
+        "ignore_spans": [
+            # String match against span name
+            "/health",
+
+            # Regex match against span name
+            re.compile(r"/flow/.*"),
+
+            # Match by attributes (all must match)
+            {
+                "attributes": {
+                    "service.id": "15def9a",
+                    "flow.pipeline": "legacy",
+                }
+            },
+
+            # Match by name and attributes
+            {
+                "name": re.compile(r"/flow/.*"),
+                "attributes": {
+                    "service.id": re.compile(r".*\.facade"),
+                },
+            },
+        ],
+    },
+)
+```
