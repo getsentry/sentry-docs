@@ -1,4 +1,4 @@
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog"]}>
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.log4net"]}>
 
 Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `SentrySdk.Logger` APIs.
 
@@ -81,7 +81,40 @@ The _Enrichments_ of _log events_ are attached as attributes to the logs, alongs
 
 </PlatformSection>
 
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog"]}>
+<PlatformSection supported={["dotnet.log4net"]}>
+
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the _log4net_ APIs, for example through the `ILog` methods (`Debug`, `Info`, `Warn`, `Error`, and `Fatal`).
+
+log4net levels are automatically mapped to Sentry's severity:
+
+| log4net.Core.Level | Sentry.SentryLogLevel | Sentry Logs UI Severity |
+| --- | --- | --- |
+| Trace | Trace | trace |
+| Debug | Debug | debug |
+| Info | Info | info |
+| Warn | Warning | warn |
+| Error | Error | error |
+| Fatal | Fatal | fatal |
+
+These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+```csharp
+private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
+
+Log.Info("A simple log message");
+Log.Error("An error log message");
+
+ThreadContext.Properties["Property"] = "Value";
+Log.Warn("Message with a custom property");
+```
+
+The log4net _properties_ (from the log event, `ThreadContext`, and `GlobalContext`) are attached as `property.<name>` attributes to the logs, alongside a set of default attributes automatically provided by the SDK. The logger name is attached as the `category.name` attribute.
+
+Because log4net renders each message before it reaches the appender, structured logs from log4net carry the fully-formatted message but no message template or parameters.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.log4net"]}>
 
 The SDK automatically provides a set of default attributes attached to your logs.
 Additionally, you can attach custom attributes via a delegate.
