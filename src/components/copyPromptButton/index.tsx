@@ -8,21 +8,23 @@ import {useCallback, useMemo, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
-import {buildPrompt} from '../agentSkillsCallout/shared';
+import {buildPrompt} from '../agentSetupCallout/shared';
 import styles from './style.module.scss';
 
 type Props = {
-  /** Skill package name, e.g. "sentry-nextjs-sdk". */
+  /** Skill package name, e.g. "sentry-nextjs-sdk". Used for analytics. */
   skill: string;
+  /** Display name for the SDK, e.g. "Next.js". Named in the copied prompt. */
+  platformName?: string;
 };
 
-export function CopyPromptButton({skill}: Props) {
+export function CopyPromptButton({skill, platformName}: Props) {
   const [copied, setCopied] = useState(false);
   const {emit} = usePlausibleEvent();
   const {resolvedTheme} = useTheme();
   const isDark = resolvedTheme === 'dark';
 
-  const prompt = buildPrompt(skill);
+  const prompt = buildPrompt(platformName);
 
   /**
    * Tooltip styles matching the onboarding tooltip pattern.
