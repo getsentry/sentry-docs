@@ -1,0 +1,40 @@
+## Record Already-Completed Transactions
+
+<Alert>
+
+Requires Sentry SDK version `6.8.0` or higher.
+
+</Alert>
+
+`StartTransaction` measures work as it happens, using a live stopwatch. Sometimes, though, the work you want to report has already finished somewhere else — for example, spans measured on another machine or in another process and relayed to your application through a proxy. For those cases, use `SentrySdk.RecordTransaction` to record a transaction whose timing you supply explicitly:
+
+```csharp
+SentrySdk.RecordTransaction(
+    "checkout",                    // name
+    "http.server",                 // operation
+    originalStartTimestamp,        // when the work started (DateTimeOffset)
+    originalDuration,              // how long it ran (TimeSpan, must not be negative)
+    traceId: originTraceId,        // optional: preserve the trace id from the originating system
+    spanId: originRootSpanId,      // optional: preserve the root span id
+    parentSpanId: originParentId,  // optional: continue a trace from another service
+    configure: transaction =>
+    {
+        transaction.Release = "1.2.3";
+        transaction.SetTag("origin", "proxy");
+
+        // Child spans also take their timing up front and can be nested arbitrarily
+        transaction.RecordSpan("db.query", queryStart, queryDuration, configure: span =>
+        {
+            span.Description = "SELECT * FROM orders";
+            span.RecordSpan("db.connection", connectStart, connectDuration);
+        });
+    });
+```
+
+The transaction is captured and sent to Sentry once the `configure` callback returns — there is no `Finish()` to call.
+
+Because a recorded transaction represents work that happened elsewhere, it behaves differently from one started with `StartTransaction`:
+
+- **Timing is explicit.** Each transaction and span takes a start timestamp and a duration up front, rather than being measured live.
+- **Sampling is skipped.** Recorded transactions are always sent, regardless of <PlatformIdentifier name="traces-sample-rate" /> or <PlatformIdentifier name="traces-sampler" />. Your <PlatformIdentifier name="before-send-transaction" /> callback still runs, so you can filter or scrub there.
+- **The current scope doesn't apply.** The transaction is captured against a clean scope, so breadcrumbs, user data, and tags from the current process won't leak onto work that happened elsewhere. To attach scope data that belongs with the original trace, use `transaction.ConfigureScope` inside the callback, or the `Release` and `Environment` setters.
