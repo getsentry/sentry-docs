@@ -1,0 +1,190 @@
+---
+title: Errors
+sidebar_order: 201
+sidebar_section: debug
+description: >-
+  Errors allows you to search, filter, and query all your error event data
+  across projects and environments to uncover trends and gain insights.
+---
+
+## Overview
+
+The [**Errors**](https://sentry.io/orgredirect/organizations/:orgslug/explore/errors/) page lets you query all of your error event metadata across projects and environments. You can build custom queries with flexible filters, group and stack results, visualize trends over time, and save queries for reuse by your team.
+
+While [Issues](/product/issues/) groups related error events for triage and resolution, the Errors page gives you a powerful way to ask questions across all your error data at once, surfacing patterns and trends that individual issues may not reveal.
+
+## Searching and Filtering
+
+### Search Conditions
+
+All error events have built-in key fields and custom tags. Use the search bar to filter events by these keys. For a list of built-in key fields, check out the [Searchable Properties documentation](/concepts/search/searchable-properties/).
+
+The search syntax is identical to [Sentry's Search syntax](/concepts/search/). For example, `count()` gives you the number of times an event occurs:
+
+- Exact match: `count():99`
+- Upper bounds: `count():<99` or `count():<=99`
+- Lower bounds: `count():>99` or `count():>=99`
+- Multiple bounds: `count():>10 count():<20`
+
+Use `OR` and `AND` between filters. Note that `OR` cannot be used between aggregate and non-aggregate filters. Learn more about [Using `OR` and `AND`](/concepts/search/#using-or-and-and).
+
+You can search multiple values for the same key by putting them in a list. For example, `x:[value1, value2]` returns the same results as `x:value1 OR x:value2`. Learn more about [Multiple Values on the Same Key](/concepts/search/#multiple-values-on-the-same-key).
+
+### Filter by Project, Environment, and Date Range
+
+Use the common filters at the top of the page to scope your query by project, environment, and date range.
+
+### Tag Summary Filters
+
+Every event carries a list of tag values. The tag summary visualizes the top 10 keys sorted by frequency, with the most common tag value shown above the bar. Click **Show Tags** to see the tag summary.
+
+Click on any tag to refine your search. For example, clicking on Chrome listed under Browser will add Chrome to your search conditions and update the results.
+
+## Interactive Graph
+
+Each query has an interactive graph that reflects the data in the table below. Click and drag over an area to zoom in.
+
+### Interval
+
+The interval selector controls date groupings in the graph. The available intervals depend on the selected time range -- for example, querying over 90 days limits you to intervals between one hour and 45 days.
+
+### Display Options
+
+- Total Period
+- Previous Period
+- Release Markers
+- Top Period
+- Total Daily
+- Top Daily
+- Bar Chart
+
+### Limit
+
+When the display is set to "Top Period" or "Top Daily", you can set a limit. The default is five, showing the top five results.
+
+### Y-Axis Options
+
+- Count
+- Unique User Count
+
+When the display is set to "Total Period", "Previous Period", "Total Daily", or "Bar Chart", you can configure up to three Y-axes by selecting multiple options.
+
+## Table Columns and Stacking Functions
+
+Click "Columns" above the table to manage which columns appear in the results. You can add, remove, and reorder key field columns or custom tag columns.
+
+### Stacking Functions
+
+Add the following functions as columns to stack (group) events:
+
+- `count()`
+- `count_if(...)`
+- `count_unique(...)`
+- `eps()`
+- `epm()`
+
+Each function will ask you to assign a parameter. Some are required, others optional. Functions stack events with the same values. If no functions are applied, events are listed individually. Once you're done editing columns, click "Apply" to update results.
+
+### Cell Filters
+
+Hovering over a table cell reveals an ellipsis that opens a context menu with additional filtering options. For example, you can add a value to the search conditions by clicking "Add to filter", or exclude it with "Exclude from filter".
+
+### Sorting Columns
+
+Click a column header to sort. A down arrow sorts descending, an up arrow sorts ascending.
+
+## Saved Queries
+
+You can save any of your queries by clicking the **Save As** button in the top right. Nam your query, and you can then update it or find it later in the All or Starred Queries sections. 
+
+
+### Add to Dashboard
+
+Queries can be added to [custom dashboards](/product/dashboards/custom-dashboards/) as widgets. Open the context menu on the query card or within the query results view and click "Add to Dashboard". Name your widget, select the target dashboard, and save.
+
+### Set as Default
+
+Customize your default view by configuring a query with specific columns, charts, and filters, then clicking "Set as Default". Navigating to the Errors page will then open with this configuration pre-loaded. Click "Remove Default" to revert to the default "All Events" view.
+
+### Export CSV
+
+Click "Export Data" to download a CSV file of the results. For large exports, you'll receive an email with the download link. The results are limited to 10 million rows or 1 GB, whichever comes first.
+
+The download includes a `SHA1` checksum you can use to verify integrity:
+
+```bash
+echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
+```
+
+## Pre-built Queries
+
+Pre-built queries are available from the "Saved Queries" view and are identified by the Sentry avatar. These can be duplicated, butcannot be removed.
+
+## Uncovering Trends
+
+The Errors page is a powerful way to query across all your error metadata, going beyond the scope of individual issues or projects to reveal trends across all your applications. Enriching your error data with custom tags, release, and environment information makes these queries even more powerful. Learn more about [enriching events](/concepts/key-terms/enrich-data/).
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+<Alert>
+
+Some table column options may be repeated if you've set up a tag with the same name as a Sentry field. Use the table column option marked "field" for the examples below.
+
+</Alert>
+
+### Counting Events, Users, and Issues per Project
+
+Build a query to find which projects have the most issues:
+
+1. Select the projects, environments, and date range you want to query.
+2. Edit the table columns to show `count()`, `count_unique(user)`, and `count_unique(issue)` per project.
+3. Click the `COUNT_UNIQUE(ISSUE)` column header to sort by the number of unique issues.
+4. Hover over the top project, click the actions icon, and select "Add to filter" to narrow your results to that project.
+5. Change columns to `issue`, `title`, `count()`, and `count_unique(user)` to drill into individual issues.
+
+### Errors by URL
+
+Create a report of errors across URL endpoints:
+
+- Search condition: `has:url`
+- Table columns: `url`, `platform.name`, `count()`
+
+Filter URL patterns using wildcards or click "Add to filter" on a specific URL to drill deeper.
+
+### Unhandled Errors
+
+Find unhandled fatal errors that may be crashing your application:
+
+- Search condition: `handled:no level:fatal`
+- Table columns: `mechanism`, `platform.name`, `count()`
+
+Select a crash type and add it to the filter, then change columns to show the `message` and `count()` for more detail.
+
+### Files With Most Errors
+
+Find which files in your codebase are generating the most errors:
+
+- Search condition: `has:stack.filename`
+- Table columns: `stack.filename`, `count()`, `count_unique(issue)`
+
+Change the display to compare the current period with the previous one to spot trends. Add a specific filename to the filter and change columns to see the major error culprits in that file.
+
+### Errors per Release
+
+Track how the health of a project changes across releases:
+
+- Table columns: `release`, `count()`, `count_unique(issue)`
+
+Add a release as a filter and change columns to `count()` and `title` to see similar errors. Click the "Open Group" icon to drill into individual events, or open the release in [Releases](/product/releases/).
+
+### Errors by Hour or Day
+
+The `timestamp.to_hour` and `timestamp.to_day` fields round timestamps down to the last hour or day. This lets you group events by time periods -- for example, showing hourly counts for errors that occurred at least twice per hour.
+
+All timestamps display in your preferred timezone, which you can set in **User Settings > Account > Account Details**.
+
+## Additional Use Cases
+
+For more examples of working with error data, see:
+
+- [What issues are consuming my quota?](/pricing/quotas/manage-event-stream-guide/#which-issues-are-consuming-my-quota)

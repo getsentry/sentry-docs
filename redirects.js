@@ -1658,7 +1658,15 @@ const userDocsRedirects = [
   },
   {
     source: '/product/explore/discover-queries/:path*',
-    destination: '/product/discover-queries/:path*',
+    destination: '/product/errors/',
+  },
+  {
+    source: '/product/discover-queries/:path*',
+    destination: '/product/errors/',
+  },
+  {
+    source: '/product/discover-queries',
+    destination: '/product/errors/',
   },
   {
     source: '/product/explore/session-replay/:path*',
