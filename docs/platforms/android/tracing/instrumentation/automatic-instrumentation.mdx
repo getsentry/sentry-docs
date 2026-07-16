@@ -159,6 +159,149 @@ You can opt out of Activity Instrumentation and App Start Instrumentation using 
 
 Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals).
 
+### Standalone App Start Tracing
+
+<Alert level="info">
+
+This feature is experimental. The API is subject to change and may introduce breaking changes in future releases.
+
+</Alert>
+
+By default, app start data is attached as spans to the first transaction in your app. Standalone app start tracing sends app start data as its own separate transaction instead. This gives you more accurate app start measurements, since they aren't dependent on another transaction being started.
+
+To enable standalone app start tracing, add the following to your `AndroidManifest.xml`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.standalone-app-start-tracing.enable" android:value="true" />
+</application>
+```
+
+Or, configure it manually in code:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setEnableStandaloneAppStartTracing(true);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.isEnableStandaloneAppStartTracing = true
+}
+```
+
+Unlike the `app.start.cold` and `app.start.warm` spans described above, standalone app start tracing uses the `app.start` operation for its transaction. You can use a custom `tracesSampler` to set a dedicated sample rate for app starts without increasing your overall sample rate:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setEnableStandaloneAppStartTracing(true);
+  options.setTracesSampler(context -> {
+    if ("app.start".equals(context.getTransactionContext().getOperation())) {
+      return 1.0;
+    }
+    return 0.1;
+  });
+});
+```
+
+```kotlin
+import io.sentry.SentryOptions.TracesSamplerCallback
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.isEnableStandaloneAppStartTracing = true
+  options.tracesSampler = TracesSamplerCallback { context ->
+    if (context.transactionContext.operation == "app.start") {
+      1.0
+    } else {
+      0.1
+    }
+  }
+}
+```
+
+#### Extending the App Start
+
+_(New in version 8.48.0)_
+
+By default, the standalone app start transaction ends when the first frame is drawn. If your app performs additional work after that — such as loading initial data from a server or database — you can extend the app start transaction to include that time by calling `Sentry.extendAppStart()`.
+
+Call `Sentry.extendAppStart()` in `Application.onCreate`, after the SDK is initialized, so the SDK doesn't automatically finish the app start transaction when the first frame is drawn. With automatic initialization, the SDK is ready before `Application.onCreate` runs. If you initialize the SDK manually, call `SentryAndroid.init()` before `Sentry.extendAppStart()`.
+
+Optionally, retrieve the extended app start span with `Sentry.getExtendedAppStartSpan()` to add child spans that break down the extended launch period. Perform your launch-time work, finish any child spans, and call `Sentry.finishExtendedAppStart()` when your app is fully ready.
+
+```java {filename:MyApplication.java}
+import android.app.Application;
+import io.sentry.ISpan;
+import io.sentry.Sentry;
+
+public final class MyApplication extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+
+    Sentry.extendAppStart();
+
+    // Optionally, retrieve the extended app start span to attach your own child spans
+    ISpan extendedSpan = Sentry.getExtendedAppStartSpan();
+    ISpan child =
+        extendedSpan != null
+            ? extendedSpan.startChild("preload", "Preload resources")
+            : null;
+
+    preloadResources();
+
+    if (child != null) {
+      child.finish();
+    }
+
+    Sentry.finishExtendedAppStart();
+  }
+}
+```
+
+```kotlin {filename:MyApplication.kt}
+import android.app.Application
+import io.sentry.Sentry
+
+class MyApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+
+    Sentry.extendAppStart()
+
+    // Optionally, retrieve the extended app start span to attach your own child spans
+    val extendedSpan = Sentry.getExtendedAppStartSpan()
+    val child = extendedSpan?.startChild("preload", "Preload resources")
+
+    preloadResources()
+
+    child?.finish()
+
+    Sentry.finishExtendedAppStart()
+  }
+}
+```
+
+These examples use `Sentry.finishExtendedAppStart()` to finish the extended app start. Alternatively, if you retrieved the extended span, you can call `finish()` on it directly. Both methods finish the same extension, so use only one.
+
+Finish any child spans first, then finish the extended app start once your launch-time work is done. By default, if the extended app start isn't finished within the 30-second [deadline timeout](/platforms/android/configuration/options/#deadlineTimeout), the SDK finishes the extended span with `DEADLINE_EXCEEDED` and suppresses the cold or warm app start measurement. The standalone `app.start` transaction and its spans are still sent.
+
+If you finish the extended app start before the first frame is drawn (the natural end of the app start), the SDK uses the natural app start end instead, so the reported measurement is never shorter than the actual app start.
+
+<Alert>
+
+Extending the app start requires standalone app start tracing to be enabled. If `enableStandaloneAppStartTracing` is `false`, or the app start transaction was already created, `Sentry.getExtendedAppStartSpan()` returns `null` and `Sentry.finishExtendedAppStart()` is a no-op.
+
+</Alert>
+
 ### Slow and Frozen Frames
 
 <Alert>
@@ -352,6 +495,7 @@ To change the timeouts you can:
     <meta-data android:name="io.sentry.traces.deadline-timeout" android:value="0" /> <!-- 0 disable deadline timeout -->
 </application>
 ```
+
 ```java
 import io.sentry.android.core.SentryAndroid;
 
@@ -360,6 +504,7 @@ SentryAndroid.init(this, options -> {
     options.setDeadlineTimeout(0); // disable deadline timeout
 });
 ```
+
 ```kotlin
 import io.sentry.android.core.SentryAndroid
 
@@ -436,7 +581,7 @@ When the UI transaction is not finished yet, but the user makes a new interactio
 
 _(New in version 6.10.0)_
 
-By adding a span for each launch of an activity, time to initial display (TTID) provides insight into how long it takes for your activities to launch and draw their first UI frame. The SDK sets the span operation to `ui.load.initial-display` and the span description to the activity's name, followed by `initial display` -  for example, `MainActivity initial display`.
+By adding a span for each launch of an activity, time to initial display (TTID) provides insight into how long it takes for your activities to launch and draw their first UI frame. The SDK sets the span operation to `ui.load.initial-display` and the span description to the activity's name, followed by `initial display` - for example, `MainActivity initial display`.
 
 The span starts when each Activity is launched, which is defined as an application launch for the first Activity, and the `onPause` method of the previous Activity for each subsequent Activity launched.
 

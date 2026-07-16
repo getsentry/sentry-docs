@@ -6,32 +6,68 @@ sidebar_order: 1
 
 Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
 
-The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Go SDK collects.
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Go SDK collects automatically.
 
-For many of the categories listed here it is required to enable the <PlatformLink to="/configuration/options">SendDefaultPII option</PlatformLink>.
+## Options to Control Data Collection
+
+Use the <PlatformLink to="/configuration/options/#DataCollection">`DataCollection` option</PlatformLink> to opt in or out of data categories individually. The legacy <PlatformLink to="/configuration/options/#SendDefaultPII">`SendDefaultPII` option</PlatformLink> is still supported, but deprecated.
+
+Defaults depend on which option you use:
+
+- Without `DataCollection` (and with `SendDefaultPII` unset or `false`), the SDK uses legacy privacy defaults.
+- Passing a `DataCollection` value opts in to `DataCollection` defaults for any fields you don't set explicitly.
+- Setting `SendDefaultPII: true` is equivalent to enabling all `DataCollection` categories. If both options are set, `DataCollection` takes precedence.
+
+For exact defaults, field names, filtering modes, and examples, see the <PlatformLink to="/configuration/options/#DataCollection">`DataCollection` option reference</PlatformLink>.
+
+Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
 ## HTTP Headers
 
-By default, the Sentry SDK doesn't send any HTTP headers. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-go/blob/master/interfaces.go#L157-163) in place, which filters out any headers that contain sensitive data.
+When using `DataCollection`, the Sentry SDK collects HTTP request and response headers by default.
 
-To start sending HTTP headers, set <PlatformLink to="/configuration/options">SendDefaultPII option</PlatformLink> to true.
+Use the `DataCollection.HTTPHeaders` option to control this. You can disable it with `sentry.CollectionOff`, or use `sentry.CollectionAllowList` or `sentry.CollectionDenyList` to restrict which header values are sent. Values whose keys match Sentry's built-in sensitive denylist are automatically scrubbed, while the keys are kept.
+
+Without `DataCollection` (and with `SendDefaultPII` unset or `false`), HTTP headers are collected with additional legacy privacy filtering.
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cookies that contain sensitive information, such as the Session ID and CSRF Token cookies.
+When using `DataCollection`, the SDK collects cookies with sensitive values scrubbed. Opt out by setting `DataCollection.Cookies` to `sentry.CollectionOff`.
 
-If you want to send cookies, set <PlatformLink to="/configuration/options">SendDefaultPII option</PlatformLink> to true.
+To collect cookies when not using `DataCollection`, set the deprecated `SendDefaultPII: true` option. You can also restrict which cookie values are sent with `sentry.CollectionAllowList` or `sentry.CollectionDenyList`.
+
+## Information About Logged-in User
+
+The SDK can populate `user.*` fields from request instrumentation when user information collection is enabled. Disable automatic user information with `DataCollection.UserInfo: sentry.Set(false)`.
+
+User data that you explicitly set, for example with `Scope.SetUser`, is always sent regardless of `DataCollection`.
 
 ## Users' IP Addresses
 
-By default, the Sentry SDK doesn't send the user's IP address. Once enabled, the Sentry backend services will infer the user ip address based on the incoming request, unless certain integrations you can enable override this behavior.
+With user information collection enabled, the SDK can send request environment data, such as `REMOTE_ADDR`, which Sentry can use to infer users' IP addresses. Disable this with `DataCollection.UserInfo: sentry.Set(false)`.
 
-To enable sending the user's IP address, set <PlatformLink to="/configuration/options">SendDefaultPII option</PlatformLink> to true.
+IP addresses can also appear in headers, cookies, or query parameters, such as the `X-Forwarded-For` header. To filter those values, configure deny lists for `DataCollection.HTTPHeaders`, `DataCollection.Cookies`, and `DataCollection.QueryParams`. See the <PlatformLink to="/configuration/options/#DataCollection">`DataCollection` option reference</PlatformLink> for an example.
 
 ## Request URL
 
-The full request URL of incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+The SDK collects request URLs for incoming HTTP requests and outgoing HTTP client spans. Depending on your application, URL paths can contain PII data. For example, a URL like `/users/1234/details`, where `1234` is a user id, may be considered PII.
+
+URL credentials are redacted. Query parameters are controlled separately by `DataCollection.QueryParams`.
 
 ## Request Query String
 
-The full request query string of incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+The SDK can collect query strings from incoming and outgoing HTTP requests. Without `DataCollection`, query strings follow the SDK's legacy behavior. With `DataCollection`, query parameters are collected by default with sensitive values scrubbed.
+
+Control this with <PlatformLink to="/configuration/options/#DataCollection">`DataCollection.QueryParams`</PlatformLink>. Sentry also has some additional [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from query strings.
+
+## HTTP Bodies
+
+With `DataCollection`, supported HTTP body types are collected by default. JSON and form-encoded bodies are parsed and values whose keys match the sensitive denylist are replaced with `[Filtered]`. Opaque body data is replaced entirely with `[Filtered]`.
+
+Control body collection with <PlatformLink to="/configuration/options/#DataCollection">`DataCollection.HTTPBodies`</PlatformLink>. Set it to an empty slice to disable body collection, or provide a subset of supported body types.
+
+Without `DataCollection` (and with `SendDefaultPII` unset or `false`), Sentry doesn't send HTTP body content.
+
+## Device, OS, and Runtime Information
+
+By default, the Sentry SDK sends information about the operating system and Go runtime to Sentry. This helps provide context about where an event occurred.
