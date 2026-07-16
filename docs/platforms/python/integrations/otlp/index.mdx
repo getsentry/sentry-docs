@@ -27,7 +27,7 @@ For the OpenTelemetry SDK, you need to [configure instrumentation](https://opent
 
 ### Sentry
 
-For the Sentry SDK, you simply need to enable our `OTLPIntegration` along with your existing configuration.
+For the Sentry SDK, add the `OTLPIntegration` to your existing configuration.
 
 <OnboardingOptionButtons
   options={["error-monitoring", "logs"]}
@@ -54,11 +54,13 @@ sentry_sdk.init(
 
 ## Behavior
 
-Under the hood, the `OTLPIntegration` will setup the following parts:
+Under the hood, the `OTLPIntegration` sets up the following parts:
 
-* A [`SpanExporter`](https://opentelemetry.io/docs/concepts/components/#exporters) that will automatically setup the OTLP ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Python SDK.
-* A [`Propagator`](https://opentelemetry.io/docs/concepts/context-propagation/#propagation) that ensures [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/) works
-* Trace/Span linking for all other Sentry events such as Errors, Logs, Crons and Metrics
+* A [`SpanExporter`](https://opentelemetry.io/docs/concepts/components/#exporters) that automatically configures the OTLP ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Python SDK (i.e. do not set `traces_sample_rate` or `traces_sampler`).
+* A Sentry [`Propagator`](https://opentelemetry.io/docs/concepts/context-propagation/#propagation) for compatibility with services using Sentry's native tracing (see note below)
+* Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
+
+Cross-service trace propagation uses OTel's default W3C `traceparent` headers and does not require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
 
 ## Options
 
@@ -69,7 +71,7 @@ You can pass the following keyword arguments to `OTLPIntegration()`:
 
   Automatically configure an Exporter to send OTLP traces to the right project from the DSN or `collector_url`, defaults to `True`.
 
-  Set to `False` to setup the TracerProvider manually.
+  Set to `False` to set up the TracerProvider manually.
 
 - `collector_url`:
 
@@ -77,9 +79,15 @@ You can pass the following keyword arguments to `OTLPIntegration()`:
 
 - `setup_propagator`:
 
-  Automatically configure the Sentry Propagator for Distributed Tracing, defaults to `True`.
+  Automatically configure the Sentry propagator for distributed tracing, defaults to `True`.
 
   Set to `False` to configure propagators manually or to disable propagation.
+
+  <Alert level="warning" title="Planned Removal">
+
+  The automatic propagator setup will be removed in the next major version. Configure propagators manually using the [OpenTelemetry propagation API](https://opentelemetry.io/docs/languages/python/propagation/) instead.
+
+  </Alert>
 
 - `capture_exceptions`:
 

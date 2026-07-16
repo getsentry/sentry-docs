@@ -32,7 +32,7 @@ supported:
 
 With <Link to="/ai/monitoring/agents/dashboards/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
 
-<AgentSkillsCallout skill="sentry-setup-ai-monitoring" />
+<AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
 ## Prerequisites
 
@@ -398,42 +398,6 @@ await Sentry.startSpan(
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
 
-### Handoff Span
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
-
-**Requirements:**
-- `op` must be `"gen_ai.handoff"`
-- `name` should follow the pattern `"handoff from {source} to {target}"`
-- All [Common Span Attributes](#common-span-attributes) should be set
-
-The handoff span itself has no body — it just marks the transition point before the target agent starts.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-await Sentry.startSpan(
-  { op: "gen_ai.handoff", name: "handoff from Weather Agent to Travel Agent" },
-  () => {} // Handoff span just marks the transition
-);
-
-await Sentry.startSpan(
-  { op: "gen_ai.invoke_agent", name: "invoke_agent Travel Agent" },
-  async () => {
-    // Run the target agent here
-  }
-);
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Streaming Responses
 
 When the LLM returns a stream, the span must outlive the initial callback. Use `Sentry.startInactiveSpan` to create the span, then end it when the stream finishes:
@@ -485,10 +449,6 @@ async function callLLMStreaming(model, messages) {
 ```
 
 `startInactiveSpan` creates a span without automatically ending it. `Sentry.withActiveSpan` propagates context so any child spans nest correctly. Call `span.end()` when the stream completes or errors.
-
-## Common Span Attributes
-
-<Include name="tracing/ai-agents-module/common-span-attributes" />
 
 <Include name="tracing/ai-agents-module/token-cost-gotchas" />
 

@@ -50,3 +50,69 @@ You can resolve this with any of the following approaches:
 - **Remove the `+m` attribute from binary files in Perforce.** This ensures synced files receive the current timestamp and are treated as newer by UBT.
 - **Clean the plugin's `Binaries` directory before building.**
 - **Avoid pre-populating `Binaries` in VM or build machine images.** Ensure that build environments don't carry over stale binaries from previous SDK versions.
+
+### Missing Sentry Binaries When Using UnrealGameSync
+
+When distributing precompiled editor binaries via UnrealGameSync (UGS), the Sentry plugin's runtime dependencies (`crashpad_handler.exe`, `crashpad_wer.dll`, `sentry-crash.exe`, etc.) may be missing from the archived binaries. Without these, the SDK cannot capture crashes on machines that sync the precompiled builds.
+
+**Cause**
+
+BuildGraph archives only the files that are explicitly tagged for inclusion. The plugin declares its crash handler executables as runtime dependencies, which are copied to the `Binaries` directory during the build but are not part of the compiled target outputs. Unless they're tagged via target receipts, they won't be included in the archived editor binaries.
+
+**Solution**
+
+Tag the plugin's runtime dependencies in your BuildGraph script so they are archived along with the editor binaries:
+
+```xml
+<Tag Files="#EditorBinaries$(EditorPlatform)" Filter="*.target" With="#TargetReceipts"/>
+<TagReceipt Files="#TargetReceipts" RuntimeDependencies="true" With="#RuntimeDependencies"/>
+<Tag Files="#RuntimeDependencies" Filter="crashpad_handler.exe;crashpad_wer.dll;sentry-crash.exe" With="#BinariesToArchive$(EditorPlatform)"/>
+```
+
+## Runtime Issues
+
+### Crash Events Don't Appear in Sentry Immediately
+
+After a crash, the corresponding event may not show up in Sentry until the game is launched again.
+
+On most platforms, crashes are captured by an in-process handler which cannot upload the report within the same session. The captured crash is stored on disk and sent on the next app run. The exceptions are Windows, Linux, and macOS (with the <PlatformLink to="/configuration/native-backend/">Native backend</PlatformLink>), where an out-of-process handler is used and crash reports are uploaded right away.
+
+### App Freezes on Startup on Linux
+
+On Linux, the Unreal Editor or a packaged game may freeze during startup when the Sentry SDK initializes. The last log messages typically come from `LogSentrySdk`, and in some cases the log contains an error like:
+
+```
+FATAL spawn_subprocess.cc:221] posix_spawn: Permission denied (13)
+```
+
+**Cause**
+
+The SDK launches an external `crashpad_handler` executable during initialization. If this file is missing the execute permission, spawning the handler process fails and the engine hangs. This typically happens when the permission is lost while the plugin files are being transferred — for example, when they're extracted or copied in a way that doesn't preserve file attributes, or checked into version control without the executable bit.
+
+**Solution**
+
+Restore the execute permission on the handler binary in the plugin's `ThirdParty` directory:
+
+```bash
+chmod +x Plugins/Sentry/Source/ThirdParty/Linux/Crashpad/bin/crashpad_handler
+```
+
+Then clean the plugin's `Binaries` and `Intermediate` directories and rebuild, so that the stale copy of the handler is replaced with the fixed one.
+
+### Crashes Not Captured on Older Linux Distributions
+
+On older Linux distributions (such as Ubuntu 18.04 and 20.04), the crashpad handler that ships with the SDK may fail to run, resulting in crashes not being captured or uploaded.
+
+**Cause**
+
+The crashpad handler requires a recent version of the C++ standard library (`libstdc++`) and `libcurl` to be available at runtime. Older distributions may ship versions that are too old or may not have these libraries installed.
+
+**Solution**
+
+Upgrade `libstdc++` and install `libcurl` in the deployment environment:
+
+```bash
+sudo apt-get update
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get install -y libstdc++6 libcurl4
+```
