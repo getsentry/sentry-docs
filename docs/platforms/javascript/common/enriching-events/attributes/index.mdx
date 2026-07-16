@@ -1,0 +1,41 @@
+---
+title: Attributes
+description: "Attributes automatically enrich your telemetry with typed key-value data. Use them to add business context that you can filter and search in Sentry."
+---
+
+<AvailableSince version="10.61.0" />
+
+**Attributes** are key-value pairs you can attach to your telemetry (like spans, logs and metrics). Unlike [tags](../tags/),
+which only accept `string` values, attributes support `string`, `number` and `boolean` values.
+
+Common uses include subscription tier, feature flags, or any business context that helps you filter and query your telemetry.
+Check out [Sending Span Metrics](../../tracing/span-metrics/) for an example of how to use attributes to enrich your spans.
+
+Setting attributes will bind them to the [isolation scope](../scopes/#isolation-scope). This ensures they'll automatically be included on future telemetry for the current request or page view:
+
+```javascript
+Sentry.setAttribute('is_admin', true);
+
+Sentry.setAttributes({
+  'user.num_orders': user.numOrders,
+  'subscription.tier': 'pro',
+});
+```
+
+To attach attributes to a broader or narrower context, you can set them on a specific scope instead.
+Use the global scope for attributes that should appear on all telemetry across the entire application, and `withScope` for a single operation only:
+
+```javascript
+// Applied to everything across the entire application
+Sentry.getGlobalScope().setAttributes({
+  'app.version': '1.2.3',
+});
+
+// Applied to a single operation only
+Sentry.withScope((scope) => {
+  scope.setAttribute('checkout.step', 'payment');
+  Sentry.logger.info('Processing payment');
+});
+```
+
+Learn more about how scope data is applied to events in [Scopes](../scopes/).

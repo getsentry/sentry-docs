@@ -351,8 +351,8 @@ export async function Home() {
                 </h3>
                 <p className="text-sm text-[var(--gray-11)] dark:text-white leading-relaxed">
                   Integrate Sentry into your AI coding assistants using Sentry's{' '}
-                  <Link href="/ai/agent-skills/" className="text-[#8b5cf6] underline">
-                    Skills
+                  <Link href="/ai/agent-plugin/" className="text-[#8b5cf6] underline">
+                    plugin
                   </Link>{' '}
                   and{' '}
                   <a
@@ -395,7 +395,7 @@ export async function Home() {
               image={AiImage}
               imageAlt="AI integration image"
               title="Sentry for AI"
-              description="Connect Sentry to your AI coding assistants with agent skills and MCP."
+              description="Connect Sentry to your AI coding assistants with the agent plugin and MCP."
             />
 
             {/* Row 2: Guides and Pricing & Billing */}
