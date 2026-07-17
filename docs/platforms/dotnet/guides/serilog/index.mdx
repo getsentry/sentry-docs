@@ -109,52 +109,6 @@ The SDK only needs to be initialized once. If a `DSN` is made available to this 
 
 </Alert>
 
-### Filtering Which Log Events Reach Sentry
-
-`MinimumBreadcrumbLevel` and `MinimumEventLevel` determine what the sink does with a log event, but every log event the logger captures still reaches the sink. If your logger's minimum level is verbose — for example, because another sink writes debug logs to a file — you can use Serilog's [per-sink minimum level](https://github.com/serilog/serilog/wiki/Configuration-Basics#overriding-per-sink) to stop lower-level log events from reaching Sentry entirely. This also controls which log entries are sent to Sentry as [structured logs](logs/):
-
-```csharp
-Log.Logger = new LoggerConfiguration()
-  // Debug and higher are written to the file
-  .MinimumLevel.Debug()
-  .WriteTo.File("app.log")
-  .WriteTo.Sentry(o =>
-  {
-    // Only Warning and higher reach the Sentry sink
-    o.RestrictedToMinimumLevel = LogEventLevel.Warning;
-    o.MinimumEventLevel = LogEventLevel.Error;
-  })
-  .CreateLogger();
-```
-
-```json {filename:appsettings.json}
-{
-  "Serilog": {
-    "Using": [ "Sentry.Serilog" ],
-    "MinimumLevel": {
-      "Default": "Debug"
-    },
-    "WriteTo": [
-      {
-        "Name": "Sentry",
-        "Args": {
-          "minimumEventLevel": "Error",
-          "restrictedToMinimumLevel": "Warning"
-        }
-      }
-    ]
-  }
-}
-```
-
-To change the sink's minimum level at runtime, set the `LevelSwitch` option to a [LoggingLevelSwitch](https://github.com/serilog/serilog/wiki/Configuration-Basics#dynamic-levels) instead.
-
-<Alert>
-
-Setting the per-sink minimum level in code requires Sentry.Serilog version 6.8.0 or later. In earlier versions, it can only be set via `appsettings.json`.
-
-</Alert>
-
 ### Options
 
 #### MinimumBreadcrumbLevel
@@ -171,7 +125,15 @@ Whether or not this integration should initialize the SDK. If you intend to call
 
 #### RestrictedToMinimumLevel
 
-A `LogEventLevel` which indicates the minimum level a log event has to be processed by the sink at all. By default this value is `Verbose`, meaning no log events are filtered out. Ignored when `LevelSwitch` is set.
+`MinimumBreadcrumbLevel` and `MinimumEventLevel` determine what the sink does with a log event, but every log event the logger captures still reaches the sink. If your logger's minimum level is verbose — for example, because another sink writes debug logs to a file — you can use Serilog's [per-sink minimum level](https://github.com/serilog/serilog/wiki/Configuration-Basics#overriding-per-sink) to stop lower-level log events from reaching Sentry entirely.
+
+By default this value is `Verbose`, meaning no log events are filtered out. Ignored when `LevelSwitch` is set.
+
+<Alert level="warning" title="Note">
+
+This also controls which log entries are sent to Sentry as [structured logs](logs/)
+
+</Alert>
 
 #### LevelSwitch
 
