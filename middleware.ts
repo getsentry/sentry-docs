@@ -3533,10 +3533,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/authentication/two-factor-authentication/',
   },
   {
-    from: '/platforms/go/guides/fiber/user-feedback/configuration/',
-    to: '/platforms/go/user-feedback/',
-  },
-  {
     from: '/platforms/javascript/guides/',
     to: '/platforms/javascript/',
   },
@@ -4407,6 +4403,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/data-model/event-payloads/user/',
     to: '/sdk/foundations/envelopes/event-payloads/user/',
+  },
+  {
+    from: '/integrations/integration-platform/ui-components/alert-rule-action/',
+    to: '/integrations/integration-platform/ui-components/alert-action/',
   },
 ];
 

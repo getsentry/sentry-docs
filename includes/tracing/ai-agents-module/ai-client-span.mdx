@@ -1,20 +1,23 @@
 <PlatformSection supported={["python"]}>
-The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create this span.
+  The
+  [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates)
+  decorator can also be used to create this span.
 </PlatformSection>
 
 - The span `op` MUST be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - The span `name` SHOULD be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- The `gen_ai.operation.name` attribute MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- The `gen_ai.provider.name` attribute MUST be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
 - The `gen_ai.request.model` attribute MUST be the requested model. (e.g. `"o3-mini"`)
 - The `gen_ai.response.model` attribute MUST be the concrete model that responded. (e.g. `"gpt-4o-2024-08-06"`)
 - If the request originates from an agent, `gen_ai.agent.name` SHOULD be set to the agent's name. (e.g. `"Weather Agent"`)
 - If relevant, `gen_ai.pipeline.name` SHOULD be set to the name of the AI workflow or pipeline. (e.g. `"weather-pipeline"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 ### Request Attributes
 
-| Data Attribute                     | Type   | Requirement Level | Description                                                                                                   | Example                                                               |
-| :--------------------------------- | :----- | :---------------- | :------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of message objects sent to the LLM. **[0]**, **[1]**                                                     | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| Data Attribute                     | Type   | Requirement Level | Description                                                                                                    | Example                                                               |
+| :--------------------------------- | :----- | :---------------- | :------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
+| `gen_ai.input.messages`            | string | optional          | List of message objects sent to the LLM. **[0]**, **[1]**                                                      | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of objects describing the available tools. **[0]**                                                        | `'[{"name": "random_number", "description": "..."}]'`                 |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                   | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.frequency_penalty` | float  | optional          | Model configuration parameter.                                                                                 | `0.5`                                                                 |
@@ -24,22 +27,22 @@ The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instr
 | `gen_ai.request.top_k`             | int    | optional          | Limits model to K most likely next tokens.                                                                     | `40`                                                                  |
 | `gen_ai.request.top_p`             | float  | optional          | Model configuration parameter.                                                                                 | `0.7`                                                                 |
 | `gen_ai.request.presence_penalty`  | float  | optional          | Model configuration parameter.                                                                                 | `0.5`                                                                 |
-| `gen_ai.request.reasoning_effort`  | string | optional          | Constrains the effort on reasoning for reasoning models. Supported values vary by provider.                    | `"medium"`                                                            |
+| `gen_ai.request.reasoning.level`   | string | optional          | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.         | `"medium"`                                                            |
 | `gen_ai.request.messages`          | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of message objects sent to the LLM. **[0]**          | `'[{"role": "system", "content": "..."}]'`                            |
 | `gen_ai.request.available_tools`   | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of objects describing the available tools. **[0]** | `'[{"name": "random_number", "description": "..."}]'`                 |
 
 ### Response Attributes
 
-| Data Attribute                    | Type    | Requirement Level | Description                                                                                             | Example                                                                      |
-| :-------------------------------- | :------ | :---------------- | :------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------- |
-| `gen_ai.response.model`                | string  | required          | The concrete model that responded (may differ from `gen_ai.request.model`).                             | `"gpt-4o-2024-08-06"`                                                       |
-| `gen_ai.output.messages`               | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                  | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-| `gen_ai.response.finish_reasons`       | string  | optional          | Stringified array of reasons the model stopped generating. **[0]**                                      | `'["stop"]'`                                                                 |
-| `gen_ai.response.id`                   | string  | optional          | Unique identifier for the completion.                                                                   | `"chatcmpl-abc123"`                                                          |
-| `gen_ai.response.streaming`            | boolean | optional          | Whether the response was streamed.                                                                      | `true`                                                                       |
-| `gen_ai.response.time_to_first_token`  | double  | optional          | Seconds until first response chunk in streaming.                                                        | `0.5`                                                                        |
-| `gen_ai.response.text`            | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the model's responses. | `"The weather in Paris is rainy"`                                            |
-| `gen_ai.response.tool_calls`      | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]**   | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
+| Data Attribute                        | Type    | Requirement Level | Description                                                                                             | Example                                                                      |
+| :------------------------------------ | :------ | :---------------- | :------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------- |
+| `gen_ai.response.model`               | string  | required          | The concrete model that responded (may differ from `gen_ai.request.model`).                             | `"gpt-4o-2024-08-06"`                                                        |
+| `gen_ai.output.messages`              | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                  | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
+| `gen_ai.response.finish_reasons`      | string  | optional          | Stringified array of reasons the model stopped generating. **[0]**                                      | `'["stop"]'`                                                                 |
+| `gen_ai.response.id`                  | string  | optional          | Unique identifier for the completion.                                                                   | `"chatcmpl-abc123"`                                                          |
+| `gen_ai.response.streaming`           | boolean | optional          | Whether the response was streamed.                                                                      | `true`                                                                       |
+| `gen_ai.response.time_to_first_token` | double  | optional          | Seconds until first response chunk in streaming.                                                        | `0.5`                                                                        |
+| `gen_ai.response.text`                | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the model's responses. | `"The weather in Paris is rainy"`                                            |
+| `gen_ai.response.tool_calls`          | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]**   | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
 
 ### Token Usage
 
