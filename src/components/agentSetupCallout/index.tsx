@@ -41,7 +41,9 @@ export function AgentSetupCallout({skill, platformName}: Props) {
         DocMetrics.copyAIPrompt(window.location.pathname, skill, true);
         setTimeout(() => setCopied(false), 1500);
       } catch (error) {
-        Sentry.captureException(error);
+        if ((error as Error)?.name !== 'NotAllowedError') {
+          Sentry.captureException(error);
+        }
         DocMetrics.copyAIPrompt(window.location.pathname, skill, false);
         setCopied(false);
       }
