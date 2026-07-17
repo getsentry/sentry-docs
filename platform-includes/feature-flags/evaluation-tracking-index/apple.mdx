@@ -1,0 +1,75 @@
+If you use a third-party SDK to evaluate feature flags, use the generic API to manually track feature flag evaluations. The SDK stores each evaluation on the current scope. If a span or transaction is active, the SDK also records the evaluation on that active span or transaction. Only boolean flag evaluations are supported.
+
+### Generic API
+
+Call `SentrySDK.addFeatureFlag` after evaluating a feature flag:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
+
+SentrySDK.addFeatureFlag(name: "test-flag", result: false)
+SentrySDK.capture(error: error)
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK addFeatureFlagWithName:@"test-flag" result:NO];
+[SentryObjCSDK captureError:error];
+```
+
+Go to your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+### Custom Hub
+
+If you use a custom hub, add the feature flag evaluation to that hub. This updates the custom hub's scope and active span or transaction, without changing the global `SentrySDK` scope:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+hub.addFeatureFlag(name: "test-flag", result: false)
+hub.capture(error: error)
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[hub addFeatureFlagWithName:@"test-flag" result:NO];
+[hub captureError:error];
+```
+
+### Scope Callback
+
+Use a scope callback when the evaluation should apply to this capture's local scope instead of remaining on the current scope:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.capture(error: error) { scope in
+    scope.addFeatureFlag(name: "test-flag", result: false)
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK captureError:error withScopeBlock:^(SentryObjCScope * _Nonnull scope) {
+    [scope addFeatureFlagWithName:@"test-flag" result:NO];
+}];
+```
+
+Feature flags added in a scope callback don't persist on the current scope. If a span or transaction is active, the SDK still records the evaluation on that active span or transaction.
+
+### Clear Feature Flags
+
+Clear feature flags when they no longer apply, such as after a user signs out or switches accounts:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.configureScope { scope in
+    scope.clearFeatureFlags()
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK configureScope:^(SentryObjCScope * _Nonnull scope) {
+    [scope clearFeatureFlags];
+}];
+```
+
+`clearFeatureFlags()` removes evaluations only from the current scope. It doesn't affect parent or sibling scopes, or evaluations already recorded on an active span or transaction.
+
+Scope evaluations are attached to error and message events. The current scope keeps the 100 most recent, unique feature flag evaluations. When a scope forks, the child receives a copy of these evaluations, and changes to the copy don't affect the parent scope.
+
+Active spans and transactions record the first 10 unique feature flags as span attributes using the `flag.evaluation.<name>` key. Spans don't inherit evaluations from their parent span.
