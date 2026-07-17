@@ -364,8 +364,8 @@ export async function Home() {
                     MCP server
                   </a>{' '}
                   with your agents. Debug agents and MCP servers by{' '}
-                  <Link href="/ai/monitoring/" className="text-[#8b5cf6] underline">
-                    monitoring your AI features
+                  <Link href="/ai/observability/" className="text-[#8b5cf6] underline">
+                    observing your AI features
                   </Link>
                   .
                 </p>

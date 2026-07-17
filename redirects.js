@@ -1881,14 +1881,14 @@ const userDocsRedirects = [
     source: '/ai/sentry-cli/',
     destination: 'https://cli.sentry.dev',
   },
-  // Redirects for Insights → Sentry Dashboards migration
+   // Redirects for Insights → Sentry Dashboards migration
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/ai/monitoring/:path*',
+    destination: '/ai/observability/:path*',
   },
   {
     source: '/product/insights/agents/:path*',
-    destination: '/ai/monitoring/agents/:path*',
+    destination: '/ai/observability/agents/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1896,11 +1896,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mcp/',
-    destination: '/ai/monitoring/mcp/',
+    destination: '/ai/observability/mcp/',
   },
   {
     source: '/product/insights/ai/:path*',
-    destination: '/ai/monitoring/:path*',
+    destination: '/ai/observability/:path*',
   },
   {
     source: '/product/insights/requests/',
@@ -1959,30 +1959,129 @@ const userDocsRedirects = [
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
   },
-  // AI Agent Monitoring moved to top-level feature
+  // Agent Tracing moved to top-level feature
   {
     source: '/platforms/javascript/tracing/instrumentation/ai-agents-module/:path*',
-    destination: '/platforms/javascript/ai-agent-monitoring/:path*',
+    destination: '/platforms/javascript/agent-tracing/:path*',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module/:path*',
-    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/:path*',
   },
   {
     source:
       '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
-    destination: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing-browser/:path*',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
-    destination: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
   },
-  // Browser JS doesn't have server-side AI Agent Monitoring, redirect to browser version
+  // Browser JS doesn't have server-side Agent Tracing, redirect to browser version
+  {
+    source: '/platforms/javascript/agent-tracing/',
+    destination: '/platforms/javascript/agent-tracing-browser/',
+  },
+  // AI Monitoring → AI Observability rename redirects
+  {
+    source: '/ai/monitoring/:path*',
+    destination: '/ai/observability/:path*',
+  },
+  {
+    source: '/ai/monitoring/',
+    destination: '/ai/observability/',
+  },
+  // AI Agent Monitoring / ai-agent-tracing → Agent Tracing rename redirects
   {
     source: '/platforms/javascript/ai-agent-monitoring/',
-    destination: '/platforms/javascript/ai-agent-monitoring-browser/',
+    destination: '/platforms/javascript/agent-tracing-browser/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/:path*',
+    destination: '/platforms/javascript/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring-browser/',
+    destination: '/platforms/javascript/agent-tracing-browser/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing-browser/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-monitoring/',
+    destination: '/platforms/react-native/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-monitoring/:path*',
+    destination: '/platforms/react-native/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/php/guides/laravel/ai-monitoring/',
+    destination: '/platforms/php/guides/laravel/agent-tracing/',
+  },
+  {
+    source: '/platforms/php/guides/laravel/ai-monitoring/:path*',
+    destination: '/platforms/php/guides/laravel/agent-tracing/:path*',
+  },
+  // ai-agent-tracing → agent-tracing rename redirects
+  {
+    source: '/platforms/javascript/ai-agent-tracing/',
+    destination: '/platforms/javascript/agent-tracing-browser/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/:path*',
+    destination: '/platforms/javascript/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing-browser/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing-browser/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-tracing/',
+    destination: '/platforms/react-native/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-tracing/:path*',
+    destination: '/platforms/react-native/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/php/guides/laravel/ai-agent-tracing/',
+    destination: '/platforms/php/guides/laravel/agent-tracing/',
+  },
+  {
+    source: '/platforms/php/guides/laravel/ai-agent-tracing/:path*',
+    destination: '/platforms/php/guides/laravel/agent-tracing/:path*',
   },
   {
     source: '/product/dashboards/sentry-dashboards/performance-metrics/',
