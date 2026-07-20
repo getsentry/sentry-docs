@@ -127,7 +127,7 @@ Manual assignment is only needed to override the automatic default.
 `beforeSendTransaction` has **no effect** in stream mode — transactions are never created, so the callback is never invoked. Migrate its logic to `beforeSendSpan` to modify spans and `ignoreSpans` to drop them:
 
 ```dart diff
-- options.beforeSendTransaction = (transaction) {
+- options.beforeSendTransaction = (transaction, hint) {
 -   // scrub sensitive data, drop transactions by name, etc.
 -   return transaction;
 - };
@@ -139,7 +139,22 @@ Manual assignment is only needed to override the automatic default.
 + ];
 ```
 
-Note that `beforeSendSpan` is mutation-only and cannot drop spans — use `ignoreSpans` for that. `beforeSendSpan` runs when each span ends, so it sees the full set of attributes, including any added during the span's lifetime. `ignoreSpans`, by contrast, is evaluated when a span is created and matches on the span name only. Remove the `beforeSendTransaction` option after migrating its logic. See <PlatformLink to="/tracing/streamed-spans/#extended-configuration-optional">Extended Configuration</PlatformLink> for details.
+`ignoreTransactions` also has **no effect** in stream mode. Replace it with `ignoreSpans`:
+
+```dart diff
+- options.ignoreTransactions = [
+-   'health-check',
+-   r'^internal\.',
+- ];
++ options.ignoreSpans = [
++   IgnoreSpanRule.nameContains('health-check'),
++   IgnoreSpanRule.nameStartsWith('internal.'),
++ ];
+```
+
+`ignoreTransactions` interprets each entry as a case-insensitive regular expression and matches substrings by default. `ignoreSpans` uses explicit, case-sensitive rules. Choose `nameContains`, `nameEquals`, `nameStartsWith`, or `nameEndsWith` based on the existing pattern. Pass a `RegExp` to `nameContains` or `nameStartsWith` when needed.
+
+Note that `beforeSendSpan` is mutation-only and cannot drop spans — use `ignoreSpans` for that. `beforeSendSpan` runs when each span ends, so it sees the full set of attributes, including any added during the span's lifetime. `ignoreSpans`, by contrast, is evaluated when a span is created and matches on the span name only. Remove the `beforeSendTransaction` and `ignoreTransactions` options after migrating their logic. See <PlatformLink to="/tracing/streamed-spans/#extended-configuration-optional">Extended Configuration</PlatformLink> for details.
 
 ## Sampling
 

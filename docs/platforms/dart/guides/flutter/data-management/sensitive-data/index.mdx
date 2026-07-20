@@ -35,9 +35,9 @@ If you _do not_ wish to use the default PII behavior, you can also choose to ide
 
 ## Scrubbing Data
 
-### <PlatformIdentifier name="before-send" /> & <PlatformIdentifier name="before-send-transaction" />
+### <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-send-transaction" />, & <PlatformIdentifier name="before-send-span" />
 
-SDKs provide a <PlatformIdentifier name="before-send" /> hook, which is invoked before an error or message event is sent and can be used to modify event data to remove sensitive information. Some SDKs also provide a <PlatformIdentifier name="before-send-transaction" /> hook which does the same thing for transactions. We recommend using <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> in the SDKs to **scrub any data before it is sent**, to ensure that sensitive data never leaves the local environment.
+The SDK provides a <PlatformIdentifier name="before-send" /> hook, which is invoked before an error or message event is sent and can be used to modify event data to remove sensitive information. It also provides a <PlatformIdentifier name="before-send-transaction" /> hook, that does the same thing for transactions, and a <PlatformIdentifier name="before-send-span" /> hook, that does the same thing for spans in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>. We recommend using these hooks in the SDKs to **scrub any data before it is sent**, to ensure that sensitive data never leaves the local environment.
 
 <PlatformContent includePath="configuration/before-send/" />
 
@@ -47,7 +47,7 @@ Sensitive data may appear in the following areas:
 - Breadcrumbs → Some SDKs (JavaScript and the Java logging integrations, for example) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will also record database queries, which may need to be scrubbed. Most SDKs will add the HTTP query string and fragment as a data attribute to the breadcrumb, which may need to be scrubbed.
 - User context → Automated behavior is controlled via <PlatformIdentifier name="send-default-pii" />.
 - HTTP context → Query strings may be picked up in some frameworks as part of the HTTP request context.
-- Transaction Names → In certain situations, transaction names might contain sensitive data. For example, a browser's pageload transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the framework, your routing configuration, race conditions, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
+- Transaction/Service Span Names → In certain situations, transaction and span names might contain sensitive data. For example, a browser's pageload transaction/service span might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the framework, your routing configuration, race conditions, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
 - HTTP Spans → Most SDKs will include the HTTP query string and fragment as a data attribute, which means the HTTP span may need to be scrubbed.
 
 For more details and data filtering instructions, see <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink>.
