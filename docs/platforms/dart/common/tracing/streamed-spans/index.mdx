@@ -36,12 +36,6 @@ Trace
           └── Child span
 ```
 
-<Alert level="warning" title="Migrating from transaction mode?">
-
-Stream mode replaces the transaction-based APIs with new span APIs, so migrating to stream mode and adopting the new span APIs are the same step. If you have existing custom instrumentation, see the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Guide</PlatformLink> for a full list of changes.
-
-</Alert>
-
 ## Prerequisites
 
 You need:
@@ -49,6 +43,28 @@ You need:
 - <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in
   your app
 - Sentry SDK `>=9.23.0`
+
+## Migrate from Transaction Mode
+
+For most apps, switching to stream mode requires no code changes beyond the initial opt-in. Automatic instrumentation switches to the streaming span APIs for you.
+
+If you use custom instrumentation or transaction-specific configuration, follow these steps:
+
+1. [Enable stream mode](#enable-stream-mode).
+2. Replace `Sentry.startTransaction` and `ISentrySpan.startChild` with the [streaming span APIs](#start-a-span).
+3. Replace span data and tags with [attributes](#add-attributes).
+4. Replace `beforeSendTransaction` and `ignoreTransactions` with [`beforeSendSpan`](#filter-spans) and [`ignoreSpans`](#drop-spans).
+5. [Verify the migration](#verify-your-setup).
+
+See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Guide</PlatformLink> for complete before-and-after examples.
+
+### Agent-Assisted Migration
+
+Copy the following prompt and paste it into your AI agent:
+
+```txt
+Use curl to download, read and follow https://raw.githubusercontent.com/getsentry/sentry-for-ai/refs/heads/main/skills-legacy/sentry-span-streaming-dart/SKILL.md to enable and migrate to span streaming in the Sentry SDK.
+```
 
 ## Enable Stream Mode
 
@@ -109,15 +125,22 @@ The SDK instruments common operations for you, but you can wrap your own code in
 <SplitSection>
 <SplitSectionText>
 
-`Sentry.startSpan` runs a callback and ends the span when the returned future completes.
+Use `Sentry.startSpan` to create a span that ends automatically when the callback completes:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```dart
-await Sentry.startSpan('checkout', (span) async {
-  // Your code here
-});
+final result = await Sentry.startSpan(
+  'my-operation',
+  (_) async {
+    // Your code here
+    return await doWork();
+  },
+  attributes: {
+    'my.attribute': SentryAttribute.string('value'),
+  },
+);
 ```
 
 </SplitSectionCode>
@@ -125,16 +148,20 @@ await Sentry.startSpan('checkout', (span) async {
 <SplitSection>
 <SplitSectionText>
 
-Child spans created inside an active span are automatically associated with the parent through zones:
+Child spans created inside the callback are automatically associated with the parent through zones:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```dart
-await Sentry.startSpan('checkout', (span) async {
-  await Sentry.startSpan('load cart', (_) => loadCart());
+await Sentry.startSpan('parent-operation', (_) async {
+  await Sentry.startSpan('child-step-1', (_) async {
+    await stepOne();
+  });
 
-  await Sentry.startSpan('submit payment', (_) => submitPayment());
+  await Sentry.startSpan('child-step-2', (_) async {
+    await stepTwo();
+  });
 });
 ```
 
@@ -261,13 +288,15 @@ paymentSpan.end(endTimestamp: nativeEnd);
 </SplitSection>
 </SplitLayout>
 
-### Add Span Attributes
+## Add Attributes
+
+Attach structured metadata to spans using typed `SentryAttribute` values.
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-Attach structured metadata to spans using `setAttribute` or `setAttributes`, and remove them with `removeAttribute`.
+You can set attributes when starting a span:
 
 <Alert level="info">
 
@@ -279,16 +308,43 @@ Sentry automatically sets several standard attributes on spans. To avoid acciden
 <SplitSectionCode>
 
 ```dart
-await Sentry.startSpan('process-order', (span) async {
-  span.setAttribute('order.id', SentryAttribute.string('abc-123'));
-
-  span.setAttributes({
+await Sentry.startSpan(
+  'process-order',
+  (_) async {
+    await processOrder();
+  },
+  attributes: {
+    'sentry.op': SentryAttribute.string('queue.process'),
+    'order.id': SentryAttribute.string('abc-123'),
     'order.item_count': SentryAttribute.int(5),
     'order.priority': SentryAttribute.bool(true),
-    'order.total': SentryAttribute.double(42.50),
+  },
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+<SplitSection>
+<SplitSectionText>
+
+Or add them to an already running span with `setAttribute` or `setAttributes`. Use `removeAttribute` to remove an attribute:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```dart
+await Sentry.startSpan('handle-request', (span) async {
+  span.setAttribute(
+    'http.response.status_code',
+    SentryAttribute.int(200),
+  );
+
+  span.setAttributes({
+    'http.route': SentryAttribute.string('/api/users'),
+    'user.id': SentryAttribute.string('user-42'),
   });
 
-  await processOrder();
+  await handleRequest();
 });
 ```
 
@@ -296,7 +352,7 @@ await Sentry.startSpan('process-order', (span) async {
 </SplitSection>
 </SplitLayout>
 
-<Expandable title="SentryAttribute factory">
+<Expandable title="SentryAttribute Factory">
 
 Each attribute value is created with a typed `SentryAttribute` factory:
 
@@ -312,6 +368,20 @@ Each attribute value is created with a typed `SentryAttribute` factory:
 | `SentryAttribute.doubleArray(v)` | `List<double>` |
 
 </Expandable>
+
+### Shared Attributes
+
+In transaction mode, tags set on the scope are applied to the transaction. In stream mode, tags aren't applied to spans. You don't need to remove existing tags because they still apply to error events, but you should add attributes for data that's also relevant to spans.
+
+Use `Sentry.setAttributes` to attach attributes to the current scope. The SDK automatically includes them on spans created from that scope:
+
+```dart
+Sentry.setAttributes({
+  'org_id': SentryAttribute.string(user.orgId),
+  'user_tier': SentryAttribute.string(user.tier),
+  'service': SentryAttribute.string('checkout'),
+});
+```
 
 ### Set Span Status
 
@@ -384,7 +454,7 @@ options.ignoreSpans = [
 </SplitSection>
 </SplitLayout>
 
-<Expandable title="IgnoreSpanRule factory">
+<Expandable title="IgnoreSpanRule Factory">
 
 | Factory                                  | Matches                           |
 | ---------------------------------------- | --------------------------------- |
@@ -426,9 +496,15 @@ options.tracesSampler = (samplingContext) {
 
 Only service spans are sampled and child spans inherit the service span's decision. When a service span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call.
 
+## Distributed Tracing (Optional)
+
+Automatic trace propagation for outgoing requests continues to work in stream mode.
+
+See <PlatformLink to="/tracing/trace-propagation/">Trace Propagation</PlatformLink> for configuration and supported integrations.
+
 ## Verify Your Setup
 
 To make sure you've enabled stream mode successfully:
 
-- **Check the Sentry dashboard**: Spans should appear in the Traces view shortly after each span completes, without waiting for a whole transaction to finish. Spans are buffered briefly and flushed in batches, so expect a short delay before they appear.
+- **Check the Sentry dashboard**: Spans should appear in the Traces view shortly after they complete. Traces look similar to transaction mode, but contain spans instead of transactions. Spans are buffered briefly and flushed in batches, so expect a short delay before they appear.
 - **Check your logs**: If the SDK logs warnings about unsupported span operations, you may still be using the legacy Span API somewhere in your code. See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Guide</PlatformLink> to update it.
