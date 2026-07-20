@@ -220,6 +220,28 @@ Verify that the DSN you pass to `options.dsn` is a valid Sentry DSN URL starting
 
 Cocoa SDK versions before [9.20.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.20.0) and [8.58.4](https://github.com/getsentry/sentry-cocoa/releases/tag/8.58.4) have a bug where, when one data type was rate limited (for example, user feedback), the SDK could also drop unrelated data such as errors, spans, and sessions. Please update the Cocoa SDK to version [9.20.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.20.0) or [8.58.4](https://github.com/getsentry/sentry-cocoa/releases/tag/8.58.4) or above to fix this problem.
 
+## Linker Errors with SPM Dependencies in Xcode on arm64e
+
+This issue only affects projects that integrate Sentry via Swift Package Manager using the <PlatformLink to="/install/swift-package-manager/">`SentrySPM` (compile from source)</PlatformLink> product and build for arm64e. The pre-built binary products (`Sentry`, `Sentry-Dynamic`) are not affected.
+
+When building for arm64e, Xcode may produce linker errors because SPM dependencies are not compiled for the arm64e architecture by default:
+
+```
+Undefined symbols for architecture arm64e: ...
+```
+
+This is a known Xcode bug (Apple Feedback: FB23764103).
+
+### iOS, macOS, and visionOS
+
+Add `iOSPackagesShouldBuildARM64e = YES` to your `.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` file. This tells Xcode to build SPM packages with arm64e support.
+
+### tvOS, watchOS, and Mac Catalyst
+
+The `iOSPackagesShouldBuildARM64e` setting only affects iOS, macOS, and visionOS — tvOS, watchOS, and Mac Catalyst targets still hit the same linker error.
+
+The workaround is to remove `arm64e` from the target's **Architectures** build setting in Xcode so the IDE build succeeds. When building with `xcodebuild`, override this by passing `ARCHS="arm64 arm64e"` on the command line so that arm64e is still included in CI and release builds. For more details, see [sentry-cocoa #8426](https://github.com/getsentry/sentry-cocoa/pull/8426).
+
 ## Troubleshooting Session Replay
 
 See [Session Replay - Troubleshooting](/platforms/apple/guides/ios/session-replay/troubleshooting) for more information.
