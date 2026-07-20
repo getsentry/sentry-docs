@@ -43,17 +43,20 @@ If you archive an issue "Forever", events connected with that issue will continu
 
 ### Resolve
 
-You can manually mark an issue as `Resolved` when it’s been fixed. You can also specify further by resolving it in:
+You can manually mark an issue as `Resolved` when it’s been fixed. A plain **Resolve** marks the issue fixed immediately. If another event for that issue is seen in any release, Sentry marks it `Regressed` and brings it back for review.
 
-- Your next release
-- A current release
-- Another release
+If you use [releases](/product/releases/), you can resolve an issue in a specific release instead. That tells Sentry which versions still count as expected noise and which newer versions should count as a regression. For more detail on how release comparison works, see [3 Different Ways to Resolve Issues](/product/releases/#3-different-ways-to-resolve-issues).
 
-or
+- **The next release**: Marks the issue resolved in the next release after the latest one where it was seen. Use this when the fix is merged or ready, but not deployed yet. Older clients can keep sending the error without reopening the issue; Sentry only treats it as a regression if it shows up again after that next release ships.
+  - Example: You fixed a null pointer in `main`, but production is still on `1.8.0`. Resolve in the next release so `1.8.0` traffic stays quiet and only a recurrence in `1.9.0` (or later) reopens the issue.
+- **The current release**: Marks the issue resolved in the project's current/latest release shown in the UI. Use this when the fix is already live in that release. Events from older releases won't reopen it; events from a newer release will.
+  - Example: You shipped the fix in `2.4.1`, which is the current release. Resolve in the current release so leftover `2.4.0` sessions don't create a false regression, but a recurrence in `2.4.2` does.
+- **Another existing release**: Marks the issue resolved in a release you choose. Use this when the fix shipped in a specific version that isn't the one labeled current, such as a hotfix branch or a release that only some environments run.
+  - Example: Most traffic is on `3.2.0`, but you hotfixed the bug in `3.1.4` for a single tenant. Resolve in that existing release so Sentry anchors regression detection to `3.1.4` instead of the latest release.
 
-- By [including the issue ID in a commit or pull request associated with a release](/product/releases/associate-commits/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F#resolve-issues-by-commit)
+You can also resolve by [including the issue ID in a commit or pull request associated with a release](/product/releases/associate-commits/#resolve-issues-by-commit).
 
-If the same issue comes back, its status will automatically change to `Regressed`.
+If the same issue comes back in a newer release than the one you resolved it in, its status will automatically change to `Regressed`.
 
 ### Delete
 
