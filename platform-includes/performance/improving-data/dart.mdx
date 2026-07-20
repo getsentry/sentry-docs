@@ -1,10 +1,13 @@
 ## Adding Data Attributes to Transactions and Spans
 
-You can add data attributes to your transactions and spans. This data is visible in the trace explorer in Sentry. Data attributes can be of type `String`, `int`, `double` or `bool`, as well as (non-mixed) arrays of these types:
+You can add data attributes to your transactions and spans. This data is visible in the trace explorer in Sentry.
 
-### For Transactions
+- Transaction mode: Use `setData` with `String`, `int`, `double` or `bool` values, as well as (non-mixed) arrays of these types.
+- Stream mode: Use `setAttribute` or `setAttributes` with a typed <PlatformLink to="/tracing/streamed-spans/#add-span-attributes">`SentryAttribute` factory</PlatformLink>.
 
-```dart
+### For Transactions/Service Spans
+
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 final transaction = Sentry.startTransaction('my-transaction', 'http.server');
 transaction.setData('data_attribute_1', 'value1');
 transaction.setData('data_attribute_2', 42);
@@ -15,9 +18,29 @@ transaction.setData('data_attribute_5', [42, 43]);
 transaction.setData('data_attribute_6', [true, false]);
 ```
 
+```dart {tabTitle:Stream Mode}
+await Sentry.startSpan(
+  'my-transaction',
+  (span) async {
+    span.setAttribute('sentry.op', SentryAttribute.string('http.server'));
+    span.setAttribute('data_attribute_1', SentryAttribute.string('value1'));
+    span.setAttribute('data_attribute_2', SentryAttribute.int(42));
+    span.setAttribute('data_attribute_3', SentryAttribute.bool(true));
+
+    span.setAttributes({
+      'data_attribute_4': SentryAttribute.stringArray(['value1', 'value2']),
+      'data_attribute_5': SentryAttribute.intArray([42, 43]),
+      'data_attribute_6': SentryAttribute.boolArray([true, false])
+    });
+  },
+  // force the creation of a service span
+  parentSpan: null,
+);
+```
+
 ### For Spans
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 final span = parent.startChild('http.client');
 span.setData('data_attribute_1', 'value1');
 span.setData('data_attribute_2', 42);
@@ -26,4 +49,18 @@ span.setData('data_attribute_3', true);
 span.setData('data_attribute_4', ['value1', 'value2']);
 span.setData('data_attribute_5', [42, 43]);
 span.setData('data_attribute_6', [true, false]);
+```
+
+```dart {tabTitle:Stream Mode}
+await Sentry.startSpan('http.client', (span) async {
+  span.setAttribute('data_attribute_1', SentryAttribute.string('value1'));
+  span.setAttribute('data_attribute_2', SentryAttribute.int(42));
+  span.setAttribute('data_attribute_3', SentryAttribute.bool(true));
+
+  span.setAttributes({
+    'data_attribute_4': SentryAttribute.stringArray(['value1', 'value2']),
+    'data_attribute_5': SentryAttribute.intArray([42, 43]),
+    'data_attribute_6': SentryAttribute.boolArray([true, false])
+  });
+});
 ```
