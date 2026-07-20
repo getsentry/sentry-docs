@@ -1,14 +1,20 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
-import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassification';
+import {
+  AI_AGENT_PATTERN,
+  matchPattern,
+  type TrafficType,
+} from 'sentry-docs/lib/trafficClassification';
 
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
 // NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
 const isDeveloperDocs =
   process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
-const BASE_URL = isDeveloperDocs ? 'https://develop.sentry.dev' : 'https://docs.sentry.io';
+const BASE_URL = isDeveloperDocs
+  ? 'https://develop.sentry.dev'
+  : 'https://docs.sentry.io';
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
@@ -24,6 +30,14 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  // Classify once per request and record it as a counter. This metric — not
+  // trace sampling — is the source of truth for agent/bot/user traffic: the
+  // middleware root span is created by Next.js before any request data reaches
+  // Sentry, so classification is impossible at trace-sampling time (see
+  // src/tracesSampler.ts).
+  const classification = classifyTraffic(request);
+  recordClassification(request, classification);
+
   // First, handle canonical URL redirects for deprecated paths
   const canonicalRedirect = handleRedirects(request);
   if (canonicalRedirect) {
@@ -31,7 +45,32 @@ export function middleware(request: NextRequest) {
   }
 
   // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  return handleAIClientRedirect(request);
+  return handleAIClientRedirect(request, classification);
+}
+
+type TrafficClassification = ReturnType<typeof classifyTraffic>;
+
+/**
+ * Records the per-request traffic classification as a counter metric.
+ * Every request the middleware sees is counted — no sampling — making this
+ * the system of record for agent/bot/user traffic on the docs site.
+ */
+function recordClassification(
+  request: NextRequest,
+  classification: TrafficClassification
+): void {
+  const agent =
+    classification.trafficType === 'ai_agent'
+      ? matchPattern(request.headers.get('user-agent') ?? '', AI_AGENT_PATTERN)
+      : undefined;
+
+  Sentry.metrics.count('docs.request.classified', 1, {
+    attributes: {
+      traffic_type: classification.trafficType,
+      device_type: classification.deviceType,
+      ...(agent && {agent}),
+    },
+  });
 }
 
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
@@ -123,8 +162,10 @@ function wantsMarkdown(request: NextRequest): boolean {
  * These headers are added to the REQUEST (not response) so tracesSampler can read them.
  * Uses NextResponse.next({ request: { headers } }) pattern to modify the request.
  */
-function createClassifiedRequestHeaders(request: NextRequest): Headers {
-  const classification = classifyTraffic(request);
+function createClassifiedRequestHeaders(
+  request: NextRequest,
+  classification: TrafficClassification
+): Headers {
   const headers = new Headers(request.headers);
   headers.set('x-traffic-type', classification.trafficType);
   headers.set('x-device-type', classification.deviceType);
@@ -134,10 +175,13 @@ function createClassifiedRequestHeaders(request: NextRequest): Headers {
 /**
  * Creates a pass-through response with traffic classification headers on the request.
  */
-function nextWithClassification(request: NextRequest): NextResponse {
+function nextWithClassification(
+  request: NextRequest,
+  classification: TrafficClassification
+): NextResponse {
   return NextResponse.next({
     request: {
-      headers: createClassifiedRequestHeaders(request),
+      headers: createClassifiedRequestHeaders(request, classification),
     },
   });
 }
@@ -145,10 +189,14 @@ function nextWithClassification(request: NextRequest): NextResponse {
 /**
  * Creates a rewrite response with traffic classification headers on the request.
  */
-function rewriteWithClassification(request: NextRequest, destination: URL): NextResponse {
+function rewriteWithClassification(
+  request: NextRequest,
+  destination: URL,
+  classification: TrafficClassification
+): NextResponse {
   return NextResponse.rewrite(destination, {
     request: {
-      headers: createClassifiedRequestHeaders(request),
+      headers: createClassifiedRequestHeaders(request, classification),
     },
   });
 }
@@ -169,7 +217,10 @@ function mdToCanonicalPath(mdPathname: string): string {
 /**
  * Handles redirection to markdown versions for AI/LLM clients
  */
-const handleAIClientRedirect = (request: NextRequest) => {
+const handleAIClientRedirect = (
+  request: NextRequest,
+  classification: TrafficClassification
+) => {
   const userAgentString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
   const url = request.nextUrl;
@@ -207,8 +258,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // engine crawlers consolidate ranking to the human-readable URL instead of indexing the
   // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
-    const response = nextWithClassification(request);
-    response.headers.set('Link', `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`);
+    const response = nextWithClassification(request, classification);
+    response.headers.set(
+      'Link',
+      `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
+    );
     return response;
   }
 
@@ -221,7 +275,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
       url.pathname
     )
   ) {
-    return nextWithClassification(request);
+    return nextWithClassification(request, classification);
   }
 
   // Check for markdown request (Accept header, user-agent, or manual)
@@ -248,11 +302,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
     // Rewrite to serve markdown inline (same URL, different content)
     // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
-    return rewriteWithClassification(request, newUrl);
+    return rewriteWithClassification(request, newUrl, classification);
   }
 
   // Default: pass through with traffic classification headers
-  return nextWithClassification(request);
+  return nextWithClassification(request, classification);
 };
 
 const handleRedirects = (request: NextRequest) => {
