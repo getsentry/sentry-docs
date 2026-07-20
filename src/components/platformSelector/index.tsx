@@ -36,7 +36,7 @@ export function PlatformSelector({
 }) {
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
-    title.replaceAll('.', ' ').replaceAll(/ +/g, ' ').trim();
+    title.replace(/\./g, ' ').replace(/ +/g, ' ').trim();
   const platformsAndGuides = useMemo(
     () =>
       platforms

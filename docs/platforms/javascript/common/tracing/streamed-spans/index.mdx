@@ -1,0 +1,463 @@
+---
+title: Streamed Spans
+description: "Learn how to use stream mode to send spans to Sentry as they finish, removing the 1,000-span limit and making trace data visible sooner."
+sidebar_order: 35
+new: true
+notSupported:
+  - javascript.cordova
+  - javascript.electron
+---
+
+By default, the Sentry JavaScript SDKs collect all spans in memory and send them to Sentry as a single transaction once the root span ends. This is called transaction mode.
+Stream mode changes this by sending spans to Sentry in batches as they finish. Service spans, which represent a service's entry point, replace transactions as the main grouping for each service.
+
+<Expandable title="Why use stream mode?">
+
+- **No 1,000-span limit.** In transaction mode, transactions are capped at 1,000 spans. Stream mode has no upper limit since spans are sent in batches.
+- **Lower memory usage.** Spans are flushed periodically and don't need to be held in memory until the root span ends. This is especially useful for long-running processes like queue consumers or cron jobs.
+- **Faster visibility.** Span data arrives in Sentry as your application runs, instead of only after the entire operation completes.
+- **No data loss from crashes.** If your process terminates unexpectedly, spans that were already flushed are preserved. In transaction mode, a crash before the root span ends means all span data is lost.
+
+</Expandable>
+
+You can find the following span types mentioned throughout this page:
+
+- **Root span**: The topmost span in a trace. It has no parent span and is always a service span.
+- **Service span**: A parent-level span at the entry of a service. In transaction mode, this is called a transaction.
+- **Child span**: Any span nested under a parent span within the same trace.
+
+This graph shows how these span types relate to each other within a trace:
+
+```
+Trace
+│
+└── Root span [service A]
+     ├── Child span
+     │    └── Child span
+     └── Service span [service B]
+          ├── Child span
+          └── Child span
+```
+
+
+
+Span stream mode will be enabled by default in version `11.0.0` of the SDK.
+You can already opt into stream mode in version 10 by following the migration guide below.
+
+
+## Prerequisites
+
+You need:
+
+- <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in
+  your app
+- <PlatformSdkPackageName /> SDK version `>=10.66.0`
+
+## Migrate from Transaction Mode
+
+For most users, switching to stream mode requires no code changes beyond the initial opt-in.
+If you use `beforeSendSpan` or `beforeSendTransaction`, follow these steps:
+
+1. [Enable stream mode](#enable-stream-mode)
+2. [Wrap `beforeSendSpan` with `Sentry.withStreamedSpan()` to filter spans](#filter-spans)
+3. [Replace `beforeSendTransaction` with `ignoreSpans` to drop spans](#drop-spans)
+4. [Migrate tags (`Sentry.setTag(s)`) to attributes (`Sentry.setAttribute(s)`)](#shared-attributes)
+5. [Verify the migration](#verify-your-setup)
+
+
+### Agent-Assisted migration
+
+Copy the following prompt and paste it into your AI agent:
+
+```txt
+Use curl to download, read and follow https://raw.githubusercontent.com/getsentry/sentry-for-ai/refs/heads/main/skills-legacy/sentry-span-streaming-js/SKILL.md to enable and migrate to span streaming in the Sentry SDK.
+```
+
+## Enable Stream Mode
+
+<PlatformContent includePath="performance/enable-stream-mode" />
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.sveltekit", "javascript.astro", "javascript.solidstart", "javascript.capacitor", "javascript.tanstackstart-react", "javascript.remix", "javascript.react-router", "javascript.effect"]}>
+
+<Alert level="success" title="Mixing tracing modes in distributed tracing">
+
+Tracing modes are scoped per SDK, which means you can use, for example, stream mode in your frontend, and transaction mode in your backend, or vice versa.
+
+</Alert>
+
+</PlatformSection>
+
+<Expandable title="How does span flushing work?">
+
+When stream mode is enabled, the SDK maintains an internal buffer that groups spans by trace ID.
+
+Spans are flushed:
+
+- On a regular interval (every 5 seconds by default).
+- When a trace's buffer reaches 1,000 spans or the maximum size limit of a batch.
+- When you call `Sentry.flush()` or `Sentry.close()`.
+
+Each flush sends only the spans accumulated since the last flush, grouped into envelopes by trace ID.
+
+</Expandable>
+
+## Manual Instrumentation (Optional)
+
+### Start a Span
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.startSpan()` to create a span that is automatically ended when the callback completes:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+const result = await Sentry.startSpan(
+  { name: "my-operation", attributes: { "my.attribute": "value" } },
+  async () => {
+    // Your code here
+    return await doWork();
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Child spans created inside the callback are automatically associated with the parent:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+await Sentry.startSpan({ name: "parent-operation" }, async () => {
+  await Sentry.startSpan({ name: "child-step-1" }, async () => {
+    await stepOne();
+  });
+
+  await Sentry.startSpan({ name: "child-step-2" }, async () => {
+    await stepTwo();
+  });
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+For more details on span creation APIs, such as `startSpan`, `startSpanManual`, or `startInactiveSpan`, see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink>.
+
+## Add Attributes
+
+Attach structured metadata to spans using <PlatformLink to="/configuration/apis/#startSpan">`attributes`</PlatformLink>, which can be `string`, `number`, or `boolean`, as well as arrays of these types.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+You can set attributes when starting a span:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.startSpan(
+  {
+    name: "process-order",
+    attributes: {
+      "sentry.op": "queue.process",
+      "order.id": "abc-123",
+      "order.item_count": 5,
+      "order.priority": true,
+    },
+  },
+  () => {
+    // Process the order
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Or add them to an already running span:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.startSpan({ name: "handle-request" }, (span) => {
+  // Set a single attribute
+  span.setAttribute("http.response.status_code", 200);
+
+  // Set multiple attributes at once
+  span.setAttributes({
+    "http.route": "/api/users",
+    "user.id": "user-42",
+  });
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span Metrics</PlatformLink> documentation.
+
+</SplitLayout>
+
+### Shared Attributes
+
+Previously, transaction mode applied shared tags (`Sentry.setTag(s)`) to the service span (transaction).
+In Stream mode, tags are no longer applied to spans. 
+Set shared attributes on a specific scope instead.
+You don't need to remove tags from your code, since they still apply to errors.
+Instead, add attributes for all data that's relevant for spans, logs metrics.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics). 
+These work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but they accept `string`, `number`, and `boolean` values.
+
+To attach attributes to a broader or narrower context, set them on a specific scope instead. Use the global scope for app-wide attributes and the current scope for a single operation.
+
+See <PlatformLink to="/enriching-events/attributes/">Attributes</PlatformLink> for more information.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Applied to all spans, logs and metrics
+Sentry.setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
+Sentry.setAttribute("service", "checkout");
+
+// Global scope - shared across entire app
+Sentry.getGlobalScope().setAttributes({
+  service: "checkout",
+  version: "2.1.0",
+});
+
+// Current scope - single operation
+Sentry.withScope((scope) => {
+  scope.setAttribute("request_id", req.id);
+  Sentry.logger.info("Processing order");
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Extended Configuration (Optional)
+
+### Filter Spans
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To modify or redact span data before it's sent, use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink>. In stream mode, wrap it with `Sentry.withStreamedSpan()` so the SDK applies it to spans as they are flushed rather than only at transaction time.
+
+<Alert>
+  `beforeSendSpan` can only modify span data, and you cannot use it to drop
+  spans. Use [`ignoreSpans`](#drop-spans) instead.
+</Alert>
+
+The `span` object also has different property names in stream mode. For example, `span.op` becomes `span.attributes?.["sentry.op"]` and `span.description` becomes `span.name`. See the migration note below for the full list.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+  beforeSendSpan: Sentry.withStreamedSpan((span) => {
+    // In stream mode, 'op' is accessed via attributes
+    if (span.attributes?.["sentry.op"] === "db.query") {
+      // In stream mode, 'description' is now renamed to 'name'
+      span.name = "[filtered]";
+    }
+    return span;
+  }),
+});
+```
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["browser"]}>
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.sveltekit", "javascript.astro", "javascript.solidstart", "javascript.capacitor", "javascript.tanstackstart-react", "javascript.remix", "javascript.react-router", "javascript.effect"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    // other integrations
+    Sentry.spanStreamingIntegration(),
+  ],
+  beforeSendSpan: Sentry.withStreamedSpan((span) => {
+    // In stream mode, 'op' is accessed via attributes
+    if (span.attributes?.["sentry.op"] === "db.query") {
+      // In stream mode, 'description' is now renamed to 'name'
+      span.name = "[filtered]";
+    }
+    return span;
+  }),
+});
+```
+
+</PlatformSection>
+</PlatformCategorySection>
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable level="warning" title="Migrating from transaction mode?">
+
+If you're using `beforeSendSpan`, wrap it with `Sentry.withStreamedSpan()` as shown above, otherwise the SDK falls back to transaction mode.
+
+Note that the `span` object is `StreamedSpanJSON` instead of `SpanJSON` and has different property names:
+
+| Transaction Mode (`SpanJSON`)      | Stream Mode (`StreamedSpanJSON`)    |
+| ---------------------------------- | ----------------------------------- |
+| `span.description`                 | `span.name`                         |
+| `span.data` (processed attributes) | `span.attributes` (raw attributes)  |
+| `span.timestamp` (end time)        | `span.end_timestamp`                |
+| `span.status` (optional string)    | `span.status` (`'ok'` or `'error'`) |
+| `span.op`                          | `span.attributes['sentry.op']`      |
+
+If you're using `beforeSendTransaction` to drop spans, use [`ignoreSpans`](#drop-spans) instead, since `beforeSendTransaction` is not available in stream mode.
+
+</Expandable>
+
+### Drop Spans
+
+In stream mode, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To prevent specific spans from being created, use the <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> option:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "stream",
+  ignoreSpans: [
+    // Drop spans whose name contains "healthcheck"
+    "healthcheck",
+    // Drop spans whose name matches a pattern
+    /^GET \/api\/v1\/internal/,
+    // Drop spans matching name and attribute conditions
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.route": "/api/status",
+      },
+    },
+  ],
+});
+```
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["browser"]}>
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.sveltekit", "javascript.astro", "javascript.solidstart", "javascript.capacitor", "javascript.tanstackstart-react", "javascript.remix", "javascript.react-router", "javascript.effect"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    // other integrations
+    Sentry.spanStreamingIntegration(),
+  ],
+  ignoreSpans: [
+    // Drop spans whose name contains "healthcheck"
+    "healthcheck",
+    // Drop spans whose name matches a pattern
+    /^GET \/api\/v1\/internal/,
+    // Drop spans matching name and attribute conditions
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.route": "/api/status",
+      },
+    },
+  ],
+});
+```
+
+</PlatformSection>
+
+</PlatformCategorySection>
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+If a matching span is a service span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the nearest ancestor.
+
+<Alert level="warning" title="Migrating from transaction mode?">
+
+In transaction mode, `ignoreSpans` is evaluated at transaction end rather than at span start. Review your existing rules to make sure the attributes and names you're matching on are passed when the span is created.
+
+If you're auto-instrumenting and don't know what the initial name of a span is when it starts, enable SDK debug logging during development by setting <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink> when initializing the SDK.
+
+</Alert>
+
+## Distributed Tracing (Optional)
+
+Distributed tracing works out of the box when tracing is enabled and works the same way in stream mode. If you need to manually propagate trace context, for example,
+when the SDK can't instrument automatically, see <PlatformLink to="/tracing/distributed-tracing/custom-instrumentation/">Custom Trace Propagation</PlatformLink>.
+
+
+## Verify Your Setup
+
+To make sure you've enabled stream mode successfully:
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.nuxt", "javascript.sveltekit", "javascript.astro", "javascript.solidstart", "javascript.capacitor", "javascript.tanstackstart-react", "javascript.remix", "javascript.react-router", "javascript.effect"]}>
+
+- **Check the Sentry dashboard**: Spans should appear in the Traces view shortly after they complete. Traces look the same as in transaction mode, but without transactions.
+- **Check for fallback warnings in your logs**: If the SDK logs warnings about falling back to transaction mode, your `beforeSendSpan` callback is likely missing the `Sentry.withStreamedSpan()` wrapper.
+
+</PlatformSection>
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["browser"]}>
+
+- **Check the Sentry dashboard**: Spans should appear in the Traces view shortly after they complete. Traces look similar to transaction mode, but contain only spans and no transactions.
+- **Check for fallback warnings in your logs**: If the SDK logs warnings about falling back to transaction mode, your `beforeSendSpan` callback is likely missing the `Sentry.withStreamedSpan()` wrapper.
+- **Check the network tab in your browser's DevTools**: Span envelopes should appear as individual requests with content type `application/vnd.sentry.items.span.v2+json`
+
+</PlatformCategorySection>
