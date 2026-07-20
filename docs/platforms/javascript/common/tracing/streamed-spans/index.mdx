@@ -39,12 +39,10 @@ Trace
 ```
 
 
-<Alert level="info">
 
 Span stream mode will be enabled by default in version `11.0.0` of the SDK.
 You can already opt into stream mode in version 10 by following the migration guide below.
 
-</Alert>
 
 ## Prerequisites
 
@@ -62,7 +60,17 @@ If you use `beforeSendSpan` or `beforeSendTransaction`, follow these steps:
 1. [Enable stream mode](#enable-stream-mode)
 2. [Wrap `beforeSendSpan` with `Sentry.withStreamedSpan()` to filter spans](#filter-spans)
 3. [Replace `beforeSendTransaction` with `ignoreSpans` to drop spans](#drop-spans)
-4. [Verify the migration](#verify-your-setup)
+4. [Migrate tags (`Sentry.setTag(s)`) to attributes (`Sentry.setAttribute(s)`)](#shared-attributes)
+5. [Verify the migration](#verify-your-setup)
+
+
+### Agent-Assisted migration
+
+Copy the following prompt and paste it into your AI agent:
+
+```txt
+Use curl to download, read and follow https://raw.githubusercontent.com/getsentry/sentry-for-ai/refs/heads/main/skills-legacy/sentry-span-streaming-js/SKILL.md to enable and migrate to span streaming in the Sentry SDK.
+```
 
 ## Enable Stream Mode
 
@@ -85,7 +93,7 @@ When stream mode is enabled, the SDK maintains an internal buffer that groups sp
 Spans are flushed:
 
 - On a regular interval (every 5 seconds by default).
-- When a trace's buffer reaches 1,000 spans.
+- When a trace's buffer reaches 1,000 spans or the maximum size limit of a batch.
 - When you call `Sentry.flush()` or `Sentry.close()`.
 
 Each flush sends only the spans accumulated since the last flush, grouped into envelopes by trace ID.
@@ -206,10 +214,18 @@ Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span
 </SplitLayout>
 
 
-<SplitSection>
-<SplitSectionText>
+
 
 ### Shared Attributes
+
+Previously, transaction mode applied shared tags (`Sentry.setTag(s)`) to the service span (transaction).
+In Stream mode, tags are no longer applied to spans. 
+Set shared attributes on a specific scope instead.
+You don't need to remove tags from your code, since they still apply to errors.
+Instead, add attributes for all data that's relevant for spans, logs metrics.
+
+<SplitSection>
+<SplitSectionText>
 
 Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics). 
 These work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but they accept `string`, `number`, and `boolean` values.
@@ -222,7 +238,7 @@ See <PlatformLink to="/enriching-events/attributes/">Attributes</PlatformLink> f
 <SplitSectionCode>
 
 ```javascript
-// Applied to allspans, logs and metrics
+// Applied to all spans, logs and metrics
 Sentry.setAttributes({
   org_id: user.orgId,
   user_tier: user.tier,
