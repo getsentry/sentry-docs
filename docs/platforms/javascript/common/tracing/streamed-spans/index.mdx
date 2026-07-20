@@ -38,13 +38,21 @@ Trace
           └── Child span
 ```
 
+
+<Alert level="info">
+
+Span stream mode will be enabled by default in version `11.0.0` of the SDK.
+You can already opt into stream mode in version 10 by following the migration guide below.
+
+</Alert>
+
 ## Prerequisites
 
 You need:
 
 - <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in
   your app
-- Sentry SDK `>=10.53.1`
+- <PlatformSdkPackageName /> SDK version `>=10.53.1`
 
 ## Migrate from Transaction Mode
 
@@ -135,7 +143,7 @@ await Sentry.startSpan({ name: "parent-operation" }, async () => {
 
 For more details on span creation APIs, such as `startSpan`, `startSpanManual`, or `startInactiveSpan`, see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink>.
 
-### Add Span Attributes
+## Add Attributes
 
 Attach structured metadata to spans using <PlatformLink to="/configuration/apis/#startSpan">`attributes`</PlatformLink>, which can be `string`, `number`, or `boolean`, as well as arrays of these types.
 
@@ -195,6 +203,49 @@ Sentry.startSpan({ name: "handle-request" }, (span) => {
 Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span Metrics</PlatformLink> documentation.
 
 </SplitLayout>
+
+
+<SplitSection>
+<SplitSectionText>
+
+### Shared Attributes
+
+<AvailableSince version="10.61.0" />
+
+Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics). 
+These work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but they accept `string`, `number`, and `boolean` values.
+
+To attach attributes to a broader or narrower context, set them on a specific scope instead. Use the global scope for app-wide attributes and the current scope for a single operation.
+
+See <PlatformLink to="/enriching-events/attributes/">Attributes</PlatformLink> for more information.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// Applied to allspans, logs and metrics
+Sentry.setAttributes({
+  org_id: user.orgId,
+  user_tier: user.tier,
+});
+Sentry.setAttribute("service", "checkout");
+
+// Global scope - shared across entire app
+Sentry.getGlobalScope().setAttributes({
+  service: "checkout",
+  version: "2.1.0",
+});
+
+// Current scope - single operation
+Sentry.withScope((scope) => {
+  scope.setAttribute("request_id", req.id);
+  Sentry.logger.info("Processing order");
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
 
 ## Distributed Tracing (Optional)
 
