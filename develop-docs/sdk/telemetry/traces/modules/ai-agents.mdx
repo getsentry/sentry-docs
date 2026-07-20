@@ -23,7 +23,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` SHOULD be `"gen_ai.invoke_agent"`.
-- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`)  **[6]**
+- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[6]**
 - Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
 - If provided, the attribute `gen_ai.request.model` MUST be the agent's default request model. (e.g. `"gpt-4o"`)
@@ -35,7 +35,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                           | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                            | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                          | `500`                                                                 |
@@ -45,23 +45,23 @@ Additional attributes on the span:
 | `gen_ai.request.temperature`       | float  | optional          | Model configuration parameter.                                                                                                          | `0.1`                                                                 |
 | `gen_ai.request.top_p`             | float  | optional          | Model configuration parameter.                                                                                                          | `0.7`                                                                 |
 | `gen_ai.request.top_k`             | int    | optional          | Limits model to K most likely next tokens.                                                                                              | `40`                                                                  |
-| `gen_ai.request.reasoning_effort`  | string | optional          | Constrains the effort on reasoning for reasoning models. Supported values vary by provider.                                             | `"medium"`                                                            |
+| `gen_ai.request.reasoning.level`   | string | optional          | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.                                  | `"medium"`                                                            |
 | `gen_ai.request.messages`          | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of dictionaries describing the messages (prompts) given to the agent. **[0]** | `'[{"role": "system", "content": "..."}, ...]'`                       |
 | `gen_ai.request.available_tools`   | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of dictionaries describing the available tools. **[0]**                     | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 
 ### Response Data
 
-| Attribute                             | Type    | Requirement Level | Description                                                                                           | Example                                                                      |
-| :------------------------------------ | :------ | :---------------- | :---------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| `gen_ai.output.messages`              | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-| `gen_ai.response.streaming`           | boolean | optional          | Whether response was streamed asynchronously.                                                         | `true`                                                                       |
-| `gen_ai.response.text`                | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the agents response. | `"The weather in Paris is rainy"`                                            |
-| `gen_ai.response.tool_calls`          | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]** | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
+| Attribute                    | Type    | Requirement Level | Description                                                                                           | Example                                                                      |
+| :--------------------------- | :------ | :---------------- | :---------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| `gen_ai.output.messages`     | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
+| `gen_ai.response.streaming`  | boolean | optional          | Whether response was streamed asynchronously.                                                         | `true`                                                                       |
+| `gen_ai.response.text`       | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the agents response. | `"The weather in Paris is rainy"`                                            |
+| `gen_ai.response.tool_calls` | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]** | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
 
 ### Token Usage Data
 
-| Attribute                               | Type | Requirement Level | Description                                                                                     | Example |
-| :-------------------------------------- | :--- | :---------------- | :---------------------------------------------------------------------------------------------- | :------ |
+| Attribute                               | Type | Requirement Level | Description                                                                          | Example |
+| :-------------------------------------- | :--- | :---------------- | :----------------------------------------------------------------------------------- | :------ |
 | `gen_ai.usage.input_tokens`             | int  | optional          | The number of tokens used in the AI input (prompt), including cached tokens. **[2]** | `60`    |
 | `gen_ai.usage.input_tokens.cached`      | int  | optional          | The number of cached tokens used in the AI input (prompt).                           | `50`    |
 | `gen_ai.usage.input_tokens.cache_write` | int  | optional          | Tokens written to cache when processing input.                                       | `20`    |
@@ -103,7 +103,7 @@ Additional attributes on the span:
 | `gen_ai.request.temperature`       | float  | optional          | Model configuration parameter.                                                                                                       | `0.1`                                                                 |
 | `gen_ai.request.top_p`             | float  | optional          | Model configuration parameter.                                                                                                       | `0.7`                                                                 |
 | `gen_ai.request.top_k`             | int    | optional          | Limits model to K most likely next tokens.                                                                                           | `40`                                                                  |
-| `gen_ai.request.reasoning_effort`  | string | optional          | Constrains the effort on reasoning for reasoning models. Supported values vary by provider.                                          | `"medium"`                                                            |
+| `gen_ai.request.reasoning.level`   | string | optional          | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.                               | `"medium"`                                                            |
 | `gen_ai.request.messages`          | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of dictionaries describing the messages (prompts) sent to the LLM. **[0]** | `'[{"role": "system", "content": "..."}, ...]'`                       |
 | `gen_ai.request.available_tools`   | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of dictionaries describing the available tools. **[0]**                  | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 
@@ -121,8 +121,8 @@ Additional attributes on the span:
 
 ### Token Usage Data
 
-| Attribute                               | Type | Requirement Level | Description                                                                                     | Example |
-| :-------------------------------------- | :--- | :---------------- | :---------------------------------------------------------------------------------------------- | :------ |
+| Attribute                               | Type | Requirement Level | Description                                                                          | Example |
+| :-------------------------------------- | :--- | :---------------- | :----------------------------------------------------------------------------------- | :------ |
 | `gen_ai.usage.input_tokens`             | int  | optional          | The number of tokens used in the AI input (prompt), including cached tokens. **[2]** | `60`    |
 | `gen_ai.usage.input_tokens.cached`      | int  | optional          | The number of cached tokens used in the AI input (prompt).                           | `50`    |
 | `gen_ai.usage.input_tokens.cache_write` | int  | optional          | Tokens written to cache when processing input.                                       | `20`    |
