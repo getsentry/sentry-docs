@@ -6,6 +6,14 @@ sidebar_order: 30
 
 Sentry's tracing functionality helps you monitor application performance by capturing distributed traces, attaching attributes, and span performance across your application. However, Capturing traces for every transaction can generate significant volumes of data. Sampling allows you to control the amount of spans that are sent to Sentry from your application.
 
+<PlatformSection notSupported={["javascript.cordova"]}>
+<Alert>
+
+If you're using stream mode, sampling works the same way as described in this guide but applies to service spans instead of transactions. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for more information.
+
+</Alert>
+</PlatformSection>
+
 The JavaScript SDK provides two main options for controlling the sampling rate:
 
 1. [Uniform Sample Rate](#uniform-sample-rate-tracessamplerate) (recommended)
@@ -62,39 +70,39 @@ tracesSampler: (samplingContext) => {
   const { name, attributes, inheritOrSampleWith } = samplingContext;
 
   // Sample all checkout transactions
-  if (name.includes('/checkout') || attributes?.flow === 'checkout') {
+  if (name.includes("/checkout") || attributes?.flow === "checkout") {
     return 1.0;
   }
 
   // Sample 50% of login transactions
-  if (name.includes('/login') || attributes?.flow === 'login') {
+  if (name.includes("/login") || attributes?.flow === "login") {
     return 0.5;
   }
 
   // Sample 10% of everything else
   return inheritOrSampleWith(0.1);
-}
+};
 ```
 
 2. Handling Different Environments
 
 ```javascript
 tracesSampler: (samplingContext) => {
-    const { inheritOrSampleWith } = samplingContext;
+  const { inheritOrSampleWith } = samplingContext;
 
   // Sample all transactions in development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     return 1.0;
   }
 
   // Sample 5% in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return 0.05;
   }
 
   // Sample 20% in staging
   return inheritOrSampleWith(0.2);
-}
+};
 ```
 
 3. Controlling Sampling Based on User or Transaction Properties
@@ -104,7 +112,7 @@ tracesSampler: (samplingContext) => {
   const { attributes, inheritOrSampleWith } = samplingContext;
 
   // Always sample for premium users
-  if (attributes?.userTier === 'premium') {
+  if (attributes?.userTier === "premium") {
     return 1.0;
   }
 
@@ -114,13 +122,13 @@ tracesSampler: (samplingContext) => {
   }
 
   // Sample less for high-volume, low-value paths
-  if (attributes?.path?.includes('/api/metrics')) {
+  if (attributes?.path?.includes("/api/metrics")) {
     return 0.01;
   }
 
   // Default sampling rate
   return inheritOrSampleWith(0.2);
-}
+};
 ```
 
 ## Sampling Decision Precedence
