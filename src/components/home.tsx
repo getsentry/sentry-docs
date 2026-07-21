@@ -8,7 +8,6 @@ import {HomeSearchObserver} from './homeSearchVisibility';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformIcon} from './platformIcon';
 import {Search} from './search';
-import {Sidebar} from './sidebar';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export async function Home() {
@@ -41,9 +40,7 @@ export async function Home() {
         useStoredSearchPlatforms={false}
         platforms={platforms}
       />
-      <section className="px-0 flex relative">
-        <Sidebar path={['product']} />
-        <main id="main" className="main-content flex-1 min-w-0">
+      <main id="main">
         <div className="mt-[var(--header-height)]">
           <Banner />
         </div>
@@ -218,8 +215,7 @@ export async function Home() {
           <SentryWordmarkLogo height={50} fill="#ffffff" />
         </div>
       </footer>
-        </main>
-      </section>
+      </main>
       <AskAiSearchParams />
       <style>{`
         .hero-gradient {
