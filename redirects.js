@@ -612,10 +612,6 @@ const userDocsRedirects = [
     destination: '/integrations/cloud-monitoring/aws-lambda/',
   },
   {
-    source: '/integrations/cloudflare-workers/',
-    destination: '/integrations/cloud-monitoring/cloudflare-workers/',
-  },
-  {
     source: '/integrations/gcp-cloud-run/',
     destination: '/integrations/cloud-monitoring/gcp-cloud-run/',
   },
