@@ -10,6 +10,8 @@ platforms:
   - flutter
 ---
 
+<Include name="dart-stream-mode-general-callout.mdx" />
+
 <Include name="feature-stage-beta.mdx" />
 
 _(New in version 7.16.0)_
@@ -19,7 +21,7 @@ The [sentry_isar](https://pub.dev/packages/sentry_isar) package provides `Isar` 
 
 ## Instrumentation Behaviour
 
-The created spans will be attached to the transaction on the scope. If no transaction is on the scope the Isar span will not be sent to Sentry.
+The created spans attach to the active span. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan()`. If no span is active, the Isar span won't be sent to Sentry.
 
 ## Prerequisites
 
@@ -61,7 +63,7 @@ final isar = await SentryIsar.open(
 
 ### 1. Execute the Code
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sentry_isar/sentry_isar.dart';
@@ -93,6 +95,39 @@ Future<void> runApp() async {
   });
 
   await tr.finish(status: const SpanStatus.ok());
+}
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_isar/sentry_isar.dart';
+
+import 'user.dart'; // Import your Isar model instead
+
+Future<void> runApp() async {
+  await Sentry.startSpan('isarTest', (span) async {
+    final dir = await getApplicationDocumentsDirectory();
+
+    final isar = await SentryIsar.open(
+      [UserSchema],
+      directory: dir.path,
+    );
+
+    final newUser = User()
+      ..name = 'Joe Dirt'
+      ..age = 36;
+
+    await isar.writeTxn(() async {
+      await isar.users.put(newUser); // insert & update
+    });
+
+    final existingUser = await isar.users.get(newUser.id); // get
+
+    await isar.writeTxn(() async {
+      await isar.users.delete(existingUser!.id); // delete
+    });
+  }, parentSpan: null);
 }
 ```
 
