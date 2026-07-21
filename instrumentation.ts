@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 
-import {tracesSampler} from './tracesSampler';
+import {tracesSampler} from 'sentry-docs/tracesSampler';
 
 export function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
