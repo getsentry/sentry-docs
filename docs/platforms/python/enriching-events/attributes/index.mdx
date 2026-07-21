@@ -1,0 +1,124 @@
+---
+title: Attributes
+description: "Attributes automatically enrich your telemetry with typed key-value data. Use them to add business context that you can filter and search in Sentry."
+---
+
+<AvailableSince version="2.54.0" />
+
+**Attributes** are key-value pairs you can attach to your telemetry (like <PlatformLink to="/tracing/streamed-spans">spans</PlatformLink>, <PlatformLink to="/logs">logs</PlatformLink>, and <PlatformLink to="/metrics">metrics</PlatformLink>).
+
+Common uses include subscription tier, feature flags, or any business context that helps you filter and query your telemetry.
+
+Attribute values can be `str`, `int`, `float`, or `bool`, as well as arrays of these types.
+
+<Alert level="info">
+
+Attributes on spans require <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink> (SDK version `2.62.0`+). In stream mode, spans have no contexts, data, or tags — everything is an attribute, so `set_data()`, `set_tag()`, and `set_context()` are replaced by `set_attribute()` and `set_attributes()`.
+
+Attributes on logs and metrics don't require stream mode — they work regardless of your `trace_lifecycle` setting.
+
+</Alert>
+
+## Add Attributes to a Scope
+
+Use `sentry_sdk.set_attribute` and `sentry_sdk.set_attributes` to attach attributes that are automatically included on all logs and metrics — and, in stream mode, on all spans. These write to the isolation scope, so they apply for the current request or session:
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_attributes({
+    "org_id": user.org_id,
+    "user_tier": user.tier,
+})
+sentry_sdk.set_attribute("service", "checkout")
+```
+
+To attach attributes more broadly or more narrowly, set them on a specific scope instead:
+
+```python
+import sentry_sdk
+
+# Global scope — applies to every event for the life of the app
+sentry_sdk.get_global_scope().set_attribute("app.version", "1.2.3")
+
+# Current scope — applies only within this block
+with sentry_sdk.new_scope() as scope:
+    scope.set_attribute("checkout.step", "payment")
+    sentry_sdk.logger.info("Processing payment")
+```
+
+See <PlatformLink to="/enriching-events/scopes">Scopes</PlatformLink> for more on the global, isolation, and current scopes.
+
+## Setting Attributes on Individual Telemetry
+
+You can also attach attributes to a single span, log, or metric directly, which is useful when the data only makes sense for that one item.
+
+### Spans
+
+In stream mode, you can set attributes when starting a span:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(
+    name="process-order",
+    attributes={
+        "sentry.op": "queue.process",
+        "order.id": "abc-123",
+        "order.item_count": 5,
+        "order.priority": True,
+    },
+):
+    process_order()
+```
+
+Or add them to an already running span:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(name="handle-request") as span:
+    span.set_attribute("http.response.status_code", 200)
+
+    span.set_attributes({
+        "http.route": "/api/users",
+        "user.id": "user-42",
+    })
+```
+
+See <PlatformLink to="/tracing/streamed-spans/#add-span-attributes">Add Span Attributes</PlatformLink> for more.
+
+### Logs
+
+Pass attributes to any `sentry_sdk.logger` call via the `attributes` kwarg:
+
+```python
+sentry_sdk.logger.error(
+    "Payment processing failed",
+    attributes={
+        "payment.provider": "stripe",
+        "payment.method": "credit_card",
+    }
+)
+```
+
+See <PlatformLink to="/logs">Logs</PlatformLink> for more.
+
+### Metrics
+
+Pass attributes in the `attributes` parameter of any metric:
+
+```python
+import sentry_sdk
+
+sentry_sdk.metrics.count(
+    "button_click",
+    5,
+    attributes={
+        "browser": "Firefox",
+        "app_version": "1.0.0"
+    },
+)
+```
+
+See <PlatformLink to="/metrics">Application Metrics</PlatformLink> for more.
