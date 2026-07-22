@@ -184,39 +184,39 @@ export async function Home() {
             />
           </div>
         </section>
-        <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
-          <div className="px-3 pt-10 border-t border-gray">
-            <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2 mb-2">
-              <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
-              <FooterLink href="/contributing">Contribute</FooterLink>
-              <FooterLink href="https://www.sentry.help/en/" external>
-                Support
-              </FooterLink>
-              <FooterLink href="https://sentry.io/changelog/" external>
-                Changelog
-              </FooterLink>
-            </div>
-            <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2">
-              <FooterLink href="https://sandbox.sentry.io/" external>
-                Sandbox
-              </FooterLink>
-              <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
-                Self-hosting Sentry
-              </FooterLink>
-              <FooterLink href="https://develop.sentry.dev/" external>
-                Developer docs
-              </FooterLink>
-            </div>
-          </div>
-          <p className="px-3 text-sm">
-            © {new Date().getFullYear()} • Sentry is a registered trademark of Functional
-            Software, Inc.
-          </p>
-          <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
-            <SentryWordmarkLogo height={50} fill="#ffffff" />
-          </div>
-        </footer>
       </main>
+      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
+        <div className="px-3 pt-10 border-t border-gray">
+          <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2 mb-2">
+            <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
+            <FooterLink href="/contributing">Contribute</FooterLink>
+            <FooterLink href="https://www.sentry.help/en/" external>
+              Support
+            </FooterLink>
+            <FooterLink href="https://sentry.io/changelog/" external>
+              Changelog
+            </FooterLink>
+          </div>
+          <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2">
+            <FooterLink href="https://sandbox.sentry.io/" external>
+              Sandbox
+            </FooterLink>
+            <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
+              Self-hosting Sentry
+            </FooterLink>
+            <FooterLink href="https://develop.sentry.dev/" external>
+              Developer docs
+            </FooterLink>
+          </div>
+        </div>
+        <p className="px-3 text-sm">
+          © {new Date().getFullYear()} • Sentry is a registered trademark of Functional
+          Software, Inc.
+        </p>
+        <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
+          <SentryWordmarkLogo height={50} fill="#ffffff" />
+        </div>
+      </footer>
       <AskAiSearchParams />
       <style>{`
         .hero-gradient {
