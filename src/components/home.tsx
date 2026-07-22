@@ -92,8 +92,8 @@ export async function Home() {
               </span>
             </Link>
 
-            {/* Manual setup */}
-            <Link href="#platforms" className="setup-card group no-underline">
+            {/* Manual setup — plain <a> so the same-page hash reliably scrolls (next/link doesn't) */}
+            <a href="#platforms" className="setup-card group no-underline">
               <div className="setup-icon">
                 <svg
                   width="26"
@@ -119,7 +119,7 @@ export async function Home() {
                 Choose your platform
                 <Arrow />
               </span>
-            </Link>
+            </a>
           </div>
         </section>
 
