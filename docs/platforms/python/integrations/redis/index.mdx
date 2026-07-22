@@ -5,11 +5,14 @@ description: "Learn about importing the Redis integration."
 
 The [Redis](https://redis.io/) integration hooks into the [Redis client for Python](https://pypi.org/project/redis/) and logs all Redis commands as <PlatformLink to="/enriching-events/breadcrumbs/">breadcrumbs</PlatformLink>.
 
+<Include name="python-stream-mode-general-callout.mdx" />
+
 ## Install
 
 ```bash {tabTitle:pip}
 pip install "sentry-sdk"
 ```
+
 ```bash {tabTitle:uv}
 uv add "sentry-sdk"
 ```
@@ -31,6 +34,7 @@ def main():
     sentry_sdk.init(...)  # same as above
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
+    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
     with sentry_sdk.start_transaction(name="testing_sentry"):
         r.set("foo", "bar")
         r.get("foo")
@@ -47,6 +51,7 @@ def main():
     sentry_sdk.init(...)  # same as above
     rc = RedisCluster(host='localhost', port=16379)
 
+    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
     with sentry_sdk.start_transaction(name="testing_sentry"):
         rc.set("foo", "bar")
         rc.get("foo")
@@ -64,6 +69,7 @@ async def main():
     sentry_sdk.init(...)  # same as above
     r = redis.Redis(host='localhost', port=6379)
 
+    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
     with sentry_sdk.start_transaction(name="testing_sentry"):
         await r.set("foo", "bar")
         await r.get("foo")
@@ -102,6 +108,7 @@ sentry_sdk.init(
     ],
 )
 ```
+
 You can pass the following keyword arguments to `RedisIntegration()`:
 
 - `max_data_size`
@@ -117,7 +124,6 @@ When you set `max_data_size` to a value that evaluates to `False` (like `0` or `
 You can specify a list of prefixes to Redis keys to define a key space that should be considered as cache. Cache keys will show up in the cache-monitoring dashboard, giving you more insight into your caching strategy.
 
 For example, if you, set `cache_prefixes` to `["template.cache", "middleware.cache"]`, then access to all Redis keys starting with `template.cache` or `middleware.cache` will show up in your cache-monitoring dashboard.
-
 
 ## Supported Versions
 

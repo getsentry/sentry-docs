@@ -5,6 +5,8 @@ description: "Learn about using Sentry with Celery."
 
 The Celery integration adds support for the [Celery Task Queue System](https://docs.celeryq.dev/).
 
+<Include name="python-stream-mode-general-callout.mdx" />
+
 ## Install
 
 Install `sentry-sdk` from PyPI:
@@ -12,6 +14,7 @@ Install `sentry-sdk` from PyPI:
 ```bash {tabTitle:pip}
 pip install sentry-sdk
 ```
+
 ```bash {tabTitle:uv}
 uv add sentry-sdk
 ```
@@ -110,6 +113,7 @@ def main():
 
     # Enqueueing a task to be processed by Celery
     with sentry_sdk.start_transaction(name="calling-a-celery-task"):
+    # or sentry_sdk.traces.start_span(name="calling-a-celery-task", parent_span=None) in stream mode
         result = add.delay(4, 4)
 
 if __name__ == "__main__":
@@ -178,7 +182,6 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
   Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
 
   If this is set to `False`:
-
   - errors in Celery tasks won't be matched to the triggering function.
   - your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
 
