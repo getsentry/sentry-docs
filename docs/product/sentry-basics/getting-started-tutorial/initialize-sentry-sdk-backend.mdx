@@ -68,13 +68,9 @@ Sentry captures data by using a platform-specific SDK that you add to your app's
 
    The options set in `Sentry.init()` are called the SDK's configuration. The only required option is the DSN; the SDK supports many others, which you can read about in our [Configuration](/platforms/javascript/guides/node/configuration/) docs. The configuration above enables Sentry's error monitoring and [**Tracing**](/product/tracing/) features.
 
-1. Import `instrument.js` at the top of your `server.js` file. Then import `Sentry` and set up the error handler after all controllers and before any other error middleware:
+1. Open your `server.js` file, import `Sentry`, and set up the error handler after all controllers and before any other error middleware. You don't import `instrument.js` here — you'll load it with Node's `--import` flag when you start the app (in the next step):
 
 ```javascript diff {filename:server.js}
-+    // IMPORTANT: Make sure to import `instrument.js` at the top of your file.
-+    import "./instrument.js";
-
-+    // All other imports below
 +    import * as Sentry from "@sentry/node";
    import express from "express";
    import cors from "cors";
@@ -147,6 +143,8 @@ In the `tracing-tutorial-backend` project folder:
    ```bash {tabTitle:pnpm}
    pnpm start
    ```
+
+   The sample app's `start` script runs `node --import ./instrument.js server.js`. The `--import` flag runs `instrument.js` (your `Sentry.init()` call) _before_ the rest of the app loads — which is required for Sentry to instrument an ESM app correctly. If you adapt this to your own ESM project, start it the same way.
 
    Once the application starts, you'll see a confirmation message similar to this one in your terminal:
 
