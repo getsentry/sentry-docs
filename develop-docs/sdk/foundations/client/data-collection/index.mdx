@@ -2,12 +2,18 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.7.0
+spec_version: 0.9.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.9.0
+    date: 2026-07-21
+    summary: Allow `stackFrameVariables` to accept a `KeyValueCollectionBehavior` for filtering by variable name in addition to the Boolean default.
+  - version: 0.8.0
+    date: 2026-07-13
+    summary: Update name of `queryParams` to `urlQueryParams` to reduce ambiguity with other query types.
   - version: 0.7.0
     date: 2026-07-08
     summary: Include configuration for queue/tasks data. Modify database config to accept a boolean value instead of a map of key/values. Update name of `graphql` to `graphQL`
@@ -154,7 +160,7 @@ SDKs **MUST** perform a **partial, case-insensitive match** when comparing key n
 
 #### Sensitive Denylist
 
-The following terms **MUST** be included in the sensitive denylist and applied to headers, cookie names, and query param keys. For cookies and query params that arrive as an unparsed string, see [Cookies and Query Params](#cookies-and-query-params).
+The following terms **MUST** be included in the sensitive denylist and applied to headers, cookie names, and query param keys. For cookies and URL query params that arrive as an unparsed string, see [Cookies and URL Query Params](#cookies-and-url-query-params).
 
 `["auth", "token", "secret", "password", "passwd", "pwd", "key", "jwt", "bearer", "sso", "saml", "csrf", "xsrf", "credentials", "session", "sid", "identity"]`
 
@@ -162,7 +168,7 @@ Values for keys that match **MUST** be replaced with `"[Filtered]"`.
 
 #### Extended Deny Terms
 
-The sensitive denylist covers credentials and secrets. Some headers additionally carry user-identifying information (IP address, user ID, origin host) without being credentials. If an application is subject to GDPR or similar privacy regulations, users can add these terms via a deny list for `cookies`, `httpHeaders`, and `queryParams`.
+The sensitive denylist covers credentials and secrets. Some headers additionally carry user-identifying information (IP address, user ID, origin host) without being credentials. If an application is subject to GDPR or similar privacy regulations, users can add these terms via a deny list for `cookies`, `httpHeaders`, and `urlQueryParams`.
 
 The list of case-insensitive, partial-match terms **SHOULD** be documented in the user documentation of the respective SDK:
 
@@ -178,7 +184,7 @@ init({
       response: { mode: "denyList", terms: ["forwarded", "-ip", "remote-", "via", "-user"] },
     },
     cookies: { mode: "denyList", terms: ["forwarded", "-ip", "remote-", "via", "-user"] },
-    queryParams: { mode: "denyList", terms: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    urlQueryParams: { mode: "denyList", terms: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
 })
 ```
@@ -187,11 +193,11 @@ init({
 
 URL strings in span descriptions follow the format defined in [Structuring Data](/sdk/telemetry/traces/structuring-data/): `METHOD scheme://host/path` — query strings and fragments are excluded.
 
-The `queryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
+The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
 
 **Example:** Given a request to `https://example.com/api/users?token=abc123&page=5`:
 
-| Attribute | `queryParams` enabled | `queryParams` off |
+| Attribute | `urlQueryParams` enabled | `urlQueryParams` off |
 |---|---|---|
 | Span description | `GET https://example.com/api/users` | same |
 | `url.full` | `https://example.com/api/users?token=[Filtered]&page=5` | `https://example.com/api/users` |
@@ -199,9 +205,9 @@ The `queryParams` option controls query parameter filtering wherever query strin
 | `url.query` | `token=[Filtered]&page=5` | not collected |
 | `request.query_string` | `token=[Filtered]&page=5` | not collected |
 
-#### Cookies and Query Params
+#### Cookies and URL Query Params
 
-Cookies and query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
+Cookies and URL query params may arrive as a single unparsed string (e.g., `Cookie: user_session=abc; theme=dark-mode`) rather than pre-split key-value pairs. SDKs **MAY** handle both cases:
 
 **When the string can be parsed into individual key-value pairs**, apply the denylist per-key.
 
@@ -215,7 +221,7 @@ http.request.header.cookie.theme: "dark-mode"           // not sensitive — val
 http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
 ```
 
-For query parameters: the rules and terms as specified in `queryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is.
+For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is.
 
 
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
@@ -304,7 +310,7 @@ This means if a user calls `Sentry.setUser({ email: "jane@example.com" })`, that
 
 #### Key-Value Collection Behavior
 
-For key-value data (cookies, headers, query params), key names are **always included** in the event. SDKs **MUST** support the following collection modes to control which **values** are sent in plaintext vs. replaced with `"[Filtered]"`:
+For key-value data (cookies, headers, URL query params), key names are **always included** in the event. SDKs **MUST** support the following collection modes to control which **values** are sent in plaintext vs. replaced with `"[Filtered]"`:
 
 | Mode | Behavior |
 |------|----------|
@@ -517,6 +523,16 @@ public enum BodyType {
 
 </Expandable>
 
+---
+
+#### Filtering Stack Frame Variables
+
+The `stackFrameVariables` option accepts a Boolean by default (`true` collects all local variables, `false` collects none). SDKs **MUST** also accept a `KeyValueCollectionBehavior` to filter which variables are sent by name. Filtering follows the same collection modes as [Key-Value Collection Behavior](#key-value-collection-behavior), matching against variable names.
+
+<Alert level="warning">
+  Filtering by variable name requires the developer to know the variable names **as they appear after bundling**. Minifiers and other build-time transforms frequently rename local variables (e.g., `password` becomes `a`), so allow/deny terms configured against source names may not match the names captured at runtime. Prefer the Boolean form unless you have verified the post-bundle variable names for your build.
+</Alert>
+
 </SpecSection>
 
 <SpecSection id="datacollection-options" status="candidate" since="0.2.0">
@@ -540,18 +556,18 @@ init({
       response?: KeyValueCollectionBehavior,       // default: { mode: "denyList" }
     },
     httpBodies?: string[],                         // default: all valid body types
-    queryParams?: KeyValueCollectionBehavior,      // default: { mode: "denyList" }
+    urlQueryParams?: KeyValueCollectionBehavior,   // default: { mode: "denyList" }
     graphQL?: {
       document?: boolean,                          // default: true
       variables?: boolean,                         // default: true
     },
     genAI?: {
-      inputs?: boolean,                              // default: true
-      outputs?: boolean,                             // default: true
+      inputs?: boolean,                            // default: true
+      outputs?: boolean,                           // default: true
     },
-    databaseQueryData?: boolean,                     // default: true
-    queues?: boolean,                               // default: true
-    stackFrameVariables?: boolean,                 // default: true
+    databaseQueryData?: boolean,                   // default: true
+    queues?: boolean,                              // default: true
+    stackFrameVariables?: boolean | KeyValueCollectionBehavior, // default: true
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
   },
 })
@@ -563,12 +579,12 @@ init({
 | `cookies` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
 | `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
-| `queryParams` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
+| `urlQueryParams` | Key-value collection | `{ mode: "denyList" }` | 0.8.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `graphQL` | `{ document?, variables? }` | Both `true` | 0.5.0 | For `document`: Collect the GraphQL document. <br /><br /> For `variables`: Collect the variables that are passed to GraphQL operations. |
 | `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
-| `databaseQueryData` | Boolean | `true` | 0.6.0 | Include data that's associated with database queries. This can include parameters provided to a query, statement values, or the returned results of a query.<br /><br />Structural metadata such as the database system, a query summary, or the table being acted upon in the operation are **not** controlled by this property, and are **always** collected. |
+| `databaseQueryData` | Boolean | `true` | 0.6.0 | Include data that's associated with database queries. This controls collection of bound query parameters, data payloads for write operations, and returned result data.<br /><br />Sanitized or parameterized DB statements (`db.query.text`) are **not** controlled by this property. Structural metadata such as the database system, query summary, operation name, or the table being acted upon is also **always** collected. |
 | `queues` | Boolean | `true` | 0.7.0 | Include arguments passed to tasks within queues. |
-| `stackFrameVariables` | Boolean | `true` | 0.1.0 | Include local variable values captured within stack frames. |
+| `stackFrameVariables` | Boolean or key-value collection | `true` | 0.1.0 | Include local variable values captured within stack frames. Accepts a Boolean (`true` collects all variables, `false` collects none) or a `KeyValueCollectionBehavior` to filter which variables are sent by name (see [Filtering Stack Frame Variables](#filtering-stack-frame-variables)). Key-value collection added in 0.9.0. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
 
@@ -587,7 +603,7 @@ Omitting `dataCollection` entirely is equivalent to passing an empty object — 
 init({ dsn: "..." });
 ```
 
-**Result:** Cookies, headers, query params, HTTP bodies, generative AI inputs/outputs, stack frame variables, and user identity fields (`user.*`) are all collected. The sensitive denylist scrubs sensitive values.
+**Result:** Cookies, headers, URL query params, HTTP bodies, generative AI inputs/outputs, stack frame variables, and user identity fields (`user.*`) are all collected. The sensitive denylist scrubs sensitive values.
 
 ### Disable User Identity
 
@@ -645,7 +661,7 @@ init({
   dataCollection: {
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
-    queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
 });
 ```
@@ -675,7 +691,7 @@ init({
     queues: false,
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
-    queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
 });
 ```
