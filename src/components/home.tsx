@@ -74,7 +74,7 @@ export async function Home() {
         <section className="max-w-screen-lg mx-auto px-4 sm:px-8 -mt-2 pb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* AI setup */}
-            <Link href="/ai/agent-skills/" className="setup-card group no-underline">
+            <Link href="/ai/agent-plugin/" className="setup-card group no-underline">
               <div className="setup-icon">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l1.9 4.6L18.5 8.5 13.9 10.4 12 15l-1.9-4.6L5.5 8.5l4.6-1.9L12 2z" />
