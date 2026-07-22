@@ -75,9 +75,10 @@ export function CopyPromptButton({skill, platformName}: Props) {
         DocMetrics.copyAIPrompt(window.location.pathname, skill, true, 'inline_link');
         setTimeout(() => setCopied(false), 1500);
       } catch (error) {
-        if ((error as Error)?.name !== 'NotAllowedError') {
-          Sentry.captureException(error);
-        }
+        Sentry.logger.warn('clipboard.writeText failed', {
+          error: (error as Error)?.message,
+          errorName: (error as Error)?.name,
+        });
         DocMetrics.copyAIPrompt(window.location.pathname, skill, false, 'inline_link');
         setCopied(false);
       }
