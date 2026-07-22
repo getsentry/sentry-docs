@@ -1,0 +1,117 @@
+---
+title: Cloudflare Workers AI
+description: "Learn how Sentry instruments Cloudflare Workers AI to capture gen_ai spans."
+---
+
+<AvailableSince version="10.67.0" />
+
+Sentry automatically instruments the [Cloudflare Workers AI binding](https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/) (`env.AI`). Calls to `env.AI.run(...)` create `gen_ai` spans that follow Sentry's <PlatformLink to="/ai-agent-monitoring/">AI Agent Monitoring</PlatformLink> conventions, capturing the model, request parameters, and token usage.
+
+No extra setup is required beyond initializing the SDK with `withSentry`. As long as your handler receives the instrumented `env`, the `AI` binding is wrapped for you:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  {
+    async fetch(request, env) {
+      // env.AI is automatically instrumented
+      const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+        messages: [{ role: "user", content: "What is the capital of France?" }],
+      });
+
+      return new Response(JSON.stringify(result));
+    },
+  }
+);
+```
+
+You can browse the full list of available models in the [Cloudflare Workers AI models directory](https://developers.cloudflare.com/ai/models/).
+
+## Tracking Conversations
+
+<Alert>
+  Tracking Conversations has **beta** stability. Configuration options and
+  behavior may change.
+</Alert>
+
+The Workers AI instrumentation does **not** infer the conversation ID automatically. To group multi-turn AI calls into a single <Link to="/ai/monitoring/conversations/">Conversation</Link>, set it manually with <PlatformLink to="/configuration/apis/#setConversationId">`Sentry.setConversationId()`</PlatformLink>. The ID is applied as the `gen_ai.conversation.id` attribute to all AI spans within the current scope. See <PlatformLink to="/ai-agent-monitoring/#tracking-conversations">Tracking Conversations</PlatformLink> for details.
+
+When you use the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), each agent instance already has a stable identifier, its Durable Object instance name (`this.name`), which is a natural conversation ID.
+
+### Agent
+
+Set the conversation ID at the start of the request handler, before any `env.AI.run(...)` calls:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { Agent } from "agents";
+
+class MyAgentBase extends Agent<Env> {
+  async onRequest(request: Request): Promise<Response> {
+    // Use the Agent's Durable Object instance name as the conversation ID
+    Sentry.setConversationId(this.name);
+
+    const result = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages: [{ role: "user", content: await request.text() }],
+    });
+
+    return new Response(JSON.stringify(result));
+  }
+}
+
+export const MyAgent = Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyAgentBase
+);
+```
+
+### ChatAgent
+
+For chat agents, set the conversation ID at the top of `onChatMessage` so every AI call triggered while handling the message shares it:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { AIChatAgent } from "@cloudflare/ai-chat";
+import type { StreamTextOnFinishCallback } from "ai";
+
+class MyChatAgentBase extends AIChatAgent<Env> {
+  async onChatMessage(
+    _onFinish: StreamTextOnFinishCallback
+  ): Promise<Response | undefined> {
+    // Every message in this chat session shares the same conversation ID
+    Sentry.setConversationId(this.name);
+
+    const result = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages: this.messages.map((m) => ({
+        role: m.role,
+        content: m.parts
+          .filter((p) => p.type === "text")
+          .map((p) => p.text)
+          .join(""),
+      })),
+    });
+
+    return new Response(JSON.stringify(result));
+  }
+}
+
+export const MyChatAgent = Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyChatAgentBase
+);
+```
+
+To unset the conversation ID, pass `null` to `Sentry.setConversationId()`.
+
+Grouped AI calls show up in the <Link to="/ai/monitoring/conversations/">Conversations</Link> view, where you can inspect token usage, latency, and errors across an entire conversation.

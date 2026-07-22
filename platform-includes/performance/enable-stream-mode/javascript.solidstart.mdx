@@ -1,0 +1,53 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Opt in by adding `spanStreamingIntegration()` to your list of integrations when initializing the SDK in your `entry.client.tsx` file:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: src/entry-client.tsx}
+import * as Sentry from "@sentry/solidstart";
+// import solidRouterBrowserTracingIntegration if you're using Solid Router
+import { solidRouterBrowserTracingIntegration } from "@sentry/solidstart/solidrouter";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    // only add solidRouterBrowserTracingIntegration if you're using Solid Router
+    solidRouterBrowserTracingIntegration(),
+    // enables stream mode
+    Sentry.spanStreamingIntegration(),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Then set the `traceLifecycle` option to `'stream'` when initializing the SDK in your `instrument.server.mjs` file:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: src/instrument.server.mjs}
+import * as Sentry from "@sentry/solidstart";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  // enables stream mode
+  traceLifecycle: "stream",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To revert to transaction mode, remove `traceLifecycle` and `spanStreamingIntegration()` from these files.

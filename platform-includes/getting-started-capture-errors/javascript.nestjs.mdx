@@ -93,6 +93,35 @@ export class ExampleExceptionFilter extends BaseExceptionFilter {
 </SplitSection>
 </SplitLayout>
 
+<Expandable title="Are you using WebSockets?">
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+`SentryGlobalFilter` handles WebSocket exceptions, but NestJS doesn't apply filters registered via `APP_FILTER` to WebSocket gateways. To make sure errors thrown in a gateway are captured, add the `@UseFilters()` decorator directly to the gateway class, even if `SentryGlobalFilter` is already registered as a global provider.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {1, 3, 5}
+import { UseFilters } from "@nestjs/common";
+import { WebSocketGateway } from "@nestjs/websockets";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
+
+@UseFilters(new SentryGlobalFilter())
+@WebSocketGateway()
+export class YourGateway {
+  // ...your event handlers
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</Expandable>
+
 <Expandable title="Are you using Microservices?">
 
 <SplitLayout>

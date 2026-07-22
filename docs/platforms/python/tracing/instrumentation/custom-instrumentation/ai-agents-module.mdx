@@ -4,11 +4,11 @@ sidebar_order: 500
 description: "Learn how to manually instrument your code to use Sentry's Agents module."
 ---
 
-With <Link to="/ai/monitoring/agents/dashboards/">Sentry AI Agent Monitoring</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. AI Agent Monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/ai/observability/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. Agent Tracing data will be fully connected to your other Sentry data like logs, errors, and traces.
 
-<AgentSkillsCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
+<AgentSetupCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
 
-As a prerequisite to setting up AI Agent Monitoring with Python, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument AI agents created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
+As a prerequisite to setting up Agent Tracing with Python, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument AI agents created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
 
 ## Automatic Instrumentation
 
@@ -80,7 +80,7 @@ with sentry_sdk.start_span(op="gen_ai.chat", name="chat o3-mini") as span:
 
 #### Thinking / reasoning messages
 
-Models with extended thinking (such as Anthropic's `thinking` blocks, Gemini's `thought`, or DeepSeek's `reasoning_content`) produce internal reasoning that isn't part of the user-visible reply. Represent this content as a `reasoning` part inside the assistant message, alongside the user-facing `text` part. Sentry surfaces reasoning parts separately and filters them out of the user-facing <Link to="/ai/monitoring/conversations/">Conversations</Link> view, so don't fold thinking into a `text` part.
+Models with extended thinking (such as Anthropic's `thinking` blocks, Gemini's `thought`, or DeepSeek's `reasoning_content`) produce internal reasoning that isn't part of the user-visible reply. Represent this content as a `reasoning` part inside the assistant message, alongside the user-facing `text` part. Sentry surfaces reasoning parts separately and filters them out of the user-facing <Link to="/ai/observability/conversations/">Conversations</Link> view, so don't fold thinking into a `text` part.
 
 ```python
 import json
@@ -123,7 +123,7 @@ This span represents the execution of an AI agent, capturing the full lifecycle 
 
 <Alert>
 
-For a complete guide on naming agents across all supported frameworks, see [Naming Your Agents](/ai/monitoring/agents/naming/).
+For a complete guide on naming agents across all supported frameworks, see [Naming Your Agents](/ai/observability/agents/naming/).
 
 </Alert>
 
@@ -171,34 +171,13 @@ with sentry_sdk.start_span(op="gen_ai.execute_tool", name="execute_tool get_weat
     span.set_data("gen_ai.tool.call.result", json.dumps(result))
 ```
 
-### Handoff Span
-
-This span marks the transition of control from one agent to another, typically when the current agent determines another agent is better suited to handle the task.
-
-<Expandable title="Handoff span attributes">
-  <Include name="tracing/ai-agents-module/handoff-span" />
-</Expandable>
-
-#### Example of a Handoff Span
-
-```python
-import sentry_sdk
-
-with sentry_sdk.start_span(op="gen_ai.handoff", name="handoff from Weather Agent to Travel Agent"):
-    pass  # Handoff span just marks the transition
-
-with sentry_sdk.start_span(op="gen_ai.invoke_agent", name="invoke_agent Travel Agent"):
-    # Run the target agent here
-    pass
-```
-
 ## Tracking Conversations
 
 <Alert>
   Tracking Conversations has **beta** stability. Configuration options and behavior may change.
 </Alert>
 
-For AI applications that involve multi-turn conversations, you can use `sentry_sdk.ai.set_conversation_id()` to associate all AI spans from the same conversation. This enables you to track and analyze complete <Link to="/ai/monitoring/conversations/">conversation</Link> flows within Sentry.
+For AI applications that involve multi-turn conversations, you can use `sentry_sdk.ai.set_conversation_id()` to associate all AI spans from the same conversation. This enables you to track and analyze complete <Link to="/ai/observability/conversations/">conversation</Link> flows within Sentry.
 
 The conversation ID is set as the `gen_ai.conversation.id` attribute on all AI-related spans in the current scope. To remove the conversation ID, use the `remove_conversation_id()` method on the `Scope`.
 
@@ -229,7 +208,7 @@ response = openai.responses.create(
 
 ## Identifying Users in Conversations
 
-The [Conversations](/ai/monitoring/conversations/) view includes a **User** column. To populate it, call `sentry_sdk.set_user` once per request or session, before any AI calls:
+The [Conversations](/ai/observability/conversations/) view includes a **User** column. To populate it, call `sentry_sdk.set_user` once per request or session, before any AI calls:
 
 ```python
 import sentry_sdk
@@ -238,9 +217,5 @@ sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": 
 ```
 
 Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present.
-
-## Common Span Attributes
-
-<Include name="tracing/ai-agents-module/common-span-attributes" />
 
 <Include name="tracing/ai-agents-module/token-cost-gotchas" />

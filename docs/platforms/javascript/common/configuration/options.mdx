@@ -17,7 +17,7 @@ sidebar_order: 1
   </PlatformSection>
 
 The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 <PlatformContent includePath="configuration/dsn" />
 
@@ -126,7 +126,7 @@ Sentry.init({
     httpBodies: [],
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
-    queryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
 });
 ```
@@ -149,12 +149,12 @@ For more on what data Sentry collects and how to control it, see <PlatformLink t
 | `cookies`             | `CollectBehavior`            | `true`     | Collect cookies.                                                                                                                         |
 | `httpHeaders`         | `{ request?, response? }`    | both `true`| Collect HTTP request and response headers.                                                                                               |
 | `httpBodies`          | `HttpBodyCollectionTarget[]` | all types  | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable.    |
-| `queryParams`         | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
+| `urlQueryParams`      | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
 | `genAI`               | `{ inputs?, outputs? }`      | both `true`| Collect generative AI input/output content. Metadata is always collected.                                                                |
 | `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
 | `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
 
-The `cookies`, `httpHeaders`, and `queryParams` categories accept a `CollectBehavior` value:
+The `cookies`, `httpHeaders`, and `urlQueryParams` categories accept a `CollectBehavior` value:
 
 ```typescript
 type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
@@ -521,6 +521,12 @@ For example, the Sentry Nuxt SDK does not attach an error handler as it's captur
 
 ## Tracing Options
 
+<Alert>
+
+If you're using <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, tracing options work the same way as described but apply to service spans instead of transactions.
+
+</Alert>
+
 <PlatformSection supported={["javascript.electron"]}>
   **Note:** For Electron, tracing options apply to the process where these
   options are set.
@@ -585,15 +591,39 @@ This is useful to prevent traces of unknown third-party services from being cont
 
 This function is called with a transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
+Not available in stream mode. Instead, use [`ignoreSpans`](#ignoreSpans) to drop spans, or [`beforeSendSpan`](#beforeSendSpan) to modify spans.
+
 </SdkOption>
 
 <SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON'>
 
-This function is called with a serialized span object, and can return a modified span object. This might be useful for manually stripping PII from spans.
-This function is called for root spans as well as for all child spans.
-If you want to drop the root span, including all of its child spans, use [`beforeSendTransaction`](#beforeSendTransaction) instead.
+This function is called with a serialized span object and can return a modified span object. Use it, for example, to manually strip PII from spans or filter data from spans before they're sent to Sentry. It runs for all spans, including transactions and their child spans.
 
-Please note that the `span` you receive as an argument is a serialized object, not a `Span` class instance.
+Note that `beforeSendSpan` can only modify span data, meaning you cannot use it to drop spans. Use [`ignoreSpans`](#ignoreSpans) to drop spans, or [`beforeSendTransaction`](#beforeSendTransaction) to drop transactions.
+
+The `span` you receive as an argument is a serialized object, not a `Span` class instance.
+
+If you're using stream mode, wrap `beforeSendSpan` with `Sentry.withStreamedSpan()` — otherwise the SDK falls back to transaction mode.
+
+<Expandable level="warning" title="Span object property names in stream mode">
+
+In stream mode, the span object is `StreamedSpanJSON` instead of `SpanJSON` and has different property names:
+
+| Transaction Mode (`SpanJSON`)      | Stream Mode (`StreamedSpanJSON`)    |
+| ---------------------------------- | ----------------------------------- |
+| `span.description`                 | `span.name`                         |
+| `span.data` (processed attributes) | `span.attributes` (raw attributes)  |
+| `span.timestamp` (end time)        | `span.end_timestamp`                |
+| `span.status` (optional string)    | `span.status` (`'ok'` or `'error'`) |
+| `span.op`                          | `span.attributes['sentry.op']`      |
+
+</Expandable>
+
+<Expandable title="Examples">
+
+<PlatformContent includePath="configuration/before-send-span" />
+
+</Expandable>
 
 </SdkOption>
 
@@ -601,15 +631,28 @@ Please note that the `span` you receive as an argument is a serialized object, n
 
 <Include name="platforms/configuration/options/ignore-transactions.mdx" />
 
+Not available in stream mode. Use [`ignoreSpans`](#ignoreSpans) instead.
+
 </SdkOption>
 
-<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp}>' defaultValue='[]' availableSince='10.2.0'>
+<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp, attributes?: Record<string, string | number | boolean | null | undefined>}>' defaultValue='[]' availableSince='10.2.0'>
 
-A list of strings or regex patterns matching span names that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with a `name` and `op` property to match both the span name and the operation name. Note that at least `name` or `op` must be provided.
+A list of strings or regex patterns matching spans that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with `name`, `op`, and `attributes` properties to match on multiple conditions. At least one property must be provided.
 
-If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
-
+If a matching span is a transaction or service span, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
 By default, no spans are ignored.
+
+In <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
+
+<Alert level="warning" title="Migrating from transaction mode?">
+
+In transaction mode, `ignoreSpans` is evaluated at transaction end rather than at span start. Review your existing rules to make sure the attributes you're matching on are passed when the span is created.
+
+If you're auto-instrumenting and don't know what the initial name of a span is when it starts, enable SDK debug logging during development by setting <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink> when initializing the SDK.
+
+</Alert>
+
+<Expandable title="Examples">
 
 Here are some predefined matches for common spans to get you started:
 
@@ -634,12 +677,24 @@ Sentry.init({
       name: /.+\.(png|svg|jpe?g|gif|bmp|tiff?|webp|avif|heic?|ico).*$/,
     },
 
+    // Drop spans whose name contains "healthcheck"
+    "healthcheck",
+
+    // Drop spans matching name and attribute conditions
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.route": "/api/status",
+      },
+    },
+
     // Measure spans
     { op: "measure" },
   ],
 });
 ```
 
+</Expandable>
 </SdkOption>
 
 <SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0'>
@@ -668,6 +723,25 @@ When enabled, `gen_ai` spans are sent as standalone envelope items instead of be
 This is enabled by default starting with SDK version `10.61.0` (before that, it defaulted to `false`). Set it to `false` to send `gen_ai` spans as part of the transaction instead.
 
 Self-hosted Sentry users should set this option to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
+
+</SdkOption>
+
+<SdkOption name="traceLifecycle" type="'static' | 'stream'" defaultValue="'static'" availableSince='10.53.1'>
+
+Controls how spans are sent to Sentry:
+
+- In transaction mode (`'static'`, the default), all spans are collected in memory and sent to Sentry as a single transaction once the root span ends.
+- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`'stream'`), spans are sent in batches as they finish.
+
+<PlatformCategorySection supported={["browser"]}>
+<Alert>
+
+You don't need to use this option if you're using a browser-based SDK (for example, React or Vue) or a framework SDK that handles client-side rendering (for example Next.js or Remix).
+Instead, <PlatformLink to="/tracing/streamed-spans">enable stream mode</PlatformLink> by adding `spanStreamingIntegration` to your integrations when initializing the SDK.
+
+</Alert>
+
+</PlatformCategorySection>
 
 </SdkOption>
 
@@ -744,7 +818,7 @@ A number between `0` and `1` that sets the percentage of how many sessions shoul
 Determines how profiling sessions are controlled. It has two modes:
 
 - `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling">profiling API documentation</PlatformLink>.</PlatformSection>
-- `'trace'`: Profiling starts and stops automatically with transactions, as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+- `'trace'`: Profiling starts and stops automatically with transactions (or service spans if you're using <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>), as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
 
 </SdkOption>
 

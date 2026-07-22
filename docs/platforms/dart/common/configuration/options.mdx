@@ -18,7 +18,7 @@ The DSN tells the SDK where to send the events. If this value is not provided, t
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -198,6 +198,28 @@ By the time <PlatformIdentifier name="beforeSend" /> is executed, all scope data
 
 </SdkOption>
 
+<SdkOption name="beforeSendSpan" type="function" availableSince="9.23.0">
+
+<Alert>
+
+Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
+
+</Alert>
+
+This function is called with a span event object `SentrySpanV2` and can return a modified span object. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
+
+<Expandable title="Examples">
+
+```dart
+options.beforeSendSpan = (span) {
+  span.removeAttribute('http.request.body');
+};
+```
+
+</Expandable>
+
+</SdkOption>
+
 <SdkOption name="beforeBreadcrumb" type="function">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
@@ -227,6 +249,52 @@ A number between `0` and `1`, controlling the percentage chance a given transact
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="tracesSampleRate" /> must be defined to enable tracing.
 
+<Alert>
+
+In stream mode, the sampling context is different: read the span's `name` and `attributes` from `samplingContext.spanContext` instead of the transaction context. See <PlatformLink to="/tracing/streamed-spans/#sampling-optional">Streamed Spans</PlatformLink> for details.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="traceLifecycle" type="enum" defaultValue="static" availableSince="9.23.0">
+
+Controls how spans are collected and sent to Sentry.
+
+- In transaction mode (`SentryTraceLifecycle.static`, the default), spans are buffered and sent together as a transaction.
+- In <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink> (`SentryTraceLifecycle.stream`), spans are sent to Sentry in batches as they finish.
+
+</SdkOption>
+
+<SdkOption name="ignoreSpans" type="array" availableSince="9.23.0">
+
+<Alert>
+
+Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
+
+</Alert>
+
+A list of `IgnoreSpanRule`s that drop spans whose name matches a rule (`nameEquals`, `nameStartsWith`, `nameContains`, or `nameEndsWith`). `ignoreSpans` is evaluated at span start, so only the span names available at that point are taken into account. When an ignored span has children, the children are re-parented to the nearest recording ancestor rather than dropped.
+
+| Factory                                  | Matches                           |
+| ---------------------------------------- | --------------------------------- |
+| `IgnoreSpanRule.nameEquals(String)`      | Exact span name                   |
+| `IgnoreSpanRule.nameStartsWith(Pattern)` | Name prefix (String or RegExp)    |
+| `IgnoreSpanRule.nameContains(Pattern)`   | Name substring (String or RegExp) |
+| `IgnoreSpanRule.nameEndsWith(String)`    | Name suffix                       |
+
+<Expandable title="Examples">
+
+```dart
+options.ignoreSpans = [
+  IgnoreSpanRule.nameEquals('health-check'),
+  IgnoreSpanRule.nameStartsWith('internal.'),
+  IgnoreSpanRule.nameContains('metrics'),
+  IgnoreSpanRule.nameEndsWith('.bg'),
+];
+```
+
+</Expandable>
 </SdkOption>
 
 <SdkOption name="tracePropagationTargets" type="array">

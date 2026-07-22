@@ -1,0 +1,119 @@
+---
+title: Set Up Agent Tracing
+sidebar_title: Agent Tracing
+sidebar_order: 5
+sidebar_section: features
+description: "Monitor Laravel AI agents with token usage, latency, tool execution, and error tracking."
+new: true
+---
+
+<Alert>
+
+This feature is currently in Beta. Beta features are still in progress and may have bugs. We recognize the irony.
+
+</Alert>
+
+With <Link to="/ai/observability/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your Laravel AI agents with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. Agent Tracing data is connected to your other Sentry data like logs, errors, and traces.
+
+<AgentSetupCallout skill="sentry-setup-ai-monitoring" platformName="PHP" />
+
+## Requirements
+
+- `sentry/sentry-laravel` version `4.27.0` or later
+- Laravel 12.x or later
+- [`laravel/ai`](https://laravel.com/docs/13.x/ai-sdk#installation) installed and configured
+- <PlatformLink to="/tracing/">Tracing</PlatformLink> enabled in your Sentry
+  configuration
+
+## Configure
+
+Laravel AI tracing is enabled by default when `laravel/ai` is installed and tracing is active.
+
+```shell {filename:.env}
+SENTRY_TRACES_SAMPLE_RATE=1.0
+```
+
+You can opt out of all AI spans, or individual AI span types, in `config/sentry.php`:
+
+```php {filename:config/sentry.php}
+'tracing' => [
+    // Master switch for all AI spans (requires laravel/ai)
+    'gen_ai' => env('SENTRY_TRACE_GEN_AI_ENABLED', true),
+
+    // Individual span types
+    'gen_ai_invoke_agent' => env('SENTRY_TRACE_GEN_AI_INVOKE_AGENT_ENABLED', true),
+    'gen_ai_chat' => env('SENTRY_TRACE_GEN_AI_CHAT_ENABLED', true),
+    'gen_ai_execute_tool' => env('SENTRY_TRACE_GEN_AI_EXECUTE_TOOL_ENABLED', true),
+    'gen_ai_embeddings' => env('SENTRY_TRACE_GEN_AI_EMBEDDINGS_ENABLED', true),
+],
+```
+
+<Alert>
+
+Sentry considers LLM and tool inputs/outputs as PII and doesn't include them by default. To capture this data for debugging, set `SENTRY_SEND_DEFAULT_PII=true`. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for details.
+
+</Alert>
+
+## Automatic Instrumentation
+
+The Laravel SDK automatically instruments the [Laravel AI](https://laravel.com/docs/13.x/ai-sdk) package. Once enabled, Sentry captures:
+
+- Agent invocations
+- LLM requests
+- Tool executions
+- Embeddings
+- Token usage
+- Model and provider metadata
+
+For package-specific details, see the <PlatformLink to="/integrations/laravel-ai/">Laravel AI integration</PlatformLink>.
+
+## Supported Providers and Custom URLs
+
+Sentry creates `gen_ai.chat` spans by matching Laravel AI's outgoing HTTP requests to the provider URL. Built-in URL detection supports these Laravel AI provider drivers:
+
+- Anthropic
+- DeepSeek
+- Gemini
+- Groq
+- Mistral
+- Ollama
+- OpenAI
+- OpenRouter
+- Voyage AI
+- xAI
+
+If you use a custom provider, or override a provider's endpoint, include a `url` value in `config/ai.php` so Sentry can identify those requests:
+
+```php {filename:config/ai.php}
+'providers' => [
+    'my-llm' => [
+        'driver' => 'openai-compatible',
+        'url' => env('MY_LLM_URL'),
+        'key' => env('MY_LLM_API_KEY'),
+    ],
+],
+```
+
+The provider key (`my-llm` in this example) is what Laravel AI passes to Sentry as the provider name. Sentry looks for `ai.providers.my-llm.url` and uses that value as the URL prefix for chat span detection.
+
+## Verify
+
+Prompt one of your Laravel AI agents. For example, from a route:
+
+```php {filename:routes/web.php}
+use App\Ai\Agents\TimeAgent;
+
+Route::get('/debug-ai', function () {
+    $response = (new TimeAgent)->prompt('What time is it?');
+
+    return $response->text;
+});
+```
+
+Visiting this route triggers an AI agent invocation that Sentry captures. It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Conversations
+
+If your agent uses Laravel AI's [remembering conversations](https://laravel.com/docs/13.x/ai-sdk#remembering-conversations) feature, Sentry automatically tracks the `conversationId` returned by Laravel AI. The integration adds it to AI spans as `gen_ai.conversation.id`, which lets Sentry group multiple prompts into the same conversation in **Explore > Conversations**.
+
+For CLI commands and other non-HTTP entry points, create a transaction around each agent call so the AI spans are captured.

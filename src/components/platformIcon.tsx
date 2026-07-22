@@ -305,6 +305,12 @@ import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
 import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
+// The Expo icon exists on platformicons master (getsentry/platformicons
+// b20159fb) but isn't in a published release yet (latest is 9.5.0). This local
+// copy is byte-identical to the upstream svg/expo.svg; once platformicons cuts
+// a release with it, bump the dependency and switch to
+// `platformicons/svg/expo.svg` (+ svg_80x80) like every other icon.
+import ExpoSVG from 'sentry-docs/icons/expo.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -503,6 +509,10 @@ const formatToSVG = {
   ember: {
     sm: EmberSVG,
     lg: EmberSVGLarge,
+  },
+  expo: {
+    sm: ExpoSVG,
+    lg: ExpoSVG,
   },
   express: {
     sm: ExpressSVG,
@@ -962,6 +972,7 @@ export const PLATFORM_TO_ICON = {
   dotnetfx: 'dotnetfx',
   electron: 'electron',
   elixir: 'elixir',
+  expo: 'expo',
   flutter: 'flutter',
   font: 'font',
   fsharp: 'fsharp',
@@ -1108,6 +1119,10 @@ export const PLATFORM_TO_ICON = {
   powershell: 'powershell',
   qt: 'qt',
   'react-native': 'react-native',
+  // The Expo guide's platform key is `react-native.expo` (normalized to
+  // `react-native-expo`); map it so it gets the Expo icon instead of falling
+  // back to the React language icon.
+  'react-native-expo': 'expo',
   ruby: 'ruby',
   'ruby-rack': 'ruby',
   'ruby-rails': 'rails',

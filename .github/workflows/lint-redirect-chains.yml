@@ -1,0 +1,167 @@
+name: Lint Redirect Chains
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'middleware.ts'
+      - 'redirects.js'
+      - 'docs/**/*.mdx'
+      - 'docs/**/*.md'
+      - 'develop-docs/**/*.mdx'
+      - 'develop-docs/**/*.md'
+      - 'includes/**/*.mdx'
+      - 'includes/**/*.md'
+      - 'platform-includes/**/*.mdx'
+      - 'platform-includes/**/*.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint-redirect-chains:
+    name: Check for redirect chains
+    runs-on: ubuntu-latest
+    continue-on-error: true # Fail the check but don't block merge
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        with:
+          node-version-file: 'package.json'
+
+      - name: Run redirect chain lint
+        id: lint
+        continue-on-error: true
+        run: |
+          set +e
+          OUTPUT=$(npx tsx scripts/lint-redirect-chains.ts 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          echo "$OUTPUT"
+
+          # Extract JSON output if present
+          HAS_JSON=false
+          if echo "$OUTPUT" | grep -Fq -- "---JSON_OUTPUT---"; then
+            JSON_OUTPUT=$(echo "$OUTPUT" | sed -n '/---JSON_OUTPUT---/,/---JSON_OUTPUT---/p' | sed '1d;$d')
+            echo "lint_result<<EOF" >> $GITHUB_OUTPUT
+            echo "$JSON_OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            HAS_JSON=true
+          fi
+
+          echo "has_results=$HAS_JSON" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Post comment if redirect chains found
+        if: steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINT_RESULT: ${{ toJSON(steps.lint.outputs.lint_result) }}
+        with:
+          script: |
+            let lintResult;
+            try {
+              // First parse unwraps the toJSON() encoding, second parse converts the JSON string to an object
+              const jsonString = JSON.parse(process.env.LINT_RESULT);
+              lintResult = JSON.parse(jsonString);
+            } catch (e) {
+              console.error('Failed to parse lint result:', e);
+              core.setFailed('Failed to parse redirect chain lint output');
+              return;
+            }
+
+            const redirectChains = lintResult.redirectChains || [];
+            const contentLinkIssues = lintResult.contentLinkIssues || [];
+
+            if (redirectChains.length === 0 && contentLinkIssues.length === 0) {
+              return;
+            }
+
+            let comment = '## \u26a0\ufe0f Redirect Chain Issues Detected\n\n';
+            comment += 'This PR introduces or contains redirect chains that degrade SEO and add latency.\n\n';
+
+            if (redirectChains.length > 0) {
+              comment += '### Redirect-to-Redirect Chains\n\n';
+              comment += 'These redirect destinations point to another redirect, creating multi-hop chains. ';
+              comment += 'Update the destination to point directly to the final URL:\n\n';
+              comment += '| Source | Current Destination | Should Be | File |\n';
+              comment += '|--------|-------------------|-----------|------|\n';
+              for (const chain of redirectChains) {
+                const docLabel = chain.isDeveloperDocs ? ' (dev)' : '';
+                comment += `| \`${chain.source}\` | \`${chain.currentDest}\` | \`${chain.finalDest}\` | ${chain.file}${docLabel} |\n`;
+              }
+              comment += '\n';
+            }
+
+            if (contentLinkIssues.length > 0) {
+              // Group by file
+              const byFile = {};
+              for (const issue of contentLinkIssues) {
+                if (!byFile[issue.filePath]) byFile[issue.filePath] = [];
+                byFile[issue.filePath].push(issue);
+              }
+
+              comment += `### Content Links Pointing to Redirects (${contentLinkIssues.length} found)\n\n`;
+              comment += 'These links point to URLs that redirect. Update them to point directly to the final destination:\n\n';
+              comment += '| File | Line | Current Link | Should Be |\n';
+              comment += '|------|------|--------------|-----------|\n';
+              for (const [file, issues] of Object.entries(byFile)) {
+                for (const issue of issues) {
+                  comment += `| \`${file}\` | ${issue.line} | \`${issue.linkPath}\` | \`${issue.finalDest}\` |\n`;
+                }
+              }
+              comment += '\n';
+            }
+
+            comment += '---\n';
+            comment += '*Each redirect hop loses ~15% of SEO link equity and adds latency for users.*\n';
+
+            // Check for existing comments from this action (paginate to handle PRs with 30+ comments)
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Redirect Chain Issues Detected')
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment,
+              });
+            }
+
+      - name: Report failure if redirect chains found
+        if: steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true'
+        run: |
+          echo "::warning::Redirect chain issues detected. See PR comment for details."
+          exit 1
+
+      - name: Success
+        if: steps.lint.outputs.exit_code == '0'
+        run: |
+          echo "No redirect chains or content link issues found."

@@ -14,7 +14,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that's also missing, no events will be sent.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -90,9 +90,94 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 <SdkOption name="SendDefaultPII" type="bool" defaultValue="false">
 
-If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
+<Alert level="warning">
+  `SendDefaultPII` is deprecated. Use [`DataCollection`](#DataCollection) for
+  granular control over automatically collected data.
+</Alert>
+
+If this flag is enabled, certain personally identifiable information (PII) is added by active integrations.
+For backwards compatibility, `SendDefaultPII: true` behaves like enabling all [`DataCollection`](#DataCollection) categories.
+If both options are set, `DataCollection` takes precedence.
+
+<Alert>
+  Passing [`DataCollection`](#DataCollection) opts you into the more permissive `DataCollection` defaults. To preserve the old `SendDefaultPII: false` behavior while using `DataCollection`, explicitly disable or filter each category. See the [`DataCollection`](#DataCollection) example below.
+
+Data you set explicitly, for example with `Scope.SetUser`, is always sent regardless of `DataCollection`.
+
+</Alert>
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</SdkOption>
+
+<SdkOption name="DataCollection" type="*sentry.DataCollection">
+
+Controls which categories of data the SDK collects automatically. All fields are optional.
+When `DataCollection` is configured, the SDK collects rich debugging context and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+For backwards compatibility, if `DataCollection` is not configured, the SDK uses `SendDefaultPII` to determine legacy collection behavior.
+Set `DataCollection: &sentry.DataCollection{}` to use the new defaults.
+
+Common defaults:
+
+| Configuration                                  | Behavior                                                                                                                                              |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DataCollection: nil`, `SendDefaultPII: false` | Legacy privacy defaults: no cookies or HTTP bodies, user information disabled, headers and query strings collected with additional privacy filtering. |
+| `DataCollection: nil`, `SendDefaultPII: true`  | Legacy PII-enabled behavior, equivalent to enabling the `DataCollection` defaults.                                                                    |
+| `DataCollection: &sentry.DataCollection{}`     | New `DataCollection` defaults: collect supported categories and scrub sensitive values.                                                               |
+
+For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
+
+| Field         | Type                                 | Default when `DataCollection` is configured   | Description                                                                                                                                                             |
+| ------------- | ------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UserInfo`    | `sentry.Option[bool]`                | `sentry.Set(true)`                            | Populates `user.*` fields from auto-instrumentation. This doesn't affect user data explicitly set with `Scope.SetUser`.                                                 |
+| `Cookies`     | `*sentry.KeyValueCollectionBehavior` | denylist mode                                 | Collects cookies and scrubs sensitive cookie values.                                                                                                                    |
+| `HTTPHeaders` | `*sentry.HeaderCollectionConfig`     | request and response headers in denylist mode | Collects HTTP request and response headers independently.                                                                                                               |
+| `HTTPBodies`  | `[]sentry.BodyType`                  | all body types                                | Body types to collect: `sentry.BodyIncomingRequest`, `sentry.BodyOutgoingRequest`, and `sentry.BodyIncomingResponse`. Set to an empty slice to disable body collection. |
+| `QueryParams` | `*sentry.KeyValueCollectionBehavior` | denylist mode                                 | Collects URL query parameters and scrubs sensitive values.                                                                                                              |
+
+`Cookies`, `HTTPHeaders.Request`, `HTTPHeaders.Response`, and `QueryParams` use `KeyValueCollectionBehavior`:
+
+```go
+// Zero value: collect keys and scrub values whose keys match the built-in
+// sensitive denylist plus any additional Terms.
+sentry.KeyValueCollectionBehavior{
+    Mode:  sentry.CollectionDenyList,
+    Terms: []string{"custom-secret"},
+}
+
+// Disable collection for this category.
+sentry.KeyValueCollectionBehavior{Mode: sentry.CollectionOff}
+
+// Only listed keys send their real value. Built-in sensitive keys are still scrubbed.
+sentry.KeyValueCollectionBehavior{
+    Mode:  sentry.CollectionAllowList,
+    Terms: []string{"page", "x-request-id"},
+}
+```
+
+Example:
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    DataCollection: &sentry.DataCollection{
+        UserInfo: sentry.Set(false),
+        HTTPBodies: []sentry.BodyType{},
+        HTTPHeaders: &sentry.HeaderCollectionConfig{
+            Request: &sentry.KeyValueCollectionBehavior{
+                Mode:  sentry.CollectionAllowList,
+                Terms: []string{"x-request-id"},
+            },
+            Response: &sentry.KeyValueCollectionBehavior{Mode: sentry.CollectionOff},
+        },
+        QueryParams: &sentry.KeyValueCollectionBehavior{
+            Mode:  sentry.CollectionDenyList,
+            Terms: []string{"customer"},
+        },
+    },
+})
+```
 
 </SdkOption>
 
