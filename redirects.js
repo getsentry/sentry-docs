@@ -1877,10 +1877,14 @@ const userDocsRedirects = [
     source: '/ai/sentry-cli/',
     destination: 'https://cli.sentry.dev',
   },
-   // Redirects for Insights → AI Observability → Product Agents migration
+   // Redirects for Insights → Product Agents migration
+  {
+    source: '/product/insights/llm-monitoring/',
+    destination: '/product/agents/',
+  },
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/ai/observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/product/insights/agents/:path*',
@@ -1894,9 +1898,38 @@ const userDocsRedirects = [
     source: '/product/insights/mcp/',
     destination: '/product/agents/mcp/',
   },
+  // Flatten remaining /insights/ai/agents/* under /product/agents/*
+  {
+    source: '/product/insights/ai/agents/',
+    destination: '/product/agents/',
+  },
+  {
+    source: '/product/insights/ai/agents/:path*',
+    destination: '/product/agents/:path*',
+  },
+  {
+    source: '/product/insights/ai/conversations/',
+    destination: '/product/agents/conversations/',
+  },
+  {
+    source: '/product/insights/ai/conversations/:path*',
+    destination: '/product/agents/conversations/:path*',
+  },
+  {
+    source: '/product/insights/ai/mcp/',
+    destination: '/product/agents/mcp/',
+  },
+  {
+    source: '/product/insights/ai/mcp/:path*',
+    destination: '/product/agents/mcp/:path*',
+  },
+  {
+    source: '/product/insights/ai/',
+    destination: '/product/agents/',
+  },
   {
     source: '/product/insights/ai/:path*',
-    destination: '/ai/observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/product/insights/requests/',
