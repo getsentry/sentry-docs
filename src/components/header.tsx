@@ -183,12 +183,12 @@ export function Header({
       {/* define a header-height variable for consumption by other components */}
       <style>{`
         :root { --header-height: 64px; }
-        /* Home page: align header content with max-w-screen-xl (1280px) content */
+        /* Home page: align header content with max-w-screen-lg (1024px) content */
         /* The nav element has px-4 (16px) on mobile, md:pl-3 (12px) on desktop */
-        /* Home content uses px-4 (16px), sm:px-8 (32px), lg:px-[50px] */
+        /* Home content uses px-4 (16px), sm:px-8 (32px) — no larger step */
         /* So we subtract the nav's padding from the content's padding */
         .header-content-home {
-          max-width: 1280px;
+          max-width: 1024px;
           margin-left: auto;
           margin-right: auto;
           padding-left: 0;
@@ -211,10 +211,10 @@ export function Header({
         }
         @media (min-width: 1024px) {
           .header-content-home {
-            /* 50px (content) - 12px (nav md:pl-3) = 38px on left */
-            /* 50px (content) - 24px (right div lg:pr-6) = 26px on right */
-            padding-left: 38px;
-            padding-right: 26px;
+            /* 32px (content) - 12px (nav md:pl-3) = 20px on left */
+            /* 32px (content) - 24px (right div lg:pr-6) = 8px on right */
+            padding-left: 20px;
+            padding-right: 8px;
           }
         }
         /* Doc pages: fluid centering to match sidebar offset at wide viewports */
