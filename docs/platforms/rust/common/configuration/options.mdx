@@ -8,6 +8,8 @@ description: "Learn more about how the SDK can be configured via options. These 
 
 ## Available Options
 
+Configure `ClientOptions` with builder methods such as `.dsn(...)`, `.sample_rate(...)`, and `.traces_sample_rate(...)`. Public fields remain readable after construction, but builders are the supported way to create options because `ClientOptions` is non-exhaustive.
+
 <TableOfContents ignoreIds={["available-options"]} />
 
 ## Core Options
@@ -31,6 +33,8 @@ Turns debug mode on or off. If debug is enabled, the SDK will attempt to print o
 <SdkOption name="release" type='string' envVar='SENTRY_RELEASE'>
 
 Sets the release. This string is freeform and not set by default. Some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+Use `.release(...)` with a string, or `.maybe_release(sentry::release_name!())` when using the optional value returned by the release macro.
 
 </SdkOption>
 
@@ -131,7 +135,9 @@ The list of default integrations depends on the feature flags of the `sentry` cr
 
 <SdkOption name="sample_rate" type='f32' defaultValue='1.0'>
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+Configures the fixed sample rate for error events through the `.sample_rate(...)` builder, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+
+Under the hood, this sets `event_sampling_strategy` to `EventSamplingStrategy::FixedRate`. Fixed-rate sampling is currently the only supported event sampling strategy; the SDK does not provide a callback-based event sampler.
 
 </SdkOption>
 
@@ -145,15 +151,21 @@ By the time `before_send` is executed, all scope data has already been applied t
 
 ## Tracing Options
 
-<SdkOption name="traces_sample_rate" type='f32' defaultValue='0.0'>
+The SDK stores one traces sampling strategy at a time (`traces_sampling_strategy`). Configure it with either `.traces_sample_rate(...)` or `.traces_sampler(...)`. These builders are mutually exclusive: each call replaces the previous strategy, so the last builder called wins. The default is `TracesSamplingStrategy::Disabled`, which is not the same as an explicit fixed rate of `0.0`.
 
-A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app.
+<SdkOption name="traces_sample_rate" type='f32'>
+
+A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies when there is no inherited parent sampling decision.
+
+Calling `.traces_sample_rate(...)` selects `TracesSamplingStrategy::FixedRate`, including when the rate is `0.0`. That explicit fixed-rate strategy can still honor an inherited parent sampling decision. Leaving tracing at the default disabled strategy rejects transactions even when a parent or explicit decision is positive.
 
 </SdkOption>
 
 <SdkOption name="traces_sampler" type='Fn'>
 
-If given, called with a `SamplingContext` for each transaction to determine the sampling rate. Return a sample rate between `0.0` and `1.0` for the transaction in question. Takes priority over the `traces_sample_rate`.
+If given, called with a `TransactionContext` for each transaction to determine the sampling rate. Return a sample rate between `0.0` and `1.0` for the transaction in question.
+
+Calling `.traces_sampler(...)` selects `TracesSamplingStrategy::Function` and replaces any strategy previously set with `.traces_sample_rate(...)`. The callback receives the transaction context, including any parent sampling decision in `ctx.sampled()`, and decides the rate itself.
 
 </SdkOption>
 

@@ -9,7 +9,7 @@ Adding Sentry to your app gives you a great deal of very valuable information ab
 
 ## Sampling Error Events
 
-To send a representative sample of your errors to Sentry, set the <PlatformIdentifier name="sample-rate" /> option in your SDK configuration to a number between `0` (0% of errors sent) and `1` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
+To send a representative sample of your errors to Sentry, call the <PlatformIdentifier name="sample-rate" /> builder on your `ClientOptions` with a number between `0` (0% of errors sent) and `1` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
 
 <PlatformContent includePath="configuration/sample-rate" />
 
@@ -32,25 +32,23 @@ Choose a sampling rate with the goal of finding a balance between performance an
 
 ## Configuring the Transaction Sample Rate
 
-The Sentry SDKs have two configuration options to control the volume of transactions sent to Sentry, allowing you to take a representative sample:
+The Rust SDK stores a single traces sampling strategy. Configure it with one of these builders:
 
 1. Uniform sample rate (<PlatformIdentifier name="traces-sample-rate" />):
-   - Provides an even cross-section of transactions, no matter where in your app or under what circumstances they occur.
-   - Uses default [inheritance](#inheritance) and [precedence](#precedence) behavior
+   - Selects `TracesSamplingStrategy::FixedRate`
+   - Provides an even cross-section of transactions, no matter where in your app or under what circumstances they occur
+   - Uses default [inheritance](#inheritance) and [precedence](#precedence) behavior for the fixed-rate strategy
 
 2. Sampling function (<PlatformIdentifier name="traces-sampler" />) which:
+   - Selects `TracesSamplingStrategy::Function`
    - Samples different transactions at different rates
    - <PlatformLink to="/configuration/filtering/">Filters</PlatformLink> out
      some transactions entirely
-   - Modifies default [precedence](#precedence) and [inheritance](#inheritance) behavior
+   - Decides through the callback instead of the fixed-rate inheritance path
 
-By default, none of these options are set, meaning no transactions will be sent to Sentry. You must set either one of the options to start sending transactions.
+These builders are mutually exclusive. Each call replaces the previous strategy, so the last sampling builder called wins.
 
-<Alert>
-
-Sampling functions (<PlatformIdentifier name="traces-sampler" />) are currently not supported by this platform.
-
-</Alert>
+By default, the strategy is `TracesSamplingStrategy::Disabled`, meaning tracing is off and transactions are not sent. You must call either `.traces_sample_rate(...)` or `.traces_sampler(...)` to enable a non-disabled strategy. Calling `.traces_sample_rate(0.0)` is an explicit fixed-rate strategy and is not equivalent to leaving tracing disabled; see [inheritance](#inheritance).
 
 ### Setting a Uniform Sample Rate
 
@@ -62,32 +60,31 @@ Whatever a transaction's sampling decision, that decision will be passed to its 
 
 (See <PlatformLink to="/tracing/trace-propagation/">Distributed Tracing</PlatformLink> for more about how that propagation is done.)
 
-If the transaction currently being created is one of those subsequent transactions (in other words, if it has a parent transaction), the upstream (parent) sampling decision will be included in the sampling context data. Your <PlatformIdentifier name="traces-sampler" /> can use this information to choose whether to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
+If the transaction currently being created is one of those subsequent transactions (in other words, if it has a parent transaction), the upstream (parent) sampling decision is available on the transaction context as `ctx.sampled()`. Behavior depends on the configured strategy:
 
-<PlatformContent includePath="performance/always-inherit-sampling-decision">
+- `TracesSamplingStrategy::Disabled` (default): the transaction is not sent, even when a parent decision is positive.
+- `TracesSamplingStrategy::FixedRate` (from `.traces_sample_rate(...)`): an inherited parent decision is honored. When there is no parent decision, the configured fixed rate is used. This remains true for an explicit rate of `0.0`.
+- `TracesSamplingStrategy::Function` (from `.traces_sampler(...)`): the callback receives the transaction context, including any parent decision, and returns the sample rate. Inherit the parent decision in the callback when you want to keep distributed traces intact.
 
-In some SDKs, for convenience, the <PlatformIdentifier name="traces-sampler" /> function can return a boolean, so that a parent's decision can be returned directly if that's the desired behavior.
-
-</PlatformContent>
-
-If you're using a <PlatformIdentifier name="traces-sample-rate" /> rather than a <PlatformIdentifier name="traces-sampler" />, the decision will always be inherited.
+In most cases, inheriting a parent decision is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
 
 ## Precedence
 
 There are multiple ways for a transaction to end up with a sampling decision.
 
-- Random sampling according to a static sample rate set in <PlatformIdentifier name="traces-sample-rate" />
+- The default disabled traces sampling strategy
+- Random sampling according to a static sample rate set with <PlatformIdentifier name="traces-sample-rate" />
 - Random sampling according to a sample function rate returned by <PlatformIdentifier name="traces-sampler" />
 - Absolute decision (100% chance or 0% chance) returned by <PlatformIdentifier name="traces-sampler" />
 - If the transaction has a parent, inheriting its parent's sampling decision
-- Absolute decision passed to <PlatformIdentifier name="start-transaction" />
+- Explicit decision set on the transaction context, for example with `ctx.set_sampled(true)` before `start_transaction`
 
-When there's the potential for more than one of these to come into play, the following precedence rules apply:
+Because only one traces sampling strategy is active at a time, strategy selection is last-builder-call-wins when both `.traces_sample_rate(...)` and `.traces_sampler(...)` appear in configuration. Once a strategy is selected, the following rules apply:
 
-1. If a sampling decision is passed to <PlatformIdentifier name="start-transaction" />, that decision will be used, overriding everything else.
-1. If <PlatformIdentifier name="traces-sampler" /> is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, use the sampling context data to make its own decision, or choose a sample rate for the transaction. We advise against overriding the parent sampling decision because it will break distributed traces)
-1. If <PlatformIdentifier name="traces-sampler" /> is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
-1. If <PlatformIdentifier name="traces-sampler" /> is not defined and there's no parent sampling decision, <PlatformIdentifier name="traces-sample-rate" /> will be used.
+1. If the strategy is `Disabled`, the transaction is not sampled.
+2. If the strategy is `Function`, the callback's returned rate is used. The callback may read or ignore a parent decision on the transaction context.
+3. If the strategy is `FixedRate` and the transaction context carries an explicit sampling decision (from a parent or from `set_sampled`), that decision is used.
+4. If the strategy is `FixedRate` and there is no explicit decision, the configured fixed rate is used.
 
 <Alert>
 
