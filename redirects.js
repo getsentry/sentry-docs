@@ -1877,14 +1877,14 @@ const userDocsRedirects = [
     source: '/ai/sentry-cli/',
     destination: 'https://cli.sentry.dev',
   },
-   // Redirects for Insights → Sentry Dashboards migration
+   // Redirects for Insights → AI Observability → Product Agents migration
   {
     source: '/product/insights/llm-monitoring/:path*',
     destination: '/ai/observability/:path*',
   },
   {
     source: '/product/insights/agents/:path*',
-    destination: '/ai/observability/agents/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1892,7 +1892,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mcp/',
-    destination: '/ai/observability/mcp/',
+    destination: '/product/agents/mcp/',
   },
   {
     source: '/product/insights/ai/:path*',
@@ -1980,14 +1980,78 @@ const userDocsRedirects = [
     source: '/platforms/javascript/agent-tracing/',
     destination: '/platforms/javascript/agent-tracing-browser/',
   },
-  // AI Monitoring → AI Observability rename redirects
+  // AI Monitoring / AI Observability → Product Agents
   {
-    source: '/ai/monitoring/:path*',
-    destination: '/ai/observability/:path*',
+    source: '/ai/monitoring/agents/dashboard/',
+    destination: '/product/agents/dashboards/',
+  },
+  {
+    source: '/ai/monitoring/agents/',
+    destination: '/product/agents/',
+  },
+  {
+    source: '/ai/monitoring/agents/:path*',
+    destination: '/product/agents/:path*',
+  },
+  {
+    source: '/ai/monitoring/conversations/',
+    destination: '/product/agents/conversations/',
+  },
+  {
+    source: '/ai/monitoring/conversations/:path*',
+    destination: '/product/agents/conversations/:path*',
+  },
+  {
+    source: '/ai/monitoring/mcp/',
+    destination: '/product/agents/mcp/',
+  },
+  {
+    source: '/ai/monitoring/mcp/:path*',
+    destination: '/product/agents/mcp/:path*',
   },
   {
     source: '/ai/monitoring/',
-    destination: '/ai/observability/',
+    destination: '/product/agents/',
+  },
+  {
+    source: '/ai/monitoring/:path*',
+    destination: '/product/agents/:path*',
+  },
+  {
+    source: '/ai/observability/agents/dashboard/',
+    destination: '/product/agents/dashboards/',
+  },
+  {
+    source: '/ai/observability/agents/',
+    destination: '/product/agents/',
+  },
+  {
+    source: '/ai/observability/agents/:path*',
+    destination: '/product/agents/:path*',
+  },
+  {
+    source: '/ai/observability/conversations/',
+    destination: '/product/agents/conversations/',
+  },
+  {
+    source: '/ai/observability/conversations/:path*',
+    destination: '/product/agents/conversations/:path*',
+  },
+  {
+    source: '/ai/observability/mcp/',
+    destination: '/product/agents/mcp/',
+  },
+  {
+    source: '/ai/observability/mcp/:path*',
+    destination: '/product/agents/mcp/:path*',
+  },
+  {
+    source: '/ai/observability/',
+    destination: '/product/agents/',
+  },
+  {
+    source: '/ai/observability/:path*',
+    destination: '/product/agents/:path*',
   },
   // AI Agent Monitoring / ai-agent-tracing → Agent Tracing rename redirects
   {
