@@ -45,20 +45,18 @@ use tracing_subscriber::prelude::*;
 
 fn main() {
     // Initialize Sentry
-    let _guard = sentry::init((
-        "___PUBLIC_DSN___",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
             # ___PRODUCT_OPTION_START___ performance
             // Capture all traces and spans. Set to a lower value in production
-            traces_sample_rate: 1.0,
+            .traces_sample_rate(1.0)
             # ___PRODUCT_OPTION_END___ performance
             # ___PRODUCT_OPTION_START___ logs
-            enable_logs:true
+            .enable_logs(true),
             # ___PRODUCT_OPTION_END___ logs
-            ..sentry::ClientOptions::default()
-        },
-    ));
+    );
 
     // Register the Sentry tracing layer
     tracing_subscriber::registry()
