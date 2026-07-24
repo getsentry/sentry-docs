@@ -98,3 +98,42 @@ struct SwiftUIApp: App {
     }
 }
 ```
+
+## Add Readable Stack Traces With Debug Symbols
+
+To get readable stack traces for release builds, upload dSYM files to Sentry during your Xcode build. Add `--include-sources` to upload source context at the same time, so Sentry can show code snippets next to stack frames.
+
+1. Install [Sentry CLI](/cli/installation/).
+2. Configure Sentry CLI authentication. Use `SENTRY_AUTH_TOKEN` in your CI/CD environment, or use a local `.sentryclirc` file and add it to `.gitignore`.
+3. In your app target build settings, set `DEBUG_INFORMATION_FORMAT` to `DWARF with dSYM File` and `ENABLE_USER_SCRIPT_SANDBOXING` to `NO` for the configurations that should upload debug symbols.
+4. Add a new Xcode Run Script build phase named `Upload Debug Symbols to Sentry`:
+
+<OrgAuthTokenNote />
+
+```bash
+# This script is responsible for uploading debug symbols and source context for Sentry.
+if [[ "$(uname -m)" == arm64 ]]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+if which sentry-cli >/dev/null; then
+  export SENTRY_ORG=___ORG_SLUG___
+  export SENTRY_PROJECT=___PROJECT_SLUG___
+  ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+  if [ ! $? -eq 0 ]; then
+    echo "warning: sentry-cli - $ERROR"
+  fi
+else
+  echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+fi
+```
+
+5. Add this path to the Run Script's **Input Files**:
+
+```text
+${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}
+```
+
+If you don't want to upload source code, remove the `--include-sources` argument from the Run Script.
+
+For more details, see <PlatformLink to="/dsym/">Uploading Debug Symbols</PlatformLink> and <PlatformLink to="/sourcecontext/">Source Context</PlatformLink>.
