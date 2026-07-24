@@ -1,0 +1,75 @@
+---
+title: Set Up Snapshots
+sidebar_title: Snapshots
+sidebar_order: 5300
+sidebar_section: features
+description: Set up snapshots for Flutter apps using golden file tests.
+beta: true
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+Set up [Snapshots](/product/snapshots/) for your Flutter app using Flutter's built-in golden file testing. Generate snapshots locally or in your own CI, then upload the generated images to Sentry for image diffing, visual review, and GitHub status checks.
+
+## Step 1: Generate Images
+
+Flutter's `flutter_test` package can render your widgets and save the result as an image using `matchesGoldenFile`. Write a test for each screen or component you want to snapshot:
+
+```dart
+void main() {
+  group('snapshot', () {
+    testWidgets('renders home screen', (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: MyHomeScreen()));
+
+      await expectLater(
+        find.byType(MyHomeScreen),
+        matchesGoldenFile('home_screen.png'),
+      );
+    });
+  });
+}
+```
+
+Put your snapshot tests in a dedicated directory, such as `test/snapshots/`, so you can generate and upload them independently of your other widget tests. By default, `matchesGoldenFile` writes the image next to the test file that calls it, so a test at `test/snapshots/home_screen_test.dart` produces `test/snapshots/home_screen.png`.
+
+Then generate the images by running your tests with `--update-goldens`:
+
+```bash
+flutter test --update-goldens test/snapshots/
+```
+
+<Alert level="info">
+
+`--update-goldens` only writes images to disk — it doesn't compare them against a baseline. Sentry, not `flutter test`, performs the visual diffing, so you don't need to commit the generated `.png` files to your repository.
+
+</Alert>
+
+<Alert level="warning">
+
+Widget tests render text with a placeholder test font unless you load your app's real fonts first, so text may appear as solid blocks in your snapshots. Load your fonts in a [`flutter_test_config.dart`](https://api.flutter.dev/flutter/flutter_test/) file, or use a helper like [`golden_toolkit`'s `loadAppFonts()`](https://pub.dev/packages/golden_toolkit), before running your snapshot tests.
+
+</Alert>
+
+Any tool that writes PNG or JPEG files works with Sentry, including packages built on top of `matchesGoldenFile` like [`golden_toolkit`](https://pub.dev/packages/golden_toolkit) and [`alchemist`](https://pub.dev/packages/alchemist), which add support for multi-device and multi-theme goldens.
+
+## Step 2: Test Locally
+
+Generate the images, then upload them with `sentry-cli`:
+
+```bash
+flutter test --update-goldens test/snapshots/
+
+sentry-cli snapshots upload --app-id com.example.your-app test/snapshots/
+```
+
+See [Uploading Snapshots](/product/snapshots/uploading-snapshots/) for the full CLI reference and metadata schema.
+
+## Step 3: Integrate Into CI
+
+Once the local upload succeeds, wire the same commands into your CI. See [Integrating Into CI](/product/snapshots/integrating-into-ci/) for the general GitHub Actions structure.
+
+## Best Practices
+
+- **Run golden tests in a consistent environment.** Flutter renders text and shapes using the host operating system's font and graphics stack, so the same test can produce different pixels on macOS, Linux, and Windows. Generate your baseline and CI snapshots on the same OS (matching your CI runner locally with something like a Linux container) to avoid spurious diffs.
+- **Pin your Flutter SDK version.** Rendering can change between Flutter versions. Use the same version locally and in CI to keep snapshots stable.
+- **Isolate snapshot tests.** Put them in a dedicated directory so you can generate and upload them independently of your other widget tests.
