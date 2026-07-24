@@ -1,0 +1,69 @@
+---
+title: Cloudflare Agents SDK
+description: "Link Cloudflare Agents SDK chats to Sentry Conversations with a chat session ID."
+---
+
+When you build agents with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), set a conversation ID so multi-turn AI activity groups correctly in <Link to="/product/agents/conversations/">Conversations</Link>.
+
+Use **your chat session ID** (for example a UUID or `conv_…` value your app creates when the user starts a chat). Do not use a user ID, room name, or the Durable Object instance name unless that name is already one chat session.
+
+Workers AI and other AI integrations do **not** set this for you.
+
+## Prerequisites
+
+- <PlatformLink to="/tracing/">Tracing enabled</PlatformLink>
+- Durable Objects instrumented with `instrumentDurableObjectWithSentry` (see <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>)
+
+## Link conversations
+
+Set the conversation ID before any AI calls in the request handler:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { Agent } from "agents";
+
+class MyAgentBase extends Agent<Env> {
+  async onRequest(request: Request): Promise<Response> {
+    // Your chat session ID for this conversation (not user id / "default")
+    const chatSessionId = new URL(request.url).searchParams.get("chatId");
+    if (chatSessionId) {
+      Sentry.setConversationId(chatSessionId);
+    }
+
+    const result = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages: [{ role: "user", content: await request.text() }],
+    });
+
+    return new Response(JSON.stringify(result));
+  }
+}
+
+export const MyAgent = Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyAgentBase
+);
+```
+
+If you already name each agent instance as one chat session (for example `useAgent({ name: chatSessionId })`), you can pass that value:
+
+```typescript
+Sentry.setConversationId(this.name);
+```
+
+Only do this when the instance name is **one conversation**, not per-user or a shared singleton like `"default"`.
+
+To clear the ID: `Sentry.setConversationId(null)`.
+
+## Users
+
+Populate the Conversations **User** column with `Sentry.setUser` once per session, before AI calls. See <PlatformLink to="/agent-tracing/#identifying-users-in-conversations">Identifying Users in Conversations</PlatformLink>.
+
+## Related
+
+- <PlatformLink to="/features/workers-ai/">Workers AI</PlatformLink>
+- <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>
+- <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>
+- <Link to="/product/agents/conversations/">Conversations</Link> product docs
