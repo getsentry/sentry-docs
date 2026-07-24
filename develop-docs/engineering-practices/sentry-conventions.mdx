@@ -57,7 +57,7 @@ yarn create:attribute \
   - `"private"` if the attribute should not be visible in the UI (but will be returned by the debug endpoint).
 - Add a `changelog` entry with `"version": "next"`.
 - Run `yarn generate` to regenerate the JS and Python code.
-- Run `npx vitest run` to verify all tests pass (including alias symmetry, name template validation, etc.).
+- Run `yarn test` to verify all tests pass (including alias symmetry, name template validation, etc.).
 
 ### Merge process
 
@@ -124,13 +124,14 @@ They're sent by SDKs and flow through as-is. Deprecation backfills with `backfil
 [Step 3](#sentry-backend) is only required when the attribute needs special adjustments in the Sentry UI.
 
 The [`SPAN_ATTRIBUTE_DEFINITIONS`](https://github.com/getsentry/sentry/blob/master/src/sentry/search/eap/spans/attributes.py) needs an entry when:
-1. The public alias differs from the internal name (e.g., public alias: span.duration -> internal name: sentry.duration_ms)
-2. The attribute needs a special search type that is not a primitive, like for example currency, byte, millisecond, percentage.
-3. The attribute has a validator or normalizer (e.g., validate_span_id, validate_event_id) or value normalization (e.g., normalize_event_id_strict) only runs through an explicit definition
-4. The attribute has a processor (post-processing transforms on query results require an explicit definition)
-5. The attribute is private (private=True restricts access to callers with the attribute in their fields_acl; this flag only works through an explicit definition)
-6. The attribute is a secondary alias (secondary_alias=True marks compatibility aliases that shouldn't be preferred in reverse lookups)
-7. The attribute has context (context=AttributeContext(brief=...) provides human-readable descriptions exposed through the API)
+1. The attribute is prefixed with `sentry.*`. To avoid divergence between Explore and the trace waterfall, add a public alias for the attribute (e.g. the attribute without the `sentry.*` prefix)
+2. The public alias differs from the internal name (e.g., public alias: span.duration -> internal name: sentry.duration_ms)
+3. The attribute needs a special search type that is not a primitive, like for example currency, byte, millisecond, percentage.
+4. The attribute has a validator or normalizer (e.g., validate_span_id, validate_event_id) or value normalization (e.g., normalize_event_id_strict) only runs through an explicit definition
+5. The attribute has a processor (post-processing transforms on query results require an explicit definition)
+6. The attribute is private (private=True restricts access to callers with the attribute in their fields_acl; this flag only works through an explicit definition)
+7. The attribute is a secondary alias (secondary_alias=True marks compatibility aliases that shouldn't be preferred in reverse lookups)
+8. The attribute has context (context=AttributeContext(brief=...) provides human-readable descriptions exposed through the API)
 
 If none of these apply, no entry is required.
 
