@@ -1,0 +1,117 @@
+---
+title: Attributes
+description: "Attributes automatically enrich your telemetry with typed key-value data. Use them to add business context that you can filter and search in Sentry."
+---
+
+<AvailableSince version="9.9.0" />
+
+**Attributes** are key-value pairs you can attach to your telemetry (like <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">spans</PlatformLink> (SDK version `9.23.0`+), <PlatformLink to="/logs">logs</PlatformLink>, and <PlatformLink to="/metrics">metrics</PlatformLink>).
+
+Common uses include subscription tier, feature flags, or any business context that helps you filter and query your telemetry.
+
+Each attribute value is created with a typed `SentryAttribute` factory:
+
+| Factory                          | Dart Type      |
+| -------------------------------- | -------------- |
+| `SentryAttribute.string(v)`      | `String`       |
+| `SentryAttribute.int(v)`         | `int`          |
+| `SentryAttribute.bool(v)`        | `bool`         |
+| `SentryAttribute.double(v)`      | `double`       |
+| `SentryAttribute.stringArray(v)` | `List<String>` |
+| `SentryAttribute.intArray(v)`    | `List<int>`    |
+| `SentryAttribute.boolArray(v)`   | `List<bool>`   |
+| `SentryAttribute.doubleArray(v)` | `List<double>` |
+
+<Alert level="info">
+
+Attributes on spans require <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>. In stream mode, spans have no contexts, data, or tags — everything is a typed attribute, so `setData` and `setTag` are replaced by `setAttribute` and `setAttributes`.
+
+Attributes on logs and metrics don't require stream mode and work by default.
+
+</Alert>
+
+## Add Attributes to the Current Scope
+
+Use `Sentry.setAttributes` to attach attributes to the current scope. This is the easiest way to enrich everything at once:
+
+```dart
+Sentry.setAttributes({
+  'org_id': SentryAttribute.string(user.orgId),
+  'user_tier': SentryAttribute.string(user.tier),
+  'service': SentryAttribute.string('checkout'),
+});
+```
+
+## Setting Attributes on Individual Telemetry
+
+You can also attach attributes to a single span, log, or metric directly, which is useful when the data only makes sense for that one item.
+
+### Spans
+
+In stream mode, you can set attributes when starting a span:
+
+```dart
+await Sentry.startSpan(
+  'process-order',
+  (_) async {
+    await processOrder();
+  },
+  attributes: {
+    'sentry.op': SentryAttribute.string('queue.process'),
+    'order.id': SentryAttribute.string('abc-123'),
+    'order.item_count': SentryAttribute.int(5),
+    'order.priority': SentryAttribute.bool(true),
+  },
+);
+```
+
+Or add them to an already running span with `setAttribute` or `setAttributes`. Use `removeAttribute` to remove an attribute:
+
+```dart
+await Sentry.startSpan('handle-request', (span) async {
+  span.setAttribute(
+    'http.response.status_code',
+    SentryAttribute.int(200),
+  );
+
+  span.setAttributes({
+    'http.route': SentryAttribute.string('/api/users'),
+    'user.id': SentryAttribute.string('user-42'),
+  });
+
+  await handleRequest();
+});
+```
+
+See <PlatformLink to="/tracing/streamed-spans/#add-attributes">Add Attributes</PlatformLink> for more on span attributes.
+
+### Logs
+
+Pass attributes to any `Sentry.logger` call:
+
+```dart
+Sentry.logger.info('User ${user.username} added ${product.name} to cart.', attributes: {
+  'user': SentryAttribute.string(user.username),
+  'product': SentryAttribute.string(product.name),
+});
+```
+
+See <PlatformLink to ="/logs">Logs</PlatformLink> for more.
+
+### Metrics
+
+Pass attributes in the `attributes` parameter of any metric. Each metric has a 2KB size limit for attributes:
+
+```dart
+Sentry.metrics.count(
+  'api_calls',
+  1,
+  attributes: {
+    'endpoint': SentryAttribute.string('/api/orders'),
+    'user_tier': SentryAttribute.string('pro'),
+    'region': SentryAttribute.string('us-west'),
+  },
+);
+```
+
+See <PlatformLink to="/metrics">Metrics</PlatformLink> for more.
