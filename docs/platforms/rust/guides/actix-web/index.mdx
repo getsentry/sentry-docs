@@ -41,20 +41,18 @@ async fn failing(_req: HttpRequest) -> Result<String, Error> {
 }
 
 fn main() -> io::Result<()> {
-    let _guard = sentry::init((
-        "___PUBLIC_DSN___",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
             // Capture all traces and spans. Set to a lower value in production
-            traces_sample_rate: 1.0,
+            .traces_sample_rate(1.0)
             // Capture user IPs and potentially sensitive headers when using HTTP server integrations
             // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-            send_default_pii: true,
+            .send_default_pii(true)
             // Capture all HTTP request bodies, regardless of size
-            max_request_body_size: sentry::MaxRequestBodySize::Always,
-            ..Default::default()
-        },
-    ));
+            .max_request_body_size(sentry::MaxRequestBodySize::Always),
+    );
 
     actix_web::rt::System::new().block_on(async {
         HttpServer::new(|| {
