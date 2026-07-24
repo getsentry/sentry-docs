@@ -4,20 +4,83 @@ If you use a third-party SDK to evaluate feature flags, you can enable a Sentry 
 - <PlatformLink to="/integrations/launchdarkly">LaunchDarkly</PlatformLink>
 
 ### Generic API
-If you use an unsupported solution, you can use the generic API to manually track feature flag evaluations. These evaluations are held in memory and are sent to Sentry on error and transaction events. **At the moment, we only support boolean flag evaluations.**
+
+If you use an unsupported solution, use the generic API to manually track feature flag evaluations. The SDK stores each evaluation on the current scope. If a span or transaction is active, the SDK also records the evaluation on that active span or transaction. Only boolean flag evaluations are supported.
 
 ```java {3}
 import io.sentry.Sentry;
 
-Sentry.addFeatureFlag("feature_flag.test-flag", false);
+Sentry.addFeatureFlag("test-flag", false);
 Sentry.captureException(new Exception("Something went wrong!"));
 ```
 
 ```kotlin {3}
 import io.sentry.Sentry
 
-Sentry.addFeatureFlag("feature_flag.test-flag", false)
+Sentry.addFeatureFlag("test-flag", false)
 Sentry.captureException(Exception("Something went wrong!"))
 ```
 
 Go to your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+### Custom Scopes
+
+If you use a separate `IScopes` instance, add the feature flag evaluation to that instance. This updates its scope and active span or transaction, without changing the global `Sentry` scope:
+
+```java {1}
+scopes.addFeatureFlag("test-flag", false);
+scopes.captureException(new Exception("Something went wrong!"));
+```
+
+```kotlin {1}
+scopes.addFeatureFlag("test-flag", false)
+scopes.captureException(Exception("Something went wrong!"))
+```
+
+### Scope Callback
+
+Use a scope callback when the evaluation should apply to this capture's local scope instead of remaining on the current scope:
+
+```java {4}
+import io.sentry.Sentry;
+
+Sentry.captureException(new Exception("Something went wrong!"), scope -> {
+  scope.addFeatureFlag("test-flag", false);
+});
+```
+
+```kotlin {4}
+import io.sentry.Sentry
+
+Sentry.captureException(Exception("Something went wrong!")) { scope ->
+  scope.addFeatureFlag("test-flag", false)
+}
+```
+
+Feature flags added in a scope callback don't persist on the current scope. If a span or transaction is active, the SDK still records the evaluation on that active span or transaction.
+
+### Clear Feature Flags
+
+Clear feature flags when they no longer apply, such as after a user signs out or switches accounts:
+
+```java {4}
+import io.sentry.Sentry;
+
+Sentry.configureScope(scope -> {
+  scope.clearFeatureFlags();
+});
+```
+
+```kotlin {4}
+import io.sentry.Sentry
+
+Sentry.configureScope { scope ->
+  scope.clearFeatureFlags()
+}
+```
+
+`clearFeatureFlags()` removes evaluations only from the current scope. It doesn't affect parent or sibling scopes, or evaluations already recorded on an active span or transaction.
+
+Scope evaluations are attached to error events. By default, the current scope keeps the 100 most recent, unique feature flag evaluations. When a scope forks, the child receives a copy of these evaluations, and changes to the copy don't affect the parent scope.
+
+Active spans and transactions record the first 10 unique feature flags as span attributes using the `flag.evaluation.<name>` key. Spans don't inherit evaluations from their parent span.
