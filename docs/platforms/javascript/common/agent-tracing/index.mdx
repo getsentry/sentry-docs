@@ -30,7 +30,7 @@ supported:
   - javascript.nitro
 ---
 
-With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. Agent Tracing data will be fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. Track token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
@@ -45,6 +45,10 @@ Before setting up Agent Tracing, ensure you have <PlatformLink to="/tracing/">tr
 <SplitSectionText>
 
 The JavaScript SDK supports automatic instrumentation for AI libraries. Add the integration for your AI library to your Sentry configuration:
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+- <PlatformLink to="/features/workers-ai/">Cloudflare Workers AI</PlatformLink> — automatic instrumentation for `env.AI` (no integration to add)
+</PlatformSection>
 
 <PlatformSection notSupported={["javascript.deno"]}>
 - <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
@@ -78,6 +82,73 @@ Sentry.init({
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+## Tracking Conversations
+
+<Alert>
+  Tracking Conversations has **beta** stability. Configuration options and behavior may change.
+</Alert>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
+
+Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of the session. The ID is applied to all AI-related spans in the current scope. Pass `null` to unset it.
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Building with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/)? Link chats with your session ID. See <PlatformLink to="/features/agents-sdk/">Cloudflare Agents SDK</PlatformLink>.
+
+</PlatformSection>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+// Set conversation ID at the start of a conversation
+Sentry.setConversationId('conv_abc123');
+
+// All subsequent AI calls will be linked to this conversation
+await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [{ role: "user", content: "Hello" }],
+});
+
+// Later in the conversation
+await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    { role: "user", content: "Hello" },
+    { role: "assistant", content: "Hi there!" },
+    { role: "user", content: "What's the weather?" },
+  ],
+});
+
+// Both calls will have gen_ai.conversation.id: "conv_abc123"
+
+// To unset it
+Sentry.setConversationId(null);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Identifying Users in Conversations
+
+The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
 
 ## Options
 
@@ -141,76 +212,19 @@ Sentry.init({
 </SplitSection>
 </SplitLayout>
 
-## Tracking Conversations
-
-<Alert>
-  Tracking Conversations has **beta** stability. Configuration options and behavior may change.
-</Alert>
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-When building AI applications with multi-turn conversations, you can use `setConversationId()` to link all AI spans from the same conversation together. This allows you to analyze entire conversation flows in Sentry.
-
-The conversation ID is automatically applied as the `gen_ai.conversation.id` attribute to all AI-related spans within the current scope. To unset the conversation ID, pass `null`.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-
-// Set conversation ID at the start of a conversation
-Sentry.setConversationId('conv_abc123');
-
-// All subsequent AI calls will be linked to this conversation
-await openai.chat.completions.create({
-  model: "gpt-4",
-  messages: [{ role: "user", content: "Hello" }],
-});
-
-// Later in the conversation
-await openai.chat.completions.create({
-  model: "gpt-4",
-  messages: [
-    { role: "user", content: "Hello" },
-    { role: "assistant", content: "Hi there!" },
-    { role: "user", content: "What's the weather?" },
-  ],
-});
-
-// Both calls will have gen_ai.conversation.id: "conv_abc123"
-
-// To unset it
-Sentry.setConversationId(null);
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-## Identifying Users in Conversations
-
-The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
-
-```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-
-Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
-```
-
-Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the [setUser API reference](/platforms/javascript/configuration/apis/#setUser) for the full list of supported fields.
-
 ## Manual Instrumentation
 
 You can also instrument agent spans yourself. See <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>.
 
 ## Framework Exporters
 
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.nextjs", "javascript.nuxt", "javascript.astro", "javascript.solidstart", "javascript.sveltekit", "javascript.remix", "javascript.tanstackstart-react"]}>
+
 If you're using an AI framework with a Sentry exporter, you can send traces to Sentry:
 
 - <PlatformLink to="/agent-tracing/mastra/">Mastra Sentry Exporter</PlatformLink>
+
+</PlatformSection>
 
 ## MCP Server Monitoring
 
