@@ -353,6 +353,16 @@ UI Profiling requires SDK versions `8.7.0` or higher. Lower versions can use the
 
 </Alert>
 
+<SdkOption name="enableLegacyProfiling" type="bool" defaultValue="true" availableSince="8.47.0">
+
+On devices running Android 15 (API level 35) or higher, UI Profiling always uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, this option controls whether the SDK falls back to the <PlatformLink to="/profiling/legacy">legacy `tracer` backend</PlatformLink>. When `true` (the default), the legacy profiler runs on devices below API level 35. Set it to `false` to disable profiling on those devices entirely.
+
+Setting this option to `false` also disables <PlatformLink to="/configuration/options/#transaction-based-profiling-options">transaction-based profiling</PlatformLink> (`profilesSampleRate`/`profilesSampler`) on all devices, since transaction-based profiling always relies on the legacy profiler and is not supported by the ProfilingManager (Perfetto) backend.
+
+This option is deprecated and will be removed in the next major release, when only the ProfilingManager (Perfetto) backend will remain.
+
+</SdkOption>
+
 <SdkOption name="profileSessionSampleRate" type="float" availableSince="8.7.0">
 
 A number between `0` and `1`, controlling the percentage chance that the session will be profiled. (`0` represents 0%, `1` represents 100%.) The default is null (disabled).
@@ -370,7 +380,7 @@ Whether the UI profiling lifecycle is controlled manually or based on the trace 
 
 <SdkOption name="startProfilerOnAppStart" type="bool" defaultValue="false" availableSince="8.7.0">
 
-A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profileSessionSampleRate" /> must be defined.
+A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profileSessionSampleRate" /> must be defined. App start profiling is only supported by the <PlatformLink to="/profiling/legacy">legacy profiler</PlatformLink>, which runs on devices below Android 15 (API level 35). It has no effect with the ProfilingManager (Perfetto) backend used on API level 35 and higher.
 
 - If profileLifecycle is set to `manual`: profiling is started automatically on startup and stopProfiler must be called manually whenever the app startup is deemed to be completed
 - If profileLifecycle is set to `trace`: profiling is started automatically on startup, and will automatically be stopped when the root span that is associated with app startup ends
@@ -394,6 +404,12 @@ When enabled, the SDK assigns a static fingerprint to ANR events whose stack tra
 ## Transaction-Based Profiling Options
 
 This mode will eventually be deprecated, and it's recommended to upgrade to <PlatformLink to="/configuration/options/#ui-profiling-options">UI Profiling</PlatformLink>. The same behaviour, without the 30 seconds limitation, can be achieved with the `trace` <PlatformLink to="/configuration/options/#profile-lifecycle">profile lifecycle</PlatformLink> option. In order to upgrade to UI Profiling, you also need to remove the transaction-based options from your configuration.
+
+<Alert level="warning">
+
+Transaction-based profiling always uses the legacy profiler and is not supported by the ProfilingManager (Perfetto) backend. Setting <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> to `false` therefore disables transaction-based profiling on all devices, and no profiling data will be collected. Use <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> for UI (continuous) Profiling instead.
+
+</Alert>
 
 <SdkOption name="profilesSampleRate" type="float">
 
