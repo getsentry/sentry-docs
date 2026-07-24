@@ -3438,112 +3438,160 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
-    to: '/ai/observability/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/privacy/',
-    to: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/observability/agents/dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',
-    to: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/product/insights/ai/agents/getting-started/',
-    to: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/ai/observability/mcp/',
+    to: '/product/agents/mcp/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/ai/observability/mcp/getting-started/',
+    to: '/product/agents/mcp/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/ai/observability/mcp/dashboard/',
+    to: '/product/agents/mcp/dashboard/',
   },
-  // AI Monitoring → AI Observability rename redirects
+  // AI Monitoring / AI Observability → Product Agents
   {
     from: '/ai/monitoring/',
-    to: '/ai/observability/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/monitoring/agents/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/monitoring/agents/getting-started/',
-    to: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/ai/monitoring/agents/dashboards/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/monitoring/agents/dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/monitoring/agents/naming/',
-    to: '/ai/observability/agents/naming/',
+    to: '/product/agents/naming/',
   },
   {
     from: '/ai/monitoring/agents/privacy/',
-    to: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/ai/monitoring/agents/costs/',
-    to: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/ai/monitoring/agents/sampling/',
-    to: '/ai/observability/agents/sampling/',
+    to: '/product/agents/sampling/',
   },
   {
     from: '/ai/monitoring/conversations/',
-    to: '/ai/observability/conversations/',
+    to: '/product/agents/conversations/',
   },
   {
     from: '/ai/monitoring/mcp/',
-    to: '/ai/observability/mcp/',
+    to: '/product/agents/mcp/',
   },
   {
     from: '/ai/monitoring/mcp/getting-started/',
-    to: '/ai/observability/mcp/getting-started/',
+    to: '/product/agents/mcp/getting-started/',
   },
   {
     from: '/ai/monitoring/mcp/dashboard/',
-    to: '/ai/observability/mcp/dashboard/',
+    to: '/product/agents/mcp/dashboard/',
+  },
+  {
+    from: '/ai/observability/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/observability/agents/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
+  },
+  {
+    from: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/ai/observability/agents/naming/',
+    to: '/product/agents/naming/',
+  },
+  {
+    from: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
+  },
+  {
+    from: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
+  },
+  {
+    from: '/ai/observability/agents/sampling/',
+    to: '/product/agents/sampling/',
+  },
+  {
+    from: '/ai/observability/conversations/',
+    to: '/product/agents/conversations/',
+  },
+  {
+    from: '/ai/observability/mcp/',
+    to: '/product/agents/mcp/',
+  },
+  {
+    from: '/ai/observability/mcp/getting-started/',
+    to: '/product/agents/mcp/getting-started/',
+  },
+  {
+    from: '/ai/observability/mcp/dashboard/',
+    to: '/product/agents/mcp/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',
