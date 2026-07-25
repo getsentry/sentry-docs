@@ -776,6 +776,30 @@ const userDocsRedirects = [
     source: '/organization/integrations/supernaut/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/bugzero/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ellipsis/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/phoenix-alerts/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ploxir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/stackstitch/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/vedetta/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
   // via the wildcard redirect at the bottom of this file
   {
@@ -880,6 +904,30 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/supernaut/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/bugzero/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ellipsis/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/phoenix-alerts/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ploxir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/stackstitch/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/vedetta/',
     destination: '/integrations/third-party-integrations/',
   },
   {
