@@ -1,0 +1,207 @@
+---
+title: Tracking Touch Events
+sidebar_order: 80
+description: "Learn more about how to enable tracking touch events."
+---
+
+Use version `1.5.0` or later to track touch events with Sentry's React Native SDK. You will also need to wrap your app with a `TouchEventBoundary`.
+
+## Wrapping with `TouchEventBoundary`
+
+At the root of your app, usually `App.js`, wrap the app component with `Sentry.TouchEventBoundary`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+const App = () => {
+  return (
+    <Sentry.TouchEventBoundary>
+      <RestOfTheApp />
+    </Sentry.TouchEventBoundary>
+  );
+};
+
+export default AppRegistry.registerComponent("Your Amazing App", () => App);
+```
+
+## Using the `withTouchEventBoundary` Higher-Order Component
+
+At the root of your app, usually `App.js`, wrap the app component with `Sentry.withTouchEventBoundary`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+const App = () => {
+  return <RestOfTheApp />;
+};
+
+export default AppRegistry.registerComponent("Your Amazing App", () =>
+  Sentry.withTouchEventBoundary(App)
+);
+```
+
+<Alert level="warning" title="Multiple Boundaries">
+
+While you can track specific sections of your app by wrapping each section with the boundary, do not nest them or the touches could be tracked multiple times along with possible undefined behavior.
+
+</Alert>
+
+## Automatic Touch Tracking
+
+Each touch event is automatically logged as a breadcrumb and displays on the dashboard when an event occurs along with the component tree in which the touch event occurred. This component tree is logged using the `name` property of a component. By default, React Native will set this property automatically on components.
+
+## Tracking Specific Components
+
+You can let Sentry know which components to track specifically by passing the `sentry-label` prop to them. If Sentry detects a component with a `sentry-label` within a touch's component tree, it will be logged on the dashboard as having occurred in that component.
+
+For each component in the touch path, the SDK extracts a **label** and a **name**. The breadcrumb message uses the label if any component in the path has one; otherwise it falls back to the root component's name.
+
+The **label** is determined by the first available value from:
+
+1. `sentry-label` prop
+2. Custom `labelName` prop (if configured on the boundary)
+3. `accessibilityLabel` prop
+4. `aria-label` prop
+5. `testID` prop
+6. Text content extracted from children (e.g. `<Text>Save workout</Text>` → `"Save workout"`)
+
+The **name** comes from the Babel plugin annotation (`data-sentry-component`) or `displayName`. See [Component Names](/platforms/react-native/integrations/component-names/) for details.
+
+This means apps that use accessibility labels, test IDs, or simply have text inside their touchable components get meaningful touch breadcrumbs automatically, without any extra configuration.
+
+<Alert>
+
+Text extraction from children (item 6) is automatically disabled when Session Replay's `maskAllText` is enabled (the default). Set `maskAllText: false` in your `mobileReplayIntegration` config to enable it. Per-view `Sentry.Mask` boundaries are also respected.
+
+</Alert>
+
+```javascript
+const YourCoolComponent = (props) => {
+  return (
+    <View sentry-label="CardContainer">
+      <Text sentry-label="CoolText">You are cool</Text>
+    </View>
+  );
+};
+```
+
+<Alert>
+
+You don't have to worry about Typescript errors when passing the `sentry-label` prop. [Typescript will not throw an error on props with the '-' character](https://www.typescriptlang.org/docs/handbook/jsx.html#attribute-type-checking).
+
+</Alert>
+
+## Automatic `sentry-label` Injection
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
+
+When [Component Names](/platforms/react-native/integrations/component-names/) are enabled (`annotateReactComponents` option), the Babel plugin automatically injects `sentry-label` props from static text content at build time. For example, a `<Pressable>` wrapping `<Text>Save workout</Text>` will automatically receive `sentry-label="Save workout"` during the build, without any manual annotation.
+
+See [Component Names — Automatic `sentry-label` Injection](/platforms/react-native/integrations/component-names/#automatic-sentry-label-injection) for configuration details.
+
+## Automatic Text Extraction from Children
+
+<Alert>
+
+Available in SDK version `8.12.0` and above.
+
+</Alert>
+
+When no label is found from props (steps 1–5 above), the SDK attempts to extract text from the touched component's children at runtime. This complements the [build-time injection](#automatic-sentry-label-injection) — it handles dynamic text, components not processed by the Babel plugin, or cases where `annotateReactComponents` is not enabled. For example, if you touch a button:
+
+```javascript
+<Pressable>
+  <Text>Add to cart</Text>
+</Pressable>
+```
+
+The breadcrumb label will automatically be `"Add to cart"` without needing any props.
+
+Text extraction has the following limits:
+- Traverses up to **3 levels** deep into the component tree
+- Visits up to **5 sibling** nodes at each level
+- Truncates text at **64 characters**
+
+To disable runtime text extraction, set `extractTextFromChildren` to `false` (see [Options](#options)).
+
+## Interaction with Session Replay Masking
+
+To prevent masked content from leaking into breadcrumbs, the SDK respects [Session Replay](/platforms/react-native/session-replay/) masking boundaries:
+
+- When `maskAllText` is enabled on `mobileReplayIntegration` (the default), `sentry-label` and text extraction from children are both skipped, since they may contain user-visible text content.
+- When the touched element is inside a `Sentry.Mask` boundary, `sentry-label` and text extraction are skipped for that element.
+- Developer-provided labels (custom `labelName`, `accessibilityLabel`, `aria-label`, `testID`) are never affected by masking.
+
+<Alert level="info">
+
+Currently, both manually set and auto-injected `sentry-label` props are skipped when masking is active, because the SDK cannot distinguish between them at runtime. If you rely on manual `sentry-label` props for tracking, use `accessibilityLabel` or a custom `labelName` instead, which are never affected by masking.
+
+</Alert>
+
+To enable `sentry-label` and text extraction alongside Session Replay, set `maskAllText: false`:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.mobileReplayIntegration({ maskAllText: false }),
+  ],
+});
+```
+
+## Options
+
+You can pass specific options to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` higher-order component (HOC).
+
+```javascript {tabTitle:Default}
+<Sentry.TouchEventBoundary
+  ignoreNames={["BadComponent", /^Connect\(/, /^LibraryComponent$/]}
+  labelName="testLabel"
+>
+  <RestOfTheApp />
+</Sentry.TouchEventBoundary>
+```
+
+```javascript {tabTitle:HOC}
+Sentry.withTouchEventBoundary(App, { maxComponentTreeSize: 15, labelName: "testLabel" });
+```
+
+```javascript {tabTitle:Sentry.wrap()}
+Sentry.wrap(App, {
+  touchEventBoundaryProps: {
+    ignoreNames: ["BadComponent", /^Connect\(/, /^LibraryComponent$/]
+    labelName: 'accessibilityLabel',
+  },
+}
+```
+
+`breadcrumbCategory`
+
+_String_. The category assigned to the breadcrumb that is logged by the touch event.
+
+`breadcrumbType`
+
+_String_. The type assigned to the breadcrumb that is logged by the touch event.
+
+`maxComponentTreeSize`
+
+_number, default: 20_. The max number/depth of components to display when logging a touch's component tree.
+
+`ignoreNames`
+
+_Array&lt;string | RegExp>, Accepts strings and regular expressions_. Component names to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in.
+
+`labelName`
+
+_String_. The name of a custom prop to look for when determining the label of a component. Takes priority over the automatic `accessibilityLabel`, `aria-label`, `testID`, and text extraction from children fallbacks.
+
+`extractTextFromChildren`
+
+_boolean, default: true_. Extract text content from children of touched components as a label fallback. Automatically disabled when Session Replay's `maskAllText` is enabled. Text inside `Sentry.Mask` boundaries is never extracted. Set to `false` to opt out entirely.
+
+## Minified Names in Production
+
+When bundling for production, React Native will minify class and function names to reduce the bundle size. This means that **you won't get the full original component names in your touch event breadcrumbs** and instead you will see minified names. Check out our [troubleshooting guide for minified production bundles](/platforms/react-native/troubleshooting/#minified-names-in-production) documentation to solve this.

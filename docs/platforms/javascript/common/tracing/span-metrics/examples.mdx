@@ -626,10 +626,10 @@ const handleSendMessage = async (userMessage: string) => {
       attributes: {
         'gen_ai.operation.name': 'invoke_agent',
         'gen_ai.agent.name': 'Customer Support Agent',
-        'gen_ai.system': 'custom-llm',
+        'gen_ai.provider.name': 'custom-llm',
         'gen_ai.request.model': 'custom-model-v2',
         'gen_ai.response.model': 'custom-model-v2',
-        'gen_ai.request.messages': JSON.stringify([
+        'gen_ai.input.messages': JSON.stringify([
           { role: 'system', content: 'You are a helpful customer support agent.' },
           ...conversationHistory,
           { role: 'user', content: userMessage }
@@ -661,7 +661,9 @@ const handleSendMessage = async (userMessage: string) => {
         const aiResponse = await response.json();
 
         // Set response attributes
-        agentSpan.setAttribute('gen_ai.response.text', aiResponse.message);
+        agentSpan.setAttribute('gen_ai.output.messages', JSON.stringify([
+          { role: 'assistant', parts: [{ type: 'text', content: aiResponse.message }] }
+        ]));
         agentSpan.setAttribute('gen_ai.response.id', aiResponse.responseId);
         agentSpan.setAttribute('gen_ai.response.model', 'custom-model-v2');
         agentSpan.setAttribute('gen_ai.usage.total_tokens', aiResponse.totalTokens);
@@ -713,7 +715,7 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
       attributes: {
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.agent.name": "Customer Support Agent",
-        "gen_ai.system": "custom-llm",
+        "gen_ai.provider.name": "custom-llm",
         "gen_ai.request.model": "custom-model-v2",
         [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: "manual.ai.custom-llm",
         "conversation.session_id": sessionId,
@@ -729,7 +731,7 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
         ];
 
         agentSpan.setAttribute(
-          "gen_ai.request.available_tools",
+          "gen_ai.tool.definitions",
           JSON.stringify(tools)
         );
 
@@ -741,12 +743,12 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
         const llmResponse = await Sentry.startSpan(
           {
             name: "chat custom-model-v2",
-            op: "gen_ai.request",
+            op: "gen_ai.chat",
             attributes: {
-              "gen_ai.operation.name": "summarize",
-              "gen_ai.system": "custom-llm",
+              "gen_ai.operation.name": "chat",
+              "gen_ai.provider.name": "custom-llm",
               "gen_ai.request.model": "custom-model-v2",
-              "gen_ai.request.messages": JSON.stringify([
+              "gen_ai.input.messages": JSON.stringify([
                 {
                   role: "system",
                   content:
@@ -765,8 +767,10 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
 
             // Set LLM response attributes
             llmSpan.setAttribute(
-              "gen_ai.response.text",
-              llmData.choices[0].message.content || ""
+              "gen_ai.output.messages",
+              JSON.stringify([
+                { role: "assistant", parts: [{ type: "text", content: llmData.choices[0].message.content || "" }] },
+              ])
             );
             llmSpan.setAttribute("gen_ai.response.id", llmData.id);
             llmSpan.setAttribute("gen_ai.response.model", llmData.model);
@@ -785,8 +789,10 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
 
             if (llmData.choices[0].message.tool_calls) {
               llmSpan.setAttribute(
-                "gen_ai.response.tool_calls",
-                JSON.stringify(llmData.choices[0].message.tool_calls)
+                "gen_ai.output.messages",
+                JSON.stringify([
+                  { role: "assistant", parts: llmData.choices[0].message.tool_calls.map(tc => ({ type: "tool_call", name: tc.function.name, arguments: tc.function.arguments })) },
+                ])
               );
             }
 
@@ -806,7 +812,7 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
                   "gen_ai.operation.name": "execute_tool",
                   "gen_ai.tool.name": toolCall.function.name,
                   "gen_ai.tool.type": "function",
-                  "gen_ai.tool.input": toolCall.function.arguments,
+                  "gen_ai.tool.call.arguments": toolCall.function.arguments,
                   [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: "manual.ai.custom-llm",
                 },
               },
@@ -815,7 +821,7 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
                   JSON.parse(toolCall.function.arguments).query
                 );
 
-                toolSpan.setAttribute("gen_ai.tool.output", toolOutput);
+                toolSpan.setAttribute("gen_ai.tool.call.result", toolOutput);
                 toolSpan.setAttribute(
                   "search.query",
                   JSON.parse(toolCall.function.arguments).query
@@ -837,7 +843,9 @@ app.post("/api/ai/chat", async (req: Request, res: Response) => {
         // Set final agent attributes
         const resolutionStatus = toolsUsed.length > 0 ? "resolved" : "answered";
 
-        agentSpan.setAttribute("gen_ai.response.text", finalResponse);
+        agentSpan.setAttribute("gen_ai.output.messages", JSON.stringify([
+          { role: "assistant", parts: [{ type: "text", content: finalResponse }] },
+        ]));
         agentSpan.setAttribute("gen_ai.response.id", llmResponse.id);
         agentSpan.setAttribute("gen_ai.usage.total_tokens", totalTokens);
         agentSpan.setAttribute(
@@ -897,7 +905,7 @@ async function synthesizeResponse(
 
 - The frontend span (`gen_ai.invoke_agent`) captures the entire user interaction from message to response.
 - The backend agent span continues the trace with the same operation and agent name for correlation.
-- The LLM spans (`gen_ai.request`) track individual model calls with token usage and performance.
+- The LLM spans (`gen_ai.chat`) track individual model calls with token usage and performance.
 - The tool execution spans (`gen_ai.execute_tool`) monitor each tool call with input/output and timing.
 - Rich attributes enable monitoring of conversation quality, cost, and business outcomes.
 
@@ -908,4 +916,4 @@ async function synthesizeResponse(
 - Tool usage patterns via `op:gen_ai.execute_tool` grouped by `gen_ai.tool.name`.
 - Cost analysis via `conversation.cost_estimate_usd` aggregated by time period.
 - Agent effectiveness via `conversation.resolution_status` distribution.
-- Error rates for each component: `op:gen_ai.request`, `op:gen_ai.execute_tool`, `op:gen_ai.invoke_agent`.
+- Error rates for each component: `op:gen_ai.chat`, `op:gen_ai.execute_tool`, `op:gen_ai.invoke_agent`.

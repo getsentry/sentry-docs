@@ -10,6 +10,12 @@ og_image: /og-images/platforms-godot-configuration-stack-traces.png
 
 Debug information files allow Sentry to extract stack traces and provide additional information from crash reports. In order to get stack traces that contain function names, line numbers and file paths, Sentry needs to have these debug information files available when processing the crash dumps. For that, you need to export your Godot project using an export template that contains debug information.
 
+<Alert>
+
+This guide covers compiled code — the native engine, GDExtension (C/C++), and C#. To see GDScript source around stack trace frames, check out [Source Context](/platforms/godot/configuration/source-context/).
+
+</Alert>
+
 ## Prerequisites
 
 To get debug information, we need to compile export templates with debug symbols produced. You'll need Git, SCons build tool, Python, and a C++ compiler for your target platform installed.
@@ -20,7 +26,7 @@ Ensure you have a compatible C++ compiler. On Windows, for instance, you can use
 
 Here are a few ways to install the **SCons** build tool:
 
-```PowerShell {tabTitle:Windows}
+```PowerShell {tabTitle:Windows} {mdExpandTabs}
 # If you have `scoop` installed:
 scoop install scons
 ```
@@ -57,6 +63,7 @@ For more information, refer to [Building from Source](https://docs.godotengine.o
 ## Getting Godot Source
 
 Start in a terminal with Git available. Clone Godot Engine repository and switch to your [preferred version tag](https://github.com/godotengine/godot/releases) (or branch):
+
 ```bash
 git clone https://github.com/godotengine/godot
 cd godot
@@ -73,7 +80,7 @@ For Android compilation, Godot requires the Swappy frame pacing library. Downloa
 
 To compile the Godot export templates with debug symbols, run the following commands:
 
-```bash {tabTitle:Windows/Linux}
+```bash {tabTitle:Windows/Linux} {mdExpandTabs}
 scons target=template_release production=yes debug_symbols=yes separate_debug_symbols=yes
 ```
 
@@ -135,18 +142,22 @@ With your custom templates compiled, you can now export your project with debug 
 3. Configure the custom template in the **Options** tab:
 
    **For Windows/Linux:**
+
    - Find the **Custom Template** section
    - Under **Release**, browse and select your compiled template executable from the `bin/` directory
 
    **For macOS**
+
    - Find the **Custom Template** section
    - Under **Release**, browse and select `godot_macos.zip` bundle from the `bin/` directory
 
    **For iOS:**
+
    - Find the **Custom Template** section
    - Under both **Release** and **Debug**, browse and select the same `godot_ios.zip` bundle from the `bin/` directory
 
    **For Android:**
+
    - Enable **Gradle Build** in the **Gradle** section
    - Set **Android Source Template** to point to the `android_source.zip` file generated during compilation
    - Install the Android build template by navigating to **Project > Install Android Build Template...** in the editor menu
@@ -169,7 +180,7 @@ In order to get readable stack traces in Sentry, you also need to upload your de
 
 <Expandable title="Installing Sentry CLI">
 
-```PowerShell {tabTitle:Windows}
+```PowerShell {tabTitle:Windows} {mdExpandTabs}
 # On Windows, if you have `scoop` installed:
 scoop install sentry-cli
 ```
@@ -219,7 +230,7 @@ For iOS projects, you must export your project to a directory first, then run th
 
 You can also create the source bundles separately from the upload step by running:
 
-```PowerShell {tabTitle:Windows}
+```PowerShell {tabTitle:Windows} {mdExpandTabs}
 sentry-cli debug-files bundle-sources bin\godot.windows.template_release.x86_64.pdb
 sentry-cli debug-files bundle-sources bin\godot.windows.template_release.x86_64.console.pdb
 ```
@@ -279,6 +290,30 @@ This uploads the SDK's debug files to Sentry. You can repeat this step for any o
 Congratulations! You're all set up. Your exported project should now produce symbolicated stack traces in Sentry.
 
 ![Symbolicated Issue](./imgs/symbolicated_issue.png)
+
+## C# (Managed Code)
+
+The steps above cover native engine and GDExtension (C/C++) frames. Stack frames from your <PlatformLink to="/dotnet/">C# code</PlatformLink> are symbolicated separately. What you need to do depends on the platform:
+
+- **Desktop (Windows, Linux, and macOS):** No upload is required if you ship debug symbols with your game. The SDK then resolves file names and line numbers at runtime from the `.pdb` files next to your game, which the **dotnet/include_debug_symbols** export option bundles (enabled by default). If you'd rather not ship them, turn that option off and upload the portable PDBs to Sentry with `sentry-cli` instead, the same way as for Android (below).
+
+- **Android:** Upload the portable PDB files for your managed assemblies. The SDK reads the packed assemblies on the device automatically, so you don't need to recompile export templates for managed frames — only the PDB upload is required.
+
+  After exporting, Godot writes the assemblies and their `.pdb` companions under `.godot/mono/temp/bin/`. Point the command at that directory, and the CLI scans it recursively, picking up every architecture and export profile:
+
+  ```bash {tabTitle:Bash/PowerShell}
+  sentry-cli debug-files upload --type portablepdb --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ .godot/mono/temp/bin
+  ```
+
+- **iOS:** Godot compiles C# ahead of time (NativeAOT) on iOS, so managed frames are part of the native binary. Upload the dSYM debug symbols produced by the export:
+
+  ```bash {tabTitle:Bash/PowerShell}
+  sentry-cli debug-files upload --type dsym --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ <exported-directory>
+  ```
+
+  As with native iOS symbols, export your project to a directory first, then run the upload against that directory.
+
+- **Web:** Godot 4.x doesn't support C# in web exports, so managed symbolication doesn't apply to the Web platform.
 
 ## Known Limitations
 

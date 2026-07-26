@@ -1,6 +1,6 @@
 ---
 title: Seer
-sidebar_order: 7
+sidebar_order: 8
 description: "Learn more about Sentry's integration platform Seer webhooks for Issue Fix analysis notifications."
 ---
 
@@ -15,14 +15,17 @@ Sentry integrations that have subscribed to Seer webhooks can receive notificati
 Seer webhooks support seven different event types that track the complete lifecycle of AI-powered issue resolution:
 
 ### Root Cause Analysis
+
 - `seer.root_cause_started` - Triggered when root cause analysis begins
 - `seer.root_cause_completed` - Triggered when root cause analysis completes with results
 
 ### Solution Generation
+
 - `seer.solution_started` - Triggered when solution generation begins
 - `seer.solution_completed` - Triggered when a solution has been generated
 
 ### Coding
+
 - `seer.coding_started` - Triggered when the coding step (code fix generation) begins
 - `seer.coding_completed` - Triggered when code changes are ready
 - `seer.pr_created` - Triggered when pull request(s) are created
@@ -72,7 +75,12 @@ Minimal payload indicating analysis has begun:
 
 ### Root Cause Completed
 
-Includes the identified root cause:
+Includes the identified root cause. The `root_cause` object contains:
+
+- `one_line_description` (string): A one-sentence summary of the root cause.
+- `five_whys` (array of strings): A chain of reasoning explaining why the issue occurred.
+- `reproduction_steps` (array of strings): Steps to reproduce the issue.
+- `relevant_repo` (string): The repository most relevant to the root cause, in `owner/name` format.
 
 ```json
 {
@@ -86,29 +94,18 @@ Includes the identified root cause:
     "run_id": 12345,
     "group_id": 1170820242,
     "root_cause": {
-      "description": "Woah wow there's a bug here.",
-      "steps": [
-        {
-          "title": "User navigates to the dashboard page, initiating page load.",
-          "code_snippet_and_analysis": "The user's browser sends a GET request to `/dashboard`. This is the entry point for the issue.",
-          "timeline_item_type": "human_action",
-          "relevant_code_file": {
-            "file_path": "N/A",
-            "repo_name": "N/A"
-          },
-          "is_most_important_event": false
-        },
-        {
-          "title": "Next.js server renders the /dashboard route.",
-          "code_snippet_and_analysis": "The Next.js server processes the request and hits the bug",
-          "timeline_item_type": "internal_code",
-          "relevant_code_file": {
-            "file_path": "src/app/page.ts",
-            "repo_name": "owner/repo"
-          },
-          "is_most_important_event": true
-        }
-      ]
+      "one_line_description": "A `TypeError` is thrown in `sendWelcomeEmail` because `getUser` can return `null`, but the result is used without a null check.",
+      "five_whys": [
+        "The error `TypeError: Cannot read properties of null (reading 'email')` is raised at runtime.",
+        "The `user` object is `null` when `user.email` is accessed.",
+        "`getUser(userId)` returns `null` when no matching user exists.",
+        "`sendWelcomeEmail` assumes `getUser` always returns a user and omits a null check."
+      ],
+      "reproduction_steps": [
+        "Call `sendWelcomeEmail` with a `userId` that does not exist.",
+        "Observe the `TypeError` raised when `user.email` is accessed."
+      ],
+      "relevant_repo": "owner/repo"
     }
   },
   "installation": {
@@ -141,7 +138,10 @@ Minimal payload indicating solution generation has begun:
 
 ### Solution Completed
 
-Includes the generated solution details:
+Includes the generated solution details. The `solution` object contains:
+
+- `one_line_summary` (string): A one-sentence summary of the proposed fix.
+- `steps` (array): The ordered steps to implement the solution. Each step has a `title` and a `description`.
 
 ```json
 {
@@ -155,16 +155,17 @@ Includes the generated solution details:
     "run_id": 12345,
     "group_id": 1170820242,
     "solution": {
-      "description": "Definitely need to fix this.",
+      "one_line_summary": "Guard against a missing user in `sendWelcomeEmail` by returning early when `getUser` returns `null`.",
       "steps": [
         {
-          "title": "Go fix it",
+          "title": "Add a null check",
+          "description": "In `notifications.js`, check whether `user` is defined after calling `getUser(userId)` and return early if it is not."
         },
         {
-          "title": "Then go fix this other thing.",
-        },
-      ],
-      
+          "title": "Log the missing user",
+          "description": "Emit a warning when no user is found so the missing record can be investigated."
+        }
+      ]
     }
   },
   "installation": {
@@ -197,7 +198,13 @@ Minimal payload indicating the coding step has begun:
 
 ### Coding Completed
 
-Includes details about the code changes made:
+Includes the code changes made. `code_changes` is an object keyed by repository name (in `owner/name` format); each value is a list of file-level changes. Each change has:
+
+- `diff` (string): The unified diff for the file.
+- `path` (string): The path of the changed file.
+- `type` (string): The kind of change — `M` (modified), `A` (added), or `D` (deleted).
+- `added` (integer): The number of lines added.
+- `removed` (integer): The number of lines removed.
 
 ```json
 {
@@ -210,16 +217,17 @@ Includes details about the code changes made:
   "data": {
     "run_id": 12345,
     "group_id": 1170820242,
-    "changes": [
-      {
-        "repo_name": "my-app",
-        "repo_external_id": "12345",
-        "title": "fix: Initialize undefined variable",
-        "description": "This change initializes the 'blooopy' variable before use to prevent ReferenceError",
-        "diff": "<the diff as a string>",
-        "branch_name": "seer/fix-this-thing",
-      }
-    ]
+    "code_changes": {
+      "owner/repo": [
+        {
+          "diff": "--- notifications.js\n+++ notifications.js\n@@ -8,3 +8,7 @@\n   const user = getUser(userId);\n+  if (!user) {\n+    logger.warn(`No user found for id: ${userId}`);\n+    return;\n+  }\n   sendEmail(user.email, \"Welcome!\");\n }",
+          "path": "notifications.js",
+          "type": "M",
+          "added": 4,
+          "removed": 0
+        }
+      ]
+    }
   },
   "installation": {
     "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
@@ -250,7 +258,7 @@ Includes pull request details, there may be more than one pull request if there 
           "pr_id": 456789
         },
         "repo_name": "my-app",
-        "provider": "github"
+        "provider": "unknown"
       }
     ]
   },

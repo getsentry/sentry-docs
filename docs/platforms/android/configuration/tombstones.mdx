@@ -100,6 +100,38 @@ It can also make sense if you get recurring reports of native crashes early duri
 
 Other than that, the SDK will always pick up the latest Tombstone from the historical exit reasons list on the next app restart, and there won’t be any historical Tombstones to report. Also keep in mind that historical Tombstones will receive only minimal updates, as the available data is likely out of sync.
 
+#### Attaching Raw Tombstone
+
+<Alert level="info">
+
+Available in Android SDK version `8.42.0` or above.
+
+</Alert>
+
+The SDK can send the raw tombstone data from [ApplicationExitInfo#getTraceInputStream](<https://developer.android.com/reference/android/app/ApplicationExitInfo#getTraceInputStream()>) as an attachment. This is useful for performing deeper investigations using all available information from the OS, in addition to the SDK parsing the tombstone into threads with stack traces.
+
+The raw data is a binary protobuf file. To interpret it, you'll need a protobuf decoder and [Android's tombstone schema](https://android.googlesource.com/platform/system/core/+/refs/heads/main/debuggerd/proto/tombstone.proto).
+
+To enable raw tombstone attachments:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.tombstone.attach-raw" android:value="true" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  options.isAttachRawTombstone = true
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+  options.setAttachRawTombstone(true);
+});
+```
+
 #### Interaction with other Options
 
 Similar to ANR, for Tombstone derived events the options `attachThreads` and `attachStacktrace` are currently without effect.

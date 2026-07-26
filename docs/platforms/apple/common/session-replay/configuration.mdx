@@ -1,0 +1,116 @@
+---
+title: Configuration
+sidebar_order: 5501
+description: "Learn about the general Session Replay configuration fields."
+notSupported:
+  - apple.macos
+  - apple.watchos
+  - apple.tvos
+  - apple.visionos
+---
+
+<PlatformSection notSupported={["apple.ios"]}>
+
+<Include name="apple-session-replay-support-alert" />
+
+</PlatformSection>
+
+<PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+
+## General Configuration
+
+Configure Session Replay inside your `SentrySDK.start` call by setting properties on `options.sessionReplay` ([Session Replay Options](/platforms/apple/guides/ios/configuration/options/#session-replay-options)).
+
+The SDK exposes the following main options to configure Session Replay for your project:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `sessionSampleRate` | `Float` | `0.0` | Sample rate for replays that start immediately and last the entirety of the user's session. `1.0` collects all sessions. |
+| `onErrorSampleRate` | `Float` | `0.0` | Sample rate for buffered replays triggered when an error occurs. The SDK keeps the previous 30 seconds of activity and continues until the session ends when an error is sampled. |
+
+The following options provide further customization:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `maskAllText` | `Bool` | `true` | Masks all text-containing views by default. Setting this to `false` removes text views from the mask list so text appears in replays. |
+| `maskAllImages` | `Bool` | `true` | Masks image views by default. Setting this to `false` removes image views from the mask list so image content is visible in replays. |
+| `quality` | `SentryReplayQuality` | `.medium` | Defines the image quality of the session replay. Higher quality yields a more accurate replay at the cost of more data transfer and CPU usage. Possible values: `.low`, `.medium`, `.high`. |
+| `enableViewRendererV2` | `Bool` | `true` | Enables a significantly faster view renderer (up to 5x) that reduces per-frame rendering time on the main thread. Disable only if you observe rendering issues. |
+| `enableFastViewRendering` | `Bool` | `false` | Enables additional rendering speed by using the underlying `CALayer` instead of `UIView.drawHierarchy`. May produce incomplete renders for complex custom views. Only takes effect when `enableViewRendererV2` is also enabled. |
+| `networkDetailAllowUrls` | `[String \| NSRegularExpression]` | `[]` | URL patterns that enable capture of request/response bodies and headers. String patterns use substring matching; `NSRegularExpression` patterns use full regex matching. See [Network Details](#network-details) below. |
+| `networkDetailDenyUrls` | `[String \| NSRegularExpression]` | `[]` | URL patterns to never capture request/response bodies and headers, even if an allow pattern matches them. String patterns use substring matching; `NSRegularExpression` patterns use full regex matching. See [Network Details](#network-details) below. |
+| `networkCaptureBodies` | `Bool` | `true` | Controls whether request and response bodies are captured for allowed URLs. See [Network Details](#network-details) below. |
+| `networkRequestHeaders` | `[String]` | `["Content-Type", "Content-Length", "Accept"]` | Request header names to capture for enabled URLs. Default headers are always included alongside any additional headers you configure. See [Network Details](#network-details) below. |
+| `networkResponseHeaders` | `[String]` | `["Content-Type", "Content-Length", "Accept"]` | Response header names to capture for enabled URLs. Default headers are always included alongside any additional headers you configure. See [Network Details](#network-details) below. |
+
+To configure masking by view class, see [Custom Masking](/platforms/apple/guides/ios/session-replay/customredact/).
+
+## Network Details
+
+<Alert level="warning">
+
+`enableReplayNetworkDetailsCapturing` is an experimental feature and is **disabled by default**.
+
+</Alert>
+
+When enabled, Replay can capture basic information about all outgoing HTTP requests in your application, including the URL, request and response body sizes, method, and status code. This limits the chance of collecting private data.
+
+To capture additional information such as request and response headers or bodies, you need to:
+
+1. Enable the experimental flag `options.experimental.enableReplayNetworkDetailsCapturing`
+2. Specify which URLs to capture via `networkDetailAllowUrls`
+
+This opt-in approach lets you choose only URLs that are safe for capturing bodies and avoid any endpoints that may contain Personally Identifiable Information (PII).
+
+<Alert>
+
+Body and header content will be PII-sanitized server-side, based on object keys and values. Refer to [Server-Side Scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) for more details.
+
+</Alert>
+
+### Requirements
+- SDK version >= [9.12.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.12.0)
+
+Any URL matching the given pattern(s) will be captured with additional details:
+
+```swift {tabTitle:Swift}
+SentrySDK.start { options in
+    options.experimental.enableReplayNetworkDetailsCapturing = true
+    options.sessionReplay.networkDetailAllowUrls = ["https://example.com"]
+}
+```
+
+String patterns use substring matching — any URL containing the string will match. To use exact or more complex matching, pass an `NSRegularExpression`:
+
+```swift {tabTitle:Swift}
+let apiRegex = try! NSRegularExpression(pattern: "^https://api\\.example\\.com/.*")
+
+SentrySDK.start { options in
+    options.experimental.enableReplayNetworkDetailsCapturing = true
+    options.sessionReplay.networkDetailAllowUrls = [
+        "api.example.com",  // substring match
+        apiRegex,           // regex match
+    ]
+}
+```
+
+Requests to a matching URL will include request and response bodies, as well as the following default headers:
+
+- `Content-Type`
+- `Content-Length`
+- `Accept`
+
+To capture additional headers, configure `networkRequestHeaders` and `networkResponseHeaders`. The default headers above are always included:
+
+```swift {tabTitle:Swift}
+SentrySDK.start { options in
+    options.experimental.enableReplayNetworkDetailsCapturing = true
+    options.sessionReplay.networkDetailAllowUrls = ["https://api.example.com"]
+    options.sessionReplay.networkRequestHeaders = ["Cache-Control", "X-My-Header"]
+    options.sessionReplay.networkResponseHeaders = ["Referrer-Policy", "X-Response-Header"]
+}
+```
+
+<Alert>Captured bodies are truncated to 150KB maximum.</Alert>
+
+</PlatformSection>

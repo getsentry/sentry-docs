@@ -1,0 +1,152 @@
+name: Screenshot Pipeline
+
+# Automated screenshot capture, diff, and replacement pipeline.
+# Detects stale screenshots and Arcade embeds, auto-replaces high-confidence
+# diffs, and creates Linear issues for items requiring manual review.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Weekly on Monday at 6am UTC
+  workflow_dispatch: # Manual trigger
+    inputs:
+      scope:
+        description: 'Limit crawl to a specific directory (e.g., docs/product/issues)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run mode (no file changes, no PRs, no Linear issues)'
+        required: false
+        type: boolean
+        default: false
+      diff_threshold_low:
+        description: 'Min diff % to consider changed (default: 0.01 = 1%)'
+        required: false
+        type: string
+        default: '0.01'
+      diff_threshold_high:
+        description: 'Max diff % before flagging as suspicious (default: 0.50 = 50%)'
+        required: false
+        type: string
+        default: '0.50'
+
+jobs:
+  screenshot-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Full history for git log queries
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pipeline dependencies
+        run: npm install
+        working-directory: scripts/screenshot-pipeline
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: scripts/screenshot-pipeline
+
+      - name: Restore auth state
+        if: ${{ !inputs.dry_run }}
+        run: |
+          echo "$SENTRY_STORAGE_STATE" | base64 -d > /tmp/storageState.json
+        env:
+          SENTRY_STORAGE_STATE: ${{ secrets.SENTRY_STORAGE_STATE }}
+
+      - name: Validate scope input
+        if: ${{ inputs.scope != '' }}
+        run: |
+          # Validate scope is a safe directory path (alphanumeric, hyphens, slashes, dots only)
+          if ! echo "$PIPELINE_SCOPE" | grep -qE '^[a-zA-Z0-9/_.-]+$'; then
+            echo "Error: Invalid scope input. Must be a directory path (e.g., docs/product/issues)"
+            exit 1
+          fi
+        env:
+          PIPELINE_SCOPE: ${{ inputs.scope }}
+
+      - name: Run inventory crawler
+        run: |
+          SCOPE_ARGS=()
+          if [ -n "$PIPELINE_SCOPE" ]; then
+            SCOPE_ARGS=(--scope "$PIPELINE_SCOPE")
+          fi
+          npx ts-node src/crawl-inventory.ts "${SCOPE_ARGS[@]}"
+        working-directory: scripts/screenshot-pipeline
+        env:
+          UI_REFRESH_CUTOFF: '2025-06-01'
+          PIPELINE_SCOPE: ${{ inputs.scope }}
+
+      - name: Run screenshot capture & diff
+        run: |
+          DRY_RUN_ARGS=()
+          if [ "$PIPELINE_DRY_RUN" = "true" ]; then
+            DRY_RUN_ARGS=(--dry-run)
+          fi
+          npx ts-node src/capture-and-diff.ts "${DRY_RUN_ARGS[@]}"
+        working-directory: scripts/screenshot-pipeline
+        env:
+          SENTRY_STORAGE_STATE_PATH: ${{ inputs.dry_run && '' || '/tmp/storageState.json' }}
+          SENTRY_ORG_SLUG: ${{ secrets.SENTRY_ORG_SLUG }}
+          SENTRY_BASE_URL: ${{ secrets.SENTRY_BASE_URL }}
+          DIFF_THRESHOLD_LOW: ${{ inputs.diff_threshold_low || '0.01' }}
+          DIFF_THRESHOLD_HIGH: ${{ inputs.diff_threshold_high || '0.50' }}
+          PIPELINE_DRY_RUN: ${{ inputs.dry_run }}
+
+      - name: Auto-replace and open PR
+        if: ${{ !inputs.dry_run }}
+        run: npx ts-node src/auto-replace.ts
+        working-directory: scripts/screenshot-pipeline
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Linear issues
+        if: ${{ !inputs.dry_run }}
+        run: npx ts-node src/create-linear-issues.ts
+        working-directory: scripts/screenshot-pipeline
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_TEAM_ID: ${{ vars.LINEAR_TEAM_ID }}
+          SENTRY_BASE_URL: ${{ secrets.SENTRY_BASE_URL }}
+
+      - name: Upload pipeline artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: screenshot-pipeline-output
+          path: scripts/screenshot-pipeline/output/
+          retention-days: 30
+
+      - name: Write job summary
+        if: always()
+        run: |
+          echo "## Screenshot Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f scripts/screenshot-pipeline/output/inventory-manifest.json ]; then
+            TOTAL=$(jq length scripts/screenshot-pipeline/output/inventory-manifest.json)
+            STALE=$(jq '[.[] | select(.is_stale == true)] | length' scripts/screenshot-pipeline/output/inventory-manifest.json)
+            echo "**Inventory:** ${TOTAL} total assets, ${STALE} stale" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f scripts/screenshot-pipeline/output/diff-results.json ]; then
+            CAPTURED=$(jq length scripts/screenshot-pipeline/output/diff-results.json)
+            AUTO=$(jq '[.[] | select(.status == "auto_replace")] | length' scripts/screenshot-pipeline/output/diff-results.json)
+            REVIEW=$(jq '[.[] | select(.status == "needs_review")] | length' scripts/screenshot-pipeline/output/diff-results.json)
+            FAILED=$(jq '[.[] | select(.status == "capture_failed")] | length' scripts/screenshot-pipeline/output/diff-results.json)
+            echo "**Captures:** ${CAPTURED} processed" >> $GITHUB_STEP_SUMMARY
+            echo "- Auto-replace: ${AUTO}" >> $GITHUB_STEP_SUMMARY
+            echo "- Needs review: ${REVIEW}" >> $GITHUB_STEP_SUMMARY
+            echo "- Capture failed: ${FAILED}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f scripts/screenshot-pipeline/output/linear-issues.json ]; then
+            CREATED=$(jq '[.[] | select(.isNew == true)] | length' scripts/screenshot-pipeline/output/linear-issues.json)
+            echo "**Linear issues created:** ${CREATED}" >> $GITHUB_STEP_SUMMARY
+          fi

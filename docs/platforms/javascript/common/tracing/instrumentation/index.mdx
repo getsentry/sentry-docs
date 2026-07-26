@@ -74,15 +74,15 @@ This will revert to use the full hierarchy behavior, where spans are children of
 
 The following options can be used for all span starting functions:
 
-| Option             | Type                        | Description                                                                                                            |
-| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `name`             | `string`                    | The name of the span.                                                                                                  |
-| `op`               | `string`                    | The operation of the span.                                                                                             |
-| `startTime`        | `number`                    | The start time of the span.                                                                                            |
-| `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                                                                      |
-| `parentSpan`       | `Span`                      | If set, make the span a child of the specified span. Otherwise, the span will be a child of the currently active span. |
-| `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.                                                            |
-| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI.                                                    |
+| Option             | Type                        | Description                                                                                                                                                                                                                          |
+| ------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`             | `string`                    | The name of the span.                                                                                                                                                                                                                |
+| `op`               | `string`                    | The operation of the span.                                                                                                                                                                                                           |
+| `startTime`        | `number`                    | The start time of the span.                                                                                                                                                                                                          |
+| `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                                                                                                                                                                                    |
+| `parentSpan`       | `Span`                      | If set, make the span a child of the specified span. Otherwise, the span will be a child of the currently active span.                                                                                                               |
+| `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.                                                                                                                                                                          |
+| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI. Not available in <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>. Use `parentSpan: null` instead to ensure this span shows up as service span. |
 
 Only `name` is required, all other options are optional.
 
@@ -102,41 +102,40 @@ Sometimes, you do not want the span to be ended automatically when the callback 
 
 To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
 
-
 <PlatformContent includePath="performance/start-inactive-span" />
 
 <PlatformCategorySection supported={['browser']}>
 
-  ### Setting an inactive span active (browser only)
+### Setting an inactive span active (browser only)
 
-  <AvailableSince version="10.15.0" />
+<AvailableSince version="10.15.0" />
 
-  In browser environments, you might run into use cases, where the callback-based span APIs are not sufficient.
-  In such cases (see example below), you can use `startInactiveSpan` to start an initially inactive span and then
-  set it active until you manually end the span.
+In browser environments, you might run into use cases, where the callback-based span APIs are not sufficient.
+In such cases (see example below), you can use `startInactiveSpan` to start an initially inactive span and then
+set it active until you manually end the span.
 
-  ```javascript
-  let checkoutSpan;
+```javascript
+let checkoutSpan;
 
-  on('startCheckout', () => {
-    checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
-    Sentry.setActiveSpanInBrowser(checkoutSpan);
-  })
+on("startCheckout", () => {
+  checkoutSpan = Sentry.startInactiveSpan({ name: "checkout-flow" });
+  Sentry.setActiveSpanInBrowser(checkoutSpan);
+});
 
-  doSomeWork();
+doSomeWork();
 
-  on('endCheckout', () => {
-    // Ending the span automatically removes it as the active span
-    checkoutSpan.end();
-  })
-  ```
+on("endCheckout", () => {
+  // Ending the span automatically removes it as the active span
+  checkoutSpan.end();
+});
+```
 
-  Using `startInactiveSpan` in combination with `setActiveSpanInBrowser` allows you to create an inactive span that can be made active until you manually end it. In contrast, [`startSpanManual`](#starting-an-active-span-with-manual-end-startspanmanual) allows you to end the span manually at any point, but it only remains active within the callback.
+Using `startInactiveSpan` in combination with `setActiveSpanInBrowser` allows you to create an inactive span that can be made active until you manually end it. In contrast, [`startSpanManual`](#starting-an-active-span-with-manual-end-startspanmanual) allows you to end the span manually at any point, but it only remains active within the callback.
 
   <Alert>
 
-  Note that `setActiveSpanInBrowser` is only available in browser environments! If you're running code in the server
-  (for example for server-side rendering), make sure to guard this call to only run in the browser.
+Note that `setActiveSpanInBrowser` is only available in browser environments! If you're running code in the server
+(for example for server-side rendering), make sure to guard this call to only run in the browser.
 
   </Alert>
 
@@ -205,14 +204,29 @@ if (span) {
 
 ### Adding attributes to all spans
 
-To add an attribute to all spans, use the `beforeSendSpan` callback:
+To add an attribute to all spans, use the `beforeSendSpan` callback.
+Note that the property names differ between transaction mode (the default) and <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>:
 
-```javascript
+```javascript {tabTitle:Transaction Mode (Default)}
 Sentry.init({
   // dsn, ...
   beforeSendSpan(span) {
     span.data = {
       ...span.data,
+      "environment.region": "us-west-2",
+    };
+
+    return span;
+  },
+});
+```
+
+```javascript {tabTitle:Stream Mode}
+Sentry.init({
+  // dsn, ...
+  beforeSendSpan(span) {
+    span.attributes = {
+      ...span.attributes,
       "environment.region": "us-west-2",
     };
 

@@ -130,11 +130,67 @@ Link to related docs rather than repeating content:
 For automatic tracing, see <PlatformLink to="/configuration/apis/">API Reference</PlatformLink>.
 ```
 
-### Code Block Filenames
+### Code Block Meta Flags
 
 Always include filename when showing file-specific code:
 ```tsx {filename:app/error.tsx}
 ```
+
+Consecutive fenced code blocks are automatically grouped into tabbed code snippets.
+Each tab can have a title and filename:
+
+~~~
+```swift {tabTitle:Swift}
+SentrySDK.capture(error: error)
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK captureError:error];
+```
+~~~
+
+#### Markdown Export and `{mdExpandTabs}`
+
+The `.md` export (mainly used by LLMs via the "Copy page" button) **collapses tab groups
+by default**: only the first tab is included, with a note listing the other tabs
+(e.g. *Other available variations of the above snippet: yarn, pnpm*). This keeps context lean when tabs show
+trivial variations an LLM can infer on its own.
+
+Add `{mdExpandTabs}` to the first code fence in a group when the tabs contain code an LLM
+**cannot reliably derive** from seeing just one tab. This is rare — most times, adding only
+one tab to the produced `.md` is enough.
+
+~~~
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.start { options in
+    options.dsn = "..."
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"...";
+}];
+```
+~~~
+
+**Expand** — the code is too different for an LLM to infer:
+- Different languages: Swift / Objective-C, cross-language guides (JS/Python/PHP/Ruby/...)
+- Different setup flows: Hono guide init (Cloudflare vs Node.js `--import` vs Bun)
+- Different APIs or wrappers: GCP Cloud Functions (`wrapHttpFunction` vs `wrapCloudEventFunction`), serverless async/sync handlers
+- Different framework versions with distinct imports: Spring 5/6/7, Spring Boot 2/3/4, Svelte v5+ / v3
+- Client / Server splits: Next.js, Remix, React Router (Replay + browser tracing vs Node integrations)
+- Different platform tooling: KMP (`commonMain` / `iosApp` / `androidApp`), Flutter navigation (Navigator / GoRouter / AutoRoute)
+- Install methods with different patterns: npm (`import`) vs CDN (`<script>`) vs Loader (`sentryOnLoad`)
+- SDK version migration: SDK 2.x vs 1.x when APIs differ
+
+**Collapse** (default) — an LLM can figure it out from one tab:
+- Package managers: npm / yarn / pnpm, pip / uv, .NET CLI / NuGet
+- Module format: ESM / CommonJS (same API, different import syntax)
+- Config file formats: JSON / TOML, properties / yml
+- Java / Kotlin on the same platform (same APIs, syntactic sugar differences)
+- Runtime tabs where only the import path changes (e.g. `@sentry/hono/cloudflare` vs `@sentry/hono/node` in `platform-includes/` snippets)
+- Build tools when only dependency declaration syntax differs: Gradle / Maven / SBT
 
 ## Review Checklist
 

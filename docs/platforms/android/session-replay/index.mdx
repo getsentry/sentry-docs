@@ -7,9 +7,9 @@ notSupported:
 description: "Learn how to enable Session Replay in your mobile app."
 ---
 
-[Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
+[Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
-By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/explore/session-replay/).
+By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/session-replay/).
 
 ## Pre-requisites
 
@@ -199,6 +199,26 @@ options.sessionReplay.screenshotStrategy = ScreenshotStrategyType.CANVAS // or S
 
 ```XML {filename:AndroidManifest.xml}
 <meta-data android:name="io.sentry.session-replay.screenshot-strategy" android:value="canvas|pixelCopy" />
+```
+
+## SurfaceView Capture
+
+By default, Android `SurfaceView` components (used by Unity, video players, map SDKs, and other frameworks that render outside the normal View hierarchy) appear as black or transparent regions in session replays. This happens because `SurfaceView` renders to its own surface, which is composited by SurfaceFlinger independently from the Window and is not captured by the standard PixelCopy window capture.
+
+When `captureSurfaceViews` is enabled, the SDK captures each visible `SurfaceView` separately via `PixelCopy` and composites the result onto the replay frame. This option only works with the `PixelCopy` screenshot strategy (the default).
+
+<Alert level="warning">
+
+This option is experimental. The SDK cannot mask individual elements rendered inside a `SurfaceView` (e.g. native Unity UI, map labels, video frames) — masking granularity is at the `SurfaceView` level only. Only enable this for `SurfaceView` components whose content is safe to record.
+
+</Alert>
+
+```kotlin
+options.sessionReplay.isCaptureSurfaceViews = true
+```
+
+```XML {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.session-replay.capture-surface-views" android:value="true" />
 ```
 
 ## Error Linking

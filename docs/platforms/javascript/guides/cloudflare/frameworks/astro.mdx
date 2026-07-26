@@ -9,13 +9,30 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - Your application up and running
-- Astro `3.0.0` or above
-- `@astrojs/cloudflare` v12
+- Astro `6.0.0` or above
+- `@astrojs/cloudflare` v13 or above
 - `@sentry/astro` v10.40.0 or above
+- `@sentry/cloudflare` v10.40.0 or above
 
 If you're using Cloudflare Pages (not Workers), see the section below for
 setup instructions. We recommend migrating to Cloudflare Workers for better
 Sentry integration and full feature support.
+
+<Expandable level="info" title="Using Astro 3-5 with @astrojs/cloudflare v12?">
+
+For Astro 3-5 with `@astrojs/cloudflare` v12, the `@sentry/astro` integration automatically detects the Cloudflare adapter and wraps your Worker with the `@sentry/cloudflare` SDK for proper request isolation and async context.
+
+Follow the standard [Astro setup](/platforms/javascript/guides/astro/#install) without the custom entry point configuration described below. The SDK handles server-side initialization automatically.
+
+<Alert level="warning" title="Server-side configuration via environment variables only">
+
+With Astro 3-5 on Cloudflare, server-side SDK configuration only works via [environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/). The `sentry.server.config.(ts|js)` file is not supported.
+
+The SDK reads standard Sentry environment variables including `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_RELEASE`, `SENTRY_ENVIRONMENT`, and others. See the [SDK configuration spec](https://develop.sentry.dev/sdk/foundations/client/configuration/#environment-variables) for the full list.
+
+</Alert>
+
+</Expandable>
 
 <Expandable level="info" title="Using Astro on Cloudflare Pages?">
 
@@ -83,7 +100,12 @@ export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
-    sendDefaultPii: true,
+    dataCollection: {
+      // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+      // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#dataCollection
+      // userInfo: false,
+      // httpBodies: [],
+    },
     tracesSampleRate: 1.0,
   })),
   // Add more middlewares here

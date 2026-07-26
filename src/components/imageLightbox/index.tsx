@@ -107,9 +107,10 @@ export function ImageLightbox({
         ? {
             width: width != null ? `${width}px` : 'auto',
             height: height != null ? `${height}px` : 'auto',
+            maxWidth: 'min(100%, 1000px)',
             ...style,
           }
-        : {width: '100%', height: 'auto', ...style}
+        : {width: 'auto', maxWidth: 'min(100%, 1000px)', height: 'auto', ...style}
       : {width: 'auto', height: 'auto'};
 
     if (shouldUseNextImage && dimensions) {
@@ -146,7 +147,7 @@ export function ImageLightbox({
         onClick={handleClick}
         onAuxClick={handleClick}
         onKeyDown={handleKeyDown}
-        className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
+        className="cursor-pointer border-none bg-transparent p-0 block w-fit no-underline"
         aria-label={`View image: ${alt}`}
       >
         {renderImage()}

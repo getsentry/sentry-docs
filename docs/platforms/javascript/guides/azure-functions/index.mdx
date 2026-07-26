@@ -60,9 +60,12 @@ const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // Adds request headers and IP for users, for more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/azure-functions/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
+  dataCollection: {
+    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/azure-functions/configuration/options/#dataCollection
+    // userInfo: false,
+    // httpBodies: [],
+  },
   // ___PRODUCT_OPTION_START___ profiling
 
   integrations: [nodeProfilingIntegration()],
@@ -119,7 +122,7 @@ module.exports = async function (context, req) {
   } catch (e) {
     // use Sentry.withScope to enrich the event with request data
     Sentry.withScope((scope) => {
-      // Attach request context (requires sendDefaultPii: true)
+      // Attach request context (requires dataCollection: { userInfo: true })
       scope.setSDKProcessingMetadata({ request: req });
       Sentry.captureException(e);
     });
@@ -135,7 +138,7 @@ module.exports = async function (context, req) {
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version-splitlayout" />
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
 ## Step 4: Verify Your Setup
 
@@ -241,7 +244,7 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 - Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
-- [Get support](https://sentry.zendesk.com/hc/en-us/)
+- [Get support](https://www.sentry.help/en/)
 
 </Expandable>
 

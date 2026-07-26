@@ -1,0 +1,102 @@
+---
+title: Error Handler
+description: "Learn how Sentry's Hono SDK captures errors and how to customize which errors are sent to Sentry."
+---
+
+The `sentry()` middleware automatically captures unhandled errors from Hono's `onError` handler.
+
+## Default Behavior
+
+The default logic checks whether the error carries a numeric `status` property (as Hono's `HTTPException` and similar error types do).
+
+The middleware captures:
+
+- **5xx errors** — anything with a numeric `status >= 500`
+- **Non-HTTP errors** — errors without a numeric `status` property, including standard `Error` instances, non-object throws, and `null`
+
+The middleware ignores:
+
+- **3xx–4xx errors** — anything with a numeric `status` in the range 300–499 (redirects, client errors)
+
+Use `shouldHandleError` when you need to capture errors outside this default range, for example to track 401 and 403 responses as security signals.
+
+## Using `shouldHandleError`
+
+Pass a `shouldHandleError` callback to the `sentry()` middleware. The callback receives the raw error as `unknown` and must return `true` to capture it or `false` to suppress it.
+
+```typescript {tabTitle:Cloudflare Workers} {filename:index.ts} {mdExpandTabs}
+import { Hono } from "hono";
+import { sentry } from "@sentry/hono/cloudflare";
+
+const app = new Hono();
+
+app.use(
+  sentry(app, {
+    dsn: "___PUBLIC_DSN___",
+    shouldHandleError(error) {
+      const status = (error as { status?: number })?.status;
+      // Capture 401/403 in addition to the default 5xx errors
+      return (
+        status === 401 ||
+        status === 403 ||
+        typeof status !== "number" ||
+        status >= 500
+      );
+    },
+  })
+);
+
+export default app;
+```
+
+```typescript {tabTitle:Node.js} {filename:app.ts}
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import { sentry } from "@sentry/hono/node";
+
+const app = new Hono();
+
+app.use(
+  sentry(app, {
+    shouldHandleError(error) {
+      const status = (error as { status?: number })?.status;
+      // Capture 401/403 in addition to the default 5xx errors
+      return (
+        status === 401 ||
+        status === 403 ||
+        typeof status !== "number" ||
+        status >= 500
+      );
+    },
+  })
+);
+
+// Your routes here
+
+serve(app);
+```
+
+```typescript {tabTitle:Bun} {filename:index.ts}
+import { Hono } from "hono";
+import { sentry } from "@sentry/hono/bun";
+
+const app = new Hono();
+
+app.use(
+  sentry(app, {
+    dsn: "___PUBLIC_DSN___",
+    shouldHandleError(error) {
+      const status = (error as { status?: number })?.status;
+      // Capture 401/403 in addition to the default 5xx errors
+      return (
+        status === 401 ||
+        status === 403 ||
+        typeof status !== "number" ||
+        status >= 500
+      );
+    },
+  })
+);
+
+export default app;
+```

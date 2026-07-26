@@ -1,6 +1,11 @@
 Adding custom measurements is supported in Sentry's Dart/Flutter SDK version `6.11.0` and above.
 
-```dart
+- Transaction mode (default): Use `setMeasurement` on the active span.
+- <PlatformLink to="/tracing/streamed-spans">Stream mode</PlatformLink>: There's
+  no dedicated measurement API (and no public way to fetch the active span), so
+  record the values as attributes on a span you create.
+
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 
 final transaction = Sentry.getSpan();
@@ -15,4 +20,15 @@ transaction?.setMeasurement('ui.footerComponent.render', 1.3,
 
 // Record amount of times localStorage was read
 transaction?.setMeasurement('localStorageRead', 4);
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry/sentry.dart';
+
+await Sentry.startSpan('my-operation', (span) async {
+  // Record custom measurements as span attributes.
+  span.setAttribute('memoryUsed', SentryAttribute.int(123));
+  span.setAttribute('ui.footerComponent.render', SentryAttribute.double(1.3));
+  span.setAttribute('localStorageRead', SentryAttribute.int(4));
+});
 ```

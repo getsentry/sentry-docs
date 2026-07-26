@@ -194,7 +194,7 @@ Note that if the SDK implements `ignore_spans` also for transactions, this _migh
   For example, on a span attribute that only gets added to the span after it was started.
 - Filtering entire segments based on data that is unknown prior to segment start.
   For example, `http.server` segments ending in a 404 response.
-- Use cases where we mutata or make decisions on multiple spans at once (e.g. calculating and setting the total token usage on parent spans of `gen_ai` spans).
+- Use cases where we mutate or make decisions on multiple spans at once (e.g. calculating and setting the total token usage on parent spans of `gen_ai` spans).
   There's no guarantee anymore that we actually "see" all spans in time to safely aggregate on their data.
   Previously, this was trivial, by iterating over `event.spans`. 
   Now, we'd need a guarantee that the child spans finish prior to their parent span, which we often don't have.
@@ -205,6 +205,14 @@ Note that if the SDK implements `ignore_spans` also for transactions, this _migh
 \* This reflects our current span streaming strategies. We might reconsider cases in the future based on feedback and demand.   
 
 **To sum up**: Spans no longer going through event processors is a behaviour-breaking change. For users, `ignore_spans` and `before_send_span` should be the way forward. Internally, SDKs may use further processing mechanisms.
+
+## Migrating to Span Attributes
+
+All attributes set on a streamed span must be in [Sentry conventions](https://getsentry.github.io/sentry-conventions/) before they're introduced in an SDK.
+
+Implementation guidelines on specific attributes:
+
+- `http.request.body.data`: Attach on best-effort basis, as long as it can be done without side-effects like exhausting the body before the user/app can read it. Decide based on SDK/integration whether this is feasible.
 
 ## Span Buffer
 

@@ -96,6 +96,7 @@ import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NintendoSwitchSVG from 'platformicons/svg/nintendo-switch.svg';
+import NitroSVG from 'platformicons/svg/nitro.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
@@ -248,6 +249,7 @@ import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NintendoSwitchSVGLarge from 'platformicons/svg_80x80/nintendo-switch.svg';
+import NitroSVGLarge from 'platformicons/svg_80x80/nitro.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
@@ -303,6 +305,12 @@ import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
 import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
+// The Expo icon exists on platformicons master (getsentry/platformicons
+// b20159fb) but isn't in a published release yet (latest is 9.5.0). This local
+// copy is byte-identical to the upstream svg/expo.svg; once platformicons cuts
+// a release with it, bump the dependency and switch to
+// `platformicons/svg/expo.svg` (+ svg_80x80) like every other icon.
+import ExpoSVG from 'sentry-docs/icons/expo.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -501,6 +509,10 @@ const formatToSVG = {
   ember: {
     sm: EmberSVG,
     lg: EmberSVGLarge,
+  },
+  expo: {
+    sm: ExpoSVG,
+    lg: ExpoSVG,
   },
   express: {
     sm: ExpressSVG,
@@ -701,6 +713,10 @@ const formatToSVG = {
   'nintendo-switch': {
     sm: NintendoSwitchSVG,
     lg: NintendoSwitchSVGLarge,
+  },
+  nitro: {
+    sm: NitroSVG,
+    lg: NitroSVGLarge,
   },
   nuxt: {
     sm: NuxtSVG,
@@ -956,6 +972,7 @@ export const PLATFORM_TO_ICON = {
   dotnetfx: 'dotnetfx',
   electron: 'electron',
   elixir: 'elixir',
+  expo: 'expo',
   flutter: 'flutter',
   font: 'font',
   fsharp: 'fsharp',
@@ -1013,6 +1030,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
+  'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',
@@ -1101,6 +1119,10 @@ export const PLATFORM_TO_ICON = {
   powershell: 'powershell',
   qt: 'qt',
   'react-native': 'react-native',
+  // The Expo guide's platform key is `react-native.expo` (normalized to
+  // `react-native-expo`); map it so it gets the Expo icon instead of falling
+  // back to the React language icon.
+  'react-native-expo': 'expo',
   ruby: 'ruby',
   'ruby-rack': 'ruby',
   'ruby-rails': 'rails',

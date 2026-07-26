@@ -27,61 +27,75 @@ go get github.com/getsentry/sentry-go/slog
 
 ### Options
 
-`sentryslog` provides options to configure the integration with Sentry. It accepts a struct of `sentryslog.Options` that allows you to configure how the handler will behave. The options are:
+`sentryslog` accepts a `sentryslog.Option` struct to control which records are sent to Sentry and how they're enriched before sending.
 
-```go
-type Option struct {
-	// EventLevel specifies the exact log levels to capture and send to Sentry as Events.
-	// Only logs at these specific levels will be processed as events.
-	// Defaults to []slog.Level{slog.LevelError, LevelFatal}.
-	EventLevel []slog.Level
-
-	// LogLevel specifies the exact log levels to capture and send to Sentry as Log entries.
-	// Only logs at these specific levels will be processed as log entries.
-	// Defaults to []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}.
-	LogLevel []slog.Level
-
-	// Hub specifies the Sentry Hub to use for capturing events.
-	// If not provided, the current Hub is used by default.
-	Hub *sentry.Hub
-
-	// Converter is an optional function that customizes how log records
-	// are converted into Sentry events. By default, the DefaultConverter is used.
-	Converter Converter
-
-	// AttrFromContext is an optional slice of functions that extract attributes
-	// from the context. These functions can add additional metadata to the log entry.
-	AttrFromContext []func(ctx context.Context) []slog.Attr
-
-	// AddSource is an optional flag that, when set to true, includes the source
-	// information (such as file and line number) in the Sentry event.
-	// This can be useful for debugging purposes.
-	AddSource bool
-
-	// ReplaceAttr is an optional function that allows for the modification or
-	// replacement of attributes in the log record. This can be used to filter
-	// or transform attributes before they are sent to Sentry.
-	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
-}
-```
+| Field             | Type                                  | Description                                                 | Default                                                                                                 |
+| ----------------- | ------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `EventLevel`      | `[]slog.Level`                        | Log levels to capture as Sentry events                      | `[]slog.Level{slog.LevelError, sentryslog.LevelFatal}`                                                  |
+| `LogLevel`        | `[]slog.Level`                        | Log levels to capture as Sentry log entries                 | `[]slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, sentryslog.LevelFatal}` |
+| `Hub`             | `*sentry.Hub`                         | Hub to use when capturing events                            | Current hub                                                                                             |
+| `Converter`       | `Converter`                           | Custom converter for turning log records into Sentry events | `sentryslog.DefaultConverter`                                                                           |
+| `AttrFromContext` | `[]func(context.Context) []slog.Attr` | Functions that add attributes from the current context      | None                                                                                                    |
+| `AddSource`       | `bool`                                | Include file and line information in Sentry output          | `false`                                                                                                 |
+| `ReplaceAttr`     | `func([]string, slog.Attr) slog.Attr` | Rewrite or filter attributes before sending                 | None                                                                                                    |
 
 ## Verify
 
+This example sends `ERROR` records as events and `INFO`/`WARN` records as structured logs.
+
 ```go
-// Configure `slog` to use Sentry as a handler
-ctx := context.Background()
-handler := sentryslog.Option{
-    // Explicitly specify the levels that you want to be captured.
-	EventLevel: []slog.Level{slog.LevelError}, // Captures only [slog.LevelError] as error events.
-	LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo}, // Captures only [slog.LevelWarn] and [slog.LevelInfo] as log entries.
-}.NewSentryHandler(ctx)
-logger := slog.New(handler)
+package main
 
-// Send an error event to Sentry to verify functionality
-logger.Error("This error will be sent to Sentry!")
+import (
+    "context"
+    "log/slog"
 
-// Also a log entry
-logger.With("key.string", "value").Info("An error occurred")
+    sentryslog "github.com/getsentry/sentry-go/slog"
+)
+
+func main() {
+    ctx := context.Background()
+    handler := sentryslog.Option{
+        EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal},
+        LogLevel:   []slog.Level{slog.LevelInfo, slog.LevelWarn},
+        AddSource:  true,
+    }.NewSentryHandler(ctx)
+
+    logger := slog.New(handler)
+
+    logger.Info("Application started", "service", "image-processor")
+    logger.Warn("Cache miss", "key", "thumbnail:123")
+    logger.Error("Image processing failed", "image_id", "img_123")
+}
 ```
 
-<Include name="logs/go-ctx-usage-alert.mdx"/>
+## Send Logs to Sentry and Another Handler
+
+If you also want to keep writing logs somewhere else, Go 1.26+ includes `slog.NewMultiHandler`.
+
+```go
+package main
+
+import (
+    "context"
+    "log/slog"
+    "os"
+
+    sentryslog "github.com/getsentry/sentry-go/slog"
+)
+
+func main() {
+    ctx := context.Background()
+
+    sentryHandler := sentryslog.Option{
+        LogLevel: []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError},
+    }.NewSentryHandler(ctx)
+
+    textHandler := slog.NewTextHandler(os.Stdout, nil)
+
+    logger := slog.New(slog.NewMultiHandler(sentryHandler, textHandler))
+    logger.Info("Application started", "service", "image-processor")
+}
+```
+
+<Include name="logs/go-ctx-usage-alert.mdx" />

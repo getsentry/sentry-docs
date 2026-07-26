@@ -1,0 +1,47 @@
+---
+title: Source Context
+description: "Learn how to see source code around each stack trace frame in Sentry."
+---
+
+Source context shows the lines of code around each frame in a stack trace, so you can spot the failing code right in Sentry without opening your project.
+
+When you run your project from the editor, the SDK reads GDScript source straight from disk and includes it with each event automatically. Exported builds are a different story: by default, Godot exports GDScript as compressed binary tokens, stripping the source the SDK needs. You have three ways to get source context for exported games — fetching source from your repository (any language), embedding it in events (GDScript only), or uploading source bundles (C# and native only).
+
+For C#, embedding isn't an option: scripts are compiled, so the SDK can't read their source at capture time. C# frames get their file paths and line numbers from debug symbols, as covered in [Readable Stack Traces](/platforms/godot/configuration/stack-traces/#c-managed-code), and source context comes from your repository or from uploaded source bundles.
+
+## Fetching Source From Your Repository
+
+Sentry can fetch source on demand from a connected source code management (SCM) integration, such as [GitHub](/integrations/source-code-mgmt/github/), [GitLab](/integrations/source-code-mgmt/gitlab/), or [Perforce](/integrations/source-code-mgmt/perforce/), and display it next to each stack trace frame — no need to bundle your scripts as plain text.
+
+This works for frames in any language — GDScript, <PlatformLink to="/dotnet/">C#</PlatformLink>, and native (C/C++) code — as long as they carry a file path and line number. Native frames require symbolication to get those — see [Readable Stack Traces](/platforms/godot/configuration/stack-traces/).
+
+To set it up:
+
+1. Install a [supported SCM integration](/integrations/source-code-mgmt/source-context/#prerequisites) for your Sentry organization.
+2. Add a code mapping for your project — see the **Stack Trace Linking** section of your SCM provider's docs for the full walkthrough.
+   - GDScript frames reference scripts by their `res://` path, so set the **Stack Trace Root** to `res://` and the **Source Code Root** to the repository directory containing your `project.godot` — for example, `project/` if your Godot project lives in the `project` folder, or leave it empty if it sits at the repository root.
+   - C# and native frames use regular file paths, so map them with their own code mappings based on the paths you see in your stack traces.
+3. Turn on **Enable SCM Source Context** under your project's **Settings > General Settings > Client Security**.
+
+Sentry fetches each file at the commit associated with the event's release, falling back to the code mapping's default branch. For details on how fetching works, who can view the fetched source, and its limitations, see [SCM Source Context Fetching](/integrations/source-code-mgmt/source-context/).
+
+## Embedding Source Context in Events
+
+If you'd rather not connect an SCM integration, the SDK can embed GDScript source context directly in the events it sends — but only if your scripts are exported as text. In the **Export** dialog, open the **Scripts** tab of your export preset and set **GDScript Export Mode** to **Text**.
+
+Events then carry the source lines around each frame (up to 5 lines before and after). The trade-off: your scripts are bundled in plain text inside the exported project PCK file.
+
+## Uploading Source Bundles
+
+Compiled code — C# and native — can get source context without an SCM connection: `sentry-cli` can scan your debug files for source references, bundle the referenced files, and upload them alongside the debug files. Source bundles are created during debug file upload — add `--include-sources` to your `sentry-cli debug-files upload` command. See the [debug symbol upload steps](/platforms/godot/configuration/stack-traces/#uploading-debug-symbols) for the full command and [Creating Source Bundles](/cli/dif/#creating-source-bundles) for details.
+
+This doesn't work for GDScript, which has no debug information files.
+
+## Troubleshooting
+
+If frames show no source context with SCM fetching, check that:
+
+- For GDScript frames, the code mapping's stack trace root is `res://` and its source root points to the directory containing `project.godot` in your repository.
+- **Enable SCM Source Context** is turned on in your project settings.
+- The SCM integration is installed and has access to the repository.
+- The event is associated with a release whose commit Sentry can resolve — otherwise Sentry falls back to the default branch, which may not match the shipped code.

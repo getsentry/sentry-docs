@@ -27,10 +27,69 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
+
+// Default values for code keyword placeholders (e.g. ___PUBLIC_DSN___) that are
+// normally replaced client-side by codeKeywords.tsx. These must stay in sync with
+// DEFAULTS.PROJECT[0] in src/components/codeContext.tsx.
+// Values must be clearly non-functional so agents and LLMs know they need
+// to be replaced with real project-specific values. Avoid realistic-looking
+// values (e.g. valid DSN shapes) — agents will use them as-is.
+const MD_KEYWORD_DEFAULTS = {
+  DSN: 'https://<key>@o<orgId>.ingest.sentry.io/<projectId>',
+  PUBLIC_DSN: 'https://<key>@o<orgId>.ingest.sentry.io/<projectId>',
+  PUBLIC_KEY: '<your-public-key>',
+  SECRET_KEY: '<your-secret-key>',
+  API_URL: 'https://sentry.io/api',
+  PROJECT_ID: '<your-project-id>',
+  PROJECT_SLUG: '<your-project-slug>',
+  ORG_ID: '<your-org-id>',
+  ORG_SLUG: '<your-org-slug>',
+  ORG_INGEST_DOMAIN: 'o<orgId>.ingest.sentry.io',
+  JS_SDK_LOADER_HOST: 'js.sentry-cdn.com',
+  MINIDUMP_URL:
+    'https://o<orgId>.ingest.sentry.io/api/<projectId>/minidump/?sentry_key=<key>',
+  UNREAL_URL: 'https://o<orgId>.ingest.sentry.io/api/<projectId>/unreal/<key>/',
+  OTLP_URL: 'https://o<orgId>.ingest.sentry.io/api/<projectId>/integration/otlp',
+  OTLP_TRACES_URL:
+    'https://o<orgId>.ingest.sentry.io/api/<projectId>/integration/otlp/v1/traces',
+  OTLP_LOGS_URL:
+    'https://o<orgId>.ingest.sentry.io/api/<projectId>/integration/otlp/v1/logs',
+  VERCEL_LOG_DRAIN_URL:
+    'https://o<orgId>.ingest.sentry.io/api/<projectId>/integration/vercel/logs/',
+  // Org auth token: rendered as an interactive token-creator in the browser;
+  // must be clearly non-functional for markdown consumers.
+  ORG_AUTH_TOKEN: '<your-sentry-auth-token>',
+  // SDK package varies per platform (e.g. @sentry/react, @sentry/nextjs, sentry-sdk).
+  // A generic placeholder is used since the generator has no reliable platform context.
+  SDK_PACKAGE: '<sdk-package-name>',
+};
+
+/**
+ * Replaces ___KEYWORD___ placeholders in generated markdown with clearly non-functional
+ * placeholder values (e.g. <your-org-slug>) so agents and LLMs know they must be
+ * substituted with real project-specific values before use.
+ *
+ * These tokens are replaced client-side by codeKeywords.tsx at runtime; the SSR HTML
+ * (and therefore the generated markdown) contains them verbatim. Using obviously-fake
+ * values — rather than realistic-looking defaults — prevents agents from silently
+ * treating them as valid configuration.
+ *
+ * Applied after HTML→markdown conversion, outside the cache, so existing cache entries
+ * remain valid.
+ */
+function applyKeywordDefaults(markdown) {
+  let result = markdown;
+  for (const [key, value] of Object.entries(MD_KEYWORD_DEFAULTS)) {
+    result = result.replaceAll(`___${key}___`, value);
+  }
+  return result;
+}
+
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
-const CACHE_VERSION = 7;
+const CACHE_VERSION = 10;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -1004,8 +1063,15 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
         properties: {},
         children: tree,
       }))
+      .use(rehypeExpandCodeTabs)
       .use(rehypeRemark, {
         document: false,
+        // Drop React's empty `<!-- -->` text-node separators, which otherwise leak into the
+        // markdown on component-rendered pages like the API docs. Comments dispatch by node
+        // type, so this must live in nodeHandlers rather than handlers.
+        nodeHandlers: {
+          comment() {},
+        },
         handlers: {
           // HACK: Extract the canonical URL during parsing
           link: (_state, node) => {
@@ -1096,10 +1162,14 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         cacheMisses.push(relativePath);
       }
 
-      // Keep metadata outside the cache so description-only changes don't invalidate
-      // the expensive HTML → markdown conversion output.
-      // Prepend YAML frontmatter and write to target
-      const output = frontmatter ? formatYamlFrontmatter(frontmatter) + data : data;
+      // Keep these transformations outside the cache so they don't invalidate the
+      // expensive HTML → markdown conversion output:
+      //   - applyKeywordDefaults: replaces ___KEYWORD___ placeholders with defaults
+      //   - formatYamlFrontmatter: prepends YAML metadata
+      const resolved = applyKeywordDefaults(data);
+      const output = frontmatter
+        ? formatYamlFrontmatter(frontmatter) + resolved
+        : resolved;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 
       if (r2Hash !== null && s3Client) {

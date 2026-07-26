@@ -1,3 +1,5 @@
+import {InfoCircledIcon} from '@radix-ui/react-icons';
+
 import {SPEC_STATUS_BADGE, type SpecStatus} from './specConstants';
 
 type SpecMetaProps = {
@@ -18,6 +20,14 @@ export function SpecMeta({version, status}: SpecMetaProps) {
           >
             {status}
           </span>
+          <a
+            href="/sdk/getting-started/standards/spec-lifecycle"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Learn about spec statuses"
+            title="Learn about spec statuses"
+          >
+            <InfoCircledIcon className="inline-block" />
+          </a>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-500">Version</span>

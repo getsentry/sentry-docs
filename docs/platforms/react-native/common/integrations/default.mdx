@@ -1,0 +1,203 @@
+---
+title: Default Integrations
+description: "Learn about the integrations enabled by default in the Sentry React Native SDK, including React Native-specific integrations for error handling, device context, and runtime information."
+---
+
+The default integrations are enabled automatically when you call `Sentry.init()`. They handle error capturing, context enrichment, and event processing. You can disable or reconfigure any of them.
+
+## Error Handling
+
+### ReactNativeErrorHandlers
+
+_Import name: `Sentry.reactNativeErrorHandlersIntegration`_
+
+Captures unhandled errors and promise rejections on mobile. This integration hooks into React Native's `ErrorUtils` global handler for error capturing and supports engine-specific promise rejection tracking. On web, `BrowserGlobalHandlers` is used instead.
+
+Available options:
+
+```javascript
+{
+  // Capture unhandled errors via ErrorUtils (default: true)
+  onerror: boolean;
+
+  // Capture unhandled promise rejections (default: true)
+  onunhandledrejection: boolean;
+
+  // Polyfill Promise for JavaScriptCore environments (default: true)
+  // Ignored when using Hermes or react-native-web
+  patchGlobalPromise: boolean;
+}
+```
+
+For details on engine-specific promise rejection behavior (Hermes vs. JSC vs. Web), see [Unhandled Promise Rejections](/platforms/react-native/integrations/unhandled-rejections/).
+
+### InboundFilters
+
+_Import name: `Sentry.inboundFiltersIntegration`_
+
+Allows you to ignore specific errors based on the type, message, or URLs in a given exception.
+
+By default, it ignores errors that start with `Script error` or `JavaScript error: Script error`.
+
+To configure this integration, use the `ignoreErrors`, `ignoreTransactions`, `denyUrls`,
+and `allowUrls` SDK options directly. Keep in mind that `denyUrls` and `allowUrls`
+only work for captured exceptions, not raw message events.
+
+### NativeLinkedErrors
+
+_Import name: `Sentry.nativeLinkedErrorsIntegration`_
+
+Recursively reads linked errors up to a specified limit using a lookup key on the captured Error object. This mobile-only integration also processes linked errors from native layers (Java, Objective-C) and collects debug images. On web, `BrowserLinkedErrors` is used instead.
+
+Available options:
+
+```javascript
+{
+  key: string; // default: "cause"
+  limit: number; // default: 5
+}
+```
+
+Here's a code example of how this could be used:
+
+```javascript
+async function fetchReviews(movieTitle) {
+  try {
+    await fetchMovieReviews(movieTitle);
+  } catch (e) {
+    const fetchError = new Error(`Failed to fetch reviews for: ${movieTitle}`);
+    fetchError.cause = e;
+    Sentry.captureException(fetchError);
+  }
+}
+```
+
+### Dedupe
+
+_Import name: `Sentry.dedupeIntegration`_
+
+Deduplicates certain events by comparing stack traces and fingerprints. Enabled by default.
+
+## Context & Enrichment
+
+### DeviceContext
+
+_Import name: `Sentry.deviceContextIntegration`_
+
+Fetches device and app context from the native layer and merges it into events. This integration is mobile-only and requires `enableNative: true` (the default). It provides:
+
+- Device information (model, OS, memory)
+- App state (foreground/background, synced with React Native's `AppState`)
+- Native breadcrumbs (merged with JS breadcrumbs, sorted by timestamp)
+- Native tags and extra data (JS values take priority on conflicts)
+
+### EventOrigin
+
+_Import name: `Sentry.eventOriginIntegration`_
+
+Sets the tags `event.origin` to `'javascript'` and `event.environment` to `'javascript'` on every event processed by the JavaScript layer. This helps distinguish JS-layer events from native events when viewing them in Sentry.
+
+### ReactNativeInfo
+
+_Import name: `Sentry.reactNativeInfoIntegration`_
+
+Adds React Native runtime context to every event under `contexts.react_native_context`:
+
+- `js_engine` — `hermes` or the engine name from the exception
+- `hermes_version` — Hermes version string (if applicable)
+- `react_native_version` — React Native version
+- `turbo_module` — whether TurboModule is enabled
+- `fabric` — whether Fabric (new renderer) is enabled
+- `expo` — whether the app is running in Expo
+- `expo_go_version` — Expo Go version (if applicable)
+- `expo_sdk_version` — Expo SDK version (if applicable)
+- `component_stack` — React component stack from error boundaries
+- `hermes_debug_info` — whether the Hermes bundle includes debug info
+
+Also sets the tag `hermes: true` when the Hermes engine is detected.
+
+### NativeRelease
+
+_Import name: `Sentry.nativeReleaseIntegration`_
+
+Automatically sets the `release` and `dist` fields on events using native build metadata. The priority order is:
+
+1. Values passed to `Sentry.init()` (`release` and `dist` options)
+2. Native build metadata (format: `bundleId@version+buildNumber`)
+
+### FunctionToString
+
+_Import name: `Sentry.functionToStringIntegration`_
+
+Provides original function and method names, even when those functions or methods are wrapped by error or breadcrumb handlers.
+
+### HttpContext
+
+_Import name: `Sentry.httpContextIntegration`_
+
+Attaches HTTP request information such as URL, user-agent, referrer, and other headers to events. This allows Sentry to catalog and tag events with specific OS, browser, and version information.
+
+### Breadcrumbs
+
+_Import name: `Sentry.breadcrumbsIntegration`_
+
+Wraps native APIs to capture breadcrumbs.
+
+Available options:
+
+```javascript
+{
+  // Log calls to console.log, console.debug, etc. (default: true)
+  console: boolean;
+
+  // Log HTTP requests done with the Fetch API
+  // (default: true on web, false on mobile to avoid duplicates with xhr)
+  fetch: boolean;
+
+  // Log HTTP requests done with the XHR API (default: true)
+  xhr: boolean;
+
+  // Log whenever we send an event to the server (default: true)
+  sentry: boolean;
+}
+```
+
+<Alert level="info">
+
+On mobile, additional breadcrumbs (touch events, navigation, app lifecycle) are captured by the native layer and merged via the `DeviceContext` integration. The `dom` and `history` options from the browser SDK only apply when using `react-native-web`.
+
+</Alert>
+
+## Modifying System Integrations
+
+To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
+
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off capturing console calls as breadcrumbs:
+
+
+```javascript {3-7}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.breadcrumbsIntegration({
+      console: false,
+    }),
+  ],
+});
+```
+
+### Removing an Integration
+
+This example removes the integration for adding breadcrumbs to the event, which is enabled by default:
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: function (integrations) {
+    // integrations will be all default integrations
+    return integrations.filter(function (integration) {
+      return integration.name !== "Breadcrumbs";
+    });
+  },
+});
+```

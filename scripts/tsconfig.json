@@ -1,0 +1,16 @@
+{
+  // Used only when running scripts/algolia.ts via `tsx` (see .github/workflows/algolia-index.yml).
+  // tsx loads .ts files through Node's CJS resolver. `rehype-prism-diff` (imported transitively
+  // via src/mdx.ts) only declares an "import" condition in its package.json `exports` map, so the
+  // CJS resolver fails with ERR_PACKAGE_PATH_NOT_EXPORTED. Aliasing the bare specifier to the
+  // package's real dist file makes tsx resolve it as a plain file and bypass the exports map.
+  // Bun (the previous runner) tolerated the import-only exports map; tsx does not.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "sentry-docs/*": ["src/*"],
+      "rehype-prism-diff": ["node_modules/rehype-prism-diff/dist/index.js"]
+    }
+  }
+}

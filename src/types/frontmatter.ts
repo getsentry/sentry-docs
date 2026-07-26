@@ -104,11 +104,18 @@ export interface FrontMatter {
   sidebar_order?: number;
 
   /**
-   * Which sidebar section this page belongs to (for platform docs).
-   * Options: 'features' | 'configuration'
-   * Defaults to 'features' if not specified.
+   * Which sidebar section this page belongs to.
+   * Platform docs use 'features' | 'configuration'.
+   * Product docs use 'detect' | 'debug' | 'measure' | 'automate' | 'platform'.
    */
-  sidebar_section?: 'features' | 'configuration';
+  sidebar_section?:
+    | 'features'
+    | 'configuration'
+    | 'detect'
+    | 'debug'
+    | 'measure'
+    | 'automate'
+    | 'platform';
 
   /**
    * optional sidebar title

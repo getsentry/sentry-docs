@@ -7,188 +7,276 @@ sidebar_section: features
 og_image: /og-images/platforms-apple-common-user-feedback.png
 ---
 
+User Feedback lets you collect feedback from anywhere in your app without waiting for an error event. On supported platforms, you can use Sentry's managed feedback form, or you can collect feedback in your own UI and send it with the User Feedback API.
+
 <PlatformSection notSupported={["apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
 
-The User Feedback feature allows you to collect user feedback from anywhere inside your application at any time, without needing an error event to occur first.
-
 <Alert>
-  If you're using a self-hosted Sentry instance, you'll need to be on version
-  24.4.2 or higher in order to use the full functionality of the User Feedback
-  feature. Lower versions may have limited functionality.
+  If you use a self-hosted Sentry instance, use version 24.4.2 or higher for the
+  managed feedback form. Lower versions may have limited functionality.
 </Alert>
 
-## User Feedback Widget
+## Managed Feedback Form
 
-The User Feedback widget allows users to submit feedback from anywhere inside your application.
+The managed feedback form is available for iOS and iPadOS apps that can use UIKit. SwiftUI apps can present the same form through Sentry's SwiftUI helpers.
 
-![An example of the User Feedback Widget on iOS =350x](./img/user-feedback-apple-widget.png)
+<Alert level="warning">
+  The managed form presentation APIs are experimental and aren't available in
+  app extensions.
+</Alert>
 
-### Pre-requisites
+### Prerequisites
 
-Ensure that your project is set up with Sentry and that you have added the Sentry Cocoa SDK to your project.
+1. Set up Sentry in your app.
+2. Use the latest Sentry Cocoa SDK. The Swift presentation APIs require version 9.17.0 or newer.
+3. Configure User Feedback when starting the SDK.
 
-### Installation
+The Objective-C snippets on this page use the <PlatformLink to="/install/swift-package-manager/#sentryobjc">SentryObjC</PlatformLink> API.
 
-1. Install the Sentry Cocoa SDK using Swift Package Manager or by manually adding the [pre-built XCFramework from GitHub releases](https://github.com/getsentry/sentry-cocoa/releases).
-2. Ensure you are using version 8.46.0 or above of the SDK to access the latest features.
+### Configure User Feedback
 
-### Set Up
+Set `configureUserFeedback` during SDK initialization. This closure installs the User Feedback integration, which is required for the automatic `SentrySDK.feedback.show()` API and for global shake and screenshot triggers. It also provides the global configuration used by `SentrySDK.feedback.show()`, `SentrySDK.FeedbackForm`, and `.sentryFeedback(isPresented:)`.
 
-To start using the User Feedback widget in your Cocoa application, provide a feedback configuration in your `SentryOptions` when starting the SDK:
-
-```swift
- SentrySDK.start { options in
-     options.configureUserFeedback = { config in
-          config.onSubmitSuccess = { data in
-               print("Feedback submitted successfully: \(data)")
-          }
-          config.onSubmitError = { error in
-               print("Failed to submit feedback: \(error)")
-          }
-     }
- }
-```
-
-This setup will insert the widget into your app's view hierarchy. By default, it appears in the bottom trailing corner of the screen, but you can fully customize its appearance and behavior.
-
-#### SwiftUI
-
-SwiftUI apps don’t currently support automatic widget injection when the SDK starts. Several options exist to display the feedback form:
-
-##### Use your own button
-
-Add a `UIButton` to your app, then provide the reference to the feedback configuration in the SDK start options:
-
-```swift
+```swift {tabTitle:Swift} {mdExpandTabs}
 import Sentry
-import SwiftUI
-import UIKit
 
-@main
-struct SwiftUIApp: App {
-    // a button displayed somewhere in your app
-    public let feedbackButton = {
-        let button = UIButton(type: .custom)
-        button.setTitle("BYOB Feedback", for: .normal)
-        return button
-    }()
-
-    init() {
-        // start the SentrySDK as usual, as early as possible in your app's launch sequence
-        SentrySDK.start { options in
-            options.configureUserFeedback { config in
-                config.customButton = feedbackButton
-            }
-
-            // your other SDK options
-        }
-    }
-}
-```
-
-##### Manually display the widget from a connected `UIWindowSceneDelegate`
-
-You must set up a `UIApplicationDelegateAdaptor`, connect a `UIScene` to your app, and manually call `SentrySDK.feedback.showWidget()`:
-
-```swift
-import Sentry
-import SwiftUI
-
-@main
-struct SwiftUIApp: App {
-    @UIApplicationDelegateAdaptor private var appDelegate: MyAppDelegate
-
-    init() {
-        // start the SentrySDK as usual, as early as possible in your app's launch sequence
-        SentrySDK.start { options in
-            options.configureUserFeedback { config in
-                // configure user feedback and any other SDK options
-            }
-        }
-    }
-
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
-
-class MyAppDelegate: NSObject, UIApplicationDelegate, ObservableObject {
-    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        let configuration = UISceneConfiguration(
-            name: nil,
-            sessionRole: connectingSceneSession.role)
-        if connectingSceneSession.role == .windowApplication {
-            configuration.delegateClass = MySceneDelegate.self
-        }
-        return configuration
-    }
-}
-
-class MySceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
-    var initializedSentry = false
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        guard !initializedSentry else { return }
-
-        // display the feedback widget
-        SentrySDK.feedback.showWidget()
-
-        initializedSentry = true
-    }
-}
-```
-
-##### Manually display the widget from an `onAppear` view modifier
-
-You can manually call `SentrySDK.feedback.showWidget()` from an `onAppear` view modifier. Ideally, you should call this from the root view of your app, so that the widget is displayed as soon as the app is launched and only called once.
-
-```swift
-import Sentry
-import SwiftUI
-
-@main
-struct SwiftUIApp: App {
-
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .onAppear {
-                    SentrySDK.feedback.showWidget()
-                }
-        }
-    }
-}
-```
-
-### Shake to Report
-
-You can enable shake-to-report so that shaking the device opens the User Feedback form. This is only supported on iOS.
-
-```swift
 SentrySDK.start { options in
-    options.configureUserFeedback { config in
-        config.useShakeGesture = true
+    options.dsn = "___PUBLIC_DSN___"
+    options.configureUserFeedback = { config in
+        config.configureForm = { form in
+            form.formTitle = "Report Feedback"
+            form.submitButtonLabel = "Send Feedback"
+        }
+        config.onSubmitSuccess = { data in
+            print("Feedback submitted: \(data)")
+        }
+        config.onSubmitError = { error in
+            print("Feedback failed: \(error)")
+        }
     }
 }
+```
+
+```objc {tabTitle:Objective-C}
+@import SentryObjC;
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.configureUserFeedback = ^(SentryObjCUserFeedbackConfiguration *config) {
+        config.configureForm = ^(SentryObjCUserFeedbackFormConfiguration *form) {
+            form.formTitle = @"Report Feedback";
+            form.submitButtonLabel = @"Send Feedback";
+        };
+        config.onSubmitSuccess = ^(NSDictionary<NSString *, id> *data) {
+            NSLog(@"Feedback submitted: %@", data);
+        };
+        config.onSubmitError = ^(NSError *error) {
+            NSLog(@"Feedback failed: %@", error);
+        };
+    };
+}];
+```
+
+For all configuration fields, see [Configure User Feedback](./configuration/).
+
+With global configuration, the SDK tracks the active managed form and won't present another form from SDK-managed presentation paths while one is already open.
+
+If you create `SentrySDK.FeedbackForm` or `SentrySDK.FeedbackFormView` directly without global configuration, the form uses default settings plus any per-presentation configuration you provide.
+
+### Present the Form
+
+Choose between programmatic presentation APIs and automatic triggers based on how much control your app needs:
+
+- Use `SentrySDK.feedback.show()` when the SDK can choose the presenter from the active scene.
+- Use the UIKit or SwiftUI APIs when your app needs exact control over the presenting view controller, scene, window, or sheet.
+- Use shake and screenshot triggers when the form should open from a global user action.
+
+#### Show From the Active Screen
+
+Use `SentrySDK.feedback.show()` when you want the SDK to find a suitable view controller in the active scene and present the form for you.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.feedback.show { config in
+    config.configureForm = { form in
+        form.formTitle = "Feedback for this screen"
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+[[SentryObjCSDK feedback] showWithConfigure:^(SentryObjCUserFeedbackConfiguration *config) {
+    config.configureForm = ^(SentryObjCUserFeedbackFormConfiguration *form) {
+        form.formTitle = @"Feedback for this screen";
+    };
+}];
+```
+
+You can also pass a `UIImage` screenshot:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.feedback.show(screenshot: screenshot)
+```
+
+```objc {tabTitle:Objective-C}
+[[SentryObjCSDK feedback] showWithScreenshot:screenshot];
+```
+
+The SDK chooses a presenting view controller from the foreground-active scene when possible, with a window fallback for apps that don't use scenes. It only presents when that view controller isn't already presenting or transitioning.
+
+If your app needs exact scene, window, or presenting view controller control, use the UIKit or SwiftUI APIs below to present the form yourself.
+
+#### Present From UIKit
+
+Use `SentrySDK.FeedbackForm` when your app should decide which view controller presents the form.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+let form = SentrySDK.FeedbackForm(screenshot: screenshot) { config in
+    config.configureForm = { form in
+        form.formTitle = "Report Feedback"
+        form.submitButtonLabel = "Send Feedback"
+    }
+}
+
+present(form, animated: true)
+```
+
+```objc {tabTitle:Objective-C}
+UIViewController *form = [SentryObjCFeedbackForm
+    viewControllerWithScreenshot:screenshot
+                       configure:^(SentryObjCUserFeedbackConfiguration *config) {
+    config.configureForm = ^(SentryObjCUserFeedbackFormConfiguration *formConfig) {
+        formConfig.formTitle = @"Report Feedback";
+        formConfig.submitButtonLabel = @"Send Feedback";
+    };
+}];
+
+[self presentViewController:form animated:YES completion:nil];
+```
+
+#### Present From SwiftUI
+
+Use `.sentryFeedback(isPresented:)` when a SwiftUI state binding should control the form presentation.
+
+```swift
+import Sentry
+import SwiftUI
+
+struct SettingsView: View {
+    @State private var isFeedbackPresented = false
+
+    var body: some View {
+        Button("Send Feedback") {
+            isFeedbackPresented = true
+        }
+        .sentryFeedback(isPresented: $isFeedbackPresented) { config in
+            config.configureForm = { form in
+                form.submitButtonLabel = "Send Feedback"
+            }
+        }
+    }
+}
+```
+
+If you already manage your own presentation container, embed `SentrySDK.FeedbackFormView` in a SwiftUI sheet:
+
+```swift
+import Sentry
+import SwiftUI
+
+struct SettingsView: View {
+    @State private var isFeedbackPresented = false
+
+    var body: some View {
+        Button("Send Feedback") {
+            isFeedbackPresented = true
+        }
+        .sheet(isPresented: $isFeedbackPresented) {
+            SentrySDK.FeedbackFormView { config in
+                config.configureForm = { form in
+                    form.submitButtonLabel = "Send Feedback"
+                }
+            }
+        }
+    }
+}
+```
+
+#### Open Automatically From a Shake Gesture or Screenshot
+
+You can also open the managed form from a device shake or immediately after the user takes a screenshot. These options are global and only apply when set in `options.configureUserFeedback`.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.configureUserFeedback = { config in
+        config.useShakeGesture = true
+        config.showFormForScreenshots = true
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.configureUserFeedback = ^(SentryObjCUserFeedbackConfiguration *config) {
+        config.useShakeGesture = YES;
+        config.showFormForScreenshots = YES;
+    };
+}];
 ```
 
 ### Session Replay
 
-The User Feedback widget integrates seamlessly with Session Replay. When the widget is opened, the Replay SDK buffers up to 30 seconds of the user's session. If feedback is submitted, this replay is sent along with the feedback, allowing you to view both the feedback and the user's actions leading up to the feedback submission.
+The managed feedback form works with <PlatformLink to="/session-replay/">Session Replay</PlatformLink>. When the form opens, the Replay SDK buffers up to 30 seconds of the user's session. If the user submits feedback, the replay is sent with the feedback so you can see what led up to it.
+
+### Deprecated Widget and Custom Button Setup
+
+The Sentry-managed User Feedback widget, `showWidget()`, `hideWidget()`, `configureWidget`, and `customButton` configuration are deprecated and will be removed in v10.
+
+If you're migrating from `customButton`, keep your existing button and replace the SDK configuration with a regular button action. If you're migrating from the widget, add your own button, menu item, or other entry point and call the same presentation API. Your global `configureUserFeedback` form, theme, and hook configuration still applies.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+@IBAction private func feedbackButtonTapped(_ sender: UIButton) {
+    SentrySDK.feedback.show()
+}
+```
+
+```objc {tabTitle:Objective-C}
+- (IBAction)feedbackButtonTapped:(UIButton *)sender {
+    [[SentryObjCSDK feedback] show];
+}
+```
 
 </PlatformSection>
 
-### User Feedback API
+## User Feedback API
 
-The User Feedback API allows you to collect user feedback while using your own UI components. You can submit feedback directly using the `SentrySDK.capture(feedback:)` method:
+Use the User Feedback API when you collect feedback with your own UI. The SDK sends the feedback to Sentry, so you don't need to build the HTTP request yourself.
 
-```swift
-SentrySDK.capture(feedback: .init(
-    message: "I encountered a bug while using the app.",
-    name: "John Doe",
-    email: "john.doe@example.com",
+You can optionally pass an `associatedEventId` to connect feedback to an error event.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
+
+let feedback = SentryFeedback(
+    message: "The settings screen is confusing.",
+    name: "Ada",
+    email: "ada@example.com",
     source: .custom,
-    screenshot: somePngImageData // optional
-))
+    associatedEventId: nil,
+    attachments: nil
+)
+
+SentrySDK.capture(feedback: feedback)
+```
+
+```objc {tabTitle:Objective-C}
+@import SentryObjC;
+
+[SentryObjCSDK captureFeedbackWithMessage:@"The settings screen is confusing."
+                                     name:@"Ada"
+                                    email:@"ada@example.com"
+                                   source:SentryObjCFeedbackSourceCustom
+                        associatedEventId:nil
+                              attachments:nil];
 ```

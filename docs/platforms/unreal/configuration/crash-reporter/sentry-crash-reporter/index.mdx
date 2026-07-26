@@ -38,6 +38,7 @@ You can customize the appearance of the Sentry Crash Reporter directly from the 
 - **Cancel button label** - Label for the cancel button. Set to empty string to hide the button.
 - **Accent color** - Primary accent color used for the crash reporter UI elements.
 - **Window closable** - When disabled, the user cannot close the crash reporter window without submitting the report. The native close button is disabled and the cancel button is hidden. Enabled by default.
+- **Cache mode** - Initial cache mode shown to the user in the crash reporter when they have not selected one. The user can still override this at runtime. `None` never keeps envelopes after submission, `Offline` keeps them only while the host is offline, `Always` keeps them regardless of submission outcome. Leave as `Default` to let the crash reporter use its built-in default.
 - **App logo** - Replace the default crash reporter logo with a custom PNG image. Enable the override toggle, then use the image picker to select a file. The image is copied into your project's `Build/SentryCrashReporter/` folder and staged alongside the plugin during packaging.
 
 These settings are applied each time the SDK initializes. Properties that are not overridden will use the crash reporter's built-in defaults.
@@ -115,3 +116,22 @@ After replacing binaries, delete your project's `Build` and `Intermediate` direc
 The `CRASHPAD_ENABLE_STACKTRACE` feature is experimental. On Linux, it requires the `libunwind-ptrace` development package.
 
 </Alert>
+
+## Enabling Network Access on macOS
+
+<Alert>
+
+Applies only to **packaged macOS builds in the Shipping configuration**. Editor and Development/Test/DebugGame builds already include the required network entitlements.
+
+</Alert>
+
+The Sentry Crash Reporter uploads the crash envelope to Sentry, which requires the `com.apple.security.network.client` entitlement. On macOS the Crash Reporter is launched as a child process of the game and inherits its network permissions at runtime, so the entitlement needs to be set on the **game's** entitlements file rather than on the Crash Reporter bundle itself. Unreal's default Shipping entitlements file (`Engine/Build/Mac/Resources/Sandbox.NoNet.entitlements`) does **not** include it, so submissions fail with a DNS resolution error.
+
+To fix this, override the Shipping entitlements in your project's `Config/DefaultEngine.ini` with either the engine-provided `Sandbox.Server.entitlements` (which includes `network.client` and `network.server`) or your own custom file:
+
+```ini
+[/Script/MacTargetPlatform.XcodeProjectSettings]
+ShippingSpecificMacEntitlements=(FilePath="/Game/Build/Mac/Resources/Sandbox.Server.entitlements")
+```
+
+The same setting is available in the Editor under **Project Settings → Platforms → Mac → Entitlements → Mac: Entitlements (Shipping config override)**.

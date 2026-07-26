@@ -6,11 +6,17 @@ import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
+import type {ExternalSidebarLink} from './types';
 
 // Section configuration for sidebar organization
 const SECTION_LABELS: Record<string, string> = {
   features: 'Features',
   configuration: 'Configuration',
+  detect: 'Detect',
+  debug: 'Debug',
+  measure: 'Measure',
+  automate: 'Automate',
+  platform: 'Platform',
 };
 
 // Section links configuration - sections that should be clickable headers
@@ -18,7 +24,15 @@ const SECTION_LINKS: Record<string, string> = {
   features: 'features',
 };
 
-const SECTION_ORDER = ['features', 'configuration'] as const;
+const SECTION_ORDER = [
+  'features',
+  'configuration',
+  'detect',
+  'debug',
+  'measure',
+  'automate',
+  'platform',
+] as const;
 
 type Node = {
   [key: string]: any;
@@ -30,7 +44,14 @@ type Node = {
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
-    sidebar_section?: 'features' | 'configuration';
+    sidebar_section?:
+      | 'features'
+      | 'configuration'
+      | 'detect'
+      | 'debug'
+      | 'measure'
+      | 'automate'
+      | 'platform';
     sidebar_title?: string;
     title?: string;
   };
@@ -259,6 +280,7 @@ type Props = {
   tree: EntityTree[];
   collapsible?: boolean;
   exclude?: string[];
+  extraLinks?: ExternalSidebarLink[];
   title?: string;
 };
 
@@ -268,6 +290,7 @@ export function DynamicNav({
   tree,
   collapsible = false,
   exclude = [],
+  extraLinks,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -340,7 +363,25 @@ export function DynamicNav({
             </CollapsibleSidebarLink>
           )}
           <Children
-            tree={entity.children}
+            tree={
+              extraLinks
+                ? [
+                    ...entity.children,
+                    ...extraLinks.map(link => ({
+                      name: link.href,
+                      node: {
+                        path: link.href,
+                        context: {
+                          title: link.title,
+                          sidebar_order: link.order,
+                          draft: false,
+                        },
+                      },
+                      children: [],
+                    })),
+                  ]
+                : entity.children
+            }
             exclude={exclude}
             showDepth={0}
             path={linkPath}
