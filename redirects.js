@@ -800,6 +800,46 @@ const userDocsRedirects = [
     source: '/organization/integrations/vedetta/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/applied-edge/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/notilens/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/offloop/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/positron-flux/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/productpanda/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ratchet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/superlog/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/synthreo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/waroom/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // /integrations/<slug>/ redirects handle the /product/integrations/<slug>/ chain
   // via the wildcard redirect at the bottom of this file
   {
@@ -928,6 +968,46 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/vedetta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/applied-edge/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/notilens/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/offloop/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/positron-flux/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/productpanda/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ratchet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/superlog/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/synthreo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
   {
