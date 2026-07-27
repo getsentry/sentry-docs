@@ -29,8 +29,11 @@ yarn add sentry-testkit --dev
 pnpm add sentry-testkit --save-dev
 ```
 
+Sentry Testkit supports the Sentry JavaScript SDK v8, v9, and v10. You don't need to change your test setup when upgrading across these SDK versions.
+
 ### Using in tests
 
+The simplest way to get started is to override Sentry's transport with `sentryTransport`, so the testkit captures events in memory instead of sending them to Sentry.
 
 ```javascript
 import sentryTestkit from "sentry-testkit";
@@ -58,9 +61,54 @@ test("collect performance events", function () {
 });
 ```
 
-You may see more usage examples in the [testing section](https://github.com/zivl/sentry-testkit/tree/master/__tests__) of sentry-testkit repository as well.
+Reset the testkit between tests so captured data doesn't leak across cases:
+
+```javascript
+beforeEach(function () {
+  testkit.reset();
+});
+```
+
+You may see more usage examples in the [Sentry Testkit docs](https://zivl.github.io/sentry-testkit) as well.
+
+### What You Can Capture
+
+Beyond errors and performance transactions, the testkit captures a range of Sentry event types:
+
+- **Errors** — `testkit.reports()` returns all captured error reports. Each report also exposes any evaluated feature flags via `report.flags`.
+- **Transactions** — `testkit.transactions()` returns all captured performance transactions.
+- **Structured logs** — `testkit.logs()` returns captured logs (requires `enableLogs: true` in your Sentry configuration).
+- **User feedback** — `testkit.feedback()` returns submitted user feedback.
+- **Cron check-ins** — `testkit.checkIns()` returns cron monitor check-ins with their status.
+
+The list keeps growing as Sentry adds new event types, so check the [Sentry Testkit docs](https://zivl.github.io/sentry-testkit) for the latest and more.
+
+### Finding and Filtering
+
+- `testkit.findReport(error)` — locate a report by its `Error` object.
+- `testkit.findReportByMessage(message)` — find a report by a string or `RegExp`.
+- `testkit.findTransaction(name)` — locate a transaction by a string or `RegExp`.
+- `testkit.reportsWithTag(key, value)` and `testkit.transactionsWithTag(key, value)` — filter by tag.
+- `testkit.isExist(error)` — check whether an error was reported.
+
+### Waiting for Asynchronous Events
+
+Because Sentry reports events asynchronously, the testkit provides awaitable helpers that resolve once the expected number of items has been captured (or a timeout is reached): `waitForReports`, `waitForTransactions`, `waitForLogs`, `waitForFeedback`, and `waitForCheckIns`.
+
+```javascript
+test("collect error events", async function () {
+  // run any scenario that eventually calls Sentry.captureException(...)
+  const reports = await testkit.waitForReports(1, { timeout: 1000 });
+  expect(reports).toHaveLength(1);
+});
+```
+
+### Network Interception
+
+If you can't (or don't want to) override the transport — for example in end-to-end tests — you can intercept Sentry's network requests instead, without changing your application's `Sentry.init` configuration. `initNetworkInterceptor` works with your interception library of choice (such as `nock`) and parses every item of an envelope, capturing all supported event types.
+
+This makes the testkit suitable for setups ranging from unit tests to E2E environments, including Puppeteer, Playwright, browser-only, and React Native.
 
 ### Testkit API
 
-Sentry Testkit consists of a very simple and straightforward API.
-See the full API description and documentation in [Sentry Testkit Docs](https://zivl.github.io/sentry-testkit/docs/api).
+See the full API description and documentation in the [Sentry Testkit Docs](https://zivl.github.io/sentry-testkit/docs/api).
