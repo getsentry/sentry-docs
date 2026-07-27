@@ -5,9 +5,9 @@ description: "Link Cloudflare Agents SDK chats to Sentry Conversations with a ch
 
 When you build agents with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), set a conversation ID so multi-turn AI activity groups correctly in <Link to="/product/agents/conversations/">Conversations</Link>.
 
-Use **your chat session ID** (for example a UUID or `conv_…` value your app creates when the user starts a chat). Do not use a user ID, room name, or the Durable Object instance name unless that name is already one chat session.
+Use **your chat session ID** (for example a UUID or `conv_...` value your app creates when the user starts a chat). Do not use a user ID, room name, or the Durable Object instance name unless that name is already one chat session.
 
-Workers AI and other AI integrations do **not** set this for you. Set the ID on the isolation scope that runs your AI work — for chat agents, that is typically at the start of `onChatMessage`, before any model or tool calls.
+Workers AI does **not** set this for you. Set the ID on the isolation scope that runs your AI work — for chat agents, that is typically at the start of `onChatMessage`, before any model or tool calls.
 
 ## Prerequisites
 
@@ -42,7 +42,6 @@ export const MyChatAgent = Sentry.instrumentDurableObjectWithSentry(
 
 Define the conversation ID however your app tracks chats (client param, storage, etc.). Re-set it at the start of each handler that performs AI work so it applies on that isolation scope.
 
-
 If you already name each agent instance as one chat session (for example `useAgent({ name: chatSessionId })`), you can pass that value:
 
 ```typescript
@@ -55,7 +54,7 @@ To clear the ID: `Sentry.setConversationId(null)`.
 
 ## Users
 
-Populate the Conversations **User** column with `Sentry.setUser` once per session, before AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+Populate the Conversations **User** column with `Sentry.setUser` on every request or handler that performs AI calls, before those calls run. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
 
 ## Related
 

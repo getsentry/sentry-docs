@@ -79,7 +79,7 @@ Pick the guide for your AI stack. Some libraries are instrumented automatically;
 
 [Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
 
-Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of the session, before any AI calls. The ID is applied to all AI-related spans in the current scope. Pass `null` to unset it.
+Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current isolation scope (which is typically request-scoped). Pass `null` to unset it.
 
 ```javascript
 Sentry.setConversationId("conv_abc123");
@@ -96,7 +96,6 @@ Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
 Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
 
 ## Options
-
 
 ### Privacy Controls
 
@@ -117,16 +116,7 @@ You can also set `recordInputs` / `recordOutputs` on a specific AI integration. 
 
 `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction by default (since SDK version `10.61.0`). This prevents AI spans with large inputs and outputs from hitting transaction payload size limits and being dropped, and is required for <Link to="/product/agents/conversations/">Conversations</Link> to work.
 
-On earlier SDK versions, opt in by setting `streamGenAiSpans: true`:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  streamGenAiSpans: true,
-});
-```
-
-To send `gen_ai` spans as part of the transaction instead, set `streamGenAiSpans` to `false`. Self-hosted Sentry users should set this to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
+Self-hosted Sentry users should set `streamGenAiSpans: false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
 
 ## Manual Instrumentation
 
