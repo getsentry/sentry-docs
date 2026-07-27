@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/nextjs';
-
 import {tracesSampler} from 'sentry-docs/tracesSampler';
 
 export function register() {
@@ -50,20 +49,6 @@ export function register() {
           delete metric.attributes.full_path;
         }
         return metric;
-      },
-
-      // temporary change for investigating edge middleware tx names
-      beforeSendTransaction(event) {
-        if (
-          event.transaction?.includes('middleware GET') &&
-          event.contexts?.trace?.data
-        ) {
-          event.contexts.trace.data = {
-            ...event.contexts.trace.data,
-            'sentry.source': 'custom',
-          };
-        }
-        return event;
       },
     });
   }
