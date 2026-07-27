@@ -7,7 +7,7 @@ When you build agents with the [Cloudflare Agents SDK](https://developers.cloudf
 
 Use **your chat session ID** (for example a UUID or `conv_…` value your app creates when the user starts a chat). Do not use a user ID, room name, or the Durable Object instance name unless that name is already one chat session.
 
-Workers AI and other AI integrations do **not** set this for you.
+Workers AI and other AI integrations do **not** set this for you. Set the ID on the isolation scope that runs your AI work — for chat agents, that is typically at the start of `onChatMessage`, before any model or tool calls.
 
 ## Prerequisites
 
@@ -16,36 +16,32 @@ Workers AI and other AI integrations do **not** set this for you.
 
 ## Link conversations
 
-Set the conversation ID before any AI calls in the request handler:
+Set the conversation ID before any AI calls in the chat handler:
 
 ```typescript
 import * as Sentry from "@sentry/cloudflare";
-import { Agent } from "agents";
+import { AIChatAgent } from "@cloudflare/ai-chat";
 
-class MyAgentBase extends Agent<Env> {
-  async onRequest(request: Request): Promise<Response> {
-    // Your chat session ID for this conversation (not user id / "default")
-    const chatSessionId = new URL(request.url).searchParams.get("chatId");
-    if (chatSessionId) {
-      Sentry.setConversationId(chatSessionId);
-    }
+class MyChatAgentBase extends AIChatAgent<Env> {
+  async onChatMessage() {
+    // Your chat session ID (not user id / "default")
+    Sentry.setConversationId("conv_abc123");
 
-    const result = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-      messages: [{ role: "user", content: await request.text() }],
-    });
-
-    return new Response(JSON.stringify(result));
+    // … run your model and tools …
   }
 }
 
-export const MyAgent = Sentry.instrumentDurableObjectWithSentry(
+export const MyChatAgent = Sentry.instrumentDurableObjectWithSentry(
   (env: Env) => ({
     dsn: "___PUBLIC_DSN___",
     tracesSampleRate: 1.0,
   }),
-  MyAgentBase
+  MyChatAgentBase
 );
 ```
+
+Define the conversation ID however your app tracks chats (client param, storage, etc.). Re-set it at the start of each handler that performs AI work so it applies on that isolation scope.
+
 
 If you already name each agent instance as one chat session (for example `useAgent({ name: chatSessionId })`), you can pass that value:
 

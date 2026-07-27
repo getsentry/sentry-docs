@@ -38,9 +38,9 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 Before setting up Agent Tracing, ensure you have <PlatformLink to="/tracing/">tracing enabled</PlatformLink> in your Sentry configuration.
 
-## Automatic Instrumentation
+## Instrumentation
 
-The JavaScript SDK supports automatic instrumentation for AI libraries:
+Pick the guide for your AI stack. Some libraries are instrumented automatically; others need a small amount of setup — each page covers the details.
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 - <PlatformLink to="/features/workers-ai/">Cloudflare Workers AI</PlatformLink> — automatic instrumentation for `env.AI` (no integration to add)
@@ -67,7 +67,7 @@ The JavaScript SDK supports automatic instrumentation for AI libraries:
 
 [Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
 
-Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of the session. The ID is applied to all AI-related spans in the current scope. Pass `null` to unset it.
+Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of the session, before any AI calls. The ID is applied to all AI-related spans in the current scope. Pass `null` to unset it.
 
 ```javascript
 Sentry.setConversationId("conv_abc123");
@@ -93,21 +93,20 @@ Building with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agen
 
 ### Privacy Controls
 
-All AI integrations support `recordInputs` and `recordOutputs` options to control whether prompts and responses are captured. Both default to `true`.
+AI integrations can capture prompts and responses via `recordInputs` and `recordOutputs`. By default those are **off**, unless you enable generative AI collection with <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.genAI`</PlatformLink> (or the deprecated `sendDefaultPii: true`).
 
-Set these to `false` if your prompts or responses contain sensitive data you don't want sent to Sentry.
+To record prompts and responses:
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    Sentry.openAIIntegration({
-      recordInputs: false,
-      recordOutputs: false,
-    }),
-  ],
+  dataCollection: {
+    genAI: { inputs: true, outputs: true },
+  },
 });
 ```
+
+You can also set `recordInputs` / `recordOutputs` on a specific AI integration. See each integration page for the API that applies on your platform.
 
 ### Streaming Gen AI Spans
 
