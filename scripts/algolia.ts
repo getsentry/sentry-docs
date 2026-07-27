@@ -52,9 +52,17 @@ const CONCURRENCY = 50;
 // Holding every record from every page in one array is what previously OOM'd the job: ~10k pages
 // produce ~240k records, which blows past Node's default ~4GB old-space limit.
 const UPLOAD_BATCH_PAGES = 500;
+const DEFAULT_DRY_RUN_PAGE_LIMIT = 200;
 // In dry-run we only need enough pages to exercise the build + import graph, not the full corpus.
 // Raise it (ALGOLIA_DRY_RUN_PAGE_LIMIT) to load-test the full corpus without touching the index.
-const DRY_RUN_PAGE_LIMIT = Number(process.env.ALGOLIA_DRY_RUN_PAGE_LIMIT ?? 200);
+// A missing, non-numeric, or non-positive override falls back to the default: `slice(0, NaN)` and
+// `slice(0, 0)` would silently process zero pages and report a green dry run that checked nothing.
+const dryRunPageLimitOverride = Number.parseInt(
+  process.env.ALGOLIA_DRY_RUN_PAGE_LIMIT ?? '',
+  10
+);
+const DRY_RUN_PAGE_LIMIT =
+  dryRunPageLimitOverride > 0 ? dryRunPageLimitOverride : DEFAULT_DRY_RUN_PAGE_LIMIT;
 const CACHE_VERSION = 1;
 const CACHE_DIR = join(process.cwd(), '.next', 'cache', 'algolia-records');
 
