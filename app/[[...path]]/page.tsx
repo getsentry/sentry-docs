@@ -166,7 +166,8 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       const isExpectedError =
         errorCode === 'ENOENT' ||
         errorCode === 'MDX_RUNTIME_ERROR' ||
-        (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+        (typeof (e as any)?.message === 'string' &&
+          (e as any).message.includes('Failed to find a valid source file'));
       if (isExpectedError) {
         // Log as warning for visibility without flooding errors
         // Users are served static pages from CDN - this is an infrastructure edge case
@@ -241,7 +242,8 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     const isExpectedError =
       errorCode === 'ENOENT' ||
       errorCode === 'MDX_RUNTIME_ERROR' ||
-      (e instanceof Error && e.message.includes('Failed to find a valid source file'));
+      (typeof (e as any)?.message === 'string' &&
+        (e as any).message.includes('Failed to find a valid source file'));
     if (isExpectedError) {
       // Log as warning for visibility without flooding errors
       // Users are served static pages from CDN - this is an infrastructure edge case
