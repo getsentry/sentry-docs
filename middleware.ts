@@ -2689,39 +2689,43 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/errors/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/errors/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/errors/',
+  },
+  {
+    from: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/product/crons/alerts/',
@@ -3597,8 +3601,9 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/sentry-mcp/',
     to: 'https://mcp.sentry.dev',
   },
-  // Removed: /product/metrics/, /product/profiling/, /product/discover-queries/,
+  // Removed: /product/metrics/, /product/profiling/,
   // /product/session-replay/ are now canonical paths (previously redirected to /product/explore/*)
+  // /product/discover-queries/ now redirects to /product/errors/
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
