@@ -24,7 +24,14 @@ function Bug() {
         <path d="M17.4 17 L21.4 19.6" />
       </g>
       {/* head + body */}
-      <circle cx="12" cy="5.4" r="2.6" fill="currentColor" stroke="#2b2240" strokeWidth="1.6" />
+      <circle
+        cx="12"
+        cy="5.4"
+        r="2.6"
+        fill="currentColor"
+        stroke="#2b2240"
+        strokeWidth="1.6"
+      />
       <ellipse
         cx="12"
         cy="13.5"
