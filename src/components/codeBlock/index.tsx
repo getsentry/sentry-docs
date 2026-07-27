@@ -99,7 +99,7 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
 
   // Mermaid blocks should not be processed by CodeBlock - they need special client-side rendering
   if (language === 'mermaid') {
-    return <div className="language-mermaid">{children}</div>;
+    return <div className="language-mermaid" translate="no">{children}</div>;
   }
 
   async function copyCodeOnClick() {
