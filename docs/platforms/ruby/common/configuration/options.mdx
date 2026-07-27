@@ -19,7 +19,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 The DSN tells the SDK where to send events. If this value isn't provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable doesn't exist, the SDK won't send any events.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -260,6 +260,18 @@ These trusted proxies will be skipped when the SDK computes the user's ip addres
 ```ruby
 config.trusted_proxies = ["2.2.2.2"]
 ```
+
+</SdkOption>
+
+<SdkOption name="hub_isolation_level" type="Symbol" defaultValue=":thread">
+
+Controls where the SDK stores the current hub, which holds the active scope. The default `:thread` uses thread-local storage. Set it to `:fiber` to use [Fiber Storage](https://docs.ruby-lang.org/en/3.2/Fiber.html#class-Fiber-label-Fiber+Storage) (requires Ruby 3.2+), which prevents cross-request scope contamination on fiber-based servers such as [Falcon](https://github.com/socketry/falcon) and other `async` frameworks.
+
+```ruby
+config.hub_isolation_level = :fiber
+```
+
+Requesting `:fiber` on Ruby versions below 3.2 logs a warning and falls back to `:thread`.
 
 </SdkOption>
 

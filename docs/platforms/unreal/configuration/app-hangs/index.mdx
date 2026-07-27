@@ -15,7 +15,7 @@ The SDK can detect hangs in one of two ways:
 
 <Alert>
 
-The engine watcher is available on Windows and Linux. The native watchdog is available on Windows, Linux, and macOS (which needs the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>). On macOS and iOS, the Cocoa SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">app hang detection</PlatformLink>. On Android, the Java SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">ANR detection</PlatformLink>.
+The engine watcher is available on Windows and Linux. The native watchdog is available on Windows, Linux, macOS (which needs the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>), and Android (routed through the NDK integration). On macOS and iOS, the Cocoa SDK provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">app hang detection</PlatformLink>. On Android, the Java SDK also provides its own <PlatformLink to="/configuration/options/#enableAppNotRespondingTracking">ANR detection</PlatformLink>.
 
 </Alert>
 
@@ -80,6 +80,8 @@ UseNativeHangTracking=True
 
 On macOS, this option requires the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>.
 
+On Android, the native watchdog is provided by the sentry-native NDK integration and monitors the game thread. It runs alongside the Java SDK's ANR detection, which monitors the Android main (UI) thread, so a freeze that blocks both threads can be reported as both a hang event and an ANR.
+
 ### Hang Timeout
 
 The hang timeout controls how long the thread must be unresponsive before a hang event is captured. The default is 5 seconds, with a minimum of 1 second.
@@ -123,3 +125,4 @@ public:
 - **One thread at a time (engine watcher)**: If multiple threads become stuck simultaneously, only one hang is reported per episode. The engine's `FThreadHeartBeat` reports one stuck thread at a time, so additional stuck threads are only detected after the first one recovers.
 - **Game thread only (native watchdog)**: The native watchdog monitors the game thread.
 - **macOS requires the native backend**: On macOS, hang tracking is only available through the native watchdog with the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink> enabled. The engine watcher is not available on macOS.
+- **Android runs both detectors**: On Android, enabling the native watchdog does not disable the Java SDK's ANR detection. The native watchdog monitors the game thread while ANR detection monitors the main (UI) thread, so a freeze that affects both threads can produce two separate events.

@@ -1,0 +1,75 @@
+---
+title: OpenTelemetry (OTLP)
+description: "Learn about using OTLP to automatically send OpenTelemetry Traces to Sentry."
+keywords: ["otlp", "otel", "opentelemetry"]
+---
+
+The OTLP integration configures the Sentry SDK to automatically send trace data instrumented by an OpenTelemetry SDK to Sentry's [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/) [ingestion endpoint](/concepts/otlp).
+
+<Alert level="warning" title="Mutually Exclusive With Sentry Tracing">
+
+Using Sentry tracing and OTLP tracing at the same time is not supported. If Sentry tracing is enabled (`traces_sample_rate`, `traces_sampler`, or `enable_tracing`), the integration will not be registered.
+
+</Alert>
+
+## Install
+
+Install the required OpenTelemetry packages via Composer:
+
+```bash
+composer require \
+  open-telemetry/sdk \
+  open-telemetry/exporter-otlp
+```
+
+## Configure
+
+You need to configure both the OpenTelemetry and Sentry SDKs to get trace data.
+
+### OpenTelemetry
+
+For the OpenTelemetry SDK, you need to [configure instrumentation](https://opentelemetry.io/docs/languages/php/instrumentation/) you want to capture.
+
+### Sentry
+
+For the Sentry SDK, add the `OTLPIntegration` to your existing configuration.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    // Add data like request headers and IP for users, if applicable;
+    // see https://docs.sentry.io/platforms/php/data-management/data-collected/ for more info
+    'send_default_pii' => true,
+    'integrations' => [
+        new \Sentry\Integration\OTLPIntegration(),
+    ],
+]);
+```
+
+## Behavior
+
+Under the hood, the `OTLPIntegration` sets up the following parts:
+
+* A [`SpanExporter`](https://opentelemetry.io/docs/concepts/components/#exporters) that automatically configures the OTLP ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the PHP SDK (i.e. do not set `traces_sample_rate`, `traces_sampler`, or `enable_tracing`).
+* Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
+
+Cross-service trace propagation uses OTel's default W3C `traceparent` headers and does not require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
+
+## Options
+
+You can pass the following arguments to the `OTLPIntegration` constructor:
+
+- `setupOtlpTracesExporter` (bool):
+
+  Automatically configure an Exporter to send OTLP traces to the right project from the DSN or `collectorUrl`, defaults to `true`.
+
+  Set to `false` to set up the TracerProvider manually.
+
+- `collectorUrl` (string|null):
+
+  URL of your own OpenTelemetry collector. When set, the exporter will send traces to this URL instead of the Sentry OTLP endpoint derived from the DSN.
+
+## Supported Versions
+
+- PHP: 8.1+ (required by the OpenTelemetry SDK)
+- sentry/sentry: 4.23.0+

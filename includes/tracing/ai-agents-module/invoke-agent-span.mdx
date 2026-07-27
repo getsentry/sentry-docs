@@ -9,7 +9,6 @@ The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instr
 - The `gen_ai.operation.name` attribute MUST be `"invoke_agent"`.
 - The `gen_ai.agent.name` attribute SHOULD be set to the agent's name. (e.g. `"Weather Agent"`)
 - If relevant, `gen_ai.pipeline.name` SHOULD be set to the name of the AI workflow or pipeline the agent belongs to.
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 Additional attributes on the span:
 
@@ -42,14 +41,6 @@ Additional attributes on the span:
 | `gen_ai.usage.output_tokens`            | int  | optional          | The number of tokens used in the AI output, including reasoning tokens. **[3]**      | `130`   |
 | `gen_ai.usage.output_tokens.reasoning`  | int  | optional          | The number of tokens used for reasoning.                                             | `30`    |
 | `gen_ai.usage.total_tokens`             | int  | optional          | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.             | `190`   |
-
-### Cost
-
-| Data Attribute              | Type   | Requirement Level | Description                                       | Example |
-| :-------------------------- | :----- | :---------------- | :------------------------------------------------ | :------ |
-| `gen_ai.cost.input_tokens`  | double | optional          | Cost of input tokens in USD (without cached).     | `0.005` |
-| `gen_ai.cost.output_tokens` | double | optional          | Cost of output tokens in USD (without reasoning). | `0.015` |
-| `gen_ai.cost.total_tokens`  | double | optional          | Total cost for tokens used.                       | `0.020` |
 
 - **[0]:** Span attributes only allow primitive data types. This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
 - **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and filters it out of the user-facing Conversations view, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.

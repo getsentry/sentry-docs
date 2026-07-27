@@ -22,29 +22,34 @@ Changing the error sample rate requires re-deployment. In addition, setting an S
 
 ## Sampling Transaction Events
 
-We recommend sampling your transactions for two reasons:
+<Alert>
+
+This page covers both transaction mode (default, using transactions) and stream mode (using service spans). See <PlatformLink to="/tracing/streamed-spans/#sampling-optional">Streamed Spans</PlatformLink> to learn more.
+
+</Alert>
+
+We recommend sampling your transactions/service spans for two reasons:
 
 1. Capturing a single trace involves minimal overhead, but capturing traces for _every_ page load or _every_ API request may add an undesirable load to your system.
 2. Enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs.
 
-Choose a sampling rate with the goal of finding a balance between performance and volume concerns with data accuracy. You don't want to collect _too_ much data, but you want to collect sufficient data from which to draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume.
+Choose a sampling rate with the goal of finding a balance between performance and volume concerns with data accuracy. You don't want to collect _too_ much data, but you want to collect sufficient data from which to draw meaningful conclusions. If you're not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume.
 
-## Configuring the Transaction Sample Rate
+## Configuring the Sample Rate
 
-The Sentry SDKs have two configuration options to control the volume of transactions sent to Sentry, allowing you to take a representative sample:
+The Sentry SDKs have two configuration options to control the volume of transactions/service spans sent to Sentry, allowing you to take a representative sample:
 
 1. Uniform sample rate (<PlatformIdentifier name="traces-sample-rate" />):
-
-   - Provides an even cross-section of transactions, no matter where in your app or under what circumstances they occur.
+   - Provides an even cross-section of transactions/service spans, no matter where in your app or under what circumstances they occur.
    - Uses default [inheritance](#inheritance) and [precedence](#precedence) behavior
 
 2. Sampling function (<PlatformIdentifier name="traces-sampler" />) which:
-   - Samples different transactions at different rates
-   - <PlatformLink to="/configuration/filtering/">Filters</PlatformLink> out some
-     transactions entirely
+   - Samples different transactions/service spans at different rates
+   - <PlatformLink to="/configuration/filtering/">Filters</PlatformLink> out
+     some transactions/service spans entirely
    - Modifies default [precedence](#precedence) and [inheritance](#inheritance) behavior
 
-By default, none of these options are set, meaning no transactions will be sent to Sentry. You must set either one of the options to start sending transactions.
+By default, none of these options are set, meaning no transactions/service spans will be sent to Sentry. You must set either one of the options to start sending them.
 
 ### Setting a Uniform Sample Rate
 
@@ -58,23 +63,29 @@ By default, none of these options are set, meaning no transactions will be sent 
 
 ### Default Sampling Context Data
 
-The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by platform and integration.
+The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction/service span is created varies by platform and integration.
 
 <PlatformContent includePath="performance/default-sampling-context" />
 
 ### Custom Sampling Context Data
 
-When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by passing it as an optional second argument to <PlatformIdentifier name="start-transaction" />. This is useful if there's data to which you want the sampler to have access but which you don't want to attach to the transaction as `tags` or `data`, such as information that's sensitive or that’s too large to send with the transaction. For example:
+<Alert>
+
+This only applies to transaction mode. In stream mode there's no custom sampling context — pass data as span attributes when you start the span, then read them from `samplingContext.spanContext.attributes` in your `tracesSampler`. See [Setting a Sampling Function](#setting-a-sampling-function).
+
+</Alert>
+
+When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by passing it as an optional second argument to <PlatformIdentifier name="start-transaction" />. This is useful if there's data to which you want the sampler to have access but which you don't want to attach to the transaction as `tags` or `data`, such as information that's sensitive or that's too large to send with the transaction. For example:
 
 <PlatformContent includePath="performance/custom-sampling-context" />
 
 ## Inheritance
 
-Whatever a transaction's sampling decision, that decision will be passed to its child spans and from there to any transactions they subsequently cause in other services.
+Whatever a transaction's/service span's sampling decision, that decision will be passed to its child spans and from there to any transactions they subsequently cause in other services.
 
 (See <PlatformLink to="/tracing/trace-propagation/">Distributed Tracing</PlatformLink> for more about how that propagation is done.)
 
-If the transaction currently being created is one of those subsequent transactions (in other words, if it has a parent transaction), the upstream (parent) sampling decision will be included in the sampling context data. Your <PlatformIdentifier name="traces-sampler" /> can use this information to choose whether to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
+If the transaction/service span currently being created is one of those subsequent transactions/service spans (in other words, if it has a parent transaction/service span), the upstream (parent) sampling decision will be included in the sampling context data. Your <PlatformIdentifier name="traces-sampler" /> can use this information to choose whether to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
 
 <PlatformContent includePath="performance/always-inherit-sampling-decision">
 
@@ -86,23 +97,29 @@ If you're using a <PlatformIdentifier name="traces-sample-rate" /> rather than a
 
 ## Forcing a Sampling Decision
 
+<Alert>
+
+This only applies to transaction mode. In stream mode you can't force a decision at span creation — control sampling with a `tracesSampler` that reads the span's `name` and `attributes`.
+
+</Alert>
+
 If you know at transaction creation time whether or not you want the transaction sent to Sentry, you also have the option of passing a sampling decision directly to the transaction constructor (note, not in the <PlatformIdentifier name="custom-sampling-context" /> object). If you do that, the transaction won't be subject to the <PlatformIdentifier name="traces-sample-rate" />, nor will <PlatformIdentifier name="traces-sampler" /> be run, so you can count on the decision that's passed not to be overwritten.
 
 <PlatformContent includePath="performance/force-sampling-decision" />
 
 ## Precedence
 
-There are multiple ways for a transaction to end up with a sampling decision.
+There are multiple ways for a transaction/service span to end up with a sampling decision.
 
 - Random sampling according to a static sample rate set in <PlatformIdentifier name="traces-sample-rate" />
 - Random sampling according to a sample function rate returned by <PlatformIdentifier name="traces-sampler" />
 - Absolute decision (100% chance or 0% chance) returned by <PlatformIdentifier name="traces-sampler" />
-- If the transaction has a parent, inheriting its parent's sampling decision
+- If the transaction/service span has a parent, inheriting its parent's sampling decision
 - Absolute decision passed to <PlatformIdentifier name="start-transaction" />
 
 When there's the potential for more than one of these to come into play, the following precedence rules apply:
 
 1. If a sampling decision is passed to <PlatformIdentifier name="start-transaction" />, that decision will be used, overriding everything else.
-1. If <PlatformIdentifier name="traces-sampler" /> is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, use the sampling context data to make its own decision, or choose a sample rate for the transaction. We advise against overriding the parent sampling decision because it will break distributed traces)
+1. If <PlatformIdentifier name="traces-sampler" /> is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, use the sampling context data to make its own decision, or choose a sample rate for the transaction/service span. We advise against overriding the parent sampling decision because it will break distributed traces)
 1. If <PlatformIdentifier name="traces-sampler" /> is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
 1. If <PlatformIdentifier name="traces-sampler" /> is not defined and there's no parent sampling decision, <PlatformIdentifier name="traces-sample-rate" /> will be used.

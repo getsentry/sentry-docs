@@ -36,9 +36,23 @@ If you _do not_ wish to use the default PII behavior, you can also choose to ide
 
 ## Scrubbing Data
 
-### <PlatformIdentifier name="before-send" /> & <PlatformIdentifier name="before-send-transaction" />
+### Scrubbing in `beforeSend*` SDK Hooks
 
-SDKs provide a <PlatformIdentifier name="before-send" /> hook, which is invoked before an error or message event is sent and can be used to modify event data to remove sensitive information. Some SDKs also provide a <PlatformIdentifier name="before-send-transaction" /> hook which does the same thing for transactions. We recommend using <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> in the SDKs to **scrub any data before it is sent**, to ensure that sensitive data never leaves the local environment.
+SDKs provide various `beforeSend*` hooks, which are invoked before an errors, messages, spans, logs or metrics are sent and can be used to modify event data to remove sensitive information. The following hooks are available:
+
+- <PlatformLink to="/configuration/options/#beforeSend">`beforeSend`</PlatformLink> applies to error and message events
+- <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> applies to spans
+- <PlatformLink to="/configuration/options/#beforeSendLog">`beforeSendLog`</PlatformLink> applies to logs
+- <PlatformLink to="/configuration/options/#beforeSendMetric">`beforeSendMetric`</PlatformLink> applies to metrics
+- <PlatformLink to="/configuration/options/#beforeSendTransaction">`beforeSendTransaction`</PlatformLink> applies to transactions (only in transaction mode)
+
+<Alert>
+
+If you're using span <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, `beforeSendTransaction` has no effect. Instead, use `beforeSendSpan` with the `withStreamedSpan` helper to modify streamed spans directly.
+
+</Alert>
+
+We recommend using these hooks in the SDKs to **scrub any data before it is sent**, to ensure that sensitive data never leaves the local environment.
 
 <PlatformContent includePath="configuration/before-send/" />
 
@@ -50,6 +64,7 @@ Sensitive data may appear in the following areas:
 - HTTP context → Query strings may be picked up in some frameworks as part of the HTTP request context.
 - Transaction Names → In certain situations, transaction names might contain sensitive data. For example, a browser's pageload transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the framework, your routing configuration, race conditions, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
 - HTTP Spans → Most SDKs will include the HTTP query string and fragment as a data attribute, which means the HTTP span may need to be scrubbed.
+- Attributes → Attributes can be scrubbed using the `beforeSendSpan`, `beforeSendLog`, and `beforeSendMetric` hooks for the respective telemetry types.
 
 For more details and data filtering instructions, see <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink>.
 

@@ -26,7 +26,7 @@ There are no special requirements for the Span v2 envelope header.
 }
 ```
 
-Unlike transactions, envelope headers for spans **require** [Dynamic sampling context](/sdk/telemetry/traces/dynamic-sampling-context/). Also see [Envelope Headers](/sdk/foundations/transport/envelopes/#headers).
+Unlike transactions, envelope headers for spans **require** [Dynamic sampling context](/sdk/foundations/trace-propagation/dynamic-sampling-context/). Also see [Envelope Headers](/sdk/foundations/envelopes/#headers).
 
 ## Span v2 Envelope Item Header
 
@@ -61,7 +61,7 @@ The container is defined as follows:
 
 ### `version` and `ingest_settings` properties
 
-The span envelope item **SHOULD** include `version` and `ingest_settings` properties to instruct Relay to infer IP address and user agent from the incoming request. See the [Ingest Settings](/sdk/foundations/transport/envelope-items/#ingest-settings) spec for the full definition, field reference, and behavior.
+The span envelope item **SHOULD** include `version` and `ingest_settings` properties to instruct Relay to infer IP address and user agent from the incoming request. See the [Ingest Settings](/sdk/foundations/envelopes/envelope-items/#ingest-settings) spec for the full definition, field reference, and behavior.
 
 </SpecSection>
 
@@ -113,7 +113,7 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
           "type": "string",
           "value": "4.10.0"
         },
-        "sentry.span.source": {
+        "sentry.segment.name.source": {
           "type": "string",
           "value": "route"
         },
@@ -234,7 +234,7 @@ All attributes mentioned below MUST be attached to every span being emitted from
 | `sentry.op` | string | Required, see note | The [span op](../../traces/span-operations/) (e.g., `"http.client"`, `"db.query"`) of the span. MUST be set on spans from auto instrumentation, MAY be set by manually started spans. |
 | `sentry.release` | string | Required | The release version of the application |
 | `sentry.environment` | string | Required | The environment name (e.g., `"production"`, `"staging"`, `"development"`) |
-| `sentry.span.source` | string | Required, see note | The source of the span name. **MUST** be set on segment spans, **MAY** be set on child spans. <br/> See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__span__source.json) for all supported sources. <br/>See [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) and [Clustering](/backend/application-domains/transaction-clustering/#automatic-transaction-clustering) for more information.|
+| `sentry.segment.name.source` | string | Required on segment spans | The source of the span name. **MUST** exclusively be set on segment spans. <br/> See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__segment__name__source.json) for all supported sources. <br/>See [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) for more information.|
 | `sentry.profiler_id` | string | Required | The id of the currently running profiler (continuous profiling) |
 | `sentry.replay_id` | string | Required | The id of the currently running replay (if available) |
 | `os.name` | string | Required | The operating system name (e.g., "Linux", "Windows", "macOS") |

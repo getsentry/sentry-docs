@@ -18,7 +18,7 @@ The DSN tells the SDK where to send the events. If this value is not provided, t
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
-Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
@@ -201,6 +201,30 @@ This parameter controls whether integrations should capture HTTP request bodies.
 - `small`: Only small request bodies will be captured (typically 4KB).
 - `medium`: Medium and small requests will be captured (typically 10KB).
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.aspnetcore"]}>
+
+<SdkOption name="TransactionNameProvider" type="function">
+
+A callback used to name transactions for requests that the routing system doesn't resolve to a route template (for example, requests that don't match any endpoint). It receives the current `HttpContext` and returns the route portion of the name; Sentry prepends the uppercased HTTP method, so returning `orders/list` produces a transaction named `GET orders/list`. Return `null` or `string.Empty` to fall back to the URL path.
+
+```csharp
+options.TransactionNameProvider = context => context.Request.Path;
+```
+
+By default the provider is only invoked as a fallback for unresolved routes. To have it run on every request, enable <PlatformIdentifier name="PreferTransactionNameProvider" />.
+
+</SdkOption>
+
+<SdkOption name="PreferTransactionNameProvider" type="bool" defaultValue="false" availableSince="6.7.0">
+
+Controls when <PlatformIdentifier name="TransactionNameProvider" /> is invoked.
+
+When `false` (the default), the provider only runs as a fallback for requests whose route can't be resolved to a template. When `true`, the provider runs on every request after routing, and a non-empty return value overrides the route-derived transaction name. If the provider returns `null` or `string.Empty`, the routed name is kept (or the URL-path fallback applies when no route was resolved).
 
 </SdkOption>
 
