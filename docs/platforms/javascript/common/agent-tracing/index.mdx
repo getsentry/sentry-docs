@@ -30,7 +30,7 @@ supported:
   - javascript.nitro
 ---
 
-With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. Track token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
@@ -40,11 +40,7 @@ Before setting up Agent Tracing, ensure you have <PlatformLink to="/tracing/">tr
 
 ## Automatic Instrumentation
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-The JavaScript SDK supports automatic instrumentation for AI libraries. Add the integration for your AI library to your Sentry configuration:
+The JavaScript SDK supports automatic instrumentation for AI libraries:
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 - <PlatformLink to="/features/workers-ai/">Cloudflare Workers AI</PlatformLink> — automatic instrumentation for `env.AI` (no integration to add)
@@ -63,39 +59,29 @@ The JavaScript SDK supports automatic instrumentation for AI libraries. Add the 
 - <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
 </PlatformSection>
 
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-import { openAIIntegration } from "___SDK_PACKAGE___";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  integrations: [
-    openAIIntegration(),
-  ],
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Tracking Conversations
 
 <Alert>
   Tracking Conversations has **beta** stability. Configuration options and behavior may change.
 </Alert>
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 [Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
 
 Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of the session. The ID is applied to all AI-related spans in the current scope. Pass `null` to unset it.
+
+```javascript
+Sentry.setConversationId("conv_abc123");
+```
+
+### Identifying Users in Conversations
+
+The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
+
+```javascript
+Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
@@ -103,58 +89,7 @@ Building with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agen
 
 </PlatformSection>
 
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-
-// Set conversation ID at the start of a conversation
-Sentry.setConversationId('conv_abc123');
-
-// All subsequent AI calls will be linked to this conversation
-await openai.chat.completions.create({
-  model: "gpt-4",
-  messages: [{ role: "user", content: "Hello" }],
-});
-
-// Later in the conversation
-await openai.chat.completions.create({
-  model: "gpt-4",
-  messages: [
-    { role: "user", content: "Hello" },
-    { role: "assistant", content: "Hi there!" },
-    { role: "user", content: "What's the weather?" },
-  ],
-});
-
-// Both calls will have gen_ai.conversation.id: "conv_abc123"
-
-// To unset it
-Sentry.setConversationId(null);
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Identifying Users in Conversations
-
-The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
-
-```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-
-Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
-```
-
-Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
-
 ## Options
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### Privacy Controls
 
@@ -162,55 +97,32 @@ All AI integrations support `recordInputs` and `recordOutputs` options to contro
 
 Set these to `false` if your prompts or responses contain sensitive data you don't want sent to Sentry.
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-import { openAIIntegration } from "___SDK_PACKAGE___";
-
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
   integrations: [
-    openAIIntegration({
-      recordInputs: false, // Don't capture prompts
-      recordOutputs: false, // Don't capture responses
+    Sentry.openAIIntegration({
+      recordInputs: false,
+      recordOutputs: false,
     }),
   ],
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### Streaming Gen AI Spans
 
 `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction by default (since SDK version `10.61.0`). This prevents AI spans with large inputs and outputs from hitting transaction payload size limits and being dropped, and is required for <Link to="/product/agents/conversations/">Conversations</Link> to work.
 
-To send `gen_ai` spans as part of the transaction instead, set `streamGenAiSpans` to `false`. Self-hosted Sentry users should set this to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
-
-</SplitSectionText>
-<SplitSectionCode>
+On earlier SDK versions, opt in by setting `streamGenAiSpans: true`:
 
 ```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  streamGenAiSpans: false, // opt out of streaming gen_ai spans
+  streamGenAiSpans: true,
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+To send `gen_ai` spans as part of the transaction instead, set `streamGenAiSpans` to `false`. Self-hosted Sentry users should set this to `false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
 
 ## Manual Instrumentation
 
