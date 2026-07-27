@@ -1064,6 +1064,90 @@ const userDocsRedirects = [
     source: '/organization/integrations/flow-relay/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/deviera/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fencer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/logbrew/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/supernaut/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/bugzero/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ellipsis/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/phoenix-alerts/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ploxir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/stackstitch/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/vedetta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/applied-edge/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/notilens/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/offloop/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/positron-flux/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/productpanda/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ratchet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/superlog/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/synthreo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/waroom/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1153,6 +1237,90 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/deviera/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fencer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/logbrew/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/supernaut/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/bugzero/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ellipsis/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/phoenix-alerts/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ploxir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/stackstitch/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/vedetta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/applied-edge/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/notilens/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/offloop/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/positron-flux/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/productpanda/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ratchet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/superlog/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/synthreo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
   {
