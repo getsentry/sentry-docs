@@ -34,9 +34,21 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
-## Prerequisites
+## Getting Started
 
-Before setting up Agent Tracing, ensure you have <PlatformLink to="/tracing/">tracing enabled</PlatformLink> in your Sentry configuration.
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink> and pass `dataCollection` so generative AI content can be collected according to the SDK defaults (including prompts and responses when you leave the categories unconfigured):
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {},
+});
+```
+
+See <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> to tighten or expand what is collected.
 
 ## Instrumentation
 
@@ -93,15 +105,13 @@ Building with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agen
 
 ### Privacy Controls
 
-AI integrations can capture prompts and responses via `recordInputs` and `recordOutputs`. By default those are **off**, unless you enable generative AI collection with <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.genAI`</PlatformLink> (or the deprecated `sendDefaultPii: true`).
-
-To record prompts and responses:
+With `dataCollection: {}` (or any `dataCollection` config), generative AI inputs and outputs default to **on**. To turn prompt and response capture off:
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
-    genAI: { inputs: true, outputs: true },
+    genAI: { inputs: false, outputs: false },
   },
 });
 ```
