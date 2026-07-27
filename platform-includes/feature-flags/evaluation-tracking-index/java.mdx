@@ -81,6 +81,6 @@ Sentry.configureScope { scope ->
 
 `clearFeatureFlags()` removes evaluations only from the current scope. It doesn't affect parent or sibling scopes, or evaluations already recorded on an active span or transaction.
 
-Scope evaluations are attached to error and message events. By default, the current scope keeps the 100 most recent, unique feature flag evaluations. When a scope forks, the child receives a copy of these evaluations, and changes to the copy don't affect the parent scope.
+Scope evaluations are attached to error and message events. By default, the current scope keeps the latest evaluation for up to 100 flag names. Re-evaluating a flag updates its stored value and makes it the most recent evaluation. When a scope forks, the child receives a copy of these evaluations, and changes to the copy don't affect the parent scope.
 
-Active spans and transactions record the first 10 unique feature flags as span attributes using the `flag.evaluation.<name>` key. Spans don't inherit evaluations from their parent span.
+Active spans and transactions record evaluations for up to 10 flag names as span attributes using the `flag.evaluation.<name>` key. Re-evaluating a recorded flag updates its value. After 10 flag names are recorded, evaluations for new flag names are ignored. Spans don't inherit evaluations from their parent span.
