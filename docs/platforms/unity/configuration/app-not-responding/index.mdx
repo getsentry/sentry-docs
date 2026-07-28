@@ -1,11 +1,13 @@
 ---
 title: App Not Responding (ANR)
 sidebar_order: 20
-description: Learn how to turn off or specify ANR.
+description: Learn how to configure ANR and native app hang detection.
 og_image: /og-images/platforms-unity-configuration-app-not-responding.png
 ---
 
 Application Not Responding (ANR) errors are triggered when the Unity thread of the game is blocked for more than five seconds. The Unity SDK reports ANR errors as Sentry events.
+
+On Android, you can enable experimental native app hang detection to capture the Unity main thread's native stack trace. See [Native App Hang Detection on Android](#native-app-hang-detection-on-android).
 
 ## ANR Implementation Details
 
@@ -35,9 +37,9 @@ Since the ANR integration creates an exception on a background thread, based on 
 
 Since the Unity SDKs [line number support](/platforms/unity/configuration/il2cpp) is limited to actually thrown exceptions, the integration does not provide you with line numbers in the captured ANR issues.
 
-### Automatic Disabling of Native ANR Detection
+### Native Android ANR Detection
 
-To prevent duplicate ANR events, the Unity SDK automatically disables native ANR detection when initializing on Android and iOS platforms. This happens regardless of your Unity ANR setting. The Unity SDK's ANR detection is designed to work within the Unity runtime environment, where native detection mechanisms may not function correctly or would report duplicate events.
+On Android, `AndroidNativeAnrEnabled` controls ANR detection through the Android SDK and defaults to `true`. It monitors the Android UI thread independently of the Unity managed watchdog, which monitors the Unity main thread. A freeze that blocks both threads can produce two events.
 
 ### ANR Mechanism for Event Filtering
 
@@ -60,3 +62,26 @@ To set the timeout use the following snippet.
 ```csharp
 options.AnrTimeout = TimeSpan.FromSeconds(5);
 ```
+
+## Native App Hang Detection on Android
+
+Native app hang detection uses the NDK integration to watch the Unity main thread. The SDK sends a heartbeat after each frame; when the thread misses heartbeats for longer than `AppHangTimeout`, Sentry captures an app hang event with its native stack trace.
+
+<Alert title="Experimental">
+
+This feature is experimental and available on Android only.
+
+</Alert>
+
+Enable it in your options configuration:
+
+```csharp
+options.Experimental.EnableNativeAppHangTracking = true;
+options.AppHangTimeout = TimeSpan.FromSeconds(5);
+```
+
+Native app hang detection requires an Android IL2CPP build with both `AndroidNativeSupportEnabled` and `NdkIntegrationEnabled` enabled. Both options default to `true`.
+
+When native app hang detection is enabled, the Unity SDK disables its managed ANR watchdog to avoid duplicate events. Android's native ANR detection remains separate because it monitors the Android UI thread. A freeze that blocks both threads can produce an ANR and an app hang event.
+
+For runtime Android initialization, configure these options in your options callback. With build-time Android initialization, set them in the Sentry configuration window so they are written to the generated `AndroidManifest.xml`. See <PlatformLink to="/native-support/#initialization-of-the-native-sdks">Native SDK initialization</PlatformLink> for the difference between these modes.

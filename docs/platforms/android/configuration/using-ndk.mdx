@@ -83,6 +83,57 @@ Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
 }
 ```
 
+## App Hang Detection
+
+The NDK integration can detect when a native or game thread stops responding, even when the app does not crash. Unlike Android ANR detection, which monitors the Android UI thread, app hang detection watches the thread that sends native heartbeats. This is useful for engines or native code with their own main loop.
+
+<Alert title="Experimental">
+
+NDK app hang detection is experimental. It requires Sentry Android SDK version `8.48.0` or later and the NDK integration.
+
+</Alert>
+
+Enable detection when you initialize the SDK, then call `sentry_app_hang_heartbeat()` regularly from the thread you want to monitor:
+
+```kotlin {tabTitle:Kotlin}
+SentryAndroid.init(this) { options ->
+    options.isEnableNdkAppHangTracking = true
+    options.ndkAppHangTimeoutIntervalMillis = 2_000
+}
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(this, options -> {
+    options.setEnableNdkAppHangTracking(true);
+    options.setNdkAppHangTimeoutIntervalMillis(2_000);
+});
+```
+
+```c
+// Call from the thread whose responsiveness represents your app.
+void game_loop(void) {
+    while (is_running()) {
+        sentry_app_hang_heartbeat();
+        run_one_frame();
+    }
+}
+```
+
+The first heartbeat chooses the monitored thread. If it misses heartbeats for the configured timeout, the NDK integration captures an app hang event with that thread's stack trace. The timeout defaults to `5000` ms and has a minimum of `1000` ms.
+
+Android ANR detection remains independent. If the same freeze blocks both the Android UI thread and your monitored native thread, Sentry can report both an ANR and an app hang.
+
+You can also configure these options in `AndroidManifest.xml`, which is useful when the SDK initializes automatically:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.ndk.app-hang.enable" android:value="true" />
+    <meta-data android:name="io.sentry.ndk.app-hang.timeout-interval-millis" android:value="2000" />
+</application>
+```
+
+For details about the native watchdog and heartbeat behavior, see the [Native SDK app hang documentation](/platforms/native/usage/app-hangs/).
+
 ## Disable NDK Integration
 
 You can disable the NDK integration by adding the following to your `AndroidManifest.xml`:
