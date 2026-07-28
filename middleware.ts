@@ -1396,19 +1396,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-frontend/upload-source-maps/',
-    to: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    to: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/upload-source-maps/',
-    to: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    to: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     from: '/guides/integrate-frontend/configure-scms/',
-    to: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/configure-scms/',
-    to: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/guides/integrate-frontend/',
@@ -1424,27 +1424,27 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    to: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    to: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
   },
   {
     from: '/guides/integrate-frontend/initialize-sentry-sdk/',
-    to: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    to: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/initialize-sentry-sdk/',
-    to: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    to: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     from: '/guides/integrate-frontend/generate-first-error/',
-    to: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    to: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/generate-first-error/',
-    to: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    to: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
   },
   {
     from: '/basics/',
