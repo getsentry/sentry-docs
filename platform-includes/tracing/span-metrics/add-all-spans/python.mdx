@@ -1,0 +1,56 @@
+How you add data to every span depends on your tracing mode:
+
+```python {tabTitle:Transaction Mode (Default)}
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
+
+def before_send_transaction(event: Event, hint: Hint) -> Event | None:
+    # Add attributes to the root span (transaction)
+    if "trace" in event.get("contexts", {}):
+        if "data" not in event["contexts"]["trace"]:
+            event["contexts"]["trace"]["data"] = {}
+
+        event["contexts"]["trace"]["data"].update({
+            "app_version": "1.2.3",
+            "environment_region": "us-west-2"
+        })
+
+    # Add attributes to all child spans
+    for span in event.get("spans", []):
+        if "data" not in span:
+            span["data"] = {}
+
+        span["data"].update({
+            "component_version": "2.0.0",
+            "deployment_stage": "production"
+        })
+
+    return event
+
+sentry_sdk.init(
+    # ...
+    before_send_transaction=before_send_transaction
+)
+```
+
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+
+def before_send_span(span, hint):
+    # Runs once per span, as it's flushed.
+    if "attributes" not in span:
+        span["attributes"] = {}
+    span["attributes"].update({
+        "component_version": "2.0.0",
+        "deployment_stage": "production",
+    })
+    return span
+
+sentry_sdk.init(
+    # ...
+    _experiments={
+        "trace_lifecycle": "stream",
+        "before_send_span": before_send_span,
+    },
+)
+```
