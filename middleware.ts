@@ -1412,15 +1412,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-frontend/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-frontend/create-new-project/',
@@ -1532,35 +1532,35 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-backend/capturing-errors/',
-    to: '/product/sentry-basics/integrate-backend/capturing-errors/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/capturing-errors/',
-    to: '/product/sentry-basics/integrate-backend/capturing-errors/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/',
-    to: '/product/sentry-basics/integrate-backend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/',
-    to: '/product/sentry-basics/integrate-backend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/configuration-options/',
-    to: '/product/sentry-basics/integrate-backend/configuration-options/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/configuration-options/',
-    to: '/product/sentry-basics/integrate-backend/configuration-options/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/getting-started/',
-    to: '/product/sentry-basics/integrate-backend/getting-started/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/getting-started/',
-    to: '/product/sentry-basics/integrate-backend/getting-started/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/ssl/',
