@@ -178,14 +178,18 @@ with start_span(name="process") as span:
 
 If you use `traces_sample_rate`, no changes are needed.
 
-If you use a custom `traces_sampler`, the sampling context has a different structure in stream mode. Span details are available under `sampling_context["span_context"]`, which includes `name`, `trace_id`, `parent_span_id`, `parent_sampled`, and `attributes`:
+If you use a custom `traces_sampler`, the sampling context has the same structure in stream mode, but not all keys might be populated. The `data` key under `transaction_context` contains span attributes known at span start.
 
 ```python
 import sentry_sdk
 
 def traces_sampler(sampling_context):
-    if sampling_context["span_context"]["name"] in IGNORED_SPAN_NAMES:
+    if sampling_context["parent_sampled"] is not None:
+        return float(sampling_context["parent_sampled"])
+
+    if sampling_context["transaction_context"]["name"] in IGNORED_SPAN_NAMES:
         return 0.0
+
     return 1.0
 
 sentry_sdk.init(
