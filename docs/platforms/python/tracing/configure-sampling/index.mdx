@@ -89,13 +89,13 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    span_ctx = sampling_context["span_context"]
+    span_ctx = sampling_context["transaction_context"]
     name = span_ctx["name"]
-    op = span_ctx["attributes"].get("sentry.op")
+    op = span_ctx["op"]
 
     # Sample all checkout spans
     if name and ('/checkout' in name or op == 'checkout'):
@@ -177,7 +177,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
@@ -277,7 +277,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
@@ -292,7 +292,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
         return 0.8
 
     # Sample less for high-volume, low-value paths
-    name = sampling_context["span_context"]["name"]
+    name = sampling_context["transaction_context"]["name"]
     if name and name.startswith("/api/metrics"):
         return 0.01
 
@@ -385,14 +385,14 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
     # Always sample critical business operations
     # Note: sentry.op is an SDK-provided attribute
-    span_ctx = sampling_context["span_context"]
-    if span_ctx["attributes"].get("sentry.op") in ["payment.process", "order.create", "user.verify"]:
+    span_ctx = sampling_context["transaction_context"]
+    if span_ctx["op"] in ["payment.process", "order.create", "user.verify"]:
         return 1.0
 
     # Sample based on user segment
@@ -496,7 +496,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context["span_context"]["parent_sampled"]
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
@@ -555,8 +555,7 @@ When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_
         "data": Optional[dict[str, Any]]
     },
     "parent_sampled": Optional[bool],  # whether the parent transaction was sampled (SDK-provided)
-    "parent_sample_rate": Optional[float],  # the sample rate used by the parent (SDK-provided)
-    "custom_sampling_context": Optional[dict[str, Any]]  # additional custom data for sampling
+    ...  # additional custom data for sampling provided via custom_sampling_context
 }
 ```
 
@@ -564,15 +563,13 @@ When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_
 
 ```python
 {
-    "span_context": {
+    "transaction_context": {
         "name": str,  # span title at creation time (SDK-provided)
-        "trace_id": str,  # the trace ID (SDK-provided)
-        "parent_span_id": Optional[str],  # the parent span's ID, if any (SDK-provided)
-        "parent_sampled": Optional[bool],  # whether the parent span was sampled (SDK-provided)
-        "parent_sample_rate": Optional[float],  # the sample rate used by the parent (SDK-provided)
-        "attributes": dict[str, Any]  # attributes set at span-creation time (SDK- and user-provided)
+        "op": str,  # short description of span type (SDK-provided)
+        "data": dict[str, Any]  # attributes set at span-creation time (SDK- and user-provided)
     },
-    ... # additional custom key-value pairs for sampling set via custom sampling context
+    "parent_sampled": Optional[bool],  # whether the parent span was sampled (SDK-provided)
+    ...  # additional custom key-value pairs for sampling set via custom sampling context
 }
 ```
 
@@ -587,7 +584,6 @@ The sampling context contains both SDK-provided attributes and custom attributes
 - `transaction_context.name`: The name of the transaction
 - `transaction_context.op`: The operation type
 - `parent_sampled`: Whether the parent transaction was sampled
-- `parent_sample_rate`: The sample rate used by the parent
 
 **Custom Attributes:**
 
@@ -597,10 +593,9 @@ The sampling context contains both SDK-provided attributes and custom attributes
 
 **SDK-Provided Attributes:**
 
-- `span_context.name`: The name of the span
-- `span_context.attributes`: Attributes set on the span at creation time, including `sentry.op`
-- `span_context.parent_sampled`: Whether the parent span was sampled
-- `span_context.parent_sample_rate`: The sample rate used by the parent
+- `transaction_context.name`: The name of the span
+- `transaction_context.data`: Attributes set on the span at creation time, including `sentry.op`
+- `parent_sampled`: Whether the parent span was sampled
 
 **Custom Attributes:**
 
@@ -622,7 +617,7 @@ When multiple sampling mechanisms could apply, Sentry follows this order of prec
 
 1. If `traces_sampler` is defined, its decision is used. Although the `traces_sampler` can override the parent sampling decision, most users will want to ensure their `traces_sampler` respects the parent sampling decision.
 2. If no `traces_sampler` is defined, but there is a parent sampling decision from an incoming distributed trace, we use the parent sampling decision.
-3. If neither of the above, `traces_sample_rate` is used
+3. If neither of the above, `traces_sample_rate` is used.
 4. If none of the above are set, no spans are sampled. This is equivalent to setting `traces_sample_rate=0.0`.
 
 <Alert level="info">
