@@ -1,0 +1,57 @@
+---
+title: App Hangs and ANRs
+sidebar_order: 110
+description: "Detect app hangs and ANRs in Unity games."
+sidebar_section: features
+---
+
+An app hang occurs when the Unity main thread stops making progress. On Android, the operating system can also report an Application Not Responding (ANR) event when the Android UI thread is blocked. These detectors can watch different threads, so one freeze can create separate events.
+
+## App Hangs
+
+### Native App Hangs
+
+On macOS, Windows, Linux, and Android the SDK provides App Hang tracking through the `Experimental.EnableNativeAppHangTracking` options. It utilizes sentry-native and is opt-in. The timeout used for the tracking is `AppHangTimeout` and defaults to 5 seconds.
+
+These options are available on the Editor Configuration Window in `Advanced` -> `Experimental` or programmatically
+
+```csharp
+options.Experimental.EnableNativeAppHangTracking = true;
+options.AppHangTimeout = TimeSpan.FromSeconds(5);
+```
+
+Native app hang tracking adds a background watchdog and automatically emits heartbeats from the Unity main thread. Enabling it automatically disables the managed watchdog to avoid duplicate events.
+
+<Alert title="macOS">
+
+On macOS, sentry-native is not the default native SDK and needs to be enabled by setting `Experimental.MacosBackend` to the `Native`.
+
+</Alert>
+
+### iOS App Hangs
+
+On iOS provides App Hang tracking through the `EnableAppHangTracking` options. It utilizes sentry-cocoa and is enabled by default. The timeout used for the tracking is `AppHangTimeout` and defaults to 5 seconds.
+
+## ANRs
+
+### Android JVM ANRs
+
+`AndroidNativeAnrEnabled` controls JVM ANR detection and defaults to `true`. Below Android 11, it uses an in-process watchdog. On Android 11 and later, it reads the operating system's ANR exit information on the next app start. The app hang detection runs alongside JVM ANR detection, so a freeze that blocks both threads can create an ANR and an `AppHang` event.
+
+### Unity Watchdog
+
+The managed Unity watchdog is deprecated and disabled by default. Configure its timeout with `AnrTimeout`, which defaults to 5 seconds. Disable it in code with `DisableAnrIntegration()` or through the editor's `AnrDetectionEnabled` setting.
+
+The watchdog uses a coroutine and a background thread. It detects a stalled Unity main thread, but cannot capture that thread's stack trace. Its events use the `MainThreadWatchdog` mechanism.
+
+## Queries and Migration
+
+To find app hang events, search for:
+
+```
+error.mechanism.type:AppHang
+```
+
+Android JVM ANRs remain independent. Filter them with `ANR`, `AppExitInfo`, or `HistoricalAppExitInfo`.
+
+For Android NDK implementation details, see [Android NDK app hang detection](/platforms/android/configuration/using-ndk/#app-hang-detection). For Apple behavior, see [Apple app hangs](/platforms/apple/guides/ios/configuration/app-hangs/).
