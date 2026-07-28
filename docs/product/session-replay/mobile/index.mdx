@@ -9,7 +9,7 @@ og_image: /og-images/product-explore-session-replay-mobile.png
 
 Session Replay allows you to see reproductions of user sessions, which can help you understand what happened before, during, and after an error or performance issue occurred. As you play back each session, you'll be able to see every user interaction in relation to network requests, frontend and backend errors, backend spans, and more.
 
-Replays help you see exactly how the user experience is impacted by errors. Because they're integrated with our Issues product, you'll be able to see session replays connected to error events on the [Issue Details](/product/issues/issue-details/) page in Sentry. To make sure backend errors are also included in the replay, see our [backend set up instructions](/product/session-replay/web/#replays-for-backend-errors).
+Replays help you see exactly how the user experience is impacted by errors. Because they're integrated with our Issues product, you'll be able to see session replays connected to error events on the [Issue Details](/product/issues/issue-details/) page in Sentry. Replays also attach to [User Feedback](/product/user-feedback/) submissions, capturing up to 30 seconds of activity before the user reported the issue. To make sure backend errors are also included in the replay, see our [backend set up instructions](/product/session-replay/web/#replays-for-backend-errors).
 
 ![Session Replay User Interface](./img/session-replay.png)
 
@@ -18,6 +18,16 @@ Replays help you see exactly how the user experience is impacted by errors. Beca
 Session Replay for Mobile works by taking snapshots of the view hierarchy as well as a screenshot within the same frame, at the rate of one per second. These screenshots are then compressed into a video file representing a segment of the user’s session. All these small segments are then streamed into Sentry with additional trace identifiers, breadcrumbs, and other useful debugging information to compose the full user session.
 
 The user session (replay) lasts until the user closes the app, the app crashes, the user puts the app in the background for over 30 seconds, or the session reaches 60 minutes in duration. The result is a video playback that can help you reproduce bugs in your mobile app, including hard-to-debug issues related to backend APIs and microservices.
+
+### Recording Control
+
+By default, replay recording is controlled by sample rates (`sessionSampleRate` and `onErrorSampleRate`). Some mobile SDKs also offer additional control:
+
+- **iOS** — The [iOS SDK](/platforms/apple/guides/ios/session-replay/) provides a public API to manually start, stop, pause, and resume replay recording via `SentrySDK.replay`. This lets you trigger replays based on any application logic, such as a specific user flow or feature flag.
+- **Android** and **React Native** — These SDKs support a `beforeErrorSampling` callback that lets you filter which errors trigger a replay capture (for example, only capturing replays for unhandled crashes). See the [Android](/platforms/android/session-replay/) and [React Native](/platforms/react-native/session-replay/) SDK docs for platform-specific examples.
+- **Flutter** — Replay recording is currently configuration-driven only. There are no manual start/stop APIs.
+
+If you're building a browser-based or hybrid application, the [Web SDK](/platforms/javascript/session-replay/understanding-sessions/#manually-starting-replay) offers additional control, including flushing buffered replays and listening to lifecycle events.
 
 To redact anything potentially sensitive and preserve maximum user privacy, the view hierarchy is used to find the position of controls such as text boxes, images, labels, and buttons. Redaction is done with a block that's drawn over these controls, using the most predominant color of the control.
 

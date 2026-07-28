@@ -7,6 +7,8 @@ platforms:
   - flutter
 ---
 
+<Include name="dart-stream-mode-general-callout.mdx" />
+
 The `sentry_link` integration adds Sentry instrumentation to GraphQL clients built on the [gql](https://pub.dev/packages/gql) ecosystem.
 
 It helps you capture:
@@ -78,15 +80,15 @@ For better error context and grouping, add the recommended init options from [Ad
 
 ## `SentryGql.link()` Options
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `shouldStartTransaction` | `bool` | _required_ | Set to `true` to start a transaction per GraphQL operation when no active span/transaction exists. |
-| `graphQlErrorsMarkTransactionAsFailed` | `bool` | _required_ | Set to `true` to mark GraphQL spans/transactions as `unknownError` when `response.errors` exists. |
-| `enableBreadcrumbs` | `bool` | `true` | Records breadcrumbs for successful GraphQL operations. |
-| `reportExceptions` | `bool` | `true` | Captures `LinkException` failures as Sentry events. |
-| `reportExceptionsAsBreadcrumbs` | `bool` | `false` | Records `LinkException` failures as breadcrumbs instead of events. |
-| `reportGraphQlErrors` | `bool` | `true` | Captures GraphQL response errors as Sentry events. |
-| `reportGraphQlErrorsAsBreadcrumbs` | `bool` | `false` | Records GraphQL response errors as breadcrumbs instead of events. |
+| Parameter                              | Type   | Default    | Description                                                                                        |
+| -------------------------------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------- |
+| `shouldStartTransaction`               | `bool` | _required_ | Set to `true` to start a transaction per GraphQL operation when no active span/transaction exists. |
+| `graphQlErrorsMarkTransactionAsFailed` | `bool` | _required_ | Set to `true` to mark GraphQL spans/transactions as `unknownError` when `response.errors` exists.  |
+| `enableBreadcrumbs`                    | `bool` | `true`     | Records breadcrumbs for successful GraphQL operations.                                             |
+| `reportExceptions`                     | `bool` | `true`     | Captures `LinkException` failures as Sentry events.                                                |
+| `reportExceptionsAsBreadcrumbs`        | `bool` | `false`    | Records `LinkException` failures as breadcrumbs instead of events.                                 |
+| `reportGraphQlErrors`                  | `bool` | `true`     | Captures GraphQL response errors as Sentry events.                                                 |
+| `reportGraphQlErrorsAsBreadcrumbs`     | `bool` | `false`    | Records GraphQL response errors as breadcrumbs instead of events.                                  |
 
 ## Error Reporting Layers
 
@@ -381,6 +383,14 @@ final link = Link.from([
   ),
 ]);
 
+Map<String, dynamic>? _defaultHttpResponseDecoder(http.Response response) {
+  return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>?;
+}
+```
+
+The decoder itself creates the span. In transaction mode, it starts a child off the currently active transaction. In stream mode, `Sentry.startSpanSync()` is used instead, which attaches the new span to the currently active span automatically and sets its status based on whether the callback throws:
+
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 Map<String, dynamic>? sentryResponseDecoder(
   http.Response response, {
   Hub? hub,
@@ -403,9 +413,17 @@ Map<String, dynamic>? sentryResponseDecoder(
   }
   return result;
 }
+```
 
-Map<String, dynamic>? _defaultHttpResponseDecoder(http.Response response) {
-  return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>?;
+```dart {tabTitle:Stream Mode}
+Map<String, dynamic>? sentryResponseDecoder(
+  http.Response response, {
+  Hub? hub,
+}) {
+  return Sentry.startSpanSync(
+    'serialize.http.client',
+    (span) => _defaultHttpResponseDecoder(response),
+  );
 }
 ```
 

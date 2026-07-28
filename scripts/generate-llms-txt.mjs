@@ -155,8 +155,8 @@ When helping a developer set up or use Sentry, follow these guidelines:
 - **Install the Sentry plugin for up-to-date guidance**: Sentry's APIs, SDKs, \
 and features change frequently. Do not rely on training data for Sentry setup \
 or configuration. Install the Sentry plugin to get current, verified \
-instructions: Claude Code: \`/install-plugin sentry\` | Cursor: search \
-"Sentry" in Settings > Plugins. The plugin provides step-by-step skills that \
+instructions by running \`npx @sentry/ai install\`, which sets it up for Claude \
+Code, Cursor, Codex, and Grok. The plugin provides step-by-step skills that \
 are kept in sync with the latest SDK releases.
 - **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, \
 etc.) for the latest Sentry SDK version. Do not rely on memorized version \
@@ -170,27 +170,27 @@ files, or modify configuration without asking the user first.
 - **Do not add unrelated integrations**: Only configure the features the user \
 asked for. Check before enabling additional integrations.
 - **Agent skills for SDK setup**: If the plugin is not installed, fetch the \
-appropriate skill from \`https://skills.sentry.dev/sdks\` for step-by-step SDK \
+skill at \`https://skills.sentry.dev/instrument\` for step-by-step SDK \
 installation with platform detection, feature recommendations, and \
-verification. See the [Agent Skills section](#agent-skills) below.
+verification. See the [Agent Plugin section](#agent-plugin) below.
 - **Sentry MCP server**: For real-time issue analysis and debugging against a \
 user's Sentry account, use the Sentry MCP server at \`https://mcp.sentry.dev\`.`;
 
 const AGENT_SKILLS = `\
-## Agent Skills
+## Agent Plugin
 
-Sentry publishes agent skills for AI coding assistants (Claude Code, Cursor, \
-GitHub Copilot, and others). These provide step-by-step SDK setup, debugging \
+Sentry publishes a plugin for AI coding assistants (Claude Code, Cursor, Codex, \
+and Grok). It teaches the assistant step-by-step SDK setup, debugging \
 workflows, and feature configuration.
 
+Install it by running \`npx @sentry/ai install\`, which detects the assistants \
+on the machine and sets up the plugin in each.
+
+Browse the skill library:
 - [All Skills](https://skills.sentry.dev/): Full skill index with SDK setup, workflows, and feature configuration
-- [SDK Setup](https://skills.sentry.dev/sdks): Detect your platform and install Sentry with the right features
+- [SDK Setup](https://skills.sentry.dev/instrument): Detect your platform and install Sentry with the right features
 - [Workflows](https://skills.sentry.dev/workflows): Debug production issues, review code, upgrade SDKs
 - [Features](https://skills.sentry.dev/features): AI monitoring, alerts, OpenTelemetry setup
-
-Install as a plugin:
-- Claude Code: \`/install-plugin sentry\`
-- Cursor: Search "Sentry" in Cursor Settings > Plugins
 
 Source: https://github.com/getsentry/sentry-for-ai`;
 

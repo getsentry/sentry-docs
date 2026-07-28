@@ -1,0 +1,44 @@
+---
+title: Node.js Compatibility Entrypoint
+description: "Learn how the nodejs_compat entrypoint unlocks additional Node.js SDK features on Cloudflare Workers, such as Prisma instrumentation."
+---
+
+Cloudflare Workers can run with Node.js APIs enabled through the [`nodejs_compat` compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/). To take advantage of this, the Cloudflare SDK ships a dedicated `@sentry/cloudflare/nodejs_compat` entrypoint that unlocks Node.js SDK features which aren't available in the default Workers runtime.
+
+<Alert>
+
+The `@sentry/cloudflare/nodejs_compat` entrypoint requires SDK version `10.64.0` or higher. It will become the default entrypoint in the next major version (v11).
+
+</Alert>
+
+## What It Unlocks
+
+The `/nodejs_compat` entrypoint enables Node.js-only integrations and features on Cloudflare, including:
+
+- The <PlatformLink to="/configuration/integrations/prisma">`prismaIntegration`</PlatformLink> for tracing Prisma ORM queries.
+- Vercel AI SDK v7 support for the <PlatformLink to="/configuration/integrations/vercelai">`vercelAIIntegration`</PlatformLink>.
+
+## Usage
+
+The entrypoint is a drop-in replacement for `@sentry/cloudflare`, so switching over only requires changing your imports:
+
+```javascript {tabTitle:After}
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+```
+
+```javascript {tabTitle:Before}
+import * as Sentry from "@sentry/cloudflare";
+```
+
+To use the entrypoint, your Worker must set the `nodejs_compat` compatibility flag in your Wrangler configuration:
+
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "compatibility_flags": ["nodejs_compat"],
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+compatibility_flags = ["nodejs_compat"]
+```

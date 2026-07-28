@@ -113,6 +113,12 @@ This is the case because the Sentry Loader Script and CDN Bundles are detected a
 
 ## Filtering Transaction Events
 
+<Alert>
+  The options in this section are only available in transaction mode. If you're
+  using <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, go to
+  [Filtering Spans](#filtering-spans).
+</Alert>
+
 To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
 
 ### Using <PlatformIdentifier name="ignore-transactions" />
@@ -137,13 +143,49 @@ See <PlatformLink to="/configuration/options/#beforeSendTransaction">beforeSendT
 
 ## Filtering Spans
 
-Use the <PlatformIdentifier name="before-send-span" /> configuration option which allows you to provide a function to modify a span.
-This function is called for the root span and all child spans. If you want to drop the root span, including its child spans, use [`beforeSendTransaction`](#using-beforesendtransaction) instead.
-Please note that you cannot use `beforeSendSpan` to drop a span, you can only modify it and filter data on it.
+### Using <PlatformIdentifier name="before-send-span" />
+
+Use the <PlatformIdentifier name="before-send-span" /> configuration option, which lets you provide a function to modify a span.
+This function is called for the transaction (service span in stream mode) and all child spans.
+
+If you want to drop the transaction/service span, including its child spans:
+
+- Use [`beforeSendTransaction`](#using-beforesendtransaction) in transaction mode.
+- Use [`ignoreSpans`](#using-ignore-spans) in stream mode.
+
+<Alert>
+
+If you're using <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>, make sure to wrap <PlatformIdentifier name="before-send-span" /> with `Sentry.withStreamedSpan()`.
+
+</Alert>
 
 <PlatformContent includePath="configuration/before-send-span" />
 
 See <PlatformLink to="/configuration/options/#beforeSendSpan">beforeSendSpan</PlatformLink> for details.
+
+### Using <PlatformIdentifier name="ignore-spans" />
+
+You can use the <PlatformIdentifier name="ignore-spans" /> option to filter out spans that match a certain pattern by providing a list of strings or regular expressions. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead.
+
+You can also provide an object with `name`, `op`, and `attributes` properties to match on multiple conditions. At least one property must be provided.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  ignoreSpans: [
+    "partial/match",
+    /^Exact Span Name$/,
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.route": "/api/status",
+      },
+    },
+  ],
+});
+```
+
+See <PlatformLink to="/configuration/options/#ignoreSpans">ignoreSpans</PlatformLink> for details.
 
 ## Filtering Breadcrumbs
 

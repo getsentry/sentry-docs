@@ -24,6 +24,30 @@ export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
 );
 ```
 
+## Classes That Extend Durable Objects
+
+`instrumentDurableObjectWithSentry` works with any class that extends `DurableObject`, not only those that extend it directly. This includes classes built on top of Durable Objects by other libraries.
+
+For example, the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/) builds its `Agent` and `AIChatAgent` classes on top of Durable Objects, so you can instrument them the same way:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { Agent } from "agents";
+
+class MyAgentBase extends Agent<Env> {
+  // impl
+}
+
+// Export your named class as defined in your wrangler config
+export const MyAgent = Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyAgentBase
+);
+```
+
 ## RPC Trace Propagation
 
 To enable distributed tracing across RPC calls to your Durable Objects, see <PlatformLink to="/tracing/distributed-tracing">Distributed Tracing</PlatformLink>.

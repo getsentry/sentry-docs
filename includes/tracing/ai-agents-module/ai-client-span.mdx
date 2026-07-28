@@ -6,11 +6,12 @@ In transaction mode, the [@sentry_sdk.trace()](/platforms/python/tracing/instrum
 
 - The span `op` (transaction mode) or the span's `sentry.op` attribute (stream mode) MUST be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - The span `name` SHOULD be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- The `gen_ai.operation.name` attribute MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- The `gen_ai.provider.name` attribute MUST be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
 - The `gen_ai.request.model` attribute MUST be the requested model. (e.g. `"o3-mini"`)
 - The `gen_ai.response.model` attribute MUST be the concrete model that responded. (e.g. `"gpt-4o-2024-08-06"`)
 - If the request originates from an agent, `gen_ai.agent.name` SHOULD be set to the agent's name. (e.g. `"Weather Agent"`)
 - If relevant, `gen_ai.pipeline.name` SHOULD be set to the name of the AI workflow or pipeline. (e.g. `"weather-pipeline"`)
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 ### Request Attributes
 
@@ -26,7 +27,7 @@ In transaction mode, the [@sentry_sdk.trace()](/platforms/python/tracing/instrum
 | `gen_ai.request.top_k`             | int    | optional          | Limits model to K most likely next tokens.                                                                     | `40`                                                                  |
 | `gen_ai.request.top_p`             | float  | optional          | Model configuration parameter.                                                                                 | `0.7`                                                                 |
 | `gen_ai.request.presence_penalty`  | float  | optional          | Model configuration parameter.                                                                                 | `0.5`                                                                 |
-| `gen_ai.request.reasoning_effort`  | string | optional          | Constrains the effort on reasoning for reasoning models. Supported values vary by provider.                    | `"medium"`                                                            |
+| `gen_ai.request.reasoning.level`   | string | optional          | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.         | `"medium"`                                                            |
 | `gen_ai.request.messages`          | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of message objects sent to the LLM. **[0]**          | `'[{"role": "system", "content": "..."}]'`                            |
 | `gen_ai.request.available_tools`   | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of objects describing the available tools. **[0]** | `'[{"name": "random_number", "description": "..."}]'`                 |
 

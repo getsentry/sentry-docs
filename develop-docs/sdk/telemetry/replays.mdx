@@ -2,7 +2,7 @@
 title: Replay
 description: Session recording protocol for capturing and streaming browser or mobile user sessions to Sentry.
 spec_id: sdk/telemetry/replays
-spec_version: 1.2.0
+spec_version: 1.3.0
 spec_status: stable
 spec_platforms:
   - browser
@@ -11,6 +11,9 @@ spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.3.0
+    date: 2025-07-09
+    summary: Added segment_names attribute for recording transaction names that occur during a replay
   - version: 1.2.0
     date: 2025-07-30
     summary: Added session mode hard limit behavior (stop recording, clear replay_id, remove from scope)
@@ -104,6 +107,7 @@ A `replay_event` envelope item **MUST** always be sent together with a `replay_r
 | `replay_start_timestamp` | Number | **REQUIRED** (first segment) | 1.0.0 | UNIX timestamp of the start of the replay (in seconds). Only required on the first segment. |
 | `urls` | List[String] | **OPTIONAL** | 1.0.0 | List of URLs in order of visitation. |
 | `trace_ids` | List[String] | **OPTIONAL** | 1.0.0 | List of trace IDs that occurred during the replay. |
+| `segment_names` | List[String] | **OPTIONAL** | 1.3.0 | List of transaction names that occurred during the replay. Used to associate replays with specific transactions. |
 | `error_ids` | List[String] | **DEPRECATED** | 1.0.0 | Deprecated. Do not use. |
 
 #### Event Attributes
@@ -327,6 +331,7 @@ sentry_sdk.init(
     "https://sentry.io/issues/",
     "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true"
   ],
+  "segment_names": ["/issues/", "/issues/:id/"],
 
   "request": {
     "url": "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true",
@@ -380,6 +385,7 @@ sentry_sdk.init(
     "https://sentry.io/issues/",
     "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true"
   ],
+  "segment_names": ["/issues/", "/issues/:id/"],
 
   "request": {
     "url": "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true",
