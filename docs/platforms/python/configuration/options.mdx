@@ -252,7 +252,7 @@ This function is called with a transaction event object, and can return a modifi
 
 </SdkOption>
 
-<SdkOption name="_experiments.before_send_span" type='function' defaultValue='None' availableSince='2.62.0'>
+<SdkOption name="before_send_span" type='function' defaultValue='None' availableSince='2.67.0'>
 
 <Alert>
 
@@ -262,7 +262,7 @@ Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</Platfo
 
 This function is called with a span event object and can return a modified span object. Use it, for example, to manually strip PII from spans or filter data from spans before they're sent to Sentry.
 
-Note that `before_send_span` can only modify span data, meaning you cannot use it to drop spans. Use [`ignore_spans`](#_experiments.ignore_spans) to drop spans.
+Note that `before_send_span` can only modify span data, meaning you cannot use it to drop spans. Use [`ignore_spans`](#ignore_spans) to drop spans.
 
 <Expandable title="Examples">
 
@@ -280,10 +280,8 @@ def before_send_span(span, hint):
 
 sentry_sdk.init(
     # ...
-    _experiments={
-        "trace_lifecycle": "stream",
-        "before_send_span": before_send_span,
-    },
+    trace_lifecycle="stream",
+    before_send_span=before_send_span,
 )
 ```
 
@@ -405,7 +403,7 @@ If you want to disable all tracing you need to set `traces_sample_rate=None`. In
 
 <PlatformContent includePath="/performance/traces-sampler-config-option" />
 
-<SdkOption name="_experiments.trace_lifecycle" type='string' defaultValue='"static"' availableSince='2.62.0'>
+<SdkOption name="trace_lifecycle" type='string' defaultValue='"static"' availableSince='2.62.0'>
 
 Controls how spans are sent to Sentry:
 
@@ -414,7 +412,7 @@ Controls how spans are sent to Sentry:
 
 </SdkOption>
 
-<SdkOption name="_experiments.ignore_spans" type='list[str | Pattern | dict]' defaultValue='[]' availableSince='2.62.0'>
+<SdkOption name="ignore_spans" type='list[str | Pattern | dict]' defaultValue='[]' availableSince='2.62.0'>
 
 <Alert>
 
@@ -436,32 +434,30 @@ import re
 import sentry_sdk
 
 sentry_sdk.init(
-    _experiments={
-        "trace_lifecycle": "stream",
-        "ignore_spans": [
-            # String match against span name
-            "/health",
+    trace_lifecycle="stream",
+    ignore_spans=[
+        # String match against span name
+        "/health",
 
-            # Regex match against span name
-            re.compile(r"/flow/.*"),
+        # Regex match against span name
+        re.compile(r"/flow/.*"),
 
-            # Match by attributes (all must match)
-            {
-                "attributes": {
-                    "service.id": "15def9a",
-                    "flow.pipeline": "legacy",
-                }
+        # Match by attributes (all must match)
+        {
+            "attributes": {
+                "service.id": "15def9a",
+                "flow.pipeline": "legacy",
+            }
+        },
+
+        # Match by name and attributes
+        {
+            "name": re.compile(r"/flow/.*"),
+            "attributes": {
+                "service.id": re.compile(r".*\.facade"),
             },
-
-            # Match by name and attributes
-            {
-                "name": re.compile(r"/flow/.*"),
-                "attributes": {
-                    "service.id": re.compile(r".*\.facade"),
-                },
-            },
-        ],
-    },
+        },
+    ],
 )
 ```
 

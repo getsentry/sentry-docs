@@ -10,7 +10,7 @@ For an introduction to stream mode itself, see <PlatformLink to="/tracing/stream
 
 ## Enable Stream Mode
 
-Add `trace_lifecycle` to the `_experiments` option when initializing the SDK:
+Add the `trace_lifecycle` option when initializing the SDK:
 
 ```python diff
 import sentry_sdk
@@ -18,9 +18,7 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-+   _experiments={
-+       "trace_lifecycle": "stream",
-+   },
++   trace_lifecycle="stream",
 )
 ```
 
@@ -192,7 +190,7 @@ def traces_sampler(sampling_context):
 
 sentry_sdk.init(
     traces_sampler=traces_sampler,
-    _experiments={"trace_lifecycle": "stream"},
+    trace_lifecycle="stream",
 )
 ```
 
@@ -213,7 +211,7 @@ import sentry_sdk
 
 ## Filtering and Dropping Spans
 
-`before_send_transaction` has no effect in stream mode, since spans are sent individually rather than batched into a transaction. Replace it with `ignore_spans` (to drop spans) and `before_send_span` (to modify them), both configured under `_experiments`:
+`before_send_transaction` has no effect in stream mode, since spans are sent individually rather than batched into a transaction. Replace it with `ignore_spans` (to drop spans) and `before_send_span` (to modify them):
 
 ```python diff
 import re
@@ -228,15 +226,13 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
 -   before_send_transaction=my_filter,
-+   _experiments={
-+       "trace_lifecycle": "stream",
-+       "ignore_spans": [
-+           "/health",
-+           re.compile(r"^GET /api/v1/internal"),
-+           {"attributes": {"service.id": "15def9a"}},
-+       ],
-+       "before_send_span": my_span_processor,
-+   },
++   trace_lifecycle="stream",
++   ignore_spans=[
++       "/health",
++       re.compile(r"^GET /api/v1/internal"),
++       {"attributes": {"service.id": "15def9a"}},
++    ],
++    before_send_span=my_span_processor,
 )
 ```
 

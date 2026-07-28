@@ -56,7 +56,7 @@ You need:
 <SplitSection>
 <SplitSectionText>
 
-Opt in by adding `trace_lifecycle` to the `_experiments` option when initializing the SDK:
+Opt in by adding the `trace_lifecycle` option when initializing the SDK:
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -67,10 +67,8 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    _experiments={
-        # enables stream mode
-        "trace_lifecycle": "stream",
-    },
+    # enables stream mode
+    trace_lifecycle="stream",
 )
 
 ```
@@ -79,7 +77,7 @@ sentry_sdk.init(
 </SplitSection>
 </SplitLayout>
 
-To revert to transaction mode, remove the `_experiments` option or set `trace_lifecycle` to `"static"` (the default).
+To revert to transaction mode, remove the `trace_lifecycle` option or set it to `"static"` (the default).
 
 <Expandable title="How does span flushing work?">
 
@@ -313,7 +311,7 @@ See <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">Cu
 <SplitSection>
 <SplitSectionText>
 
-To modify or redact span data before it's sent, use `before_send_span` in the `_experiments` option:
+To modify or redact span data before it's sent, use the `before_send_span` option:
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -334,10 +332,8 @@ def postprocess_span(span, hint):
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    _experiments={
-        "trace_lifecycle": "stream",
-        "before_send_span": postprocess_span,
-    },
+    trace_lifecycle="stream",
+    before_send_span=postprocess_span,
 )
 ```
 
@@ -357,7 +353,7 @@ sentry_sdk.init(
 <SplitSection>
 <SplitSectionText>
 
-To prevent specific spans from being created, use `ignore_spans` in the `_experiments` option. Rules are evaluated at span start, so only the span name and attributes set at creation time are taken into account. Rules can be strings, compiled regexes, or dictionaries with name and/or attributes conditions:
+To prevent specific spans from being created, use the `ignore_spans` option. Rules are evaluated at span start, so only the span name and attributes set at creation time are taken into account. Rules can be strings, compiled regexes, or dictionaries with name and/or attributes conditions:
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -369,29 +365,27 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    _experiments={
-        "trace_lifecycle": "stream",
-        "ignore_spans": [
-            # String match against span name
-            "/health",
-            # Regex match against span name
-            re.compile(r"/flow/.*"),
-            # Match by attributes (all must match)
-            {
-                "attributes": {
-                    "service.id": "15def9a",
-                    "flow.pipeline": "legacy",
-                }
+    trace_lifecycle="stream",
+    ignore_spans=[
+        # String match against span name
+        "/health",
+        # Regex match against span name
+        re.compile(r"/flow/.*"),
+        # Match by attributes (all must match)
+        {
+            "attributes": {
+                "service.id": "15def9a",
+                "flow.pipeline": "legacy",
+            }
+        },
+        # Match by name and attributes
+        {
+            "name": re.compile(r"/flow/.*"),
+            "attributes": {
+                "service.id": re.compile(r".*\.facade"),
             },
-            # Match by name and attributes
-            {
-                "name": re.compile(r"/flow/.*"),
-                "attributes": {
-                    "service.id": re.compile(r".*\.facade"),
-                },
-            },
-        ],
-    },
+        },
+    ],
 )
 ```
 

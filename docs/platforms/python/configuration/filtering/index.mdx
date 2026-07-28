@@ -147,7 +147,7 @@ If you want to drop the service span, including its child spans, use [`ignore_sp
 
 <PlatformContent includePath="configuration/before-send-span" />
 
-See <PlatformLink to="/configuration/options/#_experiments.before_send_span">`before_send_span`</PlatformLink> for details.
+See <PlatformLink to="/configuration/options/#before_send_span">`before_send_span`</PlatformLink> for details.
 
 ### Using <PlatformIdentifier name="ignore-spans" />
 
@@ -166,33 +166,31 @@ import re
 import sentry_sdk
 
 sentry_sdk.init(
-    _experiments={
-        "trace_lifecycle": "stream",
-        "ignore_spans": [
-            # String match against span name
-            "/health",
+    trace_lifecycle="stream",
+    ignore_spans=[
+        # String match against span name
+        "/health",
 
-            # Regex match against span name
-            re.compile(r"/flow/.*"),
+        # Regex match against span name
+        re.compile(r"/flow/.*"),
 
-            # Match by attributes (all must match)
-            {
-                "attributes": {
-                    "service.id": "15def9a",
-                    "flow.pipeline": "legacy",
-                }
+        # Match by attributes (all must match)
+        {
+            "attributes": {
+                "service.id": "15def9a",
+                "flow.pipeline": "legacy",
+            }
+        },
+
+        # Match by name and attributes
+        {
+            "name": re.compile(r"/flow/.*"),
+            "attributes": {
+                "service.id": re.compile(r".*\.facade"),
             },
-
-            # Match by name and attributes
-            {
-                "name": re.compile(r"/flow/.*"),
-                "attributes": {
-                    "service.id": re.compile(r".*\.facade"),
-                },
-            },
-        ],
-    },
+        },
+    ],
 )
 ```
 
-See <PlatformLink to="/configuration/options/#_experiments.ignore_spans">`ignore_spans`</PlatformLink> for details.
+See <PlatformLink to="/configuration/options/#ignore_spans">`ignore_spans`</PlatformLink> for details.
