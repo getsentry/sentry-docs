@@ -776,6 +776,10 @@ const userDocsRedirects = [
     destination: '/integrations/issue-tracking/makeplane/',
   },
   {
+    source: '/integrations/linear-sentry-agent/',
+    destination: '/integrations/issue-tracking/sentry-linear-agent/',
+  },
+  {
     source: '/integrations/sentry-linear-agent/',
     destination: '/integrations/issue-tracking/sentry-linear-agent/',
   },
