@@ -37,7 +37,7 @@ export async function Home() {
               Get started with Sentry
             </h1>
             <p
-              className="text-[var(--gray-11)] dark:text-[var(--gray-11)] max-w-xl mx-auto mb-8"
+              className="text-[var(--gray-11)] dark:text-[var(--gray-11)] max-w-2xl mx-auto mb-8 text-balance"
               style={{fontSize: '17px', lineHeight: 1.5}}
             >
               Everything you need to catch errors, trace performance, and fix broken
