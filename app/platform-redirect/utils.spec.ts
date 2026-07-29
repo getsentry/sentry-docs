@@ -12,24 +12,24 @@ describe('sanitizeNext', () => {
   it('should reject backslash-based external URLs', () => {
     // Browsers normalize backslashes to forward slashes, so these would
     // otherwise resolve to an external origin.
-    expect(sanitizeNext('/\\devco.re')).toBe('');
-    expect(sanitizeNext('/\\/devco.re')).toBe('');
-    expect(sanitizeNext('\\\\devco.re')).toBe('');
-    expect(sanitizeNext('\\/devco.re')).toBe('');
-    expect(sanitizeNext('%2F%5Cdevco.re')).toBe('');
-    expect(sanitizeNext('///devco.re')).toBe('');
+    expect(sanitizeNext('/\\example.com')).toBe('');
+    expect(sanitizeNext('/\\/example.com')).toBe('');
+    expect(sanitizeNext('\\\\example.com')).toBe('');
+    expect(sanitizeNext('\\/example.com')).toBe('');
+    expect(sanitizeNext('%2F%5Cexample.com')).toBe('');
+    expect(sanitizeNext('///example.com')).toBe('');
   });
 
   it('should reject control characters that resolve to an external origin', () => {
     // The URL parser strips tabs and newlines, so `/<tab>/host` becomes `//host`
-    expect(sanitizeNext('/%09/devco.re')).toBe('');
-    expect(sanitizeNext('/%0a/devco.re')).toBe('');
-    expect(sanitizeNext('/%0d/devco.re')).toBe('');
+    expect(sanitizeNext('/%09/example.com')).toBe('');
+    expect(sanitizeNext('/%0a/example.com')).toBe('');
+    expect(sanitizeNext('/%0d/example.com')).toBe('');
   });
 
   it('should never return a protocol-relative path', () => {
     // Stripping unsafe characters must not leave adjacent slashes behind
-    expect(sanitizeNext('/,/devco.re')).toBe('/devcore');
+    expect(sanitizeNext('/,/example.com')).toBe('/examplecom');
     expect(sanitizeNext('/a//b')).toBe('/a/b');
   });
 
