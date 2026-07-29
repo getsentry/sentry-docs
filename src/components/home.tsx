@@ -40,8 +40,8 @@ export async function Home() {
               className="text-[var(--gray-11)] dark:text-[var(--gray-11)] max-w-xl mx-auto mb-8"
               style={{fontSize: '17px', lineHeight: 1.5}}
             >
-              Everything you need to install Sentry and start catching errors, slow
-              requests, and broken agents.
+              Everything you need to catch errors, trace performance, and fix broken
+              agents.
             </p>
           </div>
         </section>

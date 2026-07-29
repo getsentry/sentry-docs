@@ -52,14 +52,14 @@ export function HomeAiSetupCard() {
           <path d="M18.5 13.5l.95 2.3 2.3.95-2.3.95-.95 2.3-.95-2.3-2.3-.95 2.3-.95.95-2.3z" />
         </svg>
       </div>
-      <h2 className={styles.setupTitle}>Set up AI-utomatically</h2>
+      <h2 className={styles.setupTitle}>
+        <Link href="/ai/agent-plugin/" className={styles.cardLink}>
+          Set up AI-utomatically
+        </Link>
+      </h2>
       <p className={styles.setupDesc}>
         One command teaches Claude Code, Cursor, Codex, and Grok how to install and
-        configure Sentry for you. See the{' '}
-        <Link href="/ai/agent-plugin/" className={styles.inlineLink}>
-          plugin docs
-        </Link>
-        .
+        configure Sentry for you.
       </p>
       <button
         type="button"
