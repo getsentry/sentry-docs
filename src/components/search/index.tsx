@@ -81,10 +81,12 @@ const algoliaInsights = createInsightsClient(async (url, data) => {
   }
 });
 
-algoliaInsights('init', {
-  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
-});
+// Skip init when unconfigured (preview deploys) rather than throwing per click.
+const insightsAppId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID;
+const insightsApiKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY;
+if (insightsAppId && insightsApiKey) {
+  algoliaInsights('init', {appId: insightsAppId, apiKey: insightsApiKey});
+}
 
 type Props = {
   autoFocus?: boolean;
