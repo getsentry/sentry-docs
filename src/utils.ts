@@ -31,10 +31,18 @@ export const capitalize = (str: string) => {
 export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
 
 export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
-  const chunkSize = Math.ceil(arr.length / numChunks);
-  return Array.from({length: numChunks}, (_, i) =>
-    arr.slice(i * chunkSize, i * chunkSize + chunkSize)
-  );
+  // Spread the remainder over the leading chunks so lengths differ by at most
+  // one. A fixed ceil() size dumps the shortfall on the last chunk instead: 22
+  // items in 3 chunks gave 8/8/6 rather than 8/7/7.
+  const baseSize = Math.floor(arr.length / numChunks);
+  const remainder = arr.length % numChunks;
+  let start = 0;
+  return Array.from({length: numChunks}, (_, i) => {
+    const size = baseSize + (i < remainder ? 1 : 0);
+    const chunk = arr.slice(start, start + size);
+    start += size;
+    return chunk;
+  });
 };
 
 type Page = {
