@@ -84,10 +84,10 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const pathname = usePathname();
 
-  // Auto-open selector when on /platforms/ index page (no SDK selected)
-  const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
-
-  const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
+  // Deliberately NOT auto-opened on the /platforms/ index: the Radix Select
+  // focuses the combobox and locks body scroll while open, so opening it on
+  // mount stops the page from scrolling. The full SDK list is in the page body.
+  const [open, setOpen] = useState(alwaysOpen);
   const [searchValue, setSearchValue] = useState('');
 
   const matches = useMemo(() => {

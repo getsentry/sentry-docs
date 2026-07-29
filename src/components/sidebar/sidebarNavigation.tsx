@@ -4,7 +4,6 @@ import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebar} from './platformSidebar';
 import {ProductSidebar} from './productSidebar';
-import {SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
@@ -44,17 +43,17 @@ export async function SidebarNavigation({path}: {path: string[]}) {
   if (path[0] === 'platforms') {
     const platformName = path[1];
     const guideName = path[3];
+    // No trailing separator — Sidebar already renders one between the
+    // navigation and SidebarMoreLinks, and the product links that used to sit
+    // in between now live in the top-level header.
     return (
       <Fragment>
         {platformName && (
-          <Fragment>
-            <PlatformSidebar
-              platformName={platformName}
-              guideName={guideName}
-              rootNode={rootNode}
-            />
-            <SidebarSeparator />
-          </Fragment>
+          <PlatformSidebar
+            platformName={platformName}
+            guideName={guideName}
+            rootNode={rootNode}
+          />
         )}
       </Fragment>
     );

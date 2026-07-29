@@ -8,6 +8,7 @@ import {useCallback, useMemo, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
+import {CopyIcon} from '../agentSetupCallout/copyIcon';
 import {buildPrompt} from '../agentSetupCallout/shared';
 import styles from './style.module.scss';
 
@@ -115,23 +116,5 @@ export function CopyPromptButton({skill, platformName}: Props) {
         </Tooltip.Root>
       </Tooltip.Provider>
     </span>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
   );
 }

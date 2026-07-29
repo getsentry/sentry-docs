@@ -2,36 +2,20 @@ import Link from 'next/link';
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 
+import {ArrowRightIcon} from './arrowRightIcon';
 import AskAiSearchParams from './askAiSearchParams';
 import {Header} from './header';
+import styles from './home.module.scss';
+import {HomeAiSetupCard} from './homeAiSetupCard';
 import {HomeSearchObserver} from './homeSearchVisibility';
 import {NavLink, NavLinkProps} from './navlink';
-import {PlatformIcon} from './platformIcon';
+import {PlatformFilter} from './platformFilter';
 import {Search} from './search';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export async function Home() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
-  const mostViewedSDKs = [
-    {
-      key: 'javascript-nextjs',
-      title: 'Next.js',
-      url: '/platforms/javascript/guides/nextjs/',
-    },
-    {key: 'javascript-node', title: 'Node.js', url: '/platforms/javascript/guides/node/'},
-    {key: 'javascript-react', title: 'React', url: '/platforms/javascript/guides/react/'},
-    {key: 'react-native', title: 'React Native', url: '/platforms/react-native/'},
-    {key: 'python', title: 'Python', url: '/platforms/python/'},
-    {key: 'php-laravel', title: 'Laravel', url: '/platforms/php/guides/laravel/'},
-    {key: 'apple', title: 'Apple', url: '/platforms/apple/'},
-    {key: 'android', title: 'Android', url: '/platforms/android/'},
-    {key: 'go', title: 'Go', url: '/platforms/go/'},
-    {key: 'dotnet', title: '.NET', url: '/platforms/dotnet/'},
-    {key: 'java', title: 'Java', url: '/platforms/java/'},
-    {key: 'ruby', title: 'Ruby', url: '/platforms/ruby/'},
-  ];
-
   return (
     <div className="tw-app">
       <Header
@@ -46,7 +30,7 @@ export async function Home() {
         </div>
 
         {/* Hero */}
-        <section className="w-full relative hero-gradient">
+        <section className={`w-full relative ${styles.heroGradient}`}>
           <div className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-16 pb-10 text-center relative z-10">
             <h1
               className="font-bold text-[var(--gray-12)] dark:text-white mb-4"
@@ -58,43 +42,26 @@ export async function Home() {
               className="text-[var(--gray-11)] dark:text-[var(--gray-11)] max-w-xl mx-auto mb-8"
               style={{fontSize: '17px', lineHeight: 1.5}}
             >
-              Sentry provides end-to-end distributed tracing, enabling developers to
-              identify and debug performance issues and errors across their systems and
-              services.
+              Everything you need to install Sentry and start catching errors, slow
+              requests, and broken agents.
             </p>
-            <HomeSearchObserver>
-              <div className="home-search-bar relative z-50 max-w-xl mx-auto">
-                <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
-              </div>
-            </HomeSearchObserver>
           </div>
         </section>
 
-        {/* Bifurcated setup paths */}
-        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 -mt-2 pb-4">
+        {/* Bifurcated setup paths. `relative z-20` keeps the cards above the
+         * hero's `z-10` inner container, which otherwise covers their top edge. */}
+        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-4 relative z-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* AI setup */}
-            <Link href="/ai/agent-plugin/" className="setup-card group no-underline">
-              <div className="setup-icon">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2l1.9 4.6L18.5 8.5 13.9 10.4 12 15l-1.9-4.6L5.5 8.5l4.6-1.9L12 2z" />
-                  <path d="M18.5 13.5l.95 2.3 2.3.95-2.3.95-.95 2.3-.95-2.3-2.3-.95 2.3-.95.95-2.3z" />
-                </svg>
-              </div>
-              <h2 className="setup-title">Set up with AI</h2>
-              <p className="setup-desc">
-                Let your AI coding assistant install and configure Sentry for you, using
-                Sentry&apos;s agent skills, editor rules, and MCP server.
-              </p>
-              <span className="setup-cta">
-                Start AI setup
-                <Arrow />
-              </span>
-            </Link>
+            <HomeAiSetupCard />
 
-            {/* Manual setup — plain <a> so the same-page hash reliably scrolls (next/link doesn't) */}
-            <a href="#platforms" className="setup-card group no-underline">
-              <div className="setup-icon">
+            {/* Manual setup — goes to the SDK list on /platforms/ rather than
+             * scrolling in place, which barely moves on tall viewports. */}
+            <Link
+              href="/platforms/#platform-specific-docs"
+              className={`${styles.setupCard} group no-underline`}
+            >
+              <div className={styles.setupIcon}>
                 <svg
                   width="26"
                   height="26"
@@ -110,52 +77,25 @@ export async function Home() {
                   <path d="M12.5 15h5" />
                 </svg>
               </div>
-              <h2 className="setup-title">Set up manually</h2>
-              <p className="setup-desc">
-                Choose your platform and follow a step-by-step guide to install the SDK
-                and send your first event.
+              <h2 className={styles.setupTitle}>Set up manually</h2>
+              <p className={styles.setupDesc}>
+                Pick your platform and follow a step-by-step guide to install the SDK and
+                send your first event.
               </p>
-              <span className="setup-cta">
+              <span className={styles.pillLink}>
                 Choose your platform
-                <Arrow />
+                <ArrowRightIcon />
               </span>
-            </a>
+            </Link>
           </div>
         </section>
 
-        {/* Popular SDKs */}
+        {/* Every SDK, using the same filterable list as /platforms/ */}
         <section
           id="platforms"
-          className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-10 pb-6 scroll-mt-[var(--header-height)]"
+          className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
         >
-          <div className="flex items-baseline justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[var(--gray-12)]">Popular SDKs</h3>
-            <Link href="/platforms/" className="text-sm font-medium accent-link">
-              View all SDKs
-            </Link>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {mostViewedSDKs.map(platform => (
-              <Link
-                key={platform.key}
-                href={platform.url}
-                className="sdk-tile flex flex-col items-center justify-center gap-2 bg-white dark:bg-[var(--gray-2)] no-underline py-4 rounded-lg"
-              >
-                <PlatformIcon
-                  platform={platform.key}
-                  size={38}
-                  format="lg"
-                  style={{margin: 0, display: 'block'}}
-                />
-                <span
-                  className="text-[var(--gray-12)] whitespace-nowrap"
-                  style={{fontSize: '0.72rem', fontWeight: 500}}
-                >
-                  {platform.title}
-                </span>
-              </Link>
-            ))}
-          </div>
+          <PlatformFilter />
         </section>
 
         {/* Secondary quick links */}
@@ -183,6 +123,18 @@ export async function Home() {
               desc="Use sentry-cli on the command line."
             />
           </div>
+        </section>
+
+        {/* Search / Ask AI fallback */}
+        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16 text-center">
+          <h2 className="text-lg font-semibold text-[var(--gray-12)] mb-4">
+            Not finding what you&apos;re looking for?
+          </h2>
+          <HomeSearchObserver>
+            <div className={`${styles.homeSearchBar} relative z-50 max-w-xl mx-auto`}>
+              <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+            </div>
+          </HomeSearchObserver>
         </section>
       </main>
       <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
@@ -218,107 +170,13 @@ export async function Home() {
         </div>
       </footer>
       <AskAiSearchParams />
-      <style>{`
-        .hero-gradient {
-          background: linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(255, 255, 255, 0) 100%), #ffffff;
-        }
-        .dark .hero-gradient {
-          background: linear-gradient(to bottom, rgba(168, 139, 250, 0.15) 0%, rgba(0, 0, 0, 0) 100%), var(--gray-1);
-        }
-        .accent-link { color: #6c5fc7; }
-        .accent-link:hover { text-decoration: underline; }
-        /* Setup path cards */
-        .setup-card {
-          display: flex;
-          flex-direction: column;
-          background: #fff;
-          border: 1px solid var(--gray-4);
-          border-radius: 16px;
-          padding: 28px;
-          transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .dark .setup-card { background: var(--gray-2); border-color: var(--gray-4); }
-        .setup-card:hover {
-          transform: translateY(-3px);
-          border-color: #a78bfa;
-          box-shadow: 0 10px 30px rgba(108, 95, 199, 0.15);
-        }
-        .setup-icon {
-          width: 48px; height: 48px;
-          display: grid; place-items: center;
-          border-radius: 12px;
-          color: #6c5fc7;
-          background: rgba(108, 95, 199, 0.12);
-          margin-bottom: 16px;
-        }
-        .setup-title {
-          font-size: 20px; font-weight: 600; margin: 0 0 8px;
-          color: var(--gray-12);
-        }
-        .setup-desc {
-          font-size: 14.5px; line-height: 1.55; margin: 0 0 20px;
-          color: var(--gray-11); flex: 1;
-        }
-        .setup-cta {
-          display: inline-flex; align-items: center; gap: 6px;
-          font-weight: 600; font-size: 14.5px; color: #6c5fc7;
-        }
-        .setup-card:hover .setup-cta svg { transform: translateX(3px); }
-        .setup-cta svg { transition: transform 0.15s ease; }
-        .sdk-tile {
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .sdk-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.10); }
-        .dark .sdk-tile { border: 1px solid var(--gray-4); }
-        .quick-link {
-          display: block; padding: 18px 20px; border-radius: 12px;
-          border: 1px solid var(--gray-4); background: #fff;
-          transition: border-color 0.15s ease, transform 0.15s ease;
-        }
-        .dark .quick-link { background: var(--gray-2); }
-        .quick-link:hover { border-color: #a78bfa; transform: translateY(-2px); }
-        .home-search-bar input[type="text"], .home-search-bar input {
-          height: 48px !important;
-          font-size: 1rem !important;
-          width: 100% !important;
-          background: #fff;
-          border: 1.5px solid #a78bfa !important;
-          box-shadow: 0 2px 12px 0 rgba(168,139,250,0.10);
-          border-radius: 12px !important;
-          color: #1a1a1a;
-        }
-        .dark .home-search-bar input[type="text"], .dark .home-search-bar input {
-          background: var(--gray-2) !important;
-          color: #f3f3f3 !important;
-        }
-      `}</style>
     </div>
-  );
-}
-
-function Arrow() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M13 6l6 6-6 6" />
-    </svg>
   );
 }
 
 function QuickLink({href, title, desc}: {desc: string; href: string; title: string}) {
   return (
-    <Link href={href} className="quick-link no-underline">
+    <Link href={href} className={`${styles.quickLink} no-underline`}>
       <div className="font-semibold text-[var(--gray-12)] mb-1">{title}</div>
       <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
     </Link>
