@@ -125,8 +125,7 @@ export default async function Page(props: {
   }
 
   if (platformOrGuideList.length === 0) {
-    // Only ever redirect to the sanitized path — the raw `next` param is
-    // attacker controlled and must not be used as a redirect target.
+    // Never redirect to the raw, attacker-controlled `next`
     return redirect(pathname || '/');
   }
 

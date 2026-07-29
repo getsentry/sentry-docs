@@ -20,6 +20,13 @@ describe('sanitizeNext', () => {
     expect(sanitizeNext('///devco.re')).toBe('');
   });
 
+  it('should reject control characters that resolve to an external origin', () => {
+    // The URL parser strips tabs and newlines, so `/<tab>/host` becomes `//host`
+    expect(sanitizeNext('/%09/devco.re')).toBe('');
+    expect(sanitizeNext('/%0a/devco.re')).toBe('');
+    expect(sanitizeNext('/%0d/devco.re')).toBe('');
+  });
+
   it('should never return a protocol-relative path', () => {
     // Stripping unsafe characters must not leave adjacent slashes behind
     expect(sanitizeNext('/,/devco.re')).toBe('/devcore');

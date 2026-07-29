@@ -1,45 +1,36 @@
-// Only used to resolve `next` into an absolute URL so it can be origin
-// checked. It never forms part of the returned value.
-const BASE_ORIGIN = 'https://docs.sentry.io';
+// Parse base only — never part of the return value, and only compared against itself
+const PARSE_BASE = 'https://sanitize.invalid';
 
 export const sanitizeNext = (next: string) => {
-  // Links are built with `encodeURIComponent`, so the path arrives encoded
   let decoded: string;
   try {
     decoded = decodeURIComponent(next);
   } catch {
-    // Return empty string if decoding fails
     return '';
   }
 
-  // No legitimate docs path contains a colon, and it keeps scheme-like input
-  // (`javascript:`, `data:`) from ever reaching the parser
+  // No docs path contains a colon; also keeps `javascript:`/`data:` out of the parser
   if (decoded.includes(':')) {
     return '';
   }
 
   let url: URL;
   try {
-    // The WHATWG parser applies the same normalization a browser would —
-    // backslashes become slashes, `//host` and `/\host` resolve to an external
-    // host, dot segments collapse — so anything escaping our origin shows up
-    // as a differing `origin` rather than as a path we would have to untangle
-    // ourselves.
-    url = new URL(decoded, BASE_ORIGIN);
+    // WHATWG normalization matches the browser: backslashes and control chars
+    // become/collapse to slashes and dot segments resolve, so anything escaping
+    // our origin shows up as a foreign `origin` rather than as a path to untangle
+    url = new URL(decoded, PARSE_BASE);
   } catch {
     return '';
   }
 
-  if (url.origin !== BASE_ORIGIN) {
+  if (url.origin !== PARSE_BASE) {
     return '';
   }
 
-  // Drop query and hash (`url.pathname` excludes both), and allow only
-  // alphanumeric, hyphens and slashes
   const pathname = url.pathname
     .replace(/[^\w\-\/]/g, '')
-    // Stripping characters can leave adjacent slashes behind (`/,/evil` ->
-    // `//evil`), which would resolve as protocol-relative. Collapse them.
+    // stripping can leave `//`, which would resolve as protocol-relative
     .replace(/\/{2,}/g, '/');
 
   return pathname === '/' ? '' : pathname;
