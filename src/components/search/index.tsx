@@ -11,7 +11,7 @@ import {
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
-import algoliaInsights from 'search-insights';
+import {createInsightsClient} from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -52,20 +52,39 @@ const userDocsSites: SentryGlobalSearchConfig = [
 const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
-// Insights must authenticate against the same Algolia app as the search client,
-// or every click event is rejected with a 401 that sendBeacon never surfaces.
-// Read the credentials off the client: the browser build keeps them in query
-// parameters, the node build in headers. Replace with search.credentials once
-// global-search 1.4.0 is published.
-const {headers, queryParameters} = search.client.transporter;
-const searchApiKey = queryParameters['x-algolia-api-key'] ?? headers['x-algolia-api-key'];
-if (searchApiKey) {
-  algoliaInsights('init', {appId: search.client.appId, apiKey: searchApiKey});
-} else {
-  captureException(
-    new Error('Algolia Insights not initialized: no API key on the search client')
-  );
-}
+// Insights events are fire-and-forget, so rejected credentials are invisible: a
+// stale NEXT_PUBLIC_ALGOLIA_SEARCH_KEY silently 401'd every click for months.
+// Send them ourselves so a rejection gets reported once per page.
+let insightsRejectionReported = false;
+const algoliaInsights = createInsightsClient(async (url, data) => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {'Content-Type': 'application/json'},
+      // Survive the navigation a result click triggers, like sendBeacon does.
+      keepalive: true,
+    });
+    if (!response.ok && !insightsRejectionReported) {
+      insightsRejectionReported = true;
+      captureException(
+        new Error(`Algolia Insights rejected an event with ${response.status}`)
+      );
+    }
+    return response.ok;
+  } catch (error) {
+    if (!insightsRejectionReported) {
+      insightsRejectionReported = true;
+      captureException(error);
+    }
+    return false;
+  }
+});
+
+algoliaInsights('init', {
+  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
+});
 
 type Props = {
   autoFocus?: boolean;
