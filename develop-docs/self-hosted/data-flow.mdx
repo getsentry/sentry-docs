@@ -38,11 +38,18 @@ graph LR
     kafka --> sentry-post-process-forwarder --> kafka
     sentry-post-process-forwarder -- Preventing concurrent processing of the same event --> redis
 
-    vroom-blob-storage@{ shape: cyl, label: "Blob Storage\n(default is filesystem)" }
+    kafka -- Fetch tasks --> taskbroker
+    taskbroker -- Process and analyze mobile app --> launchpad
+    taskworker -- Fetch tasks to execute --> taskbroker
+    taskworker -- As a buffer and distributed lock --> redis
+    taskworker --> postgres
+    taskworker -- Alert & digest emails --> smtp
+    taskworker -- Generate server-side charts --> chartcuterie
 
-    kafka -- Profiling event processing --> vroom -- Republish to Kafka to be consumed by Snuba --> kafka
-    vroom --> snuba-api
-    vroom -- Store profiles data --> vroom-blob-storage
+    launchpad -- Stores snapshot files --> objectstore
+
+    upstream-blob-storage@{ shape: win-pane, label: "Upstream Blob Storage"}
+    objectstore --> upstream-blob-storage
 
     outgoing-monitors@{ shape: win-pane, label: "Outgoing HTTP Monitors" }
     redis -- Fetching uptime configs --> uptime-checker -- Publishing uptime monitoring results --> kafka
@@ -52,15 +59,13 @@ graph LR
   subgraph ui [Web User Interface]
     sentry-blob-storage@{ shape: cyl, label: "Blob Storage\n(default is filesystem)" }
 
-    web --> worker
+    web -- Submit tasks --> kafka
     web --> postgres
     web -- Caching layer --> memcached
     web -- Queries on event (errors, spans, etc) data (to snuba-api) --> snuba-api
     web -- Avatars, attachments, etc --> sentry-blob-storage
-    worker -- As a celery queue --> redis
-    worker --> postgres
-    worker -- Alert & digest emails --> smtp
     web -- Sending test emails --> smtp
+    web -- Render profiling call trees --> vroom
   end
 
   subgraph ingestion [Event Ingestion]
@@ -94,4 +99,4 @@ graph LR
 ### Web User Interface
 
 1. The `web` service is what you see, it's the Django web UI and API that serves the Sentry's frontend.
-2. The `worker` service mainly consumes tasks from  `redis` that acts as a celery queue. One notable task is to send emails through the SMTP server.
+2. The `taskworker` service execute various tasks from storing data to nodestore (currently SeaweedFS on self-hosted) to sending emails. It fetches the tasks from `taskbroker`, which retrieves the task from `kafka`. If a client want to submit a task, they need to publish a message on the `taskworker` (or relevant `taskworker-*`) topic on Kafka.

@@ -10,6 +10,8 @@ platforms:
   - flutter
 ---
 
+<Include name="dart-stream-mode-general-callout.mdx" />
+
 _(New in version 6.17.0)_
 
 Enabling UI instrumentation captures transactions and adds breadcrumbs for a set of different user interactions, which include clicks, long clicks, taps, and so on.
@@ -50,13 +52,25 @@ Future<void> main() async {
 If the view doesn't have the key assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified.
 The key value should be unique across the whole application because the transactions are grouped by its name.
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 ElevatedButton(
   key: const Key('my_button_widget'),
   onPressed: () {
     final activeSpan = Sentry.getSpan();
     final childSpan = activeSpan?.startChild('some operation', description: 'some description');
     childSpan?.finish();
+  }, child: const Text('User Interaction Example'),
+),
+```
+
+```dart {tabTitle:Stream Mode}
+ElevatedButton(
+  key: const Key('my_button_widget'),
+  onPressed: () async {
+    // The tap starts a root span automatically; nested spans attach to it
+    await Sentry.startSpan('some operation', (span) async {
+      // your operation
+    });
   }, child: const Text('User Interaction Example'),
 ),
 ```
@@ -141,7 +155,9 @@ The `idleTimeoout` defaults to `3000` milliseconds (3 seconds).
 
 You can also disable the idle timeout by setting it to `null`, but if you do, you must finish the transaction manually.
 
-To finish the transaction manually, use `Sentry.getSpan()` to retrieve the active transaction on the scope:
+In stream mode, there's no public accessor for the active span, so manual finishing isn't available — keep the idle timeout enabled so the span finishes automatically.
+
+To finish the transaction manually in transaction mode, use `Sentry.getSpan()` to retrieve the active transaction on the scope:
 
 ```dart
 import 'package:sentry/sentry.dart';

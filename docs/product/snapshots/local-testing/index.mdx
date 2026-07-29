@@ -32,6 +32,14 @@ sentry-cli snapshots download --snapshot-id 259299
 
 Use `--output` to change the destination directory. See the [full download reference](/cli/snapshots/#download-baselines) for all available flags.
 
+<Alert level="info">
+  For very large test suites (tens of thousands of images), you may hit download
+  size limits. In that case, an alternative would be to generate your baseline
+  snapshots locally instead of downloading them (via your base branch). If
+  you're running into this limit with a smaller number of images than expected,
+  [reach out to support](https://sentry.io/contact/support/).
+</Alert>
+
 ## Diffing Locally
 
 Use `sentry-cli snapshots diff` to compare two directories of images. See the [full diff reference](/cli/snapshots/#local-diff) for all available flags.
@@ -40,7 +48,7 @@ Use `sentry-cli snapshots diff` to compare two directories of images. See the [f
 sentry-cli snapshots diff ./snapshots-base ./snapshots-head
 ```
 
-This outputs JSON with per-image results (`changed`, `unchanged`, `added`, `removed`) and writes diff mask images to `./diff-output/`. Use `--fail-on-diff` to exit with code 1 when any differences are found — useful in CI or pre-push hooks:
+This outputs JSON with per-image results (`changed`, `unchanged`, `added`, `removed`, and `skipped` when using `--selective`) and writes diff mask images to `./diff-output/`. Use `--fail-on-diff` to exit with code 1 when any differences are found — useful in CI or pre-push hooks:
 
 ```bash
 sentry-cli snapshots diff ./snapshots-base ./snapshots-head --fail-on-diff

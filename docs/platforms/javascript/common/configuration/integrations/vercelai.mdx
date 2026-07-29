@@ -34,19 +34,41 @@ Requires SDK version `10.12.0` or higher for Deno.
 
 </Alert>
 
+<PlatformSection supported={['javascript.cloudflare']}>
+
+<Alert>
+
+On Cloudflare, AI SDK v7 support requires SDK version `10.64.0` or higher and the <PlatformLink to="/features/nodejs-compat">`@sentry/cloudflare/nodejs_compat`</PlatformLink> entrypoint.
+
+</Alert>
+
+</PlatformSection>
+
+<Alert level="warning">
+
+Don't use the AI SDK's `registerTelemetry` API (AI SDK v7 and above) together with this integration. Sentry's `vercelAIIntegration` already instruments the AI SDK, so registering telemetry separately will result in duplicate spans.
+
+</Alert>
+
+<Alert level="warning">
+
+`dataCollection: {}` enables the SDK's **permissive** defaults — generative AI inputs/outputs **and** other categories (user identity, cookies, headers, HTTP bodies, query parameters, and stack-frame locals) unless you override them. See <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
+
+</Alert>
+
 _Import name: `Sentry.vercelAIIntegration`_
 
 The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) SDK by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
 
-<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno", "javascript.nextjs"]}>
   It is enabled by default and will automatically capture spans for all `ai`
   function calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
 
 ```javascript
 Sentry.init({
-  dsn: "____PUBLIC_DSN____"
+  dsn: "____PUBLIC_DSN____",
   tracesSampleRate: 1.0,
-  streamGenAiSpans: true,
+  dataCollection: {},
   integrations: [
     Sentry.vercelAIIntegration({
       recordInputs: true,
@@ -58,17 +80,38 @@ Sentry.init({
 
 </PlatformSection>
 
-<PlatformSection supported={['javascript.cloudflare']}>
+<PlatformSection supported={['javascript.deno']}>
 This integration is not enabled by default. You need to manually enable it by passing `Sentry.vercelAIIntegration()` to `Sentry.init`:
 
 ```javascript
 Sentry.init({
-  dsn: "____PUBLIC_DSN____"
+  dsn: "____PUBLIC_DSN____",
   tracesSampleRate: 1.0,
-  streamGenAiSpans: true,
+  dataCollection: {},
   integrations: [Sentry.vercelAIIntegration()],
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare']}>
+Not enabled by default. For AI SDK v7, register it with the <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink> entrypoint (requires the Wrangler `nodejs_compat` compatibility flag):
+
+```javascript
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {},
+    integrations: [Sentry.vercelAIIntegration()],
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
+For AI SDK versions before v7, import `@sentry/cloudflare` instead and use the same options.
 
 </PlatformSection>
 
@@ -77,16 +120,16 @@ This integration is enabled by default in the Node runtime, but not in the Edge 
 
 ```javascript {filename: 'sentry.edge.config.(js|ts)'}
 Sentry.init({
-  dsn: "____PUBLIC_DSN____"
+  dsn: "____PUBLIC_DSN____",
   tracesSampleRate: 1.0,
-  streamGenAiSpans: true,
+  dataCollection: {},
   integrations: [Sentry.vercelAIIntegration()],
 });
 ```
 
 </PlatformSection>
 
-<PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
+<PlatformSection supported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
 To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, `streamText`, and `ToolLoopAgent` call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
 
 ```javascript
@@ -102,9 +145,43 @@ const result = await generateText({
 
 </PlatformSection>
 
-<PlatformSection notSupported={['javascript.cloudflare']}>
 ## Options
 
+### `enableTruncation`
+
+_Type: `boolean`_
+
+Enables or disables truncation of recorded input messages. Truncation keeps large payloads within span size limits.
+
+Defaults to `true`.
+
+<PlatformSection notSupported={['javascript.cloudflare']}>
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ enableTruncation: false })],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare']}>
+
+```javascript
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [Sentry.vercelAIIntegration({ enableTruncation: false })],
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.cloudflare', 'javascript.deno']}>
 ### `force`
 
 Requires SDK version `9.29.0` or higher.
@@ -126,7 +203,9 @@ Sentry.init({
   forced when it is enabled.
 </PlatformSection>
 
-<PlatformSection notSupported={['javascript.nextjs']}>
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.cloudflare', 'javascript.nextjs']}>
 ### `recordInputs`
 
 Requires SDK version `9.27.0` or higher.
@@ -161,19 +240,41 @@ Sentry.init({
 
 </PlatformSection>
 
+<PlatformSection supported={['javascript.cloudflare']}>
+### `recordInputs` and `recordOutputs`
+
+Integration-level `recordInputs` / `recordOutputs` need AI SDK v7+ and the <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink> entrypoint. On the default entrypoint, set `recordInputs` / `recordOutputs` on each call’s `experimental_telemetry` instead (see [Configuration](#configuration)).
+
+```javascript
+// @sentry/cloudflare/nodejs_compat only (AI SDK v7+)
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {},
+    integrations: [
+      Sentry.vercelAIIntegration({ recordInputs: true, recordOutputs: true }),
+    ],
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
 </PlatformSection>
 
 ## ToolLoopAgent
 
 The integration also captures spans for the [`ToolLoopAgent`](https://ai-sdk.dev/docs/agents/overview#toolloopagent-class) class. Each call to `generate()` or `stream()` creates an agent span with individual LLM requests and tool executions as child spans.
 
-<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno", "javascript.nextjs"]}>
 
 No additional configuration is needed — `ToolLoopAgent` spans are captured automatically.
 
 </PlatformSection>
 
-<PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
+<PlatformSection supported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
 
 Pass `experimental_telemetry` with `isEnabled: true` to the `ToolLoopAgent` constructor to correctly capture spans:
 
@@ -182,7 +283,9 @@ Pass `experimental_telemetry` with `isEnabled: true` to the `ToolLoopAgent` cons
 ```javascript
 const agent = new ToolLoopAgent({
   model: openai("gpt-4o"),
-  tools: { /* ... */ },
+  tools: {
+    /* ... */
+  },
   experimental_telemetry: { isEnabled: true },
 });
 
@@ -210,7 +313,9 @@ For `ToolLoopAgent`, set `functionId` in the constructor:
 ```javascript
 const agent = new ToolLoopAgent({
   model: openai("gpt-4o"),
-  tools: { /* ... */ },
+  tools: {
+    /* ... */
+  },
   experimental_telemetry: {
     isEnabled: true,
     functionId: "weather-agent",
@@ -244,7 +349,7 @@ const result = await generateText({
 
 ## Supported Versions
 
-- `ai`: `>=3.0.0 <=6`
+- `ai`: `>=3.0.0 <=7`
 
 ## Troubleshooting
 

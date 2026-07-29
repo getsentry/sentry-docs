@@ -43,7 +43,7 @@ jobs:
             dev-docs:
               - 'develop-docs/**'
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ${{ github.workspace }}/.next/cache
@@ -53,8 +53,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # NODE_OPTIONS is scoped to the indexing script, NOT the job: setting it job-wide (as #17283
+      # did) let `next build` claim more heap than the runner has and got the whole runner
+      # OOM-killed. The script itself batches its uploads, so this is headroom, not a requirement.
       - name: Build index for user docs
-        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/algolia.ts
+        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && NODE_OPTIONS=--max-old-space-size=8192 npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}

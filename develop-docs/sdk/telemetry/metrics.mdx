@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.9.0
+spec_version: 2.10.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.10.0
+    date: 2026-06-22
+    summary: Added client reports requirement (trace_metric count, trace_metric_byte size)
   - version: 2.9.0
     date: 2026-05-18
     summary: Added optional `timestamp` parameter to metrics public API. Changed `sentry.timestamp.sequence` to a continuously incrementing Int64 that never resets on timestamp change.
@@ -66,7 +69,7 @@ The envelope item type is named `trace_metric` for internal usage to avoid namin
 </Alert>
 
 Related specs:
-- [Envelopes](/sdk/foundations/transport/envelopes/) — transport format
+- [Envelopes](/sdk/foundations/envelopes/) — transport format
 - [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute types and structure
 - [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) — required before adding metrics support
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
@@ -162,7 +165,7 @@ By default, Relay parses the user agent attached to an incoming metric envelope 
 
 Backend SDKs (Node.js, Python, PHP, etc.) **SHOULD** attach the following attribute:
 
-1. `server.address` — the address of the server that sent the metric. Equivalent to [`server_name`](/sdk/foundations/transport/event-payloads/#optional-attributes) attached to errors and transactions.
+1. `server.address` — the address of the server that sent the metric. Equivalent to [`server_name`](/sdk/foundations/envelopes/event-payloads/#optional-attributes) attached to errors and transactions.
 
 </SpecSection>
 
@@ -252,6 +255,14 @@ These rules exist because auto-emitted metrics can cause a high volume of teleme
 
 </SpecSection>
 
+<SpecSection id="client-reports" status="candidate" since="2.10.0">
+
+### Client Reports
+
+SDKs **MUST** report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g., by counting as if serialized).
+
+</SpecSection>
+
 ---
 
 ## Wire Format
@@ -294,7 +305,7 @@ An envelope **MUST** contain at most one `trace_metric` envelope item — all me
 
 ### `version` and `ingest_settings` properties
 
-The `trace_metric` envelope item **SHOULD** include `version` and `ingest_settings` properties to instruct Relay to infer IP address and user agent from the incoming request. See the [Ingest Settings](/sdk/foundations/transport/envelope-items/#ingest-settings) spec for the full definition, field reference, and behavior.
+The `trace_metric` envelope item **SHOULD** include `version` and `ingest_settings` properties to instruct Relay to infer IP address and user agent from the incoming request. See the [Ingest Settings](/sdk/foundations/envelopes/envelope-items/#ingest-settings) spec for the full definition, field reference, and behavior.
 
 </SpecSection>
 

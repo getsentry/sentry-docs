@@ -1,0 +1,62 @@
+---
+title: App Hangs
+description: "Detect when your application becomes unresponsive and report app-hang events to Sentry."
+sidebar_section: features
+sidebar_order: 20
+---
+
+<Alert title="Experimental">
+
+In-process app-hang detection is experimental and may change in a future release. It's available since version `0.15.2`.
+
+</Alert>
+
+An unresponsive application is one of the most frustrating experiences for your users. A long-running computation, a blocking I/O call, or an infinite loop on a critical thread can freeze your app without ever crashing, so it never surfaces as an error. App-hang detection catches these cases and reports them to Sentry as app-hang events.
+
+The Native SDK detects hangs entirely in-process: a background watchdog thread monitors a single thread of your choosing and captures an event when that thread stops making progress. Because the SDK can't know which of your threads represents responsiveness, you tell it by sending heartbeats from the thread you want watched (typically your UI or main loop).
+
+## Enabling App-Hang Detection
+
+App-hang detection is disabled by default. Enable it on the options before calling `sentry_init()`, then call `sentry_app_hang_heartbeat()` regularly from the thread you want monitored:
+
+```c
+#include <sentry.h>
+
+int main(void) {
+  sentry_options_t *options = sentry_options_new();
+  sentry_options_set_dsn(options, "___PUBLIC_DSN___");
+
+  // Turn on the watchdog and (optionally) set a custom timeout.
+  sentry_options_set_enable_app_hang_tracking(options, 1);
+  sentry_options_set_app_hang_timeout(options, 2000); // milliseconds
+
+  sentry_init(options);
+
+  // Call this regularly from your main/UI loop. The first call latches
+  // this thread as the one being monitored.
+  while (app_is_running()) {
+    sentry_app_hang_heartbeat();
+    run_one_frame();
+  }
+
+  sentry_close();
+}
+```
+
+<Alert level="warning">
+
+The minimum `app_hang_timeout` is `1000` ms. Setting a lower value (including `0`) logs a warning and clamps the timeout to `1000` ms; detection still runs.
+
+</Alert>
+
+If the watched thread doesn't send a heartbeat within the configured [`app_hang_timeout`](/platforms/native/configuration/options/#app_hang_timeout), the watchdog samples the hung thread's stack trace and captures an app-hang event.
+
+## How Heartbeats Work
+
+The SDK monitors exactly one thread, chosen at runtime by your heartbeats:
+
+- **The first call to `sentry_app_hang_heartbeat()` latches the calling thread** as the monitored thread. Make sure the first heartbeat comes from the thread most representative of responsiveness, such as your UI or main loop.
+- **Heartbeats from any other thread are ignored.** Only the latched thread is watched.
+- **Calls are no-ops unless app-hang detection is enabled** via `sentry_options_set_enable_app_hang_tracking()`, so you can leave the heartbeat calls in place even when the feature is turned off.
+
+Because detection relies on heartbeats, place them where they reflect your application's responsiveness, for example, at the top of each iteration of your main loop. A thread that's busy but still ticking the loop will keep sending heartbeats; a thread genuinely stuck past the timeout will not.
