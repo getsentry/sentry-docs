@@ -50,6 +50,12 @@ Don't use the AI SDK's `registerTelemetry` API (AI SDK v7 and above) together wi
 
 </Alert>
 
+<Alert level="warning">
+
+`dataCollection: {}` enables the SDK's **permissive** defaults — generative AI inputs/outputs **and** other categories (user identity, cookies, headers, HTTP bodies, query parameters, and stack-frame locals) unless you override them. See <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
+
+</Alert>
+
 _Import name: `Sentry.vercelAIIntegration`_
 
 The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) SDK by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
@@ -89,10 +95,10 @@ Sentry.init({
 </PlatformSection>
 
 <PlatformSection supported={['javascript.cloudflare']}>
-Not enabled by default. Register it on `withSentry`:
+Not enabled by default. For AI SDK v7, register it with the <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink> entrypoint (requires the Wrangler `nodejs_compat` compatibility flag):
 
 ```javascript
-import * as Sentry from "@sentry/cloudflare";
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
 
 export default Sentry.withSentry(
   (env) => ({
@@ -104,6 +110,8 @@ export default Sentry.withSentry(
   { async fetch(request, env, ctx) { /* ... */ } },
 );
 ```
+
+For AI SDK versions before v7, import `@sentry/cloudflare` instead and use the same options.
 
 </PlatformSection>
 
@@ -160,6 +168,8 @@ Sentry.init({
 <PlatformSection supported={['javascript.cloudflare']}>
 
 ```javascript
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+
 export default Sentry.withSentry(
   (env) => ({
     dsn: "___PUBLIC_DSN___",
