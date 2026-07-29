@@ -24,14 +24,14 @@ fn main() {
         .with(sentry::integrations::tracing::layer())
         .init();
 
-    let _guard = sentry::init(sentry::ClientOptions {
-        release: sentry::release_name!(),
-        traces_sample_rate: 1.0,
-        // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-        // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-        send_default_pii: true,
-        ..Default::default()
-    });
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .maybe_release(sentry::release_name!())
+            .traces_sample_rate(1.0)
+            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
+            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+            .send_default_pii(true),
+    );
 
     main_span1();
 }
@@ -79,15 +79,13 @@ use opentelemetry_sdk::trace::SdkTracerProvider;
 use sentry::integrations::opentelemetry as sentry_opentelemetry;
 
 // Initialize the Sentry SDK
-let _guard = sentry::init((
-    "___PUBLIC_DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
+let _guard = sentry::init(
+    sentry::ClientOptions::new()
+        .dsn("___PUBLIC_DSN___")
+        .maybe_release(sentry::release_name!())
         // Enable capturing of traces; set this a to lower value in production.
-        traces_sample_rate: 1.0,
-        ..sentry::ClientOptions::default()
-    },
-));
+        .traces_sample_rate(1.0),
+);
 
 // Register the Sentry propagator for distributed tracing
 global::set_text_map_propagator(sentry_opentelemetry::SentryPropagator::new());

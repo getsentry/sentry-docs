@@ -48,20 +48,18 @@ async fn failing() -> () {
 }
 
 fn main() -> io::Result<()> {
-    let _guard = sentry::init((
-        "___PUBLIC_DSN___",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
             # ___PRODUCT_OPTION_START___ performance
             // Capture all traces and spans. Set to a lower value in production
-            traces_sample_rate: 1.0,
+            .traces_sample_rate(1.0)
             # ___PRODUCT_OPTION_END___ performance
             // Capture user IPs and potentially sensitive headers when using HTTP server integrations
             // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-            send_default_pii: true,
-            ..Default::default()
-        },
-    ));
+            .send_default_pii(true),
+    );
 
     let app = Router::new().route("/", get(failing)).layer(
         ServiceBuilder::new()
