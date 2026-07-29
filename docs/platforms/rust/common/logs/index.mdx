@@ -11,22 +11,16 @@ With Sentry Structured Logs, you can send text-based log information from your a
 ## Requirements
 
 Logs in Rust are supported in Sentry Rust SDK version `0.42.0` and above.
-Additionally, the `logs` feature flag needs to be enabled.
-
-```toml {filename:Cargo.toml}
-[dependencies]
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["logs"] }
-```
 
 ## Setup
 
-To enable logging, just add the `sentry` dependency with the `logs` feature flag.
-This will set `enable_logs: true` by default in your `sentry::ClientOptions`.
-You can opt-out from sending logs even while using the `logs` feature flag by explicitly initializing the SDK with `enable_logs: false`.
+Logs are enabled by default in the Rust SDK.
+
+If you compile `sentry` without default features, you must explicitly enable the `logs` feature flag to send logs.
 
 ## Usage
 
-Once the feature is enabled and the SDK is initialized, you can send logs by using the logging macros.
+Once the SDK is initialized, you can send logs by using the logging macros.
 The `sentry` crate exposes macros that support six different log levels:
 `logger_trace`, `logger_debug`, `logger_info`, `logger_warn`, `logger_error` and `logger_fatal`.
 The macros support logging a simple message, or a message with parameters, with `format` syntax:
@@ -68,7 +62,7 @@ To use the `tracing` integration with logs, add the necessary dependencies to yo
 
 ```toml {filename:Cargo.toml}
 [dependencies]
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["tracing", "logs"] }
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["tracing"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 ```
@@ -111,7 +105,7 @@ The fields of `tracing` events are automatically captured as attributes in Sentr
 By default, `tracing` events at or above info level are captured as Sentry logs.
 
 This behavior can be customized by applying a custom `event_filter` when creating the layer.
-The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `logs` feature flag.
+The following snippet shows the default `event_filter`:
 
 ```rust
 use sentry::integrations::tracing::EventFilter;
@@ -133,7 +127,7 @@ To use the `log` integration with logs, add the necessary dependencies to your `
 
 ```toml {filename:Cargo.toml}
 [dependencies]
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["log", "logs"] }
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["log"] }
 log = "0.4"
 # optional: use any log implementation you prefer
 env_logger = "0.11"
@@ -149,8 +143,7 @@ fn main() {
     let _guard = sentry::init(
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
-            .maybe_release(sentry::release_name!())
-            .enable_logs(true),
+            .maybe_release(sentry::release_name!()),
     );
 
     let logger = sentry::integrations::log::SentryLogger::with_dest(
@@ -181,7 +174,6 @@ let _guard = sentry::init(
     sentry::ClientOptions::new()
         .dsn("___PUBLIC_DSN___")
         .maybe_release(sentry::release_name!())
-        .enable_logs(true)
         .before_send_log(|log| {
             // filter out all trace level logs
             if log.level == sentry::protocol::LogLevel::Trace {
