@@ -7,10 +7,8 @@ import AskAiSearchParams from './askAiSearchParams';
 import {Header} from './header';
 import styles from './home.module.scss';
 import {HomeAiSetupCard} from './homeAiSetupCard';
-import {HomeSearchObserver} from './homeSearchVisibility';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
-import {Search} from './search';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export async function Home() {
@@ -119,17 +117,6 @@ export async function Home() {
               desc="Use sentry-cli on the command line."
             />
           </div>
-        </section>
-
-        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16 text-center">
-          <h2 className="text-lg font-semibold text-[var(--gray-12)] mb-4">
-            Not finding what you&apos;re looking for?
-          </h2>
-          <HomeSearchObserver>
-            <div className={`${styles.homeSearchBar} relative z-50 max-w-xl mx-auto`}>
-              <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
-            </div>
-          </HomeSearchObserver>
         </section>
       </main>
       <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">

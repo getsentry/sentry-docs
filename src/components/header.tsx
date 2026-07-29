@@ -11,7 +11,6 @@ import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
 
 import {MagicIcon} from './cutomIcons/magic';
-import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {mainSections} from './navigationData';
 import sidebarStyles from './sidebar/style.module.scss';
 import {ThemeToggle} from './theme-toggle';
@@ -49,18 +48,9 @@ export function Header({
   platforms = [],
 }: Props) {
   const isHomePage = pathname === '/';
-  // Homepage search is below the fold, so the header search starts visible.
-  const [homeSearchVisible, setHomeSearchVisible] = useState(false);
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
-  // Listen for home search visibility changes
-  useHomeSearchVisibility(
-    useCallback((isVisible: boolean) => {
-      setHomeSearchVisible(isVisible);
-    }, [])
-  );
 
   // Close mobile overlays on navigation
   useEffect(() => {
@@ -175,9 +165,6 @@ export function Header({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [sidebarOpen]);
-
-  // Show header search if: not on home page, OR on home page but home search is scrolled out of view
-  const showHeaderSearch = !isHomePage || !homeSearchVisible;
 
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center min-h-[64px]">
@@ -305,8 +292,6 @@ export function Header({
             <div
               className="flex flex-shrink-0 items-center gap-2"
               style={{
-                visibility: showHeaderSearch ? 'visible' : 'hidden',
-                pointerEvents: showHeaderSearch ? 'auto' : 'none',
                 width: '340px',
                 minWidth: '340px',
               }}
