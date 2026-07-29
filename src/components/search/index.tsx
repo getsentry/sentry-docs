@@ -82,10 +82,12 @@ const algoliaInsights = createInsightsClient(async (url, data) => {
   }
 });
 
-// Skip init when unconfigured (preview deploys) rather than throwing per click.
 const insightsAppId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID;
 const insightsApiKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY;
-if (insightsAppId && insightsApiKey) {
+// Unconfigured deploys (previews) stay silent: search-insights throws on every
+// call until it is initialized, so nothing may be sent either.
+const insightsEnabled = Boolean(insightsAppId && insightsApiKey);
+if (insightsEnabled) {
   algoliaInsights('init', {appId: insightsAppId, apiKey: insightsApiKey});
 }
 
@@ -340,6 +342,9 @@ export function Search({
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
+    if (!insightsEnabled) {
+      return;
+    }
     try {
       algoliaInsights('clickedObjectIDsAfterSearch', {
         eventName: 'documentation_search_result_click',
