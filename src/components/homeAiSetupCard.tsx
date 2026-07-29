@@ -12,13 +12,9 @@ import {DocMetrics} from 'sentry-docs/metrics';
 
 import styles from './home.module.scss';
 
-/** The installer from /ai/agent-plugin/ — keep the two in sync. */
+/** Keep in sync with /ai/agent-plugin/. */
 const INSTALL_COMMAND = 'npx @sentry/ai install';
 
-/**
- * Homepage counterpart to the "Set up manually" card: instead of prose, it hands
- * the visitor the one command that wires the Sentry plugin into their agent.
- */
 export function HomeAiSetupCard() {
   const [copied, setCopied] = useState(false);
   const {emit} = usePlausibleEvent();

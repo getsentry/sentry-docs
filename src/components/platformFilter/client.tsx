@@ -56,7 +56,6 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
         <div className="lg:col-span-2 space-y-2">
-          {/* id is the anchor the homepage's "Set up manually" card links to */}
           <h2 id="platform-specific-docs" className="text-2xl font-medium">
             Platform-specific docs
           </h2>

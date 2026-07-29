@@ -49,7 +49,8 @@ export function Header({
   platforms = [],
 }: Props) {
   const isHomePage = pathname === '/';
-  const [homeSearchVisible, setHomeSearchVisible] = useState(true);
+  // Homepage search is below the fold, so the header search starts visible.
+  const [homeSearchVisible, setHomeSearchVisible] = useState(false);
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);

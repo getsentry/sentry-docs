@@ -43,9 +43,7 @@ export async function SidebarNavigation({path}: {path: string[]}) {
   if (path[0] === 'platforms') {
     const platformName = path[1];
     const guideName = path[3];
-    // No trailing separator — Sidebar already renders one between the
-    // navigation and SidebarMoreLinks, and the product links that used to sit
-    // in between now live in the top-level header.
+    // Sidebar already renders the separator before SidebarMoreLinks.
     return (
       <Fragment>
         {platformName && (

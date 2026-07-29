@@ -48,15 +48,12 @@ export async function Home() {
           </div>
         </section>
 
-        {/* Bifurcated setup paths. `relative z-20` keeps the cards above the
-         * hero's `z-10` inner container, which otherwise covers their top edge. */}
+        {/* z-20 keeps the cards above the hero's z-10 inner container */}
         <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-4 relative z-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* AI setup */}
             <HomeAiSetupCard />
 
-            {/* Manual setup — goes to the SDK list on /platforms/ rather than
-             * scrolling in place, which barely moves on tall viewports. */}
             <Link
               href="/platforms/#platform-specific-docs"
               className={`${styles.setupCard} group no-underline`}
@@ -90,7 +87,6 @@ export async function Home() {
           </div>
         </section>
 
-        {/* Every SDK, using the same filterable list as /platforms/ */}
         <section
           id="platforms"
           className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
@@ -125,7 +121,6 @@ export async function Home() {
           </div>
         </section>
 
-        {/* Search / Ask AI fallback */}
         <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16 text-center">
           <h2 className="text-lg font-semibold text-[var(--gray-12)] mb-4">
             Not finding what you&apos;re looking for?
