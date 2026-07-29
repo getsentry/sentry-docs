@@ -23,6 +23,7 @@ import {
 } from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {isExpectedMdxError} from 'sentry-docs/mdxErrors';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
@@ -162,14 +163,8 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       // This can happen when serverless function is invoked at runtime but docs files
       // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
       // Note: This error handling is duplicated for regular docs below - keep them in sync.
-      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
-      const isExpectedError =
-        errorCode === 'ENOENT' ||
-        errorCode === 'MDX_RUNTIME_ERROR' ||
-        (e instanceof Error && e.message.includes('Failed to find a valid source file'));
-      if (isExpectedError) {
-        // Log as warning for visibility without flooding errors
-        // Users are served static pages from CDN - this is an infrastructure edge case
+      if (isExpectedMdxError(e)) {
+        const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
         Sentry.logger.warn('MDX file not found at runtime, returning 404', {
           path: params.path?.join('/'),
           errorCode,
@@ -177,6 +172,13 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
         });
         return notFound();
       }
+      // TODO(diagnostic): remove once Edge runtime error shape is confirmed
+      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+      Sentry.logger.error('Unexpected error loading MDX, re-throwing as 500', {
+        path: params.path?.join('/'),
+        errorCode,
+        hasMessage: typeof (e as any)?.message === 'string',
+      });
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
@@ -237,14 +239,8 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     // This can happen when serverless function is invoked at runtime but docs files
     // aren't in the bundle, or MDX compilation is attempted at Vercel runtime.
     // Note: This error handling is duplicated for developer docs above - keep them in sync.
-    const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
-    const isExpectedError =
-      errorCode === 'ENOENT' ||
-      errorCode === 'MDX_RUNTIME_ERROR' ||
-      (e instanceof Error && e.message.includes('Failed to find a valid source file'));
-    if (isExpectedError) {
-      // Log as warning for visibility without flooding errors
-      // Users are served static pages from CDN - this is an infrastructure edge case
+    if (isExpectedMdxError(e)) {
+      const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
       Sentry.logger.warn('MDX file not found at runtime, returning 404', {
         path: pageNode.path,
         errorCode,
@@ -252,6 +248,13 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       });
       return notFound();
     }
+    // TODO(diagnostic): remove once Edge runtime error shape is confirmed
+    const errorCode = e && typeof e === 'object' && 'code' in e ? e.code : null;
+    Sentry.logger.error('Unexpected error loading MDX, re-throwing as 500', {
+      path: pageNode.path,
+      errorCode,
+      hasMessage: typeof (e as any)?.message === 'string',
+    });
     throw e;
   }
   const {mdxSource, frontMatter} = doc;
