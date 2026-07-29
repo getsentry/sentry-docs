@@ -1,8 +1,8 @@
 import {useMemo} from 'react';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
-import {isExpectedMdxError} from 'sentry-docs/mdxErrors';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {isExpectedMdxError} from 'sentry-docs/mdxErrors';
 
 import {PlatformContent} from './platformContent';
 

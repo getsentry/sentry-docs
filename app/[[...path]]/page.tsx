@@ -23,7 +23,6 @@ import {
 } from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {isExpectedMdxError} from 'sentry-docs/mdxErrors';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
@@ -31,6 +30,7 @@ import {
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
+import {isExpectedMdxError} from 'sentry-docs/mdxErrors';
 import {PageType} from 'sentry-docs/metrics';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
