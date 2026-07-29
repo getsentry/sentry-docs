@@ -178,6 +178,42 @@ export function Search({
     };
   }, [autoFocus]);
 
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
+  const showResults = query.length >= 2 && inputFocus;
+
+  // Keep the dropdown inside the viewport: cap it to whichever side of the input
+  // has more room, and flip above only when that side is the top.
+  useEffect(() => {
+    if (!showResults) {
+      return undefined;
+    }
+    const GUTTER = 16;
+    const update = () => {
+      const input = inputRef.current;
+      const dropdown = resultsRef.current;
+      if (!input || !dropdown) {
+        return;
+      }
+      const {top, bottom} = input.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - bottom - GUTTER * 2;
+      const spaceAbove = top - GUTTER * 2;
+      const flip = spaceAbove > spaceBelow;
+      setPlacement(flip ? 'top' : 'bottom');
+      dropdown.style.setProperty(
+        '--sgs-available-space',
+        `${Math.round(Math.max(flip ? spaceAbove : spaceBelow, 200))}px`
+      );
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, {passive: true});
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update);
+    };
+  }, [showResults]);
+
   const searchFor = useCallback(
     async (
       inputQuery: string,
@@ -368,8 +404,12 @@ export function Search({
           </Button>
         </Fragment>
       </div>
-      {query.length >= 2 && inputFocus && (
-        <div className={styles['sgs-search-results']}>
+      {showResults && (
+        <div
+          className={styles['sgs-search-results']}
+          data-placement={placement}
+          ref={resultsRef}
+        >
           <div className={styles['sgs-ai']}>
             <button
               id="ai-list-entry"
