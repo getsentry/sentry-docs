@@ -22,12 +22,6 @@ import styles from './search.module.scss';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
 
-// Initialize Algolia Insights
-algoliaInsights('init', {
-  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
-});
-
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
@@ -57,6 +51,21 @@ const userDocsSites: SentryGlobalSearchConfig = [
 ];
 const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
+
+// Insights must authenticate against the same Algolia app as the search client,
+// or every click event is rejected with a 401 that sendBeacon never surfaces.
+// Read the credentials off the client: the browser build keeps them in query
+// parameters, the node build in headers. Replace with the ALGOLIA_APP_ID and
+// ALGOLIA_SEARCH_API_KEY exports once global-search 1.4.0 is published.
+const {headers, queryParameters} = search.client.transporter;
+const searchApiKey = queryParameters['x-algolia-api-key'] ?? headers['x-algolia-api-key'];
+if (searchApiKey) {
+  algoliaInsights('init', {appId: search.client.appId, apiKey: searchApiKey});
+} else {
+  captureException(
+    new Error('Algolia Insights not initialized: no API key on the search client')
+  );
+}
 
 type Props = {
   autoFocus?: boolean;
