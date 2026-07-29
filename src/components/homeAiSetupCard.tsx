@@ -32,12 +32,7 @@ export function HomeAiSetupCard() {
     try {
       await navigator.clipboard.writeText(INSTALL_COMMAND);
       setCopied(true);
-      DocMetrics.copyAIPrompt(
-        window.location.pathname,
-        undefined,
-        true,
-        'homepage_card'
-      );
+      DocMetrics.copyAIPrompt(window.location.pathname, undefined, true, 'homepage_card');
       setTimeout(() => setCopied(false), 1500);
     } catch (error) {
       Sentry.logger.warn('clipboard.writeText failed', {
