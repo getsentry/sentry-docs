@@ -61,8 +61,9 @@ const algoliaInsights = createInsightsClient(async (url, data) => {
     const response = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(data),
-      headers: {'Content-Type': 'application/json'},
-      // Survive the navigation a result click triggers, like sendBeacon does.
+      // text/plain keeps this a CORS simple request: an application/json
+      // preflight can be cancelled by the navigation a result click triggers.
+      headers: {'Content-Type': 'text/plain'},
       keepalive: true,
     });
     if (!response.ok && !insightsRejectionReported) {
