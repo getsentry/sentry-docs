@@ -9,6 +9,38 @@ describe('sanitizeNext', () => {
     expect(sanitizeNext('//example.com')).toBe('');
   });
 
+  it('should reject backslash-based external URLs', () => {
+    // Browsers normalize backslashes to forward slashes, so these would
+    // otherwise resolve to an external origin.
+    expect(sanitizeNext('/\\devco.re')).toBe('');
+    expect(sanitizeNext('/\\/devco.re')).toBe('');
+    expect(sanitizeNext('\\\\devco.re')).toBe('');
+    expect(sanitizeNext('\\/devco.re')).toBe('');
+    expect(sanitizeNext('%2F%5Cdevco.re')).toBe('');
+    expect(sanitizeNext('///devco.re')).toBe('');
+  });
+
+  it('should never return a protocol-relative path', () => {
+    // Stripping unsafe characters must not leave adjacent slashes behind
+    expect(sanitizeNext('/,/devco.re')).toBe('/devcore');
+    expect(sanitizeNext('/a//b')).toBe('/a/b');
+  });
+
+  it('should reject non-http schemes', () => {
+    // eslint-disable-next-line no-script-url -- asserting this is rejected
+    expect(sanitizeNext('javascript:alert(1)')).toBe('');
+    expect(sanitizeNext('data:text/html,x')).toBe('');
+  });
+
+  it('should resolve dot segments', () => {
+    expect(sanitizeNext('/a/./b')).toBe('/a/b');
+    expect(sanitizeNext('/a/../../b')).toBe('/b');
+  });
+
+  it('should normalize backslashes within a path', () => {
+    expect(sanitizeNext('/path\\to/resource')).toBe('/path/to/resource');
+  });
+
   it('should prepend a slash if missing', () => {
     expect(sanitizeNext('path/to/resource')).toBe('/path/to/resource');
   });

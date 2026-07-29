@@ -125,8 +125,9 @@ export default async function Page(props: {
   }
 
   if (platformOrGuideList.length === 0) {
-    // try to redirect the user to the page directly, might result in 404
-    return redirect(next);
+    // Only ever redirect to the sanitized path — the raw `next` param is
+    // attacker controlled and must not be used as a redirect target.
+    return redirect(pathname || '/');
   }
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
