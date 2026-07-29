@@ -4,11 +4,11 @@ import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback, useState} from 'react';
+import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 import {CodeBlock} from '../codeBlock';
-import {CopyIcon} from './copyIcon';
 import {buildPrompt} from './shared';
 import styles from './style.module.scss';
 
@@ -67,7 +67,7 @@ export function AgentSetupCallout({skill, platformName}: Props) {
           <code className={styles.promptText}>{prompt}</code>
         </div>
         <button className={styles.copyButton} onClick={copyPrompt} type="button">
-          <CopyIcon />
+          <Copy size={14} />
           {copied ? 'Copied!' : 'Copy Prompt'}
         </button>
       </div>

@@ -5,10 +5,10 @@ import {Theme} from '@radix-ui/themes';
 import * as Sentry from '@sentry/nextjs';
 import {useTheme} from 'next-themes';
 import {useCallback, useMemo, useState} from 'react';
+import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
-import {CopyIcon} from '../agentSetupCallout/copyIcon';
 import {buildPrompt} from '../agentSetupCallout/shared';
 import styles from './style.module.scss';
 
@@ -99,7 +99,7 @@ export function CopyPromptButton({skill, platformName}: Props) {
               type="button"
               aria-label="Copy setup prompt for AI agents"
             >
-              <CopyIcon />
+              <Copy size={14} />
               <span className={styles.label}>{copied ? 'Copied!' : 'Copy Prompt'}</span>
             </button>
           </Tooltip.Trigger>

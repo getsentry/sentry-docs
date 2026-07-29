@@ -3,14 +3,13 @@
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback, useState} from 'react';
+import {Check, Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import Claude from 'sentry-docs/icons/claude';
 import Codex from 'sentry-docs/icons/codex';
 import Cursor from 'sentry-docs/icons/cursor';
 import {DocMetrics} from 'sentry-docs/metrics';
 
-import {CheckIcon} from './agentSetupCallout/checkIcon';
-import {CopyIcon} from './agentSetupCallout/copyIcon';
 import styles from './home.module.scss';
 
 /** The installer from /ai/agent-plugin/ — keep the two in sync. */
@@ -79,7 +78,7 @@ export function HomeAiSetupCard() {
         </span>
         <code className={styles.commandText}>{INSTALL_COMMAND}</code>
         <span className={styles.commandAction}>
-          {copied ? <CheckIcon /> : <CopyIcon />}
+          {copied ? <Check size={14} /> : <Copy size={14} />}
         </span>
       </button>
     </div>

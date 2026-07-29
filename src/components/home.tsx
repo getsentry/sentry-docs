@@ -1,8 +1,8 @@
 import Link from 'next/link';
+import {ArrowRight} from 'react-feather';
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 
-import {ArrowRightIcon} from './arrowRightIcon';
 import AskAiSearchParams from './askAiSearchParams';
 import {Header} from './header';
 import styles from './home.module.scss';
@@ -84,7 +84,7 @@ export async function Home() {
               </p>
               <span className={styles.pillLink}>
                 Choose your platform
-                <ArrowRightIcon />
+                <ArrowRight size={16} />
               </span>
             </Link>
           </div>
