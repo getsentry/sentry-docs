@@ -54,7 +54,7 @@ export function HomeAiSetupCard() {
       </div>
       <h2 className={styles.setupTitle}>
         <Link href="/ai/agent-plugin/" className={styles.cardLink}>
-          Ask AI to set it up
+          Set up with a coding agent
         </Link>
       </h2>
       <p className={styles.setupDesc}>
