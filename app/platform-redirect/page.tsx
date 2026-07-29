@@ -124,9 +124,19 @@ export default async function Page(props: {
     }
   }
 
+  // make the Sidebar aware of the current path
+  setServerContext({rootNode, path: ['platform-redirect']});
+
+  // Only redirect to doctree-resolved URLs. Never redirect based on `next` alone
   if (platformOrGuideList.length === 0) {
-    // Never redirect to the raw, attacker-controlled `next`
-    return redirect(pathname || '/');
+    return (
+      <DocPage frontMatter={{title: defaultTitle, description: ''}}>
+        <Alert level="warning">
+          We couldn't find documentation for this path on any platform.{' '}
+          <SmartLink to="/">Go to the docs home</SmartLink>.
+        </Alert>
+      </DocPage>
+    );
   }
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
@@ -143,9 +153,6 @@ export default async function Page(props: {
     title,
     description,
   };
-
-  // make the Sidebar aware of the current path
-  setServerContext({rootNode, path: ['platform-redirect']});
 
   return (
     <DocPage frontMatter={frontMatter}>
