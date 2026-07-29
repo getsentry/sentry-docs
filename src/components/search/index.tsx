@@ -55,8 +55,8 @@ const search = new SentryGlobalSearch(config);
 // Insights must authenticate against the same Algolia app as the search client,
 // or every click event is rejected with a 401 that sendBeacon never surfaces.
 // Read the credentials off the client: the browser build keeps them in query
-// parameters, the node build in headers. Replace with the ALGOLIA_APP_ID and
-// ALGOLIA_SEARCH_API_KEY exports once global-search 1.4.0 is published.
+// parameters, the node build in headers. Replace with search.credentials once
+// global-search 1.4.0 is published.
 const {headers, queryParameters} = search.client.transporter;
 const searchApiKey = queryParameters['x-algolia-api-key'] ?? headers['x-algolia-api-key'];
 if (searchApiKey) {
