@@ -52,31 +52,19 @@ function getForwardedTrafficType(
 }
 
 /**
- * Middleware root spans are created by Next.js itself ('Middleware.execute')
- * before any request data reaches Sentry, so they can never be classified
- * here — and they carry no useful detail (the name is collapsed to
- * `middleware GET`). Per-request traffic classification is recorded as the
- * `docs.request.classified` metric in middleware.ts instead.
- */
-function isMiddlewareRootSpan(samplingContext: SamplingContext): boolean {
-  return (
-    samplingContext.attributes?.['next.span_type'] === 'Middleware.execute' ||
-    samplingContext.attributes?.['sentry.op'] === 'http.server.middleware' ||
-    samplingContext.name === 'middleware' ||
-    Boolean(samplingContext.name?.startsWith('middleware '))
-  );
-}
-
-/**
  * Determines trace sample rate based on traffic classification.
  *
  * Sample rates (from shared config):
- * - Middleware root spans: 0% (unclassifiable by architecture and information-free;
- *   traffic counting happens in middleware.ts via the docs.request.classified metric)
  * - AI agents: 100% (full visibility into agentic docs consumption)
  * - Bots/crawlers: 0% (filter out noise)
  * - Real users: 30%
  * - Unknown: 30% (tracked separately for visibility)
+ *
+ * Middleware root spans are sampled with the same rules as other roots. Next.js
+ * may create `Middleware.execute` before request data reaches Sentry, so
+ * classification can fall back to user-agent / unknown. Per-request traffic
+ * counts remain in the unsampled `docs.request.classified` metric in
+ * middleware.ts.
  *
  * Classification prefers the `x-traffic-type` header stamped by the middleware
  * onto forwarded requests, falling back to user-agent pattern matching for
@@ -84,10 +72,6 @@ function isMiddlewareRootSpan(samplingContext: SamplingContext): boolean {
  * before bots; if something matches both patterns, we sample it.
  */
 export function tracesSampler(samplingContext: SamplingContext): number {
-  if (isMiddlewareRootSpan(samplingContext)) {
-    return 0;
-  }
-
   const headers = samplingContext.normalizedRequest?.headers;
 
   // Trust the classification the middleware stamped onto the forwarded request
@@ -97,7 +81,8 @@ export function tracesSampler(samplingContext: SamplingContext): number {
   }
 
   // Fallback to user-agent pattern matching if no middleware classification
-  // (e.g. requests that bypass the middleware matcher)
+  // (e.g. requests that bypass the middleware matcher, or middleware roots
+  // sampled before headers are available)
   const userAgent =
     getHeaderValue(headers, 'user-agent') ??
     (samplingContext.attributes?.['http.user_agent'] as string | undefined) ??
