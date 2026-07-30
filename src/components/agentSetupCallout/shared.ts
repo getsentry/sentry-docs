@@ -1,14 +1,39 @@
 /**
- * Shared constants and utilities for agent skills prompt building.
+ * Shared constants and utilities for agent setup prompt building.
  * Used by AgentSetupCallout (full banner) and inline copy-prompt buttons.
  */
 
-export const SKILLS_BASE_URL = 'https://skills.sentry.dev';
+export const DOCS_ORIGIN = 'https://docs.sentry.io';
 
-/** Single entrypoint skill that instruments any SDK; the SDK is named in prose. */
-export const INSTRUMENT_SKILL_URL = `${SKILLS_BASE_URL}/instrument`;
+/** Fallback when a page-specific docs URL is unavailable. */
+export const DEFAULT_DOCS_URL = `${DOCS_ORIGIN}/platforms.md`;
 
-export function buildPrompt(sdkName?: string): string {
-  const target = sdkName ? `the Sentry ${sdkName} SDK` : 'Sentry';
-  return `Use curl to download, read and follow ${INSTRUMENT_SKILL_URL} to set up ${target}.`;
+/** Convert a docs path or full docs URL into a markdown export URL. */
+export function toDocsMarkdownUrl(docsPathOrUrl: string): string {
+  if (docsPathOrUrl.startsWith('http://') || docsPathOrUrl.startsWith('https://')) {
+    const url = new URL(docsPathOrUrl);
+    const cleanPath = url.pathname.replace(/\/$/, '').replace(/\.md$/, '');
+    return `${url.origin}${cleanPath || '/index'}.md`;
+  }
+
+  const cleanPath = docsPathOrUrl
+    .replace(/^\//, '')
+    .replace(/\/$/, '')
+    .replace(/\.md$/, '');
+  return `${DOCS_ORIGIN}/${cleanPath || 'index'}.md`;
+}
+
+/**
+ * Build a copy-paste prompt that points an agent at docs markdown.
+ * Prefer a page-specific docs path/URL when available.
+ */
+export function buildPrompt(options?: {
+  docsUrl?: string;
+  platformName?: string;
+}): string {
+  const target = options?.platformName
+    ? `the Sentry ${options.platformName} SDK`
+    : 'Sentry';
+  const docsUrl = toDocsMarkdownUrl(options?.docsUrl || DEFAULT_DOCS_URL);
+  return `Read and follow ${docsUrl} to set up ${target}.`;
 }

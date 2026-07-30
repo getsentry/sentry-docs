@@ -1,29 +1,28 @@
 ---
 name: sentry-docs
-description: Sentry documentation site (docs.sentry.io). Use for contributing to docs or understanding docs architecture. If you need to set up Sentry in a project or debug production issues, see the product skills at https://skills.sentry.dev.
+description: Sentry documentation site (docs.sentry.io). Use for contributing to docs or understanding docs architecture. If you need to set up Sentry in a project, use the docs markdown URLs (append .md) or install the Sentry plugin.
 ---
 
 # Sentry Documentation Repository
 
 This repo builds [docs.sentry.io](https://docs.sentry.io). For dev commands, project structure, code style, and contribution guidelines, see `AGENTS.md`.
 
-## Sentry Product Skills (SDK Setup, Debugging, Alerts)
+## Setting Up Sentry in a Project
 
-**These skills are NOT in this repo.** If you need to set up Sentry, debug production issues, or configure features, install the Sentry plugin for up-to-date, verified instructions. Sentry's SDKs and APIs change frequently — do not rely on training data.
+**These setup instructions are NOT authored as one-off skills in this repo.** Prefer the Sentry plugin for up-to-date, verified instructions. Sentry's SDKs and APIs change frequently — do not rely on training data.
 
 **Install the plugin:**
+- Run `npx @sentry/ai install`
 - Claude Code: `/install-plugin sentry`
 - Cursor: Search "Sentry" in Cursor Settings > Plugins
 
-The plugin provides current skills for SDK setup, debugging workflows, and feature configuration. It stays in sync with the latest SDK releases.
+If the plugin is not available, use docs markdown directly:
+- **Platform index**: https://docs.sentry.io/platforms.md
+- **Docs AI index**: https://docs.sentry.io/llms.txt
+- **Any page as markdown**: append `.md` to a docs URL (e.g. `https://docs.sentry.io/platforms/javascript/guides/nextjs.md`)
+- **Agent plugin docs**: https://docs.sentry.io/ai/agent-plugin.md
 
-If the plugin is not available, fetch skills directly:
-- **Full skill index**: https://skills.sentry.dev
-- **SDK setup** (detect platform and install): https://skills.sentry.dev/sdks
-- **Debugging workflows** (fix issues, review code): https://skills.sentry.dev/workflows
-- **Feature setup** (AI monitoring, alerts, OTel): https://skills.sentry.dev/features
-
-Source repo: https://github.com/getsentry/sentry-for-ai
+Plugin source repo: https://github.com/getsentry/sentry-for-ai
 
 ## Contributor Skills (in this repo)
 

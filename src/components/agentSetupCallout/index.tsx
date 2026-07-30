@@ -3,6 +3,7 @@
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
+import {usePathname} from 'next/navigation';
 import {useCallback, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -14,7 +15,10 @@ import styles from './style.module.scss';
 type Props = {
   /** Display name for the platform, e.g. "Next.js", "Python". Omit for generic. */
   platformName?: string;
-  /** Skill package name, e.g. "sentry-nextjs-sdk". Omit for generic/all skills. */
+  /**
+   * Kept for analytics compatibility with existing MDX call sites.
+   * @deprecated Prefer docs URLs in the copied prompt.
+   */
   skill?: string;
 };
 
@@ -22,8 +26,12 @@ export function AgentSetupCallout({skill, platformName}: Props) {
   const [copied, setCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const {emit} = usePlausibleEvent();
+  const pathname = usePathname();
 
-  const prompt = buildPrompt(platformName);
+  const prompt = buildPrompt({
+    platformName,
+    docsUrl: pathname || undefined,
+  });
 
   const copyPrompt = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
