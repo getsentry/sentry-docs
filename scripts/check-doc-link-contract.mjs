@@ -57,8 +57,16 @@ function routeTopologyChanged(docsRoot, baseRef) {
   return output.split('\n').some(line => {
     if (!line) return false;
     const [status, ...files] = line.split('\t');
-    if (files.some(file => file === 'redirects.js' || file === 'middleware.ts'))
+    if (
+      files.some(
+        file =>
+          file === 'redirects.js' ||
+          file === 'middleware.ts' ||
+          file === 'scripts/data/static-sites-www-astro-docs-paths.json'
+      )
+    ) {
       return true;
+    }
     if (
       files.some(file =>
         /^docs\/platforms\/[^/]+\/(?:guides\/[^/]+\/)?config\.yml$/.test(file)
@@ -77,24 +85,66 @@ function printIssues(title, issues) {
   console.log(`\n${title} (${issues.length}):`);
   for (const issue of issues) {
     console.log(`- ${issue.raw}`);
-    console.log(`  ${issue.file}:${issue.line}`);
+    if (issue.file) {
+      console.log(`  ${issue.file}:${issue.line || 1}`);
+    }
     console.log(`  ${issue.resolution.chain.join(' -> ')} [${issue.resolution.status}]`);
   }
 }
 
+function loadLinksFromFile(linksFile) {
+  const payload = JSON.parse(fs.readFileSync(linksFile, 'utf8'));
+  const paths = Array.isArray(payload) ? payload : payload.paths;
+  if (!Array.isArray(paths)) {
+    throw new Error(`links file must be an array or {paths: []}: ${linksFile}`);
+  }
+
+  const relative = path.basename(linksFile);
+  return paths.map(pathname => ({
+    file: relative,
+    line: 1,
+    pathname,
+    raw: `https://docs.sentry.io${pathname}`,
+  }));
+}
+
+function writeLinksFile(linksFile, consumerRoot, links) {
+  const payload = {
+    source: consumerRoot,
+    generated_at: new Date().toISOString(),
+    generated_note:
+      'Regenerate from a static-sites checkout: node scripts/check-doc-link-contract.mjs --consumer-root <static-sites>/packages/www-astro --write-links-file scripts/data/static-sites-www-astro-docs-paths.json',
+    paths: [...uniqueLinksByPath(links).keys()].sort(),
+  };
+  fs.mkdirSync(path.dirname(linksFile), {recursive: true});
+  fs.writeFileSync(linksFile, `${JSON.stringify(payload, null, 2)}\n`);
+  console.log(`Wrote ${payload.paths.length} paths to ${linksFile}`);
+}
+
 const args = parseArgs(process.argv.slice(2));
 const docsRoot = path.resolve(args['docs-root'] || process.cwd());
-const consumerRoot = path.resolve(args['consumer-root'] || '.');
+const linksFile = args['links-file'] ? path.resolve(args['links-file']) : null;
+const writeLinksFilePath = args['write-links-file']
+  ? path.resolve(args['write-links-file'])
+  : null;
+const consumerRoot = args['consumer-root'] ? path.resolve(args['consumer-root']) : null;
 const baselineRef = args['baseline-ref'];
 const consumerBaselineRef = args['consumer-baseline-ref'];
-const consumerRepoRoot = path.resolve(args['consumer-repo-root'] || consumerRoot);
+const consumerRepoRoot = path.resolve(
+  args['consumer-repo-root'] || consumerRoot || process.cwd()
+);
+
+if (writeLinksFilePath) {
+  if (!consumerRoot || !fs.existsSync(consumerRoot)) {
+    console.error(`--write-links-file requires an existing --consumer-root`);
+    process.exit(2);
+  }
+  writeLinksFile(writeLinksFilePath, consumerRoot, extractDocsLinks(consumerRoot));
+  process.exit(0);
+}
 
 if (!fs.existsSync(path.join(docsRoot, 'redirects.js'))) {
   console.error(`docs root does not look like sentry-docs: ${docsRoot}`);
-  process.exit(2);
-}
-if (!fs.existsSync(consumerRoot)) {
-  console.error(`consumer root does not exist: ${consumerRoot}`);
   process.exit(2);
 }
 
@@ -107,7 +157,21 @@ if (
   process.exit(0);
 }
 
-const links = [...uniqueLinksByPath(extractDocsLinks(consumerRoot)).values()];
+let links;
+if (linksFile) {
+  if (!fs.existsSync(linksFile)) {
+    console.error(`links file does not exist: ${linksFile}`);
+    process.exit(2);
+  }
+  links = loadLinksFromFile(linksFile);
+} else {
+  if (!consumerRoot || !fs.existsSync(consumerRoot)) {
+    console.error(`consumer root does not exist: ${consumerRoot}`);
+    process.exit(2);
+  }
+  links = [...uniqueLinksByPath(extractDocsLinks(consumerRoot)).values()];
+}
+
 const candidateResults = validateLinks(docsRoot, links);
 const candidateMissing = missingByPath(candidateResults);
 let regressions = [...candidateMissing.values()];
@@ -127,6 +191,10 @@ if (baselineRef) {
     baseline.cleanup();
   }
 } else if (consumerBaselineRef) {
+  if (!consumerRoot) {
+    console.error(`--consumer-baseline-ref requires --consumer-root`);
+    process.exit(2);
+  }
   const baseline = checkoutWorktree(
     consumerRepoRoot,
     consumerBaselineRef,
