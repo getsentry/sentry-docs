@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 0.11.0
     date: 2026-07-30
-    summary: Require URL query parameter values to be stored percent-encoded, exactly as they appear in the URL.
+    summary: Require encoded URL query parameters to be stored exactly as they appear in the URL.
   - version: 0.10.0
     date: 2026-07-29
     summary: Clarify that Session Replay is not gated by `dataCollection` or `sendDefaultPii` due to opposing defaults (opt-in vs. opt-out).
@@ -204,7 +204,7 @@ URL strings in span descriptions follow the format defined in [Structuring Data]
 
 The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
 
-Query parameters **MUST** be stored percent-encoded, exactly as they appear in the URL. SDKs **MUST NOT** decode them before attaching them, since decoding makes delimiters ambiguous and loses the original request.
+Encoded query parameters **MUST** be stored exactly as they appear in the URL.
 
 **Example:** Given a request to `https://example.com/api/users?token=abc123&q=a%20b%26c&page=5`:
 
@@ -232,7 +232,7 @@ http.request.header.cookie.theme: "dark-mode"           // not sensitive — val
 http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
 ```
 
-For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is, percent-encoded as received (see [URLs](#urls)).
+For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is (see [URLs](#urls)).
 
 
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
