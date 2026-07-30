@@ -1,0 +1,53 @@
+name: Check static-sites docs links
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'docs/**/*.md'
+      - 'docs/**/*.mdx'
+      - 'docs/platforms/**/config.yml'
+      - 'middleware.ts'
+      - 'redirects.js'
+      - 'scripts/check-doc-link-contract.mjs'
+      - 'scripts/lib/doc-link-contract.mjs'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-static-sites-doc-links:
+    name: Check static-sites docs links
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout sentry-docs
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+
+      - name: Fetch docs base commit
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git fetch --no-tags --depth=1 origin "$BASE_SHA"
+
+      - name: Checkout static-sites
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          repository: getsentry/static-sites
+          ref: master
+          path: static-sites
+          fetch-depth: 1
+
+      - name: Check consumer links against candidate docs routes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node scripts/check-doc-link-contract.mjs \
+            --docs-root . \
+            --consumer-root static-sites/packages/www-astro \
+            --baseline-ref "$BASE_SHA" \
+            --only-if-route-changed true
