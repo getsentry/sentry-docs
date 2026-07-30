@@ -27,10 +27,7 @@ export function toDocsMarkdownUrl(docsPathOrUrl: string): string {
  * Build a copy-paste prompt that points an agent at docs markdown.
  * Prefer a page-specific docs path/URL when available.
  */
-export function buildPrompt(options?: {
-  docsUrl?: string;
-  platformName?: string;
-}): string {
+export function buildPrompt(options?: {docsUrl?: string; platformName?: string}): string {
   const target = options?.platformName
     ? `the Sentry ${options.platformName} SDK`
     : 'Sentry';

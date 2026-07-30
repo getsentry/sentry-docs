@@ -31,11 +31,7 @@ export function LinkWithPlatformIcon({platform, label, url, skill}: Props) {
         {label ?? platform}
       </SmartLink>
       {skill && (
-        <CopyPromptButton
-          skill={skill}
-          platformName={label ?? platform}
-          url={url}
-        />
+        <CopyPromptButton skill={skill} platformName={label ?? platform} url={url} />
       )}
     </span>
   );
