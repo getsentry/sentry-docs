@@ -1,0 +1,128 @@
+---
+title: Vite Plugin
+description: "Learn how to use the Sentry Cloudflare Vite plugin to instrument bundled dependencies at build time."
+---
+
+<AvailableSince version="10.68.0" />
+
+<Alert>
+  The Sentry Cloudflare Vite plugin has **experimental** stability. Configuration
+  options and behavior may change or be removed in any release.
+</Alert>
+
+The Sentry Cloudflare Vite plugin (`sentryCloudflareVitePlugin`) instruments your Worker at build time. It can:
+
+1. **Instrument bundled dependencies** — automatically instruments supported packages in your bundle (such as database clients like `mysql`) at build time, giving you more traces out of the box.
+2. **Auto-instrument your Worker entry** — optionally wraps your default export with `Sentry.withSentry()` and Durable Objects with `instrumentDurableObjectWithSentry()` at build time, so you don't need to modify your code.
+
+**We recommend building your Cloudflare Worker with Vite and the `sentryCloudflareVitePlugin` plugin.** It's the most complete way to get tracing for bundled dependencies in the Workers runtime. If you already deploy with `wrangler` directly, see [Migrating From Wrangler](#migrating-from-wrangler).
+
+## Install
+
+The Vite plugin ships with `@sentry/cloudflare`, so there's no extra package to install. It's designed to run alongside the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/).
+
+## Prerequisites
+
+The plugin relies on Node.js APIs (`diagnostics_channel`) at runtime, so your Worker must have the `nodejs_compat` compatibility flag enabled. See <PlatformLink to="/features/nodejs-compat/">Node.js Compatibility Entrypoint</PlatformLink> for setup.
+
+## Configure
+
+Enable `useDiagnosticsChannelInjection` to trace supported bundled dependencies, and wrap your handler with `withSentry` as usual:
+
+```typescript {filename:vite.config.ts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    cloudflare(),
+    sentryCloudflareVitePlugin({
+      _experimental: {
+        useDiagnosticsChannelInjection: true,
+      },
+    }),
+  ],
+});
+```
+
+```typescript {filename:index.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  {
+    async fetch(request, env) {
+      // Spans from bundled dependencies (such as mysql) are captured automatically
+      return new Response("...");
+    },
+  }
+);
+```
+
+### Auto-instrumentation (Experimental)
+
+Alternatively, the plugin can wrap your Worker for you at build time, so you don't need `withSentry` in your code. Enable `autoInstrumentation` and the plugin reads your `wrangler.(jsonc|toml)` to find the entry point, Durable Objects, and workflows:
+
+```typescript {filename:vite.config.ts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    cloudflare(),
+    sentryCloudflareVitePlugin({
+      _experimental: {
+        autoInstrumentation: true,
+        useDiagnosticsChannelInjection: true,
+      },
+    }),
+  ],
+});
+```
+
+With auto-instrumentation, you can optionally provide Sentry options via a co-located `instrument.server.*` file (`.ts`, `.mts`, `.js`, `.mjs`, or `.cjs`) next to your Worker entry. Use `defineCloudflareOptions` for full type-checking:
+
+```typescript {filename:instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+}));
+```
+
+If no `instrument.server.*` file exists, the SDK reads all configuration (DSN, release, environment, sample rate, etc.) from the Worker's `env` bindings at runtime.
+
+## Options
+
+<SdkOption name="_experimental" type="object">
+
+Experimental options that may change or be removed without notice.
+
+</SdkOption>
+
+<SdkOption name="_experimental.autoInstrumentation" type="boolean" defaultValue="false">
+
+Automatically wraps your Worker at build time so you don't have to edit your entry. The plugin reads your wrangler config, wraps the default export with `Sentry.withSentry()` (sourcing options from a co-located `instrument.server.*` file, falling back to `env`), and wraps any configured Durable Object and Workflow classes with the matching `instrument*WithSentry` helper. Both `vite build` and `vite dev` are instrumented.
+
+</SdkOption>
+
+<SdkOption name="_experimental.useDiagnosticsChannelInjection" type="boolean" defaultValue="false">
+
+Enables build-time automatic instrumentation of supported dependencies. When enabled, the plugin injects `diagnostics_channel` calls into bundled packages during both `vite build` and `vite dev`. When disabled or omitted, the plugin is a no-op.
+
+</SdkOption>
+
+## Migrating From Wrangler
+
+If you deploy with `wrangler` directly, moving to Vite is straightforward:
+
+1. Set up the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/get-started/) and add a `vite.config.ts` with the `cloudflare()` and `sentryCloudflareVitePlugin()` plugins as shown above.
+2. Run `vite build` before `wrangler deploy`, and use `vite dev` in place of `wrangler dev` for local development.
+
+Your existing `wrangler.jsonc` becomes the input config — the plugin generates the deployed output during the build. For the full list of fields that change or become redundant, see Cloudflare's [Migrating from Wrangler](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/) guide.
