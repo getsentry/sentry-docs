@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.9.1
+spec_version: 0.10.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.10.0
+    date: 2026-07-29
+    summary: Clarify that Session Replay is not gated by `dataCollection` or `sendDefaultPii` due to opposing defaults (opt-in vs. opt-out).
   - version: 0.9.1
     date: 2026-07-29
     summary: Clarify that `genAI.inputs` gates system instructions in addition to prompt messages and tool call arguments/definitions.
@@ -261,6 +264,17 @@ is most natural for their API surface.
 
 When an integration exposes data-collection options, the values set on the integration **MUST** take precedence over the
 corresponding global `dataCollection` values for the data that integration collects.
+
+#### Session Replay
+
+Session Replay is **not** gated by `dataCollection` (or its predecessor `sendDefaultPii`). It is a privacy-sensitive
+feature with its own opt-in privacy model — by default it masks all text, images, and user input — which is the
+**opposite** of the `dataCollection` opt-out model. Wiring the two together would flip privacy-sensitive defaults for the
+majority of existing Replay users and create confusion about which layer controls masking.
+
+Because of this, SDKs **MUST NOT** change what Session Replay captures based on `dataCollection`.
+Replay's masking and network-capture behavior **MUST** continue to be controlled exclusively by the Replay
+integration's own privacy options. SDK documentation **SHOULD** explicitly state that `dataCollection` does not affect Session Replay so users are not surprised by the exception.
 
 </SpecSection>
 
