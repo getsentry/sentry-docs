@@ -108,16 +108,16 @@ function annotateMiddlewareSpan(
   }
 
   const outcome = middlewareOutcome(response);
+  const rootSpan = Sentry.getRootSpan(activeSpan);
 
-  Sentry.getRootSpan(activeSpan)
-    .updateName(`middleware ${request.method} ${outcome}`)
-    .setAttributes({
-      [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: 'custom',
-      'middleware.outcome': outcome,
-      'url.path': request.nextUrl.pathname,
-      traffic_type: classification.trafficType,
-      device_type: classification.deviceType,
-    });
+  rootSpan.updateName(`middleware ${request.method} ${outcome}`);
+  rootSpan.setAttributes({
+    [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: 'custom',
+    'middleware.outcome': outcome,
+    'url.path': request.nextUrl.pathname,
+    traffic_type: classification.trafficType,
+    device_type: classification.deviceType,
+  });
 }
 
 /**
