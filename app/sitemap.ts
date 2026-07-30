@@ -2,6 +2,24 @@ import type {MetadataRoute} from 'next';
 import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
+// Develop docs section roots that should be included in the sitemap.
+// Deep pages are excluded to match the noindex strategy -- search engines
+// should not discover pages we've told them not to index.
+const DEVELOP_DOCS_INDEXABLE_ROOTS = new Set([
+  'getting-started',
+  'engineering-practices',
+  'application-architecture',
+  'development-infrastructure',
+  'backend',
+  'frontend',
+  'services',
+  'integrations',
+  'ingestion',
+  'sdk',
+  'sdk-setup-wizards',
+  'self-hosted',
+]);
+
 /**
  * Recursively extracts all slugs (paths) from a DocNode tree.
  * This traverses the entire tree and collects the path from each node,
@@ -23,13 +41,28 @@ function extractSlugsFromDocTree(node: DocNode): string[] {
   return slugs;
 }
 
+/**
+ * For develop docs, returns only the section root paths (e.g., 'getting-started',
+ * 'backend') that should remain indexable. Deep pages are excluded from the
+ * sitemap to match the noindex meta tag strategy.
+ */
+function filterDevelopDocsPaths(paths: string[]): string[] {
+  return paths.filter(path => {
+    // Section root pages have no slashes (single segment like 'getting-started')
+    return !path.includes('/') && DEVELOP_DOCS_INDEXABLE_ROOTS.has(path);
+  });
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rootNode = await getDocsRootNode();
   const baseUrl = isDeveloperDocs
     ? 'https://develop.sentry.dev'
     : 'https://docs.sentry.io';
 
-  const paths = extractSlugsFromDocTree(rootNode);
+  let paths = extractSlugsFromDocTree(rootNode);
+  if (isDeveloperDocs) {
+    paths = filterDevelopDocsPaths(paths);
+  }
   return docsToSitemap(paths, baseUrl);
 }
 
