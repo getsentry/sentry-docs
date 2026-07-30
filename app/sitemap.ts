@@ -1,24 +1,7 @@
 import type {MetadataRoute} from 'next';
+import {DEVELOP_DOCS_INDEXABLE_ROOTS} from 'sentry-docs/developDocsConfig';
 import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-
-// Develop docs section roots that should be included in the sitemap.
-// Deep pages are excluded to match the noindex strategy -- search engines
-// should not discover pages we've told them not to index.
-const DEVELOP_DOCS_INDEXABLE_ROOTS = new Set([
-  'getting-started',
-  'engineering-practices',
-  'application-architecture',
-  'development-infrastructure',
-  'backend',
-  'frontend',
-  'services',
-  'integrations',
-  'ingestion',
-  'sdk',
-  'sdk-setup-wizards',
-  'self-hosted',
-]);
 
 /**
  * Recursively extracts all slugs (paths) from a DocNode tree.
