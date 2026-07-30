@@ -3498,6 +3498,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/agents/dashboards/',
   },
   {
+    from: '/product/agents/dashboard/',
+    to: '/product/agents/dashboards/',
+  },
+  {
     from: '/ai/observability/agents/dashboard/',
     to: '/product/agents/dashboards/',
   },
