@@ -2205,7 +2205,7 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/agent-tracing-browser/',
   },
   // AI Monitoring / AI Observability → Product Agents
-  // Keep singular dashboard mappings ahead of :path* catch-alls
+  // Keep singular dashboard mappings ahead of :path* catch-all rules
   {
     source: '/ai/monitoring/agents/dashboard/',
     destination: '/product/agents/dashboards/',
