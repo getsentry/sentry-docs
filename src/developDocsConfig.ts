@@ -1,6 +1,6 @@
 /**
  * Develop docs roots that should remain indexable by search engines.
- * Noindex to prevent them from competing with docs.sentry.io in search results. 
+ * Noindex to prevent them from competing with docs.sentry.io in search results.
  * Used by both page.tsx (meta tags) and sitemap.ts (sitemap filtering)
  */
 export const DEVELOP_DOCS_INDEXABLE_ROOTS = new Set([
