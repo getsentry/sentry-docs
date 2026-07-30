@@ -11,6 +11,7 @@ on:
       - 'redirects.js'
       - 'scripts/check-doc-link-contract.mjs'
       - 'scripts/lib/doc-link-contract.mjs'
+      - '.github/workflows/check-static-sites-doc-links.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -34,6 +35,17 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: git fetch --no-tags --depth=1 origin "$BASE_SHA"
 
+      # static-sites is private; default GITHUB_TOKEN cannot read it.
+      - name: Get token for static-sites checkout
+        id: static-sites-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
+        with:
+          app-id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private-key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+          owner: getsentry
+          repositories: |
+            static-sites
+
       - name: Checkout static-sites
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -41,6 +53,7 @@ jobs:
           ref: master
           path: static-sites
           fetch-depth: 1
+          token: ${{ steps.static-sites-token.outputs.token }}
 
       - name: Check consumer links against candidate docs routes
         env:
