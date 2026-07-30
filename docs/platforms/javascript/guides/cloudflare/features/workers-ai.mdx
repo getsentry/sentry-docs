@@ -5,9 +5,9 @@ description: "Learn how Sentry instruments Cloudflare Workers AI to capture gen_
 
 <AvailableSince version="10.67.0" />
 
-Sentry automatically instruments the [Cloudflare Workers AI binding](https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/) (`env.AI`). Calls to `env.AI.run(...)` create `gen_ai` spans that follow Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions, capturing the model, request parameters, and token usage.
+Sentry automatically instruments the [Cloudflare Workers AI binding](https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/) (`env.AI`). Calls to `env.AI.run(...)` create `gen_ai` spans that follow Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions.
 
-No extra setup is required beyond initializing the SDK with `withSentry`. As long as your handler receives the instrumented `env`, the `AI` binding is wrapped for you:
+No extra instrumentation setup is required beyond initializing the SDK with `withSentry`. As long as your handler receives the instrumented `env`, the `AI` binding is wrapped for you:
 
 ```typescript
 import * as Sentry from "@sentry/cloudflare";
@@ -16,6 +16,9 @@ export default Sentry.withSentry(
   (env) => ({
     dsn: "___PUBLIC_DSN___",
     tracesSampleRate: 1.0,
+    // Capture prompts and responses on gen_ai spans (also enables other
+    // permissive dataCollection defaults — tighten as needed)
+    dataCollection: {},
   }),
   {
     async fetch(request, env) {
@@ -30,7 +33,29 @@ export default Sentry.withSentry(
 );
 ```
 
+With only `tracesSampleRate` set and no `dataCollection`, you still get spans (model, operation, token usage). Prompt and response content is **off** unless you pass `dataCollection` (for example `dataCollection: {}`) or set `dataCollection.genAI` explicitly:
+
+```typescript
+dataCollection: {
+  genAI: { inputs: true, outputs: true },
+},
+```
+
+To keep other `dataCollection` categories off while sending AI content, set only the categories you need and opt out of the rest. See <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
+
 You can browse the full list of available models in the [Cloudflare Workers AI models directory](https://developers.cloudflare.com/ai/models/).
+
+## What Gets Instrumented
+
+| Topic | Behavior |
+| --- | --- |
+| Method | Only `env.AI.run(...)` |
+| Chat vs embeddings | Inputs with `messages` or `prompt` → `chat`; `text` → `embeddings`; otherwise `chat` |
+| Streaming | Span ends when the stream is fully read or cancelled |
+| `returnRawResponse` / `websocket` | Response body fields are not introspected |
+| Prompt / response content | Controlled by root `dataCollection.genAI` (defaults **on** when any `dataCollection` is set, **off** when it is absent) |
+
+There is no public per-binding options API on `@sentry/cloudflare`. Control AI input/output recording with root `dataCollection.genAI`.
 
 ## Next Steps
 
