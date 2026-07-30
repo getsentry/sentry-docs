@@ -27,10 +27,18 @@ export function toDocsMarkdownUrl(docsPathOrUrl: string): string {
  * Build a copy-paste prompt that points an agent at docs markdown.
  * Prefer a page-specific docs path/URL when available.
  */
-export function buildPrompt(options?: {docsUrl?: string; platformName?: string}): string {
+export function buildPrompt(options?: {
+  docsUrl?: string;
+  platformName?: string;
+  /** Optional verb phrase, e.g. "enable span streaming". Defaults to setup. */
+  task?: string;
+}): string {
+  const docsUrl = toDocsMarkdownUrl(options?.docsUrl || DEFAULT_DOCS_URL);
+  if (options?.task) {
+    return `Read and follow ${docsUrl} to ${options.task}.`;
+  }
   const target = options?.platformName
     ? `the Sentry ${options.platformName} SDK`
     : 'Sentry';
-  const docsUrl = toDocsMarkdownUrl(options?.docsUrl || DEFAULT_DOCS_URL);
   return `Read and follow ${docsUrl} to set up ${target}.`;
 }
