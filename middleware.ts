@@ -43,15 +43,16 @@ export function middleware(request: NextRequest) {
   const classification = classifyTraffic(request);
   recordClassification(request, classification);
 
-  // First, handle canonical URL redirects for deprecated paths
-  const canonicalRedirect = handleRedirects(request);
-  if (canonicalRedirect) {
-    return applyNoindexForNonProductionDomains(request, canonicalRedirect);
-  }
+  // First handle canonical URL redirects for deprecated paths, then check for
+  // AI/LLM clients and redirect to markdown if appropriate.
+  const response = applyNoindexForNonProductionDomains(
+    request,
+    handleRedirects(request) ?? handleAIClientRedirect(request, classification)
+  );
 
-  // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  const response = handleAIClientRedirect(request, classification);
-  return applyNoindexForNonProductionDomains(request, response);
+  annotateMiddlewareSpan(request, classification, response);
+
+  return response;
 }
 
 /**
@@ -74,6 +75,50 @@ function applyNoindexForNonProductionDomains(
 }
 
 type TrafficClassification = ReturnType<typeof classifyTraffic>;
+
+type MiddlewareOutcome = 'redirect' | 'rewrite' | 'passthrough';
+
+function middlewareOutcome(response: NextResponse): MiddlewareOutcome {
+  if (response.status >= 300 && response.status < 400) {
+    return 'redirect';
+  }
+  // Set by NextResponse.rewrite(). If Next.js renames it we degrade to
+  // 'passthrough' rather than throwing.
+  return response.headers.has('x-middleware-rewrite') ? 'rewrite' : 'passthrough';
+}
+
+/**
+ * Next.js names this span `middleware GET` with no route detail, and the
+ * tracesSampler can't classify it. Both are fixable here, where the request is
+ * in hand: `sentry.source: 'custom'` stops the SDK reclaiming the name, and
+ * `traffic_type` keeps bots filterable at query time.
+ *
+ * Named by outcome, not path — the docs site has thousands of paths (plus every
+ * file under /mdx-images/), so naming by URL would blow up transaction-name
+ * cardinality. The path stays queryable as `url.path`.
+ */
+function annotateMiddlewareSpan(
+  request: NextRequest,
+  classification: TrafficClassification,
+  response: NextResponse
+): void {
+  const activeSpan = Sentry.getActiveSpan();
+  if (!activeSpan) {
+    return;
+  }
+
+  const outcome = middlewareOutcome(response);
+
+  Sentry.getRootSpan(activeSpan)
+    .updateName(`middleware ${request.method} ${outcome}`)
+    .setAttributes({
+      [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: 'custom',
+      'middleware.outcome': outcome,
+      'url.path': request.nextUrl.pathname,
+      traffic_type: classification.trafficType,
+      device_type: classification.deviceType,
+    });
+}
 
 /**
  * Records the per-request traffic classification as a counter metric.

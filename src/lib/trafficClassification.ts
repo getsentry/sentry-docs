@@ -34,6 +34,13 @@ export const SAMPLE_RATES: Record<TrafficType, number> = {
 };
 
 /**
+ * Middleware root spans can't be classified at sampling time (see
+ * src/tracesSampler.ts), so this rate is applied blind to all traffic.
+ * ~1% of 2.4M requests/day ≈ 24k spans/day.
+ */
+export const MIDDLEWARE_SAMPLE_RATE = 0.01;
+
+/**
  * Checks if the input matches the pattern.
  * Returns the matched substring (lowercase), or undefined if no match.
  */
