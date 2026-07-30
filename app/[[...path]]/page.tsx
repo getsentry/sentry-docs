@@ -13,6 +13,7 @@ import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {SpecChangelog} from 'sentry-docs/components/specChangelog';
 import {isSpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
+import {isDevelopDocsIndexablePath} from 'sentry-docs/developDocsConfig';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -287,39 +288,6 @@ type MetadataProps = {
     path?: string[];
   }>;
 };
-
-// Develop docs section roots that should remain indexable by search engines.
-// All other develop docs pages get noindex to prevent them from competing
-// with docs.sentry.io in search results. These correspond to the left nav
-// top-level sections defined in src/components/sidebar/developDocsSidebar.tsx.
-const DEVELOP_DOCS_INDEXABLE_ROOTS = new Set([
-  'getting-started',
-  'engineering-practices',
-  'application-architecture',
-  'development-infrastructure',
-  'backend',
-  'frontend',
-  'services',
-  'integrations',
-  'ingestion',
-  'sdk',
-  'sdk-setup-wizards',
-  'self-hosted',
-]);
-
-/**
- * Returns true if a develop docs path should remain indexable.
- * Only the homepage (no path) and the root page of each left nav section
- * (single-segment paths like ['getting-started']) are indexable.
- */
-function isDevelopDocsIndexablePath(path: string[] | undefined): boolean {
-  // Homepage
-  if (!path || path.length === 0) {
-    return true;
-  }
-  // Section root pages (e.g., /getting-started/, /backend/)
-  return path.length === 1 && DEVELOP_DOCS_INDEXABLE_ROOTS.has(path[0]);
-}
 
 // Helper function to clean up canonical tags missing leading or trailing slash
 function formatCanonicalTag(tag: string) {
