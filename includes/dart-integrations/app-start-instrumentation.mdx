@@ -25,9 +25,12 @@ Before diving into the configuration, it's important to understand how app start
 App start instrumentation tracks the duration between the earliest native process initialization and the first frame rendered (as reported by [addTimingsCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addTimingsCallback.html)). Once the app start is processed, the callback is removed to avoid additional overhead.
 
 When the SDK receives the start and end times of the app launch, the SDK:
+
 - Creates a transaction named `ui.load`
 - Attaches a span with either `app.start.cold` or `app.start.warm` operation
 - Adds app start metrics to the transaction
+
+If you'd rather have the app start reported as its own transaction, see [Standalone App Start Tracing](#standalone-app-start-tracing).
 
 <Alert>
 
@@ -65,6 +68,80 @@ Open the [sentry.io performance page](https://sentry.io/performance), find, and 
 ### 3. View App Start Metrics:
 
 Select the event within your transaction. Sentry displays the app start metrics on the right side of the screen in the **Mobile Vitals** section.
+
+## Standalone App Start Tracing
+
+<Alert level="info">
+
+This feature is experimental and available since [version 9.26.0](https://github.com/getsentry/sentry-dart/blob/main/CHANGELOG.md#9260). The API is subject to change and may introduce breaking changes in future releases.
+
+</Alert>
+
+By default, app start data is attached to the first `ui.load` transaction in your app, which mixes startup timing with screen-display timing. Standalone app start tracing sends the app start as its own `App Start` transaction with the `app.start` operation instead. This gives you more accurate measurements, because they no longer depend on a screen transaction being started, and it lets you sample app starts independently.
+
+To enable it:
+
+```dart
+await SentryFlutter.init((options) {
+  options.tracesSampleRate = 1.0;
+  options.enableStandaloneAppStartTracing = true;
+});
+```
+
+Standalone app start tracing requires tracing to be enabled and is only supported on Android and iOS. On every other platform the SDK keeps attaching app start data to the first `ui.load` transaction.
+
+Because the transaction uses the `app.start` operation, you can use `tracesSampler` to give app starts a dedicated sample rate without raising your overall sample rate:
+
+```dart
+await SentryFlutter.init((options) {
+  options.enableStandaloneAppStartTracing = true;
+  options.tracesSampler = (samplingContext) {
+    if (samplingContext.transactionContext.operation == 'app.start') {
+      return 1.0;
+    }
+    return 0.1;
+  };
+});
+```
+
+### Extending the App Start
+
+The app start ends when the first frame renders. If your app does startup work that runs past that point — loading initial data from a server or a database, for example — call `SentryFlutter.extendAppStart()` to include that work in the reported duration, then `SentryFlutter.finishExtendedAppStart()` once it's done.
+
+Call `extendAppStart()` before the first frame renders. The `appRunner` callback of `SentryFlutter.init`, before `runApp`, is the safest place. Pair the two calls in a `try`/`finally` so an early return or a thrown exception can't leave the app start open.
+
+```dart
+await SentryFlutter.init(
+  (options) {
+    options.tracesSampleRate = 1.0;
+    options.enableStandaloneAppStartTracing = true;
+  },
+  appRunner: () async {
+    SentryFlutter.extendAppStart();
+    runApp(const MyApp());
+
+    try {
+      await loadStartupConfiguration();
+    } finally {
+      await SentryFlutter.finishExtendedAppStart();
+    }
+  },
+);
+```
+
+This adds an `Extended App Start` span with the `app.start.extended` operation, covering the time between the two calls. To break that period down further, retrieve the span with `SentryFlutter.getExtendedAppStartSpan()` and start child spans on it. Spans you start under the extension keep the app start open until they finish, so finish them too if they shouldn't delay it.
+
+<Alert level="warning">
+
+Always finish what you extend. While an extension is open the app start is still in progress, and if it hits its 30-second deadline first, the extension is dropped and the reported duration falls back to the first frame.
+
+</Alert>
+
+<Alert>
+
+Extending requires standalone app start tracing to be enabled. `extendAppStart()` does nothing when standalone app start tracing is off, when the first frame has already rendered, or when the app start is already extended. Each of those cases is logged rather than reported back to the caller.
+
+</Alert>
 
 ## Disable App Start Instrumentation
 
