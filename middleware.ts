@@ -88,14 +88,18 @@ function middlewareOutcome(response: NextResponse): MiddlewareOutcome {
 }
 
 /**
- * Next.js names this span `middleware GET` with no route detail, and the
- * tracesSampler can't classify it. Both are fixable here, where the request is
- * in hand: `sentry.source: 'custom'` stops the SDK reclaiming the name, and
- * `traffic_type` keeps bots filterable at query time.
+ * The tracesSampler can't classify this span (no request data at sampling time),
+ * so the detail it needs to stay useful is attached here instead, where the
+ * request is in hand. `traffic_type` keeps bots filterable at query time and
+ * `middleware.outcome` gives the redirect/rewrite/passthrough breakdown.
  *
- * Named by outcome, not path — the docs site has thousands of paths (plus every
- * file under /mdx-images/), so naming by URL would blow up transaction-name
- * cardinality. The path stays queryable as `url.path`.
+ * Attributes only — deliberately no `updateName`. The SDK's
+ * `enhanceMiddlewareRootSpan` rewrites the name of every `Middleware.execute`
+ * span to `middleware {METHOD}` on the send path, reading Next.js'
+ * `next.span_name` attribute and ignoring `sentry.source`, so any name set here
+ * is silently discarded. Outcome and path live as attributes rather than in the
+ * transaction name — which also keeps name cardinality flat, since the docs
+ * site has thousands of paths plus every file under /mdx-images/.
  */
 function annotateMiddlewareSpan(
   request: NextRequest,
@@ -107,13 +111,10 @@ function annotateMiddlewareSpan(
     return;
   }
 
-  const outcome = middlewareOutcome(response);
   const rootSpan = Sentry.getRootSpan(activeSpan);
 
-  rootSpan.updateName(`middleware ${request.method} ${outcome}`);
   rootSpan.setAttributes({
-    [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: 'custom',
-    'middleware.outcome': outcome,
+    'middleware.outcome': middlewareOutcome(response),
     'url.path': request.nextUrl.pathname,
     traffic_type: classification.trafficType,
     device_type: classification.deviceType,

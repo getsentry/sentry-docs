@@ -53,15 +53,26 @@ function getForwardedTrafficType(
 }
 
 /**
+ * Ops the SDK has used for the Next.js middleware root span. `http.server.middleware`
+ * is the v10 op; v11 renames it to the `@sentry/conventions` `middleware`. Both are
+ * matched so the detection survives the upgrade.
+ */
+const MIDDLEWARE_SPAN_OPS = new Set(['http.server.middleware', 'middleware']);
+
+/**
  * Middleware root spans are created by Next.js itself ('Middleware.execute')
  * before any request data reaches Sentry, so they can never be classified here —
  * no headers, no user-agent. They get a low blind rate instead; middleware.ts
- * names them and stamps `traffic_type` so bots stay filterable at query time.
+ * stamps `traffic_type` on them so bots stay filterable at query time.
+ *
+ * `next.span_type` is the load-bearing check — it's set by Next.js at span
+ * creation, so it's the one attribute reliably present this early. The op and
+ * name checks are fallbacks for runtimes that get there another way.
  */
 function isMiddlewareRootSpan(samplingContext: SamplingContext): boolean {
   return (
     samplingContext.attributes?.['next.span_type'] === 'Middleware.execute' ||
-    samplingContext.attributes?.['sentry.op'] === 'http.server.middleware' ||
+    MIDDLEWARE_SPAN_OPS.has(samplingContext.attributes?.['sentry.op'] as string) ||
     samplingContext.name === 'middleware' ||
     Boolean(samplingContext.name?.startsWith('middleware '))
   );
