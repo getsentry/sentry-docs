@@ -16,15 +16,17 @@ type Props = {
   skill: string;
   /** Display name for the SDK, e.g. "Next.js". Named in the copied prompt. */
   platformName?: string;
+  /** Docs path for the platform setup guide, e.g. "/platforms/javascript/guides/nextjs/". */
+  url?: string;
 };
 
-export function CopyPromptButton({skill, platformName}: Props) {
+export function CopyPromptButton({skill, platformName, url}: Props) {
   const [copied, setCopied] = useState(false);
   const {emit} = usePlausibleEvent();
   const {resolvedTheme} = useTheme();
   const isDark = resolvedTheme === 'dark';
 
-  const prompt = buildPrompt(platformName);
+  const prompt = buildPrompt({platformName, docsUrl: url});
 
   /**
    * Tooltip styles matching the onboarding tooltip pattern.

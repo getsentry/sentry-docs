@@ -95,7 +95,7 @@ When writing requirements in `develop-docs/`:
 - `docs.sentry.io/llms.txt` is the root LLM discovery index (follows [llmstxt.org](https://llmstxt.org) spec)
 - Auto-generated from `public/doctree.json` by `scripts/generate-llms-txt.mjs`
 - Run `pnpm generate-llms-txt` to regenerate, or it runs automatically as part of `pnpm build`
-- Includes: product description, AI agent instructions, platform/section index, links to agent skills at `skills.sentry.dev`
+- Includes: product description, AI agent instructions, platform/section index, and docs/plugin guidance for agents
 
 ## Sentry Product Skills (sentry-for-ai)
 

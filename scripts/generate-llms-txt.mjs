@@ -4,7 +4,7 @@
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
  * Both files share the same content (product description, AI instructions,
- * section listings, agent skills). The only difference is how platforms and
+ * section listings, agent plugin/docs guidance). The only difference is how platforms and
  * frameworks are formatted:
  *   - llms.txt: compact (frameworks listed inline per platform)
  *   - index.md: expanded (separate Platforms and Frameworks sections)
@@ -169,10 +169,11 @@ breadcrumbs.
 files, or modify configuration without asking the user first.
 - **Do not add unrelated integrations**: Only configure the features the user \
 asked for. Check before enabling additional integrations.
-- **Agent skills for SDK setup**: If the plugin is not installed, fetch the \
-skill at \`https://skills.sentry.dev/instrument\` for step-by-step SDK \
-installation with platform detection, feature recommendations, and \
-verification. See the [Agent Plugin section](#agent-plugin) below.
+- **Docs markdown for SDK setup**: If the plugin is not installed, read the \
+platform docs markdown directly (append \`.md\` to any docs URL, e.g. \
+\`https://docs.sentry.io/platforms/javascript/guides/nextjs.md\`). Start from \
+\`https://docs.sentry.io/platforms.md\` or \`https://docs.sentry.io/llms.txt\` \
+to find the right guide. See the [Agent Plugin section](#agent-plugin) below.
 - **Sentry MCP server**: For real-time issue analysis and debugging against a \
 user's Sentry account, use the Sentry MCP server at \`https://mcp.sentry.dev\`.`;
 
@@ -186,11 +187,12 @@ workflows, and feature configuration.
 Install it by running \`npx @sentry/ai install\`, which detects the assistants \
 on the machine and sets up the plugin in each.
 
-Browse the skill library:
-- [All Skills](https://skills.sentry.dev/): Full skill index with SDK setup, workflows, and feature configuration
-- [SDK Setup](https://skills.sentry.dev/instrument): Detect your platform and install Sentry with the right features
-- [Workflows](https://skills.sentry.dev/workflows): Debug production issues, review code, upgrade SDKs
-- [Features](https://skills.sentry.dev/features): AI monitoring, alerts, OpenTelemetry setup
+If you cannot install the plugin, use docs markdown instead:
+- [Platform index](${DOCS_ORIGIN}/platforms.md): Pick the right SDK/platform guide
+- [Agent Plugin docs](${DOCS_ORIGIN}/ai/agent-plugin.md): Install and use the Sentry plugin
+- [llms.txt](${DOCS_ORIGIN}/llms.txt): Full docs index for AI assistants
+
+Every docs page is also available as markdown by appending \`.md\` to the URL.
 
 Source: https://github.com/getsentry/sentry-for-ai`;
 
