@@ -11,26 +11,20 @@ An app hang occurs when the Unity main thread stops making progress. On Android,
 
 ### Native App Hangs
 
-On macOS, Windows, Linux, and Android the SDK provides App Hang tracking through the `Experimental.EnableNativeAppHangTracking` options. It utilizes sentry-native and is opt-in. The timeout used for the tracking is `AppHangTimeout` and defaults to 5 seconds.
+On Android, Windows, Linux, and macOS with the native backend, the SDK provides app hang tracking through the `EnableAppHangTracking` option. It uses sentry-native and is disabled by default. On Android, it also requires `NdkIntegrationEnabled`. The timeout is `AppHangTimeout`, which defaults to 5 seconds.
 
 These options are available on the Editor Configuration Window in `Advanced` -> `Experimental` or programmatically
 
 ```csharp
-options.Experimental.EnableNativeAppHangTracking = true;
+options.EnableAppHangTracking = true;
 options.AppHangTimeout = TimeSpan.FromSeconds(5);
 ```
 
-Native app hang tracking adds a background watchdog and automatically emits heartbeats from the Unity main thread. Enabling it automatically disables the managed watchdog to avoid duplicate events.
+On Android with the NDK integration and on sentry-native desktop platforms, the SDK adds a background watchdog and automatically emits heartbeats from the Unity main thread. Cocoa tracks app hangs directly. When app hang tracking is configured, the SDK removes the managed watchdog to avoid duplicate events.
 
-<Alert title="macOS">
+### App Hangs on iOS and macOS
 
-On macOS, sentry-native is not the default native SDK and needs to be enabled by setting `Experimental.MacosBackend` to the `Native`.
-
-</Alert>
-
-### iOS App Hangs
-
-On iOS provides App Hang tracking through the `EnableAppHangTracking` options. It utilizes sentry-cocoa and is enabled by default. The timeout used for the tracking is `AppHangTimeout` and defaults to 5 seconds.
+On iOS and macOS, `EnableAppHangTracking` enables app hang tracking through sentry-cocoa. It is disabled by default. The timeout is `AppHangTimeout`, which defaults to 5 seconds. When targeting macOS you can select the native SDK used to `Native` to utilize sentry-native as well.
 
 ## ANRs
 
