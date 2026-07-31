@@ -43,15 +43,16 @@ export function middleware(request: NextRequest) {
   const classification = classifyTraffic(request);
   recordClassification(request, classification);
 
-  // First, handle canonical URL redirects for deprecated paths
-  const canonicalRedirect = handleRedirects(request);
-  if (canonicalRedirect) {
-    return applyNoindexForNonProductionDomains(request, canonicalRedirect);
-  }
+  // First handle canonical URL redirects for deprecated paths, then check for
+  // AI/LLM clients and redirect to markdown if appropriate.
+  const response = applyNoindexForNonProductionDomains(
+    request,
+    handleRedirects(request) ?? handleAIClientRedirect(request, classification)
+  );
 
-  // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  const response = handleAIClientRedirect(request, classification);
-  return applyNoindexForNonProductionDomains(request, response);
+  annotateMiddlewareSpan(request, classification, response);
+
+  return response;
 }
 
 /**
@@ -74,6 +75,51 @@ function applyNoindexForNonProductionDomains(
 }
 
 type TrafficClassification = ReturnType<typeof classifyTraffic>;
+
+type MiddlewareOutcome = 'redirect' | 'rewrite' | 'passthrough';
+
+function middlewareOutcome(response: NextResponse): MiddlewareOutcome {
+  if (response.status >= 300 && response.status < 400) {
+    return 'redirect';
+  }
+  // Set by NextResponse.rewrite(). If Next.js renames it we degrade to
+  // 'passthrough' rather than throwing.
+  return response.headers.has('x-middleware-rewrite') ? 'rewrite' : 'passthrough';
+}
+
+/**
+ * The tracesSampler can't classify this span (no request data at sampling time),
+ * so the detail it needs to stay useful is attached here instead, where the
+ * request is in hand. `traffic_type` keeps bots filterable at query time and
+ * `middleware.outcome` gives the redirect/rewrite/passthrough breakdown.
+ *
+ * Attributes only — deliberately no `updateName`. The SDK's
+ * `enhanceMiddlewareRootSpan` rewrites the name of every `Middleware.execute`
+ * span to `middleware {METHOD}` on the send path, reading Next.js'
+ * `next.span_name` attribute and ignoring `sentry.source`, so any name set here
+ * is silently discarded. Outcome and path live as attributes rather than in the
+ * transaction name — which also keeps name cardinality flat, since the docs
+ * site has thousands of paths plus every file under /mdx-images/.
+ */
+function annotateMiddlewareSpan(
+  request: NextRequest,
+  classification: TrafficClassification,
+  response: NextResponse
+): void {
+  const activeSpan = Sentry.getActiveSpan();
+  if (!activeSpan) {
+    return;
+  }
+
+  const rootSpan = Sentry.getRootSpan(activeSpan);
+
+  rootSpan.setAttributes({
+    'middleware.outcome': middlewareOutcome(response),
+    'url.path': request.nextUrl.pathname,
+    traffic_type: classification.trafficType,
+    device_type: classification.deviceType,
+  });
+}
 
 /**
  * Records the per-request traffic classification as a counter metric.
