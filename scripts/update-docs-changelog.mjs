@@ -181,11 +181,15 @@ async function fetchMergedPRs() {
     headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
   }
 
-  // Fetch recently merged PRs
-  const searchQuery = `repo:${REPO_OWNER}/${REPO_NAME} is:pr is:merged sort:updated-desc`;
-  const url = `https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&per_page=${PR_LIMIT}`;
+  // Limit to PRs merged in the last 30 days to avoid pulling in old PRs
+  // that were recently "updated" by bot comments or label changes
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const mergedSince = thirtyDaysAgo.toISOString().split('T')[0];
 
-  console.log('Fetching merged PRs...');
+  const searchQuery = `repo:${REPO_OWNER}/${REPO_NAME} is:pr is:merged merged:>=${mergedSince}`;
+  const url = `https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&sort=created&order=desc&per_page=${PR_LIMIT}`;
+
+  console.log(`Fetching PRs merged since ${mergedSince}...`);
 
   const response = await fetch(url, {headers});
 
