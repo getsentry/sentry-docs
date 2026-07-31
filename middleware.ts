@@ -16,6 +16,11 @@ const BASE_URL = isDeveloperDocs
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
 
+// Production domains whose content should be indexable by search engines.
+// All other hostnames (Vercel preview/deployment URLs, old production deployments)
+// get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
+const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -41,11 +46,31 @@ export function middleware(request: NextRequest) {
   // First, handle canonical URL redirects for deprecated paths
   const canonicalRedirect = handleRedirects(request);
   if (canonicalRedirect) {
-    return canonicalRedirect;
+    return applyNoindexForNonProductionDomains(request, canonicalRedirect);
   }
 
   // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  return handleAIClientRedirect(request, classification);
+  const response = handleAIClientRedirect(request, classification);
+  return applyNoindexForNonProductionDomains(request, response);
+}
+
+/**
+ * Adds X-Robots-Tag: noindex to responses served from non-production domains.
+ * This prevents search engines from indexing stale Vercel deployment URLs
+ * (e.g., sentry-docs-<hash>.vercel.app) or old production deployments that
+ * are still accessible but no longer current.
+ *
+ * Production domains (docs.sentry.io, develop.sentry.dev) are not affected.
+ */
+function applyNoindexForNonProductionDomains(
+  request: NextRequest,
+  response: NextResponse
+): NextResponse {
+  const hostname = request.nextUrl.hostname;
+  if (!INDEXABLE_HOSTNAMES.has(hostname)) {
+    response.headers.set('X-Robots-Tag', 'noindex');
+  }
+  return response;
 }
 
 type TrafficClassification = ReturnType<typeof classifyTraffic>;
@@ -3470,6 +3495,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/product/agents/dashboard/',
     to: '/product/agents/dashboards/',
   },
   {

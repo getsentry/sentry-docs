@@ -2083,9 +2083,20 @@ const userDocsRedirects = [
     source: '/product/insights/ai/agents/',
     destination: '/product/agents/',
   },
+  // Singular dashboard path predates the plural page; must beat the :path* catch-all
+  // or external links 404 after landing on /product/agents/dashboard/
+  {
+    source: '/product/insights/ai/agents/dashboard/',
+    destination: '/product/agents/dashboards/',
+  },
   {
     source: '/product/insights/ai/agents/:path*',
     destination: '/product/agents/:path*',
+  },
+  // Catch bookmarks / intermediate hops that still use the singular segment
+  {
+    source: '/product/agents/dashboard/',
+    destination: '/product/agents/dashboards/',
   },
   {
     source: '/product/insights/ai/conversations/',
@@ -2194,6 +2205,7 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/agent-tracing-browser/',
   },
   // AI Monitoring / AI Observability → Product Agents
+  // Keep singular dashboard mappings ahead of :path* catch-all rules
   {
     source: '/ai/monitoring/agents/dashboard/',
     destination: '/product/agents/dashboards/',
