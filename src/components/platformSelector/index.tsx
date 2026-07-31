@@ -84,10 +84,8 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const pathname = usePathname();
 
-  // Auto-open selector when on /platforms/ index page (no SDK selected)
-  const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
-
-  const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
+  // Not auto-opened on /platforms/: Radix Select locks body scroll while open.
+  const [open, setOpen] = useState(alwaysOpen);
   const [searchValue, setSearchValue] = useState('');
 
   const matches = useMemo(() => {

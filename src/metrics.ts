@@ -172,7 +172,7 @@ export const DocMetrics = {
     pathname: string,
     skill: string | undefined,
     success: boolean,
-    source: 'callout' | 'inline_link' = 'callout'
+    source: 'callout' | 'inline_link' | 'homepage_card' = 'callout'
   ) => {
     Sentry.metrics.count('docs.copy_ai_prompt', 1, {
       attributes: {

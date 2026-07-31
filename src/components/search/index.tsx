@@ -11,7 +11,7 @@ import {
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
-import algoliaInsights from 'search-insights';
+import {createInsightsClient} from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -21,12 +21,6 @@ import {Logo} from '../logo';
 import styles from './search.module.scss';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
-
-// Initialize Algolia Insights
-algoliaInsights('init', {
-  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
-});
 
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
@@ -57,6 +51,45 @@ const userDocsSites: SentryGlobalSearchConfig = [
 ];
 const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
+
+// Insights events are fire-and-forget, so rejected credentials are invisible: a
+// stale NEXT_PUBLIC_ALGOLIA_SEARCH_KEY silently 401'd every click for months.
+// Send them ourselves so a rejection gets reported once per page.
+let insightsRejectionReported = false;
+const algoliaInsights = createInsightsClient(async (url, data) => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      // text/plain keeps this a CORS simple request: an application/json
+      // preflight can be cancelled by the navigation a result click triggers.
+      headers: {'Content-Type': 'text/plain'},
+      keepalive: true,
+    });
+    if (!response.ok && !insightsRejectionReported) {
+      insightsRejectionReported = true;
+      captureException(
+        new Error(`Algolia Insights rejected an event with ${response.status}`)
+      );
+    }
+    return response.ok;
+  } catch (error) {
+    if (!insightsRejectionReported) {
+      insightsRejectionReported = true;
+      captureException(error);
+    }
+    return false;
+  }
+});
+
+const insightsAppId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID;
+const insightsApiKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY;
+// Unconfigured deploys (previews) stay silent: search-insights throws on every
+// call until it is initialized, so nothing may be sent either.
+const insightsEnabled = Boolean(insightsAppId && insightsApiKey);
+if (insightsEnabled) {
+  algoliaInsights('init', {appId: insightsAppId, apiKey: insightsApiKey});
+}
 
 type Props = {
   autoFocus?: boolean;
@@ -178,6 +211,42 @@ export function Search({
     };
   }, [autoFocus]);
 
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
+  const showResults = query.length >= 2 && inputFocus;
+
+  // Keep the dropdown inside the viewport: cap it to whichever side of the input
+  // has more room, and flip above only when that side is the top.
+  useEffect(() => {
+    if (!showResults) {
+      return undefined;
+    }
+    const GUTTER = 16;
+    const update = () => {
+      const input = inputRef.current;
+      const dropdown = resultsRef.current;
+      if (!input || !dropdown) {
+        return;
+      }
+      const {top, bottom} = input.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - bottom - GUTTER * 2;
+      const spaceAbove = top - GUTTER * 2;
+      const flip = spaceAbove > spaceBelow;
+      setPlacement(flip ? 'top' : 'bottom');
+      dropdown.style.setProperty(
+        '--sgs-available-space',
+        `${Math.round(Math.max(flip ? spaceAbove : spaceBelow, 200))}px`
+      );
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, {passive: true});
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update);
+    };
+  }, [showResults]);
+
   const searchFor = useCallback(
     async (
       inputQuery: string,
@@ -273,6 +342,9 @@ export function Search({
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
+    if (!insightsEnabled) {
+      return;
+    }
     try {
       algoliaInsights('clickedObjectIDsAfterSearch', {
         eventName: 'documentation_search_result_click',
@@ -368,8 +440,12 @@ export function Search({
           </Button>
         </Fragment>
       </div>
-      {query.length >= 2 && inputFocus && (
-        <div className={styles['sgs-search-results']}>
+      {showResults && (
+        <div
+          className={styles['sgs-search-results']}
+          data-placement={placement}
+          ref={resultsRef}
+        >
           <div className={styles['sgs-ai']}>
             <button
               id="ai-list-entry"
