@@ -4,7 +4,7 @@ sidebar_order: 11
 description: "Learn about how to add app hang detection reporting."
 ---
 
-This integration tracks app hangs. This feature is available on iOS, tvOS, and macOS.
+This integration tracks app hangs. It's available on iOS, tvOS, and macOS, and on Android through NDK-based detection (see [App Hang Tracking on Android](#app-hang-tracking-on-android)).
 
 Trying to use an unresponsive app is extremely frustrating for users. There are many reasons why an app may become unresponsive, such as long-running code, infinite loop bugs, and so on. With app hang tracking you can detect and fix them.
 
@@ -27,6 +27,31 @@ import * as Sentry from "@sentry/react-native";
 Sentry.init({
   dsn: "DSN",
   appHangTimeoutInterval: 1,
+});
+```
+
+### App Hang Tracking on Android
+
+The `enableAppHangTracking` and `appHangTimeoutInterval` options above apply to iOS only. On Android, you can enable `sentry-native`'s heartbeat-based app hang detection with the `enableNdkAppHangTracking` option. This is independent of the JVM-based ANR detection and requires NDK to be enabled. It's disabled by default:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableNdkAppHangTracking: true,
+});
+```
+
+The default timeout is 5000 milliseconds. This represents the minimum amount of time the app can be unresponsive before it's classified as hanging. You can change the timeout by setting the `ndkAppHangTimeoutIntervalMillis` option:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableNdkAppHangTracking: true,
+  ndkAppHangTimeoutIntervalMillis: 3000,
 });
 ```
 
