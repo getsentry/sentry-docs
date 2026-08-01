@@ -1,5 +1,6 @@
 'use client';
 import {MoonIcon, SunIcon} from '@radix-ui/react-icons';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import {IconButton, Tooltip} from '@radix-ui/themes';
 import {useTheme} from 'next-themes';
 import {Fragment} from 'react';
@@ -22,6 +23,7 @@ export function ThemeToggle({
      }
    `}</style>
 
+      <TooltipPrimitive.Provider delayDuration={300}>
       <Tooltip className="radix-themes-custom-fonts" content="Toggle theme">
         <IconButton
           size="3"
@@ -48,6 +50,7 @@ export function ThemeToggle({
           />
         </IconButton>
       </Tooltip>
+      </TooltipPrimitive.Provider>
     </Fragment>
   );
 }
