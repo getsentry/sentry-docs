@@ -24,7 +24,8 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
 
   // Update href after hydration to check localStorage
   useEffect(() => {
-    const storedPlatform = isLocalStorageAvailable() && localStorage.getItem('active-platform');
+    const storedPlatform =
+      isLocalStorageAvailable() && localStorage.getItem('active-platform');
     if (storedPlatform && platforms.length > 0) {
       const platform = platforms.find(p => p.key === storedPlatform);
       if (platform) {
@@ -43,7 +44,8 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
 
   // Click handler as fallback for SDKs link
   const handleSdkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const storedPlatform = isLocalStorageAvailable() && localStorage.getItem('active-platform');
+    const storedPlatform =
+      isLocalStorageAvailable() && localStorage.getItem('active-platform');
     if (storedPlatform && platforms && platforms.length > 0) {
       // First check if it's a platform key
       const platform = platforms.find(p => p.key === storedPlatform);
