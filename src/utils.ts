@@ -112,7 +112,13 @@ export function captureException(exception: unknown): void {
   }
 }
 
-export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';
+export const isLocalStorageAvailable = () => {
+  try {
+    return typeof window !== 'undefined' && window.localStorage !== null;
+  } catch {
+    return false;
+  }
+};
 
 export const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');
