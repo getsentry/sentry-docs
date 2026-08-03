@@ -36,7 +36,11 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 ## Getting Started
 
-Enable <PlatformLink to="/tracing/">tracing</PlatformLink> and pass `dataCollection` so generative AI content can be collected according to the SDK defaults (including prompts and responses when you leave the categories unconfigured):
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink> and pass `dataCollection` so generative AI content follows the SDK defaults (including prompts and responses when left unconfigured).
+
+`dataCollection: {}` also opts into other **permissive** defaults (bodies, cookies, user info, and more). Tighten via <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ```javascript
 import * as Sentry from "___SDK_PACKAGE___";
@@ -48,17 +52,55 @@ Sentry.init({
 });
 ```
 
-See <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> to tighten or expand what is collected.
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {},
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // your worker
+    },
+  },
+);
+```
+
+Durable Objects / <PlatformLink to="/features/agents-sdk/">Agents SDK</PlatformLink>: use <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink> with the same options.
+
+</PlatformSection>
 
 ## Instrumentation
 
-Pick the guide for your AI stack. Some libraries are instrumented automatically; others need a small amount of setup — each page covers the details.
+Pick your AI stack. Some libraries auto-instrument; others need a short setup — each page has the details.
 
 <PlatformSection supported={["javascript.cloudflare"]}>
-- <PlatformLink to="/features/workers-ai/">Cloudflare Workers AI</PlatformLink>
+
+On Cloudflare, setup differs by library—open the guide for your stack:
+
+- **Workers AI** — works automatically once Sentry wraps your worker.
+- **Vercel AI** — turn the integration on in your Sentry options, then enable telemetry on each AI call (details on that page).
+- **OpenAI, Anthropic, Google GenAI, LangChain, LangGraph** — not auto-instrumented here. Each guide shows how to wrap your client so AI spans show up. Tracing alone is not enough.
+
+- <PlatformLink to="/features/workers-ai/">Workers AI</PlatformLink>
+- <PlatformLink to="/features/agents-sdk/">Agents SDK</PlatformLink>
+- <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/openai/">OpenAI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/anthropic/">Anthropic</PlatformLink>
+- <PlatformLink to="/configuration/integrations/google-genai/">Google Gen AI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langchain/">LangChain</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langgraph/">LangGraph</PlatformLink>
+
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.deno"]}>
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno"]}>
 - <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
 - <PlatformLink to="/configuration/integrations/openai/">OpenAI</PlatformLink>
 - <PlatformLink to="/configuration/integrations/anthropic/">Anthropic</PlatformLink>
@@ -99,7 +141,9 @@ Any of `id`, `email`, or `username` is sufficient — Conversations displays whi
 
 ### Privacy Controls
 
-With `dataCollection: {}` (or any `dataCollection` config), generative AI inputs and outputs default to **on**. To turn prompt and response capture off:
+With `dataCollection: {}` (or any `dataCollection` config), generative AI inputs and outputs default to **on**. To turn them off:
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ```javascript
 Sentry.init({
@@ -112,11 +156,58 @@ Sentry.init({
 
 You can also set `recordInputs` / `recordOutputs` on a specific AI integration. See each integration page for the API that applies on your platform.
 
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {
+      genAI: { inputs: false, outputs: false },
+    },
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
+On the default CF entrypoint, control Vercel AI I/O with `experimental_telemetry` per call (or integration-level `record*` via `nodejs_compat`). See each integration page.
+
+</PlatformSection>
+
 ### Streaming Gen AI Spans
 
-`gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction by default (since SDK version `10.61.0`). This prevents AI spans with large inputs and outputs from hitting transaction payload size limits and being dropped, and is required for <Link to="/product/agents/conversations/">Conversations</Link> to work.
+From SDK `10.61.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
 
-Self-hosted Sentry users should set `streamGenAiSpans: false`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
+Self-hosted Sentry users should set `streamGenAiSpans: false` if standalone `gen_ai` spans may not be ingested.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  streamGenAiSpans: false,
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    streamGenAiSpans: false,
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
+</PlatformSection>
 
 ## Manual Instrumentation
 
