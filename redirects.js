@@ -2182,6 +2182,11 @@ const userDocsRedirects = [
   // Agent Tracing moved to top-level feature
   {
     source:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module.md',
+    destination: '/platforms/python/agent-tracing.md',
+  },
+  {
+    source:
       '/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/:path*',
     destination: '/platforms/python/agent-tracing/:path*',
   },
