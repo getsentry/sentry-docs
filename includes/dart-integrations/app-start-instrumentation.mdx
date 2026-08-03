@@ -108,9 +108,9 @@ await SentryFlutter.init((options) {
 
 The app start ends when the first frame renders. If your app does startup work that runs past that point — loading initial data from a server or a database, for example — call `SentryFlutter.extendAppStart()` to include that work in the reported duration, then `SentryFlutter.finishExtendedAppStart()` once it's done.
 
-Call `extendAppStart()` before the first frame renders. The `appRunner` callback of `SentryFlutter.init`, before `runApp`, is the safest place. Pair the two calls in a `try`/`finally` so an early return or a thrown exception can't leave the app start open.
+The only requirement is that `extendAppStart()` runs before the first frame renders, so both the `appRunner` callback of `SentryFlutter.init` and your root widget's `initState` work. Reach for `initState` when the startup work belongs to your widget tree, and `appRunner` when it doesn't. Either way, pair the two calls in a `try`/`finally` so an early return or a thrown exception can't leave the app start open.
 
-```dart
+```dart {tabTitle:appRunner} {mdExpandTabs}
 await SentryFlutter.init(
   (options) {
     options.tracesSampleRate = 1.0;
@@ -128,6 +128,31 @@ await SentryFlutter.init(
   },
 );
 ```
+
+```dart {tabTitle:initState}
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _loadStartupConfiguration();
+  }
+
+  Future<void> _loadStartupConfiguration() async {
+    // Extend first, before any await, so the call can't slip past the first frame.
+    SentryFlutter.extendAppStart();
+
+    try {
+      await loadStartupConfiguration();
+    } finally {
+      await SentryFlutter.finishExtendedAppStart();
+    }
+  }
+
+  // ...
+}
+```
+
+`initState` runs during the first build, which happens before the first frame is rasterized. Call `extendAppStart()` before the first `await` in that method, though — awaiting first gives the frame a chance to render, and the extension is then refused.
 
 This adds an `Extended App Start` span with the `app.start.extended` operation, covering the time between the two calls. To break that period down further, retrieve the span with `SentryFlutter.getExtendedAppStartSpan()` and start child spans on it. Spans you start under the extension keep the app start open until they finish, so finish them too if they shouldn't delay it.
 
