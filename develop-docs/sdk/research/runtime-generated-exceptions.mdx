@@ -1,0 +1,30 @@
+---
+title: Runtime-Generated Exceptions Without a First-Class Platform
+sidebar_order: 20
+---
+
+This note tracks whether Sentry should add first-class platform support for runtimes that produce their own exception stacks (for example Scheme implementations), versus continuing to rely on the generic error event path.
+
+## Current behavior
+
+- Error events already accept language-neutral `exception` and `stacktrace` payloads. See the [exception/error wire format](/sdk/telemetry/errors/) and [stack trace interface](/sdk/foundations/envelopes/event-payloads/stacktrace/).
+- Frames are ordered oldest to newest. Each frame needs at least one of `filename`, `function`, or `instruction_addr`.
+- Relay's valid platform list does not include every language. Unknown platforms use values such as `other` ([`VALID_PLATFORMS`](https://github.com/getsentry/relay/blob/master/relay-event-schema/src/protocol/constants.rs)).
+- There is no first-party SDK for Scheme/CHICKEN.
+
+## Practical ingestion path
+
+Runtimes that can dump an uncaught exception and call chain can already report to Sentry without a dedicated ingest pipeline:
+
+1. Capture the uncaught condition/exception and stack in the origin runtime.
+2. Translate into a normal Sentry error event (`exception.values`, `stacktrace.frames`, optional `threads`).
+3. Send with an existing supported SDK (`capture_event` / envelope) or a raw envelope to a DSN.
+4. Use `platform: "other"` unless a first-class platform identifier is added later.
+
+This is closer to manual event construction than minidump processing: no native crash dump or symbolication service is required when the runtime already provides source-level frames.
+
+## Open product question
+
+First-class support (SDK, `scheme` platform id, onboarding, language-specific defaults) is optional and should be decided by the owning team based on demand and whether `platform: "other"` creates concrete UX or grouping gaps.
+
+Until then, guidance plus the generic exception path is enough to unblock producers.
