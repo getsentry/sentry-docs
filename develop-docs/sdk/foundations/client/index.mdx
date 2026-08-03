@@ -124,20 +124,16 @@ See [Scopes: Client Resolution](/sdk/foundations/state-management/scopes/#client
 When `captureEvent`, `captureException`, or `captureMessage` is called, the Client processes the event through the following pipeline. The event **MAY** be discarded at any stage, stopping further processing.
 
 1. **Disabled check**: If the SDK is disabled (no transport / no DSN), discard immediately.
-2. **Ignored exception types**: Discard events matching `ignoreErrors` (client report reason: `event_processor`). See [Configuration](/sdk/foundations/client/configuration/#event-sampling).
+2. **Ignored exception types**: Discard events matching [`ignoreErrors`](/sdk/foundations/client/configuration/#event-sampling) (client report reason: `event_processor`).
 3. **Scope application**: Obtain the current, isolation, and global scopes. Merge scope data onto the event in the [defined order](/sdk/foundations/state-management/scopes/#applying-scope-data-to-events). Invoke scoped event processors first, then global event processors, each in registration order. Any processor returning `null` discards the event (client report reason: `event_processor`).
 4. **`before_send` hook**: Invoke the user-configured callback. Returning `null` discards the event (client report reason: `before_send`). This hook **MUST** only apply to error events. For transactions, use `before_send_transaction`. For logs, use `before_send_log`. See [Hooks](/sdk/foundations/client/hooks/) for details.
 5. **Session update**: SDKs that implement [Sessions](/sdk/telemetry/sessions/) **MUST** update the current session here — incrementing its `errors` count or setting its status. SDKs without session support skip this step.
 6. **Sampling**: Apply the configured `sample_rate`. Events **MAY** be randomly discarded. When discarded, the Client **MUST** record a [client report](/sdk/telemetry/client-reports/) with discard reason `sample_rate`.
 7. **Transport**: Pass the event to the transport (or TelemetryProcessor). The transport **MAY** discard due to missing DSN, full queue, or [rate limiting](/sdk/foundations/transport/rate-limiting/).
 
-Steps 2 through 4 are developer-controlled filters: an event they discard **MUST NOT** update the session, because the developer chose to ignore it. Steps 6 and 7 discard events to save quota, so they **MUST NOT** prevent the session update. This is why sampling runs late — an event that is sampled out still counts toward release health.
+Ignored exception types, event processors, and `before_send` are developer-controlled filters: an event they discard **MUST NOT** update the session, because the developer chose to ignore it. Sampling and the transport discard events to save quota, so they **MUST NOT** prevent the session update — a sampled-out event still counts toward release health. This is the only reason sampling runs after `before_send`.
 
-#### Sampling Position
-
-SDKs that implement sessions **MUST** apply sampling after the session update, as ordered above.
-
-SDKs that do **not** implement sessions **MAY** apply sampling immediately after the disabled check. With no session to update, moving sampling earlier has no effect on release health and avoids the cost of running event processors and `before_send` on events that will be discarded. These SDKs **MUST** still record the `sample_rate` client report.
+SDKs that do not implement sessions therefore **MAY** apply sampling immediately after the disabled check, discarding events before event processors and `before_send` run. They **MUST** still record the `sample_rate` client report.
 
 </SpecSection>
 
