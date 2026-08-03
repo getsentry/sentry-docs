@@ -28,6 +28,7 @@ import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
 import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
+import {replaceCurrentUrlTokens} from './markdown-keywords.mjs';
 
 // Default values for code keyword placeholders (e.g. ___PUBLIC_DSN___) that are
 // normally replaced client-side by codeKeywords.tsx. These must stay in sync with
@@ -1166,7 +1167,10 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
       // expensive HTML → markdown conversion output:
       //   - applyKeywordDefaults: replaces ___KEYWORD___ placeholders with defaults
       //   - formatYamlFrontmatter: prepends YAML metadata
-      const resolved = applyKeywordDefaults(data);
+      const resolved = replaceCurrentUrlTokens(
+        applyKeywordDefaults(data),
+        frontmatter?.url
+      );
       const output = frontmatter
         ? formatYamlFrontmatter(frontmatter) + resolved
         : resolved;

@@ -2,12 +2,21 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.9.0
+spec_version: 0.11.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.11.0
+    date: 2026-07-30
+    summary: Require encoded URL query parameters to be stored exactly as they appear in the URL.
+  - version: 0.10.0
+    date: 2026-07-29
+    summary: Clarify that Session Replay is not gated by `dataCollection` or `sendDefaultPii` due to opposing defaults (opt-in vs. opt-out).
+  - version: 0.9.1
+    date: 2026-07-29
+    summary: Clarify that `genAI.inputs` gates system instructions in addition to prompt messages and tool call arguments/definitions.
   - version: 0.9.0
     date: 2026-07-21
     summary: Allow `stackFrameVariables` to accept a `KeyValueCollectionBehavior` for filtering by variable name in addition to the Boolean default.
@@ -73,7 +82,7 @@ Non-identifying context used for debugging and performance. Examples include, bu
 - Performance and error context (stack frames, breadcrumbs, span metadata)
 - Framework/routing context where it does not contain PII or secrets
 - Generative AI metadata (model name, token counts, tool names, etc.)
-- Generative AI inputs and outputs (prompt content, completion content)
+- Generative AI inputs and outputs (system instructions, prompt content, tool definitions, completion content)
 
 For the full list of supported context types (device, OS, runtime, app, browser, GPU, culture, cloud resource, memory info, and more), see the [Contexts Interface](/sdk/foundations/transport/event-payloads/contexts/).
 
@@ -195,15 +204,17 @@ URL strings in span descriptions follow the format defined in [Structuring Data]
 
 The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
 
-**Example:** Given a request to `https://example.com/api/users?token=abc123&page=5`:
+Encoded query parameters **MUST** be stored exactly as they appear in the URL.
+
+**Example:** Given a request to `https://example.com/api/users?token=abc123&q=a%20b%26c&page=5`:
 
 | Attribute | `urlQueryParams` enabled | `urlQueryParams` off |
 |---|---|---|
 | Span description | `GET https://example.com/api/users` | same |
-| `url.full` | `https://example.com/api/users?token=[Filtered]&page=5` | `https://example.com/api/users` |
+| `url.full` | `https://example.com/api/users?token=[Filtered]&q=a%20b%26c&page=5` | `https://example.com/api/users` |
 | `url.path` | `/api/users` | same |
-| `url.query` | `token=[Filtered]&page=5` | not collected |
-| `request.query_string` | `token=[Filtered]&page=5` | not collected |
+| `url.query` | `token=[Filtered]&q=a%20b%26c&page=5` | not collected |
+| `request.query_string` | `token=[Filtered]&q=a%20b%26c&page=5` | not collected |
 
 #### Cookies and URL Query Params
 
@@ -221,7 +232,7 @@ http.request.header.cookie.theme: "dark-mode"           // not sensitive — val
 http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
 ```
 
-For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is.
+For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is (see [URLs](#urls)).
 
 
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
@@ -258,6 +269,17 @@ is most natural for their API surface.
 
 When an integration exposes data-collection options, the values set on the integration **MUST** take precedence over the
 corresponding global `dataCollection` values for the data that integration collects.
+
+#### Session Replay
+
+Session Replay is **not** gated by `dataCollection` (or its predecessor `sendDefaultPii`). It is a privacy-sensitive
+feature with its own opt-in privacy model — by default it masks all text, images, and user input — which is the
+**opposite** of the `dataCollection` opt-out model. Wiring the two together would flip privacy-sensitive defaults for the
+majority of existing Replay users and create confusion about which layer controls masking.
+
+Because of this, SDKs **MUST NOT** change what Session Replay captures based on `dataCollection`.
+Replay's masking and network-capture behavior **MUST** continue to be controlled exclusively by the Replay
+integration's own privacy options. SDK documentation **SHOULD** explicitly state that `dataCollection` does not affect Session Replay so users are not surprised by the exception.
 
 </SpecSection>
 
@@ -581,7 +603,7 @@ init({
 | `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
 | `urlQueryParams` | Key-value collection | `{ mode: "denyList" }` | 0.8.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `graphQL` | `{ document?, variables? }` | Both `true` | 0.5.0 | For `document`: Collect the GraphQL document. <br /><br /> For `variables`: Collect the variables that are passed to GraphQL operations. |
-| `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs (e.g. prompt text, tool call arguments). <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). Metadata such as model name and token counts is always collected regardless of these settings. |
+| `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs. This gates system instructions, prompt messages, tool definitions, and tool call arguments. <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). <br /><br /> Metadata such as model name and token counts is always collected regardless of these settings. |
 | `databaseQueryData` | Boolean | `true` | 0.6.0 | Include data that's associated with database queries. This controls collection of bound query parameters, data payloads for write operations, and returned result data.<br /><br />Sanitized or parameterized DB statements (`db.query.text`) are **not** controlled by this property. Structural metadata such as the database system, query summary, operation name, or the table being acted upon is also **always** collected. |
 | `queues` | Boolean | `true` | 0.7.0 | Include arguments passed to tasks within queues. |
 | `stackFrameVariables` | Boolean or key-value collection | `true` | 0.1.0 | Include local variable values captured within stack frames. Accepts a Boolean (`true` collects all variables, `false` collects none) or a `KeyValueCollectionBehavior` to filter which variables are sent by name (see [Filtering Stack Frame Variables](#filtering-stack-frame-variables)). Key-value collection added in 0.9.0. |

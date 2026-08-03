@@ -48,6 +48,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         run: |
+          set -euxo pipefail
+
           git config user.email "bot@getsentry.com"
           git config user.name "getsentry-bot"
 
@@ -64,7 +66,6 @@ jobs:
           else
             gh pr create \
               --title "chore: Update docs changelog" \
-              --body "Automated update of the docs changelog from recent merged PRs." \
-              --label "Type: Maintenance"
-            gh pr merge --squash --auto
+              --body "Automated update of the docs changelog from recent merged PRs."
+            gh pr merge "$branch" --squash --auto
           fi

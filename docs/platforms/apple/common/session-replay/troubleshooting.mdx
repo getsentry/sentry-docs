@@ -45,6 +45,36 @@ Text views, input views, images, video players and webviews are all masked by de
 
 </Expandable>
 
+<Expandable title="Why are parts of my replay completely masked?" permalink>
+
+Starting with Sentry Cocoa **9.24.0**, Session Replay may mask an entire layer subtree if Core Animation raises an exception while the SDK inspects it. This privacy-safe fallback prevents the exception from crashing your app and avoids exposing content that the SDK could not inspect for sensitive data.
+
+A malformed `CABasicAnimation` is one possible cause. The animation's `fromValue` and `toValue` must use types compatible with each other and with the animated key path. For example, a `position` animation must use `CGPoint` values for both endpoints:
+
+```swift
+// Incorrect: mixes a scalar value with a CGPoint value.
+let animation = CABasicAnimation(keyPath: "position")
+animation.fromValue = NSNumber(value: 0)
+animation.toValue = NSValue(cgPoint: CGPoint(x: 100, y: 100))
+```
+
+```swift
+// Correct: both endpoints contain CGPoint values.
+let animation = CABasicAnimation(keyPath: "position")
+animation.fromValue = NSValue(cgPoint: CGPoint(x: 0, y: 0))
+animation.toValue = NSValue(cgPoint: CGPoint(x: 100, y: 100))
+```
+
+If your code creates the animation, correct the endpoint types. If a third-party UI library creates it, update the library and check its release notes for animation-related fixes.
+
+When SDK debug logging is enabled, a warning similar to the following confirms that Session Replay used this fallback:
+
+```text
+Caught Objective-C exception NSInvalidArgumentException: -[NSConcreteValue doubleValue]: unrecognized selector
+```
+
+</Expandable>
+
 <Expandable title="What's the lowest version of iOS supported?" permalink>
 
 Session Replay recording happens even on the lowest version supported by the Sentry SDK, which is aligned with App Store support.
