@@ -7,10 +7,12 @@ spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
+  - id: sdk/foundations/client
+    version: ">=3.0.0"
 spec_changelog:
   - version: 1.7.1
     date: 2026-08-03
-    summary: Tied the session update filter order to the canonical client event pipeline and removed the contradictory apply_to_scope timing note
+    summary: Deferred filter ordering to the client event pipeline and removed the contradictory apply_to_scope timing note
   - version: 1.7.0
     date: 2025-10-16
     summary: Added error level impact rules for session error counting
@@ -215,13 +217,7 @@ When events are dropped by filtering mechanisms (sample rate, rate limiting, `be
 
 If the event has been dropped but the session was updated, the session update **SHOULD** be sent to the server without the event in case the session changed from healthy to errored or from any state to crashed (for user-attended sessions).
 
-**Filter order** — the session update sits between `beforeSend` and sampling in the [event pipeline](/sdk/foundations/client/#event-pipeline):
-1. Check for ignored exception types (`ignore_errors`)
-2. Apply scoped event processors
-3. Apply global event processors
-4. Apply `beforeSend`
-5. Update the session if the event made it this far
-6. Apply sampling rate
+For the exact position of the session update relative to these filters, see the [event pipeline](/sdk/foundations/client/#event-pipeline) in the Client spec, which is the authoritative ordering. In short: the session update sits after `beforeSend` and before sampling, so developer-controlled filters run first and quota-saving drops run after.
 
 </SpecSection>
 
@@ -229,7 +225,7 @@ If the event has been dropped but the session was updated, the session update **
 
 ### Session Updates and Sending
 
-SDKs **SHOULD** automatically update the current session whenever data is captured, incrementing the `errors` count or updating the session based on the distinct ID. The update happens after `beforeSend` and before sampling — see [Session Update Filtering](#session-update-filtering) for its exact position in the pipeline.
+SDKs **SHOULD** automatically update the current session whenever data is captured, incrementing the `errors` count or updating the session based on the distinct ID. The update happens after `beforeSend` and before sampling — see the [event pipeline](/sdk/foundations/client/#event-pipeline) for its exact position.
 
 SDKs **SHOULD** aim to minimize the number of envelopes sent upstream.
 
