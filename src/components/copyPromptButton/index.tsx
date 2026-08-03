@@ -5,6 +5,7 @@ import {Theme} from '@radix-ui/themes';
 import * as Sentry from '@sentry/nextjs';
 import {useTheme} from 'next-themes';
 import {useCallback, useMemo, useState} from 'react';
+import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
@@ -75,7 +76,10 @@ export function CopyPromptButton({skill, platformName}: Props) {
         DocMetrics.copyAIPrompt(window.location.pathname, skill, true, 'inline_link');
         setTimeout(() => setCopied(false), 1500);
       } catch (error) {
-        Sentry.captureException(error);
+        Sentry.logger.warn('clipboard.writeText failed', {
+          error: (error as Error)?.message,
+          errorName: (error as Error)?.name,
+        });
         DocMetrics.copyAIPrompt(window.location.pathname, skill, false, 'inline_link');
         setCopied(false);
       }
@@ -95,7 +99,7 @@ export function CopyPromptButton({skill, platformName}: Props) {
               type="button"
               aria-label="Copy setup prompt for AI agents"
             >
-              <CopyIcon />
+              <Copy size={14} />
               <span className={styles.label}>{copied ? 'Copied!' : 'Copy Prompt'}</span>
             </button>
           </Tooltip.Trigger>
@@ -112,23 +116,5 @@ export function CopyPromptButton({skill, platformName}: Props) {
         </Tooltip.Root>
       </Tooltip.Provider>
     </span>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
   );
 }

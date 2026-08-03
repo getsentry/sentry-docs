@@ -81,14 +81,12 @@ use tracing::{error, info, warn};
 use tracing_subscriber::prelude::*;
 
 fn main() {
-    let _guard = sentry::init((
-        "___PUBLIC_DSN___",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
-            enable_logs: true,
-            ..Default::default()
-        },
-    ));
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
+            .enable_logs(true),
+    );
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
@@ -148,14 +146,12 @@ use sentry_log::LogFilter;
 use log::{info, warn, error};
 
 fn main() {
-    let _guard = sentry::init((
-        "___PUBLIC_DSN___",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
-            enable_logs: true,
-            ..Default::default()
-        },
-    ));
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
+            .enable_logs(true),
+    );
 
     let logger = sentry::integrations::log::SentryLogger::with_dest(
         env_logger::Builder::from_default_env().build(),
@@ -181,18 +177,19 @@ If you'd like to see support for additional logging libraries, please open a [ne
 To filter logs, or update them before they are sent to Sentry, you can use the `before_send_log` client option.
 
 ```rust
-let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
-    release: sentry::release_name!(),
-    enable_logs: true,
-    before_send_log: Some(std::sync::Arc::new(|log| {
-        // filter out all trace level logs
-        if log.level == sentry::protocol::LogLevel::Trace {
-            return None;
-        }
-        Some(log)
-    })),
-    ..Default::default()
-}));
+let _guard = sentry::init(
+    sentry::ClientOptions::new()
+        .dsn("___PUBLIC_DSN___")
+        .maybe_release(sentry::release_name!())
+        .enable_logs(true)
+        .before_send_log(|log| {
+            // filter out all trace level logs
+            if log.level == sentry::protocol::LogLevel::Trace {
+                return None;
+            }
+            Some(log)
+        }),
+);
 ```
 
 ## Default Attributes

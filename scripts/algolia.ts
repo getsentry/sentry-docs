@@ -14,6 +14,7 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import {getDevDocsFrontMatter, getDocsFrontMatter} from '../src/mdx';
 import {FrontMatter} from '../src/types';
+import {isVersioned} from '../src/versioning';
 
 const ALGOLIA_SENTRY_DSN = process.env.ALGOLIA_SENTRY_DSN;
 if (ALGOLIA_SENTRY_DSN) {
@@ -48,9 +49,21 @@ const index =
     : null;
 
 const CONCURRENCY = 50;
+// Pages are generated and uploaded in batches so peak heap stays flat as the corpus grows.
+// Holding every record from every page in one array is what previously OOM'd the job: ~10k pages
+// produce ~240k records, which blows past Node's default ~4GB old-space limit.
+const UPLOAD_BATCH_PAGES = 500;
+const DEFAULT_DRY_RUN_PAGE_LIMIT = 200;
 // In dry-run we only need enough pages to exercise the build + import graph, not the full corpus.
-// Processing all ~10k pages cold (no warm cache) exhausts the heap, so cap it.
-const DRY_RUN_PAGE_LIMIT = 200;
+// Raise it (ALGOLIA_DRY_RUN_PAGE_LIMIT) to load-test the full corpus without touching the index.
+// A missing, non-numeric, or non-positive override falls back to the default: `slice(0, NaN)` and
+// `slice(0, 0)` would silently process zero pages and report a green dry run that checked nothing.
+const dryRunPageLimitOverride = Number.parseInt(
+  process.env.ALGOLIA_DRY_RUN_PAGE_LIMIT ?? '',
+  10
+);
+const DRY_RUN_PAGE_LIMIT =
+  dryRunPageLimitOverride > 0 ? dryRunPageLimitOverride : DEFAULT_DRY_RUN_PAGE_LIMIT;
 const CACHE_VERSION = 1;
 const CACHE_DIR = join(process.cwd(), '.next', 'cache', 'algolia-records');
 
@@ -75,22 +88,73 @@ async function indexAndUpload() {
     : getDocsFrontMatter());
 
   const allPages = pageFrontMatters.filter(
-    frontMatter => !frontMatter.draft && !frontMatter.noindex && frontMatter.title
+    frontMatter =>
+      !frontMatter.draft &&
+      !frontMatter.noindex &&
+      frontMatter.title &&
+      // Versioned pages document superseded SDK majors and outrank the current
+      // docs for the same query. They stay reachable via the version selector.
+      !isVersioned(frontMatter.slug)
   );
   const pages = DRY_RUN ? allPages.slice(0, DRY_RUN_PAGE_LIMIT) : allPages;
+  const uploadIndex = DRY_RUN ? null : index;
   console.log(
-    `📄 Processing ${pages.length}${DRY_RUN ? ` of ${allPages.length} (dry-run cap)` : ''} pages with concurrency ${CONCURRENCY}`
+    `📄 Processing ${pages.length}${DRY_RUN ? ` of ${allPages.length} (dry-run cap)` : ''} pages in batches of ${UPLOAD_BATCH_PAGES} with concurrency ${CONCURRENCY}`
   );
 
-  const {records, cacheHits, cacheMisses} = await generateAlgoliaRecords(pages);
-  const generateTime = performance.now();
-  const generateSeconds = (generateTime - startTime) / 1000;
+  // Read the pre-existing objectIDs *before* uploading anything: record objectIDs are
+  // auto-generated per run, so every run writes a fresh set and deletes the previous one.
+  let existingRecordIds: string[] = [];
+  if (uploadIndex) {
+    existingRecordIds = await fetchExistingRecordIds(uploadIndex);
+    console.log(
+      `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
+    );
+    console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
+  }
+
+  const newRecordIDs = new Set<string>();
+  let recordCount = 0;
+  let cacheHits = 0;
+  let cacheMisses = 0;
+  let generateSeconds = 0;
+
+  for (let offset = 0; offset < pages.length; offset += UPLOAD_BATCH_PAGES) {
+    const batch = pages.slice(offset, offset + UPLOAD_BATCH_PAGES);
+
+    const batchStart = performance.now();
+    const batchResult = await generateAlgoliaRecords(batch);
+    generateSeconds += (performance.now() - batchStart) / 1000;
+
+    cacheHits += batchResult.cacheHits;
+    cacheMisses += batchResult.cacheMisses;
+    recordCount += batchResult.records.length;
+
+    if (uploadIndex) {
+      const saveResult = await uploadIndex.saveObjects(batchResult.records, {
+        batchSize: 10000,
+        autoGenerateObjectIDIfNotExist: true,
+      });
+      saveResult.objectIDs.forEach(id => newRecordIDs.add(id));
+    }
+
+    // `batchResult` is the only reference to this batch's records, so dropping it here lets the
+    // GC reclaim them before the next batch is generated. This is what keeps peak heap flat.
+    console.log(
+      `   ↳ ${Math.min(offset + batch.length, pages.length)}/${pages.length} pages, ${recordCount} records`
+    );
+  }
+
+  if (!DRY_RUN) {
+    cleanupStaleCacheFiles();
+  }
+
   console.log(
-    `🔥 Generated ${records.length} records from ${pages.length} pages in ${generateSeconds.toFixed(1)}s (cache: ${cacheHits} hits, ${cacheMisses} misses)`
+    `🔥 Generated ${recordCount} records from ${pages.length} pages in ${generateSeconds.toFixed(1)}s (cache: ${cacheHits} hits, ${cacheMisses} misses)`
   );
 
   Sentry.metrics.gauge('algolia.pages_total', pages.length, {attributes: metricTags});
-  Sentry.metrics.gauge('algolia.records_total', records.length, {attributes: metricTags});
+  Sentry.metrics.gauge('algolia.records_total', recordCount, {attributes: metricTags});
   Sentry.metrics.distribution('algolia.generate_duration', generateSeconds, {
     attributes: metricTags,
     unit: 'second',
@@ -98,32 +162,19 @@ async function indexAndUpload() {
   Sentry.metrics.gauge('algolia.cache_hits', cacheHits, {attributes: metricTags});
   Sentry.metrics.gauge('algolia.cache_misses', cacheMisses, {attributes: metricTags});
 
-  if (DRY_RUN || !index) {
-    console.log(
-      `🧪 Dry run: generated ${records.length} records, skipping Algolia upload`
-    );
+  if (!uploadIndex) {
+    console.log(`🧪 Dry run: generated ${recordCount} records, skipping Algolia upload`);
   } else {
-    const existingRecordIds = await fetchExistingRecordIds(index);
-    console.log(
-      `🔥 Found ${existingRecordIds.length} existing records in \`${DOCS_INDEX_NAME}\``
-    );
-
-    console.log(`🔥 Saving records to \`${DOCS_INDEX_NAME}\`...`);
-    const saveResult = await index.saveObjects(records, {
-      batchSize: 10000,
-      autoGenerateObjectIDIfNotExist: true,
-    });
-    const newRecordIDs = new Set(saveResult.objectIDs);
     console.log(`🔥 Saved ${newRecordIDs.size} records`);
 
     const recordsToDelete = existingRecordIds.filter(id => !newRecordIDs.has(id));
     if (recordsToDelete.length > 0) {
       console.log(`🔥 Deleting ${recordsToDelete.length} stale records...`);
-      await index.deleteObjects(recordsToDelete);
+      await uploadIndex.deleteObjects(recordsToDelete);
     }
 
     if (!isDeveloperDocs) {
-      await index.setSettings({
+      await uploadIndex.setSettings({
         ...sentryAlgoliaIndexSettings,
         searchableAttributes: [
           'unordered(title)',
@@ -190,20 +241,21 @@ async function generateAlgoliaRecords(pages: FrontMatter[]) {
     )
   );
 
-  // Skip cleanup in dry-run: we only processed a subset of pages, so most cache files would look
-  // "stale" and get wrongly deleted, poisoning the shared cache.
-  if (!DRY_RUN) {
-    const allFiles = fs.readdirSync(CACHE_DIR);
-    const stale = allFiles.filter(f => !usedCacheFiles.has(f));
-    for (const f of stale) {
-      fs.unlinkSync(join(CACHE_DIR, f));
-    }
-    if (stale.length > 0) {
-      console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
-    }
-  }
-
   return {records: results.flat(), cacheHits, cacheMisses};
+}
+
+// Must run only after every batch has been generated, otherwise pages from later batches would
+// still look unused and get their cache files deleted. Skipped in dry-run: we only process a
+// subset of pages there, so most cache files would look "stale" and poison the shared cache.
+function cleanupStaleCacheFiles() {
+  const allFiles = fs.readdirSync(CACHE_DIR);
+  const stale = allFiles.filter(f => !usedCacheFiles.has(f));
+  for (const f of stale) {
+    fs.unlinkSync(join(CACHE_DIR, f));
+  }
+  if (stale.length > 0) {
+    console.log(`🧹 Cleaned up ${stale.length} stale cache files`);
+  }
 }
 
 const frameworkPopularity: Record<string, number> = {
