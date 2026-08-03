@@ -167,7 +167,50 @@ class _MyAppState extends State<MyApp> {
 
 `initState` runs during the first build, which happens before the first frame is rasterized. Call `extendAppStart()` before the first `await` in that method, though — awaiting first gives the frame a chance to render, and the extension is then refused.
 
-This adds an `Extended App Start` span with the `app.start.extended` operation, covering the time between the two calls. To break that period down further, retrieve the span with `SentryFlutter.getExtendedAppStartSpan()` and start child spans on it. Spans you start under the extension keep the app start open until they finish, so finish them too if they shouldn't delay it.
+This adds an `Extended App Start` span with the `app.start.extended` operation, covering the time between the two calls.
+
+#### Breaking Down the Extension
+
+To see which part of your startup work took the time, retrieve the extension span and attach children to it. Use the getter that matches your trace lifecycle: `getExtendedAppStartSpan()` in transaction mode, `getExtendedAppStartSpanV2()` in stream mode. The other one returns `null`.
+
+```dart {tabTitle: Transaction Mode (Default)} {mdExpandTabs}
+SentryFlutter.extendAppStart();
+
+final appStart = SentryFlutter.getExtendedAppStartSpan();
+final child = appStart?.startChild(
+  'http.client',
+  description: 'Fetch remote config',
+);
+
+try {
+  await fetchRemoteConfig();
+} finally {
+  await child?.finish();
+  await SentryFlutter.finishExtendedAppStart();
+}
+```
+
+```dart {tabTitle: Stream Mode}
+SentryFlutter.extendAppStart();
+
+final appStart = SentryFlutter.getExtendedAppStartSpanV2();
+
+try {
+  await Sentry.startSpan(
+    'Fetch remote config',
+    (span) => fetchRemoteConfig(),
+    parentSpan: appStart,
+  );
+} finally {
+  await SentryFlutter.finishExtendedAppStart();
+}
+```
+
+In stream mode, `startSpan` ends the child for you once the callback completes, so it only needs the parent. The extension span isn't the active span, which is why you have to pass it as `parentSpan` rather than relying on automatic nesting.
+
+Both getters return `null` when the app start isn't extended. In transaction mode the null-aware calls take care of that. In stream mode, passing `parentSpan: null` means "start a root span", so guard the call if a stray root would be a problem.
+
+Spans you start under the extension keep the app start open until they finish, so finish them too if they shouldn't delay it.
 
 <Alert level="warning">
 
