@@ -131,9 +131,9 @@ await SentryFlutter.init(
   },
   appRunner: () async {
     SentryFlutter.extendAppStart();
-    runApp(const MyApp());
 
     try {
+      runApp(const MyApp());
       await loadStartupConfiguration();
     } finally {
       await SentryFlutter.finishExtendedAppStart();
@@ -176,13 +176,12 @@ To see which part of your startup work took the time, retrieve the extension spa
 ```dart {tabTitle: Transaction Mode (Default)} {mdExpandTabs}
 SentryFlutter.extendAppStart();
 
-final appStart = SentryFlutter.getExtendedAppStartSpan();
-final child = appStart?.startChild(
-  'http.client',
-  description: 'Fetch remote config',
-);
-
+ISentrySpan? child;
 try {
+  child = SentryFlutter.getExtendedAppStartSpan()?.startChild(
+    'http.client',
+    description: 'Fetch remote config',
+  );
   await fetchRemoteConfig();
 } finally {
   await child?.finish();
@@ -193,13 +192,11 @@ try {
 ```dart {tabTitle: Stream Mode}
 SentryFlutter.extendAppStart();
 
-final appStart = SentryFlutter.getExtendedAppStartSpanV2();
-
 try {
   await Sentry.startSpan(
     'Fetch remote config',
     (span) => fetchRemoteConfig(),
-    parentSpan: appStart,
+    parentSpan: SentryFlutter.getExtendedAppStartSpanV2(),
   );
 } finally {
   await SentryFlutter.finishExtendedAppStart();
