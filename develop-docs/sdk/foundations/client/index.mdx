@@ -133,7 +133,7 @@ When `captureEvent`, `captureException`, or `captureMessage` is called, the Clie
 
 Ignored exception types, event processors, and `before_send` are developer-controlled filters: an event they discard **MUST NOT** update the session, because the developer chose to ignore it. Sampling and the transport discard events to save quota, so they **MUST NOT** prevent the session update — a sampled-out event still counts toward release health. This is the only reason sampling runs after `before_send`.
 
-SDKs that do not implement sessions therefore **MAY** apply sampling immediately after the disabled check, discarding events before event processors and `before_send` run. They **MUST** still record the `sample_rate` client report.
+SDKs without session support **MAY** instead apply sampling immediately after the disabled check. With no session to update, where sampling runs does not affect release health, and sampling early skips event processors and `before_send` for events that will never be sent. The `sample_rate` client report is **REQUIRED** either way.
 
 </SpecSection>
 
