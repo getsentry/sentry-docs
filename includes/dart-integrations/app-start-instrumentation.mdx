@@ -226,15 +226,21 @@ Extending requires standalone app start tracing to be enabled. `extendAppStart()
 
 ## Disable App Start Instrumentation
 
-To disable the app start instrumentation, you can remove the `NativeAppStartIntegration` from the `integrations` list in your `SentryFlutter.init` call.
+App start ships as two integrations: `NativeAppStartIntegration` for the default `ui.load`-attached path, and `StandaloneAppStartIntegration` for standalone app start tracing. The SDK registers both and each one stands down at runtime depending on your configuration, so remove both to turn app start off no matter how it's configured.
 
 ```dart
-// ignore: implementation_imports
-import 'package:sentry_flutter/src/integrations/native_app_start_integration.dart';
+// ignore_for_file: implementation_imports
+import 'package:sentry_flutter/src/app_start/standalone/standalone_app_start_integration.dart';
+import 'package:sentry_flutter/src/app_start/ui_load_attached/native_app_start_integration.dart';
 
 await SentryFlutter.init((options) {
-  final integration = options.integrations.firstWhere(
-    (integration) => integration is NativeAppStartIntegration);
-  options.removeIntegration(integration);
+  for (final integration in options.integrations) {
+    if (integration is NativeAppStartIntegration ||
+        integration is StandaloneAppStartIntegration) {
+      options.removeIntegration(integration);
+    }
+  }
 });
 ```
+
+App start integrations are only registered on the platforms that support them, so don't assume either one is present — looking them up with `firstWhere` throws when they aren't.
