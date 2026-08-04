@@ -1,0 +1,42 @@
+---
+title: Cloudflare Workers AI
+description: "Learn how Sentry instruments Cloudflare Workers AI to capture gen_ai spans."
+---
+
+<AvailableSince version="10.67.0" />
+
+Sentry automatically instruments the [Cloudflare Workers AI binding](https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/) (`env.AI`). Calls to `env.AI.run(...)` create `gen_ai` spans that follow Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions, capturing the model, request parameters, and token usage.
+
+No extra setup is required beyond initializing the SDK with `withSentry`. As long as your handler receives the instrumented `env`, the `AI` binding is wrapped for you:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  {
+    async fetch(request, env) {
+      // env.AI is automatically instrumented
+      const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+        messages: [{ role: "user", content: "What is the capital of France?" }],
+      });
+
+      return new Response(JSON.stringify(result));
+    },
+  }
+);
+```
+
+That is enough for spans. Prompt and response content is **off** unless you pass `dataCollection` (for example `dataCollection: {}`). Any `dataCollection` object also enables other permissive defaults — tighten them via <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
+
+Only `env.AI.run` is instrumented. Streaming spans end when the stream is fully read or cancelled. With `returnRawResponse` or `websocket`, response body fields are not recorded.
+
+You can browse the full list of available models in the [Cloudflare Workers AI models directory](https://developers.cloudflare.com/ai/models/).
+
+## Next Steps
+
+- Group multi-turn chats with <PlatformLink to="/agent-tracing/#tracking-conversations">`setConversationId()`</PlatformLink>
+- If you use the <PlatformLink to="/features/agents-sdk/">Cloudflare Agents SDK</PlatformLink>, follow that guide

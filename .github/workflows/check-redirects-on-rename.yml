@@ -140,17 +140,17 @@ jobs:
             comment += '---\n';
             comment += '_Note: `middleware.ts` is recommended for simple exact-match redirects. Use `redirects.js` for redirects with path parameters (e.g., `:path*`)._\n';
 
-            // Check for existing comments from this action
-            const {data: comments} = await github.rest.issues.listComments({
+            // Check for existing comments from this action (paginate to handle PRs with 30+ comments)
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const existingComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              (comment.user.login === 'github-actions[bot]' || comment.user.login.includes('bot')) &&
-              comment.body.includes('Missing Redirects Detected')
+            const existingComment = comments.find(c => 
+              c.user.type === 'Bot' && 
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Missing Redirects Detected')
             );
 
             if (existingComment) {

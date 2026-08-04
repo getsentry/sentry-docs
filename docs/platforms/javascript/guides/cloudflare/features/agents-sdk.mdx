@@ -1,0 +1,96 @@
+---
+title: Cloudflare Agents SDK
+description: "Instrument Cloudflare Agents SDK classes with Sentry and link chats to Conversations."
+---
+
+<AvailableSince version="10.69.0" />
+
+When you build agents with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), wrap your agent classes with `instrumentAgentWithSentry`. Agents are Durable Objects under the hood, so the wrapper applies everything <PlatformLink to="/features/durableobject/">Durable Object instrumentation</PlatformLink> does (request transactions, alarms, WebSocket handlers, RPC trace propagation), plus agent-specific telemetry:
+
+- **Callable RPC spans**: a span for each `@callable()` method invoked over WebSocket, carrying the agent class and instance name as attributes.
+- **Automatic conversation IDs**: the SDK sets the conversation ID on every chat turn (`onChatMessage`) and every callable RPC call, so `gen_ai` spans group in <Link to="/product/agents/conversations/">Conversations</Link> without any `setConversationId` call.
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { Agent, callable } from "agents";
+
+class MyAgentBase extends Agent<Env> {
+  @callable()
+  async greet(name: string): Promise<string> {
+    return `Hello, ${name}!`;
+  }
+}
+
+// Export your named class as defined in your wrangler config
+export const MyAgent = Sentry.instrumentAgentWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    enableRpcTracePropagation: true,
+  }),
+  MyAgentBase
+);
+```
+
+`instrumentAgentWithSentry` works with `Agent` from `agents`, `AIChatAgent` from `@cloudflare/ai-chat`, and `McpAgent` from `agents/mcp`. When you build with the <PlatformLink to="/features/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>'s `autoInstrumentation`, the plugin detects and wraps Agent classes automatically.
+
+## Conversation IDs
+
+The automatic conversation ID defaults to the **agent instance name**, which is correct when one agent instance is one chat session (for example `useAgent({ name: chatSessionId })`). When the chat is cleared (`clearHistory()` from `useAgentChat`, or anything that emits the [`message:clear` observability event](https://developers.cloudflare.com/agents/runtime/operations/observability/#channels)), the SDK rotates to a fresh conversation ID, so a reset chat groups as a new conversation.
+
+If your instances are per-user or a shared singleton like `"default"`, the default would group unrelated chats into one conversation. Override it with your own chat session ID at the start of `onChatMessage`, before any model or tool calls:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { AIChatAgent } from "@cloudflare/ai-chat";
+
+class MyChatAgentBase extends AIChatAgent<Env> {
+  async onChatMessage() {
+    // Your chat session ID (not user id / "default")
+    Sentry.setConversationId("conv_abc123");
+
+    // … run your model and tools …
+  }
+}
+```
+
+Use a real chat session ID, such as a UUID or `conv_...` value your app creates when the user starts a chat. Do not use a user ID or room name: those group unrelated chats into one conversation. To clear the ID, call `Sentry.setConversationId(null)`.
+
+## SDK Versions Before 10.69.0
+
+On older SDK versions, wrap agent classes with `instrumentDurableObjectWithSentry` instead and set the conversation ID manually at the start of the handler (`onRequest` for `Agent`, `onChatMessage` for `AIChatAgent`), before any AI calls:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { AIChatAgent } from "@cloudflare/ai-chat";
+
+class MyChatAgentBase extends AIChatAgent<Env> {
+  async onChatMessage() {
+    Sentry.setConversationId("conv_abc123");
+
+    // … run your model and tools …
+  }
+}
+
+export const MyChatAgent = Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyChatAgentBase
+);
+```
+
+## Users
+
+Populate the Conversations **User** column with `Sentry.setUser` on every request or handler that performs AI calls, before those calls run. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+
+## Related
+
+- <PlatformLink to="/features/workers-ai/">Workers AI</PlatformLink>
+- <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>
+- <PlatformLink to="/features/vite-plugin/">Vite Plugin</PlatformLink>
+- <PlatformLink to="/agent-tracing/#tracking-conversations">
+    Tracking Conversations
+  </PlatformLink>
+- <Link to="/product/agents/conversations/">Conversations</Link> product docs

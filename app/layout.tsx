@@ -5,6 +5,7 @@ import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
+import {HashNavigation} from 'sentry-docs/components/hashNavigation';
 import {SkipToContent} from 'sentry-docs/components/skipToContent';
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
@@ -45,6 +46,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         >
           <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
             <SkipToContent />
+            <HashNavigation />
             {children}
           </Theme>
         </ThemeProvider>

@@ -24,6 +24,18 @@ export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
 );
 ```
 
+## Classes That Extend Durable Objects
+
+`instrumentDurableObjectWithSentry` works with any class that extends `DurableObject`, not only those that extend it directly. This includes classes built on top of Durable Objects by other libraries.
+
+For classes built on the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/) (`Agent`, `AIChatAgent`, `McpAgent`), use the dedicated `instrumentAgentWithSentry` wrapper instead (SDK version 10.69.0 or higher). It applies the same Durable Object instrumentation and adds spans for `@callable()` RPC methods as well as automatic conversation IDs. See <PlatformLink to="/features/agents-sdk/">Cloudflare Agents SDK</PlatformLink>.
+
+## Durable Object Storage Spans
+
+`instrumentDurableObjectWithSentry` automatically instruments Durable Object storage operations (`get`, `put`, `delete`, `list`). Each storage operation creates a span.
+
+The SDK also filters out framework-internal storage operations (version 10.69.0 or higher): keys prefixed with `cf_`, `cf:`, `__ps_`, or `/` (used internally by the Agents SDK and PartyServer) don't create spans, so your traces show only your own storage access.
+
 ## RPC Trace Propagation
 
 To enable distributed tracing across RPC calls to your Durable Objects, see <PlatformLink to="/tracing/distributed-tracing">Distributed Tracing</PlatformLink>.
