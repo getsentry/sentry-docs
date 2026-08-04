@@ -83,7 +83,8 @@ Lifetime is the only thing that separates the two. Both are a `sentry_scope_t *`
 
 ## Capturing With a Scope
 
-Everything above applies to more than events. Feedback, logs, and metrics take a scope the same way, with the same ownership rule, so there's nothing new to learn per telemetry type:
+Scope data isn't just for errors. Feedback, logs, and metrics each can take a scope through their own
+`sentry_scope_capture_*` function, so the context you build for one capture can enrich any of them:
 
 ```c
 sentry_scope_capture_event(scope, event);
@@ -92,16 +93,6 @@ sentry_scope_capture_log(scope, SENTRY_LEVEL_INFO, "Cache miss", attributes);
 sentry_scope_capture_metric(
     scope, SENTRY_METRIC_COUNT, "cache.miss", sentry_value_new_int64(1), NULL, attributes);
 ```
-
-For logs and metrics, pass `NULL` as the scope to apply only the global scope.
-
-Scoped log and metric capture is available since SDK version [0.15.4](https://github.com/getsentry/sentry-native/releases/tag/0.15.4), scoped feedback capture since [0.16.0](https://github.com/getsentry/sentry-native/releases/tag/0.16.0).
-
-<Alert>
-
-`sentry_capture_event_with_scope` is deprecated in favor of `sentry_scope_capture_event`, which takes the scope first to match the rest of the family. Note that the argument order is reversed between the two.
-
-</Alert>
 
 ## How Scope Data Is Layered
 
