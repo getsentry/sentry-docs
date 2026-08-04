@@ -9,7 +9,7 @@ When the SDK captures an event, it merges the event data with the extra informat
 
 ## What's a Scope?
 
-A scope holds the data that rides along with your telemetry: [tags](../tags/), [contexts](../context/), [breadcrumbs](../breadcrumbs/), the [user](../identify-user/), the level, the fingerprint, and the attributes attached to [logs](/platforms/godot/logs/) and [metrics](/platforms/godot/metrics/). The `SentryScope` class exposes one method per kind of data — `set_tag()`, `set_context()`, `add_breadcrumb()`, `set_user()`, `set_level()`, `set_fingerprint()`, and `set_attribute()` — plus `clear()`, which wipes everything written to that scope.
+A scope holds the data that rides along with your telemetry: [tags](../tags/), [contexts](../context/), [breadcrumbs](../breadcrumbs/), the [user](../identify-user/), the severity level, the fingerprint, and the attributes attached to [logs](/platforms/godot/logs/) and [metrics](/platforms/godot/metrics/). The `SentryScope` class exposes one method per kind of data — `set_tag()`, `set_context()`, `add_breadcrumb()`, `set_user()`, `set_level()`, `set_fingerprint()`, and `set_attribute()` — plus `clear()`, which wipes everything written to that scope.
 
 When a scope is forked, the fork inherits everything the parent holds at that moment. The two are independent from then on: writes to the fork never reach the parent, and later writes to the parent never reach the fork.
 
@@ -65,10 +65,12 @@ Mods fail to load, and when one does you need to know which. If `_apply_mod()` p
 `with_scope()` returns whatever the callable returns, so you can wrap an existing call without restructuring it:
 
 ```gdscript
-var saved: bool = SentrySDK.with_scope(func(scope: SentryScope) -> bool:
-	scope.set_context("save_file", {"slot": slot, "path": _save_path(slot)})
-	return _write_save_file(slot)
-)
+func save_game(slot: int) -> bool:
+	var saved: bool = SentrySDK.with_scope(func(scope: SentryScope) -> bool:
+		scope.set_context("save_file", {"slot": slot, "path": _save_path(slot)})
+		return _write_save_file(slot)
+	)
+	return saved
 ```
 
 Nesting works the same way: an inner `with_scope()` forks the enclosing scope, starts with its data, and keeps its own writes to itself. Calls to `SentrySDK` methods still apply globally, even from inside the callable.
@@ -81,32 +83,19 @@ The fork only covers the synchronous part of the callable. If the callable await
 
 ## Reading the Current Scope
 
-`SentrySDK.get_current_scope()` returns the scope active on the calling thread. Inside a `with_scope()` callable, that's the fork. Anywhere else, it's the thread's own long-lived scope: it lasts as long as the thread does, applies to everything that thread captures, and is what every `with_scope()` on that thread forks from.
-
-Put data there when it holds for the whole life of the thread rather than for one operation — a thread that generates terrain in the background, for instance:
+`SentrySDK.get_current_scope()` returns the scope active on the calling thread. Inside a `with_scope()` callable, that's the fork it handed you — useful when the code that has something to add isn't the code holding the `scope` parameter:
 
 ```gdscript
-var _thread := Thread.new()
+func _apply_mod(path: String) -> void:
+	var manifest := _read_manifest(path)
+	SentrySDK.get_current_scope().set_context("manifest", manifest)
 
-
-func start_worldgen() -> void:
-	_generating = true
-	_thread.start(_worldgen_loop)
-
-
-func _worldgen_loop() -> void:
-	# Runs on the worldgen thread, so this is that thread's own scope.
-	SentrySDK.get_current_scope().set_tag("subsys", "worldgen")
-
-	while _generating:
-		_generate_next_chunk()
+	_install_resources(manifest)
 ```
 
-Every error the SDK captures from this thread now carries the tag, and nothing the main thread reports does.
+Called from inside the `with_scope()` above, this adds to that fork and is discarded with it.
 
-If you use `WorkerThreadPool` instead of your own thread, keep in mind that it reuses its threads: a scope you set up in one task is still there when the next task lands on the same thread. Call `clear()` first, or overwrite every value you care about.
-
-A fork copies this scope as it stands the moment `with_scope()` is called. Add something to it while a block is already running and that block won't see it, so set it up before the work that depends on it starts.
+Prefer `with_scope()` wherever the work fits in a block. It hands you the same scope `get_current_scope()` would return, and it makes the lifetime of the data obvious. Outside a block, don't count on how long the returned scope stays current — for data that should apply beyond a single operation, use the `SentrySDK` methods.
 
 ## How Scope Data Is Applied
 
@@ -122,15 +111,15 @@ Crash reports are the exception. The crash handler runs out of process, after yo
 
 ## Scopes and Threads
 
-Current scope belongs to the thread that created it. Write to it from another thread and the SDK rejects the call with an error and drops the data.
+The current scope belongs to the thread that created it. Write to it from another thread and the SDK rejects the call with an error and drops the data.
 
-This shapes how you use `with_scope()` around threaded work. Each thread starts with its own empty current scope, so a fork you create on the main thread doesn't cover a `WorkerThreadPool` task or a `Thread` you started from inside it. Set up the scope inside the threaded function instead, as in the example above.
+This shapes how you use `with_scope()` around threaded work. Each thread starts with its own current scope, so a fork you create on the main thread doesn't cover a `WorkerThreadPool` task or a `Thread` you started from inside it. Call `with_scope()` inside the threaded function instead.
 
 Errors and logs that the SDK captures automatically are enriched by the scope in effect on the thread that raised them. Data you need on every thread belongs on the global scope.
 
 ## Scopes in C#
 
-The .NET layer keeps its own scope model, driven by the Sentry .NET SDK API. Call it through `Sentry.Godot.SentrySdk`, the same way you'd call any other .NET SDK method:
+The .NET layer keeps its own scope model, driven by the Sentry .NET SDK API and available since C# support landed in 2.0.0. Call it through `Sentry.Godot.SentrySdk`, the same way you'd call any other .NET SDK method:
 
 ```csharp
 SentrySdk.ConfigureScope(scope =>

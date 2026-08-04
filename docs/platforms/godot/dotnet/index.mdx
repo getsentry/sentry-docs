@@ -121,7 +121,7 @@ SentrySdk.ConfigureScope(scope =>
 The native and .NET layers keep their state in sync, so you configure Sentry once and both report consistent data.
 
 - **Options are synchronized.** The DSN, release, environment, sample rate, and other shared options apply to both layers, so you only need to set them once — in Project Settings, or in a C# or GDScript init callback.
-- **Scope syncs both ways.** Tags, breadcrumbs, and the user you set in GDScript appear on C# events, and the ones you set in C# appear on GDScript and engine events. There's no need to set them twice.
+- **The global scope syncs both ways.** Tags, breadcrumbs, and the user you set in GDScript appear on C# events, and the ones you set in C# appear on GDScript and engine events. There's no need to set them twice.
 - **Events share a trace.** C# and GDScript events from the same session are linked, so you can follow an issue across both languages.
 - **Default attachments carry over.** The log file, screenshot, and scene tree attachments you've enabled are included on C# events too.
 - **Sessions are tracked once.** [Release Health](/platforms/godot/configuration/releases/#release-health) is handled for the whole game automatically. Don't enable session tracking in C# — it would double-count sessions.
@@ -135,6 +135,7 @@ Getting file names and line numbers for C# stack frames depends on the platform:
 C# support has the following limitations:
 
 - Custom contexts and user-added attachments aren't synced between the native and .NET layers. They appear only on events captured by the layer that set them. Tags, breadcrumbs, and the user are synced.
+- Data written to a local scope doesn't cross layers either. What you set inside GDScript's [`with_scope()`](/platforms/godot/enriching-events/scopes/) reaches only GDScript and engine events, and what you set inside a C# local scope reaches only C# events. Only the globally set tags, breadcrumbs, and user sync.
 - The error throttling [limits](/platforms/godot/configuration/options/#godot_logger.limits) apply to GDScript and engine errors only, not to C# exceptions.
 - On mobile, C# events currently report the wrong operating system — `Linux` on Android and `Darwin` on iOS — instead of `Android` or `iOS`.
 - On Android, C# exceptions can't be captured while the Godot debugger is attached to the app. The debugger attaches when you deploy to a device from the editor with **Debug > Deploy with Remote Debug** enabled (the default). Turn that menu option off, or test with an exported build, to capture them.
