@@ -94,15 +94,11 @@ sentry_scope_capture_metric(
     scope, SENTRY_METRIC_COUNT, "cache.miss", sentry_value_new_int64(1), NULL, attributes);
 ```
 
-## How Scope Data Is Layered
+## How Scope Data Is Applied
 
-Logs and metrics resolve attributes and the trace from three places. The most specific one wins:
+When you capture with a scope, the SDK combines that scope with the global scope. Data set in only one place is still included, so events captured with their own scope continue to carry global values such as release, environment, and user. When the same key is set in more than one place, the most specific one wins: **event data** > **passed scope** > **global scope**. Data you set directly on the event value therefore survives whatever the scopes carry.
 
-```
-per-call attributes  >  passed scope  >  global scope
-```
-
-Each source still contributes the keys only it defines, so a scope attribute and a global attribute with different names both end up on the log or metric. See [Attributes](/platforms/native/enriching-events/attributes/) for how to build them.
+Logs and metrics resolve attributes and the trace from the call site as well, which is the most specific source of the three: **per-call attributes** > **passed scope** > **global scope**. See [Attributes](/platforms/native/enriching-events/attributes/) for how to build them.
 
 ## Clearing and Copying Scopes
 
