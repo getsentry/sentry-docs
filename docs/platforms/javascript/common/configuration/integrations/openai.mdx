@@ -68,6 +68,48 @@ supported:
 
   The `instrumentOpenAiClient` helper adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your OpenAI client instance with this helper.
 
+  <PlatformSection supported={["javascript.cloudflare"]}>
+
+  On Cloudflare Workers, enable tracing on the worker (for example with `Sentry.withSentry` and `tracesSampleRate`), then wrap every OpenAI client you use. Tracing alone is not enough — unwrapped clients produce no `gen_ai.*` spans.
+
+  ```javascript
+  import * as Sentry from "@sentry/cloudflare";
+  import OpenAI from "openai";
+
+  export default Sentry.withSentry(
+    (env) => ({
+      dsn: env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+      dataCollection: {},
+    }),
+    {
+      async fetch(request, env) {
+        const openai = new OpenAI({
+          apiKey: env.OPENAI_API_KEY,
+          // OpenAI-compatible providers (for example OpenRouter) work the same way:
+          // baseURL: "https://openrouter.ai/api/v1",
+        });
+
+        const client = Sentry.instrumentOpenAiClient(openai, {
+          recordInputs: true,
+          recordOutputs: true,
+        });
+
+        const response = await client.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: "Hello!" }],
+        });
+
+        return Response.json(response);
+      },
+    },
+  );
+  ```
+
+  </PlatformSection>
+
+  <PlatformSection notSupported={["javascript.cloudflare"]}>
+
   See example below:
 
   ```javascript
@@ -89,6 +131,8 @@ supported:
     messages: [{ role: "user", content: "Hello!" }],
   });
   ```
+
+  </PlatformSection>
 
   To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
@@ -156,13 +200,36 @@ By default, tracing support is added to the following OpenAI SDK calls:
 - `chat.completions.create()` - Chat completion requests
 - `responses.create()` - Response SDK requests
 
-Streaming and non-streaming requests are automatically detected and handled appropriately.
+Streaming and non-streaming requests are automatically detected and handled appropriately. Each call creates a `gen_ai.chat` span (including `responses.create()`).
+
+### What is captured
+
+Instrumented calls record model, token usage, latency, and (when enabled) inputs/outputs on the LLM span. If you pass `tools` to the request, Sentry stores the tool definitions on the span and records any tool calls the model returns as span attributes.
+
+### Tool execution spans
+
+The OpenAI SDK does **not** run your tools — your application does, after the model returns `tool_calls`. Because of that, `instrumentOpenAiClient` / `openAIIntegration` do **not** create `gen_ai.execute_tool` spans for local tool handlers.
+
+To get the full agent tree (`gen_ai.invoke_agent` → `gen_ai.chat` + `gen_ai.execute_tool`), wrap your tool loop with <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>, or use a framework integration that owns the tool loop (for example <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI</PlatformLink>).
+
+### Streaming token usage
 
 <Alert>
 
 When using OpenAI's streaming API, you must also pass `stream_options: { include_usage: true }` to receive token usage data. Without this option, OpenAI does not include `prompt_tokens` or `completion_tokens` in streamed responses, and Sentry will be unable to capture `gen_ai.usage.input_tokens` / `gen_ai.usage.output_tokens` on the resulting span. This is an OpenAI API behavior, not a Sentry limitation. See [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat/create).
 
+OpenAI-compatible providers may still return usage without `stream_options`; prefer setting `include_usage: true` whenever you need reliable token attributes.
+
 </Alert>
+
+```javascript
+const stream = await client.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages: [{ role: "user", content: "Hello!" }],
+  stream: true,
+  stream_options: { include_usage: true },
+});
+```
 
 ## Supported Versions
 
