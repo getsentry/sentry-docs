@@ -86,8 +86,6 @@ supported:
       async fetch(request, env) {
         const openai = new OpenAI({
           apiKey: env.OPENAI_API_KEY,
-          // OpenAI-compatible providers (for example OpenRouter) work the same way:
-          // baseURL: "https://openrouter.ai/api/v1",
         });
 
         const client = Sentry.instrumentOpenAiClient(openai, {
@@ -105,6 +103,10 @@ supported:
     },
   );
   ```
+
+  If you call OpenAI from a Durable Object, wrap the DO with <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink> and set `enableRpcTracePropagation: true` so Worker → DO → LLM stays on one trace.
+
+  For multi-turn Conversations and the User column, see <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink> (`setConversationId` / `setUser`).
 
   </PlatformSection>
 
@@ -200,7 +202,9 @@ By default, tracing support is added to the following OpenAI SDK calls:
 - `chat.completions.create()` - Chat completion requests
 - `responses.create()` - Response SDK requests
 
-Streaming and non-streaming requests are automatically detected and handled appropriately. Each call creates a `gen_ai.chat` span (including `responses.create()`).
+Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+Both APIs produce the same span type in Sentry: op `gen_ai.chat`, name like `chat <model>`. There is no separate `gen_ai.responses` span — `responses.create()` is still a model chat request under the hood, so it uses the standard chat operation.
 
 ### What is captured
 
@@ -217,8 +221,6 @@ To get the full agent tree (`gen_ai.invoke_agent` → `gen_ai.chat` + `gen_ai.ex
 <Alert>
 
 When using OpenAI's streaming API, you must also pass `stream_options: { include_usage: true }` to receive token usage data. Without this option, OpenAI does not include `prompt_tokens` or `completion_tokens` in streamed responses, and Sentry will be unable to capture `gen_ai.usage.input_tokens` / `gen_ai.usage.output_tokens` on the resulting span. This is an OpenAI API behavior, not a Sentry limitation. See [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat/create).
-
-OpenAI-compatible providers may still return usage without `stream_options`; prefer setting `include_usage: true` whenever you need reliable token attributes.
 
 </Alert>
 
