@@ -79,16 +79,7 @@ sentry_scope_free(scope);
 
 A long-lived scope still isn't a crash-time scope. If the worker crashes, its scope data won't be on the report.
 
-### Who Frees the Scope
-
-Lifetime is the only thing that separates the two. Both are a `sentry_scope_t *`, take the same setters, and are applied the same way, so the constructor you chose is the only thing that decides who cleans up — and getting it wrong means either a double free or a leak.
-
-| Constructor | Freed by | Reach for it when |
-| ----------- | -------- | ----------------- |
-| `sentry_local_scope_new()` | The capture function | The data describes one capture |
-| `sentry_scope_new()` | You, with `sentry_scope_free()` | The same data covers many captures |
-
-Every `sentry_scope_capture_*` function follows this rule.
+Lifetime is the only thing that separates the two. Both are a `sentry_scope_t *` and take the same setters, so the constructor you chose is the only thing that decides who cleans up, and getting it wrong means either a double free or a leak. Every `sentry_scope_capture_*` function follows this rule.
 
 ## Capturing With a Scope
 
