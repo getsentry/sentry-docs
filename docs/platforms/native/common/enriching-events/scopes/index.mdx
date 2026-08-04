@@ -46,9 +46,9 @@ For how this affects tracing, see [Connect Errors With Spans](/platforms/native/
 
 ## Passing a Scope to a Capture
 
-Create a scope, set data on it, and hand it to a capture function. Reach for one when the data describes a particular operation rather than the program as a whole — the asset that failed to decode, the request that timed out.
+Create a scope when the data belongs to a specific operation rather than to the whole program, such as the asset that failed to decode or the request that timed out. Set the data on the scope, then pass it to a capture function.
 
-The constructor you use decides how long the scope lives. `sentry_local_scope_new` creates a one-shot scope, for when the data describes a single capture:
+The constructor you choose determines the scope's lifetime. Use `sentry_local_scope_new` for a one-shot scope when the data applies to a single capture:
 
 ```c
 sentry_scope_t *scope = sentry_local_scope_new();
@@ -62,7 +62,8 @@ sentry_value_t event = sentry_value_new_message_event(
 sentry_scope_capture_event(scope, event);
 ```
 
-`sentry_scope_new` creates a scope you own, available since SDK version [0.15.4](https://github.com/getsentry/sentry-native/releases/tag/0.15.4). Configure it once and reuse it across as many captures as you like, for context that would otherwise be rebuilt every time — a worker thread, a subsystem, a connected client:
+`sentry_scope_new` creates a scope you own. Configure it once and reuse it for as many captures as you need when the
+same context would otherwise be rebuilt each time, such as for a worker thread, subsystem, or connected client:
 
 ```c
 sentry_scope_t *scope = sentry_scope_new();
