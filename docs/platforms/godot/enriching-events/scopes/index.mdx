@@ -122,6 +122,7 @@ Errors and logs that the SDK captures automatically are enriched by the scope in
 The .NET layer keeps its own scope model, driven by the Sentry .NET SDK API and available since C# support landed in 2.0.0. Call it through `Sentry.Godot.SentrySdk`, the same way you'd call any other .NET SDK method:
 
 ```csharp
+// Syncs to the native layer, so GDScript and engine events carry it too.
 SentrySdk.ConfigureScope(scope =>
 {
     scope.SetTag("subsystem", "savegame");
@@ -133,4 +134,4 @@ SentrySdk.CaptureMessage("Save failed", scope => scope.SetTag("save_slot", "3"))
 
 `ConfigureScope()` and the scope callback available on every capture method behave as documented for .NET — see [Scopes and Hubs](/platforms/dotnet/enriching-events/scopes/) for the details.
 
-The two layers don't share local scope data: what you write to a GDScript scope doesn't reach C# events, and what you write to a C# scope doesn't reach GDScript and engine events. Tags, breadcrumbs, and the user set globally still sync both ways. See <PlatformLink to="/dotnet/#how-the-two-layers-work-together">C#/.NET Support</PlatformLink> for what else crosses the boundary.
+What you write to a GDScript scope doesn't reach C# events. Going the other way, only the capture-method callback stays on the C# side, as above. See <PlatformLink to="/dotnet/#how-the-two-layers-work-together">C#/.NET Support</PlatformLink> for what else crosses the boundary.
