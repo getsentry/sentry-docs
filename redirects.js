@@ -881,7 +881,7 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/cursor/',
-    destination: '/integrations/coding-agents/cursor/',
+    destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/cursor/',
