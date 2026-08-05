@@ -155,6 +155,8 @@ Record prompts and completions on the integration and/or per call via `experimen
 
 <PlatformSection notSupported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
 
+The integration is enabled by default. Re-add it to `integrations` with options to configure it (this replaces the default instance):
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -315,6 +317,38 @@ const result = await generateText({
 
 ## Options
 
+Configure these on `Sentry.vercelAIIntegration()` when you initialize Sentry.
+
+<PlatformSection supported={['javascript.cloudflare']}>
+
+On Cloudflare, pass options in `withSentry` (AI SDK v7 + <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink>). On the default `@sentry/cloudflare` entrypoint, set `recordInputs` / `recordOutputs` on each call’s `experimental_telemetry` instead.
+
+```javascript
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {},
+    integrations: [
+      Sentry.vercelAIIntegration({
+        enableTruncation: false,
+        recordInputs: true,
+        recordOutputs: true,
+      }),
+    ],
+  }),
+  {
+    async fetch(request, env, ctx) {
+      /* your worker */
+    },
+  },
+);
+```
+
+</PlatformSection>
+
 ### `enableTruncation`
 
 _Type: `boolean`_
@@ -323,11 +357,15 @@ Enables or disables truncation of recorded input messages. Truncation keeps larg
 
 Defaults to `true`.
 
+<PlatformSection notSupported={['javascript.cloudflare']}>
+
 ```javascript
 Sentry.init({
   integrations: [Sentry.vercelAIIntegration({ enableTruncation: false })],
 });
 ```
+
+</PlatformSection>
 
 ### `force`
 
@@ -371,11 +409,15 @@ Records inputs to the `ai` function call.
 
 Defaults to `true` if `dataCollection.genAI.inputs` is `true` (the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`. You can also set recording per call with `experimental_telemetry.recordInputs`.
 
+<PlatformSection notSupported={['javascript.cloudflare']}>
+
 ```javascript
 Sentry.init({
   integrations: [Sentry.vercelAIIntegration({ recordInputs: true })],
 });
 ```
+
+</PlatformSection>
 
 ### `recordOutputs`
 
@@ -387,15 +429,13 @@ Records outputs from the `ai` function call.
 
 Defaults to `true` if `dataCollection.genAI.outputs` is `true` (the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`. You can also set recording per call with `experimental_telemetry.recordOutputs`.
 
+<PlatformSection notSupported={['javascript.cloudflare']}>
+
 ```javascript
 Sentry.init({
   integrations: [Sentry.vercelAIIntegration({ recordOutputs: true })],
 });
 ```
-
-<PlatformSection supported={['javascript.cloudflare']}>
-
-On Cloudflare, prefer the <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink> entrypoint for integration-level `recordInputs` / `recordOutputs`. Otherwise set them on each call’s `experimental_telemetry`.
 
 </PlatformSection>
 
