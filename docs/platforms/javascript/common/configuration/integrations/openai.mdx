@@ -36,7 +36,7 @@ supported:
 
 <PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
   <Alert level="warning">
-    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentOpenAiClient` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+    For meta-framework applications running on both client and server, we recommend using the [`instrumentOpenAiClient` wrapper](#instrument-the-client) to ensure consistent instrumentation across all runtimes.
   </Alert>
 </PlatformSection>
 
@@ -48,7 +48,7 @@ supported:
 
   <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
     <Alert>
-      If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, you need to use **[Manual Instrumentation](#manual-instrumentation)** to explicitly wrap your AI client instance instead.
+      If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, **[wrap the client](#instrument-the-client)** with `instrumentOpenAiClient` instead.
     </Alert>
   </PlatformSection>
 
@@ -62,11 +62,11 @@ supported:
 
 <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-  ## Manual Instrumentation
+  ## Instrument the Client
 
   _Import name: `Sentry.instrumentOpenAiClient`_
 
-  The `instrumentOpenAiClient` helper adds instrumentation for the [`openai`](https://www.npmjs.com/package/openai) SDK to capture spans by wrapping OpenAI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your OpenAI client instance with this helper.
+  The `instrumentOpenAiClient` helper instruments the [`openai`](https://www.npmjs.com/package/openai) SDK by wrapping your client instance and recording LLM interactions with configurable input/output capture.
 
   <PlatformSection supported={["javascript.cloudflare"]}>
 
@@ -184,7 +184,7 @@ Sentry.init({
 
 <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-Using the `instrumentOpenAiClient` wrapper for **manual instrumentation**:
+Using the `instrumentOpenAiClient` wrapper:
 
 ```javascript
 const client = Sentry.instrumentOpenAiClient(openai, {
