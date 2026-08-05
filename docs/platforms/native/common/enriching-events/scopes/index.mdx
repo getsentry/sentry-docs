@@ -38,13 +38,13 @@ You can also apply this configuration when unsetting a user at logout:
 
 The Native SDK keeps a single global scope shared by every thread, and no thread-local state. Writes to it are safe from a data-race perspective, but they aren't isolated: a tag one thread sets is visible to events captured on every other thread.
 
-If your program handles several users or requests concurrently, pass a scope per unit of work instead. The trade-off is that this data no longer reaches crash reports.
+If your program handles several users or requests concurrently, pass a scope per unit of work instead.
 
 For how this affects tracing, see [Connect Errors With Spans](/platforms/native/tracing/instrumentation/custom-instrumentation/#connect-errors-with-spans).
 
 </Alert>
 
-## Passing a Scope to a Capture
+## Creating a Scope
 
 Create a scope when the data belongs to a specific operation rather than to the whole program, such as the asset that failed to decode or the request that timed out. Set the data on the scope, then pass it to a capture function.
 
@@ -76,8 +76,6 @@ sentry_scope_capture_event(scope, second_event);
 
 sentry_scope_free(scope);
 ```
-
-A long-lived scope still isn't a crash-time scope. If the worker crashes, its scope data won't be on the report.
 
 Lifetime is the only thing that separates the two. Both are a `sentry_scope_t *` and take the same setters, so the constructor you chose is the only thing that decides who cleans up, and getting it wrong means either a double free or a leak. Every `sentry_scope_capture_*` function follows this rule.
 
