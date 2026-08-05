@@ -372,22 +372,37 @@ async function callLLMStreaming(model, messages) {
       yourLLMClient.stream({ model, messages })
     );
 
-    stream.on("end", (finalMessage) => {
+    // Accumulate from chunk events — stream "end" has no payload
+    let text = "";
+    let usage = { inputTokens: 0, outputTokens: 0 };
+    let responseModel = model;
+
+    stream.on("data", (chunk) => {
+      // Map chunk fields to your provider's shape
+      if (chunk.text) {
+        text += chunk.text;
+      }
+      if (chunk.usage) {
+        usage = chunk.usage;
+      }
+      if (chunk.model) {
+        responseModel = chunk.model;
+      }
+    });
+
+    stream.on("end", () => {
       span.setAttribute(
         "gen_ai.output.messages",
         JSON.stringify([
           {
             role: "assistant",
-            parts: [{ type: "text", content: finalMessage.text }],
+            parts: [{ type: "text", content: text }],
           },
         ])
       );
-      span.setAttribute("gen_ai.usage.input_tokens", finalMessage.usage.inputTokens);
-      span.setAttribute(
-        "gen_ai.usage.output_tokens",
-        finalMessage.usage.outputTokens
-      );
-      span.setAttribute("gen_ai.response.model", finalMessage.model);
+      span.setAttribute("gen_ai.usage.input_tokens", usage.inputTokens);
+      span.setAttribute("gen_ai.usage.output_tokens", usage.outputTokens);
+      span.setAttribute("gen_ai.response.model", responseModel);
       span.setAttribute("gen_ai.response.streaming", true);
       span.end();
     });
