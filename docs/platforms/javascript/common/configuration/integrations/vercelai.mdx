@@ -153,9 +153,43 @@ const result = await generateText({
 
 Record prompts and completions on the integration and/or per call via `experimental_telemetry` (see [Configuration](#configuration)).
 
-<PlatformSection notSupported={['javascript.cloudflare', 'javascript.deno']}>
+<PlatformSection notSupported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
 
 ```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {},
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+On **Node**, set integration options in `sentry.server.config.ts` (re-adding the default integration configures it). On **Edge**, set them in `sentry.edge.config.js` when you enable the integration:
+
+```javascript {filename: 'sentry.server.config.(js|ts)'}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {},
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+```javascript {filename: 'sentry.edge.config.(js|ts)'}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
