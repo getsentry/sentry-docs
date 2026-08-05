@@ -59,17 +59,15 @@ That difference decides where you configure the integration and which options do
 
 <PlatformSection supported={['javascript.cloudflare']}>
 
-Cloudflare Workers can't load OpenTelemetry instrumentation, so `@sentry/cloudflare` uses a reduced implementation that reads the spans the AI SDK emits on its own. The <PlatformLink to="/features/nodejs-compat">`@sentry/cloudflare/nodejs_compat`</PlatformLink> entrypoint runs the full Node implementation instead.
+Cloudflare Workers can't load OpenTelemetry instrumentation. On both entrypoints, Sentry reads the spans the AI SDK emits on its own instead of patching your call sites, so you must pass `experimental_telemetry` on every call. The <PlatformLink to="/features/nodejs-compat">`@sentry/cloudflare/nodejs_compat`</PlatformLink> entrypoint adds the Node.js APIs the AI SDK v7 telemetry channel needs.
 
-Your entrypoint decides which options do anything:
+Your entrypoint decides the rest:
 
-|                                   | `@sentry/cloudflare`              | `@sentry/cloudflare/nodejs_compat` |
-| --------------------------------- | --------------------------------- | ---------------------------------- |
-| Enabled by default                | No                                | No                                 |
-| `experimental_telemetry` per call | Required, or no spans are created | Required, or no spans are created   |
-| Record inputs and outputs         | Per call only                     | Integration or per call             |
-| AI SDK v7                         | Not supported                     | Supported                           |
-| Minimum Sentry SDK                | `10.6.0`                          | `10.64.0`                           |
+|                            | `@sentry/cloudflare` | `@sentry/cloudflare/nodejs_compat` |
+| -------------------------- | -------------------- | ---------------------------------- |
+| Record inputs and outputs  | Per call only        | Integration or per call            |
+| AI SDK v7                  | Not supported        | Supported                          |
+| Minimum Sentry SDK         | `10.6.0`             | `10.64.0`                          |
 
 </PlatformSection>
 
@@ -189,7 +187,7 @@ export default Sentry.withSentry(
 );
 ```
 
-On both entrypoints, adding the integration is not enough on its own. You must also pass `experimental_telemetry` on every call.
+On both entrypoints, adding the integration is not enough on its own. Cloudflare can't patch your call sites, so you must also pass `experimental_telemetry` on every call — including on `nodejs_compat`. See [Turn on telemetry](#turn-on-telemetry).
 
 </PlatformSection>
 
