@@ -379,9 +379,21 @@ async function callLLMStreaming(model, messages) {
       span.end();
     });
 
-    stream.on("error", () => span.end());
+    stream.on("error", (error) => {
+      span.setStatus({ code: 2, message: "internal_error" });
+      span.setAttribute(
+        "error.type",
+        error instanceof Error ? error.constructor.name : "Error"
+      );
+      span.end();
+    });
     return stream;
   } catch (error) {
+    span.setStatus({ code: 2, message: "internal_error" });
+    span.setAttribute(
+      "error.type",
+      error instanceof Error ? error.constructor.name : "Error"
+    );
     span.end();
     throw error;
   }
