@@ -40,6 +40,12 @@ The request body of incoming HTTP requests is sent to Sentry only if `send_defau
 
 We try to decode JSON and form data bodies in UTF-8 encoding. Raw byte payloads will not be sent to Sentry.
 
+## Active Job Data
+
+The Rails integration stores trace propagation headers in serialized Active Job payloads. You can disable this with `config.rails.active_job_propagate_traces = false`.
+
+When `send_default_pii = true`, the payload also includes the current user's `id`, `email`, and `username`. Failed-job events include serialized job arguments and, on Rails 7 or later, context set with `Rails.error.set_context` when `send_default_pii` is enabled.
+
 ## Source Context
 
 When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
