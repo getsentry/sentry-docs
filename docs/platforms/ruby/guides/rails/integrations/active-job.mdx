@@ -1,0 +1,125 @@
+---
+title: Active Job
+description: "Learn how Sentry traces Active Job enqueueing and execution and reports job failures."
+sidebar_order: 10
+---
+
+The Rails integration instruments Active Job automatically, so you can follow work from enqueueing through execution and connect job failures to the rest of a trace. Install `sentry-rails` and <PlatformLink to="/tracing/">enable tracing</PlatformLink>.
+
+## Trace Jobs
+
+When `perform_later` runs inside an active transaction, Sentry creates a `queue.publish` child span. The SDK adds trace headers to the serialized job payload and continues the trace with a `queue.process` transaction when the job runs.
+
+The execution transaction is named after the job class and includes the queue adapter, queue name, job ID, retry count, and queue latency. Spans created while the job runs, such as database or HTTP spans, become children of this transaction.
+
+If no span is active when the job is enqueued, Sentry doesn't create a `queue.publish` span. When the job runs, Sentry still instruments it with a `queue.process` transaction, subject to your tracing sampling configuration.
+
+### Control Trace Propagation
+
+Trace propagation is enabled by default. To keep the enqueue and execution telemetry but start a separate trace for the job, disable it:
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.rails.active_job_propagate_traces = false
+end
+```
+
+When `send_default_pii` is enabled, Sentry also propagates the current user's `id`, `email`, and `username` to the job execution.
+
+## Report Job Failures
+
+If a job raises an exception that Active Job doesn't handle, Sentry reports the failure and links it to the `queue.process` transaction. Retry and exception handlers can make a failure handled, which changes whether and when Sentry reports it.
+
+These examples use Solid Queue through Active Job:
+
+```ruby {filename:config/application.rb}
+config.active_job.queue_adapter = :solid_queue
+```
+
+### Report Failures After Retries Are Exhausted
+
+By default, Sentry follows Active Job's retry handling. When `retry_on` catches an exception and schedules another attempt, Sentry doesn't report that attempt because Active Job handled it.
+
+<Alert level="warning" title="Only the Final Failure Is Reported by Default">
+
+With `retry_on`, Sentry reports an error only if every attempt fails and the final exception escapes the job. If a later attempt succeeds, Sentry reports no error event.
+
+</Alert>
+
+This job allows up to three total attempts:
+
+```ruby {filename:app/jobs/process_order_job.rb}
+class ProcessOrderJob < ApplicationJob
+  queue_as :default
+  retry_on ActiveRecord::Deadlocked, wait: 5.seconds, attempts: 3
+
+  def perform(order_id)
+    OrderProcessor.call(order_id)
+  end
+end
+```
+
+With the default Sentry behavior:
+
+- If the job succeeds on any attempt, Sentry reports no error event.
+- If all three attempts fail, Sentry reports one error event for the final unhandled failure.
+
+### Report Every Failed Attempt
+
+To investigate intermittent failures even when a retry succeeds, enable `active_job_report_on_retry_error`:
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.rails.active_job_report_on_retry_error = true
+end
+```
+
+<Alert level="warning" title="Every Failed Attempt Is Reported When Enabled">
+
+Sentry reports each failed attempt, even if a later attempt succeeds. Jobs with multiple failed attempts can therefore create multiple error events.
+
+</Alert>
+
+This job allows up to five total attempts:
+
+```ruby {filename:app/jobs/sync_inventory_job.rb}
+class SyncInventoryJob < ApplicationJob
+  queue_as :low_priority
+  retry_on Net::ReadTimeout, wait: 30.seconds, attempts: 5
+
+  def perform(product_id)
+    InventorySync.call(product_id)
+  end
+end
+```
+
+With per-attempt reporting enabled:
+
+- If the first attempt succeeds, Sentry reports no error event.
+- If two attempts fail and the third succeeds, Sentry reports two error events.
+- If all five attempts fail, Sentry reports five error events.
+
+### Discarded and Rescued Failures
+
+Exceptions suppressed by `discard_on` or `rescue_from` are handled by Active Job, so Sentry doesn't report them automatically. If a `rescue_from` handler raises another exception, Sentry reports the new unhandled exception along with the original exception chain.
+
+## Supported Queue Adapters
+
+The Ruby SDK runs its Active Job integration test suite against these adapters:
+
+- Delayed Job (`:delayed_job`)
+- Resque (`:resque`)
+- Sidekiq (`:sidekiq`)
+- Solid Queue (`:solid_queue`)
+
+Other Active Job adapters may work, but aren't officially supported.
+
+<Alert level="info" title="Queue-Specific Integrations Take Precedence">
+
+If you install `sentry-sidekiq`, `sentry-delayed_job`, or `sentry-resque`, the queue-specific integration takes over. Sentry skips the generic Active Job instrumentation for that adapter to avoid duplicate events.
+
+</Alert>
+
+You can also skip a custom adapter with <PlatformLink to="/configuration/integration_options/">`rails.skippable_job_adapters`</PlatformLink>.
+
+For scheduled jobs, see <PlatformLink to="/crons/">Cron Monitoring</PlatformLink>. To capture Active Job logs, see <PlatformLink to="/logs/">Logs</PlatformLink>.
