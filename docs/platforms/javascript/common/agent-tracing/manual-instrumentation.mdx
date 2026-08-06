@@ -57,7 +57,7 @@ Set these **when the span starts** (before the model or tool call), so head-base
 
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
-For manual spans, prompt/response/tool content is whatever you set on the span. Omit those attributes (or gate them yourself) when you do not want content captured. `dataCollection.genAI` and per-integration `recordInputs` / `recordOutputs` apply to automatic instrumentation — see <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
+For manual spans, prompt, response, and tool content is whatever you set on the span. Omit those attributes, or gate them yourself, when you do not want to capture content.
 
 ## AI Request Span
 
@@ -67,9 +67,7 @@ This span represents a request to an LLM model or service that generates a respo
 const messages = [
   { role: "user", parts: [{ type: "text", content: "Tell me a joke" }] },
 ];
-const tools = [
-  { name: "get_weather", description: "Get weather for a city" },
-];
+const tools = [{ name: "get_weather", description: "Get weather for a city" }];
 
 await Sentry.startSpan(
   {
@@ -89,23 +87,19 @@ await Sentry.startSpan(
     // Call your model provider; map its response into span attributes below
     const result = await yourLLMClient.chat({ model: "o3-mini", messages });
 
-    span.setAttribute("gen_ai.response.model", result.model);
-    span.setAttribute("gen_ai.response.id", result.id);
-    span.setAttribute(
-      "gen_ai.output.messages",
-      JSON.stringify([
+    span.setAttributes({
+      "gen_ai.response.model": result.model,
+      "gen_ai.response.id": result.id,
+      "gen_ai.output.messages": JSON.stringify([
         {
           role: "assistant",
           parts: [{ type: "text", content: result.text }],
         },
-      ])
-    );
-    span.setAttribute(
-      "gen_ai.response.finish_reasons",
-      JSON.stringify([result.finishReason])
-    );
-    span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
-    span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
+      ]),
+      "gen_ai.response.finish_reasons": JSON.stringify([result.finishReason]),
+      "gen_ai.usage.input_tokens": result.usage.inputTokens,
+      "gen_ai.usage.output_tokens": result.usage.outputTokens,
+    });
     // If the provider reports cached tokens, record them as a subset of input tokens
     if (result.usage.cachedInputTokens != null) {
       span.setAttribute(
@@ -220,12 +214,6 @@ span.setAttribute("gen_ai.input.messages", JSON.stringify(inputWithTool));
 
 This span represents the execution of an AI agent, capturing the full lifecycle from receiving a task to producing a final response.
 
-<Alert>
-
-For a complete guide on naming agents across all supported frameworks, see [Naming Your Agents](/product/agents/naming/).
-
-</Alert>
-
 ```javascript
 const messages = [
   {
@@ -233,9 +221,7 @@ const messages = [
     parts: [{ type: "text", content: "What's the weather in Paris?" }],
   },
 ];
-const tools = [
-  { name: "get_weather", description: "Get weather for a city" },
-];
+const tools = [{ name: "get_weather", description: "Get weather for a city" }];
 
 await Sentry.startSpan(
   {
