@@ -5,6 +5,8 @@ description: "Learn about using Sentry with RQ."
 
 The RQ integration adds support for the [RQ job queue system](https://python-rq.org/).
 
+<Include name="python-stream-mode-general-callout.mdx" />
+
 ## Install
 
 Install `sentry-sdk` from PyPI:
@@ -12,6 +14,7 @@ Install `sentry-sdk` from PyPI:
 ```bash {tabTitle:pip}
 pip install sentry-sdk
 ```
+
 ```bash {tabTitle:uv}
 uv add sentry-sdk
 ```
@@ -22,17 +25,12 @@ If you have the `rq` package in your dependencies, the RQ integration will be en
 
 Create a file called `mysettings.py` with the following content:
 
-
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/profiling/).
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
 <OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance',
-    'profiling',
-  ]}
+  options={["error-monitoring", "performance", "profiling"]}
 />
 
 ```python {filename:mysettings.py}
@@ -72,7 +70,6 @@ The integration will automatically report errors from all RQ jobs.
 Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your jobs are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
 In addition, make sure that **`init` is called only once** in your app. For example, if you have a `Flask` app and a worker that depends on the app, we recommend only initializing Sentry once. Note that because the Flask integration is enabled automatically, you don't need to change the configuration shown above.
-
 
 ```python {filename:app.py}
 # app.py
@@ -181,6 +178,8 @@ sentry_sdk.init(
 )
 
 q = Queue(connection=Redis())
+
+# or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
 with sentry_sdk.start_transaction(name="testing_sentry"):
     result = q.enqueue(hello, "World")
 ```
