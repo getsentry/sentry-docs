@@ -502,11 +502,13 @@ import {act, render, screen} from 'sentry-test/reactTestingLibrary';
 
 it('disables submit while saving', async () => {
   let resolveRequest!: () => void;
+  const promise = new Promise<void>(resolve => {
+    resolveRequest = resolve;
+  });
+
   MockApiClient.addMockResponse({
     url: '/projects/',
-    asyncDelay: new Promise<void>(resolve => {
-      resolveRequest = resolve;
-    }),
+    asyncDelay: promise,
     body: [{id: 1, name: 'my project'}],
   });
 
@@ -514,9 +516,7 @@ it('disables submit while saving', async () => {
 
   expect(screen.getByRole('button', {name: 'Save'})).toBeDisabled();
 
-  act(() => {
-    resolveRequest();
-  });
+  act(() => resolveRequest());
 
   expect(await screen.findByText('my project')).toBeInTheDocument();
 });
