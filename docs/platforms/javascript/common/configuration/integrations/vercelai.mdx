@@ -443,6 +443,12 @@ Spans are captured without the `experimental_telemetry` block. Pass it only to s
 
 <PlatformSection supported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
 
+<PlatformSection supported={['javascript.nextjs']}>
+
+This applies to the **Edge** runtime only. On the Node runtime, Sentry patches your call sites for you — pass `experimental_telemetry` only to set `functionId` or the recording options.
+
+</PlatformSection>
+
 ```javascript
 const agent = new ToolLoopAgent({
   model: openai("gpt-4o"),
@@ -490,11 +496,35 @@ Truncates recorded input messages so large payloads stay within span size limits
 
 Defaults to `true`.
 
+<PlatformSection notSupported={['javascript.cloudflare']}>
+
 ```javascript
 Sentry.init({
   integrations: [Sentry.vercelAIIntegration({ enableTruncation: false })],
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare']}>
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [Sentry.vercelAIIntegration({ enableTruncation: false })],
+  }),
+  {
+    async fetch(request, env, ctx) {
+      /* your worker */
+    },
+  },
+);
+```
+
+</PlatformSection>
 
 <PlatformSection notSupported={['javascript.cloudflare', 'javascript.deno']}>
 
@@ -540,7 +570,13 @@ Spans are captured for these `ai` functions:
 
 </PlatformSection>
 
-<PlatformSection supported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
+<PlatformSection supported={['javascript.nextjs']}>
+
+Spans are captured for these `ai` functions. On the Edge runtime, pass `experimental_telemetry` to each one, as described in [Turn on telemetry](#turn-on-telemetry):
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare', 'javascript.deno']}>
 
 Spans are captured for these `ai` functions. Pass `experimental_telemetry` to each one, as described in [Turn on telemetry](#turn-on-telemetry):
 
