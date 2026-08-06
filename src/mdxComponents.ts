@@ -1,4 +1,4 @@
-import {AgentSkillsCallout} from './components/agentSkillsCallout';
+import {AgentSetupCallout} from './components/agentSetupCallout';
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
@@ -66,6 +66,7 @@ import {
 import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
+import {TutorialProgress} from './components/tutorialProgress';
 import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
@@ -74,7 +75,7 @@ export function mdxComponents(
   wrapper: any = ({children}) => children
 ) {
   return {
-    AgentSkillsCallout,
+    AgentSetupCallout,
     Alert,
     Arcade,
     AvailableSince,
@@ -137,6 +138,7 @@ export function mdxComponents(
     StatusBadge,
     StepComponent,
     StepConnector,
+    TutorialProgress,
     VimeoEmbed,
     VersionRequirement,
     a: SmartLink,

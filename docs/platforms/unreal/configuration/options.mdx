@@ -67,6 +67,7 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 <SdkOption name="AutomaticBreadcrumbs" type="struct" defaultNote="all fields default to false">
 
 Configures whether to automatically add breadcrumbs for specific in-game events. This is a struct containing boolean fields for different event types:
+
 - `bOnMapLoadingStarted` - when map loading starts
 - `bOnMapLoaded` - when map is loaded
 - `bOnGameStateClassChanged` - when game state changes
@@ -78,6 +79,7 @@ Configures whether to automatically add breadcrumbs for specific in-game events.
 <SdkOption name="AutomaticBreadcrumbsForLogs" type="struct" defaultNote="enabled for Fatal, Error, and Warning">
 
 Configures whether to automatically add breadcrumbs for log messages at specific verbosity levels. This is a struct containing boolean fields for different log levels:
+
 - `bOnFatalLog` - defaults to `true`
 - `bOnErrorLog` - defaults to `true`
 - `bOnWarningLog` - defaults to `true`
@@ -93,6 +95,12 @@ When enabled, stack traces are automatically attached to all messages logged. St
 This option is turned off by default.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+<Alert>
+
+On Android, only crash events contain the full callstack. Non-fatal events captured manually won't include the native C++ portion of the stack trace.
+
+</Alert>
 
 </SdkOption>
 
@@ -144,6 +152,12 @@ This feature is currently experimental and only supported on Windows.
 When enabled, game log file is automatically attached to all events captured if the current build configuration allows logging.
 
 This option is turned off by default.
+
+<Alert>
+
+The game log attached to crash events may be truncated. Crash reports can be sent to Sentry right away, while Unreal Engine is still writing the last bits of information to the log file.
+
+</Alert>
 
 </SdkOption>
 
@@ -223,6 +237,8 @@ This feature is supported on Windows and Linux only.
 
 </SdkOption>
 
+## App Hangs
+
 <SdkOption name="EnableHangTracking" type="bool" defaultValue="false">
 
 Tracks application hangs (unresponsive game thread) and captures a hang event when the thread stays unresponsive for longer than the configured timeout. By default, detection uses Unreal Engine's built-in `FThreadHeartBeat` watcher; enable <PlatformIdentifier name="UseNativeHangTracking" /> to use the sentry-native SDK's app-hang detector instead.
@@ -231,7 +247,7 @@ This option is turned off by default.
 
 <Alert>
 
-The default engine-based detection is available on Windows and Linux only, and only works in packaged non-debug builds. See <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> for setup details and prerequisites.
+The default engine-based detection is available on Windows and Linux only, and only works in packaged builds. See [App Hangs and ANRs](/platforms/unreal/app-hangs/) for setup details and prerequisites.
 
 </Alert>
 
@@ -253,9 +269,27 @@ Only takes effect when <PlatformIdentifier name="EnableHangTracking" /> is enabl
 
 <Alert>
 
-This feature is available on Windows, Linux, and macOS. On macOS it requires the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>. See <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> for details.
+This feature is available on Windows, Linux, macOS, and Android. On macOS it requires the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>. On Android, it uses the NDK integration and monitors the game thread. See [App Hangs and ANRs](/platforms/unreal/app-hangs/) for details.
 
 </Alert>
+
+</SdkOption>
+
+## App Not Responding
+
+<SdkOption name="EnableAppNotRespondingTracking" type="bool" defaultValue="true">
+
+Enables mobile app-not-responding detection. On iOS and macOS with the default Cocoa backend, this configures Cocoa app hang detection. On macOS with the native backend, use <PlatformIdentifier name="EnableHangTracking" /> and <PlatformIdentifier name="UseNativeHangTracking" /> instead. On Android, it configures JVM ANR detection.
+
+This option changed from disabled to enabled by default in version `1.13.0`. Set it to `false` to keep the previous behavior.
+
+</SdkOption>
+
+<SdkOption name="AppNotRespondingTimeout" type="float" defaultValue="5.0" defaultNote="seconds">
+
+Sets how long the main thread can remain unresponsive before the SDK captures an app-not-responding event. On Android 11 and later, the SDK reads ANRs from `ApplicationExitInfo` during a subsequent SDK initialization, so the operating system controls the threshold.
+
+Only takes effect when <PlatformIdentifier name="EnableAppNotRespondingTracking" /> is enabled.
 
 </SdkOption>
 

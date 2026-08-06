@@ -1,10 +1,10 @@
 ---
 title: Expo Updates
-description: "Automatic context, breadcrumbs, and alerts for Expo OTA updates."
+description: "Automatic context, breadcrumbs, performance spans, and alerts for Expo OTA updates."
 sidebar_order: 20
 ---
 
-When you ship OTA updates with Expo Updates, events captured by Sentry are automatically enriched with information about which update is running. This lets you filter issues by update channel, runtime version, or update ID — and get alerted when an emergency launch occurs.
+When you ship OTA updates with Expo Updates, events captured by Sentry are automatically enriched with information about which update is running. This lets you filter issues by update channel, runtime version, or update ID — track how long update checks and downloads take — and get alerted when an emergency launch occurs.
 
 These integrations are enabled by default in Expo projects. No additional setup is required.
 
@@ -58,6 +58,28 @@ All breadcrumbs use the category `expo.updates` and include the following transi
 <Alert>
 
 Update lifecycle breadcrumbs only run in native builds, not in Expo Go.
+
+</Alert>
+
+## Performance Spans
+
+The SDK automatically creates performance spans that measure how long update checks and downloads take. These spans appear as standalone transactions in the **Performance** page and can be queried in **Discover**.
+
+| Span Name | Operation | Created When |
+|---|---|---|
+| `expo-updates check` | `app.update.check` | The app starts checking for an available update |
+| `expo-updates download` | `app.update.download` | The app starts downloading an update |
+
+Each span ends when the corresponding operation completes or fails:
+
+- **Success**: The span finishes with an `ok` status. If an update was found (check) or downloaded, the `expo.update.id` attribute is set to the manifest ID.
+- **Failure**: The span finishes with an `error` status and the error message from the Expo Updates state machine.
+
+Spans are created with `forceTransaction: true` because OTA update checks typically happen outside of user-interaction transactions (for example, at app startup). This means each check or download appears as its own transaction in Sentry rather than as a child span of another trace.
+
+<Alert>
+
+Performance spans only run in native builds, not in Expo Go.
 
 </Alert>
 

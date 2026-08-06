@@ -2,6 +2,12 @@ Distributed tracing works out of the box for [supported frameworks](/platforms/p
 
 This page describes how to manually propagate trace information into and out of your Python application. All you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
 
+<Alert>
+
+This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
+
+</Alert>
+
 ## 1. Extract Incoming Tracing Information
 
 Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `continue_trace()` function to help you with this. Incoming tracing information can come from different places:
@@ -10,9 +16,16 @@ Incoming tracing information has to be extracted and stored in memory for later 
 - In a job queue, like Celery, it can be retrieved from meta or header variables.
 - You also can pick up tracing information from environment variables.
 
+<Alert>
+In **transaction mode**, `sentry_sdk.continue_trace()` returns a transaction, but does not start it. To start the transaction, use `start_transaction()`.
+
+In **stream mode**, `sentry_sdk.traces.continue_trace()` replaces `sentry_sdk.continue_trace()` and is not a context manager. The next span created with `sentry_sdk.traces.start_span()` picks it up automatically.
+
+</Alert>
+
 Here's an example of how to extract and store incoming tracing information using `continue_trace()`:
 
-```python
+```python {tabTitle:Transaction Mode (Default)}
 import sentry_sdk
 from my_project import get_incoming_headers_as_dict
 
@@ -23,14 +36,43 @@ with sentry_sdk.start_transaction(transaction):
     ...
 ```
 
-In this example, `get_incoming_headers_as_dict()` returns a dictionary that contains tracing information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+from my_project import get_incoming_headers_as_dict
 
-Sentry's `continue_trace()` function will extract the given headers, try to find the `sentry-trace` and `baggage` headers, and store them in memory for later use.
+headers = get_incoming_headers_as_dict()
 
-`continue_trace()` returns a transaction, but does not start it. To start the transaction, use `start_transaction()`.
+sentry_sdk.traces.continue_trace(headers)
 
+with sentry_sdk.traces.start_span(name="handle request"):
+    ...
+```
 
-## 2. Inject Tracing Information to Outgoing Requests
+In these examples, `get_incoming_headers_as_dict()` returns a dictionary that contains tracing information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
+
+## 2. Start a New Trace
+
+<Alert level="warning">
+  This step only applies to stream mode and is not available in transaction
+  mode.
+</Alert>
+
+In stream mode, if you need to start a completely new trace unconnected to the current one, use `sentry_sdk.traces.new_trace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.traces.start_span(name="span in trace 1"):
+    ...
+
+sentry_sdk.traces.new_trace()
+
+with sentry_sdk.traces.start_span(name="span in trace 2"):
+    # This span is the root of a new, separate trace
+    ...
+```
+
+## 3. Inject Tracing Information to Outgoing Requests
 
 For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must be added to outgoing requests. If you pregenerate HTML on the server-side, you might want to take a look at [Inject Tracing Information into Rendered HTML](#inject-tracing-information-into-rendered-html), which describes how to pass on tracing information through HTML meta tags.
 

@@ -1,0 +1,222 @@
+---
+title: Set Up Agent Tracing
+sidebar_title: Agent Tracing
+sidebar_order: 7
+description: "Monitor AI agents with token usage, latency, tool execution, and error tracking."
+sidebar_section: features
+new: true
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+  - javascript.deno
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.astro
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+  - javascript.nitro
+---
+
+With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
+
+<AgentSetupCallout skill="sentry-setup-ai-monitoring" />
+
+## Getting Started
+
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink> and pass `dataCollection` so generative AI content follows the SDK defaults (including prompts and responses when left unconfigured).
+
+`dataCollection: {}` also opts into other **permissive** defaults (bodies, cookies, user info, and more). Tighten via <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {},
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {},
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // your worker
+    },
+  },
+);
+```
+
+Durable Objects / <PlatformLink to="/features/agents-sdk/">Agents SDK</PlatformLink>: use <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink> with the same options.
+
+</PlatformSection>
+
+## Instrumentation
+
+Pick your AI stack. Some libraries auto-instrument; others need a short setup — each page has the details.
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, how much setup you need depends on the library. Enabling tracing alone is not enough for most of them.
+
+- <PlatformLink to="/features/workers-ai/">Workers AI</PlatformLink> — works as soon as Sentry wraps your worker. Nothing else to do.
+- <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI</PlatformLink> — add the integration to your Sentry options, then enable telemetry on each AI call.
+- <PlatformLink to="/features/agents-sdk/">Agents SDK</PlatformLink> — wrap your agent classes with `instrumentAgentWithSentry`.
+- <PlatformLink to="/configuration/integrations/openai/">OpenAI</PlatformLink>, <PlatformLink to="/configuration/integrations/anthropic/">Anthropic</PlatformLink>, and <PlatformLink to="/configuration/integrations/google-genai/">Google Gen AI</PlatformLink> — wrap your client instance.
+- <PlatformLink to="/configuration/integrations/langchain/">LangChain</PlatformLink> — attach Sentry's callback handler.
+- <PlatformLink to="/configuration/integrations/langgraph/">LangGraph</PlatformLink> — wrap your graph before you call `.compile()`.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno"]}>
+- <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
+- <PlatformLink to="/configuration/integrations/openai/">OpenAI</PlatformLink>
+- <PlatformLink to="/configuration/integrations/anthropic/">Anthropic</PlatformLink>
+- <PlatformLink to="/configuration/integrations/google-genai/">Google Gen AI SDK</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langchain/">LangChain</PlatformLink>
+- <PlatformLink to="/configuration/integrations/langgraph/">LangGraph</PlatformLink>
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+- <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI SDK</PlatformLink>
+</PlatformSection>
+
+## Tracking Conversations
+
+<Alert>
+  Tracking Conversations has **beta** stability. Configuration options and behavior may change.
+</Alert>
+
+[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
+
+Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current isolation scope (which is typically request-scoped). Pass `null` to unset it.
+
+```javascript
+Sentry.setConversationId("conv_abc123");
+```
+
+### Identifying Users in Conversations
+
+The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
+
+```javascript
+Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
+
+## Options
+
+### Privacy Controls
+
+With `dataCollection: {}` (or any `dataCollection` config), generative AI inputs and outputs default to **on**. To turn them off:
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+});
+```
+
+You can also set `recordInputs` / `recordOutputs` on a specific AI integration. See each integration page for the API that applies on your platform.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    dataCollection: {
+      genAI: { inputs: false, outputs: false },
+    },
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
+On the default CF entrypoint, control Vercel AI I/O with `experimental_telemetry` per call (or integration-level `record*` via `nodejs_compat`). See each integration page.
+
+</PlatformSection>
+
+### Streaming Gen AI Spans
+
+From SDK `10.61.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
+
+Self-hosted Sentry users should set `streamGenAiSpans: false` if standalone `gen_ai` spans may not be ingested.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  streamGenAiSpans: false,
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    streamGenAiSpans: false,
+  }),
+  { async fetch(request, env, ctx) { /* ... */ } },
+);
+```
+
+</PlatformSection>
+
+## Manual Instrumentation
+
+You can also instrument agent spans yourself. See <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>.
+
+<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.nextjs", "javascript.nuxt", "javascript.astro", "javascript.solidstart", "javascript.sveltekit", "javascript.remix", "javascript.tanstackstart-react"]}>
+
+## Framework Exporters
+
+If you're using an AI framework with a Sentry exporter, you can send traces to Sentry:
+
+- <PlatformLink to="/agent-tracing/mastra/">Mastra Sentry Exporter</PlatformLink>
+
+</PlatformSection>
+
+## MCP Server Monitoring
+
+If you're building MCP (Model Context Protocol) servers, Sentry can also track tool executions, prompt retrievals, and resource access. See <PlatformLink to="/tracing/instrumentation/mcp-module/">Instrument MCP Servers</PlatformLink> for setup instructions.

@@ -1,14 +1,25 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
-import {AI_AGENT_PATTERN, type TrafficType} from 'sentry-docs/lib/trafficClassification';
+import {
+  AI_AGENT_PATTERN,
+  matchPattern,
+  type TrafficType,
+} from 'sentry-docs/lib/trafficClassification';
 
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
 // NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
 const isDeveloperDocs =
   process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
-const BASE_URL = isDeveloperDocs ? 'https://develop.sentry.dev' : 'https://docs.sentry.io';
+const BASE_URL = isDeveloperDocs
+  ? 'https://develop.sentry.dev'
+  : 'https://docs.sentry.io';
+
+// Production domains whose content should be indexable by search engines.
+// All other hostnames (Vercel preview/deployment URLs, old production deployments)
+// get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
+const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
@@ -24,14 +35,113 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // First, handle canonical URL redirects for deprecated paths
-  const canonicalRedirect = handleRedirects(request);
-  if (canonicalRedirect) {
-    return canonicalRedirect;
+  // Classify once per request and record it as a counter. This metric — not
+  // trace sampling — is the source of truth for agent/bot/user traffic: the
+  // middleware root span is created by Next.js before any request data reaches
+  // Sentry, so classification is impossible at trace-sampling time (see
+  // src/tracesSampler.ts).
+  const classification = classifyTraffic(request);
+  recordClassification(request, classification);
+
+  // First handle canonical URL redirects for deprecated paths, then check for
+  // AI/LLM clients and redirect to markdown if appropriate.
+  const response = applyNoindexForNonProductionDomains(
+    request,
+    handleRedirects(request) ?? handleAIClientRedirect(request, classification)
+  );
+
+  annotateMiddlewareSpan(request, classification, response);
+
+  return response;
+}
+
+/**
+ * Adds X-Robots-Tag: noindex to responses served from non-production domains.
+ * This prevents search engines from indexing stale Vercel deployment URLs
+ * (e.g., sentry-docs-<hash>.vercel.app) or old production deployments that
+ * are still accessible but no longer current.
+ *
+ * Production domains (docs.sentry.io, develop.sentry.dev) are not affected.
+ */
+function applyNoindexForNonProductionDomains(
+  request: NextRequest,
+  response: NextResponse
+): NextResponse {
+  const hostname = request.nextUrl.hostname;
+  if (!INDEXABLE_HOSTNAMES.has(hostname)) {
+    response.headers.set('X-Robots-Tag', 'noindex');
+  }
+  return response;
+}
+
+type TrafficClassification = ReturnType<typeof classifyTraffic>;
+
+type MiddlewareOutcome = 'redirect' | 'rewrite' | 'passthrough';
+
+function middlewareOutcome(response: NextResponse): MiddlewareOutcome {
+  if (response.status >= 300 && response.status < 400) {
+    return 'redirect';
+  }
+  // Set by NextResponse.rewrite(). If Next.js renames it we degrade to
+  // 'passthrough' rather than throwing.
+  return response.headers.has('x-middleware-rewrite') ? 'rewrite' : 'passthrough';
+}
+
+/**
+ * The tracesSampler can't classify this span (no request data at sampling time),
+ * so the detail it needs to stay useful is attached here instead, where the
+ * request is in hand. `traffic_type` keeps bots filterable at query time and
+ * `middleware.outcome` gives the redirect/rewrite/passthrough breakdown.
+ *
+ * Attributes only — deliberately no `updateName`. The SDK's
+ * `enhanceMiddlewareRootSpan` rewrites the name of every `Middleware.execute`
+ * span to `middleware {METHOD}` on the send path, reading Next.js'
+ * `next.span_name` attribute and ignoring `sentry.source`, so any name set here
+ * is silently discarded. Outcome and path live as attributes rather than in the
+ * transaction name — which also keeps name cardinality flat, since the docs
+ * site has thousands of paths plus every file under /mdx-images/.
+ */
+function annotateMiddlewareSpan(
+  request: NextRequest,
+  classification: TrafficClassification,
+  response: NextResponse
+): void {
+  const activeSpan = Sentry.getActiveSpan();
+  if (!activeSpan) {
+    return;
   }
 
-  // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  return handleAIClientRedirect(request);
+  const rootSpan = Sentry.getRootSpan(activeSpan);
+
+  rootSpan.setAttributes({
+    'middleware.outcome': middlewareOutcome(response),
+    'url.path': request.nextUrl.pathname,
+    traffic_type: classification.trafficType,
+    device_type: classification.deviceType,
+  });
+}
+
+/**
+ * Records the per-request traffic classification as a counter metric.
+ * Every request the middleware sees is counted — no sampling — making this
+ * the system of record for agent/bot/user traffic on the docs site.
+ */
+function recordClassification(
+  request: NextRequest,
+  classification: TrafficClassification
+): void {
+  const agent =
+    classification.trafficType === 'ai_agent'
+      ? matchPattern(request.headers.get('user-agent') ?? '', AI_AGENT_PATTERN)
+      : undefined;
+
+  Sentry.metrics.count('docs.request.classified', 1, {
+    attributes: {
+      traffic_type: classification.trafficType,
+      device_type: classification.deviceType,
+      ...(agent && {agent}),
+    },
+  });
 }
 
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
@@ -123,8 +233,10 @@ function wantsMarkdown(request: NextRequest): boolean {
  * These headers are added to the REQUEST (not response) so tracesSampler can read them.
  * Uses NextResponse.next({ request: { headers } }) pattern to modify the request.
  */
-function createClassifiedRequestHeaders(request: NextRequest): Headers {
-  const classification = classifyTraffic(request);
+function createClassifiedRequestHeaders(
+  request: NextRequest,
+  classification: TrafficClassification
+): Headers {
   const headers = new Headers(request.headers);
   headers.set('x-traffic-type', classification.trafficType);
   headers.set('x-device-type', classification.deviceType);
@@ -134,10 +246,13 @@ function createClassifiedRequestHeaders(request: NextRequest): Headers {
 /**
  * Creates a pass-through response with traffic classification headers on the request.
  */
-function nextWithClassification(request: NextRequest): NextResponse {
+function nextWithClassification(
+  request: NextRequest,
+  classification: TrafficClassification
+): NextResponse {
   return NextResponse.next({
     request: {
-      headers: createClassifiedRequestHeaders(request),
+      headers: createClassifiedRequestHeaders(request, classification),
     },
   });
 }
@@ -145,10 +260,14 @@ function nextWithClassification(request: NextRequest): NextResponse {
 /**
  * Creates a rewrite response with traffic classification headers on the request.
  */
-function rewriteWithClassification(request: NextRequest, destination: URL): NextResponse {
+function rewriteWithClassification(
+  request: NextRequest,
+  destination: URL,
+  classification: TrafficClassification
+): NextResponse {
   return NextResponse.rewrite(destination, {
     request: {
-      headers: createClassifiedRequestHeaders(request),
+      headers: createClassifiedRequestHeaders(request, classification),
     },
   });
 }
@@ -169,7 +288,10 @@ function mdToCanonicalPath(mdPathname: string): string {
 /**
  * Handles redirection to markdown versions for AI/LLM clients
  */
-const handleAIClientRedirect = (request: NextRequest) => {
+const handleAIClientRedirect = (
+  request: NextRequest,
+  classification: TrafficClassification
+) => {
   const userAgentString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
   const url = request.nextUrl;
@@ -207,8 +329,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // engine crawlers consolidate ranking to the human-readable URL instead of indexing the
   // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
-    const response = nextWithClassification(request);
-    response.headers.set('Link', `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`);
+    const response = nextWithClassification(request, classification);
+    response.headers.set(
+      'Link',
+      `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
+    );
     return response;
   }
 
@@ -221,7 +346,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
       url.pathname
     )
   ) {
-    return nextWithClassification(request);
+    return nextWithClassification(request, classification);
   }
 
   // Check for markdown request (Accept header, user-agent, or manual)
@@ -248,11 +373,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
     // Rewrite to serve markdown inline (same URL, different content)
     // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
-    return rewriteWithClassification(request, newUrl);
+    return rewriteWithClassification(request, newUrl, classification);
   }
 
   // Default: pass through with traffic classification headers
-  return nextWithClassification(request);
+  return nextWithClassification(request, classification);
 };
 
 const handleRedirects = (request: NextRequest) => {
@@ -850,7 +975,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/java/context/',
-    to: '/platforms/java/scope/',
+    to: '/platforms/java/enriching-events/',
   },
   {
     from: '/clients/java/modules/jul/',
@@ -1342,55 +1467,55 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-frontend/upload-source-maps/',
-    to: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    to: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/upload-source-maps/',
-    to: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    to: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     from: '/guides/integrate-frontend/configure-scms/',
-    to: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/configure-scms/',
-    to: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/guides/integrate-frontend/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    to: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    to: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
   },
   {
     from: '/guides/integrate-frontend/initialize-sentry-sdk/',
-    to: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    to: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/initialize-sentry-sdk/',
-    to: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    to: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     from: '/guides/integrate-frontend/generate-first-error/',
-    to: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    to: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/generate-first-error/',
-    to: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    to: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
   },
   {
     from: '/basics/',
@@ -1478,35 +1603,35 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-backend/capturing-errors/',
-    to: '/product/sentry-basics/integrate-backend/capturing-errors/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/capturing-errors/',
-    to: '/product/sentry-basics/integrate-backend/capturing-errors/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/',
-    to: '/product/sentry-basics/integrate-backend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/',
-    to: '/product/sentry-basics/integrate-backend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/configuration-options/',
-    to: '/product/sentry-basics/integrate-backend/configuration-options/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/configuration-options/',
-    to: '/product/sentry-basics/integrate-backend/configuration-options/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/getting-started/',
-    to: '/product/sentry-basics/integrate-backend/getting-started/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/getting-started/',
-    to: '/product/sentry-basics/integrate-backend/getting-started/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/ssl/',
@@ -1698,7 +1823,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/javascript/integrations/',
-    to: '/platforms/javascript/legacy-sdk/integrations/',
+    to: '/platforms/javascript/legacy-sdk/',
   },
   {
     from: '/clients/javascript/usage/',
@@ -2635,39 +2760,43 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/errors/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/errors/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/errors/',
+  },
+  {
+    from: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/product/crons/alerts/',
@@ -3136,7 +3265,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/product/data-management-settings/event-grouping/fingerprint-rules/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
   },
   {
     from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
@@ -3384,93 +3513,175 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/ai/monitoring/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/ai/monitoring/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/ai/monitoring/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/ai/monitoring/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
-    to: '/ai/monitoring/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/',
-    to: '/ai/monitoring/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/privacy/',
-    to: '/ai/monitoring/agents/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
-    from: '/ai/monitoring/agents/dashboard/',
-    to: '/ai/monitoring/agents/dashboards/',
+    from: '/product/agents/dashboard/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/ai/observability/agents/dashboard/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',
-    to: '/ai/monitoring/agents/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/product/insights/ai/agents/getting-started/',
-    to: '/ai/monitoring/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/ai/monitoring/mcp/',
+    to: '/product/agents/mcp/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/ai/monitoring/mcp/getting-started/',
+    to: '/product/agents/mcp/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/ai/monitoring/mcp/dashboard/',
+    to: '/product/agents/mcp/dashboard/',
+  },
+  // AI Monitoring / AI Observability → Product Agents
+  {
+    from: '/ai/monitoring/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/monitoring/agents/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/monitoring/agents/getting-started/',
+    to: '/product/agents/getting-started/',
+  },
+  {
+    from: '/ai/monitoring/agents/dashboards/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/ai/monitoring/agents/dashboard/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/ai/monitoring/agents/naming/',
+    to: '/product/agents/naming/',
+  },
+  {
+    from: '/ai/monitoring/agents/privacy/',
+    to: '/product/agents/privacy/',
+  },
+  {
+    from: '/ai/monitoring/agents/costs/',
+    to: '/product/agents/costs/',
+  },
+  {
+    from: '/ai/monitoring/agents/sampling/',
+    to: '/product/agents/sampling/',
+  },
+  {
+    from: '/ai/monitoring/conversations/',
+    to: '/product/agents/conversations/',
+  },
+  {
+    from: '/ai/monitoring/mcp/',
+    to: '/product/agents/mcp/',
+  },
+  {
+    from: '/ai/monitoring/mcp/getting-started/',
+    to: '/product/agents/mcp/getting-started/',
+  },
+  {
+    from: '/ai/monitoring/mcp/dashboard/',
+    to: '/product/agents/mcp/dashboard/',
+  },
+  {
+    from: '/ai/observability/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/observability/agents/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
+  },
+  {
+    from: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/ai/observability/agents/naming/',
+    to: '/product/agents/naming/',
+  },
+  {
+    from: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
+  },
+  {
+    from: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
+  },
+  {
+    from: '/ai/observability/agents/sampling/',
+    to: '/product/agents/sampling/',
+  },
+  {
+    from: '/ai/observability/conversations/',
+    to: '/product/agents/conversations/',
+  },
+  {
+    from: '/ai/observability/mcp/',
+    to: '/product/agents/mcp/',
+  },
+  {
+    from: '/ai/observability/mcp/getting-started/',
+    to: '/product/agents/mcp/getting-started/',
+  },
+  {
+    from: '/ai/observability/mcp/dashboard/',
+    to: '/product/agents/mcp/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',
     to: 'https://mcp.sentry.dev',
   },
-  // Removed: /product/metrics/, /product/profiling/, /product/discover-queries/,
+  // Removed: /product/metrics/, /product/profiling/,
   // /product/session-replay/ are now canonical paths (previously redirected to /product/explore/*)
+  // /product/discover-queries/ now redirects to /product/errors/
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
-  },
-  {
-    from: '/data-management/advanced-datascrubbing/',
-    to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
-  },
-  {
-    from: '/platforms/javascript/guides/react/features/component-tracking/',
-    to: '/platforms/javascript/guides/react/features/component-names/',
-  },
-  {
-    from: '/platforms/rust/usage/sdk-fingerprinting/',
-    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
-  },
-  {
-    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
-    to: '/platforms/javascript/guides/angular/',
-  },
-  {
-    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
-    to: '/platforms/java/guides/spring/data-management/',
-  },
-  {
-    from: '/support/',
-    to: 'https://www.sentry.help/en/',
   },
   {
     from: '/product/security-policy-reporting/',
@@ -3555,10 +3766,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/accounts/require-2fa/',
     to: '/organization/authentication/two-factor-authentication/',
-  },
-  {
-    from: '/platforms/go/guides/fiber/user-feedback/configuration/',
-    to: '/platforms/go/user-feedback/',
   },
   {
     from: '/platforms/javascript/guides/',
@@ -3726,11 +3933,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/docs-components/',
-    to: '/development/docs/',
+    to: '/engineering-practices/documentation/',
   },
   {
     from: '/docs/',
-    to: '/development/docs/',
+    to: '/engineering-practices/documentation/',
   },
   {
     from: '/inclusion/',
@@ -3742,59 +3949,55 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/environment/',
-    to: '/development/environment/',
+    to: '/development-infrastructure/environment/',
   },
   {
     from: '/environment/pycharm/',
-    to: '/development/environment/pycharm/',
+    to: '/development-infrastructure/environment/pycharm/',
   },
   {
     from: '/environment/u2f/',
-    to: '/development/environment/u2f/',
+    to: '/development-infrastructure/environment/u2f/',
   },
   {
     from: '/testing/',
-    to: '/development/testing/',
+    to: '/development-infrastructure/testing/',
   },
   {
     from: '/philosophy/',
-    to: '/development/philosophy/',
+    to: '/getting-started/philosophy/',
   },
   {
     from: '/commit-messages/',
-    to: '/development/commit-messages/',
+    to: '/engineering-practices/commit-messages/',
   },
   {
     from: '/code-review/',
-    to: '/development/code-review/',
+    to: '/engineering-practices/code-review/',
   },
   {
     from: '/workflow/',
-    to: '/development/workflow/',
+    to: '/development-infrastructure/workflow/',
   },
   {
     from: '/continuous-integration/',
-    to: '/development/continuous-integration/',
+    to: '/development-infrastructure/continuous-integration/',
   },
   {
     from: '/python-dependencies/',
-    to: '/development/python-dependencies/',
+    to: '/development-infrastructure/python-dependencies/',
   },
   {
     from: '/rust/',
-    to: '/development/rust/',
+    to: '/engineering-practices/rust/',
   },
   {
     from: '/database-migrations/',
-    to: '/development/database-migrations/',
-  },
-  {
-    from: '/testing/',
-    to: '/development/testing/',
+    to: '/backend/application-domains/database-migrations/',
   },
   {
     from: '/analytics/',
-    to: '/development/analytics/',
+    to: '/development-infrastructure/analytics/',
   },
   {
     from: '/architecture/',
@@ -3802,15 +4005,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sentry-vs-getsentry/',
-    to: '/application/sentry-vs-getsentry/',
+    to: '/application-architecture/sentry-vs-getsentry/',
   },
   {
     from: '/config/',
-    to: '/application/config/',
+    to: '/backend/config/',
   },
   {
     from: '/issue-platform/',
-    to: '/application/issue-platform/',
+    to: '/backend/issue-platform/',
   },
   {
     from: '/issue-platform-detectors/',
@@ -3826,19 +4029,15 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ab-testing/',
-    to: '/application/ab-testing/',
-  },
-  {
-    from: '/options/',
-    to: '/application/options/',
+    to: '/backend/application-domains/ab-testing/',
   },
   {
     from: '/serializers/',
-    to: '/application/serializers/',
+    to: '/backend/serializers/',
   },
   {
     from: '/grouping/',
-    to: '/application/grouping/',
+    to: '/backend/application-domains/grouping/',
   },
   {
     from: '/pii/',
@@ -3858,35 +4057,35 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/transaction-clustering/',
-    to: '/application/transaction-clustering/',
+    to: '/backend/application-domains/transaction-clustering/',
   },
   {
     from: '/dynamic-sampling/',
-    to: '/application/dynamic-sampling/',
+    to: '/application-architecture/dynamic-sampling/',
   },
   {
     from: '/dynamic-sampling/architecture/',
-    to: '/application/dynamic-sampling/architecture/',
+    to: '/application-architecture/dynamic-sampling/architecture/',
   },
   {
     from: '/dynamic-sampling/fidelity-and-biases/',
-    to: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/biases/',
-    to: '/application/dynamic-sampling/biases/',
+    to: '/application-architecture/dynamic-sampling/biases/',
   },
   {
     from: '/dynamic-sampling/the-big-picture/',
-    to: '/application/dynamic-sampling/the-big-picture/',
+    to: '/application-architecture/dynamic-sampling/the-big-picture/',
   },
   {
     from: '/feedback-architecture/',
-    to: '/application/feedback-architecture/',
+    to: '/application-architecture/feedback-architecture/',
   },
   {
     from: '/options/',
-    to: '/backend/options/',
+    to: '/backend/application-domains/options/',
   },
   {
     from: '/sdk/features/data-handling/',
@@ -3894,7 +4093,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/craft-quick-start/',
-    to: '/sdk/processes/releases/',
+    to: '/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure/',
   },
   {
     from: '/sdk/check-ins/',
@@ -3906,7 +4105,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/distributed-tracing/',
-    to: '/sdk/telemetry/traces/distributed-tracing/',
+    to: '/sdk/foundations/trace-propagation/',
   },
   // New Sidebar structure
   {
@@ -4023,7 +4222,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/application/config/',
-    to: '/application-architecture/config/',
+    to: '/backend/config/',
   },
   {
     from: '/application-architecture/config/',
@@ -4148,7 +4347,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/backend/queue/',
-    to: '/backend/application-domains/asynchronous-workers/',
+    to: '/backend/application-domains/tasks/',
   },
   {
     from: '/api-server/application-domains/asynchronous-workers/',
@@ -4354,11 +4553,11 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/envelopes/',
-    to: '/sdk/foundations/transport/envelopes/',
+    to: '/sdk/foundations/envelopes/',
   },
   {
     from: '/sdk/data-model/envelope-items/',
-    to: '/sdk/foundations/transport/envelope-items/',
+    to: '/sdk/foundations/envelopes/envelope-items/',
   },
   {
     from: '/sdk/expected-features/rate-limiting/',
@@ -4366,7 +4565,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/overview/',
-    to: '/sdk/foundations/overview/',
+    to: '/sdk/foundations/',
   },
   {
     from: '/sdk/data-model/',
@@ -4374,19 +4573,19 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/',
-    to: '/sdk/foundations/transport/event-payloads/',
+    to: '/sdk/foundations/envelopes/event-payloads/',
   },
   {
     from: '/sdk/data-model/event-payloads/breadcrumbs/',
-    to: '/sdk/foundations/transport/event-payloads/breadcrumbs/',
+    to: '/sdk/foundations/envelopes/event-payloads/breadcrumbs/',
   },
   {
     from: '/sdk/data-model/event-payloads/contexts/',
-    to: '/sdk/foundations/transport/event-payloads/contexts/',
+    to: '/sdk/foundations/envelopes/event-payloads/contexts/',
   },
   {
     from: '/sdk/data-model/event-payloads/debugmeta/',
-    to: '/sdk/foundations/transport/event-payloads/debugmeta/',
+    to: '/sdk/foundations/envelopes/event-payloads/debugmeta/',
   },
   {
     from: '/sdk/data-model/event-payloads/exception/',
@@ -4398,47 +4597,51 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/data-model/event-payloads/lockreason/',
-    to: '/sdk/foundations/transport/event-payloads/lockreason/',
+    to: '/sdk/foundations/envelopes/event-payloads/lockreason/',
   },
   {
     from: '/sdk/data-model/event-payloads/message/',
-    to: '/sdk/foundations/transport/event-payloads/message/',
+    to: '/sdk/foundations/envelopes/event-payloads/message/',
   },
   {
     from: '/sdk/data-model/event-payloads/replay-recording/',
-    to: '/sdk/foundations/transport/event-payloads/replay-recording/',
+    to: '/sdk/foundations/envelopes/event-payloads/replay-recording/',
   },
   {
     from: '/sdk/data-model/event-payloads/request/',
-    to: '/sdk/foundations/transport/event-payloads/request/',
+    to: '/sdk/foundations/envelopes/event-payloads/request/',
   },
   {
     from: '/sdk/data-model/event-payloads/sdk/',
-    to: '/sdk/foundations/transport/event-payloads/sdk/',
+    to: '/sdk/foundations/envelopes/event-payloads/sdk/',
   },
   {
     from: '/sdk/data-model/event-payloads/span/',
-    to: '/sdk/foundations/transport/event-payloads/span/',
+    to: '/sdk/foundations/envelopes/event-payloads/span/',
   },
   {
     from: '/sdk/data-model/event-payloads/stacktrace/',
-    to: '/sdk/foundations/transport/event-payloads/stacktrace/',
+    to: '/sdk/foundations/envelopes/event-payloads/stacktrace/',
   },
   {
     from: '/sdk/data-model/event-payloads/template/',
-    to: '/sdk/foundations/transport/event-payloads/template/',
+    to: '/sdk/foundations/envelopes/event-payloads/template/',
   },
   {
     from: '/sdk/data-model/event-payloads/threads/',
-    to: '/sdk/foundations/transport/event-payloads/threads/',
+    to: '/sdk/foundations/envelopes/event-payloads/threads/',
   },
   {
     from: '/sdk/data-model/event-payloads/transaction/',
-    to: '/sdk/foundations/transport/event-payloads/transaction/',
+    to: '/sdk/foundations/envelopes/event-payloads/transaction/',
   },
   {
     from: '/sdk/data-model/event-payloads/user/',
-    to: '/sdk/foundations/transport/event-payloads/user/',
+    to: '/sdk/foundations/envelopes/event-payloads/user/',
+  },
+  {
+    from: '/integrations/integration-platform/ui-components/alert-rule-action/',
+    to: '/integrations/integration-platform/ui-components/alert-action/',
   },
 ];
 

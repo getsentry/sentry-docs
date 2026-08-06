@@ -1,0 +1,112 @@
+---
+title: Set Up Agent Tracing
+sidebar_title: Agent Tracing
+sidebar_order: 7
+sidebar_section: features
+description: "Monitor AI agents with token usage, latency, tool execution, and error tracking."
+new: true
+---
+
+With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
+
+<AgentSetupCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
+
+## Getting Started
+
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is off by default — set `send_default_pii=True` to capture it (or configure `include_prompts` per integration).
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
+```
+
+## Instrumentation
+
+Pick your AI stack. Each page has install and verify details.
+
+- <PlatformLink to="/integrations/anthropic/">Anthropic</PlatformLink>
+- <PlatformLink to="/integrations/google-genai/">Google Gen AI</PlatformLink>
+- <PlatformLink to="/integrations/openai/">OpenAI</PlatformLink>
+- <PlatformLink to="/integrations/openai-agents/">OpenAI Agents SDK</PlatformLink>
+- <PlatformLink to="/integrations/langchain/">LangChain</PlatformLink>
+- <PlatformLink to="/integrations/langgraph/">LangGraph</PlatformLink>
+- <PlatformLink to="/integrations/litellm/">LiteLLM</PlatformLink>
+- <PlatformLink to="/integrations/pydantic-ai/">Pydantic AI</PlatformLink>
+- <PlatformLink to="/integrations/huggingface_hub/">Hugging Face Hub</PlatformLink>
+
+## Tracking Conversations
+
+<Alert>
+  Tracking Conversations has **beta** stability. Configuration options and behavior may change.
+</Alert>
+
+[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `set_conversation_id()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
+
+Some integrations (for example OpenAI) infer a conversation ID automatically. For everything else, set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current scope. Call `Scope.remove_conversation_id()` to unset it. For ID format recommendations and limitations, see [Choosing a Conversation ID](/product/agents/conversations/#choosing-a-conversation-id).
+
+```python
+import sentry_sdk.ai
+
+sentry_sdk.ai.set_conversation_id("conv_abc123")
+```
+
+### Identifying Users in Conversations
+
+The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `set_user` once per request or session, before any AI calls:
+
+```python
+import sentry_sdk
+
+sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
+```
+
+Any of `id`, `email`, or `username` is sufficient — Conversations displays whichever fields are present.
+
+## Options
+
+### Privacy Controls
+
+LLM inputs and outputs are treated as PII and are **off** by default. Set `send_default_pii=True` to capture them. To keep other PII on but turn AI content off, set `include_prompts=False` on the integration:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    send_default_pii=True,
+    integrations=[
+        OpenAIIntegration(include_prompts=False),
+    ],
+)
+```
+
+See each integration page for the options that apply to your stack.
+
+### Streaming Gen AI Spans
+
+From SDK `2.64.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
+
+Self-hosted Sentry users should set `stream_gen_ai_spans=False` if standalone `gen_ai` spans may not be ingested.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    stream_gen_ai_spans=False,
+)
+```
+
+## Manual Instrumentation
+
+You can also instrument agent spans yourself. See <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>.
+
+## MCP Server Monitoring
+
+If you're building MCP (Model Context Protocol) servers, Sentry can also track tool executions, prompt retrievals, and resource access. See <PlatformLink to="/integrations/mcp/">MCP integration</PlatformLink> or <PlatformLink to="/tracing/instrumentation/custom-instrumentation/mcp-module/">manual MCP instrumentation</PlatformLink>.
