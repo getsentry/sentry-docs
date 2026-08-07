@@ -85,18 +85,35 @@ export default defineConfig({
 });
 ```
 
-With auto-instrumentation, you can optionally provide Sentry options via a co-located `instrument.server.*` file (`.ts`, `.mts`, `.js`, `.mjs`, or `.cjs`) next to your Worker entry. Use `defineCloudflareOptions` for full type-checking:
+With auto-instrumentation, you can optionally provide Sentry options via a co-located `instrument.server.*` file (`.ts`, `.mts`, `.js`, `.mjs`, or `.cjs`) next to your Worker entry. The plugin resolves this location from `main` in your wrangler config. For example, if `main` is `src/worker/index.ts`, place the file at `src/worker/instrument.server.ts`, not at the project root. Use `defineCloudflareOptions` for full type-checking:
 
 ```typescript {filename:instrument.server.ts}
 import { defineCloudflareOptions } from "@sentry/cloudflare";
 
-export default defineCloudflareOptions((env) => ({
+export const sentryOptions = (env: Env) => ({
   dsn: env.SENTRY_DSN,
   tracesSampleRate: 1.0,
-}));
+});
+
+export default defineCloudflareOptions(sentryOptions);
 ```
 
 If no `instrument.server.*` file exists, the SDK reads all configuration (DSN, release, environment, sample rate, etc.) from the Worker's `env` bindings at runtime.
+
+Configured Durable Object, Workflow, and Agents SDK classes must be declared in the Worker entry for the plugin to wrap them automatically. The plugin cannot rewrite a class that the entry only imports or re-exports from another module. In that case, wrap the imported class in the entry with its matching helper and pass it the options callback from `instrument.server.*`:
+
+```typescript {filename:src/worker/index.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { sentryOptions } from "./instrument.server";
+import { MyAgent as MyAgentBase } from "./my-agent";
+
+export const MyAgent = Sentry.instrumentAgentWithSentry(
+  sentryOptions,
+  MyAgentBase
+);
+```
+
+Use `instrumentDurableObjectWithSentry` for a plain Durable Object or `instrumentWorkflowWithSentry` for a Workflow.
 
 ## Options
 
