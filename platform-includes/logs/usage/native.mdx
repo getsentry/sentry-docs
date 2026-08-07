@@ -5,7 +5,7 @@ sentry_log_info("A simple log message");
 sentry_log_error("A %s log message", "formatted");
 ```
 
-### Additional attributes
+### Additional Attributes
 
 In case you want to provide additional attributes directly to the logging functions, you must enable the `logs_with_attributes` option. Any `sentry_log_X()` calls will expect a `sentry_value_t` object of attributes as the first `varg` after the log message.
 
@@ -44,3 +44,27 @@ sentry_value_set_by_key(param_attributes, "sentry.sdk.name", param_attr_2);
 // will only have "custom-sdk-name" as an attribute value, but not "custom parameter" which gets overwritten by "and format-string"
 sentry_log_fatal("logging with a custom parameter %s attributes", param_attributes, "and format-string");
 ```
+
+### Logging User-Provided Text
+
+The `sentry_log_X()` functions treat the message as a printf format string, so text you didn't write yourself can be misread as format specifiers. Use `sentry_log()` for that: it stores the body as-is and takes its attributes as an explicit argument, independent of the `logs_with_attributes` option.
+
+```c
+sentry_log(SENTRY_LEVEL_WARNING, user_supplied_text, sentry_value_new_null());
+```
+
+### Logging Against a Scope
+
+Tagging a group of logs with shared context means either repeating the attributes at every call or writing them to the global scope, which every thread sees. `sentry_scope_capture_log()` is the third option: it behaves like `sentry_log()`, but the log also carries the attributes and trace of the scope you pass it.
+
+```c
+sentry_scope_t *scope = sentry_scope_new();
+sentry_scope_set_attribute(scope, "worker.id",
+    sentry_value_new_attribute(sentry_value_new_string("asset-loader"), NULL));
+
+sentry_scope_capture_log(scope, SENTRY_LEVEL_INFO, "Cache warmed", sentry_value_new_null());
+
+sentry_scope_free(scope);
+```
+
+Pass `NULL` as the scope to apply the global scope alone. Which constructor you used decides who frees the scope, as described in <PlatformLink to="/enriching-events/scopes/#creating-a-scope">Scopes</PlatformLink>; see <PlatformLink to="/enriching-events/attributes/#setting-attributes-on-a-scope">Attributes</PlatformLink> for how per-call, scope, and global attributes resolve.
