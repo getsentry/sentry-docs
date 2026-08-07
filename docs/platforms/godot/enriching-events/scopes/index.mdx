@@ -1,0 +1,137 @@
+---
+title: Scopes
+description: "Learn what a scope is and how to use one to enrich only the telemetry captured by a single part of your game."
+---
+
+<AvailableSince version="2.2.0" />
+
+When the SDK captures an event, it merges the event data with the extra information held on the scopes that are in effect. Most of what you set through `SentrySDK` applies to your whole game, which is usually what you want. Scopes are how you narrow that down, so the data you attach while loading one mod doesn't ride along with everything your game captures for the rest of the session.
+
+## What's a Scope?
+
+A scope holds the data that rides along with your telemetry: <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, <PlatformLink to="/enriching-events/context/">contexts</PlatformLink>, <PlatformLink to="/enriching-events/breadcrumbs/">breadcrumbs</PlatformLink>, <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, severity level, fingerprint, and attributes attached to <PlatformLink to="/logs/">logs</PlatformLink> and <PlatformLink to="/metrics/">metrics</PlatformLink>. `SentryScope` provides setters for these values, except breadcrumbs, which you append with `add_breadcrumb()`. Calling `clear()` empties the scope, including any data it inherited when it was forked. Data set globally is unaffected.
+
+When a scope is forked, the fork inherits everything the parent holds at that moment. The two are independent from then on: writes to the fork never reach the parent, and later writes to the parent never reach the fork.
+
+## Global and Current Scopes
+
+The SDK for Godot Engine has two kinds of scopes.
+
+<Alert>
+
+If you've used another Sentry SDK, you might expect an isolation scope in addition to the global and current scopes. The SDK for Godot Engine doesn't have one yet, so `SentrySDK` methods write to the global scope.
+
+</Alert>
+
+### Global Scope
+
+The global scope applies to everything your game captures, on every thread. Reach for it when the data stays true beyond the moment you set it — the graphics backend, the difficulty setting, which level the player is in. The `SentrySDK` methods write to it:
+
+```gdscript
+SentrySDK.set_tag("level_id", "ice_caves")
+```
+
+Tag the level once when it loads, and everything captured until the next load carries it.
+
+### Current Scope
+
+The current scope is local to one thread and applies only to what that thread captures while the scope is in effect. Reach for it around a short, distinct operation where things are expected to go wrong — parsing a mod, writing a save file, importing a player-made level. The scope data pins down which run of that operation failed, and stops being useful the moment it finishes.
+
+<Alert>
+
+The current scope isn't supported on macOS or iOS yet. The SDK still captures telemetry on those platforms, but it discards anything you write to the current scope — quietly, except for a single warning the first time you call `with_scope()`. The global scope works everywhere.
+
+</Alert>
+
+## Using `with_scope()`
+
+`SentrySDK.with_scope()` forks the current scope, hands the fork to your callable, and discards it when the callable returns. Everything captured inside the callable picks up the scope data, and everything after it doesn't:
+
+```gdscript
+func load_mod(mod_id: String, version: String, path: String) -> void:
+	SentrySDK.with_scope(func(scope: SentryScope) -> void:
+		scope.set_tag("subsys", "mods")
+		scope.set_context("mod", {
+			"id": mod_id,
+			"version": version,
+			"path": path,
+		})
+		_apply_mod(path)
+	)
+```
+
+Mods fail to load, and when one does you need to know which. If `_apply_mod()` pushes an error, the issue arrives naming the mod and its version, so you can tell a broken mod from a bug in your loader. The next mod loads under its own scope, and once loading is done nothing carries either.
+
+`with_scope()` returns whatever the callable returns, so you can wrap an existing call without restructuring it:
+
+```gdscript
+func save_game(slot: int) -> bool:
+	var saved: bool = SentrySDK.with_scope(func(scope: SentryScope) -> bool:
+		scope.set_context("save_file", {"slot": slot, "path": _save_path(slot)})
+		return _write_save_file(slot)
+	)
+	return saved
+```
+
+Nesting works the same way: an inner `with_scope()` forks the enclosing scope, starts with its data, and keeps its own writes to itself. Data you write through `SentrySDK` still goes to the global scope, even from inside the callable.
+
+<Alert level="warning">
+
+The fork covers only the synchronous part of the callable, including the work reached through the functions it calls. Anything that resumes after an `await` runs outside it, and you won't always get a warning. Await outside the block, then wrap the synchronous work that follows.
+
+</Alert>
+
+## Reading the Current Scope
+
+`SentrySDK.get_current_scope()` returns the scope active on the calling thread. Inside a `with_scope()` callable, that's the fork it handed you — useful when the code that has something to add isn't the code holding the `scope` parameter:
+
+```gdscript
+func _apply_mod(path: String) -> void:
+	var manifest := _read_manifest(path)
+	SentrySDK.get_current_scope().set_context("manifest", manifest)
+
+	_install_resources(manifest)
+```
+
+Called from inside the `with_scope()` above, this adds to that fork and is discarded with it.
+
+Prefer `with_scope()` wherever the work fits in a block. It hands you the same scope `get_current_scope()` would return, and it makes the lifetime of the data obvious. Outside a block, don't count on how long the returned scope stays current — for data that should apply beyond a single operation, use the `SentrySDK` methods.
+
+## How Scope Data Is Applied
+
+An event keeps everything the global scope holds and adds whatever the current scope defines. Where both set the same tag, context, or attribute, the current scope wins, and a value set directly on the event, log, or metric wins over both. Breadcrumbs don't compete: the ones from both scopes merge into a single trail.
+
+The current scope reaches everything the SDK captures at runtime: `capture_event()`, `capture_message()`, `capture_feedback()`, logs and metrics, and the errors and warnings the SDK picks up automatically from Godot's logging.
+
+<Alert>
+
+Crash reports are the exception. They carry only what was set on the global scope, so anything you need to see in one belongs there.
+
+</Alert>
+
+## Scopes and Threads
+
+The current scope belongs to the thread that created it. Write to it from another thread and the SDK rejects the call with an error and drops the data.
+
+This shapes how you use `with_scope()` around threaded work. Each thread starts with its own current scope, so a fork you create on the main thread doesn't cover a `WorkerThreadPool` task or a `Thread` you started from inside it. Call `with_scope()` inside the threaded function instead.
+
+Errors and logs that the SDK captures automatically are enriched by the scope in effect on the thread that raised them. Data you need on every thread belongs on the global scope.
+
+## Scopes in C#
+
+The .NET layer keeps its own scope model, driven by the Sentry .NET SDK API and available since C# support landed in 2.0.0. Call it through `Sentry.Godot.SentrySdk`, the same way you'd call any other .NET SDK method:
+
+```csharp
+// Syncs to the native layer, so GDScript and engine events carry it too.
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.SetTag("subsys", "savegame");
+});
+
+// Only this message is tagged with the slot.
+SentrySdk.CaptureMessage("Save failed", scope => scope.SetTag("save_slot", "3"));
+```
+
+`ConfigureScope()` and the scope callback available on every capture method behave as documented for .NET — see [Scopes and Hubs](/platforms/dotnet/enriching-events/scopes/) for the details.
+
+What you write to a GDScript scope doesn't reach C# events. Going the other way, only the capture-method callback stays on the C# side, as above. See <PlatformLink to="/dotnet/#how-the-two-layers-work-together">C#/.NET Support</PlatformLink> for what else crosses the boundary.
