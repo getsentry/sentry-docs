@@ -11,25 +11,41 @@ The Sentry SDK for Unity provides both automatic and manual error capturing capa
 
 ## Automatic Error Capture through Unity's Logging System
 
-The Unity SDK relies on two integrations to automatically capture errors: `UnityLogHandlerIntegration` and `UnityApplicationLoggingIntegration`. While they sound similar, they serve different purposes.
+The Unity SDK automatically captures errors reported through Unity's logging system. How an event is captured depends on the logging method you use.
 
-### UnityLogHandlerIntegration
+### `Debug.LogError`
 
-The SDK uses the `UnityLogHandlerIntegration` to hook into Unity's logging system. From there it receives all log messages that are logged via the `Debug.Log`, `Debug.LogWarning`, and `Debug.LogError` methods. By default, the SDK adds these log messages as breadcrumbs to future events. The SDK will also automatically capture messages logged via `Debug.LogError` as error events and send them to Sentry. This behaviour can be disabled by unchecking the automatic capture of `Debug.LogError` on the `Logging` tab in the editor (Tools->Sentry), or programmatically, by setting the `CaptureLogErrorEvents` option to `false` in the [configure callback](/platforms/unity/configuration/options/programmatic-configuration).
+`Debug.LogError` is captured as an error-level message event. Disable automatic capture in **Tools -> Sentry -> Logging**, or set `CaptureLogErrorEvents` to `false` in the [configure callback](/platforms/unity/configuration/options/programmatic-configuration).
 
-#### Stack Trace Support & Line Numbers
-
-If [configured](https://docs.unity3d.com/6000.0/Documentation/Manual/stack-trace.html), Unity will include the stack traces with the log messages as raw strings. The SDK is able to parse and display this stack trace in the issue details page.
-
-If you're using Unity 6 or newer, you have the option to to enable the source code line numbers in the [player settings](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-managed-stack-traces.html). These line numbers are then part of the stringified stack trace and will be parsed by the SDK.
+Enable `AttachStacktrace` to include and parse the stack trace Unity provides with the log. On platforms other than WebGL, Unity 6 or later can include source lines in that stack trace when you enable source code line numbers in [Player Settings](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-managed-stack-traces.html).
 
 <Alert>
-Known Limitation: In versions older than Unity 6, the SDK is unable to provide line numbers for events captured through `Debug.LogError`. The SDK has only the stringified stack trace provided by Unity to work with and since there is no native exception available at the time of logging, Sentry can't symbolicate the stack trace on the server side either.
+  In versions older than Unity 6, `Debug.LogError` stack traces do not include
+  source line numbers.
 </Alert>
 
-### UnityApplicationLoggingIntegration
+### `Debug.LogException`
 
-The SDK uses the `UnityApplicationLoggingIntegration` to add its own log handler right before Unity's logging system. It then passes the logs back to Unity. This allows the SDK to capture errors through the `Application.logMessageReceived` method. All handled exceptions - such as those captured via `Log.LogException` calls - and unhandled exceptions end up on that call and are captured by the SDK. These messages contain the actual exception object. This allows the SDK to call into the IL2CPP backend and connect this managed exception to the native exception, allowing for server side symbolication. You can read more about the IL2CPP error integration works [here](/platforms/unity/configuration/il2cpp).
+On platforms other than WebGL, `Debug.LogException` captures the exception as an error event. If the exception was thrown before logging, its stack trace is included. A newly constructed exception has no stack trace, so `Debug.LogException(new Exception("message"))` reports only its type and message.
+
+Events captured through `Debug.LogException` are marked as unhandled. Unity doesn't identify whether an exception was explicitly logged or was unhandled. On WebGL, the SDK captures the stack trace Unity logs; see [known limitations](/platforms/unity/troubleshooting/known-limitations/#webgl-support).
+
+### Caught Exceptions
+
+Use `SentrySdk.CaptureException` for an exception you caught. This preserves its stack trace and reports it as handled:
+
+```csharp
+try
+{
+    ThrowException();
+}
+catch (Exception e)
+{
+    SentrySdk.CaptureException(e);
+}
+```
+
+For IL2CPP line-number requirements, see [IL2CPP Line Numbers](/platforms/unity/configuration/il2cpp/).
 
 ## Automatic Error Capture on the Native Layer
 
