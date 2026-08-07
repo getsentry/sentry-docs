@@ -1,7 +1,15 @@
 ```gdscript {tabTitle:GDScript} {mdExpandTabs}
 var attachment := SentryAttachment.create_with_path("user://logs/godot.log")
 attachment.content_type = "text/plain"
+
+# Global scope: attached to every event.
 SentrySDK.add_attachment(attachment)
+
+# Current scope: attached only to what's captured inside the callable.
+SentrySDK.with_scope(func(scope: SentryScope) -> void:
+	scope.add_attachment(SentryAttachment.create_with_path("user://savegame.dat"))
+	SentrySDK.capture_message("Save failed")
+)
 ```
 
 ```csharp {tabTitle:C#}
