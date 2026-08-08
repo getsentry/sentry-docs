@@ -16,6 +16,12 @@ Sentry pairs the feedback with the original event, giving you additional insight
 
 <PlatformContent includePath="user-feedback/sdk-api-example/" />
 
+<Alert>
+
+`sentry_value_new_user_feedback` and `sentry_capture_user_feedback` are deprecated. They produce the older User Report envelope item, which doesn't carry scope data or attachments. Use `sentry_value_new_feedback` and `sentry_capture_feedback` instead.
+
+</Alert>
+
 ### What Gets Sent With Feedback
 
 <AvailableSince version="0.16.0" />
@@ -40,21 +46,14 @@ sentry_capture_feedback_with_hint(user_feedback, hint);
 
 <AvailableSince version="0.16.0" />
 
-Context that describes a single piece of feedback belongs on a scope rather than the global scope, where it would apply to every subsequent event. `sentry_scope_capture_feedback()` layers that scope on top of the global scope and returns the feedback event ID.
+`sentry_scope_capture_feedback()` applies a scope on top of the global scope, so tags and other context stay on that one feedback. It takes the same hint as `sentry_capture_feedback_with_hint()` and returns the feedback event ID.
 
 ```c
 sentry_scope_t *scope = sentry_local_scope_new();
 sentry_scope_set_tag(scope, "feedback.source", "diagnostics-export");
 
-// Pass NULL for the hint when no extra attachments are needed.
 sentry_uuid_t feedback_id
-    = sentry_scope_capture_feedback(scope, user_feedback, NULL);
+    = sentry_scope_capture_feedback(scope, user_feedback, hint);
 ```
 
-The scope constructor determines who frees the scope; see <PlatformLink to="/enriching-events/scopes/#creating-a-scope">Scopes</PlatformLink>.
-
-<Alert>
-
-`sentry_value_new_user_feedback` and `sentry_capture_user_feedback` are deprecated. They produce the older User Report envelope item, which doesn't carry scope data or attachments. Use `sentry_value_new_feedback` and `sentry_capture_feedback` instead.
-
-</Alert>
+Pass `NULL` for the hint when there's nothing to attach. The scope constructor determines who frees the scope; see <PlatformLink to="/enriching-events/scopes/#creating-a-scope">Scopes</PlatformLink>.
