@@ -15,3 +15,46 @@ The user feedback API allows you to collect user feedback using your own UI. You
 Sentry pairs the feedback with the original event, giving you additional insight into issues. In order to do this, Sentry needs the `eventId`. For example, to get the `eventId`, you can use <PlatformLink to="/configuration/options/#before-send"><PlatformIdentifier name="before-send" /></PlatformLink> or the return value of the method capturing an event.
 
 <PlatformContent includePath="user-feedback/sdk-api-example/" />
+
+### What Gets Sent With Feedback
+
+<AvailableSince version="0.16.0" />
+
+Feedback carries the global scope's data: release, environment, tags, user, and contexts including the trace, along with any attachments set on the scope. Feedback from a session therefore lands on the same trace as that session's errors. The SDK deliberately leaves off breadcrumbs, modules, and stack traces.
+
+Feedback does **not** go through `before_send`. To filter or enrich it, use <PlatformLink to="/configuration/options/#before_send_feedback">`before_send_feedback`</PlatformLink>.
+
+### Attaching Files to Feedback
+
+Use a hint to send files alongside a single feedback, such as a screenshot or a diagnostic log the user agreed to share:
+
+```c
+sentry_hint_t *hint = sentry_hint_new();
+sentry_hint_attach_file(hint, "/var/log/last-session.log");
+
+// Takes ownership of both the feedback and the hint.
+sentry_capture_feedback_with_hint(user_feedback, hint);
+```
+
+### Capturing Feedback With a Scope
+
+<AvailableSince version="0.16.0" />
+
+Context that describes a single piece of feedback belongs on a scope rather than the global scope, where it would apply to every subsequent event. `sentry_scope_capture_feedback()` layers that scope on top of the global scope and returns the feedback event ID.
+
+```c
+sentry_scope_t *scope = sentry_local_scope_new();
+sentry_scope_set_tag(scope, "feedback.source", "diagnostics-export");
+
+// Pass NULL for the hint when no extra attachments are needed.
+sentry_uuid_t feedback_id
+    = sentry_scope_capture_feedback(scope, user_feedback, NULL);
+```
+
+The scope constructor determines who frees the scope; see <PlatformLink to="/enriching-events/scopes/#creating-a-scope">Scopes</PlatformLink>.
+
+<Alert>
+
+`sentry_value_new_user_feedback` and `sentry_capture_user_feedback` are deprecated. They produce the older User Report envelope item, which doesn't carry scope data or attachments. Use `sentry_value_new_feedback` and `sentry_capture_feedback` instead.
+
+</Alert>
