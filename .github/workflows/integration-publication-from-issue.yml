@@ -1,0 +1,54 @@
+name: Publish integration doc from issue
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  generate:
+    if: contains(github.event.issue.labels.*.name, 'doc-request')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Write issue body to file
+        run: |
+          mkdir -p .tmp
+          python - << 'PY'
+          import json
+          issue = json.loads(r'''${{ toJSON(github.event.issue) }}''')
+          with open(".tmp/issue-body.txt", "w", encoding="utf-8") as f:
+            f.write(issue.get("body",""))
+          PY
+
+      - name: Generate doc + update category index
+        id: gen
+        run: |
+          node scripts/generate-integration-doc.mjs .tmp/issue-body.txt
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "docs(integrations): publish ${{ steps.gen.outputs.slug }}"
+          branch: "${{ github.event.issue.user.login }}-integration-publication-${{ steps.gen.outputs.slug }}"
+          title: "Docs: publish integration (${{ steps.gen.outputs.slug }})"
+          body: |
+            Auto-generated from issue #${{ github.event.issue.number }}.
+            Requested by: @${{ github.event.issue.user.login }}
+          labels: |
+            docs
+            integrations
+            automated
+
