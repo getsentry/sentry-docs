@@ -169,6 +169,44 @@ Calling `.traces_sampler(...)` selects `TracesSamplingStrategy::Function` and re
 
 </SdkOption>
 
+<SdkOption name="org_id" type='OrganizationId'>
+
+An optional override for the SDK's organization ID.
+
+By default, the organization ID is parsed from the DSN. This only works for Sentry SaaS ingest hosts (`o123.ingest.sentry.io`, including regional hosts such as `o123.ingest.us.sentry.io`). For self-hosted Sentry and local Relay setups, it cannot be derived from the DSN, so set it explicitly with this option.
+
+The organization ID is used for trace continuation, including <PlatformLink to="/configuration/options#strict_trace_continuation">strict trace continuation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="strict_trace_continuation" type='bool' defaultValue='false'>
+
+When enabled, the SDK only continues an incoming trace if it contains an organization ID that matches the current Sentry client's.
+
+Third-party services instrumented with Sentry by another organization can send traces to your application through incoming `sentry-trace` and `baggage` headers. To keep those separate from your own traces, the SDK compares the incoming `sentry-org_id` (from the `baggage` header) with the client's organization ID.
+
+Whenever both organization IDs are known and differ, the SDK starts a new trace instead of continuing the incoming one, regardless of this option. Enabling this option extends that to traces carrying no organization ID: they are never continued. When disabled (the default), such traces are.
+
+Starting a new trace means a new trace ID, no parent span, and a fresh sampling decision.
+
+<Alert>
+
+We recommend enabling strict trace continuation only when the SDK knows its organization ID. SaaS DSNs embed the organization ID, so no further configuration is needed.
+
+For self-hosted Sentry and local Relay setups, you should configure `org_id` explicitly, since it cannot be derived from those DSNs.
+
+</Alert>
+
+<Alert level="warning">
+
+Not all SDKs attach an organization ID to outgoing traces yet — including the Rust SDK itself. If a service sending requests to your application uses such an SDK, keep this option disabled, or its traces will not be continued.
+
+</Alert>
+
+Learn more in <PlatformLink to="/tracing/trace-propagation/">Trace Propagation</PlatformLink>.
+
+</SdkOption>
+
 ## Transport Options
 
 <SdkOption name="http_proxy" type='string' envVar='HTTP_PROXY'>
