@@ -47,11 +47,17 @@ sentry_log_fatal("logging with a custom parameter %s attributes", param_attribut
 
 ### Logging User-Provided Text
 
-The `sentry_log_X()` functions treat the message as a printf format string, so text you didn't write yourself can be misread as format specifiers. Use `sentry_log()` for that: it stores the body as-is and takes its attributes as an explicit argument, independent of the `logs_with_attributes` option.
+The `sentry_log_X()` functions treat the message as a printf format string, so user-provided text may be interpreted as format specifiers. To log user-provided text safely, use `sentry_log()` instead. It stores the message body as-is and accepts attributes as an explicit argument.
 
 ```c
-sentry_log(SENTRY_LEVEL_WARNING, user_supplied_text, sentry_value_new_null());
+sentry_value_t attributes = sentry_value_new_object();
+sentry_value_set_by_key(attributes, "search.source",
+    sentry_value_new_attribute(sentry_value_new_string("command-palette"), NULL));
+
+sentry_log(SENTRY_LEVEL_INFO, user_query, attributes);
 ```
+
+`sentry_log()` takes ownership of the attributes you pass, so don't free them yourself. To send the same attributes with more than one log, call `sentry_value_incref` before each additional call.
 
 ### Logging Against a Scope
 
