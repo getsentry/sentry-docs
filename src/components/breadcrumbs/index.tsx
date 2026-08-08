@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
+import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
@@ -20,7 +21,9 @@ export function Breadcrumbs({items}: BreadcrumbsProps) {
   const handlePlatformsClick = (e: React.MouseEvent) => {
     e.preventDefault();
     // Clear stored platform so SDK selector resets
-    localStorage.removeItem('active-platform');
+    if (isLocalStorageAvailable()) {
+      localStorage.removeItem('active-platform');
+    }
     // Navigate after clearing localStorage
     router.push('/platforms/');
   };
