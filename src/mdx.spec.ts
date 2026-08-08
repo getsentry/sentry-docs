@@ -1,6 +1,12 @@
-import {describe, expect, test} from 'vitest';
+import {afterEach, describe, expect, test, vi} from 'vitest';
 
-import {addVersionToFilePath, getVersionedIndexPath, getVersionsFromDoc} from './mdx';
+import {
+  addVersionToFilePath,
+  getFileBySlug,
+  getVersionedIndexPath,
+  getVersionsFromDoc,
+} from './mdx';
+import {isExpectedMdxError} from './mdxErrors';
 import {FrontMatter} from './types';
 
 const mockFm: FrontMatter[] = [
@@ -115,6 +121,66 @@ describe('mdx', () => {
       expect(addVersionToFilePath('platforms/javascript/index.mdx', '2')).toBe(
         'platforms/javascript/index__v2.mdx'
       );
+    });
+  });
+
+  describe('getFileBySlug error contracts', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    test('throws error with .code = ENOENT for non-existent slug', async () => {
+      let thrown: unknown;
+      try {
+        await getFileBySlug('nonexistent/path/that/does/not/exist');
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown).toBeDefined();
+      expect(thrown).toHaveProperty('code', 'ENOENT');
+      expect(thrown).toHaveProperty('message');
+      expect((thrown as Error).message).toContain('Failed to find a valid source file');
+    });
+
+    test('ENOENT error is recognized by isExpectedMdxError', async () => {
+      let thrown: unknown;
+      try {
+        await getFileBySlug('nonexistent/path/that/does/not/exist');
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown).toBeDefined();
+      expect(isExpectedMdxError(thrown)).toBe(true);
+    });
+
+    test('throws error with .code = MDX_RUNTIME_ERROR in Vercel runtime', async () => {
+      vi.stubEnv('VERCEL', '1');
+      vi.stubEnv('NODE_ENV', 'production');
+      delete process.env.CI;
+
+      let thrown: unknown;
+      try {
+        await getFileBySlug('any/slug');
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown).toBeDefined();
+      expect(thrown).toHaveProperty('code', 'MDX_RUNTIME_ERROR');
+    });
+
+    test('MDX_RUNTIME_ERROR is recognized by isExpectedMdxError', async () => {
+      vi.stubEnv('VERCEL', '1');
+      vi.stubEnv('NODE_ENV', 'production');
+      delete process.env.CI;
+
+      let thrown: unknown;
+      try {
+        await getFileBySlug('any/slug');
+      } catch (e) {
+        thrown = e;
+      }
+      expect(thrown).toBeDefined();
+      expect(isExpectedMdxError(thrown)).toBe(true);
     });
   });
 });
