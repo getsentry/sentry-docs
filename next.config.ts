@@ -168,9 +168,6 @@ module.exports = withSentryConfig(nextConfig, {
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
-  // Marks first-party code for `thirdPartyErrorFilterIntegration`
-  applicationKey: 'sentry-docs',
-
   webpack: {
     treeshake: {
       // Automatically tree-shake Sentry logger statements to reduce bundle size
@@ -183,6 +180,9 @@ module.exports = withSentryConfig(nextConfig, {
     automaticVercelMonitors: true,
     reactComponentAnnotation: {
       enabled: true,
+    },
+    unstable_sentryWebpackPluginOptions: {
+      applicationKey: 'sentry-docs',
     },
   },
 
