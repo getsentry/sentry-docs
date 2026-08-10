@@ -1,15 +1,17 @@
 import * as Sentry from '@sentry/nextjs';
 import {tracesSampler} from 'sentry-docs/tracesSampler';
 
+import {dataCollection} from './sentry.data-collection';
+
 export function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       tracesSampler,
-      traceLifecycle: 'stream',
       enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
+      dataCollection,
       integrations: [Sentry.consoleLoggingIntegration()],
 
       // Filter sensitive metric attributes (no PII in metrics)
@@ -31,10 +33,10 @@ export function register() {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       tracesSampler,
-      traceLifecycle: 'stream',
       enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
+      dataCollection,
       integrations: [Sentry.consoleLoggingIntegration()],
 
       // Filter sensitive metric attributes (no PII in metrics)

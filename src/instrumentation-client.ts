@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 
+import {dataCollection} from '../sentry.data-collection';
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -15,6 +17,8 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
+  dataCollection,
+
   replaysOnErrorSampleRate: 1.0,
 
   // This sets the sample rate to be 10%. You may want this to be 100% while
@@ -28,7 +32,6 @@ Sentry.init({
       maskAllText: false,
       blockAllMedia: false,
     }),
-    Sentry.spanStreamingIntegration(),
     Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
       behaviour: 'drop-error-if-exclusively-contains-third-party-frames',
