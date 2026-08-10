@@ -1,0 +1,67 @@
+---
+title: Fiber v3
+description: "Instrument Fiber v3 applications with Sentry."
+---
+
+Use the Fiber v3 middleware to capture errors and trace requests.
+
+## Install
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/fiberv3
+```
+
+## Configure
+
+Initialize Sentry before installing the middleware:
+
+```go
+import (
+    fiber "github.com/gofiber/fiber/v3"
+    "github.com/getsentry/sentry-go"
+    sentryfiber "github.com/getsentry/sentry-go/fiberv3"
+)
+
+if err := sentry.Init(sentry.ClientOptions{Dsn: "___PUBLIC_DSN___"}); err != nil {
+    panic(err)
+}
+
+app := fiber.New()
+app.Use(sentryfiber.New(sentryfiber.Options{}))
+```
+
+Set `Repanic` to `true` if Fiber should handle recovered panics. Set `WaitForDelivery` to `true` when the application may exit before the event is sent.
+
+## Use The Request Hub
+
+The middleware adds a hub to `fiber.Ctx`. Use it instead of the global capture functions to keep request data isolated:
+
+```go
+app.Get("/", func(ctx fiber.Ctx) error {
+    if hub := sentryfiber.GetHubFromContext(ctx); hub != nil {
+        hub.CaptureMessage("Request handled")
+    }
+    return ctx.SendStatus(fiber.StatusOK)
+})
+```
+
+Install the Sentry middleware before routes and any middleware that needs the request hub.
+
+### Access The Fiber Context In `BeforeSend`
+
+```go
+sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+        if hint.Context != nil {
+            if ctx, ok := hint.Context.Value(sentry.RequestContextKey).(fiber.Ctx); ok {
+                _ = ctx.Hostname()
+            }
+        }
+        return event
+    },
+})
+```
+
+For Fiber v2, see the [Fiber guide](/platforms/go/guides/fiber/).
