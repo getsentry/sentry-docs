@@ -577,7 +577,7 @@ async function renderMdxOverrides(root, docTree) {
 
     const relativePath = file.replace(/\.mdx$/, '.md');
     const urlPath = file.replace(/\.mdx$/, '').replace(/^index$/, '');
-    const canonicalUrl = `${DOCS_ORIGIN}/${urlPath}`;
+    const canonicalUrl = urlPath ? `${DOCS_ORIGIN}/${urlPath}/` : `${DOCS_ORIGIN}/`;
 
     const html = [
       '<!DOCTYPE html><html><head>',
