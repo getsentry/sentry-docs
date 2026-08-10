@@ -13,7 +13,7 @@ const SECTION_LABELS: Record<string, string> = {
   features: 'Features',
   configuration: 'Configuration',
   detect: 'Detect',
-  debug: 'Debug',
+  debug: 'Explore',
   measure: 'Measure',
   automate: 'Automate',
   platform: 'Platform',
