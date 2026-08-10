@@ -3,6 +3,7 @@
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback} from 'react';
+import {ensureTrailingSlash} from 'sentry-docs/utils';
 
 import {ExternalLink} from './externalLink';
 
@@ -78,9 +79,17 @@ export function SmartLink({
     );
   }
 
+  // Only add trailing slashes to internal page paths. Skip URLs with a scheme
+  // (e.g. mailto:) and paths that point to static files with an extension
+  // (e.g. /pdfs/report.pdf), since those are not Next.js pages.
+  const hasScheme = realTo.includes(':');
+  const hasFileExtension = /\.\w{2,10}(?=[?#]|$)/.test(realTo);
+  const normalizedHref =
+    hasScheme || hasFileExtension ? realTo : ensureTrailingSlash(realTo);
+
   return (
     <Link
-      href={to || href || ''}
+      href={normalizedHref}
       onClick={handleAutolinkClick}
       className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
