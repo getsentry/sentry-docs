@@ -1164,6 +1164,10 @@ const userDocsRedirects = [
     source: '/organization/integrations/oneleet/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/superlog-responder/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1349,6 +1353,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/oneleet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
   {
