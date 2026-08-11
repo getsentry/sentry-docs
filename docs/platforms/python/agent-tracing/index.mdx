@@ -7,7 +7,7 @@ description: "Monitor agents with token usage, latency, tool execution, and erro
 new: true
 ---
 
-With <Link to="/product/ai-observability/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/ai-observability/agents/">Agents</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
 
@@ -45,9 +45,9 @@ Pick your AI stack. Each page has install and verify details.
   Tracking Conversations has **beta** stability. Configuration options and behavior may change.
 </Alert>
 
-[Agents](/product/ai-observability/agents/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `set_conversation_id()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
+[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `set_conversation_id()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
 
-Some integrations (for example OpenAI) infer a conversation ID automatically. For everything else, set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current scope. Call `Scope.remove_conversation_id()` to unset it. For ID format recommendations and limitations, see [Choosing a Conversation ID](/product/ai-observability/agents/#choosing-a-conversation-id).
+Some integrations (for example OpenAI) infer a conversation ID automatically. For everything else, set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current scope. Call `Scope.remove_conversation_id()` to unset it. For ID format recommendations and limitations, see [Choosing a Conversation ID](/product/agents/conversations/#choosing-a-conversation-id).
 
 ```python
 import sentry_sdk.ai
@@ -57,7 +57,7 @@ sentry_sdk.ai.set_conversation_id("conv_abc123")
 
 ### Identifying Users in Conversations
 
-The [Agents](/product/ai-observability/agents/) view includes a **User** column. To populate it, call `set_user` once per request or session, before any AI calls:
+The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `set_user` once per request or session, before any AI calls:
 
 ```python
 import sentry_sdk
@@ -65,7 +65,7 @@ import sentry_sdk
 sentry_sdk.set_user({"id": "user_123", "email": "jane@example.com", "username": "jane"})
 ```
 
-Any of `id`, `email`, or `username` is sufficient — the Agents view displays whichever fields are present.
+Any of `id`, `email`, or `username` is sufficient — the Conversations view displays whichever fields are present.
 
 ## Options
 
@@ -90,7 +90,7 @@ See each integration page for the options that apply to your stack.
 
 ### Streaming Gen AI Spans
 
-From SDK `2.64.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/ai-observability/agents/">Agents</Link>).
+From SDK `2.64.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
 
 Self-hosted Sentry users should set `stream_gen_ai_spans=False` if standalone `gen_ai` spans may not be ingested.
 

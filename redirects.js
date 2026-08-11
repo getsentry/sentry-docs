@@ -2094,15 +2094,15 @@ const userDocsRedirects = [
    // Redirects for Insights → Product Agents migration
   {
     source: '/product/insights/llm-monitoring/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/product/insights/agents/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -2110,68 +2110,60 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mcp/',
-    destination: '/product/ai-observability/mcp/',
+    destination: '/product/mcp-servers/',
   },
-  // Flatten remaining /insights/ai/agents/* under /product/ai-observability/*
+  // Flatten remaining /insights/ai/agents/* under /product/agents/*
   {
     source: '/product/insights/ai/agents/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   // Singular dashboard path predates the plural page; must beat the :path* catch-all
-  // or external links 404 after landing on /product/ai-observability/dashboard/
+  // or external links 404 after landing on /product/agents/dashboard/
   {
     source: '/product/insights/ai/agents/dashboard/',
-    destination: '/product/ai-observability/dashboards/',
+    destination: '/product/agents/dashboards/',
   },
   {
     source: '/product/insights/ai/agents/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   // Catch bookmarks / intermediate hops that still use the singular segment
   {
     source: '/product/agents/dashboard/',
-    destination: '/product/ai-observability/dashboards/',
+    destination: '/product/agents/dashboards/',
   },
-  // Product Agents → AI Observability rename
+  // MCP moved from /product/agents/mcp/ to /product/mcp-servers/
   {
-    source: '/product/agents/conversations/',
-    destination: '/product/ai-observability/agents/',
-  },
-  {
-    source: '/product/agents/conversations/:path*',
-    destination: '/product/ai-observability/agents/:path*',
+    source: '/product/agents/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
-    source: '/product/agents/',
-    destination: '/product/ai-observability/',
-  },
-  {
-    source: '/product/agents/:path*',
-    destination: '/product/ai-observability/:path*',
+    source: '/product/agents/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/product/insights/ai/conversations/',
-    destination: '/product/ai-observability/agents/',
+    destination: '/product/agents/conversations/',
   },
   {
     source: '/product/insights/ai/conversations/:path*',
-    destination: '/product/ai-observability/agents/:path*',
+    destination: '/product/agents/conversations/:path*',
   },
   {
     source: '/product/insights/ai/mcp/',
-    destination: '/product/ai-observability/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
     source: '/product/insights/ai/mcp/:path*',
-    destination: '/product/ai-observability/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/product/insights/ai/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   {
     source: '/product/insights/ai/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/product/insights/requests/',
@@ -2269,75 +2261,75 @@ const userDocsRedirects = [
   // Keep singular dashboard mappings ahead of :path* catch-all rules
   {
     source: '/ai/monitoring/agents/dashboard/',
-    destination: '/product/ai-observability/dashboards/',
+    destination: '/product/agents/dashboards/',
   },
   {
     source: '/ai/monitoring/agents/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   {
     source: '/ai/monitoring/agents/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/ai/monitoring/conversations/',
-    destination: '/product/ai-observability/agents/',
+    destination: '/product/agents/conversations/',
   },
   {
     source: '/ai/monitoring/conversations/:path*',
-    destination: '/product/ai-observability/agents/:path*',
+    destination: '/product/agents/conversations/:path*',
   },
   {
     source: '/ai/monitoring/mcp/',
-    destination: '/product/ai-observability/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
     source: '/ai/monitoring/mcp/:path*',
-    destination: '/product/ai-observability/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/ai/monitoring/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   {
     source: '/ai/monitoring/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/ai/observability/agents/dashboard/',
-    destination: '/product/ai-observability/dashboards/',
+    destination: '/product/agents/dashboards/',
   },
   {
     source: '/ai/observability/agents/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   {
     source: '/ai/observability/agents/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   {
     source: '/ai/observability/conversations/',
-    destination: '/product/ai-observability/agents/',
+    destination: '/product/agents/conversations/',
   },
   {
     source: '/ai/observability/conversations/:path*',
-    destination: '/product/ai-observability/agents/:path*',
+    destination: '/product/agents/conversations/:path*',
   },
   {
     source: '/ai/observability/mcp/',
-    destination: '/product/ai-observability/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
     source: '/ai/observability/mcp/:path*',
-    destination: '/product/ai-observability/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/ai/observability/',
-    destination: '/product/ai-observability/',
+    destination: '/product/agents/',
   },
   {
     source: '/ai/observability/:path*',
-    destination: '/product/ai-observability/:path*',
+    destination: '/product/agents/:path*',
   },
   // AI Agent Monitoring / ai-agent-tracing → Agent Tracing rename redirects
   {

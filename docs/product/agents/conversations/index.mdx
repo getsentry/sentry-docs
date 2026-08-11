@@ -1,12 +1,11 @@
 ---
-title: Agents
+title: Conversations
 sidebar_order: 30
+beta: true
 description: >-
-  Monitor past agent activity. Replay every message and
+  Monitor past conversations with your AI assistants. Replay every message and
   tool call to understand what happened and where things went wrong.
 keywords:
-  - agents
-  - agent monitoring
   - AI conversations
   - conversation monitoring
   - chat monitoring
@@ -19,15 +18,21 @@ keywords:
   - gen_ai.input.messages
 ---
 
-Sentry's Agents view lets you observe the interactions users have had with your chat-based assistants. It provides a user-like view into past conversations, showing the full exchange of messages and tool calls so you can understand exactly what happened during each session.
+<Alert>
 
-Find conversations and their related spans in **Explore > Agents** in the Sentry sidebar.
+Conversations is currently in beta. Features and user experience are subject to change.
+
+</Alert>
+
+Sentry's Conversations view lets you observe the interactions users have had with your chat-based AI assistants. It provides a user-like view into past conversations, showing the full exchange of messages and tool calls so you can understand exactly what happened during each session.
+
+You can find it in **Explore > Conversations** in the Sentry sidebar.
 
 ## Prerequisites
 
-The Agents view is built on top of [agent tracing](/product/ai-observability/getting-started/). Before you can use it, you need:
+Conversations are built on top of [Agent Tracing](/product/agents/). Before you can use them, you need:
 
-1. **Tracing enabled** with the Sentry SDK configured for your agent project. Follow the [agent tracing getting started guide](/product/ai-observability/getting-started/) if you haven't already.
+1. **Tracing enabled** with the Sentry SDK configured for your AI agent project. Follow the [Agent Tracing getting started guide](/product/agents/getting-started/) if you haven't already.
 
 2. **A conversation ID on your spans.** Sentry groups spans into conversations using the `gen_ai.conversation.id` attribute. You can set this manually, or some SDK integrations infer it automatically.
 
@@ -37,7 +42,7 @@ For list titles, also send OTEL-shaped user input on those spans. See [Conversat
 
 A conversation is a collection of spans that share the same `gen_ai.conversation.id`. This is typically the ID of the chat session in your application (for example, the session ID you store in your database).
 
-Some SDK integrations (such as OpenAI Agents SDK for Python and OpenAI SDK for Node) automatically infer the conversation ID. For all other integrations, you need to set it manually. See your platform's agent tracing guide for setup instructions:
+Some SDK integrations (such as OpenAI Agents SDK for Python and OpenAI SDK for Node) automatically infer the conversation ID. For all other integrations, you need to set it manually. See your platform's Agent tracing guide for setup instructions:
 
 - [JavaScript/Node](/platforms/javascript/guides/node/agent-tracing/#tracking-conversations)
 - [Cloudflare](/platforms/javascript/guides/cloudflare/agent-tracing/#tracking-conversations)
@@ -62,7 +67,7 @@ The reverse is also true: a single trace can contain spans from different conver
 
 ## User Attribution
 
-The Agents view includes a **User** column that shows which user initiated each conversation. To populate it, call `setUser` (JavaScript) or `set_user` (Python) once per request or session, before any AI calls:
+The Conversations view includes a **User** column that shows which user initiated each conversation. To populate it, call `setUser` (JavaScript) or `set_user` (Python) once per request or session, before any AI calls:
 
 ```javascript
 // JavaScript / Node.js
@@ -82,7 +87,7 @@ Any of `id`, `email`, or `username` is sufficient. If no user is set, the column
 
 ## Conversation Titles
 
-Sentry generates a short title for each conversation so you can scan the list in **Explore > Agents**. Titles come from the **first user message** in the conversation — the earliest span that carries both a conversation ID and extractable user input.
+Sentry generates a short title for each conversation so you can scan the list in **Explore > Conversations**. Titles come from the **first user message** in the conversation — the earliest span that carries both a conversation ID and extractable user input.
 
 If no title has been generated yet, the list shows the first user message text instead. If Sentry cannot find any user messages in the conversation, it shows **Untitled conversation**.
 
@@ -105,13 +110,15 @@ If no title has been generated yet, the list shows the first user message text i
 
    The legacy `{role, content}` format is also accepted. Put system prompts in `gen_ai.system_instructions` when you can, and keep the first **user** turn in the input messages with `role: "user"`. If the only content on the span is a system message, Sentry cannot derive a title.
 
-3. **Message content actually sent to Sentry.** If inputs are omitted (for example `sendDefaultPii: false` without an override that captures gen AI inputs), or scrubbed to filtered values, title generation has nothing to work with. See [Data Privacy](/product/ai-observability/privacy/).
+3. **Message content actually sent to Sentry.** If inputs are omitted (for example `sendDefaultPii: false` without an override that captures gen AI inputs), or scrubbed to filtered values, title generation has nothing to work with. See [Data Privacy](/product/agents/privacy/).
 
 SDK integrations that already emit OTEL-shaped `gen_ai.*` spans typically meet these requirements once conversation IDs and input collection are enabled. For manual instrumentation, set the attributes on your agent or AI client spans — see the [span attribute tables](/platforms/javascript/guides/node/agent-tracing/manual-instrumentation/).
 
-## Agents List
+## Conversations List
 
-The [Agents](https://sentry.io/orgredirect/organizations/:orgslug/explore/agents/) page shows the most recent conversations that match your filters.
+The [Conversations](https://sentry.io/orgredirect/organizations/:orgslug/explore/conversations/) page shows the most recent conversations that match your filters.
+
+![Conversations List](./img/conversations-list.png)
 
 Each row in the list displays:
 
@@ -127,6 +134,8 @@ Use the filters at the top of the page to narrow results by project, date range,
 ## Conversation Detail
 
 Click any conversation to open the detail view in a drawer.
+
+![Conversation Detail](./img/conversations-detail.png)
 
 The detail view shows a chat-like interface with the full message history: user inputs, assistant responses, and tool calls. Click on any message to see the underlying spans, including individual LLM generations and tool executions, with timing and error information.
 

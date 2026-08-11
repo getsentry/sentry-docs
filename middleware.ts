@@ -3513,173 +3513,177 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/product/ai-observability/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/privacy/',
-    to: '/product/ai-observability/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/agents/dashboard/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
-  // Product Agents → AI Observability rename
+  // MCP moved from /product/agents/mcp/ to /product/mcp-servers/
   {
-    from: '/product/agents/conversations/',
-    to: '/product/ai-observability/agents/',
+    from: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
-    from: '/product/agents/',
-    to: '/product/ai-observability/',
+    from: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
+  },
+  {
+    from: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/ai/observability/agents/dashboard/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',
-    to: '/product/ai-observability/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/product/insights/ai/agents/getting-started/',
-    to: '/product/ai-observability/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/product/ai-observability/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/product/ai-observability/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/product/ai-observability/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
-  // AI Monitoring / AI Observability → AI Observability
+  // AI Monitoring / AI Observability → Product Agents
   {
     from: '/ai/monitoring/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/monitoring/agents/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/monitoring/agents/getting-started/',
-    to: '/product/ai-observability/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/ai/monitoring/agents/dashboards/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/monitoring/agents/dashboard/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/monitoring/agents/naming/',
-    to: '/product/ai-observability/naming/',
+    to: '/product/agents/naming/',
   },
   {
     from: '/ai/monitoring/agents/privacy/',
-    to: '/product/ai-observability/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/ai/monitoring/agents/costs/',
-    to: '/product/ai-observability/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/ai/monitoring/agents/sampling/',
-    to: '/product/ai-observability/sampling/',
+    to: '/product/agents/sampling/',
   },
   {
     from: '/ai/monitoring/conversations/',
-    to: '/product/ai-observability/agents/',
+    to: '/product/agents/conversations/',
   },
   {
     from: '/ai/monitoring/mcp/',
-    to: '/product/ai-observability/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/monitoring/mcp/getting-started/',
-    to: '/product/ai-observability/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/monitoring/mcp/dashboard/',
-    to: '/product/ai-observability/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/ai/observability/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/observability/agents/',
-    to: '/product/ai-observability/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/observability/agents/getting-started/',
-    to: '/product/ai-observability/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/ai/observability/agents/dashboards/',
-    to: '/product/ai-observability/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/observability/agents/naming/',
-    to: '/product/ai-observability/naming/',
+    to: '/product/agents/naming/',
   },
   {
     from: '/ai/observability/agents/privacy/',
-    to: '/product/ai-observability/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/ai/observability/agents/costs/',
-    to: '/product/ai-observability/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/ai/observability/agents/sampling/',
-    to: '/product/ai-observability/sampling/',
+    to: '/product/agents/sampling/',
   },
   {
     from: '/ai/observability/conversations/',
-    to: '/product/ai-observability/agents/',
+    to: '/product/agents/conversations/',
   },
   {
     from: '/ai/observability/mcp/',
-    to: '/product/ai-observability/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/observability/mcp/getting-started/',
-    to: '/product/ai-observability/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/observability/mcp/dashboard/',
-    to: '/product/ai-observability/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',

@@ -30,7 +30,7 @@ supported:
   - javascript.nitro
 ---
 
-With <Link to="/product/ai-observability/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/ai-observability/agents/">Agents</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
@@ -113,7 +113,7 @@ On Cloudflare, how much setup you need depends on the library. Enabling tracing 
   Tracking Conversations has **beta** stability. Configuration options and behavior may change.
 </Alert>
 
-[Agents](/product/ai-observability/agents/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
+[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
 
 Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current isolation scope (which is typically request-scoped). Pass `null` to unset it.
 
@@ -123,13 +123,13 @@ Sentry.setConversationId("conv_abc123");
 
 ### Identifying Users in Conversations
 
-The [Agents](/product/ai-observability/agents/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
+The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
 
 ```javascript
 Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
 ```
 
-Any of `id`, `email`, or `username` is sufficient — the Agents view displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
+Any of `id`, `email`, or `username` is sufficient — the Conversations view displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
 
 ## Options
 
@@ -173,7 +173,7 @@ On the default CF entrypoint, control Vercel AI I/O with `experimental_telemetry
 
 ### Streaming Gen AI Spans
 
-From SDK `10.61.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/ai-observability/agents/">Agents</Link>).
+From SDK `10.61.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
 
 Self-hosted Sentry users should set `streamGenAiSpans: false` if standalone `gen_ai` spans may not be ingested.
 
