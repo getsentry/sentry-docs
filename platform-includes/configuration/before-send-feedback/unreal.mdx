@@ -1,0 +1,30 @@
+```cpp
+UCLASS()
+class USomeBeforeSendFeedbackHandler : public USentryBeforeSendFeedbackHandler
+{
+	GENERATED_BODY()
+
+public:
+	virtual USentryFeedback* HandleBeforeSendFeedback_Implementation(USentryFeedback* Feedback, USentryHint* Hint) override
+    {
+        UE_LOG(LogTemp, Log, TEXT("Hello from CPP beforeSendFeedback handler"));
+	    return Super::HandleBeforeSendFeedback_Implementation(Feedback, Hint);
+    }
+};
+
+...
+
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    Settings->BeforeSendFeedbackHandler = USomeBeforeSendFeedbackHandler::StaticClass();
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
+```
