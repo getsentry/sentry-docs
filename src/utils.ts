@@ -119,6 +119,24 @@ export const stripTrailingSlash = (url: string) => {
 };
 
 /**
+ * Ensures a URL path has a trailing slash, preserving any `?` or `#` suffix.
+ *
+ * Matches the site's `trailingSlash: true` Next.js config so that internal
+ * links point directly to the canonical URL instead of triggering a 308
+ * redirect (which creates broken canonical chains for SEO).
+ */
+export function ensureTrailingSlash(url: string): string {
+  const match = url.match(/^([^?#]*)(.*)/s)!;
+  const path = match[1];
+  const suffix = match[2];
+
+  if (path === '' || path === '/' || path.endsWith('/')) {
+    return path + suffix;
+  }
+  return path + '/' + suffix;
+}
+
+/**
  * Debounce function to limit the number of times a function is called.
  * @param func The function to be debounced.
  * @param wait The time to wait before calling the function.

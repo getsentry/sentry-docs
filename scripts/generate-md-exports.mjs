@@ -21,6 +21,7 @@ import {
 import pLimit from 'p-limit';
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
+import rehypeStringify from 'rehype-stringify';
 import remarkGfm from 'remark-gfm';
 import RemarkLinkRewrite from 'remark-link-rewrite';
 import remarkStringify from 'remark-stringify';
@@ -577,7 +578,7 @@ async function renderMdxOverrides(root, docTree) {
 
     const relativePath = file.replace(/\.mdx$/, '.md');
     const urlPath = file.replace(/\.mdx$/, '').replace(/^index$/, '');
-    const canonicalUrl = `${DOCS_ORIGIN}/${urlPath}`;
+    const canonicalUrl = urlPath ? `${DOCS_ORIGIN}/${urlPath}/` : `${DOCS_ORIGIN}/`;
 
     const html = [
       '<!DOCTYPE html><html><head>',
@@ -947,17 +948,18 @@ async function createWork() {
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 /**
- * Strips build-specific HTML elements that are irrelevant for markdown generation.
+ * Strips build-specific HTML elements from Next.js output using a proper
+ * HTML parser (rehype-parse) instead of regular expressions.
  *
- * Next.js build output contains elements that change between builds:
+ * Removes:
  * - <script> tags: RSC/Flight payloads, JS chunk references with content hashes
  * - <link> tags referencing /_next/static/: CSS files, fonts, JS preloads with hashes
  * - <style> tags with href: inlined CSS with build-specific hash in href attribute
  *
  * These elements are irrelevant for markdown generation (we only use title, canonical
  * link, and div#main content), so stripping them:
- * 1. Speeds up HTML parsing by reducing input size significantly
- * 2. Removes most build-specific variation from the HTML
+ * 1. Removes most build-specific variation from the HTML
+ * 2. Produces cleaner input for the downstream unified pipeline
  *
  * IMPORTANT: This function's output is used as pipeline input for .process(), so it must
  * only remove complete HTML elements — never modify text content or attribute values.
@@ -965,15 +967,32 @@ const md5 = data => createHash('md5').update(data).digest('hex');
  * normalizeForCacheKey().
  */
 function stripUnstableElements(html) {
-  return (
-    html
-      // Remove script tags (RSC payloads, JS chunk references)
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      // Remove link tags referencing Next.js build assets (CSS, fonts, JS preloads)
-      .replace(/<link[^>]*\/_next\/[^>]*>/gi, '')
-      // Remove style tags with href attribute (inlined CSS with build hashes)
-      .replace(/<style[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/style>/gi, '')
-  );
+  const tree = unified().use(rehypeParse).parse(html);
+
+  remove(tree, node => {
+    if (node.type !== 'element') {
+      return false;
+    }
+    // Remove all <script> tags
+    if (node.tagName === 'script') {
+      return true;
+    }
+    // Remove <link> tags referencing Next.js build assets
+    if (
+      node.tagName === 'link' &&
+      typeof node.properties?.href === 'string' &&
+      node.properties.href.includes('/_next/')
+    ) {
+      return true;
+    }
+    // Remove <style> tags with href attribute (inlined CSS with build hashes)
+    if (node.tagName === 'style' && node.properties?.href) {
+      return true;
+    }
+    return false;
+  });
+
+  return unified().use(rehypeStringify).stringify(tree);
 }
 
 /**
