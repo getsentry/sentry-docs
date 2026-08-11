@@ -134,12 +134,23 @@ async def trigger_error():
 
 </OnboardingOption>
 
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
 ## Options
 
 <Include name="python-stream-mode-integration-option-callout.mdx" />
 
-By adding `FastApiIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `FastApiIntegration` to change its behavior.
+Add `FastApiIntegration` to your `sentry_sdk.init()` call to set options for `FastApiIntegration` to change its behavior.
+
+<Alert level="warning">
+
 Because FastAPI is based on the Starlette framework, both integrations, `StarletteIntegration` and `FastApiIntegration`, must be instantiated.
+
+</Alert>
 
 ```python
 from sentry_sdk.integrations.starlette import StarletteIntegration
@@ -164,11 +175,24 @@ sentry_sdk.init(
 
 You can pass the following keyword arguments to `StarletteIntegration()` and `FastApiIntegration()`:
 
-- `transaction_style`:
+<SdkOption name='transaction_style' type='string' defaultValue='"url"'>
 
-  This option lets you influence how the transactions are named in Sentry. For example:
+How to name transactions that show up in Sentry tracing.
+The default is `"url"`.
 
-  ```python
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+In the code example, the transaction name will be:
+
+- `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
+- `"product_detail"` if you set `transaction_style="endpoint"`
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```python
   import sentry_sdk
   from sentry_sdk.integrations.starlette import StarletteIntegration
   from sentry_sdk.integrations.fastapi import FastApiIntegration
@@ -190,43 +214,56 @@ You can pass the following keyword arguments to `StarletteIntegration()` and `Fa
   @app.get("/catalog/product/{product_id}")
   async def product_detail(product_id):
       return {...}
-  ```
+```
 
-  In the above code, the transaction name will be:
-  - `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
-  - `"product_detail"` if you set `transaction_style="endpoint"`
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-  The default is `"url"`.
+</SdkOption>
 
-- `failed_request_status_codes`:
+<SdkOption name='failed_request_status_codes' type='set[int]' defaultValue='{*range(500, 600)}'>
 
-  A `set` of integers that will determine which status codes should be reported to Sentry.
+A `set` of integers that determine which status codes should be reported to Sentry.
 
-  The `failed_request_status_codes` option determines whether [`HTTPException`](https://fastapi.tiangolo.com/reference/exceptions/?h=httpexception) exceptions should be
-  reported to Sentry. Unhandled exceptions that don't have a `status_code` attribute will always be reported to Sentry.
+The `failed_request_status_codes` option determines whether [`HTTPException`](https://fastapi.tiangolo.com/reference/exceptions/?h=httpexception) exceptions should be
+reported to Sentry. Unhandled exceptions that don't have a `status_code` attribute will always be reported to Sentry.
 
-  Examples of valid `failed_request_status_codes`:
-  - `{500}` will only send events on HTTP 500.
-  - `{400, *range(500, 600)}` will send events on HTTP 400 as well as the 5xx range.
-  - `{500, 503}` will send events on HTTP 500 and 503.
-  - `set()` (the empty set) will not send events for any HTTP status code.
+Examples of valid `failed_request_status_codes`:
 
-  The default is `{*range(500, 600)}`, meaning that all 5xx status codes are reported to Sentry.
+- `{500}` will only send events on HTTP 500.
+- `{400, *range(500, 600)}` will send events on HTTP 400 as well as the 5xx range.
+- `{500, 503}` will send events on HTTP 500 and 503.
+- `set()` (the empty set) will not send events for any HTTP status code.
 
-- `middleware_spans`:
+The default is `{*range(500, 600)}`, meaning that all 5xx status codes are reported to Sentry.
 
-  Create spans and track performance of all middleware layers in your FastAPI project. Set to `True` to enable.
+</SdkOption>
 
-  The default is `False`.
+<SdkOption name='middleware_spans' type='bool' defaultValue='False'>
 
-- `http_methods_to_capture`:
+Create spans and track performance of all middleware layers in your Django project. Set to `True` to enable.
+The default is `False`.
 
-  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+</SdkOption>
 
-  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+<SdkOption name='http_methods_to_capture' type='Tuple[str, ...]' defaultValue='("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)' availableSince='2.15.0'>
 
-  (Note that `OPTIONS` and `HEAD` are missing by default.)
+A tuple containing all the HTTP methods (as uppercase strings) that should create a transaction in Sentry.
+The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
 
-  <Alert title="Added in 2.15.0">The `http_methods_to_capture` option.</Alert>
+Note that `OPTIONS` and `HEAD` are excluded by default.
 
+</SdkOption>
+
+## Next Steps
+
+<PlatformContent includePath="getting-started-next-steps" />
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
 </StepConnector>
