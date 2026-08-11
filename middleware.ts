@@ -3547,6 +3547,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/agents/dashboard/',
     to: '/product/agents/dashboards/',
   },
+  // MCP moved from /product/agents/mcp/ to /product/mcp-servers/
+  {
+    from: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
+  },
+  {
+    from: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
+  },
+  {
+    from: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
+  },
   {
     from: '/ai/observability/agents/dashboard/',
     to: '/product/agents/dashboards/',
@@ -3561,15 +3574,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   // AI Monitoring / AI Observability → Product Agents
   {
@@ -3614,15 +3627,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ai/monitoring/mcp/',
-    to: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/monitoring/mcp/getting-started/',
-    to: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/monitoring/mcp/dashboard/',
-    to: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/ai/observability/',
@@ -3662,15 +3675,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ai/observability/mcp/',
-    to: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/observability/mcp/getting-started/',
-    to: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/observability/mcp/dashboard/',
-    to: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',

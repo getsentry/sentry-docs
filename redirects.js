@@ -2110,7 +2110,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mcp/',
-    destination: '/product/agents/mcp/',
+    destination: '/product/mcp-servers/',
   },
   // Flatten remaining /insights/ai/agents/* under /product/agents/*
   {
@@ -2132,6 +2132,15 @@ const userDocsRedirects = [
     source: '/product/agents/dashboard/',
     destination: '/product/agents/dashboards/',
   },
+  // MCP moved from /product/agents/mcp/ to /product/mcp-servers/
+  {
+    source: '/product/agents/mcp/',
+    destination: '/product/mcp-servers/',
+  },
+  {
+    source: '/product/agents/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
+  },
   {
     source: '/product/insights/ai/conversations/',
     destination: '/product/agents/conversations/',
@@ -2142,11 +2151,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/ai/mcp/',
-    destination: '/product/agents/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
     source: '/product/insights/ai/mcp/:path*',
-    destination: '/product/agents/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/product/insights/ai/',
@@ -2272,11 +2281,11 @@ const userDocsRedirects = [
   },
   {
     source: '/ai/monitoring/mcp/',
-    destination: '/product/agents/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
     source: '/ai/monitoring/mcp/:path*',
-    destination: '/product/agents/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/ai/monitoring/',
@@ -2308,11 +2317,11 @@ const userDocsRedirects = [
   },
   {
     source: '/ai/observability/mcp/',
-    destination: '/product/agents/mcp/',
+    destination: '/product/mcp-servers/',
   },
   {
     source: '/ai/observability/mcp/:path*',
-    destination: '/product/agents/mcp/:path*',
+    destination: '/product/mcp-servers/:path*',
   },
   {
     source: '/ai/observability/',
