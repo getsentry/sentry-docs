@@ -10,7 +10,9 @@ sentry_options_add_attachment(options, "/var/server.log");
 
 ### Adding Attachments to the Scope
 
-Adding attachments to the global scope at run-time after SDK initialization will monitor the file and upload it along with any event or crash that is sent to Sentry, whereas adding attachments to a local scope will only upload the file with the specific event captured in that local scope.
+Adding attachments to the global scope at run-time after SDK initialization will monitor the file and upload it along with any event or crash that is sent to Sentry. Attaching to a [scope you create](/platforms/native/enriching-events/scopes/#creating-a-scope) instead uploads the file only with the captures that scope is passed to.
+
+Only global scope attachments are included in crash reports. A file attached to a scope you create is uploaded only when you explicitly capture an event with that scope. If you need the file included with a crash, attach it to the global scope or add it to the options instead.
 
 ```c
 // Global Scope
@@ -21,7 +23,7 @@ sentry_scope_t *scope = sentry_local_scope_new();
 sentry_scope_attach_file(scope, "/var/local.log");
 sentry_value_t event = sentry_value_new_event();
 /* ... */
-sentry_capture_event_with_scope(event, scope);
+sentry_scope_capture_event(scope, event);
 ```
 
 Alternately, use `bytes` to initialize an attachment. When doing so, you also need to specify a filename.
@@ -38,7 +40,7 @@ sentry_scope_t *scope = sentry_local_scope_new();
 sentry_scope_attach_bytes(scope, bytes, bytes_len, "local.bin");
 sentry_value_t event = sentry_value_new_event();
 /* ... */
-sentry_capture_event_with_scope(event, scope);
+sentry_scope_capture_event(scope, event);
 ```
 
 <Alert>When using the `crashpad` backend, it writes byte attachments to disk into a flat directory structure. If multiple buffers are attached with the same `filename`, it will internally ensure unique filenames for attachments by appending a unique suffix to the filename. Therefore, attachments may show up with altered names in Sentry.</Alert>
