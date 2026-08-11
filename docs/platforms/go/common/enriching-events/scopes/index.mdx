@@ -72,6 +72,22 @@ made will stay isolated within the <PlatformIdentifier name="with-scope" /> call
 more easily isolate pieces of context information to specific locations in your code or
 even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
 
+### Using <PlatformIdentifier name="push-scope" />
+
+<PlatformIdentifier name="push-scope" /> and <PlatformIdentifier name="configure-scope" /> both modify the active scope, but they differ in how long the change lasts:
+
+- <PlatformIdentifier name="configure-scope" /> updates the current scope and keeps the change until you unset it or clear the scope.
+- <PlatformIdentifier name="push-scope" /> adds a child scope. Call <PlatformIdentifier name="pop-scope" /> to restore the previous scope, usually with `defer`.
+- <PlatformIdentifier name="with-scope" /> clones the current scope for a callback and restores it automatically when the callback returns.
+
+In Go, <PlatformIdentifier name="push-scope" /> returns the new scope so you can configure it directly:
+
+```go
+scope := sentry.PushScope()
+defer sentry.PopScope()
+scope.SetTag("request.type", "background")
+```
+
 ## Setting Attributes
 
 You can set typed attributes on the scope using `SetAttributes`. These attributes are attached to logs and metrics emitted within the scope. Attributes use the `attribute` package for type safety.

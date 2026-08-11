@@ -1,0 +1,148 @@
+---
+title: Fiber v3
+description: "Learn how to add Sentry instrumentation to programs using Fiber v3."
+---
+
+For a quick reference, see the [Fiber v3 example](https://github.com/getsentry/sentry-go/tree/master/_examples/fiber) in the Go SDK source code repository.
+
+[Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/fiberv3) is also available.
+
+<Alert>
+  Fiber v3 uses the `github.com/getsentry/sentry-go/fiberv3` package. For Fiber
+  v2, use the [`sentry-go/fiber` package](/platforms/go/guides/fiber/).
+</Alert>
+
+## Install
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/fiberv3
+```
+
+<Break />
+
+## Configure
+
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-config" />
+
+### Options
+
+`sentryfiberv3` accepts a struct of `Options` that allows you to configure how the handler behaves.
+
+```go
+// Repanic configures whether Sentry should repanic after recovery. Fiber v3
+// doesn't include its own Recovery handler, so set this according to how your
+// application handles panics.
+Repanic bool
+// WaitForDelivery configures whether to block the request before continuing.
+// Enable it when the application may exit before the event is delivered.
+WaitForDelivery bool
+// Timeout for the event delivery requests.
+Timeout time.Duration
+```
+
+<Break />
+
+```go
+sentryHandler := sentryfiberv3.New(sentryfiberv3.Options{
+    // you can modify these options
+    Repanic:         true,
+    WaitForDelivery: true,
+    Timeout:         5 * time.Second,
+})
+
+app := fiber.New()
+app.Use(sentryHandler)
+```
+
+## Verify
+
+```go
+app := fiber.New()
+
+app.Use(sentryfiberv3.New(sentryfiberv3.Options{
+// specify options here...
+}))
+
+app.All("/", func(ctx fiber.Ctx) error {
+    // capturing an error intentionally to simulate usage
+    sentry.CaptureMessage("It works!")
+
+    return ctx.SendStatus(fiber.StatusOK)
+})
+
+if err := app.Listen(":3000"); err != nil {
+    panic(err)
+}
+```
+
+## Usage
+
+`sentryfiberv3` attaches an instance of `*sentry.Hub` to `fiber.Ctx`, which makes it available throughout the rest of the request's lifetime.
+You can access it with `sentryfiberv3.GetHubFromContext()` in subsequent middleware and routes.
+Use this hub instead of the global capture functions to keep data separated between requests.
+
+<PlatformContent includePath="tracing/automatic-instrumentation/middleware-note" />
+
+**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryfiberv3`!**
+
+```go
+func enhanceSentryEvent(ctx fiber.Ctx) error {
+    if hub := sentryfiberv3.GetHubFromContext(ctx); hub != nil {
+        hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+    }
+    return ctx.Next()
+}
+
+sentryHandler := sentryfiberv3.New(sentryfiberv3.Options{
+    Repanic:         true,
+    WaitForDelivery: true,
+})
+
+defaultHandler := func(ctx fiber.Ctx) error {
+    if hub := sentryfiberv3.GetHubFromContext(ctx); hub != nil {
+        hub.WithScope(func(scope *sentry.Scope) {
+            scope.SetAttributes(attribute.String("unwantedQuery", "someQueryDataMaybe"))
+            hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
+        })
+    }
+    return ctx.SendStatus(fiber.StatusOK)
+}
+
+fooHandler := func(ctx fiber.Ctx) error {
+    enhanceSentryEvent(ctx)
+    panic("y tho")
+}
+
+app.Use(sentryHandler)
+app.All("/foo", fooHandler)
+app.All("/", defaultHandler)
+
+if err := app.Listen(":3000"); err != nil {
+    panic(err)
+}
+```
+
+### Accessing Context in `BeforeSend` callback
+
+Fiber v3 passes a `fiber.Ctx` value in the request context rather than the `*fiber.Ctx` used by Fiber v2:
+
+```go
+sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+        if hint.Context != nil {
+            if ctx, ok := hint.Context.Value(sentry.RequestContextKey).(fiber.Ctx); ok {
+                fmt.Println(ctx.Hostname())
+            }
+        }
+        return event
+    },
+})
+```
+
+## Next Steps
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
