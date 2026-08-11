@@ -1,32 +1,104 @@
 ---
 title: FastAPI
-description: Learn about using Sentry with FastAPI.
+description: Learn how to set up Sentry in you FastAPI app, capture your first errors and traces, and view them in Sentry.
 og_image: /og-images/platforms-python-integrations-fastapi.png
 ---
 
-The FastAPI integration adds support for the [FastAPI Framework](https://fastapi.tiangolo.com/).
-
 <Include name="python-stream-mode-general-callout.mdx" />
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- FastAPI `0.79.0+`
+- Python `3.7+`
+
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
-
-```bash {tabTitle:pip}
-pip install sentry-sdk
-```
-
-```bash {tabTitle:uv}
-uv add sentry-sdk
-```
+<PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
-If you have the `fastapi` package in your dependencies, the FastAPI integration will be enabled automatically when you initialize the Sentry SDK.
+Choose the features you want to configure, and this guide will show you how:
 
-<PlatformContent includePath="getting-started-config" />
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
+/>
 
-## Verify
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
+
+Configuration should happen as **early as possible** in your application's lifecycle.
+
+<Alert>
+
+If you have the `fastapi` package in your dependencies, the Sentry FastAPI integration will be enabled automatically when you initialize the Sentry SDK.
+
+</Alert>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Import and initialize the SDK in your app's entry point:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="python.splitlayout"
+/>
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To further customize your setup, review the [Options section](#options) below.
+
+### Capturing Errors
+
+Sentry automatically captures errors and reports issues for you.
+You can also expect the following for your FastAPI project:
+
+- By default, all exceptions leading to an Internal Server Error are captured and reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
+- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
+- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
+
+<OnboardingOption optionId="performance">
+
+The Sentry SDK automatically monitors the following parts of your FastAPI project:
+
+- Middleware stack
+- Middleware `send` and `receive` callbacks
+- Database queries
+- Redis commands
+
+You can also manually capture performance data – see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> to learn more.
+
+</OnboardingOption>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```python
 from fastapi import FastAPI
@@ -40,35 +112,27 @@ async def trigger_error():
     division_by_zero = 1 / 0
 ```
 
-When you point your browser to [http://localhost:8000/sentry-debug](http://localhost:8000/sentry-debug) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+<OnboardingOption optionId="performance">
 
-## Behaviour
+<Include name="tracing/python-quick-start-verify-tracing-splitlayout.mdx" />
 
-### Issue Reporting
+</OnboardingOption>
 
-The following information about your FastAPI project will be available to you on Sentry.io:
+<OnboardingOption optionId="logs">
 
-- By default, all exceptions leading to an Internal Server Error are captured and reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
-- Request data such as URL, HTTP method, headers, form data, and JSON payloads is attached to all issues.
-- Sentry excludes raw bodies and multipart file uploads.
-- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+<Include name="logs/python-quick-start-verify-logs-splitlayout.mdx" />
 
-### Monitor Performance
+</OnboardingOption>
 
-The following parts of your FastAPI project are monitored:
+<OnboardingOption optionId="metrics">
 
-- Middleware stack
-- Middleware `send` and `receive` callbacks
-- Database queries
-- Redis commands
+<Include name="metrics/python-quick-start-verify-metrics-splitlayout.mdx" />
 
-<Alert>
-
-The parameter [traces_sample_rate](/platforms/python/configuration/options/#traces-sample-rate) needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
-
-</Alert>
+</OnboardingOption>
 
 ## Options
 
@@ -165,7 +229,4 @@ You can pass the following keyword arguments to `StarletteIntegration()` and `Fa
 
   <Alert title="Added in 2.15.0">The `http_methods_to_capture` option.</Alert>
 
-## Supported Versions
-
-- FastAPI: 0.79.0+
-- Python: 3.7+
+</StepConnector>
