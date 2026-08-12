@@ -81,9 +81,10 @@ export function middleware(request: NextRequest) {
  * - not a GET request (avoid interfering with API/cron/webhook traffic), or
  * - the request is already on the canonical host.
  *
- * VERCEL_ENV is inlined at build time (see next.config.ts `env`) because the
- * edge runtime can't read server env vars at request time; it's constant per
- * deployment, so build-time inlining is correct.
+ * VERCEL_ENV is frozen into the bundle at build time (see next.config.ts
+ * `env`) so this has a stable value; it is constant per deployment, so that is
+ * correct. Requires "Automatically expose System Environment Variables" to be
+ * enabled on the Vercel project (the default).
  */
 function redirectProductionBuildUrlToCanonical(
   request: NextRequest
