@@ -9,7 +9,7 @@ The [`logging`](/platforms/python/integrations/logging) integration provides mos
 
 <Alert level="info" title="Sentry Logs for Loguru">
 
-Enable the Sentry Logs feature with `sentry_sdk.init(enable_logs=True)` to unlock Sentry's full logging power. With Sentry Logs, you can search, filter, and analyze logs from across your entire application in one place.
+Enable the Sentry Logs feature with `LoguruIntegration(capture_sentry_logs=True)` to unlock Sentry's full logging power. With Sentry Logs, you can search, filter, and analyze logs from across your entire application in one place.
 
 </Alert>
 
@@ -28,17 +28,20 @@ uv add sentry-sdk
 
 ## Configure
 
-To capture Loguru log records as [Sentry logs](/platforms/python/logs/), set `enable_logs` to `True`. The integration itself doesn't need to be added manually. If you have the `loguru` package in your dependencies, the Loguru integration will be enabled automatically when you initialize the Sentry SDK.
+If you have the `loguru` package in your dependencies, the Loguru integration will be enabled automatically when you initialize the Sentry SDK. To capture Loguru log records as [Sentry logs](/platforms/python/logs/), set `capture_sentry_logs` to `True` on the integration.
 
 ```python
 import sentry_sdk
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
-    enable_logs=True,
+    integrations=[
+        LoguruIntegration(capture_sentry_logs=True),
+    ],
 )
 ```
 
@@ -60,7 +63,7 @@ This will capture both logs and send them to Sentry Logs. Additionally, an error
 
 ## Behavior
 
-Logs with a level of `INFO` and higher will be captured as Sentry logs as long as `enable_logs` is `True` and the log level set in the `logging` module is `INFO` or below. The threshold can be configured via the [`sentry_logs_level` option](#options).
+Logs with a level of `INFO` and higher will be captured as Sentry logs as long as `capture_sentry_logs` is `True` and the log level set in the `logging` module is `INFO` or below. The threshold can be configured via the [`sentry_logs_level` option](#options).
 
 Additionally, the Loguru integration will create an error event from all `ERROR`-level logs. This feature is configurable via the [`event_level` integration option](#options).
 
@@ -71,10 +74,13 @@ The following snippet demonstrates the default behavior:
 ```python
 import sentry_sdk
 from loguru import logger
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 sentry_sdk.init(
     ...,
-    enable_logs=True,
+    integrations=[
+        LoguruIntegration(capture_sentry_logs=True),
+    ],
 )
 
 # The following will be captured as Sentry logs:
@@ -138,6 +144,7 @@ sentry_sdk.init(
     # ...
     integrations=[
         LoguruIntegration(
+            capture_sentry_logs=True,                    # Capture Loguru logs as Sentry logs
             sentry_logs_level=LoggingLevels.INFO.value,  # Capture INFO and above as logs
             level=LoggingLevels.INFO.value,              # Capture INFO and above as breadcrumbs
             event_level=LoggingLevels.ERROR.value,       # Send ERROR logs as events
@@ -147,18 +154,15 @@ sentry_sdk.init(
 ```
 
 
+- `capture_sentry_logs`
+
+  Set to `True` to capture Loguru log records as [Sentry structured logs](/platforms/python/logs/).
+
+  Default: `False`
+
 - `sentry_logs_level`
 
-  The Sentry Python SDK will capture log records with a level higher than or equal to `sentry_logs_level` as [Sentry structured logs](/platforms/python/logs/). If set to `None`, the SDK won't send records as logs.
-
-  To capture Loguru log records as Sentry logs, you must enable the `enable_logs` option when initializing the SDK (regardless of the `sentry_logs_level` setting).
-
-  ```python
-  sentry_sdk.init(
-      # ...
-      enable_logs=True,
-  )
-  ```
+  The Sentry Python SDK will capture log records with a level higher than or equal to `sentry_logs_level` as [Sentry structured logs](/platforms/python/logs/). If set to `None`, the SDK won't send records as logs. Only applies when `capture_sentry_logs` is `True`.
 
   Default: `INFO`
 
@@ -178,7 +182,7 @@ sentry_sdk.init(
 
 <Expandable title="Logs not appearing in Sentry">
 
-  First, make sure you have the `enable_logs=True` option in your `sentry_sdk.init()` and you're on the latest version of the SDK.
+  First, make sure you're on the latest version of the SDK. If you're using the `sentry_sdk.logger` API directly (e.g., `sentry_sdk.logger.info(...)`), logs are sent automatically. If you're using Loguru and want those log records captured as Sentry logs, make sure you have `capture_sentry_logs=True` set on your `LoguruIntegration`.
 
   Your logs could be missing because of the logging level of the logger. The SDK will honor the configured level of each logger. That means that you won't see any `INFO` or `DEBUG` data in Sentry from a logger with the level set to `WARNING`, regardless of how you configure the integration.
 
