@@ -166,7 +166,17 @@ describe('production build-url redirect to canonical (Deployment Protection off)
     expect(res.status).not.toBe(308);
   });
 
-  it('does not redirect non-GET requests', async () => {
+  it('redirects HEAD requests', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-abc123.vercel.app/foo/', 'HEAD')
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe('https://docs.sentry.io/foo/');
+  });
+
+  it('does not redirect non-page requests', async () => {
     const {middleware} = await importMiddleware({});
     vi.stubEnv('VERCEL_ENV', 'production');
     const res = middleware(

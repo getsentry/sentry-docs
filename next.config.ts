@@ -141,13 +141,7 @@ const nextConfig = {
     // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
     // Edge runtime doesn't have access to server env vars at request time.
     DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
-    // Freeze VERCEL_ENV into the bundle at build time so middleware.ts has a
-    // stable value for detecting production deployments. VERCEL_ENV is constant
-    // per deployment, so build-time freezing is intentional and correct; it
-    // follows the DEVELOPER_DOCS pattern above. (Vercel also exposes VERCEL_ENV
-    // at runtime when "Automatically expose System Environment Variables" is
-    // enabled — the default — so this entry is a deliberate freeze, not a
-    // workaround for missing runtime access.)
+    // Freeze this per-deployment value for middleware, matching the pattern above.
     VERCEL_ENV: process.env.VERCEL_ENV,
   },
   redirects,

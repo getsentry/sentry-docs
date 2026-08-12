@@ -16,9 +16,6 @@ const BASE_URL = isDeveloperDocs
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
 
-// The canonical, publicly-served production hostname for this docs site. On
-// production deployments, any other host is a Vercel-generated build URL
-// (e.g. sentry-docs-<hash>.vercel.app) that we redirect to this host.
 const CANONICAL_HOST = new URL(BASE_URL).hostname;
 
 // Production domains whose content should be indexable by search engines.
@@ -40,11 +37,6 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Lock down Vercel-generated *production* build URLs. Deployment Protection is
-  // off, so generated production URLs (e.g. sentry-docs-<hash>.vercel.app) would
-  // otherwise be publicly accessible and indexable as a separate copy of the
-  // site. Redirect them to the canonical domain. Preview deployments are left
-  // untouched and publicly accessible, so contractors can open PR previews.
   const buildUrlRedirect = redirectProductionBuildUrlToCanonical(request);
   if (buildUrlRedirect) {
     return buildUrlRedirect;
@@ -70,26 +62,14 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-/**
- * On production deployments, redirects any request whose host isn't the
- * canonical domain to the canonical domain (preserving path + query). This
- * keeps Vercel-generated production build URLs from being crawled, indexed, or
- * used as a separate copy of the site.
- *
- * Returns null (no redirect) when:
- * - not a production deployment (previews stay publicly accessible),
- * - not a GET request (avoid interfering with API/cron/webhook traffic), or
- * - the request is already on the canonical host.
- *
- * VERCEL_ENV is frozen into the bundle at build time (see next.config.ts
- * `env`) so this has a stable value; it is constant per deployment, so that is
- * correct. Requires "Automatically expose System Environment Variables" to be
- * enabled on the Vercel project (the default).
- */
+/** Redirects page requests on noncanonical production hosts, leaving previews public. */
 function redirectProductionBuildUrlToCanonical(
   request: NextRequest
 ): NextResponse | null {
-  if (process.env.VERCEL_ENV !== 'production' || request.method !== 'GET') {
+  if (
+    process.env.VERCEL_ENV !== 'production' ||
+    (request.method !== 'GET' && request.method !== 'HEAD')
+  ) {
     return null;
   }
   if (request.nextUrl.hostname === CANONICAL_HOST) {
