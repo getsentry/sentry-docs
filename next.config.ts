@@ -141,6 +141,10 @@ const nextConfig = {
     // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
     // Edge runtime doesn't have access to server env vars at request time.
     DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Inline VERCEL_ENV for the same reason: middleware.ts uses it to decide
+    // whether a deployment is production. It is constant per deployment, so
+    // build-time inlining is correct.
+    VERCEL_ENV: process.env.VERCEL_ENV,
   },
   redirects,
   rewrites: () => [
