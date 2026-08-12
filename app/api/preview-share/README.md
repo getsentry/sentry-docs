@@ -73,5 +73,15 @@ and the GitHub Actions secret (existing links stop working immediately).
 
 - Allowed preview hosts: `sentry-docs*` / `develop-docs*` on `.sentry.dev` or
   `.vercel.app`. Anything else is rejected by the endpoint.
-- The endpoint is `noindex` and `no-store`.
+- The endpoint only ever redirects to a **preview** host. Each link's signature
+  is bound to a specific host, and the workflow only signs non-production
+  deployments, so no valid link to a production build URL can be minted. As an
+  extra guard, the endpoint also hard-rejects the production `git-master` build
+  alias.
+- The endpoint is a redirector only — no preview content is served from
+  `docs.sentry.io`. Hitting it without a valid signed link returns a harmless
+  `400`.
+- The endpoint is `noindex`/`no-store` on every response and is also
+  `Disallow`ed in `robots.txt`. It is not linked from any page, nav, or the
+  sitemap — it only appears in the PR comment.
 - Tests: `pnpm test app/api/preview-share`.

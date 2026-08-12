@@ -109,6 +109,13 @@ describe('preview-share route', () => {
     expect(res.status).toBe(400);
   });
 
+  it('refuses the production (master) build alias even with a valid signature', () => {
+    const u = 'https://sentry-docs-git-master-getsentry.vercel.app';
+    const exp = FUTURE();
+    const res = GET(buildRequest({u, exp, sig: sign(u, exp)}));
+    expect(res.status).toBe(400);
+  });
+
   it('returns 400 for a non-https target', () => {
     const u = 'http://sentry-docs-git-my-branch.sentry.dev';
     const exp = FUTURE();

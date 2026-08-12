@@ -31,6 +31,12 @@ export const dynamic = 'force-dynamic';
 const ALLOWED_PREVIEW_HOST =
   /^(sentry-docs|develop-docs)[a-z0-9-]*\.(sentry\.dev|vercel\.app)$/;
 
+// Defense-in-depth: never redirect to the production (default-branch) build
+// alias, even if a valid signature somehow existed for it. The workflow only
+// ever signs non-production deployments, so this should never match in
+// practice — it's a belt-and-suspenders guard for the production lockdown.
+const PRODUCTION_BRANCH_ALIAS = /(^|[.-])git-master([-.])/;
+
 function timingSafeStrEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
@@ -113,6 +119,9 @@ export function GET(request: NextRequest): NextResponse {
   }
   if (target.protocol !== 'https:' || !ALLOWED_PREVIEW_HOST.test(target.host)) {
     return errorPage('This preview link points to a host that is not allowed.', 400);
+  }
+  if (PRODUCTION_BRANCH_ALIAS.test(target.host)) {
+    return errorPage('This preview link points to a production build URL.', 400);
   }
 
   // Pick the correct project's bypass secret based on the host. The host is
