@@ -141,6 +141,8 @@ const nextConfig = {
     // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
     // Edge runtime doesn't have access to server env vars at request time.
     DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Freeze this per-deployment value for middleware, matching the pattern above.
+    VERCEL_ENV: process.env.VERCEL_ENV,
   },
   redirects,
   rewrites: () => [
