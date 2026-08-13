@@ -4,6 +4,7 @@ import {usePathname, useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import {Platform} from 'sentry-docs/types';
+import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {mainSectionsWithDropdowns} from './navigationData';
 import {PlatformSelector} from './platformSelector';
@@ -60,7 +61,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
 
   // Update href after hydration to check localStorage
   useEffect(() => {
-    const storedPlatform = localStorage.getItem('active-platform');
+    const storedPlatform =
+      isLocalStorageAvailable() && localStorage.getItem('active-platform');
     if (storedPlatform) {
       // Find the platform URL from our platforms list
       const platform = platforms.find(p => p.key === storedPlatform);
@@ -81,7 +83,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
 
   // Click handler - use client-side navigation for stored platform redirect
   const handleSdkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const storedPlatform = localStorage.getItem('active-platform');
+    const storedPlatform =
+      isLocalStorageAvailable() && localStorage.getItem('active-platform');
     if (storedPlatform && platforms && platforms.length > 0) {
       // First check if it's a platform key
       const platform = platforms.find(p => p.key === storedPlatform);
