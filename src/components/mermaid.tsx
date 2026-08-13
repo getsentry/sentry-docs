@@ -12,6 +12,15 @@ export default function Mermaid() {
         document.querySelectorAll<HTMLDivElement>('.language-mermaid');
       if (mermaidBlocks.length === 0) return;
 
+      // Mermaid uses the Constructable Stylesheets API (new CSSStyleSheet()),
+      // which is not supported in some in-app browsers (e.g. Google iOS app).
+      // Bail out early so the raw diagram source remains readable as a code block.
+      try {
+        new CSSStyleSheet(); // eslint-disable-line no-new
+      } catch {
+        return;
+      }
+
       const escapeHTML = (str: string) =>
         str.replace(
           /[&<>"']/g,
@@ -51,11 +60,19 @@ export default function Mermaid() {
       });
 
       // Render both themes
-      mermaid.initialize({startOnLoad: false, theme: 'default'});
-      await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.light')});
+      try {
+        mermaid.initialize({startOnLoad: false, theme: 'default'});
+        await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.light')});
 
-      mermaid.initialize({startOnLoad: false, theme: 'dark'});
-      await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.dark')});
+        mermaid.initialize({startOnLoad: false, theme: 'dark'});
+        await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.dark')});
+      } catch {
+        // If rendering fails, still mark rendering done so the display CSS is
+        // injected — this hides the duplicate dark/light clone and leaves one
+        // readable copy of the raw diagram source in the DOM.
+        setDoneRendering(true);
+        return;
+      }
 
       // Initialize pan/zoom for all SVGs (including hidden ones)
       document.querySelectorAll('.language-mermaid svg').forEach(svg => {
