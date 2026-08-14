@@ -1997,6 +1997,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
   {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/mcp-module/',
+    to: '/platforms/javascript/guides/:guide/mcp-monitoring/',
+  },
+  {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
   },

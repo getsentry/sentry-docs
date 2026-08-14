@@ -12,7 +12,7 @@ keywords:
   - Node.js MCP
 ---
 
-Sentry MCP Observability helps you track and debug Model Context Protocol (MCP) implementations using our supported SDKs and integrations. Monitor your complete MCP workflows from client connections to server responses, including tool executions, resource access, and protocol communications.
+Sentry MCP Monitoring helps you track and debug Model Context Protocol (MCP) implementations using our supported SDKs and integrations. Monitor your complete MCP workflows from client connections to server responses, including tool executions, resource access, and protocol communications.
 
 To start sending MCP data to Sentry, make sure you've created a Sentry project for your MCP-enabled repository and follow the guide below:
 
@@ -21,18 +21,18 @@ To start sending MCP data to Sentry, make sure you've created a Sentry project f
 ### JavaScript - MCP Server
 
 <VersionRequirement
-  product="MCP Observability"
+  product="MCP Monitoring"
   sdk="Node SDK"
   minVersion="9.46.0"
 />
 
-The Sentry JavaScript SDK supports MCP observability by wrapping the MCP Server from the [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk) package. This wrapper automatically captures spans for your MCP server workflows including tool executions, resource access, and client connections.
+The example below uses [`@modelcontextprotocol/sdk`](https://www.npmjs.com/package/@modelcontextprotocol/sdk) 1.x. The Sentry wrapper automatically captures spans for MCP server workflows, including tool executions, resource access, and client connections.
 
 #### Quick Start with MCP Server
 
 ```javascript
 import * as Sentry from "@sentry/node";
-import { McpServer } from "@modelcontextprotocol/sdk";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 // Sentry init needs to be above everything else
 Sentry.init({
@@ -40,22 +40,22 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// Your MCP server with optional input/output recording
+// Wrap every MCP server instance
 const server = Sentry.wrapMcpServerWithSentry(
   new McpServer({
     name: "my-mcp-server",
     version: "1.0.0",
   }),
-  {
-    recordInputs: true,
-    recordOutputs: true,
-  }
 );
 
 ...
 ```
 
+Stable `@modelcontextprotocol/server` 2.x support requires Sentry JavaScript SDK version `10.70.0` or newer. For framework-specific setup, see MCP Monitoring for [Node.js](/platforms/javascript/guides/node/mcp-monitoring/), [Hono](/platforms/javascript/guides/hono/mcp-monitoring/), or [Cloudflare](/platforms/javascript/guides/cloudflare/mcp-monitoring/).
+
 #### Options
+
+The `recordInputs` and `recordOutputs` options require Sentry JavaScript SDK version `10.33.0` or newer.
 
 ##### `recordInputs`
 
@@ -63,7 +63,7 @@ _Type: `boolean`_
 
 Records inputs to MCP tool and prompt calls (such as tool arguments and prompt parameters).
 
-Defaults to `true` if `sendDefaultPii` is `true`.
+Defaults to `dataCollection.genAI.inputs`. In Sentry JavaScript SDK 10.x, when `dataCollection` isn't configured, this follows `sendDefaultPii`.
 
 ##### `recordOutputs`
 
@@ -71,23 +71,23 @@ _Type: `boolean`_
 
 Records outputs from MCP tool and prompt calls (such as tool results and prompt messages).
 
-Defaults to `true` if `sendDefaultPii` is `true`.
+Defaults to `dataCollection.genAI.outputs`. In Sentry JavaScript SDK 10.x, when `dataCollection` isn't configured, this follows `sendDefaultPii`.
 
 #### Cloudflare Workers
 
 MCP work on Cloudflare can finish after the Worker returns an HTTP response. Configure `traceLifecycle: "stream"` so spans are sent when they finish instead of depending on a static request snapshot. This requires `@sentry/cloudflare` version `10.49.0` or newer.
 
-See [Instrument MCP Servers on Cloudflare](/platforms/javascript/guides/cloudflare/tracing/instrumentation/mcp-module/) for the configuration and filtering differences in stream mode.
+See [MCP Monitoring on Cloudflare](/platforms/javascript/guides/cloudflare/mcp-monitoring/) for the configuration and filtering differences in stream mode.
 
 ### Python - MCP Server
 
 <VersionRequirement
-  product="MCP Observability"
+  product="MCP Monitoring"
   sdk="Python SDK"
   minVersion="2.43.0"
 />
 
-The Sentry Python SDK supports MCP observability for the [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (both low-level and FastMCP APIs) and [standalone FastMCP](https://gofastmcp.com/getting-started/welcome). The integration automatically captures spans for your MCP server workflows including tool executions, resource access, and prompt handling.
+The Sentry Python SDK supports MCP Monitoring for the [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (both low-level and FastMCP APIs) and [standalone FastMCP](https://gofastmcp.com/getting-started/welcome). The integration automatically captures spans for your MCP server workflows, including tool executions, resource access, and prompt handling.
 
 #### Quick Start
 
