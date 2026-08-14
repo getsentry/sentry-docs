@@ -36,6 +36,37 @@ The JavaScript SDK supports automatic instrumentation for MCP servers. We recomm
 
 - [MCP (Model Context Protocol)](/product/mcp-servers/getting-started/)
 
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+### Preserve MCP Spans After the Response
+
+Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. With the static trace lifecycle, Sentry snapshots the request transaction when the response is returned, so MCP spans that finish later may be missing.
+
+Set `traceLifecycle: "stream"` so the SDK can send each sampled span when it finishes. Span streaming on Cloudflare requires `@sentry/cloudflare` version `10.49.0` or newer.
+
+```javascript {filename:index.js}
+import * as Sentry from "@sentry/cloudflare";
+
+const worker = {
+  async fetch(request, env, ctx) {
+    return handleMcpRequest(request, env, ctx);
+  },
+};
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    traceLifecycle: "stream",
+  }),
+  worker
+);
+```
+
+Stream mode sends span records instead of assembling one transaction event with embedded spans. Use `beforeSendSpan` and `ignoreSpans` to filter streamed spans instead of `beforeSendTransaction` and `ignoreTransactions`. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for details.
+
+</PlatformSection>
+
 ## Manual Instrumentation
 
 For your MCP data to show up in Sentry, spans must be created with well-defined names and data attributes. See below for the different types of MCP operations you can instrument.
