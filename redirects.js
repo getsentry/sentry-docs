@@ -1093,6 +1093,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1265,6 +1269,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/bugzero/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
   {
