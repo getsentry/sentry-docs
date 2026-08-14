@@ -1156,6 +1156,22 @@ const userDocsRedirects = [
     source: '/organization/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/application-platform/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fix-with-taskbounty/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/oneleet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/superlog-responder/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1333,6 +1349,22 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/waroom/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/application-platform/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fix-with-taskbounty/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/oneleet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
   {
