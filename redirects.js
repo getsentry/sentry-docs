@@ -2994,11 +2994,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/alerts/create-alerts/',
-    destination: '/product/monitors-and-alerts/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/create-alerts/',
   },
   {
     source: '/product/alerts/create-alerts/issue-alert-config/',
-    destination: '/product/monitors-and-alerts/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/create-alerts/',
   },
   {
     source: '/product/alerts/create-alerts/metric-alert-config/',
@@ -3006,7 +3006,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/alerts/create-alerts/routing-alerts/',
-    destination: '/product/monitors-and-alerts/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/create-alerts/',
   },
   {
     source: '/product/alerts/create-alerts/uptime-alert-config/',

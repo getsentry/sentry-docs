@@ -1,0 +1,169 @@
+---
+title: Creating an Alert
+sidebar_order: 10
+description: >-
+  Learn about every option available when you create an Alert, including
+  sources, environments, triggers, filters, actions, and throttling.
+---
+
+Alerts let you configure how you want to learn about issue activity like creation, resolution, or when Seer completes tasks. This page walks through each step of the **New Alert** form and the options available in each one.
+
+<Arcade src="https://demo.arcade.software/yXRDN2qTVqtedkfpQIbB?embed" />
+
+To get started, go to **Monitors > [Alerts](https://sentry.io/monitors/alerts)** and click **Create Alert**.
+
+## Permissions
+
+Alerts are an organization-level feature. Owners, Managers, Admins (and Team Admins) can always create and edit Alerts. Members and Team Contributors can too, as long as **Let Members Create and Edit Monitors and Alerts** is enabled in your [organization settings](https://sentry.io/settings/organization/), which it is by default. Learn more about [roles and permissions](/organization/membership/).
+
+<Alert level="warning">
+  Alerts scoped to [all projects](#alert-on-all-projects) can only be managed by Owners and Managers.
+</Alert>
+
+## Step 1: Select a Source
+
+The **Source** determines where issues that can trigger an Alert come from:
+
+- **Alert on all issues in selected projects**: Pick one or more projects. The Alert evaluates every issue in those projects, no matter which Monitor created it.
+- **Alert on specific monitors**: Connect individual [Monitors](/product/monitors-and-alerts/monitors/) so the Alert only evaluates issues those Monitors create. Click **Connect Monitors** to search all Monitors, filter by project, and select the ones you want. Use **Edit Monitors** to change your selection later, or **Create New Monitor** to set up a new one.
+- **Alert on all issues in all projects**: The Alert evaluates every issue in the organization. See [Alert on All Projects](#alert-on-all-projects) below.
+
+Pick selected projects when you want coverage for a single service, specific Monitors when the Alert only makes sense for a particular set of Monitors such as a single cron job or set of uptime checks, and all projects when the Alert should apply organization-wide.
+
+### Alert on All Projects
+
+Selecting **Alert on all issues in all projects** scopes the Alert to your whole organization instead of a set of projects. Sentry evaluates it against every issue in the organization and issues from projects created after you save the Alert are covered automatically.
+
+This is the best choice for teams with simple alerting needs like feed channels in Slack or high level monitoring of newly detected issues.
+
+## Step 2: Filter Issues by Environment
+
+Select the <PlatformLink to="/configuration/environments/">environment</PlatformLink> the Alert evaluates. This filters on the `environment` tag in your events, so you can send production alerts somewhere different from staging or QA alerts.
+
+The dropdown defaults to All Environments, which applies no environment filter. Otherwise you can select an environment from the list of distinct environment tags across your projects. It's possible also possible to filter environment tag values in the IF section of the Alert Builder, consider this option for complex routing configurations.
+
+## Step 3: Build the Alert
+
+The **Alert Builder** has three sections: **When** (triggers), **If** (filters), and **Then** (actions).
+
+### When: Triggers
+
+Triggers are the issue events that start an Alert evaluation. Triggers use `ANY` logic — the Alert evaluates as soon as one of them happens — and each trigger can only be added once.
+
+| Trigger                                            | Runs when                                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **A new issue is created**                         | An issue is created.                                                    |
+| **An issue escalates**                             | An event on an issue caused it to move from a lower priority to a higher one, or causes it to be [flagged as escalating](/product/issues/states-triage/escalating-issues). |
+| **A resolved issue regresses**                     | An resolved issue regresses when it's seen again (cannot be triggered by manually unresolving).                                               |
+| **An issue is resolved**                           | An issue is marked as resolved.                             |
+| **An event is captured**                           | Any event is captured for an issue, including events on existing issues.                          |
+| **Seer runs on an issue and reaches the stage...** | [Seer](/product/ai-in-sentry/seer/) finishes one of the stages you select.                        |
+
+For the Seer trigger, select one or more stages: **Root cause analysis completed**, **Planning completed**, **Coding completed**, or **Pull request created**.
+
+Learn more about issue lifecycle in [Issue States and Triage](/product/issues/states-triage/) and the [Seer Autofix process](/product/ai-in-sentry/seer/autofix/#how-issue-autofix-works).
+
+### If: Filters
+
+Filters decide which actions will run when issue triggers occur. 
+
+An Alert can have many **If** blocks and each **If** block evaluates filters matching with `all`, `any`, or `none` logic:
+
+- **all**: every filter must match.
+- **any**: at least one filter must match.
+- **none**: no filter may match.
+
+If you don't add any filters, every issue trigger matches (the block reads **Any event**). 
+
+#### Filter by Issue Attributes
+
+<Alert>
+
+Event attribute, release, and frequency filters only apply to occurrence-based monitors (errors, N+1, and replay), and only to the **A new issue is created** and **An event is captured** triggers. The builder marks these filters with a warning icon.
+
+</Alert>
+
+| Filter               | Options                                                                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Issue age**        | The issue is **older than** or **newer than** a value in **minutes**, **hours**, **days**, or **weeks**.                                                   |
+| **Issue assignment** | The issue is assigned to **No One**, a **Team**, or a organization **Member**.                                                                                          |
+| **Issue frequency**  | The issue has happened at least a set number of times.                                                                                                     |
+| **Issue category**   | The issue category is **equal to** or **not equal to** one of `error`, `feedback`, `outage`, `metric`, `db_query`, `http_client`, `frontend`, or `mobile`. |
+| **Issue type**       | The issue type is **equal to** or **not equal to** a specific issue type, which is even more granular than category.                                            |
+| **Issue priority**   | The current [issue priority](/product/issues/issue-priority/) is greater than or equal to **high**, **medium**, or **low**.                                |
+| **De-escalation**    | The issue priority de-escalates (ex. high -> medium, or medium -> low).                                                                                   |
+
+#### Filter by Frequency
+
+Frequency filters compare how often sometvhing happens. Each one supports two comparison modes:
+
+- **more than...**: an absolute count in an interval — **in 5 minutes**, **in 15 minutes**, **in one hour**, **in one day**, **in one week**, or **in 30 days**.
+- **relatively higher than...**: a percentage increase over a past interval — **5 minutes ago**, **15 minutes ago**, **one hour ago**, **one day ago**, **one week ago**, or **30 days ago**.
+
+| Filter                              | Description                                                                                                                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Number of events**                | How many events the issue has received.                                                                                                                                        |
+| **Number of users affected**        | How many unique users the issue has affected.                                                                                                                                  |
+| **Percentage of sessions affected** | Compares the issue's event count against an estimate of project [sessions](/product/releases/health/#sessions) in the selected interval. Intervals are limited to **5 minutes**, **10 minutes**, **30 minutes**, and **one hour**. |
+
+Frequency filters also accept **sub-filters**, which scope the count to a subset of events. Add one or more sub-filters in the form `[Attribute or Tag] [is / is not] [value]`. Multiple sub-filters are combined with `and`.
+
+#### Filter by Event Attributes
+
+| Filter              | Options                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Event attribute** | The event's [attribute](/concepts/search/searchable-properties/) matches a value. Attributes include `message`, `platform`, `environment`, `type`, `error.handled`, `error.unhandled`, `error.main_thread`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `http.status_code`, `sdk.name`, `stacktrace.code`, `stacktrace.module`, `stacktrace.filename`, `stacktrace.abs_path`, `stacktrace.package`, `unreal.crash_type`, `app.in_foreground`, `os.distribution_name`, and `os.distribution_version`. |
+| **Tagged event**    | The event's <PlatformLink to="/enriching-events/tags/">tag</PlatformLink> matches a value.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Event level**     | The event's level **equals**, is **greater than or equal**, or is **less than or equal** to `fatal`, `error`, `warning`, `info`, `debug`, or `sampling`.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Latest release**  | The issue is in the latest [release](/product/releases/). This filter has no additional options.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Release age**     | The **oldest** or **newest** adopted release associated with the event's issue is **older than** or **newer than** the latest adopted release in a given environment.                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+Event attribute and tag filters support these match types: **contains**, **equals**, **starts with**, **ends with**, **does not contain**, **does not equal**, **does not start with**, **does not end with**, **is set**, **is not set**, **is one of**, and **is not one of**.
+
+### Then: Actions
+
+Actions are what Sentry does when the triggers and filters match. Available actions depend on the [integrations](/integrations/) installed in your organization.
+
+#### Notifications
+
+- **Notify on preferred channel**: Notify **Suggested Assignees**, a **Team**, or a **Member**, and Sentry delivers via each recipient's [notification settings](/product/notifications/notification-settings/). Suggested Assignees include current assignees, issue owners from [ownership rules](/product/issues/ownership-rules/), and authors of [suspect commits](/product/issues/suspect-commits/). When no suggested assignee is found, choose a fallback: **Recently Active Members** (default), **All Project Members**, or **No One**.
+- **[Slack](/integrations/notification-incidents/slack/)**: Select the workspace and channel. You can also add a channel or user ID to avoid [rate limiting](/integrations/notification-incidents/slack/#rate-limiting-error), and optionally show **tags** (for example, `environment,my_tag`) and **notes** (for example, `@jane, @on-call-team`) in the message.
+- **[Discord](/integrations/notification-incidents/discord/)**: Select the server and enter a channel ID or URL — a channel name won't work. You can optionally show **tags** in the message.
+- **[MS Teams](/integrations/notification-incidents/msteams/)**: Select the team and channel.
+- **[PagerDuty](/integrations/notification-incidents/pagerduty/)**: Select the service and the **severity** to send.
+- **[Opsgenie](/integrations/notification-incidents/opsgenie/)**: Select the team and the **priority** to send.
+- **Send a notification via an integration**: Take action via a [third party integration](/integrations/third-party-integrations/) that supports Alert actions or trigger a custom webhook.
+
+#### Ticket Creation
+
+Create a work item in an issue tracker, and use **these settings** on the action to configure fields such as project, issue type, assignee, and labels:
+
+- **[Jira](/integrations/issue-tracking/jira/)** and **Jira Server**
+- **[GitHub](/integrations/source-code-mgmt/github/)** and **GitHub Enterprise**
+- **[Azure DevOps](/integrations/source-code-mgmt/azure-devops/)**
+
+#### Other Integrations
+
+Take action via a [third party integration](/integrations/third-party-integrations/) that supports Alert actions or to legacy integrations (plugins) configured on the project.
+
+<Alert>
+
+Click **Send Test Notification** on an **If/Then** block to send a test event through that block's actions. This verifies that your integrations are wired up correctly before you save but event based triggers may behave differently.
+
+</Alert>
+
+### Add Multiple If/Then Blocks
+
+Click **+ If/Then Block** to add another set of filters and actions to the same Alert. Every block evaluates against the same triggers, so you can route different event shapes to different places from a single Alert — for example, create a Jira ticket or Slack notification for every new issue, but only page on-call when the issue is high priority.
+
+## Step 4: Set Throttling
+
+**Throttling** (previously called the action interval) controls how often the Alert can run its actions for a given issue. If events in an issue match triggers repeatedly within the throttle window, the actions won't run again until the throttle period has elapsed.
+
+Options are **Get notified on every trigger** (the default), **5 minutes**, **10 minutes**, **30 minutes**, **60 minutes**, **3 hours**, **12 hours**, **24 hours**, **1 week**, and **30 days**.
+
+## Step 5: Name and Save
+
+Sentry generates a name from your configuration as you build. To change it, click the name in the header at the top of the page and enter a descriptive one, such as "Frontend high priority to #frontend-oncall".
+
+Click **Create Alert** to save. Sentry takes you to the Alert's details page, where you can review its history, edit it, or turn it off. Learn more in [Managing Alerts](/product/monitors-and-alerts/alerts/#managing-alerts).
