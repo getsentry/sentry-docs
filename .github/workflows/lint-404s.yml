@@ -16,14 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
-
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
-        id: setup-node
-        with:
-          node-version-file: 'package.json'
-          cache: 'pnpm'
-
       - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: filter
         with:
@@ -33,9 +25,22 @@ jobs:
               - 'includes/**'
               - 'platform-includes/**'
               - 'scripts/lint-404s/**'
+              - '.github/workflows/lint-404s.yml'
             dev-docs:
               - 'develop-docs/**'
+
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+        id: setup-node
+        with:
+          node-version-file: 'package.json'
+          cache: 'pnpm'
+
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
         with:
           path: |
             ${{ github.workspace }}/.next/cache
@@ -44,18 +49,24 @@ jobs:
             nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
 
       - run: pnpm install --frozen-lockfile
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
 
-      - run: pnpm build
+      # Skip og images / md-exports / llms.txt — not needed for internal link checks
+      # (same light build path as algolia-index.yml)
+      - name: Build user docs
+        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: pnpm build:developer-docs
+      - name: Build developer docs
+        run: git submodule init && git submodule update && pnpm enforce-redirects && pnpm generate-doctree && pnpm next build
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_DEVELOPER_DOCS: 1
 
       - name: Start Http Server
         run: pnpm start &
