@@ -1093,6 +1093,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1150,6 +1154,22 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/waroom/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/application-platform/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fix-with-taskbounty/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/oneleet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
@@ -1268,6 +1288,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1325,6 +1349,22 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/waroom/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/application-platform/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fix-with-taskbounty/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/oneleet/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -2221,6 +2261,69 @@ const userDocsRedirects = [
   {
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
+  },
+  // Mastra moved from Agent Tracing to JavaScript integrations
+  // Map older Agent Tracing names directly to avoid redirect chains.
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/mastra.md',
+    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/mastra/:path*',
+    destination:
+      '/platforms/javascript/configuration/integrations/mastra/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/mastra.md',
+    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/mastra/:path*',
+    destination:
+      '/platforms/javascript/configuration/integrations/mastra/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/mastra/:path*',
+    destination:
+      '/platforms/javascript/configuration/integrations/mastra/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
   },
   // Agent Tracing moved to top-level feature
   {
