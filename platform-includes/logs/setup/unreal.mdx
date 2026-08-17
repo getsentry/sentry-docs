@@ -1,28 +1,4 @@
-To enable logging in your Unreal Engine project, you need to configure the Sentry SDK with structured logging enabled.
-
-### Project Settings Configuration
-
-1. Open your project settings: **Project Settings > Plugins > Sentry**
-2. Check the **Enable Structured Logging** option
-
-### Programmatic Configuration
-
-Alternatively, you can enable logging programmatically when initializing the SDK:
-
-```cpp
-#include "SentrySubsystem.h"
-
-void ConfigureSentryWithLogs()
-{
-    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
-
-    // Create settings with logging enabled
-    SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
-    {
-        Settings->EnableStructuredLogging = true;
-    }));
-}
-```
+Structured logging is enabled by default, so no setup is required to start capturing logs. This page covers the advanced options available for configuring how logs are captured and forwarded.
 
 ### Advanced Configuration Options
 
@@ -38,8 +14,6 @@ USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem
 // Configure automatic log forwarding programmatically
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
-    Settings->EnableStructuredLogging = true;
-
     // Enable specific severity levels for UE_LOG forwarding
     Settings->StructuredLoggingLevels.bOnDebugLog = false;
     Settings->StructuredLoggingLevels.bOnInfoLog = true;
@@ -59,11 +33,8 @@ You can filter which log categories are sent to Sentry:
 // Configure category filtering
 USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-// Create settings with logging enabled
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
-    Settings->EnableStructuredLogging = true;
-
     // Only forward logs from specific categories
     TArray<FString> AllowedCategories;
     AllowedCategories.Add(TEXT("LogGameFlow"));
@@ -121,9 +92,6 @@ SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
 
 void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
 {
-    // Enable structured logging
-    Settings->EnableStructuredLogging = true;
-
     // Configure individual severity levels
     Settings->StructuredLoggingLevels.bOnDebugLog = false;
     Settings->StructuredLoggingLevels.bOnInfoLog = true;
