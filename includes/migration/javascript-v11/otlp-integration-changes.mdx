@@ -1,0 +1,27 @@
+---
+id: otlp-integration-changes
+title: "`otlpIntegration` moved and lost its exporter options"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+features: [custom-otel]
+platformCategory: server
+order: 150
+---
+
+`Sentry.otlpIntegration()` is exported from every server-side SDK now, and no longer sets up an exporter, span processor, or tracer provider. The `@sentry/node-core/light/otlp` entry point, the `setupOtlpTracesExporter` and `collectorUrl` options, and the `OtlpIntegration` name were removed.
+
+Import it from your platform SDK and configure your own exporter, pointing it at `Sentry.getOtlpTracesEndpoint(dsn)` or at your collector:
+
+```diff
+- import { otlpIntegration } from '@sentry/node-core/light/otlp';
++ import { otlpIntegration } from '@sentry/node';
+```
+
+If you reference the integration by name, update it:
+
+```diff
+- integrations.filter(integration => integration.name !== 'OtlpIntegration')
++ integrations.filter(integration => integration.name !== 'Otlp')
+```

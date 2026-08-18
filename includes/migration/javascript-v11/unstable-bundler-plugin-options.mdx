@@ -1,0 +1,36 @@
+---
+id: unstable-bundler-plugin-options
+title: "The `unstable_sentry*PluginOptions` escape hatch was removed"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: [astro, nextjs, nuxt, react-router, solidstart, sveltekit]
+features: []
+platformCategory: all
+order: 350
+---
+
+The `unstable_sentry*PluginOptions` escape hatch was removed from every SDK:
+
+| SDK                    | Removed option                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `@sentry/astro`        | `unstable_sentryVitePluginOptions` (top-level and inside `sourceMapsUploadOptions`) |
+| `@sentry/nextjs`       | `unstable_sentryWebpackPluginOptions` (top-level and inside `webpack`)              |
+| `@sentry/nuxt`         | `unstable_sentryBundlerPluginOptions`                                               |
+| `@sentry/react-router` | `unstable_sentryVitePluginOptions`                                                  |
+| `@sentry/solidstart`   | `unstable_sentryVitePluginOptions`                                                  |
+| `@sentry/sveltekit`    | `unstable_sentryVitePluginOptions`                                                  |
+
+Set the option directly on the Sentry build options:
+
+```js
+// Before
+unstable_sentryWebpackPluginOptions: {
+  applicationKey: 'my-app',
+},
+
+// After
+applicationKey: 'my-app',
+```
+
+`moduleMetadata` and `sourcemaps.resolveSourceMap` are first-class build options now. `release.uploadLegacySourcemaps`, `_experiments`, and the whole-plugin `disable` flag have no equivalent; use `sourcemaps.disable` instead. Passing a removed option logs a build-time warning.

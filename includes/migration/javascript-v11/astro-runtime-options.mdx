@@ -1,0 +1,44 @@
+---
+id: astro-runtime-options
+title: "Runtime SDK options moved out of `sentryAstro()`"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: [astro]
+features: []
+platformCategory: all
+order: 400
+---
+
+Runtime SDK options (`dsn`, `environment`, `release` as a string, `sampleRate`, `tracesSampleRate`, `replaysSessionSampleRate`, `replaysOnErrorSampleRate`) can no longer be passed to `sentryAstro()`. `release` and `debug` are build-time options now, and the generated client snippet always includes the `Replay` integration.
+
+Keep build-time options in `astro.config.mjs`:
+
+```ts
+export default defineConfig({
+  integrations: [
+    sentry({
+      org: 'my-org',
+      project: 'my-project',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: '1.0.0' },
+      debug: true,
+    }),
+  ],
+});
+```
+
+Move runtime options to `sentry.client.config.ts` or `sentry.server.config.ts`:
+
+```ts
+import * as Sentry from '@sentry/astro';
+
+Sentry.init({
+  dsn: 'https://example@sentry.io/123',
+  release: '1.0.0',
+  environment: 'production',
+  tracesSampleRate: 0.5,
+});
+```
+
+To customize or remove Replay, create a `sentry.client.config.ts`.

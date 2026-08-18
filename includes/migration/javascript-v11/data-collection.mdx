@@ -1,0 +1,49 @@
+---
+id: data-collection
+title: "`sendDefaultPii` is replaced by `dataCollection`"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+features: []
+platformCategory: all
+order: 10
+---
+
+`sendDefaultPii` was replaced by `dataCollection`, which controls each category individually. Leaving `dataCollection` unset collects most categories by default, where the unset `sendDefaultPii` was restrictive.
+
+| Category              | v10 default (`sendDefaultPii` off) | v11 default          |
+| --------------------- | ---------------------------------- | -------------------- |
+| `userInfo`            | `false`                            | `true`               |
+| `cookies`             | not collected                      | `true`               |
+| `httpHeaders`         | request + response, PII scrubbed   | request + response   |
+| `httpBodies`          | not collected (size only)          | all request/response |
+| `urlQueryParams`      | `true`                             | `true`               |
+| `genAI`               | inputs + outputs not collected     | inputs + outputs     |
+| `databaseQueryData`   | `false`                            | `true`               |
+| `stackFrameVariables` | `true`                             | `true`               |
+| `frameContextLines`   | `7`                                | `5`                  |
+
+If you set `sendDefaultPii: true`, remove it. The v11 default matches that behavior.
+
+If you relied on the v10 default, set the baseline explicitly:
+
+```js
+Sentry.init({
+  dataCollection: {
+    userInfo: false,
+    cookies: false,
+    httpHeaders: {
+      request: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+      response: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+    },
+    httpBodies: [],
+    urlQueryParams: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+    genAI: { inputs: false, outputs: false },
+    databaseQueryData: false,
+    graphQL: { document: false, variables: false },
+  },
+});
+```
+
+Review your data-scrubbing config, especially for request and response bodies. `cookies`, `urlQueryParams`, and the `httpHeaders` fields also accept `{ allow: string[] }` or `{ deny: string[] }`. See the [`dataCollection` docs](https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection).

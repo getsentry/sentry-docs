@@ -1,0 +1,28 @@
+---
+id: remix-action-form-data
+title: "Remix action form data is reported under a new attribute name"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: [remix]
+features: [tracing]
+platformCategory: all
+order: 30
+---
+
+`captureActionFormDataKeys` is an integration-level override now, so it no longer requires `dataCollection.httpBodies` to include `'incomingRequest'`. Captured fields are reported as `remix.action_form_data.<field>` span attributes on every runtime, where Node.js previously used `formData.<field>`.
+
+```js
+// v10: both were required
+Sentry.init({
+  captureActionFormDataKeys: { username: true },
+  dataCollection: { httpBodies: ['incomingRequest'] },
+});
+
+// v11
+Sentry.init({
+  captureActionFormDataKeys: { username: true },
+});
+```
+
+Update dashboards, alerts, and saved searches that query `formData.*`. If you do not set `captureActionFormDataKeys`, all form fields are captured when `dataCollection.httpBodies` includes `'incomingRequest'`, with sensitive-looking names replaced by `[Filtered]`.

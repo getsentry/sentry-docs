@@ -1,0 +1,27 @@
+---
+id: span-streaming-opt-out
+title: "Opting out of span streaming"
+phase: code-changes
+category: behavior
+severity: informational
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 80
+---
+
+`traceLifecycle: 'static'` keeps the previous transaction-based model if you cannot migrate `beforeSendSpan`, `beforeSendTransaction`, or `ignoreTransactions` yet.
+
+```js
+Sentry.init({
+  traceLifecycle: 'static',
+
+  // `beforeSendSpan` MUST be wrapped with Sentry.withStaticSpan:
+  beforeSendSpan: Sentry.withStaticSpan(span => {
+    span.description = scrub(span.description);
+    return span;
+  }),
+});
+```
+
+In Node.js, Bun, Vercel Edge, and Cloudflare you can set `SENTRY_TRACE_LIFECYCLE=static` instead. The static lifecycle is planned for removal in a future major version.
