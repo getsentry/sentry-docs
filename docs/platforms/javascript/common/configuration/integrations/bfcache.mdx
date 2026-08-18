@@ -1,0 +1,100 @@
+---
+title: BFCache Metrics
+description: "Track browser back/forward cache (bfcache) health as Sentry application metrics."
+beta: true
+notSupported:
+  - javascript.cordova
+  - javascript.capacitor
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nitro
+  - javascript.nestjs
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.bun
+---
+
+<AvailableSince version="11.0.0" />
+
+<Alert>
+
+This integration only works inside a browser environment.
+
+</Alert>
+
+_Import name: `Sentry.bfcacheIntegration`_
+
+The `bfcacheIntegration` tracks the health of the browser's [back/forward cache (bfcache)](https://web.dev/articles/bfcache) and emits it as [Sentry Application Metrics](/product/metrics/). The bfcache is a browser optimization that restores a previously visited page instantly from an in-memory snapshot when the user navigates back or forward. When it works, the Back button feels instant. When it doesn't, the same action becomes a full page reload.
+
+This integration answers questions that ordinary page-load data can't:
+
+- What share of back/forward navigations are restored instantly?
+- Which routes miss the bfcache most often?
+- What is blocking the page from being cached?
+- How expensive is the fallback reload when a restore fails?
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.bfcacheIntegration()],
+});
+```
+
+This integration requires <PlatformLink to="/metrics">Sentry Application Metrics</PlatformLink> to be available in your Sentry organization.
+
+A **hit** is a back/forward navigation that the browser restored instantly from the bfcache; a **miss** is one that fell back to a full page load. Hit/miss detection works across modern Chromium, Firefox, and Safari. When a miss occurs, the SDK also records the browser-reported [`notRestoredReasons`](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/notRestoredReasons) it wasn't cached, currently a Chromium-only API, so misses on other browsers are recorded without reasons.
+
+## Options
+
+### `maxReasons`
+
+A single miss can report several not-restored reasons (for example, one page can be blocked by multiple frames). By default, every reported reason is emitted. Set `maxReasons` to cap how many are emitted per miss:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.bfcacheIntegration({
+      maxReasons: 3,
+    }),
+  ],
+});
+```
+
+Values below `1` are clamped to `1`, since a lower cap would drop all reason data. This option only limits the `browser.bfcache.not_restored` metric; the reason count on `browser.bfcache.navigation` is unaffected.
+
+## Emitted Metrics
+
+| Metric                          | Type         | Description                                                                                      |
+| ------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
+| `browser.bfcache.navigation`    | counter      | One per back/forward navigation, split by outcome (`hit` or `miss`).                             |
+| `browser.bfcache.not_restored`  | counter      | One per not-restored reason on a miss. Chromium-only.                                            |
+| `browser.bfcache.reload.duration` | distribution | Duration (in milliseconds) of the fallback reload when a back/forward navigation missed the bfcache. |
+
+### Attributes
+
+`browser.bfcache.navigation` includes:
+
+| Attribute                                    | Description                                                                                   |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `browser.bfcache.outcome`                    | `hit` if the page was restored from the bfcache, `miss` if it was reloaded.                    |
+| `browser.bfcache.not_restored_reason_count`  | The number of reasons the browser reported for a miss. `0` when the browser reported none.     |
+| `sentry.segment.name`                        | The route the navigation landed on. Falls back to `window.location.pathname` without tracing.  |
+
+`browser.bfcache.not_restored` includes:
+
+| Attribute                 | Description                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `browser.bfcache.reason`  | A browser-reported reason the page was not restored (for example, `unload-listener`, `websocket`). |
+| `browser.bfcache.frame`   | Where the reason originated: the `top` document or a `child` frame.                              |
+| `sentry.segment.name`     | The route the navigation landed on.                                                              |
+
+## A Note on Reasons
+
+The `notRestoredReasons` strings are defined by the browser and can change between versions. Chrome also reports a privacy-masked `masked` reason alongside real ones for cross-origin frames. Treat the reason values as a moving target rather than a fixed enum, and group on them accordingly in dashboards.
