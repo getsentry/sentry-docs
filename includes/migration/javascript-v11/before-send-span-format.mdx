@@ -1,0 +1,49 @@
+---
+id: before-send-span-format
+title: "`beforeSendSpan` receives the streamed span format"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 50
+---
+
+`beforeSendSpan` now receives a `StreamedSpanJSON` object as each span finishes, rather than every span of a transaction just before it is sent. The fields were renamed:
+
+| Before (`SpanJSON`) | After (`StreamedSpanJSON`)     |
+| ------------------- | ------------------------------ |
+| `description`       | `name`                         |
+| `data`              | `attributes`                   |
+| `op`                | `attributes['sentry.op']`      |
+| `timestamp`         | `end_timestamp`                |
+| `status` (`string`) | `status` (`'ok'` or `'error'`) |
+
+Update the callback:
+
+```js
+// Before
+Sentry.init({
+  beforeSendSpan: span => {
+    if (span.op === 'db.query') {
+      span.description = scrub(span.description);
+      span.data['db.statement'] = scrub(span.data['db.statement']);
+    }
+    return span;
+  },
+});
+
+// After
+Sentry.init({
+  beforeSendSpan: span => {
+    if (span.attributes?.['sentry.op'] === 'db.query') {
+      span.name = scrub(span.name);
+      span.attributes['db.statement'] = scrub(span.attributes['db.statement']);
+    }
+    return span;
+  },
+});
+```
+
+Use `ignoreSpans` to drop spans; returning `null` is a no-op. A callback that does not match your `traceLifecycle` is never invoked: wrap it in `Sentry.withStaticSpan()` for `'static'`, leave it unwrapped for `'stream'`.
