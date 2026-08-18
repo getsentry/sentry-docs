@@ -1,0 +1,50 @@
+---
+id: span-attribute-changes
+title: "Span attributes were renamed to match semantic conventions"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 60
+---
+
+Span attributes follow the shared `@sentry/conventions` package now, and many were renamed.
+
+**HTTP and network**
+
+- `http.query` and `http.fragment` to `url.query` and `url.fragment`
+- `net.peer.name` and `net.peer.port` on database and messaging client spans to `server.address` and `server.port`
+- `net.transport` to `network.transport`
+
+**Database**
+
+- `db.system` to `db.system.name`
+- `db.name` to `db.namespace`
+- `db.operation` to `db.operation.name`
+- `db.statement` to `db.query.text`
+- `db.mongodb.collection` to `db.collection.name`
+- Legacy `messaging.*` attributes on the AMQP instrumentation now use their semantic-convention equivalents
+
+**Gen AI**
+
+- `gen_ai.system` to `gen_ai.provider.name`
+- `gen_ai.request.available_tools` to `gen_ai.tool.definitions`
+- `gen_ai.tool.input` to `gen_ai.tool.call.arguments`
+- `gen_ai.tool.output` to `gen_ai.tool.call.result`
+- `gen_ai.usage.cache_creation_input_tokens` to `gen_ai.usage.cache_creation.input_tokens`
+- `gen_ai.usage.cache_read_input_tokens` to `gen_ai.usage.cache_read.input_tokens`
+- (Vercel AI) `gen_ai.usage.input_tokens.cached` to `gen_ai.usage.cache_read.input_tokens`
+- (Vercel AI) `gen_ai.usage.input_tokens.cache_write` to `gen_ai.usage.cache_creation.input_tokens`
+- (Vercel AI) `gen_ai.usage.output_tokens.reasoning` to `gen_ai.usage.reasoning.output_tokens`
+- (Vercel AI) `ai.pipeline.name` and `ai.streaming` to `gen_ai.pipeline.name` and `gen_ai.response.streaming`
+- `gen_ai.tool.type` is no longer set
+- (Anthropic) `gen_ai.prompt` is no longer set. The legacy Completions API's `prompt` is reported as a user message on `gen_ai.input.messages`.
+
+**Browser and filesystem**
+
+- `code.filepath` and `code.function` on `ui.long_animation_frame` spans to `code.file.path` and `code.function.name`
+- `fs_error` on `file` spans to `error.type`, carrying the syscall error code (such as `ENOENT`) instead of the full message
+
+Update any custom instrumentation, `beforeSendSpan` callback, dashboard or alert that references these. TypeScript does not catch them.

@@ -1,0 +1,25 @@
+---
+id: span-to-json-format
+title: "`spanToJSON` returns the streamed span format"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 75
+---
+
+`Sentry.spanToJSON` returns a `StreamedSpanJSON` object instead of `SpanJSON`, the same shape [`beforeSendSpan` receives](#before-send-span-format). `spanToStreamedSpanJSON` was removed.
+
+Replace calls to the removed helper:
+
+```js
+// Before
+const spanJson = Sentry.spanToStreamedSpanJSON(span);
+
+// After
+const spanJson = Sentry.spanToJSON(span);
+```
+
+If you [opt out of span streaming](#span-streaming-opt-out), use `spanToStaticSpanJSON` to get the old `SpanJSON` shape.
