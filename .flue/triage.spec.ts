@@ -182,6 +182,9 @@ describe('policy projection', () => {
 
     expect(policy.needsInformationCloseDueAt).toBe('2026-01-15T00:00:00.000Z');
     expect(policy.parkingLotEligibleAt).toBe('2026-07-02T00:00:00.000Z');
+    expect(policy.parkingLotGitHubLabel).toBe('Parking Lot');
+    expect(policy.parkingLotLinearStatus).toBe('Canceled');
+    expect(policy.parkingLotLinearStatusType).toBe('canceled');
     expect(policy.closurePolicy).toBe('after-needs-information-timeout');
   });
 

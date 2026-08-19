@@ -30,6 +30,6 @@ Write mode is intentionally out of scope. Before it is enabled:
 - Review shadow artifacts for routing, priority, evidence, and policy accuracy.
 - Persist first-triage and needs-information timestamps so lifecycle deadlines do not reset.
 - Reconcile qualifying Linear activity before evaluating six-month inactivity.
-- Create a `Parking Lot` canceled-type status in the Linear DOCS workflow.
+- Map the GitHub `Parking Lot` label to the existing Linear `Canceled` status; do not create a custom Linear status.
 - Validate a recommended resolution flow before applying its employee-policy exemption.
 - Put GitHub, Linear, and pull-request mutations in separately permissioned jobs.

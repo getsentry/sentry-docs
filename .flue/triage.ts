@@ -257,7 +257,9 @@ export interface PolicyProjection {
   needsInformationResponseWindowDays?: 14;
   parkingLotEligibleAt?: string;
   parkingLotInactivityMonths: 6;
-  parkingLotStatus: 'Parking Lot';
+  parkingLotGitHubLabel: 'Parking Lot';
+  parkingLotLinearStatus: 'Canceled';
+  parkingLotLinearStatusType: 'canceled';
   closurePolicy:
     | 'human-only'
     | 'after-validated-resolution'
@@ -456,7 +458,9 @@ export function projectPolicy(
             6
           ),
     parkingLotInactivityMonths: 6,
-    parkingLotStatus: 'Parking Lot',
+    parkingLotGitHubLabel: 'Parking Lot',
+    parkingLotLinearStatus: 'Canceled',
+    parkingLotLinearStatusType: 'canceled',
     closurePolicy: employee.isEmployee
       ? resolutionAutomationCandidate
         ? 'after-validated-resolution'
