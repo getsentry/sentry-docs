@@ -1,0 +1,147 @@
+name: Preview Share Link
+
+# When Vercel finishes a *preview* deployment, post (or update) a single sticky
+# comment on the associated PR with a shareable link that lets contractors open
+# the protection-gated preview in their browser.
+#
+# The Vercel "Protection Bypass for Automation" secret is NEVER placed in the
+# comment. Instead we post a link to our own public redirect endpoint
+# (`/api/preview-share` on docs.sentry.io), signing it with an HMAC so the
+# public endpoint cannot be driven by bots that merely discover a preview URL.
+#
+# Runs on `deployment_status`, which executes in the base-repo context and has
+# access to secrets even for pull requests opened from forks.
+
+on:
+  deployment_status:
+
+# Avoid duplicate work when Vercel emits multiple status events for the same
+# deployment; the comment upsert is idempotent regardless.
+concurrency:
+  group: preview-share-${{ github.event.deployment.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  comment:
+    # Only act on successful, non-production deployments.
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      !contains(github.event.deployment_status.environment, 'Production')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SHARE_LINK_SIGNING_KEY: ${{ secrets.SHARE_LINK_SIGNING_KEY }}
+          SHARE_BASE_URL: ${{ vars.SHARE_BASE_URL }}
+          LINK_TTL_DAYS: '30'
+        with:
+          script: |
+            const crypto = require('node:crypto');
+
+            const {owner, repo} = context.repo;
+            const ds = context.payload.deployment_status;
+            const deployment = context.payload.deployment;
+
+            const signingKey = process.env.SHARE_LINK_SIGNING_KEY;
+            const baseUrl = process.env.SHARE_BASE_URL;
+            if (!signingKey || !baseUrl) {
+              core.setFailed('Missing SHARE_LINK_SIGNING_KEY secret or SHARE_BASE_URL variable.');
+              return;
+            }
+
+            // Resolve the preview URL and reduce it to its origin.
+            const targetUrl = ds.target_url || ds.environment_url;
+            if (!targetUrl) {
+              core.info('No target_url on deployment_status; nothing to do.');
+              return;
+            }
+            let origin, host;
+            try {
+              const parsed = new URL(targetUrl);
+              origin = parsed.origin;
+              host = parsed.host;
+            } catch {
+              core.info(`Unparseable target_url: ${targetUrl}`);
+              return;
+            }
+
+            // Only handle our docs preview hosts (user docs + developer docs).
+            const ALLOWED = /^(sentry-docs|develop-docs)[a-z0-9-]*\.(sentry\.dev|vercel\.app)$/;
+            if (!ALLOWED.test(host)) {
+              core.info(`Host is not a docs preview host, skipping: ${host}`);
+              return;
+            }
+            const isDevelop = host.startsWith('develop-docs');
+            const projectLabel = isDevelop ? 'Developer docs' : 'User docs';
+
+            // Map the deployed commit back to its PR.
+            const sha = deployment.sha;
+            const {data: prs} =
+              await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: sha,
+              });
+            const pr = prs.find(p => p.state === 'open') || prs[0];
+            if (!pr) {
+              core.info(`No PR associated with ${sha}; nothing to comment on.`);
+              return;
+            }
+
+            // Build the signed, expiring share link.
+            const ttlDays = Number(process.env.LINK_TTL_DAYS || '30');
+            const exp = Math.floor(Date.now() / 1000) + ttlDays * 24 * 60 * 60;
+            const sig = crypto
+              .createHmac('sha256', signingKey)
+              .update(`${origin}|${exp}`)
+              .digest('hex');
+            const shareUrl =
+              `${baseUrl.replace(/\/$/, '')}/api/preview-share` +
+              `?u=${encodeURIComponent(origin)}&exp=${exp}&sig=${sig}`;
+            const expDate = new Date(exp * 1000).toISOString().slice(0, 10);
+
+            const marker = '<!-- preview-share-link -->';
+            const body = [
+              marker,
+              `### 🔓 Shareable preview link`,
+              ``,
+              `This preview is behind Vercel Deployment Protection. Open it in your ` +
+                `browser with the link below — no Vercel login required:`,
+              ``,
+              `**[Open ${projectLabel} preview →](${shareUrl})**`,
+              ``,
+              `- Bare preview URL (login required): <${origin}>`,
+              `- Link expires: **${expDate}** — push a new commit for a fresh link.`,
+              ``,
+              `<sub>Generated automatically. The link sets a one-time bypass cookie so ` +
+                `you can browse the whole preview normally.</sub>`,
+            ].join('\n');
+
+            // Upsert a single sticky comment (paginate to avoid duplicates on
+            // long PR threads).
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {owner, repo, issue_number: pr.number, per_page: 100}
+            );
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+              core.info(`Updated share-link comment on PR #${pr.number}.`);
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body,
+              });
+              core.info(`Created share-link comment on PR #${pr.number}.`);
+            }
