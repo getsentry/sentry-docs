@@ -160,6 +160,38 @@ describe('parsePriority', () => {
     expect(parsePriority(body).priority).toBe(PRIORITIES.NORMAL);
   });
 
+  it('requires a closing code fence to use the same character and sufficient length', () => {
+    const body = [
+      '````markdown',
+      SECTION,
+      '- [x] Urgent deadline: 2026-09-15',
+      '```',
+      SECTION,
+      '- [x] Other deadline: 2026-09-16',
+      '~~~',
+      SECTION,
+      '- [x] Other deadline: 2026-09-17',
+      '````',
+      SECTION,
+      '- [x] No deadline: Not urgent',
+    ].join('\n');
+
+    expect(parsePriority(body).priority).toBe(PRIORITIES.NORMAL);
+  });
+
+  it('accepts a closing code fence that is longer than the opening fence', () => {
+    const body = [
+      '```markdown',
+      SECTION,
+      '- [x] Urgent deadline: 2026-09-15',
+      '````',
+      SECTION,
+      '- [x] No deadline: Not urgent',
+    ].join('\n');
+
+    expect(parsePriority(body).priority).toBe(PRIORITIES.NORMAL);
+  });
+
   it('rejects duplicate visible urgency sections', () => {
     const body = [
       SECTION,

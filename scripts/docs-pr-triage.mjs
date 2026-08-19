@@ -100,18 +100,24 @@ function getVisibleMarkdownLines(body) {
   let fence = null;
 
   for (const line of lines) {
-    const marker = line.trim().match(/^(`{3,}|~{3,})/i)?.[1];
-    if (marker) {
-      if (!fence) {
-        fence = marker[0];
-      } else if (marker[0] === fence) {
+    const trimmed = line.trim();
+    if (fence) {
+      const closingMarker = trimmed.match(/^(`{3,}|~{3,})\s*$/)?.[1];
+      if (
+        closingMarker?.[0] === fence.character &&
+        closingMarker.length >= fence.length
+      ) {
         fence = null;
       }
       continue;
     }
-    if (!fence) {
-      visible.push(line);
+
+    const openingMarker = trimmed.match(/^(`{3,}|~{3,})/)?.[1];
+    if (openingMarker) {
+      fence = {character: openingMarker[0], length: openingMarker.length};
+      continue;
     }
+    visible.push(line);
   }
   return visible;
 }
