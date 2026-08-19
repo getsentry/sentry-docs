@@ -1,64 +1,72 @@
-name: 'Triage Issue (Flue)'
+name: Triage Issue Shadow Run
 
 on:
-  issues:
-    types: [opened]
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to triage'
+        description: Issue number to triage
         required: true
         type: number
 
 concurrency:
-  group: flue-triage
+  group: flue-triage-shadow
   cancel-in-progress: false
+  queue: max
 
 jobs:
   triage:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      contains(github.event.issue.labels.*.name, 'Docs') ||
-      contains(github.event.issue.labels.*.name, 'Docs Platform') ||
-      contains(github.event.issue.labels.*.name, 'Bug')
+      (vars.FLUE_TRIAGE_SHADOW_ENABLED == 'true' && github.event_name == 'issue_comment' &&
+       !github.event.issue.pull_request &&
+       (github.event.comment.user.login == 'linear-code' ||
+        github.event.comment.user.login == 'linear-code[bot]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
-      issues: write
+      issues: read
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 22
+          node-version-file: package.json
+          cache: pnpm
 
-      - name: Install Flue
-        run: npm install -g @flue/cli
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Parse issue number
         id: issue
         env:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          INPUT_ISSUE_NUMBER: ${{ github.event.inputs.issue_number }}
+          INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
         run: |
-          if [ "$EVENT_NAME" = "issues" ]; then
-            echo "number=$EVENT_ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
-          else
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             echo "number=$INPUT_ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=$EVENT_ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run triage agent
+      - name: Run read-only triage
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
-          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-        run: |
-          npx flue run triage-issue --target node \
-            --id "triage-${ISSUE_NUMBER}" \
-            --payload "{\"issueNumber\": ${ISSUE_NUMBER}}"
+          GH_TOKEN: ${{ github.token }}
+          TRIAGE_OUTPUT: .flue/output/triage-${{ steps.issue.outputs.number }}.json
+        run: pnpm triage:shadow --issue ${{ steps.issue.outputs.number }}
+
+      - name: Upload triage decision
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: triage-${{ steps.issue.outputs.number }}
+          path: .flue/output/triage-${{ steps.issue.outputs.number }}.json
+          if-no-files-found: error
