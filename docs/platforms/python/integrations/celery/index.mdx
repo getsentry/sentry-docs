@@ -1,25 +1,61 @@
 ---
 title: Celery
-description: "Learn about using Sentry with Celery."
+description: "Learn how to set up Sentry in your Celery app, capture your first errors and traces, and view them in Sentry."
 ---
 
 The Celery integration adds support for the [Celery Task Queue System](https://docs.celeryq.dev/).
 
 <Include name="python-stream-mode-general-callout.mdx" />
 
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Celery `4.4.7+`
+- Python `3.6+`
+
+<StepConnector selector="h2" showNumbers={true}>
+
 ## Install
 
-Install `sentry-sdk` from PyPI:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```bash {tabTitle:pip}
-pip install sentry-sdk
+pip install "sentry-sdk"
 ```
 
 ```bash {tabTitle:uv}
-uv add sentry-sdk
+uv add "sentry-sdk"
 ```
 
+```bash {tabTitle:poetry}
+poetry add "sentry-sdk"
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ## Configure
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
+/>
+
+<Include name="quick-start-features-expandable" />
+
+Configuration should happen as **early as possible** in your application's lifecycle.
 
 If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
 
@@ -33,17 +69,16 @@ If you have the `celery` package in your dependencies, the Celery integration wi
 
 When using Celery without Django, you'll need to initialize the Sentry SDK in both your application and the Celery worker processes spawned by the Celery daemon.
 
-In addition to capturing errors, you can use Sentry for [distributed tracing](/concepts/key-terms/tracing/) and [profiling](/product/profiling/). Select what you'd like to install to get the corresponding installation and configuration instructions below.
+In addition to capturing errors, you can use Sentry for [distributed tracing](/concepts/key-terms/tracing/) and [profiling](/product/profiling/).
 
 #### Set up Sentry in Celery Daemon or Worker Processes
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
 
 ```python {filename:tasks.py}
 from celery import Celery, signals
 import sentry_sdk
+# ___PRODUCT_OPTION_START___ metrics
+from sentry_sdk import metrics
+# ___PRODUCT_OPTION_END___ metrics
 
 # Initializing Celery
 app = Celery("tasks", broker="...")
@@ -81,13 +116,12 @@ The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#
 
 #### Set up Sentry in Your Application
 
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
-
 ```python {filename:main.py}
 from tasks import add
 import sentry_sdk
+# ___PRODUCT_OPTION_START___ metrics
+from sentry_sdk import metrics
+# ___PRODUCT_OPTION_END___ metrics
 
 def main():
     # Initializing Sentry SDK in our process
@@ -124,11 +158,37 @@ if __name__ == "__main__":
 
 If you're using Celery with Django in a typical setup, have initialized the SDK in your `settings.py` file (as described in the [Django integration documentation](/platforms/python/integrations/django/#configure)), and have your Celery configured to use the same settings as [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), there's no need to initialize the Celery SDK separately.
 
-## Verify
+To further customize your setup, review the [Options section](#options) below.
 
-To confirm that your SDK is initialized on worker start, pass `debug=True` to `sentry_sdk.init()`. This will add extra output to your Celery logs when the SDK is initialized. If you see the output during worker startup, and not just after a task has started, then it's working correctly.
+### Capturing Errors
 
-The snippet below includes an intentional `ZeroDivisionError` in the Celery task that will be captured by Sentry. To trigger the error call `debug_sentry.delay()`:
+Sentry automatically captures errors and exceptions raised in your Celery tasks and reports them as issues.
+
+To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
+
+<OnboardingOption optionId="performance">
+### Instrumenting Your App
+
+The Sentry SDK automatically creates spans for your Celery tasks, and propagates the trace from the code that enqueues a task to the worker that runs it.
+
+You can also manually capture performance data – see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> to learn more.
+
+</OnboardingOption>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```python {filename:tasks.py}
 from celery import Celery, signals
@@ -145,15 +205,104 @@ def debug_sentry():
     1/0
 ```
 
-<Alert title="Note on distributed tracing">
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-Sentry uses custom message headers for distributed tracing. For Celery versions 4.x, with [message protocol of version 1](https://docs.celeryq.dev/en/stable/internals/protocol.html#version-1), this functionality is broken, and Celery fails to propagate custom headers to the worker. Protocol version 2, which is the default since Celery version 4.0, is not affected.
+Trigger the error by calling `debug_sentry.delay()`.
 
-The fix for the custom headers propagation issue was introduced to Celery project ([PR](https://github.com/celery/celery/pull/6374)) starting with version 5.0.1. However, the fix was not backported to versions 4.x.
+To confirm that your SDK is initialized on worker start, pass `debug=True` to `sentry_sdk.init()`. This will add extra output to your Celery logs when the SDK is initialized. If you see the output during worker startup, and not just after a task has started, then it's working correctly.
 
-</Alert>
+<OnboardingOption optionId="performance">
+
+### Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test your tracing configuration, create a custom transaction and span:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```py
+import sentry_sdk
+
+with sentry_sdk.start_transaction(op="task", name="Transaction Name"):
+    span = sentry_sdk.start_span(name="Custom Span Name")
+    span.finish()
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+### Logs
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry catches your logs (which are enabled by default), add some log statements to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```py
+import sentry_sdk
+
+sentry_sdk.logger.info("This is an info log message")
+sentry_sdk.logger.warning("This is a warning message")
+sentry_sdk.logger.error("This is an error message")
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="metrics">
+
+### Metrics
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Send test metrics from your app to verify metrics are arriving in Sentry:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```py
+from sentry_sdk import metrics
+
+metrics.count("checkout.failed", 1)
+metrics.gauge("queue.depth", 42)
+metrics.distribution("cart.amount_usd", 187.5)
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Options
+
+<Include name="python-stream-mode-integration-option-callout.mdx" />
 
 To set options on `CeleryIntegration` to change its behavior, add it explicitly to your `sentry_sdk.init()`:
 
@@ -177,35 +326,36 @@ sentry_sdk.init(
 
 You can pass the following keyword arguments to `CeleryIntegration()`:
 
-- `propagate_traces`
+<SdkOption name='propagate_traces' type='bool' defaultValue='True'>
 
-  Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
+Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
 
-  If this is set to `False`:
-  - errors in Celery tasks won't be matched to the triggering function.
-  - your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
+If this is set to `False`:
 
-  The default is `True`.
+- errors in Celery tasks won't be matched to the triggering function.
+- your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
 
-  See [Distributed Traces](#distributed-traces) below to learn how to get more fine grained control over distributed tracing in Celery tasks.
+See [Distributed Traces](#distributed-traces) below to learn how to get more fine grained control over distributed tracing in Celery tasks.
 
-- `monitor_beat_tasks`:
+</SdkOption>
 
-  Turn auto-instrumentation on or off for Celery Beat tasks using Sentry Crons.
+<SdkOption name='monitor_beat_tasks' type='bool' defaultValue='False'>
 
-  See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+Turn auto-instrumentation on or off for Celery Beat tasks using Sentry Crons.
 
-  The default is `False`.
+See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
 
-- `exclude_beat_tasks`:
+</SdkOption>
 
-  A list of Celery Beat tasks that should be excluded from auto-instrumentation using Sentry Crons. Only applied if `monitor_beat_tasks` is set to `True`.
+<SdkOption name='exclude_beat_tasks' type='list[str]' defaultValue='None'>
 
-  The list can contain strings with the names of tasks in the Celery Beat schedule to be excluded. It can also include regular expressions to match multiple tasks. For example, if you include `"payment-check-.*"` every task starting with `payment-check-` will be excluded from auto-instrumentation.
+A list of Celery Beat tasks that should be excluded from auto-instrumentation using Sentry Crons. Only applied if `monitor_beat_tasks` is set to `True`.
 
-  See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+The list can contain strings with the names of tasks in the Celery Beat schedule to be excluded. It can also include regular expressions to match multiple tasks. For example, if you include `"payment-check-.*"` every task starting with `payment-check-` will be excluded from auto-instrumentation.
 
-  The default is `None`.
+See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+
+</SdkOption>
 
 ## Distributed Traces
 
@@ -247,9 +397,31 @@ my_task_b.apply_async(
 # Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
 ```
 
-## Supported Versions
+<Alert title="Note on distributed tracing">
 
-- Celery: 4.4.7+
-- Python: 3.6+
+Sentry uses custom message headers for distributed tracing. For Celery versions 4.x, with [message protocol of version 1](https://docs.celeryq.dev/en/stable/internals/protocol.html#version-1), this functionality is broken, and Celery fails to propagate custom headers to the worker. Protocol version 2, which is the default since Celery version 4.0, is not affected.
 
-<Include name="python-use-older-sdk-for-legacy-support.mdx" />
+The fix for the custom headers propagation issue was introduced to Celery project ([PR](https://github.com/celery/celery/pull/6374)) starting with version 5.0.1. However, the fix was not backported to versions 4.x.
+
+</Alert>
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Celery application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
+- Learn more about <PlatformLink to="/usage/">manually capturing errors or messages</PlatformLink>
+- Dive straight into the API with our [API docs](https://getsentry.github.io/sentry-python/)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
