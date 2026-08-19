@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
-import { ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import imgLinks from '@pondorasti/remark-img-links';
-import { selectAll } from 'hast-util-select';
-import { createHash } from 'node:crypto';
-import { createReadStream, createWriteStream, existsSync } from 'node:fs';
-import { mkdir, opendir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { cpus } from 'node:os';
+import {selectAll} from 'hast-util-select';
+import {createHash} from 'node:crypto';
+import {createReadStream, createWriteStream, existsSync} from 'node:fs';
+import {mkdir, opendir, readdir, readFile, rm, writeFile} from 'node:fs/promises';
+import {cpus} from 'node:os';
 import * as path from 'node:path';
-import { compose, Readable } from 'node:stream';
-import { text } from 'node:stream/consumers';
-import { pipeline } from 'node:stream/promises';
-import { fileURLToPath } from 'node:url';
-import { isMainThread, parentPort, Worker, workerData } from 'node:worker_threads';
+import {compose, Readable} from 'node:stream';
+import {text} from 'node:stream/consumers';
+import {pipeline} from 'node:stream/promises';
+import {fileURLToPath} from 'node:url';
+import {isMainThread, parentPort, Worker, workerData} from 'node:worker_threads';
 import {
   constants as zlibConstants,
   createBrotliCompress,
@@ -24,11 +24,11 @@ import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
 import RemarkLinkRewrite from 'remark-link-rewrite';
 import remarkStringify from 'remark-stringify';
-import { unified } from 'unified';
-import { remove } from 'unist-util-remove';
+import {unified} from 'unified';
+import {remove} from 'unist-util-remove';
 
-import { rehypeExpandCodeTabs } from './rehype-expand-code-tabs.mjs';
-import { replaceCurrentUrlTokens } from './markdown-keywords.mjs';
+import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
+import {replaceCurrentUrlTokens} from './markdown-keywords.mjs';
 
 // Default values for code keyword placeholders (e.g. ___PUBLIC_DSN___) that are
 // normally replaced client-side by codeKeywords.tsx. These must stay in sync with
@@ -279,8 +279,8 @@ const pageOverrides = [
     // Platform index pages (e.g., platforms/javascript.md)
     match: ctx => ctx.pathParts[0] === 'platforms' && ctx.pathParts.length === 2,
     sections: [
-      { heading: 'Frameworks', items: ctx => nodeLinks(ctx.node, 'guides') },
-      { heading: 'Topics', items: ctx => childLinks(ctx, p => !p.includes('/guides/')) },
+      {heading: 'Frameworks', items: ctx => nodeLinks(ctx.node, 'guides')},
+      {heading: 'Topics', items: ctx => childLinks(ctx, p => !p.includes('/guides/'))},
     ],
   },
   {
@@ -294,7 +294,7 @@ const pageOverrides = [
         heading: ctx => `Other ${platformTitle(ctx)} Frameworks`,
         items: ctx => siblingGuideLinks(ctx),
       },
-      { heading: 'Topics', items: ctx => childLinks(ctx) },
+      {heading: 'Topics', items: ctx => childLinks(ctx)},
     ],
   },
 ];
@@ -319,7 +319,7 @@ function buildChildSection(ctx) {
 
   // Default: list children sorted by sidebar_order
   return renderSections(ctx, [
-    { heading: 'Pages in this section', items: () => childLinks(ctx) },
+    {heading: 'Pages in this section', items: () => childLinks(ctx)},
   ]);
 }
 
@@ -397,7 +397,7 @@ function buildFrontmatterMap(docTree) {
  * Formats a YAML frontmatter block for a markdown file.
  * Only includes fields that have non-empty values.
  */
-function formatYamlFrontmatter({ title, description, url }) {
+function formatYamlFrontmatter({title, description, url}) {
   let yaml = '---\n';
   if (title) {
     yaml += `title: ${JSON.stringify(title.replace(/\r?\n/g, ' '))}\n`;
@@ -430,8 +430,8 @@ function buildMdxComponents(docTree, createElement) {
       platforms.map(p =>
         createElement(
           'li',
-          { key: p.slug },
-          createElement('a', { href: `/platforms/${p.slug}` }, getTitle(p))
+          {key: p.slug},
+          createElement('a', {href: `/platforms/${p.slug}`}, getTitle(p))
         )
       )
     );
@@ -457,17 +457,17 @@ function buildMdxComponents(docTree, createElement) {
         continue;
       }
       groups.push(
-        createElement('h3', { key: `h-${platform.slug}` }, getTitle(platform)),
+        createElement('h3', {key: `h-${platform.slug}`}, getTitle(platform)),
         createElement(
           'ul',
-          { key: `ul-${platform.slug}` },
+          {key: `ul-${platform.slug}`},
           guides.map(g =>
             createElement(
               'li',
-              { key: g.slug },
+              {key: g.slug},
               createElement(
                 'a',
-                { href: `/platforms/${platform.slug}/guides/${g.slug}` },
+                {href: `/platforms/${platform.slug}/guides/${g.slug}`},
                 getTitle(g)
               )
             )
@@ -478,7 +478,7 @@ function buildMdxComponents(docTree, createElement) {
     return createElement('div', null, ...groups);
   }
 
-  function DocSectionList({ exclude = [] }) {
+  function DocSectionList({exclude = []}) {
     if (!docTree) {
       return null;
     }
@@ -491,8 +491,8 @@ function buildMdxComponents(docTree, createElement) {
       sections.map(child =>
         createElement(
           'li',
-          { key: child.slug },
-          createElement('a', { href: `/${child.slug}` }, getTitle(child))
+          {key: child.slug},
+          createElement('a', {href: `/${child.slug}`}, getTitle(child))
         )
       )
     );
@@ -500,7 +500,7 @@ function buildMdxComponents(docTree, createElement) {
 
   // Renders every top-level section with its visible children as a nested list.
   // Used for the root index.md sitemap.
-  function SectionTree({ exclude = [] }) {
+  function SectionTree({exclude = []}) {
     if (!docTree) {
       return null;
     }
@@ -509,18 +509,18 @@ function buildMdxComponents(docTree, createElement) {
     );
     const elements = [];
     for (const section of sections) {
-      elements.push(createElement('h2', { key: `h-${section.slug}` }, getTitle(section)));
+      elements.push(createElement('h2', {key: `h-${section.slug}`}, getTitle(section)));
       const children = getVisibleChildren(section);
       if (children.length > 0) {
         elements.push(
           createElement(
             'ul',
-            { key: `ul-${section.slug}` },
+            {key: `ul-${section.slug}`},
             children.map(child =>
               createElement(
                 'li',
-                { key: child.slug },
-                createElement('a', { href: `/${child.path}` }, getTitle(child))
+                {key: child.slug},
+                createElement('a', {href: `/${child.path}`}, getTitle(child))
               )
             )
           )
@@ -530,7 +530,7 @@ function buildMdxComponents(docTree, createElement) {
     return createElement('div', null, ...elements);
   }
 
-  return { PlatformList, FrameworkGroups, DocSectionList, SectionTree };
+  return {PlatformList, FrameworkGroups, DocSectionList, SectionTree};
 }
 
 async function renderMdxOverrides(root, docTree) {
@@ -545,13 +545,13 @@ async function renderMdxOverrides(root, docTree) {
   }
 
   const tempDir = path.join(root, '.next', 'cache', 'md-override-html');
-  await rm(tempDir, { recursive: true, force: true });
-  await mkdir(tempDir, { recursive: true });
+  await rm(tempDir, {recursive: true, force: true});
+  await mkdir(tempDir, {recursive: true});
 
-  const { evaluate } = await import('@mdx-js/mdx');
+  const {evaluate} = await import('@mdx-js/mdx');
   const jsxRuntime = await import('react/jsx-runtime');
   const React = await import('react');
-  const { renderToStaticMarkup } = await import('react-dom/server');
+  const {renderToStaticMarkup} = await import('react-dom/server');
   const grayMatter = (await import('gray-matter')).default;
 
   const components = buildMdxComponents(docTree, React.createElement);
@@ -564,16 +564,16 @@ async function renderMdxOverrides(root, docTree) {
       continue;
     }
 
-    const mdxSource = await readFile(path.join(overrideDir, file), { encoding: 'utf8' });
-    const { data: frontmatter, content } = grayMatter(mdxSource);
+    const mdxSource = await readFile(path.join(overrideDir, file), {encoding: 'utf8'});
+    const {data: frontmatter, content} = grayMatter(mdxSource);
 
-    const { default: MDXContent } = await evaluate(content, {
+    const {default: MDXContent} = await evaluate(content, {
       jsx: jsxRuntime.jsx,
       jsxs: jsxRuntime.jsxs,
       Fragment: jsxRuntime.Fragment,
     });
 
-    const bodyHtml = renderToStaticMarkup(React.createElement(MDXContent, { components }));
+    const bodyHtml = renderToStaticMarkup(React.createElement(MDXContent, {components}));
 
     const relativePath = file.replace(/\.mdx$/, '.md');
     const urlPath = file.replace(/\.mdx$/, '').replace(/^index$/, '');
@@ -589,10 +589,10 @@ async function renderMdxOverrides(root, docTree) {
     ].join('\n');
 
     const htmlPath = path.join(tempDir, file.replace(/\.mdx$/, '.html'));
-    await mkdir(path.dirname(htmlPath), { recursive: true });
-    await writeFile(htmlPath, html, { encoding: 'utf8' });
+    await mkdir(path.dirname(htmlPath), {recursive: true});
+    await writeFile(htmlPath, html, {encoding: 'utf8'});
 
-    overrides.set(relativePath, { htmlPath, frontmatter });
+    overrides.set(relativePath, {htmlPath, frontmatter});
     console.log(`📝 Rendered MDX override: ${file} → ${relativePath}`);
   }
 
@@ -602,7 +602,7 @@ async function renderMdxOverrides(root, docTree) {
 // Global set to track which cache files are used across all workers
 let globalUsedCacheFiles = null;
 
-function taskFinishHandler({ id, success, failedTasks, usedCacheFiles }) {
+function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
   // Collect cache files used by this worker into the global set
   if (usedCacheFiles && globalUsedCacheFiles) {
     console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.size} cache files.`);
@@ -644,7 +644,7 @@ async function createWork() {
   const doctreePath = path.join(root, 'public', doctreeFilename);
   let docTree = null;
   try {
-    docTree = JSON.parse(await readFile(doctreePath, { encoding: 'utf8' }));
+    docTree = JSON.parse(await readFile(doctreePath, {encoding: 'utf8'}));
     console.log(`🌳 Loaded doc tree from ${doctreePath}`);
   } catch (err) {
     console.warn(`⚠️ Could not load doctree (${doctreePath}): ${err.message}`);
@@ -658,8 +658,8 @@ async function createWork() {
   const mdxOverrides = await renderMdxOverrides(root, docTree);
 
   // Clear output directory
-  await rm(OUTPUT_DIR, { recursive: true, force: true });
-  await mkdir(OUTPUT_DIR, { recursive: true });
+  await rm(OUTPUT_DIR, {recursive: true, force: true});
+  await mkdir(OUTPUT_DIR, {recursive: true});
 
   const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
   console.log(`💰 Cache directory: ${CACHE_DIR}`);
@@ -667,7 +667,7 @@ async function createWork() {
   let initialCacheFiles = [];
   if (noCache) {
     console.log(`ℹ️ No cache directory found, this will take a while...`);
-    await mkdir(CACHE_DIR, { recursive: true });
+    await mkdir(CACHE_DIR, {recursive: true});
   } else {
     initialCacheFiles = await readdir(CACHE_DIR);
     console.log(
@@ -696,7 +696,7 @@ async function createWork() {
         })
       );
       continuationToken = response.NextContinuationToken;
-      for (const { Key, ETag } of response.Contents || []) {
+      for (const {Key, ETag} of response.Contents || []) {
         existingFilesOnR2.set(Key, ETag.slice(1, -1)); // Remove quotes from ETag
       }
     } while (continuationToken);
@@ -709,7 +709,7 @@ async function createWork() {
   let workerIdx = 0;
   // Need a high buffer size here otherwise Node skips some subdirectories!
   // See https://github.com/nodejs/node/issues/48820
-  const dir = await opendir(INPUT_DIR, { recursive: true, bufferSize: 1024 });
+  const dir = await opendir(INPUT_DIR, {recursive: true, bufferSize: 1024});
 
   for await (const dirent of dir) {
     if (dirent.name.endsWith('.html') && dirent.isFile()) {
@@ -718,7 +718,7 @@ async function createWork() {
         OUTPUT_DIR,
         path.relative(INPUT_DIR, dirent.parentPath || dirent.path)
       );
-      await mkdir(targetDir, { recursive: true });
+      await mkdir(targetDir, {recursive: true});
       const targetPath = path.join(targetDir, dirent.name.slice(0, -5) + '.md');
       const relativePath = normalizeRelativePath(path.relative(OUTPUT_DIR, targetPath));
       // Use MDX override HTML if available, otherwise use Next.js build HTML
@@ -860,7 +860,7 @@ async function createWork() {
     const parentFile = path.join(OUTPUT_DIR, parentPath);
     let existingContent;
     try {
-      existingContent = await readFile(parentFile, { encoding: 'utf8' });
+      existingContent = await readFile(parentFile, {encoding: 'utf8'});
     } catch (err) {
       if (err.code === 'ENOENT') {
         continue; // Parent file doesn't exist, skip
@@ -884,7 +884,7 @@ async function createWork() {
 
     if (childSection) {
       const updatedContent = existingContent + childSection;
-      await writeFile(parentFile, updatedContent, { encoding: 'utf8' });
+      await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
       if (hasR2) {
         r2Uploads.set(parentPath, updatedContent);
@@ -930,7 +930,7 @@ async function createWork() {
         const limit = pLimit(50);
         await Promise.all(
           filesToDelete.map(file =>
-            limit(() => rm(path.join(CACHE_DIR, file), { force: true }))
+            limit(() => rm(path.join(CACHE_DIR, file), {force: true}))
           )
         );
         console.log(`🧹 Cleaned up ${filesToDelete.length} unused cache files`);
@@ -1017,8 +1017,8 @@ function extractContentForCacheKey(html) {
   return title + '\0' + canonical + '\0' + normalizedMain;
 }
 
-async function genMDFromHTML(source, { cacheDir, noCache, usedCacheFiles }) {
-  const rawHTML = await readFile(source, { encoding: 'utf8' });
+async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
+  const rawHTML = await readFile(source, {encoding: 'utf8'});
   // Strip build-specific HTML elements for faster parsing.
   // See stripUnstableElements() for details on what's removed and why.
   const strippedHTML = stripUnstableElements(rawHTML);
@@ -1038,7 +1038,7 @@ async function genMDFromHTML(source, { cacheDir, noCache, usedCacheFiles }) {
         usedCacheFiles.add(cacheKey);
       }
 
-      return { cacheHit: true, data };
+      return {cacheHit: true, data};
     } catch (err) {
       if (err.code !== 'ENOENT') {
         console.warn(`Error using cache file ${cacheFile}:`, err);
@@ -1071,7 +1071,7 @@ async function genMDFromHTML(source, { cacheDir, noCache, usedCacheFiles }) {
         // markdown on component-rendered pages like the API docs. Comments dispatch by node
         // type, so this must live in nodeHandlers rather than handlers.
         nodeHandlers: {
-          comment() { },
+          comment() {},
         },
         handlers: {
           // HACK: Extract the canonical URL during parsing
@@ -1081,7 +1081,7 @@ async function genMDFromHTML(source, { cacheDir, noCache, usedCacheFiles }) {
             }
           },
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
-          button() { },
+          button() {},
           // Convert the title to the top level heading
           // This is needed because the HTML title tag is not part of the main content
           // and we want to have a top level heading in the markdown
@@ -1112,9 +1112,9 @@ async function genMDFromHTML(source, { cacheDir, noCache, usedCacheFiles }) {
           return mdUrl;
         },
       })
-      .use(imgLinks, { absolutePath: DOCS_ORIGIN })
+      .use(imgLinks, {absolutePath: DOCS_ORIGIN})
       // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
-      .use(() => tree => remove(tree, { type: 'inlineCode', value: '' }))
+      .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
       .process(strippedHTML)
@@ -1137,10 +1137,10 @@ async function genMDFromHTML(source, { cacheDir, noCache, usedCacheFiles }) {
     usedCacheFiles.add(cacheKey);
   }
 
-  return { cacheHit: false, data };
+  return {cacheHit: false, data};
 }
 
-async function processTaskList({ id, tasks, cacheDir, noCache, usedCacheFiles }) {
+async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
   // Workers don't receive usedCacheFiles in workerData, so create a new Set
   if (!usedCacheFiles) {
     usedCacheFiles = new Set();
@@ -1152,9 +1152,9 @@ async function processTaskList({ id, tasks, cacheDir, noCache, usedCacheFiles })
   let cacheMisses = [];
   let r2CacheMisses = [];
   console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files...`);
-  for (const { sourcePath, targetPath, relativePath, r2Hash, frontmatter } of tasks) {
+  for (const {sourcePath, targetPath, relativePath, r2Hash, frontmatter} of tasks) {
     try {
-      const { data, cacheHit } = await genMDFromHTML(sourcePath, {
+      const {data, cacheHit} = await genMDFromHTML(sourcePath, {
         cacheDir,
         noCache,
         usedCacheFiles,
@@ -1174,7 +1174,7 @@ async function processTaskList({ id, tasks, cacheDir, noCache, usedCacheFiles })
       const output = frontmatter
         ? formatYamlFrontmatter(frontmatter) + resolved
         : resolved;
-      await writeFile(targetPath, output, { encoding: 'utf8' });
+      await writeFile(targetPath, output, {encoding: 'utf8'});
 
       if (r2Hash !== null && s3Client) {
         const fileHash = md5(output);
@@ -1185,7 +1185,7 @@ async function processTaskList({ id, tasks, cacheDir, noCache, usedCacheFiles })
         }
       }
     } catch (error) {
-      failedTasks.push({ sourcePath, targetPath, error });
+      failedTasks.push({sourcePath, targetPath, error});
     }
   }
   const success = tasks.length - failedTasks.length;
