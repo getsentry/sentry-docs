@@ -1,14 +1,12 @@
-import {randomUUID} from 'node:crypto';
 import {appendFile, mkdir, writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
 
-import {init} from '@flue/runtime';
 import {start} from '@flue/runtime/node';
 
 import {TriageIssue} from './agents/triage-issue';
-import employeeOverrides from './employee-overrides.json';
+import {enrichWithLinear, executeTriage} from './execute-triage';
 import {fetchIssueContext} from './github';
-import {buildShadowResult} from './triage';
+import type {ShadowTriageResult} from './triage';
 
 function issueNumberFromArgs(args: string[]): number {
   const index = args.indexOf('--issue');
@@ -29,9 +27,7 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#039;');
 }
 
-async function writeJobSummary(
-  result: ReturnType<typeof buildShadowResult>
-): Promise<void> {
+async function writeJobSummary(result: ShadowTriageResult): Promise<void> {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (!summaryPath) return;
 
@@ -42,12 +38,15 @@ async function writeJobSummary(
     '| Field | Value |',
     '| --- | --- |',
     `| Classification | \`${result.decision.classification}\` |`,
-    `| Team | \`${result.decision.team}\` |`,
+    `| Actionability | \`${result.decision.actionability}\` |`,
+    `| GitHub team | \`${result.policy.githubTeamLabel}\` |`,
+    `| Linear team | \`${result.policy.targetLinearTeam}\` |`,
     `| Model priority | \`${result.decision.priority}\` |`,
     `| Policy priority | \`${result.policy.effectivePriority}\` |`,
     `| Employee | \`${result.policy.isEmployee}\` |`,
     `| Linear | \`${linear}\` |`,
     `| Action | \`${result.decision.recommendedAction}\` |`,
+    `| Parking Lot review | \`${result.policy.parkingLotReview}\` |`,
     `| Confidence | \`${result.decision.confidence.toFixed(2)}\` |`,
     '',
     '<details><summary>Summary and evidence</summary>',
@@ -66,36 +65,11 @@ async function writeJobSummary(
 
 async function main(): Promise<void> {
   const issueNumber = issueNumberFromArgs(process.argv.slice(2));
-  const issue = await fetchIssueContext(issueNumber);
+  const issue = await enrichWithLinear(await fetchIssueContext(issueNumber));
   const runtime = await start({agents: [TriageIssue]});
 
   try {
-    const agent = init(TriageIssue, {
-      id: `shadow-${issueNumber}-${randomUUID()}`,
-    });
-    const receipt = await agent.dispatch({
-      message: {
-        kind: 'signal',
-        type: 'github.issue.triage',
-        tagName: 'github-issue',
-        attributes: {
-          repository: issue.repository,
-          issueNumber: String(issue.number),
-        },
-        body: JSON.stringify(issue),
-      },
-    });
-    const reply = await agent.read(receipt);
-    const decision = reply.data.triageDecision?.at(-1);
-    if (!decision) throw new Error('The triage agent did not submit a decision.');
-
-    const result = buildShadowResult(
-      issue,
-      decision,
-      employeeOverrides,
-      new Date().toISOString(),
-      reply.metadata
-    );
+    const result = await executeTriage(runtime, issue);
     const json = `${JSON.stringify(result, null, 2)}\n`;
     const outputPath = process.env.TRIAGE_OUTPUT;
     if (outputPath) {

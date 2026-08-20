@@ -79,6 +79,23 @@ async function fetchJson<T>(url: string, token?: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+async function githubRequest<T>(
+  url: string,
+  token: string,
+  init: RequestInit
+): Promise<T> {
+  const response = await fetch(url, {
+    ...init,
+    headers: {...headers(token), 'Content-Type': 'application/json', ...init.headers},
+  });
+  if (!response.ok) {
+    throw new Error(
+      `GitHub API error for ${url}: ${response.status} ${response.statusText}`
+    );
+  }
+  return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
+}
+
 async function fetchPaginated<T>(url: string, token?: string): Promise<T[]> {
   const maxPages = 100;
   const results: T[] = [];
@@ -260,7 +277,7 @@ export async function fetchIssueContext(
   const linearLinkback = parseLinearLinkback(
     comments.map(comment => ({author: comment.user.login, body: comment.body}))
   );
-  const normalizedComments = comments.slice(-20).map(comment => ({
+  const normalizedComments = comments.slice(-100).map(comment => ({
     author: comment.user.login,
     authorType: comment.user.type,
     body: truncate(comment.body, 2_000),
@@ -290,6 +307,107 @@ export async function fetchIssueContext(
     comments: normalizedComments,
     linkedPullRequests: pulls,
     linearLinkback,
+  });
+}
+
+export async function listIssueNumbers(
+  state: 'open' | 'closed' | 'all' = 'open',
+  limit = Number.POSITIVE_INFINITY,
+  token = process.env.GH_TOKEN
+): Promise<number[]> {
+  const numbers: number[] = [];
+  for (let page = 1; numbers.length < limit; page += 1) {
+    const values = await fetchJson<
+      Array<{number: number; pull_request?: Record<string, unknown>}>
+    >(
+      `${API_ROOT}/repos/${REPOSITORY}/issues?state=${state}&per_page=100&page=${page}`,
+      token
+    );
+    numbers.push(
+      ...values.filter(value => !value.pull_request).map(value => value.number)
+    );
+    if (values.length < 100) break;
+  }
+  return Number.isFinite(limit) ? numbers.slice(0, limit) : numbers;
+}
+
+export async function addIssueLabels(
+  issueNumber: number,
+  labels: string[],
+  token = process.env.GH_TOKEN
+): Promise<void> {
+  if (!token || labels.length === 0) return;
+  await githubRequest(
+    `${API_ROOT}/repos/${REPOSITORY}/issues/${issueNumber}/labels`,
+    token,
+    {method: 'POST', body: JSON.stringify({labels})}
+  );
+}
+
+export async function removeIssueLabel(
+  issueNumber: number,
+  label: string,
+  token = process.env.GH_TOKEN
+): Promise<void> {
+  if (!token) return;
+  const response = await fetch(
+    `${API_ROOT}/repos/${REPOSITORY}/issues/${issueNumber}/labels/${encodeURIComponent(label)}`,
+    {method: 'DELETE', headers: headers(token)}
+  );
+  if (!response.ok && response.status !== 404) {
+    throw new Error(
+      `Unable to remove ${label} from #${issueNumber}: ${response.status}.`
+    );
+  }
+}
+
+export async function createIssueCommentOnce(
+  issueNumber: number,
+  marker: string,
+  body: string,
+  token = process.env.GH_TOKEN
+): Promise<void> {
+  if (!token) return;
+  const comments = await fetchPaginated<GitHubCommentResponse>(
+    `${API_ROOT}/repos/${REPOSITORY}/issues/${issueNumber}/comments`,
+    token
+  );
+  if (comments.some(comment => comment.body.includes(marker))) return;
+  await githubRequest(
+    `${API_ROOT}/repos/${REPOSITORY}/issues/${issueNumber}/comments`,
+    token,
+    {method: 'POST', body: JSON.stringify({body: `${marker}\n${body}`})}
+  );
+}
+
+export async function hasIssueCommentBySince(
+  issueNumber: number,
+  login: string,
+  since: string,
+  token = process.env.GH_TOKEN
+): Promise<boolean> {
+  const comments = await fetchPaginated<GitHubCommentResponse>(
+    `${API_ROOT}/repos/${REPOSITORY}/issues/${issueNumber}/comments`,
+    token
+  );
+  const cutoff = new Date(since).getTime();
+  return comments.some(
+    comment =>
+      comment.user.login.toLowerCase() === login.toLowerCase() &&
+      new Date(comment.created_at).getTime() > cutoff
+  );
+}
+
+export async function updateIssueState(
+  issueNumber: number,
+  state: 'open' | 'closed',
+  stateReason?: 'completed' | 'not_planned' | 'reopened',
+  token = process.env.GH_TOKEN
+): Promise<void> {
+  if (!token) return;
+  await githubRequest(`${API_ROOT}/repos/${REPOSITORY}/issues/${issueNumber}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({state, ...(stateReason ? {state_reason: stateReason} : {})}),
   });
 }
 

@@ -44,7 +44,12 @@ const issue: GitHubIssueContext = {
 
 const decision: TriageDecision = {
   classification: 'broken-link',
+  actionability: 'actionable',
   team: 'Team: Docs',
+  contentOwner: 'docs',
+  targetLinearTeam: 'docs',
+  routingConfidence: 0.95,
+  routingEvidence: ['The issue concerns a docs-owned broken link.'],
   priority: 'low',
   effort: 'small',
   linearLabel: 'Docs Platform',
@@ -58,6 +63,8 @@ const decision: TriageDecision = {
   quickFix: {
     kind: 'content-edit',
     description: 'Replace the old URL.',
+    brokenUrl: 'https://docs.sentry.io/old',
+    replacementUrl: '/new/',
     targetFiles: ['docs/example.mdx'],
   },
 };
@@ -139,9 +146,9 @@ describe('policy projection', () => {
     const policy = projectPolicy(issue, decision, overrides);
 
     expect(policy.resolutionAutomationCandidate).toBe(true);
-    expect(policy.employeeProtectionsDeferred).toBe(true);
-    expect(policy.effectivePriority).toBe('low');
-    expect(policy.individualOwnerRequired).toBe(false);
+    expect(policy.employeeProtectionsDeferred).toBe(false);
+    expect(policy.effectivePriority).toBe('high');
+    expect(policy.individualOwnerRequired).toBe(true);
     expect(policy.employeeFallbackPriority).toBe('high');
     expect(policy.employeeFallbackOwnerDueAt).toBe('2026-01-08T00:00:00.000Z');
     expect(policy.closurePolicy).toBe('after-validated-resolution');
@@ -164,7 +171,7 @@ describe('policy projection', () => {
     expect(policy.closurePolicy).toBe('human-only');
   });
 
-  test('gives external needs-information issues a 14-day close date and parking date', () => {
+  test('gives external needs-information issues no priority and a 14-day close date', () => {
     const externalIssue: GitHubIssueContext = {
       ...issue,
       author: {login: 'external-user', association: 'NONE', type: 'User'},
@@ -172,6 +179,8 @@ describe('policy projection', () => {
     };
     const needsInformation: TriageDecision = {
       ...decision,
+      actionability: 'needs-information',
+      priority: 'none',
       automationFlow: 'needs-information',
       recommendedAction: 'request-information',
       confidence: 0.85,
@@ -181,14 +190,46 @@ describe('policy projection', () => {
     const policy = projectPolicy(externalIssue, needsInformation, overrides);
 
     expect(policy.needsInformationCloseDueAt).toBe('2026-01-15T00:00:00.000Z');
-    expect(policy.parkingLotEligibleAt).toBe('2026-07-02T00:00:00.000Z');
+    expect(policy.effectivePriority).toBe('none');
+    expect(policy.parkingLotEligibleAt).toBeUndefined();
     expect(policy.parkingLotGitHubLabel).toBe('Parking Lot');
     expect(policy.parkingLotLinearStatus).toBe('Canceled');
     expect(policy.parkingLotLinearStatusType).toBe('canceled');
     expect(policy.closurePolicy).toBe('after-needs-information-timeout');
   });
 
-  test('clamps six calendar months at the end of a shorter month', () => {
+  test('preserves a human High priority on external needs-information work', () => {
+    const externalIssue: GitHubIssueContext = {
+      ...issue,
+      author: {login: 'external-user', association: 'NONE', type: 'User'},
+      linear: {
+        id: 'linear-id',
+        identifier: 'DOCS-123',
+        teamId: 'docs-id',
+        teamKey: 'DOCS',
+        teamName: 'Docs',
+        stateId: 'state-id',
+        stateName: 'Triage',
+        stateType: 'triage',
+        priority: 2,
+      },
+    };
+    const needsInformation: TriageDecision = {
+      ...decision,
+      actionability: 'needs-information',
+      priority: 'none',
+      automationFlow: 'needs-information',
+      recommendedAction: 'request-information',
+      missingInformation: ['Which page is affected?'],
+      quickFix: undefined,
+    };
+    const policy = projectPolicy(externalIssue, needsInformation, overrides);
+
+    expect(policy.effectivePriority).toBe('high');
+    expect(policy.needsInformationCloseDueAt).toBeUndefined();
+  });
+
+  test('clamps three calendar months at the end of a shorter month', () => {
     const externalIssue: GitHubIssueContext = {
       ...issue,
       author: {login: 'external-user', association: 'NONE', type: 'User'},
@@ -204,7 +245,44 @@ describe('policy projection', () => {
 
     expect(
       projectPolicy(externalIssue, ordinaryDecision, overrides).parkingLotEligibleAt
-    ).toBe('2026-02-28T00:00:00.000Z');
+    ).toBe('2025-11-30T00:00:00.000Z');
+  });
+
+  test('sends external no-priority work to immediate Parking Lot review', () => {
+    const externalIssue: GitHubIssueContext = {
+      ...issue,
+      author: {login: 'external-user', association: 'NONE', type: 'User'},
+    };
+    const noPriority: TriageDecision = {
+      ...decision,
+      priority: 'none',
+      automationFlow: 'none',
+      recommendedAction: 'route',
+      quickFix: undefined,
+      parkingLotReason: 'low-impact',
+    };
+    const policy = projectPolicy(externalIssue, noPriority, overrides);
+
+    expect(policy.parkingLotReview).toBe('immediate-priority-none');
+    expect(policy.closurePolicy).toBe('parking-lot-review');
+  });
+
+  test('routes a specific SDK issue deterministically to its Linear team', () => {
+    const sdkIssue: GitHubIssueContext = {
+      ...issue,
+      formFields: {SDK: 'Python SDK'},
+    };
+    const sdkDecision: TriageDecision = {
+      ...decision,
+      team: 'Team: Web Backend SDKs',
+      contentOwner: 'sdk-team',
+      targetLinearTeam: 'web-backend-sdks',
+    };
+    const policy = projectPolicy(sdkIssue, sdkDecision, overrides);
+
+    expect(policy.targetLinearTeam).toBe('web-backend-sdks');
+    expect(policy.githubTeamLabel).toBe('Team: Web Backend SDKs');
+    expect(policy.routingSource).toBe('issue-form');
   });
 
   test('builds a versioned result with explicit shadow warnings', () => {
@@ -215,7 +293,7 @@ describe('policy projection', () => {
       '2026-01-03T00:00:00.000Z'
     );
 
-    expect(result.schemaVersion).toBe(1);
+    expect(result.schemaVersion).toBe(2);
     expect(result.mode).toBe('shadow');
     expect(result.warnings).toContain(
       'Shadow mode: no GitHub or Linear mutations were attempted.'

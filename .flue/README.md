@@ -1,36 +1,43 @@
-# Issue Triage Shadow Mode
+# Issue Triage Bot
 
-This directory contains the read-only Flue v2 issue-triage experiment. Shadow mode fetches public GitHub context, lets the model use two narrow read tools, and emits a versioned JSON decision plus a deterministic policy projection. It has no GitHub or Linear write capability.
+The Flue v2 bot classifies GitHub issues, routes their synced Linear issues, enforces lifecycle rules, and can open validated broken-link PRs. Model output is schema-validated; identity, deadlines, permissions, and mutations are deterministic.
 
-## Review a Single Issue
+## Modes
 
-```bash
-ANTHROPIC_API_KEY=... GH_TOKEN=... pnpm triage:shadow --issue 17799
-```
+| Variable                            | Effect                                                                |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `FLUE_TRIAGE_MODE=shadow`           | Produce job summaries and JSON artifacts; never write.                |
+| `FLUE_TRIAGE_MODE=apply`            | Apply routing, priority, comments, labels, and due lifecycle actions. |
+| `FLUE_TRIAGE_AUTO_FIX_ENABLED=true` | Allow validated content-link or exact-redirect PRs.                   |
 
-Set `TRIAGE_OUTPUT=.flue/output/triage-17799.json` to retain the complete result. In GitHub Actions, each run writes a job summary and uploads this JSON as an artifact.
+Apply and auto-fix are disabled unless the repository variables are explicitly set.
 
-The workflow always supports manual dispatch. Automatic shadow runs remain disabled until the repository variable `FLUE_TRIAGE_SHADOW_ENABLED` is set to `true`; when enabled, the exact `linear-code` linkback comment triggers triage.
+## Decision Rules
+
+| Requester and decision                  | Result                                                               |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| Employee, actionable, auto-fix eligible | Attempt a validated PR; retain High-priority fallback and owner SLA. |
+| Employee, actionable, no auto-fix       | Minimum High priority and individual owner required.                 |
+| Employee, needs information             | Ask on GitHub, minimum High priority, never auto-close.              |
+| External, actionable, auto-fix eligible | Attempt a validated PR.                                              |
+| External, actionable, prioritized       | Route with Urgent, High, Medium, or Low priority.                    |
+| External, actionable, no priority       | Add `Parking Lot`, leave open, and request human review in Linear.   |
+| External, needs information             | Ask on GitHub with no priority; close after 14 days without a reply. |
+
+High/Urgent issues without an owner get a Linear reminder after seven days. High/Urgent unresolved issues get a Linear reminder after four weeks. External Medium/Low issues inactive for three months are labeled `Parking Lot`, moved to Linear `Canceled`, commented, and closed.
+
+Specific technical SDK issues move to the owning Linear team. Editorial, cross-SDK, and ambiguous work remains with DOCS. Team aliases and mentions live in `triage-config.json`.
 
 ## Validate
 
 ```bash
 pnpm triage:test
-ANTHROPIC_API_KEY=... GH_TOKEN=... pnpm triage:eval
+ANTHROPIC_API_KEY=... GH_TOKEN=... LINEAR_API_KEY=... \
+  pnpm triage:shadow --issue 17799
+ANTHROPIC_API_KEY=... GH_TOKEN=... LINEAR_API_KEY=... \
+  pnpm triage:backtest --limit 50 --state open
 ```
 
-`triage:test` covers deterministic normalization and policy. `triage:eval` runs the live model over the eight historical issues cited by PR #17811 and asserts their stable classifications and selected flow outcomes.
+The backtest writes HTML, CSV, and JSON review tables under `.flue/output/backtest`. After merge, dispatch `Triage Backtest` with a small calibration sample, then increase the limit to cover the open backlog before enabling apply mode.
 
-Employee detection initially treats GitHub `OWNER` and `MEMBER` associations as employees. Edit `employee-overrides.json` to handle exceptions in either direction.
-
-## Future Write Mode
-
-Write mode is intentionally out of scope. Before it is enabled:
-
-- Review shadow artifacts for routing, priority, evidence, and policy accuracy.
-- Persist first-triage and needs-information timestamps so lifecycle deadlines do not reset.
-- Reconcile qualifying Linear activity before evaluating six-month inactivity.
-- Create the GitHub `Parking Lot` label outside the currently incomplete declarative label catalog.
-- Map the GitHub `Parking Lot` label to the existing Linear `Canceled` status; do not create a custom Linear status.
-- Validate a recommended resolution flow before applying its employee-policy exemption.
-- Put GitHub, Linear, and pull-request mutations in separately permissioned jobs.
+Create the GitHub `Parking Lot` label outside the incomplete declarative label catalog before enabling apply mode. Reviewed backtest corrections belong in `fixtures/triage-feedback.json` and should be promoted to executable eval cases.

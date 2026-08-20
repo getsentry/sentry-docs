@@ -71,9 +71,13 @@ The normalized `formFields.SDK` value maps as follows:
 | All SDKs                 | `Team: Docs`                                         |
 | Other                    | `Team: Docs` unless evidence identifies another team |
 
+Set `contentOwner: sdk-team` and the matching `targetLinearTeam` only for technical SDK accuracy: APIs, options, code examples, compatibility, setup behavior, and framework-specific integration instructions. Keep editorial, navigation, presentation, cross-SDK, and ambiguous work with `contentOwner: docs` and `targetLinearTeam: docs`.
+
+Use these semantic Linear team values: `javascript-sdks`, `web-backend-sdks`, `mobile-platform`, `native-platform`, `ecosystem`, or `docs`. Include a separate routing confidence and concrete routing evidence. The deterministic policy layer verifies issue-form SDK selections and falls back to Docs when model routing confidence is below the threshold.
+
 ## Product Routing
 
-Map product requests to the closest allowed product-area label. Use `Product Area: Other` when evidence does not support a more specific value. Route Replays to `Team: Replay`, Crons to `Team: Crons`, SDK-specific areas to the corresponding SDK team, and general product content to `Team: Docs`.
+Map product requests to the closest allowed product-area label. Use `Product Area: Other` when evidence does not support a more specific value. Product documentation remains with `Team: Docs` and `targetLinearTeam: docs` in this phase; only specific technical SDK/platform documentation moves to an SDK team.
 
 ## Repository Evidence
 
@@ -91,6 +95,7 @@ Priority:
 - `high`: core setup, popular SDKs, missing GA documentation, or broad user impact.
 - `medium`: specific feature gaps, ordinary platform bugs, and substantial improvements.
 - `low`: edge cases, minor clarifications, typos, and cosmetic issues.
+- `none`: actionable external work that should enter Parking Lot review instead of the backlog. Never use `none` merely because information is missing.
 
 Effort:
 
@@ -100,7 +105,11 @@ Effort:
 
 ## Automated Flow Recommendation
 
-Use `broken-link-fix` with `candidate-quick-fix` only when repository evidence supports one simple fix and `quickFix` identifies plausible target files. A 404 report by itself is not enough. Use `needs-information` with `request-information` when specific missing facts block action. Use `duplicate` or `already-resolved` only with cited evidence. Otherwise use `none` and route or request human review.
+Set `actionability: needs-information` only when specific missing facts block action; list concrete questions, use `needs-information` with `request-information`, leave model priority at `none`, and do not supply a Parking Lot reason. Otherwise set `actionability: actionable` with no missing-information entries.
+
+Use `broken-link-fix` with `candidate-quick-fix` only when repository evidence supports one simple repository-owned fix. A 404 report by itself is not enough. The quick fix must provide the exact broken URL, exact root-relative or docs.sentry.io replacement URL, and verified target files. Only content link replacements and exact redirects are eligible. Use `duplicate` or `already-resolved` only with cited evidence. Otherwise use `none` and route or request human review.
+
+For actionable external work assigned `priority: none`, choose one constrained `parkingLotReason`: `low-impact`, `high-effort-relative-to-impact`, `unsupported-or-obsolete`, `out-of-scope`, `superseded`, or `other-requires-review`. This is a human-review recommendation, not authorization to close.
 
 Broken links map to `Docs Platform`. Other content classifications map to `Docs Content`; platform bugs and improvements also map to `Docs Platform`.
 

@@ -14,8 +14,17 @@ export const ClassificationSchema = v.picklist([
   'support-question',
 ]);
 
-export const PrioritySchema = v.picklist(['urgent', 'high', 'medium', 'low']);
+export const PrioritySchema = v.picklist(['urgent', 'high', 'medium', 'low', 'none']);
 export const EffortSchema = v.picklist(['small', 'medium', 'large']);
+
+export const LinearTeamSchema = v.picklist([
+  'docs',
+  'javascript-sdks',
+  'web-backend-sdks',
+  'mobile-platform',
+  'native-platform',
+  'ecosystem',
+]);
 
 export const TeamSchema = v.picklist([
   'Team: Docs',
@@ -27,6 +36,24 @@ export const TeamSchema = v.picklist([
   'Team: Crons',
   'Team: Ecosystem',
 ]);
+
+const LINEAR_TEAM_LABELS: Record<
+  v.InferOutput<typeof LinearTeamSchema>,
+  v.InferOutput<typeof TeamSchema>
+> = {
+  docs: 'Team: Docs',
+  'javascript-sdks': 'Team: JavaScript SDKs',
+  'web-backend-sdks': 'Team: Web Backend SDKs',
+  'mobile-platform': 'Team: Mobile Platform',
+  'native-platform': 'Team: Native Platform',
+  ecosystem: 'Team: Ecosystem',
+};
+
+export function githubLabelForLinearTeam(
+  team: v.InferOutput<typeof LinearTeamSchema>
+): v.InferOutput<typeof TeamSchema> {
+  return LINEAR_TEAM_LABELS[team];
+}
 
 export const PlatformSchema = v.picklist([
   'Platform: .NET',
@@ -75,9 +102,14 @@ export const ProductAreaSchema = v.picklist([
 
 const TriageDecisionObjectSchema = v.object({
   classification: ClassificationSchema,
+  actionability: v.picklist(['actionable', 'needs-information']),
   platform: v.optional(PlatformSchema),
   productArea: v.optional(ProductAreaSchema),
   team: TeamSchema,
+  contentOwner: v.picklist(['docs', 'sdk-team']),
+  targetLinearTeam: LinearTeamSchema,
+  routingConfidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
+  routingEvidence: v.pipe(v.array(evidenceText()), v.maxLength(5)),
   priority: PrioritySchema,
   effort: EffortSchema,
   linearLabel: v.picklist(['Docs Content', 'Docs Platform']),
@@ -109,10 +141,22 @@ const TriageDecisionObjectSchema = v.object({
   ),
   quickFix: v.optional(
     v.object({
-      kind: v.picklist(['content-edit', 'redirect', 'application-code']),
+      kind: v.picklist(['content-edit', 'redirect']),
       description: shortText(),
+      brokenUrl: shortText(),
+      replacementUrl: shortText(),
       targetFiles: v.pipe(v.array(shortText()), v.maxLength(5)),
     })
+  ),
+  parkingLotReason: v.optional(
+    v.picklist([
+      'low-impact',
+      'high-effort-relative-to-impact',
+      'unsupported-or-obsolete',
+      'out-of-scope',
+      'superseded',
+      'other-requires-review',
+    ])
   ),
 });
 
@@ -129,6 +173,23 @@ function isConsistentDecision(
   ) {
     return false;
   }
+  if ((decision.contentOwner === 'docs') !== (decision.targetLinearTeam === 'docs')) {
+    return false;
+  }
+  if (decision.team !== githubLabelForLinearTeam(decision.targetLinearTeam)) {
+    return false;
+  }
+  if (
+    (decision.priority === 'none' &&
+      decision.actionability === 'actionable' &&
+      decision.automationFlow === 'none' &&
+      decision.parkingLotReason === undefined) ||
+    (decision.priority !== 'none' && decision.parkingLotReason !== undefined) ||
+    (decision.actionability === 'needs-information' &&
+      decision.parkingLotReason !== undefined)
+  ) {
+    return false;
+  }
   if (
     decision.automationFlow !== 'needs-information' &&
     decision.missingInformation.length > 0
@@ -140,13 +201,18 @@ function isConsistentDecision(
   }
   if (decision.automationFlow === 'needs-information') {
     return (
+      decision.actionability === 'needs-information' &&
       decision.recommendedAction === 'request-information' &&
       decision.missingInformation.length > 0
     );
   }
+  if (decision.actionability !== 'actionable' || decision.missingInformation.length > 0) {
+    return false;
+  }
   if (decision.automationFlow === 'broken-link-fix') {
     return (
       decision.classification === 'broken-link' &&
+      decision.priority !== 'none' &&
       decision.recommendedAction === 'candidate-quick-fix' &&
       decision.quickFix !== undefined &&
       decision.missingInformation.length === 0
@@ -224,6 +290,21 @@ export const GitHubIssueContextSchema = v.object({
   comments: v.array(GitHubCommentSchema),
   linkedPullRequests: v.array(LinkedPullRequestSchema),
   linearLinkback: v.optional(LinearLinkbackSchema),
+  linear: v.optional(
+    v.object({
+      id: v.string(),
+      identifier: v.string(),
+      teamId: v.string(),
+      teamKey: v.string(),
+      teamName: v.string(),
+      stateId: v.string(),
+      stateName: v.string(),
+      stateType: v.string(),
+      priority: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(4)),
+      assigneeId: v.optional(v.string()),
+      lastHumanActivityAt: v.optional(v.string()),
+    })
+  ),
 });
 
 export const EmployeeOverridesSchema = v.object({
@@ -249,14 +330,17 @@ export interface PolicyProjection {
   employeeFallbackPriority?: TriageDecision['priority'];
   employeeFallbackOwnerDueAt?: string;
   employeeFallbackHighPriorityReviewDueAt?: string;
+  targetLinearTeam: v.InferOutput<typeof LinearTeamSchema>;
+  githubTeamLabel: v.InferOutput<typeof TeamSchema>;
+  routingSource: 'issue-form' | 'model' | 'docs-fallback';
   individualOwnerRequired: boolean;
   individualOwnerDueAt?: string;
   highPriorityReviewDueAt?: string;
-  highPriorityReviewIntervalDays?: 28;
   needsInformationCloseDueAt?: string;
   needsInformationResponseWindowDays?: 14;
   parkingLotEligibleAt?: string;
-  parkingLotInactivityMonths: 6;
+  parkingLotInactivityMonths: 3;
+  parkingLotReview: 'none' | 'immediate-priority-none' | 'inactive-three-months';
   parkingLotGitHubLabel: 'Parking Lot';
   parkingLotLinearStatus: 'Canceled';
   parkingLotLinearStatusType: 'canceled';
@@ -264,12 +348,105 @@ export interface PolicyProjection {
     | 'human-only'
     | 'after-validated-resolution'
     | 'after-needs-information-timeout'
-    | 'parking-lot-only';
+    | 'parking-lot-review';
   nextActions: string[];
 }
 
+interface SdkRoute {
+  linearTeam: v.InferOutput<typeof LinearTeamSchema>;
+  githubTeamLabel: v.InferOutput<typeof TeamSchema>;
+}
+
+const SDK_ROUTES: Record<string, SdkRoute> = {
+  'Android SDK': {
+    linearTeam: 'mobile-platform',
+    githubTeamLabel: 'Team: Mobile Platform',
+  },
+  'Apple SDK': {linearTeam: 'mobile-platform', githubTeamLabel: 'Team: Mobile Platform'},
+  'Dart SDK': {linearTeam: 'mobile-platform', githubTeamLabel: 'Team: Mobile Platform'},
+  'Elixir SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'Flutter SDK': {
+    linearTeam: 'mobile-platform',
+    githubTeamLabel: 'Team: Mobile Platform',
+  },
+  'Go SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'Java SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'JavaScript SDK': {
+    linearTeam: 'javascript-sdks',
+    githubTeamLabel: 'Team: JavaScript SDKs',
+  },
+  'Kotlin Multiplatform SDK': {
+    linearTeam: 'mobile-platform',
+    githubTeamLabel: 'Team: Mobile Platform',
+  },
+  'Native SDK': {linearTeam: 'native-platform', githubTeamLabel: 'Team: Native Platform'},
+  '.NET SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'PHP SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'PowerShell SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'Python SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'React Native SDK': {
+    linearTeam: 'mobile-platform',
+    githubTeamLabel: 'Team: Mobile Platform',
+  },
+  'Ruby SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'Rust SDK': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'Unity SDK': {linearTeam: 'native-platform', githubTeamLabel: 'Team: Native Platform'},
+  'Unreal Engine SDK': {
+    linearTeam: 'native-platform',
+    githubTeamLabel: 'Team: Native Platform',
+  },
+  'Sentry CLI': {linearTeam: 'ecosystem', githubTeamLabel: 'Team: Ecosystem'},
+  'All JavaScript SDKs': {
+    linearTeam: 'javascript-sdks',
+    githubTeamLabel: 'Team: JavaScript SDKs',
+  },
+  'All Backend SDKs': {
+    linearTeam: 'web-backend-sdks',
+    githubTeamLabel: 'Team: Web Backend SDKs',
+  },
+  'All Mobile SDKs': {
+    linearTeam: 'mobile-platform',
+    githubTeamLabel: 'Team: Mobile Platform',
+  },
+  'All Gaming SDKs': {
+    linearTeam: 'native-platform',
+    githubTeamLabel: 'Team: Native Platform',
+  },
+};
+
+export function sdkRouteFromIssue(issue: GitHubIssueContext): SdkRoute | undefined {
+  return SDK_ROUTES[issue.formFields.SDK];
+}
+
 export interface ShadowTriageResult {
-  schemaVersion: 1;
+  schemaVersion: 2;
   mode: 'shadow';
   generatedAt: string;
   issue: GitHubIssueContext;
@@ -368,6 +545,14 @@ function minimumHigh(priority: TriageDecision['priority']): TriageDecision['prio
   return priority === 'urgent' ? 'urgent' : 'high';
 }
 
+export function priorityFromLinear(
+  value: number | undefined
+): TriageDecision['priority'] | undefined {
+  return ({0: 'none', 1: 'urgent', 2: 'high', 3: 'medium', 4: 'low'} as const)[
+    value ?? -1
+  ];
+}
+
 export function projectPolicy(
   issue: GitHubIssueContext,
   decision: TriageDecision,
@@ -379,7 +564,8 @@ export function projectPolicy(
     overrides
   );
   const resolutionAutomationCandidate =
-    (decision.automationFlow === 'broken-link-fix' &&
+    (decision.actionability === 'actionable' &&
+      decision.automationFlow === 'broken-link-fix' &&
       decision.confidence >= 0.9 &&
       decision.quickFix !== undefined) ||
     (decision.automationFlow === 'already-resolved' &&
@@ -389,12 +575,52 @@ export function projectPolicy(
     (decision.automationFlow === 'duplicate' &&
       decision.confidence >= 0.95 &&
       decision.potentialDuplicate !== undefined);
-  const employeeProtectionApplies = employee.isEmployee && !resolutionAutomationCandidate;
-  const employeeProtectionsDeferred =
-    employee.isEmployee && resolutionAutomationCandidate;
-  const effectivePriority = employeeProtectionApplies
+  const employeeProtectionsDeferred = false;
+  const currentPriority = priorityFromLinear(issue.linear?.priority);
+  const effectivePriority = employee.isEmployee
     ? minimumHigh(decision.priority)
-    : decision.priority;
+    : decision.actionability === 'needs-information'
+      ? currentPriority === 'urgent' || currentPriority === 'high'
+        ? currentPriority
+        : 'none'
+      : decision.priority;
+  const deterministicRoute =
+    decision.contentOwner === 'sdk-team' ? sdkRouteFromIssue(issue) : undefined;
+  const modelRouteIsConfident =
+    decision.contentOwner === 'sdk-team' && decision.routingConfidence >= 0.85;
+  const targetLinearTeam =
+    deterministicRoute?.linearTeam ??
+    (modelRouteIsConfident ? decision.targetLinearTeam : 'docs');
+  const githubTeamLabel = githubLabelForLinearTeam(targetLinearTeam);
+  const routingSource = deterministicRoute
+    ? 'issue-form'
+    : modelRouteIsConfident
+      ? 'model'
+      : 'docs-fallback';
+  const hasCompleteActivity = Boolean(issue.lastQualifyingLinearActivityAt);
+  const lastActivityAt = hasCompleteActivity
+    ? [issue.lastQualifyingGitHubActivityAt, issue.lastQualifyingLinearActivityAt!]
+        .sort()
+        .at(-1)!
+    : undefined;
+  const immediateParkingReview =
+    !employee.isEmployee &&
+    decision.actionability === 'actionable' &&
+    effectivePriority === 'none' &&
+    !resolutionAutomationCandidate;
+  const inactiveParkingReview =
+    !employee.isEmployee &&
+    decision.actionability === 'actionable' &&
+    (effectivePriority === 'medium' || effectivePriority === 'low') &&
+    lastActivityAt !== undefined;
+  const parkingLotReview = immediateParkingReview
+    ? 'immediate-priority-none'
+    : inactiveParkingReview
+      ? 'inactive-three-months'
+      : 'none';
+  const individualOwnerRequired =
+    (effectivePriority === 'high' || effectivePriority === 'urgent') &&
+    !issue.linear?.assigneeId;
   const nextActions: string[] = [];
 
   if (resolutionAutomationCandidate) {
@@ -402,12 +628,12 @@ export function projectPolicy(
       'Validate the recommended resolution flow before allowing closure; apply the explicit employee fallback if validation fails.'
     );
   } else {
-    nextActions.push(`Route to ${decision.team} at ${effectivePriority} priority.`);
+    nextActions.push(`Route to ${targetLinearTeam} at ${effectivePriority} priority.`);
   }
 
-  if (employeeProtectionApplies) {
+  if (individualOwnerRequired) {
     nextActions.push(
-      'Require an individual Linear assignee within seven days of creation.'
+      'Require an individual Linear assignee within seven days of triage.'
     );
   }
   if (decision.automationFlow === 'needs-information') {
@@ -421,43 +647,47 @@ export function projectPolicy(
     resolutionAutomationCandidate,
     employeeProtectionsDeferred,
     effectivePriority,
-    employeeFallbackPriority: employeeProtectionsDeferred
+    employeeFallbackPriority: employee.isEmployee
       ? minimumHigh(decision.priority)
       : undefined,
-    employeeFallbackOwnerDueAt: employeeProtectionsDeferred
+    employeeFallbackOwnerDueAt: employee.isEmployee
       ? addDays(issue.createdAt, 7)
       : undefined,
-    employeeFallbackHighPriorityReviewDueAt: employeeProtectionsDeferred
+    employeeFallbackHighPriorityReviewDueAt: employee.isEmployee
       ? addDays(issue.createdAt, 28)
       : undefined,
-    individualOwnerRequired: employeeProtectionApplies,
-    individualOwnerDueAt: employeeProtectionApplies
+    targetLinearTeam,
+    githubTeamLabel,
+    routingSource,
+    individualOwnerRequired,
+    individualOwnerDueAt: individualOwnerRequired
       ? addDays(issue.createdAt, 7)
       : undefined,
     highPriorityReviewDueAt:
       effectivePriority === 'high' || effectivePriority === 'urgent'
         ? addDays(issue.createdAt, 28)
         : undefined,
-    highPriorityReviewIntervalDays:
-      effectivePriority === 'high' || effectivePriority === 'urgent' ? 28 : undefined,
     needsInformationCloseDueAt:
-      decision.automationFlow === 'needs-information' && !employee.isEmployee
+      decision.automationFlow === 'needs-information' &&
+      !employee.isEmployee &&
+      effectivePriority !== 'high' &&
+      effectivePriority !== 'urgent'
         ? addDays(issue.createdAt, 14)
         : undefined,
     needsInformationResponseWindowDays:
-      decision.automationFlow === 'needs-information' && !employee.isEmployee
+      decision.automationFlow === 'needs-information' &&
+      !employee.isEmployee &&
+      effectivePriority !== 'high' &&
+      effectivePriority !== 'urgent'
         ? 14
         : undefined,
-    parkingLotEligibleAt:
-      employee.isEmployee || !issue.lastQualifyingLinearActivityAt
-        ? undefined
-        : addMonths(
-            [issue.lastQualifyingGitHubActivityAt, issue.lastQualifyingLinearActivityAt]
-              .sort()
-              .at(-1)!,
-            6
-          ),
-    parkingLotInactivityMonths: 6,
+    parkingLotEligibleAt: inactiveParkingReview
+      ? addMonths(lastActivityAt!, 3)
+      : immediateParkingReview
+        ? issue.createdAt
+        : undefined,
+    parkingLotInactivityMonths: 3,
+    parkingLotReview,
     parkingLotGitHubLabel: 'Parking Lot',
     parkingLotLinearStatus: 'Canceled',
     parkingLotLinearStatusType: 'canceled',
@@ -467,9 +697,9 @@ export function projectPolicy(
         : 'human-only'
       : resolutionAutomationCandidate
         ? 'after-validated-resolution'
-        : decision.automationFlow === 'needs-information'
+        : decision.actionability === 'needs-information'
           ? 'after-needs-information-timeout'
-          : 'parking-lot-only',
+          : 'parking-lot-review',
     nextActions,
   };
 }
@@ -491,11 +721,15 @@ export function buildShadowResult(
       'An already-resolved decision requires a verified merged pull request.'
     );
   }
+  const policy = projectPolicy(issue, decision, overrides);
   const warnings = [
     'Shadow mode: no GitHub or Linear mutations were attempted.',
     'Lifecycle dates use issue creation as the provisional first-triage anchor until write mode persists exact event timestamps.',
   ];
-  if (!issue.lastQualifyingLinearActivityAt) {
+  if (
+    !issue.lastQualifyingLinearActivityAt &&
+    policy.parkingLotReview !== 'immediate-priority-none'
+  ) {
     warnings.push(
       'Parking Lot eligibility was withheld because qualifying Linear activity was not reconciled.'
     );
@@ -505,12 +739,12 @@ export function buildShadowResult(
   }
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     mode: 'shadow',
     generatedAt,
     issue,
     decision,
-    policy: projectPolicy(issue, decision, overrides),
+    policy,
     warnings,
     model: metadata?.model,
     usage: metadata?.usage,

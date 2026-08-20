@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
-import {fetchIssueContext, sanitizeIssueSearchQuery} from './github';
+import {fetchIssueContext, listIssueNumbers, sanitizeIssueSearchQuery} from './github';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -134,5 +134,26 @@ describe('fetchIssueContext', () => {
         url: 'https://github.com/getsentry/sentry-docs/pull/10',
       },
     ]);
+  });
+});
+
+describe('listIssueNumbers', () => {
+  test('paginates the complete issue backlog when no limit is set', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: string | URL | Request): Promise<Response> => {
+        const url = new URL(String(input));
+        const page = Number(url.searchParams.get('page'));
+        const values =
+          page === 1
+            ? Array.from({length: 100}, (_, index) => ({number: index + 1}))
+            : [{number: 101}];
+        return Promise.resolve(Response.json(values));
+      })
+    );
+
+    await expect(
+      listIssueNumbers('open', Number.POSITIVE_INFINITY, 'test-token')
+    ).resolves.toHaveLength(101);
   });
 });
