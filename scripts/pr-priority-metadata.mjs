@@ -1,3 +1,5 @@
+import {parsePriority} from './docs-pr-triage.mjs';
+
 export const PRIORITY_REMINDER_MARKER = '<!-- docs-pr-priority-reminder -->';
 
 export const PRIORITY_REMINDER_BODY = `${PRIORITY_REMINDER_MARKER}
@@ -50,4 +52,40 @@ export function buildPriorityMetadataPlan({priority, currentLabels, isDraft, com
     },
     comment,
   };
+}
+
+export async function reconcilePriorityMetadata({
+  load,
+  apply,
+  dryRun = false,
+  maxAttempts = 3,
+  onPlan = () => {},
+}) {
+  let state = await load();
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const priority = parsePriority(state.body);
+    const plan = buildPriorityMetadataPlan({
+      priority,
+      currentLabels: state.labels,
+      isDraft: state.isDraft,
+      comments: state.comments,
+    });
+    onPlan({attempt, priority, plan});
+
+    if (dryRun) {
+      return {attempts: attempt, priority, plan, dryRun: true};
+    }
+
+    await apply(plan);
+    const latest = await load();
+    if (latest.body === state.body && latest.isDraft === state.isDraft) {
+      return {attempts: attempt, priority, plan, dryRun: false};
+    }
+    state = latest;
+  }
+
+  throw new Error(
+    `Pull request metadata did not stabilize after ${maxAttempts} attempts`
+  );
 }
