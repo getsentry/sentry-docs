@@ -80,17 +80,18 @@ async function fetchJson<T>(url: string, token?: string): Promise<T> {
 }
 
 async function fetchPaginated<T>(url: string, token?: string): Promise<T[]> {
+  const maxPages = 100;
   const results: T[] = [];
   const pageUrl = new URL(url);
   pageUrl.searchParams.set('per_page', '100');
 
-  for (let page = 1; page <= 10; page += 1) {
+  for (let page = 1; page <= maxPages; page += 1) {
     pageUrl.searchParams.set('page', String(page));
     const values = await fetchJson<T[]>(pageUrl.toString(), token);
     results.push(...values);
-    if (values.length < 100) break;
+    if (values.length < 100) return results;
   }
-  return results;
+  throw new Error(`GitHub pagination exceeded ${maxPages} pages for ${url}.`);
 }
 
 async function fetchGraphQL<T>(

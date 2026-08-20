@@ -21,6 +21,12 @@ describe('sanitizeIssueSearchQuery', () => {
     ).toBe('https://docs.sentry.io/product/logs/ error:401 TypeError:undefined');
   });
 
+  test('preserves quoted phrases containing qualifier words', () => {
+    expect(sanitizeIssueSearchQuery('"state management" type:issue')).toBe(
+      '"state management"'
+    );
+  });
+
   test('returns an empty string when the query contains only qualifiers', () => {
     expect(
       sanitizeIssueSearchQuery(
