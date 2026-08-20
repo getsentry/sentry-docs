@@ -44,6 +44,16 @@ interface GitHubPullResponse {
   base: {repo: {full_name: string}};
 }
 
+interface GitHubGraphQLPullResponse {
+  number: number;
+  title: string;
+  state: 'OPEN' | 'CLOSED' | 'MERGED';
+  merged: boolean;
+  updatedAt: string;
+  url: string;
+  baseRepository: {nameWithOwner: string} | null;
+}
+
 interface GitHubTimelineEvent {
   event: string;
   created_at?: string;
@@ -83,52 +93,67 @@ async function fetchPaginated<T>(url: string, token?: string): Promise<T[]> {
   return results;
 }
 
-async function pullClosesIssue(
-  pull: GitHubPullResponse,
-  issueNumber: number,
-  token?: string
-): Promise<boolean> {
-  if (!token) return false;
-  const [owner, name] = pull.base.repo.full_name.split('/');
+async function fetchGraphQL<T>(
+  query: string,
+  variables: Record<string, unknown>,
+  token: string
+): Promise<T> {
   const response = await fetch(`${API_ROOT}/graphql`, {
     method: 'POST',
     headers: {...headers(token), 'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      query: `query($owner: String!, $name: String!, $number: Int!) {
-        repository(owner: $owner, name: $name) {
-          pullRequest(number: $number) {
-            closingIssuesReferences(first: 100) {
-              nodes { number repository { nameWithOwner } }
-            }
-          }
-        }
-      }`,
-      variables: {owner, name, number: pull.number},
-    }),
+    body: JSON.stringify({query, variables}),
   });
   const result = (await response.json()) as {
-    data?: {
-      repository?: {
-        pullRequest?: {
-          closingIssuesReferences?: {
-            nodes?: Array<{number: number; repository: {nameWithOwner: string}}>;
-          };
-        };
-      };
-    };
+    data?: T;
     errors?: Array<{message: string}>;
   };
   if (!response.ok || result.errors) {
     throw new Error(
-      `GitHub GraphQL error while checking ${pull.html_url}: ${response.status} ${JSON.stringify(result.errors ?? [])}`
+      `GitHub GraphQL error: ${response.status} ${JSON.stringify(result.errors ?? [])}`
     );
   }
-  return (
-    result.data?.repository?.pullRequest?.closingIssuesReferences?.nodes?.some(
-      issue =>
-        issue.number === issueNumber && issue.repository.nameWithOwner === REPOSITORY
-    ) ?? false
+  if (!result.data) throw new Error('GitHub GraphQL response did not contain data.');
+  return result.data;
+}
+
+async function closingPullRequests(
+  issueNumber: number,
+  token?: string
+): Promise<GitHubIssueContext['linkedPullRequests']> {
+  if (!token) return [];
+  const result = await fetchGraphQL<{
+    repository?: {
+      issue?: {
+        closedByPullRequestsReferences?: {nodes?: GitHubGraphQLPullResponse[]};
+      };
+    };
+  }>(
+    `query($owner: String!, $name: String!, $number: Int!) {
+      repository(owner: $owner, name: $name) {
+        issue(number: $number) {
+          closedByPullRequestsReferences(first: 100, includeClosedPrs: true) {
+            nodes {
+              number title state merged updatedAt url
+              baseRepository { nameWithOwner }
+            }
+          }
+        }
+      }
+    }`,
+    {owner: 'getsentry', name: 'sentry-docs', number: issueNumber},
+    token
   );
+  const pulls = result.repository?.issue?.closedByPullRequestsReferences?.nodes ?? [];
+  return pulls.map(pull => ({
+    repository: pull.baseRepository?.nameWithOwner ?? REPOSITORY,
+    number: pull.number,
+    title: pull.title,
+    state: pull.state === 'OPEN' ? ('open' as const) : ('closed' as const),
+    merged: pull.merged,
+    relationship: 'closing' as const,
+    updatedAt: pull.updatedAt,
+    url: pull.url,
+  }));
 }
 
 function truncate(value: string, length: number): string {
@@ -180,6 +205,7 @@ async function linkedPullRequests(
   timeline: GitHubTimelineEvent[],
   token?: string
 ): Promise<GitHubIssueContext['linkedPullRequests']> {
+  const closingPulls = await closingPullRequests(issueNumber, token);
   const pullUrls = new Set<string>();
 
   for (const event of timeline) {
@@ -190,20 +216,24 @@ async function linkedPullRequests(
   const pulls = await Promise.all(
     [...pullUrls].map(url => fetchJson<GitHubPullResponse>(url, token))
   );
-  return Promise.all(
-    pulls.map(async pull => ({
-      repository: pull.base.repo.full_name,
-      number: pull.number,
-      title: pull.title,
-      state: pull.state,
-      merged: pull.merged,
-      relationship: (await pullClosesIssue(pull, issueNumber, token))
-        ? ('closing' as const)
-        : ('reference' as const),
-      updatedAt: pull.updated_at,
-      url: pull.html_url,
-    }))
+  const closingKeys = new Set(
+    closingPulls.map(pull => `${pull.repository}#${pull.number}`)
   );
+  return [
+    ...closingPulls,
+    ...pulls
+      .filter(pull => !closingKeys.has(`${pull.base.repo.full_name}#${pull.number}`))
+      .map(pull => ({
+        repository: pull.base.repo.full_name,
+        number: pull.number,
+        title: pull.title,
+        state: pull.state,
+        merged: pull.merged,
+        relationship: 'reference' as const,
+        updatedAt: pull.updated_at,
+        url: pull.html_url,
+      })),
+  ];
 }
 
 export async function fetchIssueContext(
@@ -323,10 +353,10 @@ export const searchIssuesTool = defineTool({
     })
   ),
   async run({data}) {
-    const terms = data.query
-      .split(/\s+/)
-      .filter(term => !term.includes(':'))
-      .join(' ');
+    const terms = sanitizeIssueSearchQuery(data.query);
+    if (!terms) {
+      throw new Error('Search queries must contain terms beyond GitHub qualifiers.');
+    }
     const query = new URLSearchParams({
       q: `${terms} repo:${REPOSITORY} type:issue`,
       per_page: '5',
@@ -344,3 +374,19 @@ export const searchIssuesTool = defineTool({
     };
   },
 });
+
+const GITHUB_SEARCH_QUALIFIER =
+  /^-?(?:archived|assignee|author|base|closed|commenter|comments|created|draft|head|in|interactions|involves|is|label|language|linked|locked|mentions|merged|milestone|no|org|project|reactions|reason|repo|review|review-requested|reviewed-by|state|status|team|team-review-requested|type|updated|user|user-review-requested):/i;
+
+export function sanitizeIssueSearchQuery(query: string): string {
+  return query
+    .split(/\s+/)
+    .filter(
+      term =>
+        term &&
+        !GITHUB_SEARCH_QUALIFIER.test(term) &&
+        !['AND', 'NOT', 'OR'].includes(term)
+    )
+    .join(' ')
+    .trim();
+}
