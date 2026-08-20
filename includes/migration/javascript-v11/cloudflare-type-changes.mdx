@@ -1,0 +1,33 @@
+---
+id: cloudflare-type-changes
+title: "Cloudflare `env` types and generics were reworked"
+phase: cleanup
+category: type
+severity: informational
+frameworks: [cloudflare]
+features: []
+platformCategory: serverless
+order: 20
+---
+
+The `env` types and the generics on `withSentry` and `instrumentDurableObjectWithSentry` were reworked. Types are now inferred.
+
+Drop explicit generic type parameters:
+
+```diff
+- export default withSentry<Env>(
++ export default withSentry(
+    (env) => ({ dsn: env.SENTRY_DSN }),
+    {
+      async fetch(request, env, ctx) {},
+    } satisfies ExportedHandler<Env>,
+  );
+```
+
+```diff
+- export const MyDO = Sentry.instrumentDurableObjectWithSentry<Env, MyDOBase, typeof MyDOBase>(
++ export const MyDO = Sentry.instrumentDurableObjectWithSentry(
+    (env) => ({ dsn: env.SENTRY_DSN }),
+    MyDOBase,
+  );
+```

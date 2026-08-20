@@ -29,6 +29,7 @@ import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
+import {MigrationGuide} from './components/migrationGuide';
 import {
   OnboardingOption,
   OnboardingOptionButtons,
@@ -108,6 +109,7 @@ export function mdxComponents(
     Link: SmartLink,
     LinkWithPlatformIcon,
     LLMSteering,
+    MigrationGuide,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,

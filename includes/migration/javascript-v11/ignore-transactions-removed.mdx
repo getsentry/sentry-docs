@@ -1,0 +1,29 @@
+---
+id: ignore-transactions-removed
+title: "`ignoreTransactions` is replaced by `ignoreSpans`"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 70
+---
+
+`ignoreTransactions` no-ops. `ignoreSpans` now takes effect when a span starts, and dropping a segment span drops its children with it.
+
+```js
+// Before
+Sentry.init({ ignoreTransactions: ['GET /health'] });
+
+// After
+Sentry.init({ ignoreSpans: ['GET /health'] });
+```
+
+`ignoreSpans` matches on span `name` and applies to every span, so narrow the filter if child spans share a name:
+
+```js
+Sentry.init({
+  ignoreSpans: [{ name: 'GET /health', attributes: { 'sentry.op': 'http.server' } }],
+});
+```
