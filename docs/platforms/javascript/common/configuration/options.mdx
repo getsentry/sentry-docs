@@ -132,6 +132,7 @@ Sentry.init({
 ```
 
 Data you set explicitly (for example, via <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>) is always sent, regardless of `dataCollection`.
+
 </Alert>
 
 </SdkOption>
@@ -139,20 +140,20 @@ Data you set explicitly (for example, via <PlatformLink to="/apis/#setUser">`Sen
 <SdkOption name="dataCollection" type='DataCollection' availableSince="10.57.0">
 
 Controls which categories of data the SDK collects automatically. All fields are optional.
-  By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
 
 For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
 
-| Key                   | Type                         | Default    | Description                                                                                                                              |
-| --------------------- | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `userInfo`            | `boolean`                    | `true`     | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                                 |
-| `cookies`             | `CollectBehavior`            | `true`     | Collect cookies.                                                                                                                         |
-| `httpHeaders`         | `{ request?, response? }`    | both `true`| Collect HTTP request and response headers.                                                                                               |
-| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types  | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable.    |
-| `urlQueryParams`      | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
-| `genAI`               | `{ inputs?, outputs? }`      | both `true`| Collect generative AI input/output content. Metadata is always collected.                                                                |
-| `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
-| `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
+| Key                   | Type                         | Default     | Description                                                                                                                          |
+| --------------------- | ---------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `userInfo`            | `boolean`                    | `true`      | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                             |
+| `cookies`             | `CollectBehavior`            | `true`      | Collect cookies.                                                                                                                     |
+| `httpHeaders`         | `{ request?, response? }`    | both `true` | Collect HTTP request and response headers.                                                                                           |
+| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types   | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable. |
+| `urlQueryParams`      | `CollectBehavior`            | `true`      | Collect URL query parameters.                                                                                                        |
+| `genAI`               | `{ inputs?, outputs? }`      | both `true` | Collect generative AI input/output content. Metadata is always collected.                                                            |
+| `stackFrameVariables` | `boolean`                    | `true`      | Capture local variable values in stack frames.                                                                                       |
+| `frameContextLines`   | `number`                     | `5`         | Source code lines captured around each stack frame.                                                                                  |
 
 The `cookies`, `httpHeaders`, and `urlQueryParams` categories accept a `CollectBehavior` value:
 
@@ -752,9 +753,14 @@ Instead, <PlatformLink to="/tracing/streamed-spans">enable stream mode</Platform
   are set.
 </PlatformSection>
 
-<SdkOption name="enableLogs" type='boolean' defaultValue='false'>
+<SdkOption name="enableLogs" type='boolean' defaultValue='true'>
 
-Set this option to `true` to enable log capturing in Sentry. Only when this is enabled will the `logger` APIs actually send logs to Sentry.
+Controls whether the `logger` APIs send logs to Sentry. Logs are captured by default. Set this option to `false` to disable log capturing.
+
+<Alert>
+  In SDK versions below `10.71.0`, this option defaults to `false`. On those
+  versions, you must set `enableLogs: true` to send logs to Sentry.
+</Alert>
 
 </SdkOption>
 
@@ -767,8 +773,8 @@ This function is called with a log object, and can return a modified log object,
 ## Metrics Options
 
 <PlatformSection supported={["javascript.electron"]}>
-  **Note:** For Electron, metric options apply to the process where these options
-  are set.
+  **Note:** For Electron, metric options apply to the process where these
+  options are set.
 </PlatformSection>
 
 <SdkOption name="enableMetrics" type='boolean' defaultValue='true'>
@@ -809,8 +815,8 @@ The sample rate for replays that are recorded when an error happens. This type o
 
 <SdkOption name="profileSessionSampleRate" type='number' availableSince="7.4.0" defaultValue="0">
 
-A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. 
-The sampling decision is made once at the beginning of a session. 
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none.
+The sampling decision is made once at the beginning of a session.
 This option is required to enable profiling (default is `0`).
 
 </SdkOption>
@@ -838,8 +844,8 @@ A number between `0` and `1`, controlling the percentage chance a given sampled 
 
 <SdkOption name="profileSessionSampleRate" type='number' availableSince="10.27.0" defaultValue="0">
 
-A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. 
-The sampling decision is made once at the beginning of a session. 
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none.
+The sampling decision is made once at the beginning of a session.
 This option is required to enable profiling (default is `0`).
 
 <PlatformCategorySection categorySupported={["server", "serverless"]}>
