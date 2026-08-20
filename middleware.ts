@@ -21,7 +21,11 @@ const CANONICAL_HOST = new URL(BASE_URL).hostname;
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
 // get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
-const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
+const INDEXABLE_HOSTNAMES = new Set([
+  'docs.sentry.io',
+  'develop.sentry.dev',
+  'localhost',
+]);
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
@@ -444,14 +448,14 @@ const handleRedirects = (request: NextRequest) => {
   return undefined;
 };
 
-type Redirect = {
+export type Redirect = {
   /** a string with a leading and a trailing slash */
   from: `/${string}/` | '/';
   to: string;
 };
 
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
-const USER_DOCS_REDIRECTS: Redirect[] = [
+export const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/http_errors/',
     to: '/platforms/python/integrations/django/http_errors/',
@@ -3970,7 +3974,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
 ];
 
-const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
+export const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/',
     to: '/getting-started/',
