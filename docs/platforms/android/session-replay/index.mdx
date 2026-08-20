@@ -152,6 +152,77 @@ SentryAndroid.init(context, options -> {
 });
 ```
 
+## Manual Control
+
+Use manual control when replay recording depends on user consent, authentication, or a specific workflow. To disable automatic recording, [set both replay sample rates to `0.0`](/platforms/android/session-replay/configuration/#disable-automatic-replay-sampling).
+
+You can call the manual control APIs from any thread. Calls return before the requested operation completes because the SDK queues it.
+
+### Start Recording
+
+Choose the recording mode that fits your use case:
+
+- `start()` starts a full-session replay.
+- `startBuffering()` keeps a rolling buffer of up to 30 seconds. The SDK sends the buffer when an error is sampled or you call `flush()`, then continues recording in session mode.
+
+Explicit calls to `start()` and `startBuffering()` bypass the configured replay sample rates when starting recording. `onErrorSampleRate` still controls whether an error sends a buffered replay. If a replay is already recording, both methods do nothing.
+
+```kotlin {tabTitle:Kotlin}
+// Start a full-session replay.
+Sentry.replay().start()
+
+// Or start a buffered replay instead.
+// Sentry.replay().startBuffering()
+```
+
+```java {tabTitle:Java}
+// Start a full-session replay.
+Sentry.replay().start();
+
+// Or start a buffered replay instead.
+// Sentry.replay().startBuffering();
+```
+
+### Pause Recording on Sensitive Screens
+
+Pause recording before showing sensitive content, such as a PIN entry screen, and resume it after the content is hidden. A manually paused replay stays paused across app background and foreground transitions until you call `resume()`. Calling `resume()` when replay is stopped does nothing.
+
+```kotlin {tabTitle:Kotlin}
+Sentry.replay().pause()
+
+// Resume the same replay after leaving the sensitive screen.
+Sentry.replay().resume()
+```
+
+```java {tabTitle:Java}
+Sentry.replay().pause();
+
+// Resume the same replay after leaving the sensitive screen.
+Sentry.replay().resume();
+```
+
+### Stop or Flush Recording
+
+Call `stop()` to end the current replay. A later call to `start()` or `startBuffering()` creates a new replay session.
+
+```kotlin {tabTitle:Kotlin}
+Sentry.replay().stop()
+```
+
+```java {tabTitle:Java}
+Sentry.replay().stop();
+```
+
+Call `flush()` to send the current replay data without stopping recording. In session mode, it sends the pending segment and continues recording. In buffer mode, it sends the buffer and switches to session mode. Calling `flush()` while recording is stopped starts a new full-session replay.
+
+```kotlin {tabTitle:Kotlin}
+Sentry.replay().flush()
+```
+
+```java {tabTitle:Java}
+Sentry.replay().flush();
+```
+
 ## Privacy
 
 The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out the sensitive data, using the APIs described below.

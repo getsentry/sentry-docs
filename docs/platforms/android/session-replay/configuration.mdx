@@ -33,6 +33,37 @@ and the following options provide further customization:
  | beforeErrorSampling | `—`                                                     | `BeforeErrorSamplingCallback`                                      | `null`                               | A callback invoked before the `onErrorSampleRate` is checked. Return `false` to skip replay capture for this error, or `true` to proceed with the normal sample rate check. If the callback throws, replay capture proceeds normally (fail-open). Only configurable in code. See [Ignore Certain Errors from Error Sampling](/platforms/android/session-replay/#ignore-certain-errors-from-error-sampling). |
 
 
+## Disable Automatic Replay Sampling
+
+If Session Replay should start only after user consent or an app-specific condition, set both sample rates to `0.0` during initialization. This disables automatic session and error recording while keeping the Session Replay integration available for manual control.
+
+```kotlin {tabTitle:Kotlin} {mdExpandTabs}
+SentryAndroid.init(context) { options ->
+  options.sessionReplay.sessionSampleRate = 0.0
+  options.sessionReplay.onErrorSampleRate = 0.0
+}
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(context, options -> {
+  options.getSessionReplay().setSessionSampleRate(0.0);
+  options.getSessionReplay().setOnErrorSampleRate(0.0);
+});
+```
+
+```xml {tabTitle:AndroidManifest.xml}
+<application>
+  <meta-data
+    android:name="io.sentry.session-replay.session-sample-rate"
+    android:value="0.0" />
+  <meta-data
+    android:name="io.sentry.session-replay.on-error-sample-rate"
+    android:value="0.0" />
+</application>
+```
+
+Explicit calls to `Sentry.replay().start()` and `Sentry.replay().startBuffering()` bypass these sample rates when starting recording. With `onErrorSampleRate` set to `0.0`, call `flush()` to send a manually started buffer. See [Manual Control](/platforms/android/session-replay/#manual-control) for the complete API behavior.
+
 ## Network Details
 
 By default, Replay will capture basic information about all outgoing http requests in your application. This includes the URL, request and response body sizes, method, and status code. The intention is to limit the chance of collecting private data.
