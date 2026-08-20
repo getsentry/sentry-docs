@@ -1,4 +1,4 @@
-<!-- Use this checklist to make sure your PR is ready for merge. You may delete any sections you don't need. -->
+<!-- Keep the urgency section so automation can prioritize this PR. You may delete other sections you don't need. -->
 
 ## DESCRIBE YOUR PR
 

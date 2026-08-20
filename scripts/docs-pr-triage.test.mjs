@@ -2,10 +2,8 @@ import {describe, expect, it} from 'vitest';
 
 import {
   PRIORITIES,
-  REVIEW_TYPES,
   calculateReviewableChanges,
   classifyAuthor,
-  classifyReviewTypes,
   evaluateDocsReview,
   getPriorityAlertReason,
   isGeneratedFile,
@@ -398,43 +396,6 @@ describe('calculateReviewableChanges', () => {
   });
 });
 
-describe('classifyReviewTypes', () => {
-  it('returns stable badges for cross-cutting changes', () => {
-    const result = classifyReviewTypes([
-      'docs/product/issues/index.mdx',
-      'app/api/preview/route.ts',
-      'docs/platforms/javascript/index.mdx',
-      '.github/workflows/preview.yml',
-    ]);
-
-    expect(result).toEqual([
-      REVIEW_TYPES.CONTENT,
-      REVIEW_TYPES.PLATFORM,
-      REVIEW_TYPES.SDK_DOCS,
-      REVIEW_TYPES.SECURITY_CHORE,
-    ]);
-  });
-
-  it.each([
-    ['platform-includes/session-replay/index.mdx', REVIEW_TYPES.SDK_DOCS],
-    ['develop-docs/sdk/telemetry/traces.mdx', REVIEW_TYPES.SDK_DOCS],
-    ['includes/product-note.mdx', REVIEW_TYPES.CONTENT],
-    ['public/images/screenshot.png', REVIEW_TYPES.CONTENT],
-    ['middleware.ts', REVIEW_TYPES.PLATFORM],
-    ['pnpm-lock.yaml', REVIEW_TYPES.SECURITY_CHORE],
-  ])('classifies %s as %s', (path, type) => {
-    expect(classifyReviewTypes([path])).toEqual([type]);
-  });
-
-  it('classifies both sides of a renamed file', () => {
-    expect(
-      classifyReviewTypes([
-        {filename: 'app/content/page.ts', previous_filename: 'docs/product/page.mdx'},
-      ])
-    ).toEqual([REVIEW_TYPES.CONTENT, REVIEW_TYPES.PLATFORM]);
-  });
-});
-
 describe('classifyAuthor', () => {
   it('distinguishes organization members and external contributors', () => {
     expect(classifyAuthor({login: 'employee'}, 'MEMBER')).toEqual({
@@ -564,7 +525,7 @@ describe('evaluateDocsReview', () => {
     expect(bot.requestDocsReview).toBe(false);
   });
 
-  it('returns priority, type, author, and reason details for later workflows', () => {
+  it('returns priority, author, and reason details for later workflows', () => {
     const result = evaluateDocsReview({
       body: bodyWith(['- [ ] No deadline: Not urgent']),
       files: [file('docs/platforms/javascript/index.mdx', 10)],
@@ -575,7 +536,6 @@ describe('evaluateDocsReview', () => {
 
     expect(result).toMatchObject({
       priority: {priority: PRIORITIES.NEEDS_TRIAGE, valid: false},
-      types: [REVIEW_TYPES.SDK_DOCS],
       author: {isBot: false, isExternal: true},
       reasons: ['external-author'],
       requestDocsReview: true,

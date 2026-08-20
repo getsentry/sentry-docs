@@ -24,6 +24,17 @@ describe('codeowner assignment workflow', () => {
     expect(workflow.permissions).toEqual({contents: 'read'});
   });
 
+  it('serializes equivalent assignment events without mixing body edits or dry runs', () => {
+    const concurrency = workflow.jobs.codeowner_assignment.concurrency;
+
+    expect(concurrency.group).toContain('inputs.dry_run');
+    expect(concurrency.group).toContain(
+      "github.event.action == 'edited' && github.run_id"
+    );
+    expect(concurrency.group).toContain("|| 'assignment'");
+    expect(concurrency['cancel-in-progress']).toBe(true);
+  });
+
   it('checks out only the trusted base commit without persisting credentials', () => {
     const checkout = workflow.jobs.codeowner_assignment.steps.find(step =>
       step.uses?.startsWith('actions/checkout@')
@@ -60,6 +71,14 @@ describe('codeowner assignment workflow', () => {
 
     expect(assignment.run).toContain('node scripts/assign-pr-reviewers.mjs');
     expect(assignment.run).toContain('--dry-run');
+  });
+
+  it('uses the repository Node version without installing dependencies', () => {
+    const setup = workflow.jobs.codeowner_assignment.steps.find(step =>
+      step.uses?.startsWith('actions/setup-node@')
+    );
+
+    expect(setup.with['node-version-file']).toBe('package.json');
   });
 });
 

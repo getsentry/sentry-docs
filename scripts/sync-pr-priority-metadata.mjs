@@ -1,58 +1,14 @@
 import {parsePriority} from './docs-pr-triage.mjs';
+import {createGitHubClient, getGitHubRuntime} from './github-api.mjs';
 import {
   PRIORITY_REMINDER_BODY,
   buildPriorityMetadataPlan,
   isPriorityReminderComment,
 } from './pr-priority-metadata.mjs';
 
-const token = process.env.GH_TOKEN;
-const repository = process.env.REPOSITORY;
-const pullRequestNumber = Number(process.env.PR_NUMBER);
+const {token, repository, pullRequestNumber, apiBase} = getGitHubRuntime();
 const dryRun = process.argv.includes('--dry-run');
-
-if (!token) {
-  throw new Error('GH_TOKEN is required');
-}
-if (!repository?.includes('/')) {
-  throw new Error('REPOSITORY must use the owner/name format');
-}
-if (!Number.isInteger(pullRequestNumber) || pullRequestNumber <= 0) {
-  throw new Error('PR_NUMBER must be a positive integer');
-}
-
-const apiBase = process.env.GITHUB_API_URL || 'https://api.github.com';
-
-async function github(path, options = {}) {
-  const response = await fetch(`${apiBase}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${token}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-      ...options.headers,
-    },
-  });
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    const error = new Error(`GitHub API ${response.status}: ${data?.message ?? text}`);
-    error.status = response.status;
-    throw error;
-  }
-  return data;
-}
-
-async function paginate(path) {
-  const items = [];
-  for (let page = 1; ; page += 1) {
-    const separator = path.includes('?') ? '&' : '?';
-    const result = await github(`${path}${separator}per_page=100&page=${page}`);
-    items.push(...result);
-    if (result.length < 100) {
-      return items;
-    }
-  }
-}
+const {request: github, paginate} = createGitHubClient({token, apiBase});
 
 const pullRequestPath = `/repos/${repository}/pulls/${pullRequestNumber}`;
 const issuePath = `/repos/${repository}/issues/${pullRequestNumber}`;

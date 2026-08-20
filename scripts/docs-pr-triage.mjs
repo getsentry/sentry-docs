@@ -12,26 +12,12 @@ export const PRIORITY_LABELS = Object.freeze({
   [PRIORITIES.NORMAL]: 'Priority: Normal',
 });
 
-export const REVIEW_TYPES = Object.freeze({
-  CONTENT: 'Content',
-  PLATFORM: 'Platform',
-  SDK_DOCS: 'SDK Docs',
-  SECURITY_CHORE: 'Security/Chore',
-});
-
 export const REVIEW_THRESHOLDS = Object.freeze({
   docsLines: 50,
   docsFiles: 3,
   totalLines: 200,
   totalFiles: 6,
 });
-
-const REVIEW_TYPE_ORDER = [
-  REVIEW_TYPES.CONTENT,
-  REVIEW_TYPES.PLATFORM,
-  REVIEW_TYPES.SDK_DOCS,
-  REVIEW_TYPES.SECURITY_CHORE,
-];
 
 const GENERATED_EXACT_PATHS = new Set([
   'pnpm-lock.yaml',
@@ -303,51 +289,6 @@ export function calculateReviewableChanges(files) {
   };
 }
 
-function classifyPath(path) {
-  if (
-    path.startsWith('docs/platforms/') ||
-    path.startsWith('platform-includes/') ||
-    path.startsWith('develop-docs/sdk/') ||
-    path.startsWith('public/_platforms/')
-  ) {
-    return REVIEW_TYPES.SDK_DOCS;
-  }
-  if (
-    path.startsWith('docs/') ||
-    path.startsWith('develop-docs/') ||
-    path.startsWith('includes/') ||
-    path.startsWith('md-overrides/') ||
-    path.startsWith('specs/') ||
-    path.startsWith('public/') ||
-    /(?:^|\/)README\.md$/i.test(path) ||
-    /^(?:CONTRIBUTING|SKILL)\.md$/i.test(path)
-  ) {
-    return REVIEW_TYPES.CONTENT;
-  }
-  if (
-    path.startsWith('app/') ||
-    path.startsWith('src/') ||
-    path.startsWith('pages/') ||
-    /^(?:instrumentation|middleware)(?:\.[^.]+)?\.(?:js|mjs|ts)$/i.test(path)
-  ) {
-    return REVIEW_TYPES.PLATFORM;
-  }
-  return REVIEW_TYPES.SECURITY_CHORE;
-}
-
-export function classifyReviewTypes(files) {
-  const types = new Set();
-  for (const file of files ?? []) {
-    const {path, previousPath} = getFilePaths(file);
-    for (const candidate of [path, previousPath]) {
-      if (candidate) {
-        types.add(classifyPath(candidate));
-      }
-    }
-  }
-  return REVIEW_TYPE_ORDER.filter(type => types.has(type));
-}
-
 export function classifyAuthor(author, authorAssociation) {
   const login = typeof author === 'string' ? author : author?.login;
   const isBot = Boolean(
@@ -371,7 +312,6 @@ export function classifyAuthor(author, authorAssociation) {
 export function evaluateDocsReview({body, files, author, authorAssociation, isDraft}) {
   const priority = parsePriority(body);
   const changes = calculateReviewableChanges(files);
-  const types = classifyReviewTypes(files);
   const authorStatus = classifyAuthor(author, authorAssociation);
   const reasons = [];
 
@@ -400,7 +340,6 @@ export function evaluateDocsReview({body, files, author, authorAssociation, isDr
   return {
     priority,
     changes,
-    types,
     author: authorStatus,
     reasons,
     requestDocsReview: isDraft === false && !authorStatus.isBot && reasons.length > 0,

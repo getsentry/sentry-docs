@@ -56,4 +56,12 @@ describe('priority metadata workflow', () => {
     expect(metadata.run).toContain('node scripts/sync-pr-priority-metadata.mjs');
     expect(metadata.run).toContain('--dry-run');
   });
+
+  it('uses the repository Node version without installing dependencies', () => {
+    const setup = workflow.jobs.priority_metadata.steps.find(step =>
+      step.uses?.startsWith('actions/setup-node@')
+    );
+
+    expect(setup.with['node-version-file']).toBe('package.json');
+  });
 });
