@@ -25,7 +25,7 @@ The Sentry Godot SDK includes a reference User Feedback UI, which you can find i
 - `user_feedback_form.tscn` + script: A minimal user feedback form, designed for integration into existing UI.
 - `sentry_theme.tres`: The reference theme file used to customize the looks of user feedback UI.
 
-For quick implementation, drag and drop `user_feedback_gui.tscn` from the addon folder to your scene tree under a `CanvasLayer` node and call `show()` to display the feedback form. The form automatically scales to different viewport resolutions and handles its own visibility, hiding when users click "Submit" (sending feedback to Sentry) or "Cancel".
+For quick implementation, drag and drop `user_feedback_gui.tscn` from the addon folder to your scene tree under a `CanvasLayer` node and call `show()` to display the feedback form. The form automatically scales to different viewport resolutions and handles its own visibility. It hides when users click "Submit" or "Cancel". On submission, it captures feedback on the next drawn frame so an attached screenshot shows the game instead of the form and any text entered into it.
 
 ![Feedback Form](./img/user_feedback_form.png)
 
@@ -41,7 +41,14 @@ Add `user_feedback_form.tscn` as a preview while editing the theme file to see y
 
 ### Integrating the Form Into Existing UI
 
-For custom UI integration, use `user_feedback_form.tscn` instead. This component scene provides a flexible panel that can be embedded into other UI controls. Unlike the standalone GUI, you'll need to manage its visibility manually. The form exposes two signals for handling user interactions: `feedback_submitted` (triggered when feedback is sent) and `feedback_cancelled` (triggered when the user cancels the operation). After you instantiate the form inside your UI scene, you can use the provided signals to hide the form when it's no longer needed (or perform some other action):
+For custom UI integration, use `user_feedback_form.tscn` instead. This component scene provides a flexible panel that can be embedded into other UI controls. Unlike the standalone GUI, you'll need to manage its visibility manually.
+
+The form exposes two signals for handling user interactions:
+
+- `feedback_submitted` is emitted after feedback is queued but before it's captured. Hide or free the form in response. The feedback is captured on the next drawn frame so an attached screenshot shows the game without the form or any text entered into it.
+- `feedback_cancelled` is emitted when the user cancels the operation.
+
+After you instantiate the form inside your UI scene, connect these signals to hide the form when it's no longer needed. The form is implemented in GDScript, so C# code connects to its signals by name. The submitted `SentryFeedback` reaches the C# handler as a `GodotObject`.
 
 ```gdscript {tabTitle:GDScript} {mdExpandTabs}
 # Assuming you have already added the form to your scene with "UserFeedbackForm" unique name.
@@ -104,6 +111,16 @@ SentrySdk.CaptureFeedback(
     "I'm stuck in the wall!",
     contactEmail: "bob@example.com",
     name: "Bob");
+```
+
+### Exclude the Form From Feedback Screenshots
+
+Calling `SentrySDK.capture_feedback()` while an in-game feedback form is visible can include the form and its contents in an attached screenshot. Schedule capture after the next frame is drawn, then immediately hide or free the form:
+
+```GDScript
+RenderingServer.frame_post_draw.connect(
+	SentrySDK.capture_feedback.bind(feedback), CONNECT_ONE_SHOT)
+user_feedback_form.hide()
 ```
 
 Feedback events don't pass through `before_send`. To inspect, modify, or drop feedback before it's sent, see [Filtering User Feedback](/platforms/godot/configuration/filtering/#filtering-user-feedback).
