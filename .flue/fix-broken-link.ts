@@ -80,7 +80,10 @@ async function verifyReplacement(value: string): Promise<void> {
   }
 }
 
-async function verifyBroken(value: string): Promise<void> {
+async function verifyBroken(
+  value: string,
+  allowExistingRedirect: boolean
+): Promise<void> {
   const source = urlPath(value);
   const host = source.host === 'develop' ? 'develop.sentry.dev' : 'docs.sentry.io';
   const response = await fetch(`https://${host}${source.path}`, {
@@ -89,6 +92,9 @@ async function verifyBroken(value: string): Promise<void> {
   });
   if (response.status < 300) {
     throw new Error(`The reported broken URL currently resolves: ${response.url}`);
+  }
+  if (response.status < 400 && !allowExistingRedirect) {
+    throw new Error('An exact redirect already resolves the reported URL.');
   }
 }
 
@@ -227,8 +233,7 @@ async function remoteBranchExists(branch: string): Promise<boolean> {
 
 async function createPullRequest(
   branch: string,
-  issue: v.InferOutput<typeof GitHubIssueContextSchema>,
-  decision: v.InferOutput<typeof TriageDecisionSchema>
+  issue: v.InferOutput<typeof GitHubIssueContextSchema>
 ): Promise<void> {
   const linearReference = issue.linear?.identifier
     ? `\nFixes ${issue.linear.identifier}`
@@ -243,7 +248,7 @@ async function createPullRequest(
     '--title',
     `fix(docs): Resolve broken link from #${issue.number}`,
     '--body',
-    `Automated, validated broken-link fix.\n\n${decision.quickFix!.description}\n\nFixes #${issue.number}${linearReference}\n\nValidation: redirect rules, redirect-chain lint, focused tests, formatting, and git diff checks passed.`,
+    `Automated, validated broken-link fix.\n\nFixes #${issue.number}${linearReference}\n\nValidation: redirect rules, redirect-chain lint, focused tests, formatting, and git diff checks passed.`,
   ]);
 }
 
@@ -278,13 +283,13 @@ async function main(): Promise<void> {
     return;
   }
   if (await remoteBranchExists(branch)) {
-    await createPullRequest(branch, issue, decision);
+    await createPullRequest(branch, issue);
     return;
   }
   const brokenUrl = safeDocumentationUrl(decision.quickFix.brokenUrl);
   const replacementUrl = safeDocumentationUrl(decision.quickFix.replacementUrl);
   await run('git', ['switch', '-c', branch]);
-  await verifyBroken(brokenUrl);
+  await verifyBroken(brokenUrl, decision.quickFix.kind === 'content-edit');
   await verifyReplacement(replacementUrl);
   const changed =
     decision.quickFix.kind === 'content-edit'
@@ -302,7 +307,7 @@ async function main(): Promise<void> {
     `fix(docs): Resolve broken link from issue ${issue.number}`,
   ]);
   await run('git', ['push', '--set-upstream', 'origin', branch]);
-  await createPullRequest(branch, issue, decision);
+  await createPullRequest(branch, issue);
 }
 
 if (process.argv[1]?.endsWith('fix-broken-link.ts')) {

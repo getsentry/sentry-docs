@@ -1,4 +1,4 @@
-import {createHash} from 'node:crypto';
+import {createHash, createHmac, timingSafeEqual} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 
 import * as v from 'valibot';
@@ -32,6 +32,9 @@ export const TRIAGE_STATE_PREFIX = '<!-- sentry-docs-triage-state:v2:';
 
 export interface PersistedTriageState {
   policyVersion: 2;
+  revision: number;
+  githubIssueNumber: number;
+  linearIssueId: string;
   triagedAt: string;
   decision: TriageDecision;
   applied?: {
@@ -45,23 +48,56 @@ export interface PersistedTriageState {
   };
 }
 
-function encodeState(state: PersistedTriageState): string {
-  return `${TRIAGE_STATE_PREFIX}${Buffer.from(JSON.stringify(state)).toString('base64url')} -->`;
+function stateSignature(payload: string, secret: string): string {
+  return createHmac('sha256', secret).update(payload).digest('base64url');
 }
 
-export function parseTriageState(body: string): PersistedTriageState | undefined {
-  const match = body.match(/<!-- sentry-docs-triage-state:v2:([A-Za-z0-9_-]+) -->/);
+function encodeState(state: PersistedTriageState, secret: string): string {
+  const payload = Buffer.from(JSON.stringify(state)).toString('base64url');
+  return `${TRIAGE_STATE_PREFIX}${payload}.${stateSignature(payload, secret)} -->`;
+}
+
+export function parseTriageState(
+  body: string,
+  secret: string,
+  expected: {githubIssueNumber: number; linearIssueId: string}
+): PersistedTriageState | undefined {
+  const match = body.match(
+    /<!-- sentry-docs-triage-state:v2:([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+) -->/
+  );
   if (!match) return undefined;
+  const expectedSignature = Buffer.from(stateSignature(match[1], secret));
+  const provided = Buffer.from(match[2]);
+  if (
+    expectedSignature.length !== provided.length ||
+    !timingSafeEqual(expectedSignature, provided)
+  ) {
+    return undefined;
+  }
   const parsed = JSON.parse(Buffer.from(match[1], 'base64url').toString('utf8')) as {
     policyVersion?: number;
+    revision?: number;
+    githubIssueNumber?: number;
+    linearIssueId?: string;
     triagedAt?: string;
     decision?: unknown;
     applied?: PersistedTriageState['applied'];
     overrides?: PersistedTriageState['overrides'];
   };
-  if (parsed.policyVersion !== 2 || !parsed.triagedAt) return undefined;
+  if (
+    parsed.policyVersion !== 2 ||
+    !parsed.triagedAt ||
+    !Number.isInteger(parsed.revision) ||
+    parsed.githubIssueNumber !== expected.githubIssueNumber ||
+    parsed.linearIssueId !== expected.linearIssueId
+  ) {
+    return undefined;
+  }
   return {
     policyVersion: 2,
+    revision: parsed.revision!,
+    githubIssueNumber: parsed.githubIssueNumber,
+    linearIssueId: parsed.linearIssueId,
     triagedAt: parsed.triagedAt,
     decision: v.parse(TriageDecisionSchema, parsed.decision),
     ...(parsed.applied ? {applied: parsed.applied} : {}),
@@ -145,9 +181,14 @@ export async function applyTriageResult(
   const teams = await fetchLinearTeams(linearKey);
   const targetTeam = resolveLinearTeam(teams, policy.targetLinearTeam, triageConfig);
   const existingState = linear.comments
-    .toReversed()
-    .map(comment => parseTriageState(comment.body))
-    .find(Boolean);
+    .map(comment =>
+      parseTriageState(comment.body, linearKey, {
+        githubIssueNumber: issue.number,
+        linearIssueId: linear.id,
+      })
+    )
+    .filter((value): value is PersistedTriageState => Boolean(value))
+    .sort((first, second) => second.revision - first.revision)[0];
   const desiredPriority = priorityNumber(policy.effectivePriority);
   const priorityOverride =
     existingState?.applied &&
@@ -192,8 +233,11 @@ export async function applyTriageResult(
   const sameDecision =
     existingState &&
     JSON.stringify(existingState.decision) === JSON.stringify(result.decision);
-  const state: PersistedTriageState = {
+  const nextState: PersistedTriageState = {
     policyVersion: 2,
+    revision: (existingState?.revision ?? 0) + 1,
+    githubIssueNumber: issue.number,
+    linearIssueId: linear.id,
     triagedAt: sameDecision ? existingState.triagedAt : new Date().toISOString(),
     decision: result.decision,
     applied: {
@@ -210,7 +254,13 @@ export async function applyTriageResult(
         }
       : {}),
   };
-  const stateMarker = encodeState(state);
+  const state =
+    existingState &&
+    JSON.stringify({...existingState, revision: 0}) ===
+      JSON.stringify({...nextState, revision: 0})
+      ? existingState
+      : nextState;
+  const stateMarker = encodeState(state, linearKey);
   await createLinearCommentOnce(
     linearKey,
     linear,
@@ -229,6 +279,7 @@ export async function applyTriageResult(
       .digest('hex')
       .slice(0, 12);
     await addIssueLabels(issue.number, ['Waiting for: Community'], githubToken);
+    await removeIssueLabel(issue.number, 'Parking Lot', githubToken);
     await createIssueCommentOnce(
       issue.number,
       `<!-- sentry-docs-needs-information:v1:${questionHash} -->`,
@@ -248,6 +299,8 @@ export async function applyTriageResult(
       '<!-- sentry-docs-parking-review:v1 -->',
       `${docsMention} review requested: this issue is proposed for Parking Lot (${result.decision.parkingLotReason}). GitHub remains open and Linear remains active until a person approves or reprioritizes it.`
     );
+  } else {
+    await removeIssueLabel(issue.number, 'Parking Lot', githubToken);
   }
 }
 

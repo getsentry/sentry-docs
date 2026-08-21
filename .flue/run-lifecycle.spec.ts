@@ -1,3 +1,5 @@
+import {createHmac} from 'node:crypto';
+
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
 import type {GitHubIssueContext, TriageDecision} from './triage';
@@ -84,10 +86,17 @@ const issue: GitHubIssueContext = {
 function stateComment(): string {
   const value = {
     policyVersion: 2,
+    revision: 1,
+    githubIssueNumber: 123,
+    linearIssueId: 'linear-id',
     triagedAt: '2026-01-01T00:00:00.000Z',
     decision,
   };
-  return `<!-- sentry-docs-triage-state:v2:${Buffer.from(JSON.stringify(value)).toString('base64url')} -->`;
+  const payload = Buffer.from(JSON.stringify(value)).toString('base64url');
+  const signature = createHmac('sha256', 'linear-key')
+    .update(payload)
+    .digest('base64url');
+  return `<!-- sentry-docs-triage-state:v2:${payload}.${signature} -->`;
 }
 
 function linear(stateName = 'Canceled', priority = 3) {

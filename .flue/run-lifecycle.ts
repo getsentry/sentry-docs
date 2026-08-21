@@ -1,4 +1,4 @@
-import {parseTriageState} from './apply-triage';
+import {parseTriageState, type PersistedTriageState} from './apply-triage';
 import employeeOverrides from './employee-overrides.json';
 import {
   addIssueLabels,
@@ -38,9 +38,14 @@ export async function processIssue(
   const linear = await fetchLinearIssue(linearKey, issue);
   if (['completed', 'duplicate'].includes(linear.state.type)) return;
   const state = linear.comments
-    .toReversed()
-    .map(comment => parseTriageState(comment.body))
-    .find(Boolean);
+    .map(comment =>
+      parseTriageState(comment.body, linearKey, {
+        githubIssueNumber: issue.number,
+        linearIssueId: linear.id,
+      })
+    )
+    .filter((value): value is PersistedTriageState => Boolean(value))
+    .sort((first, second) => second.revision - first.revision)[0];
   if (!state) return;
 
   const enriched = {
