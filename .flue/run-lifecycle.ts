@@ -37,7 +37,12 @@ export async function processIssue(
 ): Promise<void> {
   const issue = await fetchIssueContext(issueNumber, githubToken);
   const linear = await fetchLinearIssue(linearKey, issue);
-  if (['completed', 'duplicate'].includes(linear.state.type)) return;
+  if (
+    linear.state.type === 'completed' ||
+    linear.state.name.toLowerCase() === 'duplicate'
+  ) {
+    return;
+  }
   const state = linear.comments
     .map(comment =>
       parseTriageState(comment.body, stateSecrets, {

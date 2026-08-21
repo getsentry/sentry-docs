@@ -164,7 +164,7 @@ describe('lifecycle reconciliation', () => {
     );
   });
 
-  test('moves a duplicate-type cancellation to the exact Canceled state', async () => {
+  test('preserves a human Duplicate terminal state', async () => {
     mocks.fetchLinearIssue.mockResolvedValue(linear('Duplicate'));
 
     await processIssue(
@@ -175,9 +175,8 @@ describe('lifecycle reconciliation', () => {
       new Date('2026-05-01')
     );
 
-    expect(mocks.updateLinearIssue).toHaveBeenCalledWith('linear-key', 'linear-id', {
-      stateId: 'canceled-id',
-    });
+    expect(mocks.updateLinearIssue).not.toHaveBeenCalled();
+    expect(mocks.updateIssueState).not.toHaveBeenCalled();
   });
 
   test('honors a human High-priority override and does not park the issue', async () => {
