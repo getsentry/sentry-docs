@@ -1,0 +1,157 @@
+name: Triage Issue Shadow Run
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to triage
+        required: true
+        type: number
+
+concurrency:
+  group: flue-triage-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      ((vars.FLUE_TRIAGE_MODE == 'shadow' || vars.FLUE_TRIAGE_MODE == 'apply') &&
+       github.event_name == 'issue_comment' &&
+       !github.event.issue.pull_request &&
+       (github.event.comment.user.login == 'linear-code' ||
+        github.event.comment.user.login == 'linear-code[bot]' ||
+        (github.event.comment.user.login == github.event.issue.user.login &&
+         contains(github.event.issue.labels.*.name, 'Waiting for: Community'))))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      issue_number: ${{ steps.issue.outputs.number }}
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Parse issue number
+        id: issue
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "number=$INPUT_ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=$EVENT_ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run read-only triage
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          TRIAGE_OUTPUT: .flue/output/triage-${{ steps.issue.outputs.number }}.json
+        run: pnpm triage:shadow --issue ${{ steps.issue.outputs.number }}
+
+      - name: Upload triage decision
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: triage-${{ steps.issue.outputs.number }}
+          path: .flue/output/triage-${{ steps.issue.outputs.number }}.json
+          if-no-files-found: error
+
+  apply:
+    needs: analyze
+    if: vars.FLUE_TRIAGE_MODE == 'apply'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download triage decision
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: triage-${{ needs.analyze.outputs.issue_number }}
+          path: .flue/output
+      - name: Apply triage
+        env:
+          FLUE_TRIAGE_MODE: apply
+          FLUE_TRIAGE_STATE_SECRET: ${{ secrets.FLUE_TRIAGE_STATE_SECRET }}
+          FLUE_TRIAGE_STATE_SECRET_PREVIOUS: ${{ secrets.FLUE_TRIAGE_STATE_SECRET_PREVIOUS }}
+          GH_TOKEN: ${{ github.token }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: >-
+          pnpm triage:apply --result
+          .flue/output/triage-${{ needs.analyze.outputs.issue_number }}.json
+
+  fix-broken-link:
+    needs: [analyze, apply]
+    if: >-
+      vars.FLUE_TRIAGE_MODE == 'apply' &&
+      vars.FLUE_TRIAGE_AUTO_FIX_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: write
+    steps:
+      - name: Internal GitHub App token
+        id: token
+        uses: getsentry/action-github-app-token@97c9e23528286821f97fba885c1b1123284b29cc # v2.0.0
+        with:
+          app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          token: ${{ steps.token.outputs.token }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download triage decision
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: triage-${{ needs.analyze.outputs.issue_number }}
+          path: .flue/output
+      - name: Create validated fix PR
+        env:
+          FLUE_TRIAGE_MODE: apply
+          FLUE_TRIAGE_AUTO_FIX_ENABLED: 'true'
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: >-
+          pnpm triage:fix --result
+          .flue/output/triage-${{ needs.analyze.outputs.issue_number }}.json
