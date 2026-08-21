@@ -59,19 +59,22 @@ function encodeState(state: PersistedTriageState, secret: string): string {
 
 export function parseTriageState(
   body: string,
-  secret: string,
+  secrets: string[],
   expected: {githubIssueNumber: number; linearIssueId: string}
 ): PersistedTriageState | undefined {
   const match = body.match(
     /<!-- sentry-docs-triage-state:v2:([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+) -->/
   );
   if (!match) return undefined;
-  const expectedSignature = Buffer.from(stateSignature(match[1], secret));
   const provided = Buffer.from(match[2]);
-  if (
-    expectedSignature.length !== provided.length ||
-    !timingSafeEqual(expectedSignature, provided)
-  ) {
+  const signatureValid = secrets.some(secret => {
+    const expectedSignature = Buffer.from(stateSignature(match[1], secret));
+    return (
+      expectedSignature.length === provided.length &&
+      timingSafeEqual(expectedSignature, provided)
+    );
+  });
+  if (!signatureValid) {
     return undefined;
   }
   const parsed = JSON.parse(Buffer.from(match[1], 'base64url').toString('utf8')) as {
@@ -151,9 +154,15 @@ export async function applyTriageResult(
   }
   const githubToken = env.GH_TOKEN;
   const linearKey = env.LINEAR_API_KEY;
-  if (!githubToken || !linearKey) {
-    throw new Error('Apply mode requires GH_TOKEN and LINEAR_API_KEY.');
+  const stateSecret = env.FLUE_TRIAGE_STATE_SECRET;
+  if (!githubToken || !linearKey || !stateSecret) {
+    throw new Error(
+      'Apply mode requires GH_TOKEN, LINEAR_API_KEY, and FLUE_TRIAGE_STATE_SECRET.'
+    );
   }
+  const verificationSecrets = [stateSecret, env.FLUE_TRIAGE_STATE_SECRET_PREVIOUS].filter(
+    (value): value is string => Boolean(value)
+  );
 
   let issue: GitHubIssueContext = await fetchIssueContext(
     result.issue.number,
@@ -182,7 +191,7 @@ export async function applyTriageResult(
   const targetTeam = resolveLinearTeam(teams, policy.targetLinearTeam, triageConfig);
   const existingState = linear.comments
     .map(comment =>
-      parseTriageState(comment.body, linearKey, {
+      parseTriageState(comment.body, verificationSecrets, {
         githubIssueNumber: issue.number,
         linearIssueId: linear.id,
       })
@@ -260,7 +269,7 @@ export async function applyTriageResult(
       JSON.stringify({...nextState, revision: 0})
       ? existingState
       : nextState;
-  const stateMarker = encodeState(state, linearKey);
+  const stateMarker = encodeState(state, stateSecret);
   await createLinearCommentOnce(
     linearKey,
     linear,

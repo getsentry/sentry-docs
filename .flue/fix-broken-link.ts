@@ -82,11 +82,13 @@ async function verifyReplacement(value: string): Promise<void> {
 
 async function verifyBroken(
   value: string,
+  replacementValue: string,
   allowExistingRedirect: boolean
 ): Promise<void> {
   const source = urlPath(value);
   const host = source.host === 'develop' ? 'develop.sentry.dev' : 'docs.sentry.io';
-  const response = await fetch(`https://${host}${source.path}`, {
+  const sourceUrl = `https://${host}${source.path}`;
+  const response = await fetch(sourceUrl, {
     redirect: 'manual',
     signal: AbortSignal.timeout(15_000),
   });
@@ -94,7 +96,20 @@ async function verifyBroken(
     throw new Error(`The reported broken URL currently resolves: ${response.url}`);
   }
   if (response.status < 400 && !allowExistingRedirect) {
-    throw new Error('An exact redirect already resolves the reported URL.');
+    const location = response.headers.get('location');
+    if (!location)
+      throw new Error('Existing redirect did not include a Location header.');
+    const existing = urlPath(new URL(location, sourceUrl).toString());
+    const expected = urlPath(replacementValue);
+    if (
+      existing.host === expected.host &&
+      canonicalPath(existing.path) === canonicalPath(expected.path)
+    ) {
+      throw new Error('An exact redirect already resolves to the proposed destination.');
+    }
+    throw new Error(
+      'An existing redirect points elsewhere; changing it requires human review.'
+    );
   }
 }
 
@@ -289,7 +304,11 @@ async function main(): Promise<void> {
   const brokenUrl = safeDocumentationUrl(decision.quickFix.brokenUrl);
   const replacementUrl = safeDocumentationUrl(decision.quickFix.replacementUrl);
   await run('git', ['switch', '-c', branch]);
-  await verifyBroken(brokenUrl, decision.quickFix.kind === 'content-edit');
+  await verifyBroken(
+    brokenUrl,
+    replacementUrl,
+    decision.quickFix.kind === 'content-edit'
+  );
   await verifyReplacement(replacementUrl);
   const changed =
     decision.quickFix.kind === 'content-edit'

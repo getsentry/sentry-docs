@@ -142,7 +142,13 @@ describe('lifecycle reconciliation', () => {
   test('finishes GitHub closure when Linear was already canceled', async () => {
     mocks.fetchLinearIssue.mockResolvedValue(linear());
 
-    await processIssue(123, 'github-token', 'linear-key', new Date('2026-05-01'));
+    await processIssue(
+      123,
+      'github-token',
+      'linear-key',
+      ['linear-key'],
+      new Date('2026-05-01')
+    );
 
     expect(mocks.updateLinearIssue).not.toHaveBeenCalled();
     expect(mocks.addIssueLabels).toHaveBeenCalledWith(
@@ -161,7 +167,13 @@ describe('lifecycle reconciliation', () => {
   test('moves a duplicate-type cancellation to the exact Canceled state', async () => {
     mocks.fetchLinearIssue.mockResolvedValue(linear('Duplicate'));
 
-    await processIssue(123, 'github-token', 'linear-key', new Date('2026-05-01'));
+    await processIssue(
+      123,
+      'github-token',
+      'linear-key',
+      ['linear-key'],
+      new Date('2026-05-01')
+    );
 
     expect(mocks.updateLinearIssue).toHaveBeenCalledWith('linear-key', 'linear-id', {
       stateId: 'canceled-id',
@@ -174,7 +186,13 @@ describe('lifecycle reconciliation', () => {
       state: {id: 'unstarted-id', name: 'Unstarted', type: 'unstarted'},
     });
 
-    await processIssue(123, 'github-token', 'linear-key', new Date('2026-05-01'));
+    await processIssue(
+      123,
+      'github-token',
+      'linear-key',
+      ['linear-key'],
+      new Date('2026-05-01')
+    );
 
     expect(mocks.addIssueLabels).not.toHaveBeenCalledWith(
       123,

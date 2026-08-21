@@ -41,10 +41,11 @@ describe('persisted triage state', () => {
     const marker = `${TRIAGE_STATE_PREFIX}${payload}.${signature} -->`;
 
     const expected = {githubIssueNumber: 123, linearIssueId: 'linear-id'};
-    expect(parseTriageState(marker, secret, expected)).toEqual(state);
-    expect(parseTriageState(marker, 'wrong-secret', expected)).toBeUndefined();
+    expect(parseTriageState(marker, [secret], expected)).toEqual(state);
+    expect(parseTriageState(marker, ['new-secret', secret], expected)).toEqual(state);
+    expect(parseTriageState(marker, ['wrong-secret'], expected)).toBeUndefined();
     expect(
-      parseTriageState(marker, secret, {
+      parseTriageState(marker, [secret], {
         githubIssueNumber: 999,
         linearIssueId: 'another-linear-id',
       })

@@ -11,6 +11,7 @@ The Flue v2 bot classifies GitHub issues, routes their synced Linear issues, enf
 | `FLUE_TRIAGE_AUTO_FIX_ENABLED=true` | Allow validated content-link or exact-redirect PRs.                   |
 
 Apply and auto-fix are disabled unless the repository variables are explicitly set.
+Persisted lifecycle state is HMAC-signed with `FLUE_TRIAGE_STATE_SECRET`. During rotation, keep the old value temporarily in `FLUE_TRIAGE_STATE_SECRET_PREVIOUS` so existing state remains verifiable.
 
 ## Decision Rules
 

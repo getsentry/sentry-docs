@@ -32,6 +32,7 @@ export async function processIssue(
   issueNumber: number,
   githubToken: string,
   linearKey: string,
+  stateSecrets: string[],
   now: Date
 ): Promise<void> {
   const issue = await fetchIssueContext(issueNumber, githubToken);
@@ -39,7 +40,7 @@ export async function processIssue(
   if (['completed', 'duplicate'].includes(linear.state.type)) return;
   const state = linear.comments
     .map(comment =>
-      parseTriageState(comment.body, linearKey, {
+      parseTriageState(comment.body, stateSecrets, {
         githubIssueNumber: issue.number,
         linearIssueId: linear.id,
       })
@@ -183,15 +184,22 @@ async function main(): Promise<void> {
   }
   const githubToken = process.env.GH_TOKEN;
   const linearKey = process.env.LINEAR_API_KEY;
-  if (!githubToken || !linearKey) {
-    throw new Error('Lifecycle apply mode requires GH_TOKEN and LINEAR_API_KEY.');
+  const stateSecret = process.env.FLUE_TRIAGE_STATE_SECRET;
+  if (!githubToken || !linearKey || !stateSecret) {
+    throw new Error(
+      'Lifecycle apply mode requires GH_TOKEN, LINEAR_API_KEY, and FLUE_TRIAGE_STATE_SECRET.'
+    );
   }
+  const stateSecrets = [
+    stateSecret,
+    process.env.FLUE_TRIAGE_STATE_SECRET_PREVIOUS,
+  ].filter((value): value is string => Boolean(value));
   const numbers = await listIssueNumbers('open', Number.POSITIVE_INFINITY, githubToken);
   const now = new Date();
   const failures: Array<{issue: number; error: string}> = [];
   for (const number of numbers) {
     try {
-      await processIssue(number, githubToken, linearKey, now);
+      await processIssue(number, githubToken, linearKey, stateSecrets, now);
     } catch (error) {
       console.error(`Lifecycle failed for #${number}:`, error);
       failures.push({issue: number, error: String(error)});
