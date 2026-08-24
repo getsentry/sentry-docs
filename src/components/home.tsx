@@ -7,7 +7,6 @@ import AskAiSearchParams from './askAiSearchParams';
 import {Header} from './header';
 import styles from './home.module.scss';
 import {HomeAiSetupCard} from './homeAiSetupCard';
-import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
@@ -119,36 +118,42 @@ export async function Home() {
           </div>
         </section>
       </main>
-      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
-        <div className="px-3 pt-10 border-t border-gray">
-          <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2 mb-2">
-            <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
-            <FooterLink href="/contributing">Contribute</FooterLink>
-            <FooterLink href="https://www.sentry.help/en/" external>
-              Support
-            </FooterLink>
-            <FooterLink href="https://sentry.io/changelog/" external>
-              Changelog
-            </FooterLink>
+      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 px-6 lg:px-8">
+        <div className="pt-10 border-t border-[var(--gray-a4)] flex flex-col-reverse gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              <FooterLink href="/security-legal-pii/">
+                Security, Legal &amp; PII
+              </FooterLink>
+              <FooterLink href="/contributing">Contribute</FooterLink>
+              <FooterLink href="https://www.sentry.help/en/" external>
+                Support
+              </FooterLink>
+              <FooterLink href="https://sentry.io/changelog/" external>
+                Changelog
+              </FooterLink>
+              <FooterLink href="https://sandbox.sentry.io/" external>
+                Sandbox
+              </FooterLink>
+              <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
+                Self-hosting Sentry
+              </FooterLink>
+              <FooterLink href="https://develop.sentry.dev/" external>
+                Developer docs
+              </FooterLink>
+            </div>
+            <p className="text-sm text-[var(--gray-11)]">
+              © {new Date().getFullYear()} • Sentry is a registered trademark of
+              Functional Software, Inc.
+            </p>
           </div>
-          <div className="flex flex-col items-start md:flex-row md:flex-wrap md:gap-x-6 gap-y-2">
-            <FooterLink href="https://sandbox.sentry.io/" external>
-              Sandbox
-            </FooterLink>
-            <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
-              Self-hosting Sentry
-            </FooterLink>
-            <FooterLink href="https://develop.sentry.dev/" external>
-              Developer docs
-            </FooterLink>
-          </div>
-        </div>
-        <p className="px-3 text-sm">
-          © {new Date().getFullYear()} • Sentry is a registered trademark of Functional
-          Software, Inc.
-        </p>
-        <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
-          <SentryWordmarkLogo height={50} fill="#ffffff" />
+          <SentryWordmarkLogo
+            role="img"
+            aria-label="Sentry"
+            width={128}
+            height={38}
+            className="text-[var(--foreground)] shrink-0"
+          />
         </div>
       </footer>
       <AskAiSearchParams />
@@ -167,27 +172,34 @@ function QuickLink({href, title, desc}: {desc: string; href: string; title: stri
 
 function FooterLink({
   children,
+  href,
   external,
-  ...props
-}: NavLinkProps & {href: string; external?: boolean}) {
-  const target = props.target ?? (props.href?.startsWith('http') ? '_blank' : undefined);
-
+}: {
+  children: React.ReactNode;
+  href: string;
+  external?: boolean;
+}) {
   return (
-    <NavLink {...props} target={target}>
+    <Link
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noreferrer' : undefined}
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--gray-11)] hover:text-[var(--foreground)] transition-colors no-underline"
+    >
       {children}
       {external && (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="18"
+          width="12"
+          height="12"
           viewBox="0 0 16 16"
-          fill="none"
-          className="inline-block ml-2 fill-[var(--foreground)]"
+          fill="currentColor"
+          aria-hidden="true"
+          className="opacity-60"
         >
-          <g>
-            <path d="M10 0C9.44687 0 9 0.446875 9 1C9 1.55313 9.44687 2 10 2H12.5844L6.29375 8.29375C5.90312 8.68437 5.90312 9.31875 6.29375 9.70938C6.68437 10.1 7.31875 10.1 7.70937 9.70938L14 3.41563V6C14 6.55312 14.4469 7 15 7C15.5531 7 16 6.55312 16 6V1C16 0.446875 15.5531 0 15 0H10ZM2.5 1C1.11875 1 0 2.11875 0 3.5V13.5C0 14.8813 1.11875 16 2.5 16H12.5C13.8813 16 15 14.8813 15 13.5V10C15 9.44687 14.5531 9 14 9C13.4469 9 13 9.44687 13 10V13.5C13 13.775 12.775 14 12.5 14H2.5C2.225 14 2 13.775 2 13.5V3.5C2 3.225 2.225 3 2.5 3H6C6.55312 3 7 2.55312 7 2C7 1.44687 6.55312 1 6 1H2.5Z" />
-          </g>
+          <path d="M10 0C9.44687 0 9 0.446875 9 1C9 1.55313 9.44687 2 10 2H12.5844L6.29375 8.29375C5.90312 8.68437 5.90312 9.31875 6.29375 9.70938C6.68437 10.1 7.31875 10.1 7.70937 9.70938L14 3.41563V6C14 6.55312 14.4469 7 15 7C15.5531 7 16 6.55312 16 6V1C16 0.446875 15.5531 0 15 0H10ZM2.5 1C1.11875 1 0 2.11875 0 3.5V13.5C0 14.8813 1.11875 16 2.5 16H12.5C13.8813 16 15 14.8813 15 13.5V10C15 9.44687 14.5531 9 14 9C13.4469 9 13 9.44687 13 10V13.5C13 13.775 12.775 14 12.5 14H2.5C2.225 14 2 13.775 2 13.5V3.5C2 3.225 2.225 3 2.5 3H6C6.55312 3 7 2.55312 7 2C7 1.44687 6.55312 1 6 1H2.5Z" />
         </svg>
       )}
-    </NavLink>
+    </Link>
   );
 }
