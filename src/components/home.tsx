@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import {type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
@@ -7,6 +8,7 @@ import GitHub from 'sentry-docs/icons/github';
 import Jira from 'sentry-docs/icons/jira';
 import Slack from 'sentry-docs/icons/slack';
 import Vercel from 'sentry-docs/icons/vercel';
+import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import AskAiSearchParams from './askAiSearchParams';
 import {Header} from './header';
@@ -19,30 +21,36 @@ export async function Home() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
   return (
-    <div className={`tw-app ${styles.pageBackdrop}`}>
-      <div className={styles.wallpaper} aria-hidden>
-        <div className={styles.wallpaperPattern} />
-      </div>
+    <div className="tw-app">
       <Header
         pathname="/"
         searchPlatforms={[]}
         useStoredSearchPlatforms={false}
         platforms={platforms}
       />
-      <main id="main" className={styles.pageContent}>
+      <main id="main">
         <div className="mt-[var(--header-height)]">
           <Banner />
         </div>
 
         {/* Hero */}
-        <section className="w-full relative">
-          <div className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-16 pb-10 text-center">
-            <h1
-              className="font-bold text-[var(--gray-12)] dark:text-white mb-4"
-              style={{fontSize: '40px', lineHeight: 1.15, letterSpacing: '-0.02em'}}
-            >
-              Get started with Sentry
-            </h1>
+        <section className={`w-full relative ${styles.heroGradient}`}>
+          <div className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-16 pb-10 text-center relative z-10">
+            <div className={styles.heroTitle}>
+              <Image
+                src={SentryLogoSVG}
+                alt=""
+                width={48}
+                height={44}
+                className={styles.heroLogo}
+              />
+              <h1
+                className="font-bold text-[var(--gray-12)] dark:text-white mb-0"
+                style={{fontSize: '40px', lineHeight: 1.15, letterSpacing: '-0.02em'}}
+              >
+                Get started with Sentry
+              </h1>
+            </div>
             <p
               className="text-[var(--gray-11)] dark:text-[var(--gray-11)] max-w-2xl mx-auto mb-8 text-balance"
               style={{fontSize: '17px', lineHeight: 1.5}}
@@ -176,7 +184,7 @@ export async function Home() {
           </div>
         </section>
       </main>
-      <footer className="relative z-[1] mt-12 pb-10 w-full max-w-7xl mx-auto md:px-6 px-6 lg:px-8">
+      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 px-6 lg:px-8">
         <div className="pt-10 border-t border-[var(--gray-a4)] flex flex-col-reverse gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-x-6 gap-y-3">
