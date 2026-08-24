@@ -408,6 +408,17 @@ describe('classifyAuthor', () => {
     });
   });
 
+  it('uses explicit organization membership over author association', () => {
+    expect(classifyAuthor({login: 'employee'}, 'CONTRIBUTOR', true)).toEqual({
+      isBot: false,
+      isExternal: false,
+    });
+    expect(classifyAuthor({login: 'former-member'}, 'MEMBER', false)).toEqual({
+      isBot: false,
+      isExternal: true,
+    });
+  });
+
   it.each([
     [{login: 'dependabot[bot]'}, 'NONE'],
     [{login: 'app/sentry'}, 'NONE'],

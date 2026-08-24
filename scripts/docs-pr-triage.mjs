@@ -289,7 +289,7 @@ export function calculateReviewableChanges(files) {
   };
 }
 
-export function classifyAuthor(author, authorAssociation) {
+export function classifyAuthor(author, authorAssociation, isOrganizationMember) {
   const login = typeof author === 'string' ? author : author?.login;
   const isBot = Boolean(
     (typeof author === 'object' &&
@@ -299,20 +299,29 @@ export function classifyAuthor(author, authorAssociation) {
     /^dependabot$/i.test(login ?? '')
   );
   const association = String(authorAssociation ?? '').toUpperCase();
+  const membershipKnown = typeof isOrganizationMember === 'boolean';
   return {
     isBot,
     isExternal:
       !isBot &&
       Boolean(login) &&
-      Boolean(association) &&
-      !['MEMBER', 'OWNER'].includes(association),
+      (membershipKnown
+        ? !isOrganizationMember
+        : Boolean(association) && !['MEMBER', 'OWNER'].includes(association)),
   };
 }
 
-export function evaluateDocsReview({body, files, author, authorAssociation, isDraft}) {
+export function evaluateDocsReview({
+  body,
+  files,
+  author,
+  authorAssociation,
+  isOrganizationMember,
+  isDraft,
+}) {
   const priority = parsePriority(body);
   const changes = calculateReviewableChanges(files);
-  const authorStatus = classifyAuthor(author, authorAssociation);
+  const authorStatus = classifyAuthor(author, authorAssociation, isOrganizationMember);
   const reasons = [];
 
   if (
