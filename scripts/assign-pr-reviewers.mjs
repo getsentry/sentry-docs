@@ -38,6 +38,21 @@ async function getPreviousPriority() {
     : parsePriority(event.changes.body.from);
 }
 
+async function isOrganizationMember(login) {
+  if (!login) {
+    return null;
+  }
+  try {
+    await github(`/orgs/${repositoryOwner}/members/${encodeURIComponent(login)}`);
+    return true;
+  } catch (error) {
+    if (error.status === 404) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 const pullRequestPath = `/repos/${repository}/pulls/${pullRequestNumber}`;
 const [pullRequest, files, requestedReviewers, codeowners, previousPriority] =
   await Promise.all([
@@ -47,12 +62,14 @@ const [pullRequest, files, requestedReviewers, codeowners, previousPriority] =
     readCodeowners(),
     getPreviousPriority(),
   ]);
+const organizationMember = await isOrganizationMember(pullRequest.user?.login);
 
 const triage = evaluateDocsReview({
   body: pullRequest.body,
   files,
   author: pullRequest.user,
   authorAssociation: pullRequest.author_association,
+  isOrganizationMember: organizationMember,
   isDraft: pullRequest.draft,
 });
 const priorityAlertReason = previousPriority

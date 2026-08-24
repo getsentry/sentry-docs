@@ -52,6 +52,7 @@ describe('codeowner assignment workflow', () => {
 
     expect(token.with.repositories.trim()).toBe('sentry-docs');
     expect(token.with['permission-contents']).toBeUndefined();
+    expect(token.with['permission-members']).toBe('read');
     expect(token.with['permission-pull-requests']).toBe('write');
   });
 

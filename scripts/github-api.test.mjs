@@ -84,4 +84,23 @@ describe('createGitHubClient', () => {
 
     await expect(request('/missing')).rejects.toMatchObject({status: 404});
   });
+
+  it('includes GitHub validation details in API errors', async () => {
+    const {request} = createGitHubClient({
+      token: 'secret',
+      apiBase: 'https://api.github.test',
+      fetchImplementation: () =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              message: 'Validation Failed',
+              errors: [{resource: 'PullRequest', code: 'unprocessable'}],
+            }),
+            {status: 422}
+          )
+        ),
+    });
+
+    await expect(request('/invalid')).rejects.toThrow('PullRequest');
+  });
 });

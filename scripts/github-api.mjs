@@ -35,7 +35,10 @@ export function createGitHubClient({token, apiBase, fetchImplementation = fetch}
     const text = await response.text();
     const data = text ? JSON.parse(text) : null;
     if (!response.ok) {
-      const error = new Error(`GitHub API ${response.status}: ${data?.message ?? text}`);
+      const details = data?.errors ? ` ${JSON.stringify(data.errors)}` : '';
+      const error = new Error(
+        `GitHub API ${response.status}: ${data?.message ?? text}${details}`
+      );
       error.status = response.status;
       throw error;
     }

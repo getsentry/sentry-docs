@@ -24,7 +24,7 @@ describe('priority metadata workflow', () => {
     expect(workflow.permissions).toEqual({
       contents: 'read',
       issues: 'write',
-      'pull-requests': 'read',
+      'pull-requests': 'write',
     });
   });
 
