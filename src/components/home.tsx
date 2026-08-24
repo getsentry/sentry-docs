@@ -1,7 +1,12 @@
 import Link from 'next/link';
-import {ArrowRight} from 'react-feather';
+import {type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import Cursor from 'sentry-docs/icons/cursor';
+import GitHub from 'sentry-docs/icons/github';
+import Jira from 'sentry-docs/icons/jira';
+import Slack from 'sentry-docs/icons/slack';
+import Vercel from 'sentry-docs/icons/vercel';
 
 import AskAiSearchParams from './askAiSearchParams';
 import {Header} from './header';
@@ -14,21 +19,24 @@ export async function Home() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
   return (
-    <div className="tw-app">
+    <div className={`tw-app ${styles.pageBackdrop}`}>
+      <div className={styles.wallpaper} aria-hidden>
+        <div className={styles.wallpaperPattern} />
+      </div>
       <Header
         pathname="/"
         searchPlatforms={[]}
         useStoredSearchPlatforms={false}
         platforms={platforms}
       />
-      <main id="main">
+      <main id="main" className={styles.pageContent}>
         <div className="mt-[var(--header-height)]">
           <Banner />
         </div>
 
         {/* Hero */}
-        <section className={`w-full relative ${styles.heroGradient}`}>
-          <div className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-16 pb-10 text-center relative z-10">
+        <section className="w-full relative">
+          <div className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-16 pb-10 text-center">
             <h1
               className="font-bold text-[var(--gray-12)] dark:text-white mb-4"
               style={{fontSize: '40px', lineHeight: 1.15, letterSpacing: '-0.02em'}}
@@ -45,54 +53,104 @@ export async function Home() {
           </div>
         </section>
 
-        {/* z-20 keeps the cards above the hero's z-10 inner container */}
-        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-4 relative z-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* AI setup */}
-            <HomeAiSetupCard />
-
-            <Link
-              href="/platforms/#platform-specific-docs"
-              className={`${styles.setupCard} group no-underline`}
-            >
-              <div className={styles.setupIcon}>
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2.5" y="4" width="19" height="16" rx="2.5" />
-                  <path d="M6.5 9l3 3-3 3" />
-                  <path d="M12.5 15h5" />
-                </svg>
-              </div>
-              <h2 className={styles.setupTitle}>Set up manually</h2>
-              <p className={styles.setupDesc}>
-                Pick your platform and follow a step-by-step guide to install the SDK and
-                send your first event.
-              </p>
-              <span className={styles.pillLink}>
-                Choose your platform
-                <ArrowRight size={16} />
-              </span>
-            </Link>
-          </div>
+        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-4">
+          <HomeAiSetupCard />
         </section>
 
         <section
           id="platforms"
           className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
         >
+          <div className={styles.orDivider} role="separator" aria-label="or">
+            <span>or</span>
+          </div>
+
+          <div className={styles.manualHeader}>
+            <div className={styles.setupIcon}>
+              <svg
+                width="26"
+                height="26"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <rect x="2.5" y="4" width="19" height="16" rx="2.5" />
+                <path d="M6.5 9l3 3-3 3" />
+                <path d="M12.5 15h5" />
+              </svg>
+            </div>
+            <div>
+              <h2 className={styles.setupTitle}>Set up manually</h2>
+              <p className={styles.setupDesc}>
+                Pick your platform below and follow our step-by-step guides to install the
+                SDK and send your first event.
+              </p>
+            </div>
+          </div>
+
           <PlatformFilter />
         </section>
 
-        {/* Secondary quick links */}
-        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-6 pb-16">
+        <section id="integrations" className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6">
+          <div className="space-y-2 py-8">
+            <h2 className="text-2xl font-medium">
+              <Link
+                href="/integrations/"
+                className="text-[var(--gray-12)] no-underline hover:text-[var(--accent-purple)]"
+              >
+                Integrations
+              </Link>
+            </h2>
+            <p className="m-0">
+              Connect your favorite apps and services to add features that help track and
+              triage your errors.{' '}
+              <Link href="/integrations/" className={styles.seeAllLink}>
+                See all integrations
+              </Link>
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <QuickLink
+              href="/integrations/source-code-mgmt/github/"
+              title="GitHub"
+              desc="Suspect commits, stack traces, and PR comments."
+              icon={<GitHub width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/notification-incidents/slack/"
+              title="Slack"
+              desc="Alerts, issue actions, and Seer in Slack."
+              icon={<Slack width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/issue-tracking/jira/"
+              title="Jira"
+              desc="Create and sync Jira issues from Sentry."
+              icon={<Jira width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/deployment/vercel/"
+              title="Vercel"
+              desc="Deploy notifications and source map uploads."
+              icon={<Vercel width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/coding-agents/cursor/"
+              title="Cursor"
+              desc="Launch Cursor Cloud Agents from Seer."
+              icon={<Cursor width={20} height={20} aria-hidden />}
+            />
+          </div>
+        </section>
+
+        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16">
+          <div className="space-y-2 py-8">
+            <h2 className="text-2xl font-medium">Learn More</h2>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <QuickLink
               href="/product/"
@@ -118,7 +176,7 @@ export async function Home() {
           </div>
         </section>
       </main>
-      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 px-6 lg:px-8">
+      <footer className="relative z-[1] mt-12 pb-10 w-full max-w-7xl mx-auto md:px-6 px-6 lg:px-8">
         <div className="pt-10 border-t border-[var(--gray-a4)] flex flex-col-reverse gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -161,10 +219,23 @@ export async function Home() {
   );
 }
 
-function QuickLink({href, title, desc}: {desc: string; href: string; title: string}) {
+function QuickLink({
+  href,
+  title,
+  desc,
+  icon,
+}: {
+  desc: string;
+  href: string;
+  icon?: ReactNode;
+  title: string;
+}) {
   return (
     <Link href={href} className={`${styles.quickLink} no-underline`}>
-      <div className="font-semibold text-[var(--gray-12)] mb-1">{title}</div>
+      <div className={styles.quickLinkTitle}>
+        {icon}
+        {title}
+      </div>
       <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
     </Link>
   );
