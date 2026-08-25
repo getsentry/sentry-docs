@@ -60,7 +60,10 @@ export function HomeAiSetupCard() {
         </h2>
         <p className={styles.setupDesc}>
           One command teaches Claude Code, Cursor, Codex, and Grok how to install and
-          configure Sentry for you.
+          configure Sentry for you.{' '}
+          <Link href="/ai/agent-plugin/" className={styles.seeAllLink}>
+            Read about the agent plugin
+          </Link>
         </p>
       </div>
       <button
