@@ -8,102 +8,73 @@ description: >-
 
 <Alert>
 
-Inbox is an experimental feature. It's available to organizations with [Seer](/product/ai-in-sentry/seer/) enabled, and both its behavior and its appearance may change.
+Inbox is newly available to organizations with [Seer](/product/ai-in-sentry/seer/) enabled and may change.
 
 </Alert>
 
-The **Inbox** is a focused worklist for the issues you're responsible for. Instead of sorting a long feed by date or event volume, the Inbox groups your open issues by how far along they are toward a fix, so you can start with the ones closest to done.
+The **Inbox** view is where you manage issues you're responsible for. The Inbox sorts your open issues based on their progress toward a fix and shows you actionable next steps for driving the issues forward.
 
-You'll find it in the sidebar under **Issues > Inbox**. The number next to the link counts the unresolved issues assigned to (or suggested for) you that are in the **Assigned**, **Diagnosed**, or **Fix Proposed** state.
+You can find the Inbox by navigating to **Issues > Inbox**. The number next to the link in the inner nav shows you the count of unresolved issues that are in an `Assigned`, `Diagnosed`, or `Fix Proposed` state where you are the assignee or suggested assignee.
 
 ## What the Inbox Shows
 
-The Inbox is a two-pane layout. The list of issues is on the left, and a preview of the selected issue is on the right. On a small screen, the panes stack: you see the list, then the preview after you select an issue, with a **Back to inbox** link to return.
+The Inbox is a two-pane layout (similar to the User Feedback view). The left side shows a list of issues relevant to you, or your teams; the right side includes a preview of the selected issue with relevant details about Seer autofix, linked PRs, as well as relevant activity and comments.
 
-The list only includes **unresolved** issues in the categories Seer can work on: error, mobile, frontend, database query, HTTP client, and configuration. Resolved and archived issues never appear, and neither do categories outside that list, such as uptime outages and cron failures.
+The list only includes `unresolved` issues in the categories Seer can work on: error, mobile, frontend, database query, HTTP client, and configuration. Resolved and archived issues never appear, and neither do categories outside that list, such as uptime outages and cron failures.
 
-### Progress Sections
+### Issue Progress
 
-Issues are grouped into collapsible sections, one per [progress state](#issue-progress-states), ordered so that the issues closest to being fixed come first:
+Issues are grouped by their progress state into collapsible sections, sorted so that the mostly recently progressed issues closest to being fixed are at the top of the list.
 
-| Section          | What's in it                                                                     |
-| ---------------- | -------------------------------------------------------------------------------- |
-| **Fix Proposed** | Issues with an open pull request that references the issue. Expanded by default. |
-| **Diagnosed**    | Issues where Seer has identified a root cause. Expanded by default.              |
-| **Assigned**     | Issues that have an assignee but no root cause or pull request yet.              |
-| **Identified**   | Everything else — open issues that no one has picked up.                         |
-| **Fix Applied**  | Issues with a merged fix that haven't been resolved yet.                         |
+Progress is a ladder, and the highest applicable state is applied to the issue. An issue move through all five states in order (`Identified` → `Assigned` → `Diagnosed` → `Fix Proposed` → `Fix Applied`), but skipping states is expected and allowed.
 
-Each section header shows a progress marker and a count of matching issues. Click a header to expand or collapse the section; **Assigned**, **Identified**, and **Fix Applied** start collapsed. Sections load 10 issues at a time — use **Show more** at the bottom of a section to load the next batch.
+| Section          | Condition                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `Fix Proposed`   | At least one open pull request references the issue (for example, `Fixes SENTRY-123`). |
+| `Diagnosed`      | Seer identified a root cause.                                                          |
+| `Assigned`       | The issue has an assignee.                                                             |
+| `Identified`     | Open issues that no one has picked up.                                                 |
+| `Fix Applied`    | A resolving pull request has been merged, but the issue isn't resolved yet.            |
 
-### Issue Cards
+Each section header shows a corresponding progress marker and a count of matching issues. Click a section's header to expand or collapse the section, each section loads 10 issues at a time, you can use **Show more** at the bottom of a section to load additional issues.
 
-Each issue in the list is a card showing:
+An issue moves between these sections on its own as work happens. See [How Progress Changes](#how-progress-changes) for the full set of events that advance or roll back an issue's progress.
 
-- A dot on the left if you haven't seen the issue yet
-- The issue title and message
-- The project avatar and the issue's short ID
-- How long the issue has been in its current progress state (hover to see which state it changed to)
-- The assignee's avatar, if the issue is assigned
+### Filters
 
-Click a card to load that issue in the preview pane.
+The toggle at the top of the list controls which issues are shown in the list:
 
-## Controls
+- **Me**: Issues assigned to you, or suggested for you.
+- **My Teams**: Issues assigned to or suggested for any team you're on.
+- **All**: Every assigned issue in the organization.
 
-There are two controls on the Inbox itself. Everything else you do from here happens in the preview pane.
+Learn more about automated assignment by checking out [ownership rules](/product/issues/ownership-rules/) and [suspect commits](/product/issues/suspect-commits/).
 
-### Assignee Filter
+### The Preview Pane
 
-The segmented control in the list header scopes every section to a set of issues:
-
-- **Me** — Issues assigned to you, or suggested for you by [ownership rules](/product/issues/ownership-rules/) and [suspect commits](/product/issues/suspect-commits/). This is the default.
-- **My Teams** — Adds issues assigned to or suggested for any team you're on.
-- **All** — Every issue in the organization, regardless of assignment.
-
-### Resize Handle
-
-Drag the divider between the two panes to resize the issue list. Your choice is saved in the browser, so the Inbox opens at the same width next time. Double-click the handle to reset it to the default width.
-
-## The Preview Pane
-
-The preview pane shows enough of an issue to decide what to do next without leaving the page. Opening an issue in the preview marks it as seen. Click the open icon next to the title to go to the full [Issue Details](/product/issues/issue-details/) page.
+The preview pane is limited to only the details of an issue required to decide what to do next without leaving the page. Opening an issue in the preview marks it as seen. Click the open icon next to the title to go to the full [Issue Details](/product/issues/issue-details/) page.
 
 The preview includes:
 
-- **Header** — Issue title and message, current [status](/product/issues/states-triage/), event and user counts, and when the issue was first and last seen.
 - **Actions** — Seer actions such as **Find Root Cause**, **Make a Plan**, **Write a Code Fix**, **Create PR**, and **Continue in Seer**, which reflect where Autofix has gotten to on this issue. If Seer isn't available for the issue, you get the standard issue actions (resolve, archive, and so on) instead.
 - **Priority and assignee** — Change the issue's [priority](/product/issues/issue-priority/) or reassign it in place.
 - **Linked pull requests** — Any pull requests that reference the issue.
 - **Autofix summary** — Seer's root cause, plan, and proposed code changes, when they exist.
 - **Activity** — The issue's activity feed, where you can leave a comment and tag teammates with `@` or teams with `#`.
 
-## Issue Progress States
-
-Issue progress describes how close an open issue is to being resolved. It applies only to open issues — resolved and archived issues have no progress state.
-
-Progress is a ladder, and the highest applicable state wins. Many issues move through all five states in order (**Identified** → **Assigned** → **Diagnosed** → **Fix Proposed** → **Fix Applied**), but skipping states is common. A brand new issue that already has a linked, merged pull request goes straight to **Fix Applied**.
-
-| Progress         | Condition                                                                              |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| **Fix Applied**  | A resolving pull request has been merged, but the issue isn't resolved yet.            |
-| **Fix Proposed** | At least one open pull request references the issue (for example, `Fixes SENTRY-123`). |
-| **Diagnosed**    | Seer identified a root cause.                                                          |
-| **Assigned**     | The issue has an assignee.                                                             |
-| **Identified**   | None of the conditions above apply.                                                    |
-
-### How Progress Changes
+## How Progress Changes
 
 Progress is recalculated as things happen to the issue:
 
 | What happens                                                       | Effect on progress                                                                 |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| The issue is assigned                                              | Advances to at least **Assigned**.                                                 |
-| The issue is unassigned                                            | Falls back to **Identified**, unless a root cause or pull request keeps it higher. |
-| Seer identifies a root cause                                       | Advances to at least **Diagnosed**.                                                |
-| A resolving pull request is opened or reopened                     | Advances to **Fix Proposed**.                                                      |
-| The last open pull request is closed or unlinked                   | Falls back to **Diagnosed**, **Assigned**, or **Identified**.                      |
-| A resolving pull request is merged                                 | Advances to **Fix Applied**.                                                       |
-| Anything else, while the issue is open and already **Fix Applied** | Stays **Fix Applied**.                                                             |
+| The issue is assigned                                              | Advances to at least `Assigned`.                                                   |
+| The issue is unassigned                                            | Falls back to `Identified`, unless a root cause or pull request keeps it higher.  |
+| Seer identifies a root cause                                       | Advances to at least `Diagnosed`.                                                  |
+| A resolving pull request is opened or reopened                     | Advances to `Fix Proposed`.                                                        |
+| The last open pull request is closed or unlinked                   | Falls back to `Diagnosed`, `Assigned`, or `Identified`.                            |
+| A resolving pull request is merged                                 | Advances to `Fix Applied`.                                                         |
+| Anything else, while the issue is open and already `Fix Applied`   | Stays `Fix Applied`.                                                               |
 | The issue is resolved or archived                                  | The issue closes and no longer has a progress state.                               |
 | A closed issue is unresolved, regresses, or escalates              | The issue reopens and its progress is recalculated.                                |
 
@@ -112,26 +83,14 @@ A few behaviors are worth calling out:
 - Assignment survives closing and reopening an issue.
 - Manually reopening an issue preserves the root cause Seer identified.
 - A regression clears the root cause before recalculating progress.
-- An open resolving pull request survives closing the issue and can restore **Fix Proposed** when the issue reopens.
+- An open resolving pull request survives closing the issue and can restore `Fix Proposed` when the issue reopens.
 
-For example, an issue that gets a resolving pull request, has it merged, and then gets resolved in a commit reaches **Fix Proposed**, then **Fix Applied**, then closes with no progress state. If it later regresses, it reopens at **Identified**, because the regression cleared the root cause and no higher condition still applies.
+For example, an issue that gets a resolving pull request, has it merged, and then gets resolved in a commit reaches `Fix Proposed`, then `Fix Applied`, then closes with no progress state. If it later regresses, it reopens at `Identified`, because the regression cleared the root cause and no higher condition still applies.
 
 ### Autofix and Progress
 
-Autofix steps move the issue along, but only up to a point. Recording a root cause moves an issue to **Diagnosed**; writing a plan and generating code changes don't advance it further on their own. It's the resolving pull request that moves the issue to **Fix Proposed**.
+Autofix steps move the issue along, but only up to a point. Recording a root cause moves an issue to `Diagnosed`; writing a plan and generating code changes don't advance it further on their own. It's the resolving pull request that moves the issue to `Fix Proposed`.
 
-If that pull request is closed without merging, progress falls back — usually to **Diagnosed**, since Autofix recorded a root cause on the way there, or to **Assigned** or **Identified** if it didn't. A merged pull request behaves differently: it moves the issue to **Fix Applied**, which sticks for as long as the issue stays open.
+If that pull request is closed without merging, progress falls back — usually to `Diagnosed`, since Autofix recorded a root cause on the way there, or to `Assigned` or `Identified` if it didn't. A merged pull request behaves differently: it moves the issue to `Fix Applied`, which sticks for as long as the issue stays open.
 
-When an issue has more than one resolving pull request, progress reflects whether _any_ of them is still open. Closing one while another remains open leaves the issue at **Fix Proposed**. Only when the last open pull request closes without merging does progress fall back.
-
-### Searching by Progress
-
-Progress is available as the `issue.progress` search property on the **Issues** page, so you can build [issue views](/product/issues/issue-views/) around it. You can also sort the issue stream by progress.
-
-```
-is:unresolved issue.progress:fix_proposed
-```
-
-```
-is:unresolved issue.progress:[diagnosed,fix_proposed] assigned_or_suggested:me
-```
+When an issue has more than one resolving pull request, progress reflects whether _any_ of them is still open. Closing one while another remains open leaves the issue at `Fix Proposed`. Only when the last open pull request closes without merging does progress fall back.
