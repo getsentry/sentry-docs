@@ -103,7 +103,10 @@ export async function Home() {
           <PlatformFilter />
         </section>
 
-        <section id="integrations" className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6">
+        <section
+          id="integrations"
+          className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
+        >
           <div className="space-y-2 py-8">
             <h2 className="text-2xl font-medium">
               <Link
