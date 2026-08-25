@@ -113,7 +113,9 @@ The integration automatically:
 
 ## Trace Propagation
 
-Starting with `@supabase/supabase-js` version `2.106.0`, the Supabase client can propagate W3C trace context (`traceparent`) through Supabase services. Because `Sentry.init()` already registers a W3C-compliant OpenTelemetry provider, add `tracePropagation: true` to your `createClient` call. You'll also need to set `propagateTraceparent: true` in `Sentry.init()` (it defaults to `false`) so Sentry actually emits the `traceparent` header. For browser apps, add your Supabase project URL to `tracePropagationTargets` in `Sentry.init()` as well — Sentry only attaches trace headers to cross-origin requests for listed targets, and Supabase is always cross-origin.
+Starting with `@supabase/supabase-js` version `2.106.0`, the Supabase client can propagate W3C trace context (`traceparent`) through Supabase services. Because `Sentry.init()` already registers a W3C-compliant OpenTelemetry provider, add `tracePropagation: true` to your `createClient` call. You'll also need to set `propagateTraceparent: true` in `Sentry.init()` (it defaults to `false`) so Sentry actually emits the `traceparent` header. For browser apps, add your Supabase project URL to `tracePropagationTargets` in `Sentry.init()` as well — Sentry only attaches trace headers to cross-origin requests for listed targets, and Supabase is always cross-origin. If you call Supabase Edge Functions directly from the browser, also add `sentry-trace` to the function's CORS allow-list, or the header will be dropped.
+
+By default, unsampled requests only send a bare `traceparent` (no `tracestate`/`baggage`), so correlation still works but with less context. Set `respectSamplingDecision: false` on the Supabase client if you want full trace context regardless of sampling.
 
 The `trace_id` from a Sentry span then flows into Supabase API Gateway and Edge Function logs. Combined with [Supabase Log Drains](/product/drains/supabase/), this lets you navigate from a Sentry span directly to the server-side logs it produced.
 
