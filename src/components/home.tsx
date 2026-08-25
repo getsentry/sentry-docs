@@ -40,8 +40,8 @@ export async function Home() {
               <Image
                 src={SentryLogoSVG}
                 alt=""
-                width={48}
-                height={44}
+                width={96}
+                height={88}
                 className={styles.heroLogo}
               />
               <h1
