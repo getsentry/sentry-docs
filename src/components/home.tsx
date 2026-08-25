@@ -108,7 +108,7 @@ export async function Home() {
           className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
         >
           <div className="space-y-2 py-8">
-            <h2 className="text-2xl font-medium">
+            <h2 className="text-xl font-semibold">
               <Link
                 href="/integrations/"
                 className="text-[var(--gray-12)] no-underline hover:text-[var(--accent-purple)]"
@@ -160,7 +160,7 @@ export async function Home() {
 
         <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16">
           <div className="space-y-2 py-8">
-            <h2 className="text-2xl font-medium">Learn More</h2>
+            <h2 className="text-xl font-semibold">Learn More</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <QuickLink
