@@ -10,10 +10,6 @@ By default, traces are not propagated across [RPC calls](https://developers.clou
 
 To enable trace propagation for RPC method calls, set `enableRpcTracePropagation: true` on **both** the caller and receiver sides.
 
-<Alert level="warning" title="Performance Consideration">
-  RPC trace propagation requires instrumenting the environment bindings, which adds overhead to every RPC call. Only enable this option if you need distributed tracing across service boundaries.
-</Alert>
-
 **Worker Side (Caller):**
 
 ```typescript
@@ -62,9 +58,34 @@ export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
 
 The SDK propagates trace context (`sentry-trace` and `baggage`) by appending a trailing argument to outgoing RPC calls. The receiving SDK automatically strips it before your method is executed. Your method signatures are unaffected.
 
-<Alert>
-  If the receiving Worker is not instrumented with Sentry (or `enableRpcTracePropagation` is not enabled), the trailing trace argument won't be stripped and will be passed through to your method. This is harmless for methods with fixed parameter lists, but may cause unexpected behavior if your method relies on rest parameters `(...args)` or `arguments.length`.
+#### When the Trailing Argument Isn't Stripped
+
+Stripping the trailing argument is the receiver's job, and which receivers do it depends on how they're instrumented:
+
+- A `WorkerEntrypoint` wrapped with `withSentry` strips it either way. Setting `enableRpcTracePropagation` there adds the trace continuation, not the stripping.
+- A Durable Object wrapped with `instrumentDurableObjectWithSentry` strips it only when it also sets `enableRpcTracePropagation: true`. Without that option, the SDK doesn't instrument its RPC methods at all.
+- A receiver that doesn't run Sentry never strips it.
+
+If every binding you call falls into one of the first two cases, you're finished here: those methods receive exactly the arguments you passed, and nothing in the rest of this section applies to them.
+
+<Alert level="warning" title="Unstripped Arguments Reach Your Method">
+  When the receiver is in the third case (or is a Durable Object without `enableRpcTracePropagation`), nothing strips the trailing argument, and that method runs with one more argument than the caller passed.
 </Alert>
+
+The caller propagates to **every** Durable Object namespace and service binding on `env`, so the receivers to check are these:
+
+- A service binding to a worker owned by another team, or to a third-party service.
+- A Durable Object namespace bound via `script_name` to a different worker.
+- A Durable Object class in your own worker that you forgot to wrap with `instrumentDurableObjectWithSentry`, or wrapped without `enableRpcTracePropagation`.
+
+The extra argument is a plain object, so it serializes fine and the call still succeeds. That makes the failures quiet. In an affected receiver, watch for methods that:
+
+- Use a rest parameter (`...args`) or read `arguments.length`.
+- Forward their arguments somewhere else, such as a logger, a queue, a database driver, or another RPC call.
+- Validate the argument count, like a schema that parses arguments as a fixed-length tuple.
+- Serialize their arguments, where the metadata object quietly ends up in stored data.
+
+TypeScript won't warn you about any of this. The extra argument is added at runtime, long after the type check.
 
 ### Custom Instrumentation
 
