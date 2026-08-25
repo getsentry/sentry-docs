@@ -3,8 +3,6 @@ title: Celery
 description: "Learn how to set up Sentry in your Celery app, capture your first errors and traces, and view them in Sentry."
 ---
 
-The Celery integration adds support for the [Celery Task Queue System](https://docs.celeryq.dev/).
-
 <Include name="python-stream-mode-general-callout.mdx" />
 
 ## Prerequisites
@@ -20,30 +18,7 @@ You need:
 
 ## Install
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Run the command for your preferred package manager to add the Sentry SDK to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```bash {tabTitle:pip}
-pip install "sentry-sdk"
-```
-
-```bash {tabTitle:uv}
-uv add "sentry-sdk"
-```
-
-```bash {tabTitle:poetry}
-poetry add "sentry-sdk"
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+<PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
@@ -54,6 +29,8 @@ Choose the features you want to configure, and this guide will show you how:
 />
 
 <Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
 
 Configuration should happen as **early as possible** in your application's lifecycle.
 
@@ -68,8 +45,6 @@ If you have the `celery` package in your dependencies, the Celery integration wi
 ### Set up Celery Without Django
 
 When using Celery without Django, you'll need to initialize the Sentry SDK in both your application and the Celery worker processes spawned by the Celery daemon.
-
-In addition to capturing errors, you can use Sentry for [distributed tracing](/concepts/key-terms/tracing/) and [profiling](/product/profiling/).
 
 #### Set up Sentry in Celery Daemon or Worker Processes
 
@@ -173,6 +148,69 @@ The Sentry SDK automatically creates spans for your Celery tasks, and propagates
 
 You can also manually capture performance data – see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> to learn more.
 
+#### Distributed Traces
+
+Distributed tracing extends the trace from the code running your Celery task to include the code that initiated the task.
+
+You can disable this globally with the `propagate_traces` option, documented in the [options](#options) below. If you set `propagate_traces` to `False`, all Celery tasks will start their own trace.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+If you want to have more fine-grained control over trace distribution, you can override the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
+
+<Alert>
+
+The `CeleryIntegration` does not utilize the `traces_sample_rate` config option for deciding if a trace should be propagated into a Celery task.
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```python
+import sentry_sdk
+
+# Enable global distributed traces (this is the default, just to be explicit)
+sentry_sdk.init(
+    # same as above
+    integrations=[
+        CeleryIntegration(
+            propagate_traces=True
+        ),
+    ],
+)
+
+# This will propagate the trace:
+my_task_a.delay("some parameter")
+
+# This will propagate the trace:
+my_task_b.apply_async(
+    args=("some_parameter", )
+)
+
+# This will NOT propagate the trace. The task will start its own trace:
+my_task_b.apply_async(
+    args=("some_parameter", ),
+    headers={"sentry-propagate-traces": False},
+)
+
+# Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Alert level="warning" title="Note on distributed tracing for Celery versions 4.x">
+
+Sentry uses custom message headers for distributed tracing. For Celery versions 4.x, with [message protocol version 1](https://docs.celeryq.dev/en/stable/internals/protocol.html#version-1), this functionality is broken, and Celery fails to propagate custom headers to the worker. Protocol version 2, the default since Celery 4.0, is not affected.
+
+The fix for the custom headers propagation issue was introduced to the Celery project ([PR](https://github.com/celery/celery/pull/6374)) starting with version 5.0.1. However, the fix was not backported to versions 4.x.
+
+</Alert>
+
 </OnboardingOption>
 
 ## Verify Your Setup
@@ -215,82 +253,19 @@ To confirm that your SDK is initialized on worker start, pass `debug=True` to `s
 
 <OnboardingOption optionId="performance">
 
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test your tracing configuration, create a custom transaction and span:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```py
-import sentry_sdk
-
-with sentry_sdk.start_transaction(op="task", name="Transaction Name"):
-    span = sentry_sdk.start_span(name="Custom Span Name")
-    span.finish()
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+<Include name="tracing/python-quick-start-verify-tracing-splitlayout.mdx" />
 
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
 
-### Logs
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To verify that Sentry catches your logs (which are enabled by default), add some log statements to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```py
-import sentry_sdk
-
-sentry_sdk.logger.info("This is an info log message")
-sentry_sdk.logger.warning("This is a warning message")
-sentry_sdk.logger.error("This is an error message")
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+<Include name="logs/python-quick-start-verify-logs-splitlayout.mdx" />
 
 </OnboardingOption>
 
 <OnboardingOption optionId="metrics">
 
-### Metrics
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Send test metrics from your app to verify metrics are arriving in Sentry:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```py
-from sentry_sdk import metrics
-
-metrics.count("checkout.failed", 1)
-metrics.gauge("queue.depth", 42)
-metrics.distribution("cart.amount_usd", 187.5)
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+<Include name="metrics/python-quick-start-verify-metrics-splitlayout.mdx" />
 
 </OnboardingOption>
 
@@ -335,7 +310,11 @@ If this is set to `False`:
 - errors in Celery tasks won't be matched to the triggering function.
 - your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
 
-See [Distributed Traces](#distributed-traces) below to learn how to get more fine grained control over distributed tracing in Celery tasks.
+<OnboardingOption optionId="performance">
+
+See [Distributed Traces](#distributed-traces) below to learn how to get more fine-grained control over distributed tracing in Celery tasks.
+
+</OnboardingOption>
 
 </SdkOption>
 
@@ -343,7 +322,7 @@ See [Distributed Traces](#distributed-traces) below to learn how to get more fin
 
 Turn auto-instrumentation on or off for Celery Beat tasks using Sentry Crons.
 
-See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+See <PlatformLink to="/integrations/celery/crons/">Celery Beat Auto Discovery</PlatformLink> to learn more.
 
 </SdkOption>
 
@@ -353,57 +332,9 @@ A list of Celery Beat tasks that should be excluded from auto-instrumentation us
 
 The list can contain strings with the names of tasks in the Celery Beat schedule to be excluded. It can also include regular expressions to match multiple tasks. For example, if you include `"payment-check-.*"` every task starting with `payment-check-` will be excluded from auto-instrumentation.
 
-See <PlatformLink to="/crons/#celery-beat-auto-discovery">Celery Beat Auto Discovery</PlatformLink> to learn more.
+See <PlatformLink to="/integrations/celery/crons/">Celery Beat Auto Discovery</PlatformLink> to learn more.
 
 </SdkOption>
-
-## Distributed Traces
-
-Distributed tracing extends the trace from the code that's running your Celery task so that it includes the code that initiated the task.
-
-You can disable this globally with the `propagate_traces` parameter, documented above. If you set `propagate_traces` to `False`, all Celery tasks will start their own trace.
-
-If you want to have more fine-grained control over trace distribution, you can override the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
-
-**Note:** The `CeleryIntegration` does not utilize the `traces_sample_rate` config option for deciding if a trace should be propagated into a Celery task.
-
-```python
-import sentry_sdk
-
-# Enable global distributed traces (this is the default, just to be explicit)
-sentry_sdk.init(
-    # same as above
-    integrations=[
-        CeleryIntegration(
-            propagate_traces=True
-        ),
-    ],
-)
-
-# This will propagate the trace:
-my_task_a.delay("some parameter")
-
-# This will propagate the trace:
-my_task_b.apply_async(
-    args=("some_parameter", )
-)
-
-# This will NOT propagate the trace. The task will start its own trace:
-my_task_b.apply_async(
-    args=("some_parameter", ),
-    headers={"sentry-propagate-traces": False},
-)
-
-# Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
-```
-
-<Alert title="Note on distributed tracing">
-
-Sentry uses custom message headers for distributed tracing. For Celery versions 4.x, with [message protocol of version 1](https://docs.celeryq.dev/en/stable/internals/protocol.html#version-1), this functionality is broken, and Celery fails to propagate custom headers to the worker. Protocol version 2, which is the default since Celery version 4.0, is not affected.
-
-The fix for the custom headers propagation issue was introduced to Celery project ([PR](https://github.com/celery/celery/pull/6374)) starting with version 5.0.1. However, the fix was not backported to versions 4.x.
-
-</Alert>
 
 ## Next Steps
 
