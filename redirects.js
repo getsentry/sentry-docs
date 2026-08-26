@@ -2262,68 +2262,77 @@ const userDocsRedirects = [
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
   },
-  // Mastra moved from Agent Tracing to JavaScript integrations
-  // Map older Agent Tracing names directly to avoid redirect chains.
+  // Mastra is a first-class JS framework guide.
+  // Keep old Agent Tracing + integration URLs working.
+  {
+    source: '/platforms/javascript/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source: '/platforms/javascript/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
   {
     source: '/platforms/javascript/ai-agent-monitoring/mastra.md',
-    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/mastra/:path*',
-    destination:
-      '/platforms/javascript/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra.md',
-    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/agent-tracing/mastra.md',
-    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   // Agent Tracing moved to top-level feature
   {

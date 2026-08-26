@@ -1,0 +1,173 @@
+---
+title: Mastra
+description: "Learn how to set up Sentry in your Mastra app to capture agent tracing, model calls, and tool executions."
+sdk: sentry.javascript.node
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+keywords:
+  - mastra
+  - ai
+  - agents
+  - agent tracing
+---
+
+[Mastra](https://mastra.ai/) is a TypeScript framework for building AI agents and applications. Sentry support comes from Mastra's `@mastra/sentry` exporter, which sends agent runs, model generations, tool calls, and workflows to [Sentry Agent Tracing](/product/agents/).
+
+This guide covers standalone Mastra setups first. If you run Mastra inside another framework, keep this guide for AI tracing and use that framework's Sentry guide for the host app.
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A Mastra application (`@mastra/core`)
+
+## Install
+
+Install the Mastra Sentry exporter and observability packages:
+
+```bash {tabTitle:npm}
+npm install @mastra/sentry@latest @mastra/observability@latest
+```
+
+```bash {tabTitle:yarn}
+yarn add @mastra/sentry@latest @mastra/observability@latest
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @mastra/sentry@latest @mastra/observability@latest
+```
+
+## Configure
+
+Add the exporter on your Mastra instance. This is the supported path for Mastra agent tracing.
+
+### Zero-config setup
+
+With `SENTRY_DSN` set (optional: `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`), create the exporter with no options:
+
+```typescript {filename: src/mastra/index.ts}
+import { Mastra } from "@mastra/core";
+import { Observability } from "@mastra/observability";
+import { SentryExporter } from "@mastra/sentry";
+
+export const mastra = new Mastra({
+  // agents, workflows, ...
+  observability: new Observability({
+    configs: {
+      sentry: {
+        serviceName: "my-mastra-service",
+        exporters: [new SentryExporter()],
+      },
+    },
+  }),
+});
+```
+
+### Explicit configuration
+
+Pass options directly when you don't want to rely on environment variables:
+
+```typescript {filename: src/mastra/index.ts}
+import { Mastra } from "@mastra/core";
+import { Observability } from "@mastra/observability";
+import { SentryExporter } from "@mastra/sentry";
+
+export const mastra = new Mastra({
+  // agents, workflows, ...
+  observability: new Observability({
+    configs: {
+      sentry: {
+        serviceName: "my-mastra-service",
+        exporters: [
+          new SentryExporter({
+            dsn: process.env.SENTRY_DSN,
+            environment: "production",
+            tracesSampleRate: 1.0,
+          }),
+        ],
+      },
+    },
+  }),
+});
+```
+
+Give each agent both `id` and `name` so they show up clearly in the [Agents Dashboard](/product/agents/dashboards/). See [Naming Your Agents](/product/agents/naming/).
+
+## Verify
+
+Run an agent and confirm spans show up under **Agents** in Sentry:
+
+```typescript
+const agent = mastra.getAgentById("weather-agent");
+const response = await agent.generate("What's the weather in San Francisco?");
+console.log(response.text);
+```
+
+You should see agent runs, model generations, tool calls, and token usage in Sentry.
+
+## Deployment modes
+
+AI tracing always configures `@mastra/sentry` on the Mastra instance. Host-app errors and HTTP tracing use that host's Sentry SDK guide.
+
+### Standalone Mastra server
+
+Default path (`create mastra` / `mastra build`). The exporter setup above is enough for agent tracing.
+
+### Server adapters
+
+If you mount Mastra on Express, Hono, Fastify, Koa, NestJS, or Elysia, keep the exporter on the Mastra instance. For non-AI request errors and performance on the host server, also follow that framework's guide:
+
+- [Express](/platforms/javascript/guides/express/)
+- [Hono](/platforms/javascript/guides/hono/)
+- [Fastify](/platforms/javascript/guides/fastify/)
+- [Koa](/platforms/javascript/guides/koa/)
+- [NestJS](/platforms/javascript/guides/nestjs/)
+- [Elysia](/platforms/javascript/guides/elysia/)
+
+### Embedded in another app
+
+If you call Mastra agents from Next.js, Astro, or similar:
+
+1. Keep `@mastra/sentry` on the Mastra instance (this guide).
+2. Set up the host framework SDK for the rest of the app — for example [Next.js](/platforms/javascript/guides/nextjs/) or [Astro](/platforms/javascript/guides/astro/).
+3. On serverless hosts, call `await exporter.flush()` before the isolate freezes if spans are missing.
+
+If the frontend only talks to a **separate** Mastra backend, put Sentry on that Mastra service with this guide. Instrument the frontend with its own framework guide as needed.
+
+## Conversations
+
+Mastra can set `gen_ai.conversation.id` from `metadata.threadId` so multi-turn chats group in [Conversations](/product/agents/conversations/). Prefer stable thread IDs for a chat session.
+
+## What gets captured
+
+| Mastra span            | Sentry operation       |
+| ---------------------- | ---------------------- |
+| `AGENT_RUN`            | `gen_ai.invoke_agent`  |
+| `MODEL_GENERATION`     | `gen_ai.chat`          |
+| `TOOL_CALL`            | `gen_ai.execute_tool`  |
+| `MCP_TOOL_CALL`        | `gen_ai.execute_tool`  |
+| `WORKFLOW_RUN`         | `workflow.run`         |
+| `WORKFLOW_STEP`        | `workflow.step`        |
+| `WORKFLOW_CONDITIONAL` | `workflow.conditional` |
+| `WORKFLOW_PARALLEL`    | `workflow.parallel`    |
+| `WORKFLOW_LOOP`        | `workflow.loop`        |
+| `PROCESSOR_RUN`        | `ai.processor`         |
+| `GENERIC`              | `ai.span`              |
+
+`MODEL_STEP` and `MODEL_CHUNK` spans are skipped; their data rolls up into `MODEL_GENERATION`.
+
+Spans are tagged with `sentry.origin: auto.ai.mastra`.
+
+## Learn more
+
+- [Mastra Sentry exporter reference](https://mastra.ai/reference/observability/tracing/exporters/sentry)
+- [Sentry Agents product](/product/agents/)
+- [Naming your agents](/product/agents/naming/)
+
+## Supported versions
+
+- `@mastra/sentry`: `>=1.0.0`
