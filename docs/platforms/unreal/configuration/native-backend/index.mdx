@@ -49,6 +49,18 @@ Available modes:
 - `NativeStackwalking` - Walk the stack client-side in the crash daemon and send a JSON event with stack traces. No minidump is generated, resulting in faster uploads and smaller payloads.
 - `NativeStackwalkingWithMinidump` (default) - Perform client-side stack unwinding and also attach a minidump for deep debugging when needed.
 
+### Crash Upload Mode
+
+Controls what happens after crash data has been captured. You can adjust this in **Project Settings > Plugins > Sentry > General > Native > Crash upload mode**.
+
+Available modes:
+- `Sync` (default) - Keep the crashed application blocked until the crash daemon finishes uploading the crash report.
+- `Async` - Let the crashed application terminate as soon as crash data has been captured, while the crash daemon finishes the upload in the background.
+
+`Sync` gives the crash report the best chance of reaching Sentry before the process goes away, but the application stays frozen for the duration of the upload. With large payloads, such as full minidumps, big attachments, or session replay clips, that delay is noticeable to players. `Async` removes the freeze, at the cost of the upload no longer being tied to the lifetime of the crashed process.
+
+In both modes the crash daemon's upload is bounded by the **Shutdown timeout** setting. Envelopes that don't finish uploading within that budget are kept on disk and sent during the next application run.
+
 ### Enabling Network Access on macOS
 
 <Alert>
