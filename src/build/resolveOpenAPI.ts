@@ -6,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '4b9b7fd7f5268a14443f24a5da767b8d65e52024';
+const SENTRY_API_SCHEMA_SHA = '{"message":"API rate limit exceeded for 13.89.126.68. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"}';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
