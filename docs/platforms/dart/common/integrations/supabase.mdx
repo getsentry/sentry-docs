@@ -4,8 +4,30 @@ description: "Correlate Sentry traces with Supabase logs in Dart and Flutter app
 sidebar_order: 35
 ---
 
-The Sentry Flutter/Dart SDK can propagate W3C trace context through Supabase API requests. Enabling `propagateTraceparent` (requires `sentry_flutter` ≥9.7.0) attaches the `traceparent` header to outgoing HTTP requests, which Supabase reads to stamp API Gateway and Edge Function logs with your trace ID.
+The Sentry Dart/Flutter SDK can attach W3C `traceparent` to Supabase API
+requests. Supabase stamps that trace ID onto API Gateway and Edge Function
+logs, so you can join a client span to the server logs it produced.
+This requires `sentry` or `sentry_flutter` ≥9.7.0. 
+Enable `propagateTraceparent` **and** pass `SentryHttpClient` into Supabase. The Dart
+SDK does not intercept HTTP globally, so the option has no effect on a default
+`SupabaseClient`.
 
-Combined with [Supabase Log Drains](/product/drains/supabase/), this lets you navigate from a Sentry span directly to the Supabase server logs it produced.
+```dart
+await SentryFlutter.init((options) {
+  options.dsn = '___PUBLIC_DSN___';
+  options.tracesSampleRate = 1.0;
+  options.propagateTraceparent = true;
+});
+await Supabase.initialize(
+  url: 'https://xyzcompany.supabase.co',
+  anonKey: 'your-anon-key',
+  httpClient: SentryHttpClient(),
+);
+```
 
-See the [Supabase Dart trace propagation documentation](https://supabase.com/docs/guides/monitoring-and-debugging/client-side-tracing) for full setup instructions, including the `TracePropagationOptions` API.
+Combined with [Supabase Log Drains](/product/drains/supabase/), those
+logs show up on the Sentry trace.
+
+If you inject headers from the Supabase client instead of Sentry’s HTTP
+layer, use [`TracePropagationOptions`](https://supabase.com/docs/guides/monitoring-and-debugging/client-side-tracing).
+That path does not use `propagateTraceparent`.
