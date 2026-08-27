@@ -21,7 +21,6 @@ Before enabling Session Replay in production, verify your masking configuration 
 
 </Alert>
 
-
 [Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
 By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/session-replay/).
@@ -80,6 +79,127 @@ Sampling allows you to control how much of your app's traffic will result in a S
    ends.
 
 Sampling begins as soon as a session starts. `sessionSampleRate` is evaluated first. If it's sampled, the replay recording will begin. Otherwise, `onErrorSampleRate` is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
+
+### Disable Automatic Replay Sampling
+
+To start Replay only after user consent, a feature flag, or a user action, set both sample rates to `0.0` during initialization. This keeps the Replay integration available for manual control without starting a recording automatically.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.start { options in
+    options.sessionReplay.sessionSampleRate = 0.0
+    options.sessionReplay.onErrorSampleRate = 0.0
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.sessionReplay.sessionSampleRate = 0.0;
+    options.sessionReplay.onErrorSampleRate = 0.0;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.sessionReplay.sessionSampleRate = 0.0;
+    options.sessionReplay.onErrorSampleRate = 0.0;
+}];
+```
+
+Sampling controls automatic Replay startup. Explicit calls to `start()`, `startBuffering()`, and `flush()` bypass the configured sample rates, but Replay uploads remain subject to active server-side rate limits.
+
+## Control Replay Manually
+
+Use the runtime control APIs when recording depends on user consent, authentication, or a specific workflow. Replay lifecycle calls can be made from any thread and return before the requested operation completes.
+
+### Start Recording
+
+Choose the recording mode that fits your use case:
+
+- `start()` starts a full-session replay.
+- `startBuffering()` starts a rolling buffer of up to 30 seconds. If an error occurs, `onErrorSampleRate` determines whether the SDK sends the buffer automatically. Call `flush()` to send it without an error sampling decision.
+
+If a replay is already recording, both methods do nothing.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+// Start a full-session replay.
+SentrySDK.replay.start()
+
+// Or start a buffered replay instead.
+// SentrySDK.replay.startBuffering()
+```
+
+```objc {tabTitle:Objective-C}
+// Start a full-session replay.
+[SentrySDK.replay start];
+
+// Or start a buffered replay instead.
+// [SentrySDK.replay startBuffering];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+// Start a full-session replay.
+[SentryObjCSDK.replay start];
+
+// Or start a buffered replay instead.
+// [SentryObjCSDK.replay startBuffering];
+```
+
+### Pause Recording on Sensitive Screens
+
+Call `pause()` before showing sensitive content, such as a PIN or payment entry screen. The SDK keeps the current replay active but excludes screenshots and touches from the paused interval. Call `resume()` after the sensitive content is hidden to continue the same replay.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.replay.pause()
+
+// Resume the same replay after leaving the sensitive screen.
+SentrySDK.replay.resume()
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK.replay pause];
+
+// Resume the same replay after leaving the sensitive screen.
+[SentrySDK.replay resume];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK.replay pause];
+
+// Resume the same replay after leaving the sensitive screen.
+[SentryObjCSDK.replay resume];
+```
+
+### Flush Recording
+
+Call `flush()` to send the current replay data to Sentry without stopping recording. In session mode, the SDK sends the pending data and continues recording. In buffer mode, it sends the buffer and continues in session mode. If Replay is inactive, `flush()` starts a new full-session replay.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.replay.flush()
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK.replay flush];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK.replay flush];
+```
+
+### Stop Recording
+
+Call `stop()` to end the current replay. A later call to `start()` or `startBuffering()` creates a new replay instead of resuming the stopped one.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.replay.stop()
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK.replay stop];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK.replay stop];
+```
 
 ## Privacy
 
