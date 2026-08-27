@@ -163,9 +163,9 @@ You can call the manual control APIs from any thread. Calls return before the re
 Choose the recording mode that fits your use case:
 
 - `start()` starts a full-session replay.
-- `startBuffering()` keeps a rolling buffer of up to 30 seconds. The SDK sends the buffer when an error is sampled or you call `flush()`, then continues recording in session mode.
+- `startBuffering()` keeps a rolling buffer of up to 30 seconds. If `onErrorSampleRate` samples an error, the SDK sends the buffer automatically. Call `flush()` to send it without an error or sampling decision. After either action, recording continues in session mode.
 
-Explicit calls to `start()` and `startBuffering()` bypass the configured replay sample rates when starting recording. `onErrorSampleRate` still controls whether an error sends a buffered replay. If a replay is already recording, both methods do nothing.
+Explicit calls to `start()` and `startBuffering()` bypass the configured replay sample rates when starting recording. If a replay is already recording, both methods do nothing.
 
 ```kotlin {tabTitle:Kotlin}
 // Start a full-session replay.
@@ -185,7 +185,7 @@ Sentry.replay().start();
 
 ### Pause Recording on Sensitive Screens
 
-Pause recording before showing sensitive content, such as a PIN entry screen, and resume it after the content is hidden. The SDK preserves a manual pause across app background and foreground transitions and when it automatically starts a new replay session in the same app process. Call `resume()` to continue recording. The pause state resets when the app process restarts. Calling `resume()` when replay is stopped does nothing.
+Pause recording before showing sensitive content, such as a PIN entry screen, and resume it after the content is hidden. The SDK preserves a manual pause across app background and foreground transitions and when it automatically starts a new replay session in the same app process. Call `resume()` to continue recording. The pause state resets when the app process restarts. Calling `resume()` when replay is stopped does nothing; call `start()` or `startBuffering()` to create a new replay.
 
 ```kotlin {tabTitle:Kotlin}
 Sentry.replay().pause()
@@ -209,7 +209,7 @@ The SDK can't determine whether foregrounding returns to the same sensitive scre
 
 ### Stop or Flush Recording
 
-Call `stop()` to end the current replay. A later call to `start()` or `startBuffering()` creates a new replay session.
+Call `stop()` to end the current replay. In session mode, the SDK sends any pending segment before stopping. In buffer mode, it discards the unsent buffer. A later call to `start()` or `startBuffering()` creates a new replay session.
 
 ```kotlin {tabTitle:Kotlin}
 Sentry.replay().stop()
@@ -219,7 +219,7 @@ Sentry.replay().stop()
 Sentry.replay().stop();
 ```
 
-Call `flush()` to send the current replay data without stopping recording. In session mode, it sends the pending segment and continues recording. In buffer mode, it sends the buffer and switches to session mode. Calling `flush()` while recording is stopped starts a new full-session replay.
+Call `flush()` to send the current replay data without stopping the recording. In session mode, it sends the pending segment and continues recording. In buffer mode, it sends the buffer and switches to session mode. Calling `flush()` while recording is stopped starts a new full-session replay.
 
 ```kotlin {tabTitle:Kotlin}
 Sentry.replay().flush()
