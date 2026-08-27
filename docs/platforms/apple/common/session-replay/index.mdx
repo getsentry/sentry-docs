@@ -65,7 +65,7 @@ The session will be terminated if the application has spent in the background mo
 
 ### Replay Captures on Errors Only
 
-If you prefer not to record an entire session, you can elect to capture a replay only if an error occurs. In this case, the integration will buffer up to 30 seconds worth of replay data prior to the error being thrown. It will continue to record the session, following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
+If you prefer not to record an entire session, you can elect to capture a replay only if an error occurs. In this case, the integration will buffer up to 30 seconds of replay data before the error. It will continue to record the session, following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
 
 ## Sampling
 
@@ -75,41 +75,16 @@ Sampling allows you to control how much of your app's traffic will result in a S
    replays that begin recording immediately and last the entirety of the user's session.
 2. `onErrorSampleRate` - The sample rate for
    replays that are recorded when an error happens. This type of replay will record
-   up to a minute of events prior to the error and continue recording until the session
+   up to 30 seconds of events before the error and continue recording until the session
    ends.
 
 Sampling begins as soon as a session starts. `sessionSampleRate` is evaluated first. If it's sampled, the replay recording will begin. Otherwise, `onErrorSampleRate` is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
 
-### Disable Automatic Replay Sampling
+## Manual Control
 
-To start Replay only after user consent, a feature flag, or a user action, set both sample rates to `0.0` during initialization. This keeps the Replay integration available for manual control without starting a recording automatically.
+Use manual control when replay recording depends on user consent, authentication, or a specific workflow. To disable automatic recording, [set both replay sample rates to `0.0`](/platforms/apple/guides/ios/session-replay/configuration/#disable-automatic-replay-sampling).
 
-```swift {tabTitle:Swift} {mdExpandTabs}
-SentrySDK.start { options in
-    options.sessionReplay.sessionSampleRate = 0.0
-    options.sessionReplay.onErrorSampleRate = 0.0
-}
-```
-
-```objc {tabTitle:Objective-C}
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.sessionReplay.sessionSampleRate = 0.0;
-    options.sessionReplay.onErrorSampleRate = 0.0;
-}];
-```
-
-```objc {tabTitle:Objective-C (SentryObjC)}
-[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
-    options.sessionReplay.sessionSampleRate = 0.0;
-    options.sessionReplay.onErrorSampleRate = 0.0;
-}];
-```
-
-Sampling controls automatic Replay startup. Explicit calls to `start()`, `startBuffering()`, and `flush()` bypass the configured sample rates, but Replay uploads remain subject to active server-side rate limits.
-
-## Control Replay Manually
-
-Use the runtime control APIs when recording depends on user consent, authentication, or a specific workflow. Replay lifecycle calls can be made from any thread and return before the requested operation completes.
+Replay lifecycle calls can be made from any thread and return before the requested operation completes.
 
 ### Start Recording
 
@@ -169,23 +144,7 @@ SentrySDK.replay.resume()
 [SentryObjCSDK.replay resume];
 ```
 
-### Flush Recording
-
-Call `flush()` to send the current replay data to Sentry without stopping recording. In session mode, the SDK sends the pending data and continues recording. In buffer mode, it sends the buffer and continues in session mode. If Replay is inactive, `flush()` starts a new full-session replay.
-
-```swift {tabTitle:Swift} {mdExpandTabs}
-SentrySDK.replay.flush()
-```
-
-```objc {tabTitle:Objective-C}
-[SentrySDK.replay flush];
-```
-
-```objc {tabTitle:Objective-C (SentryObjC)}
-[SentryObjCSDK.replay flush];
-```
-
-### Stop Recording
+### Stop or Flush Recording
 
 Call `stop()` to end the current replay. A later call to `start()` or `startBuffering()` creates a new replay instead of resuming the stopped one.
 
@@ -199,6 +158,20 @@ SentrySDK.replay.stop()
 
 ```objc {tabTitle:Objective-C (SentryObjC)}
 [SentryObjCSDK.replay stop];
+```
+
+Call `flush()` to send the current replay data to Sentry without stopping recording. In session mode, the SDK sends the pending data and continues recording. In buffer mode, it sends the buffer and continues in session mode. If Replay is inactive, `flush()` starts a new full-session replay.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.replay.flush()
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK.replay flush];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK.replay flush];
 ```
 
 ## Privacy

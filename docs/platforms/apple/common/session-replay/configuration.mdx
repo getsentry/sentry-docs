@@ -45,6 +45,33 @@ The following options provide further customization:
 
 To configure masking by view class, see [Custom Masking](/platforms/apple/guides/ios/session-replay/customredact/).
 
+## Disable Automatic Replay Sampling
+
+To start Replay only after user consent, a feature flag, or a user action, set both sample rates to `0.0` during initialization. This keeps the Replay integration available for manual control without starting a recording automatically.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.start { options in
+    options.sessionReplay.sessionSampleRate = 0.0
+    options.sessionReplay.onErrorSampleRate = 0.0
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.sessionReplay.sessionSampleRate = 0.0;
+    options.sessionReplay.onErrorSampleRate = 0.0;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.sessionReplay.sessionSampleRate = 0.0;
+    options.sessionReplay.onErrorSampleRate = 0.0;
+}];
+```
+
+Explicit calls to `start()` and `startBuffering()` bypass these sample rates. With `onErrorSampleRate` set to `0.0`, call `flush()` to send a manually started buffer. Replay uploads remain subject to active server-side rate limits. See [Manual Control](/platforms/apple/guides/ios/session-replay/#manual-control) for the complete API behavior.
+
 ## Network Details
 
 <Alert level="warning">
