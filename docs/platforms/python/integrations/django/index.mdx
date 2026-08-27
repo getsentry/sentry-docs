@@ -2,10 +2,19 @@
 title: Django
 caseStyle: snake_case
 supportLevel: production
-description: "Learn about using Sentry with Django."
+description: "Learn how to set up Sentry in your Django app, capture your first errors and traces, and view them in Sentry."
 ---
 
-Sentry's [Django](https://www.djangoproject.com/) integration adds support for the Django framework. It enables automatic reporting of errors and exceptions as well as tracing. In order to get started using the integration, you should have a [Sentry account](https://sentry.io) and a project set up.
+<Include name="python-stream-mode-general-callout.mdx" />
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Django `1.8+`
+- Python `3.6+`
 
 <Alert>
 
@@ -13,34 +22,40 @@ If you're using Python 3.7, Django applications with `channels` 2.0 will be corr
 
 </Alert>
 
+<StepConnector selector="h2" showNumbers={true}>
+
 ## Install
 
-Install `sentry-sdk` from PyPI:
-
-```bash {tabTitle:pip}
-pip install sentry-sdk
-```
-```bash {tabTitle:uv}
-uv add sentry-sdk
-```
+<PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance',
-    'profiling',
-    'logs',
-  ]}
+  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
 />
+
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
+
+Configuration should happen as **early as possible** in your application's lifecycle.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
 To configure the Sentry SDK, initialize it in your `settings.py` file:
 
+</SplitSectionText>
+<SplitSectionCode>
+
 ```python {filename:settings.py}
 import sentry_sdk
+# ___PRODUCT_OPTION_START___ metrics
+from sentry_sdk import metrics
+# ___PRODUCT_OPTION_END___ metrics
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
@@ -60,17 +75,59 @@ sentry_sdk.init(
     # there is an active span.
     profile_lifecycle="trace",
     # ___PRODUCT_OPTION_END___ profiling
-    # ___PRODUCT_OPTION_START___ logs
-
-    # Enable logs to be sent to Sentry
-    enable_logs=True,
-    # ___PRODUCT_OPTION_END___ logs
 )
 ```
 
-## Verify
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-The snippet below includes an intentional error that will be captured by Sentry when triggered. This will allow you to make sure that everything is working as soon as you set it up:
+To further customize your setup, review the [Options section](#options) below.
+
+### Capturing Errors
+
+Sentry automatically captures errors and reports issues for you.
+You can also expect the following for your Django project:
+
+- If you use `django.contrib.auth`, and you've set `send_default_pii=True` in your call to `init`, user data (such as current user ID, email address, username) will be attached to error events.
+- Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
+- Logs emitted by any logger will be recorded as breadcrumbs by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
+
+To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
+
+<OnboardingOption optionId="performance">
+### Instrumenting Your App
+
+<Include name="python-uwsgi-warning.mdx" />
+
+The Sentry SDK automatically monitors the following parts of your Django project:
+
+- Middleware stack
+- Signals
+- Database queries
+- Redis commands
+- Access to Django caches
+
+You can also manually capture performance data – see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> to learn more.
+
+</OnboardingOption>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+<Include name="python-quick-start-shell-warning.mdx" />
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```python
 from django.urls import path
@@ -84,35 +141,39 @@ urlpatterns = [
 ]
 ```
 
-## Behavior
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-<Include name="python-uwsgi-warning.mdx" />
+<OnboardingOption optionId="performance">
 
-### Issue Reporting
+<Include name="tracing/python-quick-start-verify-tracing-splitlayout.mdx" />
 
-- If you use `django.contrib.auth` and you've set `send_default_pii=True` in your call to `init`, user data (such as current user id, email address, username) will be attached to error events.
-- Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
-- Logs emitted by any logger will be recorded as breadcrumbs by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
+</OnboardingOption>
 
-### Tracing
+<OnboardingOption optionId="logs">
 
-The following parts of your Django project are monitored:
+<Include name="logs/python-quick-start-verify-logs-splitlayout.mdx" />
 
-- Middleware stack
-- Signals
-- Database queries
-- Redis commands
-- Access to Django caches
+</OnboardingOption>
 
-<Alert>
+<OnboardingOption optionId="metrics">
 
-The parameter [traces_sample_rate](/platforms/python/configuration/options/#traces-sample-rate) needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
+<Include name="metrics/python-quick-start-verify-metrics-splitlayout.mdx" />
 
-</Alert>
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Options
 
-By adding `DjangoIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `DjangoIntegration` to change its behavior:
+<Include name="python-stream-mode-integration-option-callout.mdx" />
+
+Add `DjangoIntegration` explicitly to your `sentry_sdk.init()` call to set options for `DjangoIntegration` to change its behavior:
 
 ```python
 import django.db.models.signals
@@ -140,54 +201,63 @@ sentry_sdk.init(
 
 You can pass the following keyword arguments to `DjangoIntegration()`:
 
-- `transaction_style`:
+<SdkOption name='transaction_style' type='string' defaultValue='"url"'>
 
-  How to name transactions that show up in Sentry tracing.
+How to name transactions that show up in Sentry tracing.
 
-  - `"/myproject/myview/<foo>"` if you set `transaction_style="url"`.
-  - `"myproject.myview"` if you set `transaction_style="function_name"`.
+- `"/myproject/myview/<foo>"` if you set `transaction_style="url"`.
+- `"myproject.myview"` if you set `transaction_style="function_name"`.
 
-  The default is `"url"`.
+The default is `"url"`.
 
-- `middleware_spans`:
+</SdkOption>
 
-  Create spans and track performance of all middleware layers in your Django project. Set to `True` to enable.
+<SdkOption name='middleware_spans' type='bool' defaultValue='False'>
 
-  The default is `False`.
+Create spans and track performance of all middleware layers in your Django project. Set to `True` to enable.
+The default is `False`.
 
-- `signals_spans`:
+</SdkOption>
 
-  Create spans and track performance of all synchronous [Django signals](https://docs.djangoproject.com/en/dev/topics/signals/) receiver functions in your Django project. Set to `False` to disable.
+<SdkOption name='signals_spans' type='bool' defaultValue='True'>
 
-  The default is `True`.
+Create spans and track performance of all synchronous [Django signals](https://docs.djangoproject.com/en/dev/topics/signals/) receiver functions in your Django project. Set to `False` to disable.
+The default is `True`.
 
-- `signals_denylist`:
+</SdkOption>
 
-  A list of signals to exclude from performance tracking. No spans will be created for these.
+<SdkOption name='signals_denylist' type='list[Signal]' defaultValue='[]'>
 
-  The default is `[]`.
+A list of signals to exclude from performance tracking. No spans will be created for these.
+The default is `[]`.
 
-- `cache_spans`:
+</SdkOption>
 
-  Create spans and track performance of all read operations to configured caches. The spans also include information if the cache access was a hit or a miss. Set to `True` to enable.
+<SdkOption name='cache_spans' type='bool' defaultValue='False'>
 
-  The default is `False`.
+Create spans and track performance of all read operations to configured caches. The spans also include information if the cache access was a hit or a miss. Set to `True` to enable.
+The default is `False`.
 
-- `http_methods_to_capture`:
+</SdkOption>
 
-  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+<SdkOption name='http_methods_to_capture' type='Tuple[str, ...]' defaultValue='("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)' availableSince='2.15.0'>
 
-  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+A tuple containing all the HTTP methods (as uppercase strings) that should create a transaction in Sentry.
+The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
 
-  (Note that `OPTIONS` and `HEAD` are missing by default.)
+Note that `OPTIONS` and `HEAD` are excluded by default.
 
-  <Alert title="Added in 2.15.0">
-    The `http_methods_to_capture` option.
-  </Alert>
+</SdkOption>
 
-## Supported Versions
+## Next Steps
 
-- Django 1.8+
-- Python 3.6+
+<PlatformContent includePath="getting-started-next-steps" />
 
-<Include name="python-use-older-sdk-for-legacy-support.mdx" />
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

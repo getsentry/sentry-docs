@@ -7,7 +7,7 @@ sidebar_section: features
 new: true
 ---
 
-With Sentry's [Application Metrics](/product/explore/metrics/), you can send counters, gauges, and distributions from your Unreal Engine game to Sentry. Once in Sentry, these metrics can be viewed alongside relevant errors, and searched using their individual attributes.
+With Sentry's [Application Metrics](/product/metrics/), you can send counters, gauges, and distributions from your Unreal Engine game to Sentry. Once in Sentry, these metrics can be viewed alongside relevant errors, and searched using their individual attributes.
 
 ## Requirements
 
@@ -23,11 +23,7 @@ With Sentry's [Application Metrics](/product/explore/metrics/), you can send cou
 
 ## Automatic Metrics
 
-<Alert level="warning">
-  Automatic metrics are experimental and may change in future releases.
-</Alert>
-
-The SDK can automatically collect performance metrics from the engine without any manual instrumentation. All automatic metrics are configured under **Project Settings > Plugins > Sentry > Metrics > Experimental** and require **Enable Metrics** to be checked.
+The SDK can automatically collect performance metrics from the engine without any manual instrumentation. All automatic metrics are configured under **Project Settings > Plugins > Sentry > Metrics > Performance**.
 
 All automatic metrics include the following attributes for filtering and grouping in Sentry dashboards:
 
@@ -53,14 +49,13 @@ When **Collect frame time metrics** is enabled, the SDK registers a performance 
 | `game.perf.gpu` | Distribution (ms) | GPU frame time |
 | `game.perf.fps` | Gauge | Engine-smoothed average FPS |
 
-To avoid flooding the metrics pipeline, the SDK only emits metrics every Nth frame, controlled by the **Frame time sample interval** setting. The default value of 30 produces approximately 2 samples per second at 60 FPS, which is sufficient for accurate percentile computation while keeping overhead minimal.
+To avoid flooding the metrics pipeline, the SDK throttles emission to at most one sample per **Frame time sample interval**. The default value of 1 second is sufficient for accurate percentile computation while keeping overhead minimal.
 
 ```cpp
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
-    Settings->EnableMetrics = true;
     Settings->EnableAutoFrameTimeMetrics = true;
-    Settings->FrameTimeSampleInterval = 30; // Emit every 30th frame (default)
+    Settings->FrameTimeSampleInterval = 1.0f; // Sample at most once per second (default)
 }));
 ```
 
@@ -81,7 +76,6 @@ GC pauses are a common source of hitches in Unreal Engine games — a single GC 
 ```cpp
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
-    Settings->EnableMetrics = true;
     Settings->EnableAutoGCMetrics = true;
 }));
 ```
@@ -92,7 +86,7 @@ SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::Create
   Tracking of active UObjects number requires Unreal Engine 5.3 or later.
 </Alert>
 
-When **Collect game stats metrics** is enabled, the SDK periodically samples system-level statistics and emits them as gauge metrics. Unlike frame time metrics which are collected per-frame, game stats are sampled on a fixed time interval to avoid unnecessary overhead — these values change slowly and don't need per-frame resolution.
+When **Collect game stats metrics** is enabled, the SDK periodically samples system-level statistics and emits them as gauge metrics. Game stats are sampled on a fixed time interval to avoid unnecessary overhead — these values change slowly and don't need frame-level resolution.
 
 | Metric | Type | Description |
 |--------|------|-------------|
@@ -104,7 +98,6 @@ The **Game stats sample interval** setting controls how often game stats are col
 ```cpp
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
-    Settings->EnableMetrics = true;
     Settings->EnableAutoGameStatsMetrics = true;
     Settings->GameStatsSampleIntervalSeconds = 60; // Sample every 60 seconds (default)
 }));
@@ -149,7 +142,6 @@ The **Network metrics sample interval** setting controls how often network stats
 ```cpp
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
-    Settings->EnableMetrics = true;
     Settings->EnableAutoNetworkMetrics = true;
     Settings->NetworkMetricsSampleInterval = 10; // Poll every 10 seconds (default)
 }));

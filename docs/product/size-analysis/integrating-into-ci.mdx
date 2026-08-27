@@ -20,6 +20,12 @@ Size Analysis works by comparing a head vs a base build, similar to how code rev
 
    a. If you have previously installed the Sentry App, ensure you have accepted the latest permissions in order to receive Status Checks.
 
+   b. **GitHub Enterprise users:** After [installing the GitHub Enterprise app](/integrations/source-code-mgmt/github/#installing-github-enterprise), navigate to **Settings > Developer Settings > GitHub Apps > [your Sentry app] > Edit > Permissions & events** and confirm the following are set:
+
+      - Repository permissions: **Checks** — Read & write
+      - Repository permissions: **Pull requests** — Read & write
+      - Subscribe to events: **Check run**
+
 2. Set up Size Analysis by following the guide for [iOS](/platforms/apple/guides/ios/size-analysis/) or [Android](/platforms/android/size-analysis/).
 
 3. Modify an existing workflow or create a new workflow to upload base builds from your main or default branch to Sentry:
@@ -43,8 +49,8 @@ jobs:
 
 **Example workflows:**
 
-- [Android main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) - Handles both push to main and pull requests in a single workflow
-- [iOS main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_main.yml) - Separate workflow for main branch
+- [Android main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_sentry_size_analysis.yml) - Handles both push to main and pull requests in a single workflow
+- [iOS main branch workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_main.yml) - Separate workflow for main branch
 
 Confirm that builds uploaded from this workflow have the correct `sha` metadata value, as well as no `base_sha` being set.
 
@@ -64,8 +70,8 @@ jobs:
 
 **Example workflows:**
 
-- [Android pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_emerge_upload.yml) - Combined main and PR workflow
-- [iOS pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_emerge_upload_pr.yml) - Separate PR workflow
+- [Android pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/android_sentry_size_analysis.yml) - Combined main and PR workflow
+- [iOS pull request workflow](https://github.com/EmergeTools/hackernews/blob/main/.github/workflows/ios_sentry_upload_pr.yml) - Separate PR workflow
 
 Confirm that builds uploaded from this workflow have the correct `sha` and `base_sha` metadata values.
 
@@ -82,6 +88,40 @@ After configuring both workflows and sending the correct metadata, the status ch
 Clicking on the "Details" button above should bring you to a more detailed breakdown of the changes.
 
 ![Example Status Check](./images/status-check.png)
+
+## Skip the Status Check When No Build Is Uploaded
+
+Your team may require a Size Analysis check on every pull request, even when some CI workflows don't produce a build artifact. For example, a pull request that changes only documentation or other files that don't affect the app binary may not need a new build. In these cases, use the [skip endpoint](/api/mobile-builds/create-a-skipped-size-analysis-status-check/) to create a neutral check for the pull request's head commit so that it can merge without an unnecessary build.
+
+<Alert level="warning">
+  The upload and skip paths should be mutually exclusive. Each workflow should
+  either upload a build or mark the check as skipped.
+</Alert>
+
+The example below assumes an earlier path-filtering step with an ID of `changes` sets a `should_upload` output. Use the same condition for your upload step and the inverse condition for the skip step so that only one runs. Reuse the `SENTRY_AUTH_TOKEN` configured for uploads and store it as an [encrypted GitHub Actions secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).
+
+```yml {filename:skip_status_checks_example.yml}
+- name: Mark Size Analysis as skipped
+  if: github.event_name == 'pull_request' && steps.changes.outputs.should_upload == 'false'
+  env:
+    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+    SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+    HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+  run: |
+    jq -n \
+      --arg sha "$HEAD_SHA" \
+      --arg repository "$GITHUB_REPOSITORY" \
+      '{sha: $sha, repository: $repository, provider: "github"}' |
+      curl --fail-with-body \
+        --request POST \
+        --header "Authorization: Bearer $SENTRY_AUTH_TOKEN" \
+        --header "Content-Type: application/json" \
+        --data-binary @- \
+        "https://sentry.io/api/0/projects/$SENTRY_ORG/$SENTRY_PROJECT/preprod/size-analysis/status-checks/skip/"
+```
+
+This example is configured for GitHub.com. For GitHub Enterprise, set `provider` to `github_enterprise`.
 
 ## Configuring Status Check Rules
 

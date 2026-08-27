@@ -21,8 +21,8 @@ import {SidebarProps} from './types';
 
 // Pages that have different paths on different platforms but are conceptually equivalent
 const EQUIVALENT_PATHS: Record<string, string> = {
-  'ai-agent-monitoring': 'ai-agent-monitoring-browser',
-  'ai-agent-monitoring-browser': 'ai-agent-monitoring',
+  'agent-tracing': 'agent-tracing-browser',
+  'agent-tracing-browser': 'agent-tracing',
 };
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
@@ -66,7 +66,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
 
           const platformPageForCurrentPath =
             nodeForPath(rootNode, ['platforms', platform.name, ...currentPathParts]) ||
-            // try equivalent path (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+            // try equivalent path (e.g., agent-tracing <-> agent-tracing-browser)
             (equivalentPath &&
               nodeForPath(rootNode, [
                 'platforms',
@@ -96,7 +96,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
                   guide.name,
                   ...currentPathParts,
                 ]) ||
-                // try equivalent path (e.g., ai-agent-monitoring <-> ai-agent-monitoring-browser)
+                // try equivalent path (e.g., agent-tracing <-> agent-tracing-browser)
                 (equivalentPath &&
                   nodeForPath(rootNode, [
                     'platforms',

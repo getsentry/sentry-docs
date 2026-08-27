@@ -31,7 +31,6 @@ Because the app hang detection integration uses SentryCrashIntegration to captur
 
 You can filter and modify app hang events in `beforeSend` by checking the event exception type:
 
-
 ```swift {tabTitle:Swift}
 import Sentry
 
@@ -60,8 +59,21 @@ SentrySDK.start { options in
 }];
 ```
 
-Starting with version 8.0.0, this feature has been enabled by default. To disable it:
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
 
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryObjCEvent * _Nullable(SentryObjCEvent * _Nonnull event) {
+        if (event.exceptions.count == 1 && [event.exceptions.firstObject.type isEqualToString:@"App Hanging"]) {
+          // modify event here or return nil to discard the event
+        }
+        return event;
+    }
+}];
+```
+
+Starting with version 8.0.0, this feature has been enabled by default. To disable it:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -79,11 +91,18 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.enableAppHangTracking = NO;
 }];
+```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAppHangTracking = NO;
+}];
 ```
 
 You can change the timeout by changing the `appHangTimeoutInterval` option:
-
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -101,7 +120,15 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.appHangTimeoutInterval = 1;
 }];
+```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.appHangTimeoutInterval = 1;
+}];
 ```
 
 ### Pause and Resume App Hang Tracking
@@ -129,7 +156,17 @@ SentrySDK.resumeAppHangTracking()
 // and you don't want the Cocoa SDK to report it.
 
 [SentrySDK resumeAppHangTracking];
+```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK pauseAppHangTracking];
+
+// Do something that might cause the app to hang,
+// and you don't want the Cocoa SDK to report it.
+
+[SentryObjCSDK resumeAppHangTracking];
 ```
 
 ### App Hangs V2
@@ -160,6 +197,15 @@ SentrySDK.start { options in
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAppHangTrackingV2 = YES; // Only available in 8.50.0–8.x
+}];
+```
+
 #### Fatal App Hangs
 
 Starting with version 8.50.0, the SDK automatically detects and reports fatal app hangs. If the user or the [system watchdog](https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations) terminates your app during an app hang, the SDK reports it as a fatal app hang on the next startup.
@@ -183,6 +229,15 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableReportNonFullyBlockingAppHangs = NO;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableReportNonFullyBlockingAppHangs = NO;
 }];

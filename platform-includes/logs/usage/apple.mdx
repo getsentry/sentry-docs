@@ -58,6 +58,34 @@ SentryLogger *logger = SentrySDK.logger;
 }];
 ```
 
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+SentryObjCLogger *logger = SentryObjCSDK.logger;
+
+// Log messages without attributes
+[logger trace:@"Starting database connection"];
+[logger debug:@"Cache miss for user"];
+[logger info:@"Updated profile"];
+
+// Log messages with attributes
+[logger trace:@"Starting database connection" attributes:@{@"database": @"users"}];
+[logger debug:@"Cache miss for user" attributes:@{@"userId": @123}];
+[logger info:@"Updated profile" attributes:@{@"profileId": @345}];
+[logger warn:@"Rate limit reached for endpoint" attributes:@{
+    @"endpoint": @"/api/results/",
+    @"isEnterprise": @NO
+}];
+[logger error:@"Failed to process payment" attributes:@{
+    @"orderId": @"order_123",
+    @"amount": @99.99
+}];
+[logger fatal:@"Database connection pool exhausted" attributes:@{
+    @"database": @"users",
+    @"activeConnections": @100
+}];
+```
+
 ### String Interpolation (Swift Only)
 
 Swift supports automatic extraction of interpolated values as attributes. When you use string interpolation in your log messages, supported types (Strings, Int, Double, and Bool) are automatically extracted and added as attributes with the key format `sentry.message.parameter.{index}`.

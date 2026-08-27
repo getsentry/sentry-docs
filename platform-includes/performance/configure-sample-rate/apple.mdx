@@ -42,3 +42,25 @@ SentrySDK.start { options in
 +   };
 }];
 ```
+
+```objc {diff, tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions * options) {
+    options.dsn = @"___PUBLIC_DSN___";
+
++   // Example uniform sample rate: capture 100% of transactions
++   // In Production you will probably want a smaller number such as 0.5 for 50%
++   options.tracesSampleRate = @1.0;
+
++   // OR if you prefer, determine traces sample rate based on the sampling context
++   options.tracesSampler = ^NSNumber * (SentryObjCSamplingContext * samplingContext) {
++       // Don't miss any transactions for VIP users
++       if ([samplingContext.customSamplingContext[@"vip"] boolValue] == YES) {
++           return @1.0;
++       } else {
++           return @0.25; // 25% for everything else
++       }
++   };
+}];
+```

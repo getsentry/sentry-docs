@@ -17,23 +17,57 @@ You can define your dependency rule by selecting the SDK version (or branch), an
   options below.
 </Alert>
 
-## Pre-compiled (Recommended)
+## Sentry (Swift)
 
-These products use pre-built binary frameworks. They don't add to your project's compile time and are the recommended choice for most projects.
+This is the recommended integration for Swift projects and most Objective-C projects.
 
-- **`Sentry`** — Static pre-built framework. Recommended for most projects as it provides the fastest app start time.
-- **`Sentry-Dynamic`** — Dynamic pre-built framework. Use this if your project requires dynamic linking.
-- **`SentrySwiftUI`** — Deprecated. SwiftUI view performance tracking is now included in the main `Sentry` product. Do not add this to new projects.
+### Compile From Source (Recommended)
 
-Alternatively, when your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
+The **`SentrySPM`** product compiles the SDK from source as part of your project build instead of using a pre-built binary. This is the recommended choice because it allows you to step through SDK code while debugging and supports compile-time configuration such as package traits.
+
+In Xcode, add the Sentry package as described above and select the **`SentrySPM`** product.
+
+When your project uses a `Package.swift` file to manage dependencies, you can specify the target with:
 
 ```swift {tabTitle:Swift}
 .package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
 ```
 
-## Compile from Source
+Then depend on the `SentrySPM` product:
 
-The **`SentrySPM`** product compiles the SDK from source as part of your project build instead of using a pre-built binary. This is useful if you want to step through SDK code while debugging. Not all product variants are available yet with this option.
+```swift {tabTitle:Swift}
+.target(
+    name: "MyApp",
+    dependencies: [
+        .product(name: "SentrySPM", package: "sentry-cocoa"),
+    ]
+)
+```
+
+### Pre-Compiled
+
+These products use pre-built binary frameworks. They don't add to your project's compile time, but they do not support compile-time configuration such as package traits, and you cannot step through SDK code while debugging.
+
+- **`Sentry`** — Static pre-built framework. Provides the fastest app start time among the pre-compiled options.
+- **`Sentry-Dynamic`** — Dynamic pre-built framework. Use this if your project requires dynamic linking.
+- **`SentrySwiftUI`** — Deprecated. SwiftUI view performance tracking is now included in the main `Sentry` product. Do not add this to new projects.
+
+In Xcode, add the Sentry package as described above and select either the **`Sentry`** or **`Sentry-Dynamic`** product.
+
+When your project uses a `Package.swift` file, add the dependency and select the product:
+
+```swift {tabTitle:Swift}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "{{@inject packages.version('sentry.cocoa') }}"),
+```
+
+```swift {tabTitle:Swift}
+.target(
+    name: "MyApp",
+    dependencies: [
+        .product(name: "Sentry", package: "sentry-cocoa"),
+    ]
+)
+```
 
 ### Building Without UIKit or AppKit
 
@@ -76,21 +110,21 @@ let package = Package(
   `Sentry-Dynamic`) don't support compile-time configuration.
 </Alert>
 
-## SentryObjC
+## SentryObjC (Objective-C)
 
 <Alert level="info">Available from SDK **9.16.0+**.</Alert>
 
-**SentryObjC** is a pure Objective-C wrapper around the Sentry SDK. It is the recommended integration for any Objective-C project — including those that use Objective-C++ (`.mm` files), have Clang modules disabled (`-fmodules=NO`), or otherwise can't use semantic imports (`@import`) or `-Swift.h`. All public types use the `SentryObjC` prefix and no Swift-related headers appear in the public surface.
-
-### Why SentryObjC?
+**SentryObjC** is a pure Objective-C wrapper around the Sentry SDK. It is the recommended integration for Objective-C projects, including those that use Objective-C++ (`.mm` files), have Clang modules disabled (`-fmodules=NO`), or otherwise can't use semantic imports (`@import`) or `-Swift.h`. All public types use the prefix `SentryObjC` and no Swift-related headers appear in the public surface.
 
 With Clang modules disabled, `@import Sentry` doesn't work and `#import <Sentry/Sentry-Swift.h>` fails with forward-declaration errors in `.mm` files. This makes `SentrySDK`, `SentryOptions`, and other Swift-bridged APIs unavailable. SentryObjC solves this by providing hand-written Objective-C headers that don't depend on Swift modules or the Swift compiler.
 
-### Installation
+<Alert level="warning">
+SentryObjC embeds the full Sentry SDK. Do not link both `Sentry` and `SentryObjC` in the same target.
+</Alert>
 
-SentryObjC is available as both a compile-from-source SPM product and pre-compiled xcframeworks.
+### Compile From Source
 
-**Via SPM (compile from source):** In Xcode, add the Sentry package as described above and select the **`SentryObjC`** product.
+In Xcode, add the Sentry package as described above and select the **`SentryObjC`** product.
 
 With `Package.swift`:
 
@@ -109,50 +143,15 @@ Then depend on the `SentryObjC` product:
 )
 ```
 
-**Via SPM (pre-compiled):** The `SentryObjC-Static` and `SentryObjC-Dynamic` products use pre-built binary frameworks, so they don't add to your project's compile time. Select one of these products instead of `SentryObjC` when adding the package in Xcode, or reference them in `Package.swift`:
+### Pre-Compiled
+
+The `SentryObjC-Static` and `SentryObjC-Dynamic` products use pre-built binary frameworks, so they don't add to your project's compile time. Select one of these products instead of `SentryObjC` when adding the package in Xcode, or reference them in `Package.swift`:
 
 ```swift {tabTitle:Swift}
 .product(name: "SentryObjC-Static", package: "sentry-cocoa"),
 ```
 
 Pre-compiled xcframeworks are also available for <PlatformLink to="/install/manual-install/">manual download</PlatformLink>.
-
-### Configuration
-
-All SentryObjC types use the `SentryObjC` prefix. Import the umbrella header and initialize the SDK:
-
-```objc
-#import <SentryObjC/SentryObjC.h>
-
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-
-    [SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
-        options.dsn = @"___PUBLIC_DSN___";
-        options.debug = YES;
-
-        // Adds IP for users.
-        // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
-        options.sendDefaultPii = YES;
-
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-        // We recommend adjusting this value in production.
-        options.tracesSampleRate = @1.0;
-    }];
-
-    return YES;
-}
-```
-
-If your project has Clang modules enabled and you're using the dynamic variant (`SentryObjC-Dynamic`), you can also use a module import instead:
-
-```objc
-@import SentryObjC;
-```
-
-<Alert level="info">
-  SentryObjC embeds the full Sentry SDK. Do not link both `Sentry` and
-  `SentryObjC` in the same target.
-</Alert>
 
 ### Additional Build Settings
 

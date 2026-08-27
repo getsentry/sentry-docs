@@ -16,7 +16,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 <SdkOption name='dsn' type='str' envVar='SENTRY_DSN' defaultValue='None'>
 
-The DSN tells the SDK where to send the events. If this option is not set, the SDK will just not send any data. The `dsn` config option takes precedence over the environment variable. Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+The DSN tells the SDK where to send the events. If this option is not set, the SDK will just not send any data. The `dsn` config option takes precedence over the environment variable. Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 <PlatformContent includePath="configuration/dsn" />
 
@@ -178,11 +178,11 @@ Please note that the Sentry server [limits HTTP request body size](https://devel
 
 </SdkOption>
 
-<SdkOption name="max_value_length" type='int' defaultValue='100 000'>
+<SdkOption name="max_value_length" type='Optional[int]' defaultValue='None'>
 
-The number of characters after which the values containing text in the event payload will be truncated.
+The number of characters after which the values containing text in the event payload will be truncated. If set to `None` (default), no truncation will be performed.
 
-In SDK versions prior to `2.34.0`, the default was `1024`.
+In SDK versions prior to `2.61`, the default was `100_000`. In SDK versions prior to `2.34.0`, the default was `1024`.
 
 </SdkOption>
 
@@ -249,6 +249,43 @@ By the time `before_send` is executed, all scope data has already been applied t
 <SdkOption name="before_send_transaction" type='function' defaultValue='None'>
 
 This function is called with a transaction event object, and can return a modified transaction event object, or `None` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+
+</SdkOption>
+
+<SdkOption name="before_send_span" type='function' defaultValue='None' availableSince='2.67.0'>
+
+<Alert>
+
+Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
+
+</Alert>
+
+This function is called with a span event object and can return a modified span object. Use it, for example, to manually strip PII from spans or filter data from spans before they're sent to Sentry.
+
+Note that `before_send_span` can only modify span data, meaning you cannot use it to drop spans. Use [`ignore_spans`](#ignore_spans) to drop spans.
+
+<Expandable title="Examples">
+
+```python {tabTitle:Stream Mode}
+import sentry_sdk
+
+def before_send_span(span, hint):
+    # Runs once per span, as it's flushed.
+    # Only attributes set at span-creation time are available here.
+    span["attributes"].update({
+        "component_version": "2.0.0",
+        "deployment_stage": "production",
+    })
+    return span
+
+sentry_sdk.init(
+    # ...
+    trace_lifecycle="stream",
+    before_send_span=before_send_span,
+)
+```
+
+</Expandable>
 
 </SdkOption>
 
@@ -356,7 +393,7 @@ sentry_sdk.init(
 
 <SdkOption name="traces_sample_rate" type='float' defaultValue='None'>
 
-A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `traces_sampler` must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given transaction (or service span in stream mode) will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions and spans created in the app. Either this or `traces_sampler` must be defined to enable tracing.
 
 If `traces_sample_rate` is `0`, this means that no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service that include trace information, those traces will be continued and thus transactions will be sent to Sentry.
 
@@ -365,6 +402,68 @@ If you want to disable all tracing you need to set `traces_sample_rate=None`. In
 </SdkOption>
 
 <PlatformContent includePath="/performance/traces-sampler-config-option" />
+
+<SdkOption name="trace_lifecycle" type='string' defaultValue='"static"' availableSince='2.62.0'>
+
+Controls how spans are sent to Sentry:
+
+- In transaction mode (`"static"`, the default), all spans are collected in memory and sent to Sentry as a single transaction once the root span ends.
+- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`"stream"`), spans are sent in batches as they finish.
+
+</SdkOption>
+
+<SdkOption name="ignore_spans" type='list[str | Pattern | dict]' defaultValue='[]' availableSince='2.62.0'>
+
+<Alert>
+
+Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
+
+</Alert>
+
+A list of strings, compiled regular expressions, or dictionaries describing spans that shouldn't be sent to Sentry. When using strings, a span name containing the string will be filtered out. For exact or more complex pattern matching, use compiled regular expressions instead. You can also provide a dictionary with `name` and/or `attributes` keys to match on multiple conditions. At least one key must be provided.
+
+If the dropped span is a service span, its children are dropped too. If it's a child span, only that span is dropped and its children are reparented to the nearest ancestor.
+By default, no spans are ignored.
+
+`ignore_spans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
+
+<Expandable title="Examples">
+
+```python
+import re
+import sentry_sdk
+
+sentry_sdk.init(
+    trace_lifecycle="stream",
+    ignore_spans=[
+        # String match against span name
+        "/health",
+
+        # Regex match against span name
+        re.compile(r"/flow/.*"),
+
+        # Match by attributes (all must match)
+        {
+            "attributes": {
+                "service.id": "15def9a",
+                "flow.pipeline": "legacy",
+            }
+        },
+
+        # Match by name and attributes
+        {
+            "name": re.compile(r"/flow/.*"),
+            "attributes": {
+                "service.id": re.compile(r".*\.facade"),
+            },
+        },
+    ],
+)
+```
+
+</Expandable>
+
+</SdkOption>
 
 <SdkOption name="trace_propagation_targets" type='list' defaultValue="['.*']">
 
@@ -513,11 +612,13 @@ A number between `0` and `1`, controlling the percentage chance a given session 
 
 </SdkOption>
 
-<SdkOption name="stream_gen_ai_spans" type='bool' defaultValue='False' availableSince='2.60.0'>
+<SdkOption name="stream_gen_ai_spans" type='bool' defaultValue='True' defaultNote='since version 2.64.0' availableSince='2.60.0'>
 
-When set to `True`, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
+When enabled, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
 
-Enable this option if you are using AI Agent Monitoring or the Conversations feature.
+This is enabled by default starting with SDK version `2.64.0` (before that, it defaulted to `False`). Set it to `False` to send `gen_ai` spans as part of the transaction instead.
+
+Self-hosted Sentry users should set this option to `False`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
 
 </SdkOption>
 
@@ -525,9 +626,21 @@ Enable this option if you are using AI Agent Monitoring or the Conversations fea
 
 <SdkOption name="enable_logs" type='bool' defaultValue='False'>
 
-Enables Sentry structured logs, allowing you to use the `sentry_sdk.logger` APIs
-to send logs to Sentry. This option must be set to `True` to automatically capture logs from Python’s built-in logging module or other supported logging integrations.
+**Deprecated:** This option will be removed in the next major version. Use the `capture_sentry_logs` option on the [`logging`](/platforms/python/integrations/logging/#options) and [Loguru](/platforms/python/integrations/loguru/#options) integrations instead.
 
-New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
+The `sentry_sdk.logger` API works standalone and is not affected by this option.
+
+For automatic capture of logs from the standard library `logging` module and from Loguru, this option acts as a fallback. If an integration leaves `capture_sentry_logs` unset, `enable_logs=True` turns automatic capture on for that integration. Setting `capture_sentry_logs` on the integration always wins.
+
+| `enable_logs`     | `capture_sentry_logs` | Automatic capture |
+| ----------------- | --------------------- | ----------------- |
+| not set / `False` | not set               | off               |
+| `True`            | not set               | on                |
+| any               | `True`                | on                |
+| any               | `False`               | off               |
+
+In SDK versions prior to `2.68.0`, this option had to be set to `True` to use the `sentry_sdk.logger` API, and it also enabled automatic capture of logs from the standard library `logging` module and from Loguru. In version `2.68.0` only, the option had no effect at all. Upgrade to `2.68.1` or later if you rely on it.
+
+Deprecated in version `2.68.1`. New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
 
 </SdkOption>

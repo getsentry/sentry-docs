@@ -27,7 +27,9 @@ This issue has been resolved in Sentry Cocoa <strong>9.11.0</strong>. Session Re
 
 <Expandable title="Does Session Replay work with UIKit, SwiftUI or AppKit?" permalink>
 
-Session Replay works with both UIKit and SwiftUI.
+Session Replay works with both UIKit and SwiftUI. However, SwiftUI support has inherent limitations with masking because the SwiftUI rendering engine does not back every view with a UIKit view.
+
+For example, `Text` views may be rendered directly into a graphics render surface rather than creating a corresponding `UILabel`. This is an operating system limitation, not a limitation of the Sentry SDK. As a result, masking for SwiftUI views is best-effort and some views may not be automatically maskable. See <PlatformLink to="/session-replay/customredact/#swiftui">SwiftUI masking</PlatformLink> for details.
 
 </Expandable>
 
@@ -43,6 +45,36 @@ Text views, input views, images, video players and webviews are all masked by de
 
 </Expandable>
 
+<Expandable title="Why are parts of my replay completely masked?" permalink>
+
+Starting with Sentry Cocoa **9.24.0**, Session Replay may mask an entire layer subtree if Core Animation raises an exception while the SDK inspects it. This privacy-safe fallback prevents the exception from crashing your app and avoids exposing content that the SDK could not inspect for sensitive data.
+
+A malformed `CABasicAnimation` is one possible cause. The animation's `fromValue` and `toValue` must use types compatible with each other and with the animated key path. For example, a `position` animation must use `CGPoint` values for both endpoints:
+
+```swift
+// Incorrect: mixes a scalar value with a CGPoint value.
+let animation = CABasicAnimation(keyPath: "position")
+animation.fromValue = NSNumber(value: 0)
+animation.toValue = NSValue(cgPoint: CGPoint(x: 100, y: 100))
+```
+
+```swift
+// Correct: both endpoints contain CGPoint values.
+let animation = CABasicAnimation(keyPath: "position")
+animation.fromValue = NSValue(cgPoint: CGPoint(x: 0, y: 0))
+animation.toValue = NSValue(cgPoint: CGPoint(x: 100, y: 100))
+```
+
+If your code creates the animation, correct the endpoint types. If a third-party UI library creates it, update the library and check its release notes for animation-related fixes.
+
+When SDK debug logging is enabled, a warning similar to the following confirms that Session Replay used this fallback:
+
+```text
+Caught Objective-C exception NSInvalidArgumentException: -[NSConcreteValue doubleValue]: unrecognized selector
+```
+
+</Expandable>
+
 <Expandable title="What's the lowest version of iOS supported?" permalink>
 
 Session Replay recording happens even on the lowest version supported by the Sentry SDK, which is aligned with App Store support.
@@ -51,7 +83,7 @@ Session Replay recording happens even on the lowest version supported by the Sen
 
 <Expandable title="Why is my issue missing a replay?" permalink>
 
-An issue may be missing a replay because the user's device was [offline](/product/explore/session-replay/mobile#frequently-asked-questions) while `sessionSampleRate` was specified, your project/organization was rate-limited, or (in rare cases) the device failed to capture the replay video.
+An issue may be missing a replay because the user's device was [offline](/product/session-replay/mobile#frequently-asked-questions) while `sessionSampleRate` was specified, your project/organization was rate-limited, or (in rare cases) the device failed to capture the replay video.
 
 </Expandable>
 
@@ -78,6 +110,7 @@ Session Replay cannot capture photo picker interfaces (`PHPickerViewController` 
 On physical devices, photo pickers and camera views will not appear in session replays. On simulators, they may appear because simulators don't use the same remote rendering approach, but this behavior should not be relied upon.
 
 This limitation exists at the iOS system level and cannot be worked around by configuring `unmaskedViewClasses` or other Session Replay settings.
+
 </Expandable>
 
 <Expandable title="Session Replay is not recording with custom window setup" permalink>

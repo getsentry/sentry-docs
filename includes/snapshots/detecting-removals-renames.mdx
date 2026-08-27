@@ -1,0 +1,16 @@
+By default, selective mode cannot detect removals or renames. To distinguish deliberately deleted snapshots from ones that simply weren't run, pass the full list of image file names from your test suite with one of these flags (use one, not both — each implicitly enables `--selective`):
+
+- `--all-image-file-names <NAMES>` — a comma-separated list of all image file names.
+- `--all-image-file-names-file <PATH>` — a path to a file (`.txt`, `.csv`, etc.) with all image file names, one per line.
+
+```bash
+sentry-cli snapshots upload ./snapshots \
+  --app-id web-frontend \
+  --all-image-file-names "homepage.png,settings/profile.png,settings/billing.png"
+```
+
+With the full list provided, Sentry sorts each baseline image that wasn't uploaded into three categories:
+
+- **Skipped** — still in the list (part of the test suite, just not run in this job).
+- **Removed** — no longer in the list (deleted from the test suite).
+- **Renamed** — matches a newly uploaded image by content hash, under a different name.

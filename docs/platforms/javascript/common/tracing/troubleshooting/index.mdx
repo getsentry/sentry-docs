@@ -4,7 +4,7 @@ description: "Learn how to troubleshoot your tracing setup."
 sidebar_order: 9000
 ---
 
-If you need help managing transactions, you can read more here. If you need additional help, you can ask on GitHub. Customers on a paid plan may also contact support.
+If you need help managing transactions or spans, start with this page. If you need additional help, you can ask on GitHub. Customers on a paid plan may also contact support.
 
 ## Group Transactions
 
@@ -27,3 +27,20 @@ For example, a 200+ character tag like this:
 `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
 
 <PlatformContent includePath="performance/control-data-truncation" />
+
+<PlatformSection notSupported={["javascript.cordova"]}>
+## Traces Miss Spans, High Memory Usage, or Data Loss After Crashes
+
+If you're hitting the 1,000-span limit, experiencing high memory usage from long-running processes, or losing span data when your process crashes, consider enabling stream mode. Stream mode sends spans to Sentry in batches as they finish rather than holding them in memory until the transaction ends.
+
+See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for more information.
+
+## `ignoreSpans` Rules No Longer Work As Expected After Migrating to Stream Mode
+
+In <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>, `ignoreSpans` is evaluated at span start rather than at transaction end as in transaction mode. This means rules that match on names and attributes added or updated while a span is active may no longer match the intended spans. Review your `ignoreSpans` rules after migrating to make sure the names and attributes you're matching on are available when the span is created.
+
+If you're auto-instrumenting and don't know what the initial name of a span is when it starts, enable SDK debug logging during development by setting <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink> when initializing the SDK.
+
+Finally, make sure you've migrated any entries from `ignoreTransactions` to `ignoreSpans`, as `ignoreTransactions` is not applied in stream mode.
+
+</PlatformSection>

@@ -1,6 +1,6 @@
 ---
 title: React Router Framework
-description: Learn how to set up and configure Sentry in your React Router v7 application using the installation wizard, capture your first errors, and view them in Sentry.
+description: Learn how to set up and configure Sentry in your React Router application (v7+) using the installation wizard, capture your first errors, and view them in Sentry.
 sdk: sentry.javascript.react-router
 categories:
   - javascript
@@ -9,7 +9,7 @@ categories:
   - server-node
 ---
 
-<AgentSkillsCallout
+<AgentSetupCallout
   skill="sentry-react-router-framework-sdk"
   platformName="React Router"
 />
@@ -23,56 +23,29 @@ categories:
 
 <Alert title='Looking for data/declarative mode?' level='info'>
 
-If you're using React Router in data or declarative mode, follow the instructions in our [React guide](/platforms/javascript/guides/react/features/react-router/v7).
+If you're using React Router in data or declarative mode, follow the instructions in our [React guide for v7](/platforms/javascript/guides/react/features/react-router/v7) or [v8](/platforms/javascript/guides/react/features/react-router/v8).
 
 </Alert>
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-<StepConnector selector="h2" showNumbers={true}>
+<StepComponent>
 
 ## Install
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+<PlatformContent includePath="sentry-init/experimental-warning" />
 
-To install Sentry using the installation wizard, run the command on the right within your project directory.
+<PlatformContent includePath="sentry-init/install-command" />
 
-The wizard guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
+<PlatformContent includePath="sentry-init/how-it-works" />
 
-</SplitSectionText>
-<SplitSectionCode>
-
-```bash
-npx @sentry/wizard@latest -i reactRouter
-```
-
-</SplitSectionCode>
-
-</SplitSection>
-</SplitLayout>
-
-This guide assumes that you enable all features and allow the wizard to create an example page and route. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
-
-<Expandable title="What does the installation wizard change inside your application?">
-
-- Installs the `@sentry/react-router` package (and optionally `@sentry/profiling-node`)
-- Reveals React Router entry point files (`entry.client.tsx` and `entry.server.tsx`) if not already visible
-- Initializes Sentry in your client and server entry files with default configuration
-- Creates `instrument.server.mjs` for server-side instrumentation
-- Updates your `app/root.tsx` to capture errors in the error boundary
-- Configures source map upload in `vite.config.ts` and `react-router.config.ts`
-- Creates `.env.sentry-build-plugin` with an auth token to upload source maps (this file is automatically added to `.gitignore`)
-- Creates example page and API route to help verify your Sentry setup
-
-</Expandable>
+<PlatformContent includePath="sentry-init/framework-wizard" />
 
 ## Configure
 
 If you prefer to configure Sentry manually, here are the configuration files the wizard would create:
 
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/session-replay/web/).
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
@@ -114,9 +87,12 @@ import { HydratedRouter } from "react-router/dom";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // To disable sending user data, uncomment the line below. For more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
-  // dataCollection: { userInfo: false },
+  dataCollection: {
+    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
+    // userInfo: false,
+    // httpBodies: [],
+  },
 
   integrations: [
     // ___PRODUCT_OPTION_START___ performance
@@ -199,9 +175,12 @@ import { nodeProfilingIntegration } from "@sentry/profiling-node";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // To disable sending user data, uncomment the line below. For more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
-  // dataCollection: { userInfo: false },
+  dataCollection: {
+    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
+    // userInfo: false,
+    // httpBodies: [],
+  },
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
@@ -235,7 +214,9 @@ Sentry.init({
 
 ## Verify Your Setup
 
-If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page created by the installation wizard:
+The `sentry init` command checks the integration files it creates or modifies before it finishes. To confirm runtime events are reaching Sentry, start your React Router app, exercise the parts of your app that should send events, and then check your Sentry project.
+
+If you used the React Router Framework Mode installation wizard instead, you can also verify your setup with the example page it creates:
 
 1. Open the example page `/sentry-example-page` in your browser. For most React Router applications, this will be at localhost.
 2. Observe the example page with a button that triggers test errors.
@@ -246,7 +227,7 @@ Clicking the button triggers an error that Sentry captures for you. The example 
 
 <Alert level="success" title="Tip">
 
-Don't forget to explore the example files' code in your project to understand what's happening after your button click.
+If you used the React Router Framework Mode installation wizard, explore the example files' code in your project to understand what's happening after your button click.
 
 </Alert>
 
@@ -276,4 +257,4 @@ Our next recommended steps for you are:
 
 </Expandable>
 
-</StepConnector>
+</StepComponent>

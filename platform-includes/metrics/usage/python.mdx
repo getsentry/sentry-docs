@@ -2,6 +2,16 @@ Metrics are enabled by default. Once you initialize the SDK, you can send metric
 
 The `metrics` namespace exposes three methods that you can use to capture different types of metric information: `count`, `gauge`, and `distribution`.
 
+### Choosing a metric type
+
+| Type | Use for | Typical examples | Aggregations |
+| ---- | ------- | ---------------- | ------------ |
+| `count` | How many times something happened | orders placed, button clicks, API calls | sum / rate of events |
+| `gauge` | The **current** value of something at sample time | queue depth, active connections, free memory | `min`, `max`, `avg`, `sum`, `count` (no percentiles) |
+| `distribution` | A **population of measured values** where percentiles matter | request latency, payload size, page load time | `min`, `max`, `avg`, `p90` and other percentiles |
+
+Use a **gauge** when each sample replaces “what is the value right now?” (for example, “there are 42 open connections”). Use a **distribution** when each sample is one observation among many and you care about the shape of those observations (for example, “this request took 187 ms” so you can compute p90 latency). Gauges are more space-efficient; pick them when you do not need percentiles.
+
 ### Emit a Counter
 
 Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
@@ -22,16 +32,55 @@ sentry_sdk.metrics.count(
 )
 ```
 
+### Emit a Gauge
+
+Gauges record the latest sampled value of a measurement (and compact aggregates such as `min`, `max`, `avg`, `sum`, and `count`). They cannot produce percentiles. Prefer gauges for point-in-time levels.
+
+To emit a gauge, do the following:
+
+```python
+import sentry_sdk
+
+# Snapshot the current number of open connections
+sentry_sdk.metrics.gauge(
+	"active_connections",
+	42,
+	attributes={
+		"pool": "checkout"
+	},
+)
+
+# Snapshot current process memory usage
+sentry_sdk.metrics.gauge(
+	"memory_usage",
+	1024,
+	unit="byte",
+	attributes={
+		"process": "api"
+	},
+)
+```
+
 ### Emit a Distribution
 
-Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
+Distributions record individual observations so you can compute richer aggregates, including percentiles such as `p90`. Prefer distributions for timings and sizes.
 
 To emit a distribution, do the following:
 
 ```python
 import sentry_sdk
 
-# Add '15.0' to a distribution used for tracking the loading times per page.
+# One API latency observation (percentiles available in Sentry)
+sentry_sdk.metrics.distribution(
+	"api_latency",
+	187.0,
+	unit="millisecond",
+	attributes={
+		"endpoint": "/api/orders"
+	},
+)
+
+# One page-load observation
 sentry_sdk.metrics.distribution(
 	"page_load",
 	15.0,
@@ -42,22 +91,25 @@ sentry_sdk.metrics.distribution(
 )
 ```
 
-### Emit a Gauge
+## Attributes
 
-Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
+Attributes let you filter and group metrics in Sentry. Use them for:
 
-To emit a gauge, do the following:
+- Environment segmentation
+- Feature flag tracking
+- User tier analysis
+
+You've already seen attributes passed directly to individual metric calls in the examples above. See <PlatformLink to="/enriching-events/attributes">Attributes</PlatformLink> for more information on how attributes work across spans, logs, and metrics.
+
+### Shared Attributes
+
+Use `sentry_sdk.set_attribute` to attach attributes that apply to all logs, metrics, and spans (only in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>). These write to the isolation scope, so they apply for the current request or session:
 
 ```python
 import sentry_sdk
 
-# Add '15.0' to a gauge used for tracking the loading times for a page.
-sentry_sdk.metrics.gauge(
-	"page_load",
-	15.0,
-	unit="millisecond",
-	attributes={
-		"page": "/home"
-	},
-)
+sentry_sdk.set_attribute("is_admin", True)
+sentry_sdk.set_attribute("auth_provider", "google")
 ```
+
+To target a broader or narrower scope instead, see <PlatformLink to="/enriching-events/attributes">Attributes</PlatformLink>.

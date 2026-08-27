@@ -10,12 +10,14 @@ platforms:
   - flutter
 ---
 
+<Include name="dart-stream-mode-general-callout.mdx" />
+
 Drift is a library for easily managing SQLite databases within Flutter applications.
 The [sentry_drift](https://pub.dev/packages/sentry_drift) package provides `Drift` support for database performance instrumentation and allows you to track the performance of your queries.
 
 ## Instrumentation Behaviour
 
-The created spans will be attached to the transaction on the scope - if no transaction is on the scope the Drift span will not be sent to Sentry.
+The created spans attach to the active span. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan()`. If no span is active, the Drift span won't be sent to Sentry.
 
 ## Prerequisites
 
@@ -60,7 +62,7 @@ await database.runWithInterceptor(interceptor: interceptor, () async {
 
 ### 1. Execute the Code
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:sentry/sentry.dart';
@@ -90,6 +92,34 @@ Future<void> driftTest() async {
   await db.close();
 
   await tr.finish(status: const SpanStatus.ok());
+}
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:sentry/sentry.dart';
+import 'package:sentry_drift/sentry_drift.dart';
+
+import 'your_database.dart';
+
+Future<void> driftTest() async {
+  await Sentry.startSpan('driftTest', (span) async {
+    final interceptor = SentryQueryInterceptor(databaseName: 'my_database_name');
+    final executor = inMemoryExecutor().interceptWith(interceptor);
+    final db = AppDatabase(executor);
+
+    await db.into(db.todoItems).insert(
+          TodoItemsCompanion.insert(
+            title: 'This is a test title',
+            content: 'test',
+          ),
+        );
+
+    final items = await db.select(db.todoItems).get();
+
+    await db.close();
+  }, parentSpan: null);
 }
 ```
 

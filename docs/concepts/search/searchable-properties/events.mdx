@@ -8,15 +8,15 @@ Events are the underlying event data captured using Sentry SDKs — that is, err
 
 You can search by event properties in the following [sentry.io](https://sentry.io) pages:
 
-- Discover - in the query builder (depending on the dataset selection)
+- Errors - in the query builder
+- Trace Explorer - in the query builder
 - Dashboards - within the widget builder (depending on dataset selection)
-- Performance - only in transaction summaries
 - Issues - as indicated in the list below
-- Alerts - when creating a metric alert
+- Alerts - when creating an alert
 
 <Alert>
 
-Please note that in Alerts only a limited number of properties are available for filtering `transaction.*` values. 
+Please note that in Alerts only a limited number of properties are available for filtering `transaction.*` values.
 
 </Alert>
 
@@ -186,7 +186,7 @@ Distinguishes build or deployment variants of the same release of an application
 
 ### `environment`
 
-Refers to your code deployment naming convention. For example, _development_, _testing_, _staging_ and so on. [Learn more](/product/sentry-basics/environments/).In some pages of [sentry.io](https://sentry.io), you filter on environment using a dropdown.
+Refers to your code deployment naming convention. For example, _development_, _testing_, _staging_ and so on. [Learn more](/concepts/key-terms/environments/).In some pages of [sentry.io](https://sentry.io), you filter on environment using a dropdown.
 
 - **Type:** string
 
@@ -480,7 +480,7 @@ The Linux distribution name. This maps to `ID` in [`/etc/os-release/`](https://w
 
 ### `os.distribution_version`
 
-The Linux distribution version. This maps to `VERSION_ID` in  [`/etc/os-release/`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html).
+The Linux distribution version. This maps to `VERSION_ID` in [`/etc/os-release/`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html).
 
 - **Type:** string
 
@@ -556,6 +556,10 @@ Name of the Sentry SDK that sent the event.
 Version of the Sentry SDK that sent the event.
 
 - **Type:** string
+
+### `span`
+
+See all searchable `span` properties on the dedicated [Span Properties page](/concepts/search/searchable-properties/spans/).
 
 ### `spans.browser`
 
@@ -671,17 +675,23 @@ A trace represents the record of the entire operation you want to measure or tra
 
 - **Type:** UUID
 
-### `trace.parent_span`
+### `trace.status`
 
-Span ID of the parent to the current transaction. This is null if the transaction is root.
+Describes the status of the trace. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/foundations/envelopes/event-payloads/transaction/) for all possible statuses.
 
-- **Type:** UUID
+- **Type:** string
 
-### `trace.span`
+### `trace_lifecycle`
 
-Span ID of the root span of the root transaction in the event.
+Traces can be sent as transactions (legacy concept) or streamed as spans.
 
-- **Type:** UUID
+- **Type:** string
+
+### `is_transaction`
+
+Indicates whether a span is also a transaction.
+
+- **Type:** boolean
 
 ### `transaction`
 
@@ -689,11 +699,17 @@ For [transactions](/product/dashboards/sentry-dashboards/transaction-summary/#wh
 
 - **Type:** string
 
-### `transaction.duration`
+### `transaction.event_id`
 
-Duration, in milliseconds, of the transaction.
+The identifier of the transaction.
 
-- **Type:** duration
+- **Type:** UUID
+
+### `transaction.method`
+
+HTTP method of the containing transaction.
+
+- **Type:** string
 
 ### `transaction.op`
 
@@ -701,11 +717,11 @@ Short code identifying the [type of operation](https://develop.sentry.dev/sdk/pe
 
 - **Type:** string
 
-### `transaction.status`
+### `transaction.span_id`
 
-Describes the status of the span/transaction. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/transaction/) for all possible statuses.
+Span ID of the first span of the root transaction in the event.
 
-- **Type:** string
+- **Type:** UUID
 
 ### `unreal.crash_type`
 

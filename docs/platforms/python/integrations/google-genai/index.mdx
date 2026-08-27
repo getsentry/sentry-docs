@@ -5,9 +5,11 @@ description: "Learn about using Sentry for Google Gen AI."
 
 This integration connects Sentry with the [Google Gen AI Python SDK](https://github.com/googleapis/python-genai).
 
-Once you've installed this SDK, you can use the Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests.
+Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry dashboard that helps you understand what's going on with your AI requests.
 
-Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/ai/monitoring/agents).
+Sentry AI Observability will automatically collect information about prompts, tools, tokens, and models. Learn more about the [Agents Dashboard](/product/agents/dashboards/).
+
+<Include name="python-stream-mode-general-callout.mdx" />
 
 ## Install
 
@@ -36,7 +38,6 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
     # Add data like inputs and responses;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    stream_gen_ai_spans=True,
     send_default_pii=True,
     integrations=[
         GoogleGenAIIntegration(),
@@ -58,6 +59,7 @@ sentry_sdk.init(...)  # same as above
 client = Client(api_key="(your Google API key)")
 
 def my_llm_stuff():
+    # or sentry_sdk.traces.start_span(name="The result of the AI inference", parent_span=None) in stream mode
     with sentry_sdk.start_transaction(name="The result of the AI inference"):
         response = client.models.generate_content(
             model="gemini-2.0-flash-exp",
@@ -68,7 +70,7 @@ def my_llm_stuff():
 
 After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
 
-If you manually created an <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [AI Agents Dashboard](/ai/monitoring/agents).
+If you manually created an <PlatformLink to="/agent-tracing/manual-instrumentation/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [Agents Dashboard](/product/agents/dashboards/).
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
@@ -92,7 +94,6 @@ sentry_sdk.init(
     # ...
     # Add data like inputs and responses;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    stream_gen_ai_spans=True,
     send_default_pii=True,
     integrations=[
         GoogleGenAIIntegration(

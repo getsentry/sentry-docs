@@ -1,0 +1,42 @@
+---
+title: Prisma
+description: "Adds instrumentation for Prisma ORM queries on Cloudflare Workers running with Node.js compatibility."
+---
+
+<Alert>
+
+On Cloudflare, the `prismaIntegration` is only available through the <PlatformLink to="/features/nodejs-compat">`@sentry/cloudflare/nodejs_compat`</PlatformLink> entrypoint, which requires SDK version `10.64.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.prismaIntegration`_
+
+Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Prisma integration. The integration creates a span for each query and reports relevant details to Sentry.
+
+To enable it on Cloudflare, import Sentry from the `@sentry/cloudflare/nodejs_compat` entrypoint and add the `prismaIntegration` to your `Sentry.init` call:
+
+```javascript {3,5}
+import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.prismaIntegration()],
+});
+```
+
+This integration supports Prisma versions 5, 6, and 7. In Prisma v5, you also need to add the `tracing` preview feature to the `generator` block of your Prisma schema:
+
+```txt {tabTitle: Prisma Schema} {filename: schema.prisma} {3}
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["tracing"]
+}
+```
+
+## Supported Versions
+
+- `prisma`: `5.x`, `6.x`, `7.x`
+
+## Learn More
+
+For details on the span structure that Prisma's OpenTelemetry tracing produces (e.g., `prisma:client:operation`, `prisma:engine:db_query`), see the [Prisma trace output documentation](https://www.prisma.io/docs/orm/prisma-client/observability-and-logging/opentelemetry-tracing#trace-output).

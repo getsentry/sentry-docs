@@ -1,0 +1,165 @@
+---
+title: Vite Plugin
+description: "Learn how to use the Sentry Cloudflare Vite plugin to instrument bundled dependencies at build time."
+---
+
+<AvailableSince version="10.68.0" />
+
+<Alert>
+  The Sentry Cloudflare Vite plugin has **experimental** stability.
+  Configuration options and behavior may change or be removed in any release.
+</Alert>
+
+The Sentry Cloudflare Vite plugin (`sentryCloudflareVitePlugin`) instruments your Worker at build time. It can:
+
+1. **Instrument bundled dependencies**: automatically instruments supported packages in your bundle (such as database clients like `mysql`) at build time, giving you more traces out of the box.
+2. **Auto-instrument your Worker entry**: optionally wraps your default export with `Sentry.withSentry()`, and Durable Object, Workflow, and Agents SDK classes with the matching `instrument*WithSentry` helper at build time, so you don't need to modify your code.
+
+**We recommend building your Cloudflare Worker with Vite and the `sentryCloudflareVitePlugin` plugin.** It's the most complete way to get tracing for bundled dependencies in the Workers runtime. If you already deploy with `wrangler` directly, see [Migrating From Wrangler](#migrating-from-wrangler).
+
+## Install
+
+The Vite plugin ships with `@sentry/cloudflare`, so there's no extra package to install. It's designed to run alongside the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/).
+
+## Prerequisites
+
+The plugin relies on Node.js APIs (`diagnostics_channel`) at runtime, so your Worker must have the `nodejs_compat` compatibility flag enabled. See <PlatformLink to="/features/nodejs-compat/">Node.js Compatibility Entrypoint</PlatformLink> for setup.
+
+## Configure
+
+Enable `useDiagnosticsChannelInjection` to trace supported bundled dependencies, and wrap your handler with `withSentry` as usual:
+
+```typescript {filename:vite.config.ts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    cloudflare(),
+    sentryCloudflareVitePlugin({
+      _experimental: {
+        useDiagnosticsChannelInjection: true,
+      },
+    }),
+  ],
+});
+```
+
+```typescript {filename:index.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  {
+    async fetch(request, env) {
+      // Spans from bundled dependencies (such as mysql) are captured automatically
+      return new Response("...");
+    },
+  }
+);
+```
+
+### Auto-instrumentation (Experimental)
+
+Alternatively, the plugin can wrap your Worker for you at build time, so you don't need `withSentry` in your code. Enable `autoInstrumentation` and the plugin reads your wrangler config (probing `wrangler.json`, `wrangler.jsonc`, and `wrangler.toml` at the Vite root, or the file set with [`wranglerConfigPath`](#options)) to find the entry point, Durable Objects, workflows, and Agents SDK classes. The plugin wraps Agents SDK classes (`Agent`, `AIChatAgent`, `McpAgent`) with `instrumentAgentWithSentry` (SDK version 10.69.0 or higher), which also gives them automatic conversation IDs (see <PlatformLink to="/features/agents-sdk/">Cloudflare Agents SDK</PlatformLink>).
+
+```typescript {filename:vite.config.ts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    cloudflare(),
+    sentryCloudflareVitePlugin({
+      _experimental: {
+        autoInstrumentation: true,
+        useDiagnosticsChannelInjection: true,
+      },
+    }),
+  ],
+});
+```
+
+With auto-instrumentation, you can optionally provide Sentry options via a co-located `instrument.server.*` file (`.ts`, `.mts`, `.js`, `.mjs`, or `.cjs`) next to your Worker entry. The plugin resolves this location from `main` in your wrangler config. For example, if `main` is `src/worker/index.ts`, place the file at `src/worker/instrument.server.ts`, not at the project root. Use `defineCloudflareOptions` for full type-checking:
+
+```typescript {filename:instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export const sentryOptions = (env: Env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+});
+
+export default defineCloudflareOptions(sentryOptions);
+```
+
+If no `instrument.server.*` file exists, the SDK reads all configuration (DSN, release, environment, sample rate, etc.) from the Worker's `env` bindings at runtime.
+
+Configured Durable Object, Workflow, and Agents SDK classes must be declared in the Worker entry for the plugin to wrap them automatically. The plugin cannot rewrite a class that the entry only imports or re-exports from another module. In that case, wrap the imported class in the entry with its matching helper and pass it the options callback from `instrument.server.*`:
+
+```typescript {filename:src/worker/index.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { sentryOptions } from "./instrument.server";
+import { MyAgent as MyAgentBase } from "./my-agent";
+
+export const MyAgent = Sentry.instrumentAgentWithSentry(
+  sentryOptions,
+  MyAgentBase
+);
+```
+
+Use `instrumentDurableObjectWithSentry` for a plain Durable Object or `instrumentWorkflowWithSentry` for a Workflow.
+
+## Options
+
+<SdkOption name="wranglerConfigPath" type="string" availableSince="10.69.0">
+
+Path to your wrangler config file. By default the plugin probes `wrangler.json`, `wrangler.jsonc`, and `wrangler.toml` at the Vite root. Set this when your config lives at a custom path, for example to mirror the `configPath` option of the Cloudflare Vite plugin:
+
+```typescript {filename:vite.config.ts}
+export default defineConfig({
+  plugins: [
+    cloudflare({ configPath: "./wrangler.agent.jsonc" }),
+    sentryCloudflareVitePlugin({
+      wranglerConfigPath: "./wrangler.agent.jsonc",
+      _experimental: {
+        autoInstrumentation: true,
+      },
+    }),
+  ],
+});
+```
+
+</SdkOption>
+
+<SdkOption name="_experimental" type="object">
+
+Experimental options that may change or be removed without notice.
+
+</SdkOption>
+
+<SdkOption name="_experimental.autoInstrumentation" type="boolean" defaultValue="false">
+
+Automatically wraps your Worker at build time so you don't have to edit your entry. The plugin reads your wrangler config, wraps the default export with `Sentry.withSentry()` (sourcing options from a co-located `instrument.server.*` file, falling back to `env`), and wraps configured classes with the matching helper: Durable Objects with `instrumentDurableObjectWithSentry`, Workflows with `instrumentWorkflowWithSentry`, and Agents SDK classes with `instrumentAgentWithSentry` (SDK version 10.69.0 or higher). Both `vite build` and `vite dev` are instrumented.
+
+</SdkOption>
+
+<SdkOption name="_experimental.useDiagnosticsChannelInjection" type="boolean" defaultValue="false">
+
+Enables build-time automatic instrumentation of supported dependencies. When enabled, the plugin injects `diagnostics_channel` calls into bundled packages during both `vite build` and `vite dev`. When disabled or omitted, the plugin is a no-op.
+
+</SdkOption>
+
+## Migrating From Wrangler
+
+If you deploy with `wrangler` directly, moving to Vite is straightforward:
+
+1. Set up the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/get-started/) and add a `vite.config.ts` with the `cloudflare()` and `sentryCloudflareVitePlugin()` plugins as shown above.
+2. Run `vite build` before `wrangler deploy`, and use `vite dev` in place of `wrangler dev` for local development.
+
+Your existing `wrangler.jsonc` becomes the input config, and the plugin generates the deployed output during the build. For the full list of fields that change or become redundant, see Cloudflare's [Migrating from Wrangler](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/) guide.

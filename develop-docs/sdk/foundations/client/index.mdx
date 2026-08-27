@@ -2,7 +2,7 @@
 title: Client
 description: The SDK component responsible for event creation, integration management, and transport dispatch.
 spec_id: sdk/foundations/client
-spec_version: 2.2.0
+spec_version: 3.0.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/state-management/scopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 3.0.0
+    date: 2026-08-03
+    summary: Breaking — Sampling runs after before_send and the session update for SDKs that support sessions; added ignored exception types and session update steps
   - version: 2.2.0
     date: 2025-02-24
     summary: Restructured into sub-specs for integrations, hooks, and configuration
@@ -47,7 +50,7 @@ Related specs:
 - [Errors](/sdk/telemetry/errors/) — error capture, exception interface, wire format
 - [Scopes](/sdk/foundations/state-management/scopes/) — scope chain and client resolution
 - [Transport](/sdk/foundations/transport/) — envelope delivery
-- [Envelopes](/sdk/foundations/transport/envelopes/) — wire format
+- [Envelopes](/sdk/foundations/envelopes/) — wire format
 - [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute type system
 
 ---
@@ -114,17 +117,25 @@ See [Scopes: Client Resolution](/sdk/foundations/state-management/scopes/#client
 
 </SpecSection>
 
-<SpecSection id="event-pipeline" status="stable" since="1.0.0">
+<SpecSection id="event-pipeline" status="stable" since="3.0.0">
 
 ### Event Pipeline
 
 When `captureEvent`, `captureException`, or `captureMessage` is called, the Client processes the event through the following pipeline. The event **MAY** be discarded at any stage, stopping further processing.
 
 1. **Disabled check**: If the SDK is disabled (no transport / no DSN), discard immediately.
-2. **Sampling**: Apply the configured `sample_rate`. Events **MAY** be randomly discarded. When discarded, the Client **MUST** record a [client report](/sdk/telemetry/client-reports/) with discard reason `sample_rate`.
-3. **Scope application**: Obtain the current, isolation, and global scopes. Merge scope data onto the event in the [defined order](/sdk/foundations/state-management/scopes/#applying-scope-data-to-events). Invoke event processors in registration order. Any processor returning `null` discards the event (client report reason: `event_processor`).
-4. **`before_send` hook**: Invoke the user-configured callback. Returning `null` discards the event (client report reason: `before_send`). This hook **MUST** only apply to error events. For transactions, use `before_send_transaction`. For logs, use `before_send_log`. See [Hooks](/sdk/foundations/client/hooks/) for details.
-5. **Transport**: Pass the event to the transport (or TelemetryProcessor). The transport **MAY** discard due to missing DSN, full queue, or [rate limiting](/sdk/foundations/transport/rate-limiting/).
+2. **Scope application and event processors**: Obtain the current, isolation, and global scopes, then apply in this order:
+   1. Merge scope data onto the event in the [defined order](/sdk/foundations/state-management/scopes/#applying-scope-data-to-events). Scope data **MUST** be merged before event processors run, so processors observe the fully populated event.
+   2. Invoke event processors — scoped first, then global, each in registration order. Any processor returning `null` discards the event (client report reason: `event_processor`).
+   3. Discard events matching [`ignoreErrors`](/sdk/foundations/client/configuration/#event-sampling) (client report reason: `event_processor`). SDKs **MAY** implement this as an event processor, in which case it runs as part of the previous step.
+3. **`before_send` hook**: Invoke the user-configured callback. Returning `null` discards the event (client report reason: `before_send`). This hook **MUST** only apply to error events. For transactions, use `before_send_transaction`. For logs, use `before_send_log`. See [Hooks](/sdk/foundations/client/hooks/) for details.
+4. **Session update**: SDKs that implement [Sessions](/sdk/telemetry/sessions/) **MUST** update the current session by incrementing its `errors` count or setting the appropriate status. SDKs without session support skip this step.
+5. **Sampling**: Apply the configured `sample_rate`. Events **MAY** be randomly discarded. When discarded, the Client **MUST** record a [client report](/sdk/telemetry/client-reports/) with discard reason `sample_rate`.
+6. **Transport**: Pass the event to the transport (or TelemetryProcessor). The transport **MAY** discard due to missing DSN, full queue, or [rate limiting](/sdk/foundations/transport/rate-limiting/).
+
+Ignored exception types, event processors, and `before_send` are developer-controlled filters: an event they discard **MUST NOT** update the session, because the developer chose to ignore it. Sampling and the transport discard events to save quota, so they **MUST NOT** prevent the session update — a sampled-out event still counts toward release health. This is the only reason sampling runs after `before_send`.
+
+SDKs without session support **MAY** instead apply sampling immediately after the disabled check. With no session to update, where sampling runs does not affect release health, and sampling early skips event processors and `before_send` for events that will never be sent. The `sample_rate` client report is **REQUIRED** either way.
 
 </SpecSection>
 
