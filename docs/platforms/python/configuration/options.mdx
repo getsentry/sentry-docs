@@ -626,10 +626,21 @@ Self-hosted Sentry users should set this option to `False`, as standalone `gen_a
 
 <SdkOption name="enable_logs" type='bool' defaultValue='False'>
 
-Starting from `2.68.0`, this option has no effect. The `sentry_sdk.logger` API works standalone. Automatic capture of logs by integrations is off by default and can be toggled on the integration level with the `capture_sentry_logs` integration option. See the [Logs documentation](/platforms/python/logs#other-logging-integrations) for more details.
+**Deprecated:** This option will be removed in the next major version. Use the `capture_sentry_logs` option on the [`logging`](/platforms/python/integrations/logging/#options) and [Loguru](/platforms/python/integrations/loguru/#options) integrations instead.
 
-In older SDK versions (prior to `2.68`), this option had to be set to `True` to be able to use the `sentry_sdk.logger` API. It also enabled automatic capture of logs from the standard library `logging` module as well as from Loguru.
+The `sentry_sdk.logger` API works standalone and is not affected by this option.
 
-Made no-op in version `2.68.0`. New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
+For automatic capture of logs from the standard library `logging` module and from Loguru, this option acts as a fallback. If an integration leaves `capture_sentry_logs` unset, `enable_logs=True` turns automatic capture on for that integration. Setting `capture_sentry_logs` on the integration always wins.
+
+| `enable_logs`     | `capture_sentry_logs` | Automatic capture |
+| ----------------- | --------------------- | ----------------- |
+| not set / `False` | not set               | off               |
+| `True`            | not set               | on                |
+| any               | `True`                | on                |
+| any               | `False`               | off               |
+
+In SDK versions prior to `2.68.0`, this option had to be set to `True` to use the `sentry_sdk.logger` API, and it also enabled automatic capture of logs from the standard library `logging` module and from Loguru. In version `2.68.0` only, the option had no effect at all. Upgrade to `2.68.1` or later if you rely on it.
+
+Deprecated in version `2.68.1`. New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
 
 </SdkOption>
