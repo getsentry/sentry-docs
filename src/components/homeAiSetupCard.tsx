@@ -52,8 +52,24 @@ export function HomeAiSetupCard() {
           <path d="M18.5 13.5l.95 2.3 2.3.95-2.3.95-.95 2.3-.95-2.3-2.3-.95 2.3-.95.95-2.3z" />
         </svg>
       </div>
+      <h2 className={styles.setupTitle}>Set up with a coding agent</h2>
+      <button
+        type="button"
+        className={styles.commandPill}
+        onClick={copyCommand}
+        aria-label={`Copy "${INSTALL_COMMAND}" to the clipboard`}
+      >
+        <span className={styles.agentIcons} aria-hidden>
+          <Claude width={15} height={15} />
+          <Codex width={15} height={15} />
+          <Cursor width={14} height={14} />
+        </span>
+        <code className={styles.commandText}>{INSTALL_COMMAND}</code>
+        <span className={styles.commandAction}>
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+        </span>
+      </button>
       <div className={styles.setupRowCopy}>
-        <h2 className={styles.setupTitle}>Set up with a coding agent</h2>
         <p className={styles.setupDesc}>
           One command teaches Claude Code, Cursor, Codex, and Grok how to install and
           configure Sentry for you.{' '}
@@ -74,22 +90,6 @@ export function HomeAiSetupCard() {
           .
         </p>
       </div>
-      <button
-        type="button"
-        className={styles.commandPill}
-        onClick={copyCommand}
-        aria-label={`Copy "${INSTALL_COMMAND}" to the clipboard`}
-      >
-        <span className={styles.agentIcons} aria-hidden>
-          <Claude width={15} height={15} />
-          <Codex width={15} height={15} />
-          <Cursor width={14} height={14} />
-        </span>
-        <code className={styles.commandText}>{INSTALL_COMMAND}</code>
-        <span className={styles.commandAction}>
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-        </span>
-      </button>
     </div>
   );
 }
