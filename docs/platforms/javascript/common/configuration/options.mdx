@@ -575,6 +575,32 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 </SdkOption>
 
+<PlatformSection supported={['javascript.cloudflare']}>
+
+<SdkOption name="rpcTracePropagationBindings" type='Array<string | RegExp>' availableSince='10.72.0'>
+
+Controls which bindings on `env` receive tracing data over [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) to Durable Objects and other Workers. RPC has no headers, so the SDK appends the trace context as a trailing argument that an instrumented receiver strips again before your method runs.
+
+String entries must match a binding name exactly, so `"DB"` does not also match `MY_DB`. Use a regular expression for pattern matching.
+
+Setting this option, with any value, also lets this Worker continue a trace that arrives on an incoming RPC call, so a Worker that both calls and receives needs nothing else. An empty array is therefore a receiver that propagates to nothing itself, and listing a binding it never calls does no harm. That means one list can serve every Worker and Durable Object in a deployment.
+
+Only list bindings whose receiver runs Sentry. Anywhere else the trailing argument survives as a real parameter, which changes what your method was called with. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
+
+Propagation over `stub.fetch()` and service binding `fetch()` uses HTTP headers, so `tracePropagationTargets` covers it instead.
+
+</SdkOption>
+
+<SdkOption name="enableRpcTracePropagation" type='boolean' defaultValue='false' availableSince='10.49.0'>
+
+**Deprecated:** Use `rpcTracePropagationBindings` instead, which names the bindings you call rather than propagating to all of them. This option will be removed in the next major version.
+
+Propagates trace context over every RPC call on `env`, including bindings whose receiver doesn't run Sentry and therefore never strips the trailing argument again.
+
+</SdkOption>
+
+</PlatformSection>
+
 <SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false' categorySupported={["server", "serverless"]}>
 
 If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
