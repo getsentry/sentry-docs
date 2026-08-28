@@ -180,9 +180,9 @@ export async function Home() {
             />
             <QuickLink href="/api/" title="API" desc="Access Sentry programmatically." />
             <QuickLink
-              href="/cli/"
-              title="CLI"
-              desc="Use sentry-cli on the command line."
+              href="/ai/"
+              title="Sentry for AI"
+              desc="See all the ways Sentry plugs into your agents and workflows."
             />
           </div>
         </section>

@@ -60,6 +60,18 @@ export function HomeAiSetupCard() {
           <Link href="/ai/agent-plugin/" className={styles.seeAllLink}>
             Read about the agent plugin
           </Link>
+          .
+        </p>
+        <p className={styles.setupDesc}>
+          Use Sentry without leaving your agent conversations by setting up the{' '}
+          <Link href="https://mcp.sentry.dev/" className={styles.seeAllLink}>
+            Sentry MCP server
+          </Link>{' '}
+          and{' '}
+          <Link href="https://cli.sentry.dev/" className={styles.seeAllLink}>
+            Sentry CLI
+          </Link>
+          .
         </p>
       </div>
       <button
