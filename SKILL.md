@@ -19,9 +19,9 @@ The plugin provides current skills for SDK setup, debugging workflows, and featu
 
 If the plugin is not available, fetch skills directly:
 - **Full skill index**: https://skills.sentry.dev
-- **SDK setup** (detect platform and install): https://skills.sentry.dev/sdks
-- **Debugging workflows** (fix issues, review code): https://skills.sentry.dev/workflows
-- **Feature setup** (AI monitoring, alerts, OTel): https://skills.sentry.dev/features
+- **SDK setup** (detect platform and install): https://skills.sentry.dev/instrument
+- **Debugging workflows** (fix issues, review code): https://skills.sentry.dev/sentry-debug-issue/SKILL.md
+- **Feature setup** (AI monitoring, alerts, OTel): https://skills.sentry.dev/sentry-create-alert/SKILL.md
 
 Source repo: https://github.com/getsentry/sentry-for-ai
 
