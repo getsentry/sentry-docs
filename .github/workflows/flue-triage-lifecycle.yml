@@ -1,0 +1,36 @@
+name: Triage Lifecycle
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: flue-triage-lifecycle
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: vars.FLUE_TRIAGE_MODE == 'apply'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply due lifecycle rules
+        env:
+          FLUE_TRIAGE_MODE: apply
+          FLUE_TRIAGE_STATE_SECRET: ${{ secrets.FLUE_TRIAGE_STATE_SECRET }}
+          FLUE_TRIAGE_STATE_SECRET_PREVIOUS: ${{ secrets.FLUE_TRIAGE_STATE_SECRET_PREVIOUS }}
+          GH_TOKEN: ${{ github.token }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: pnpm triage:lifecycle
