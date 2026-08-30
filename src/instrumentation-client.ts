@@ -4,7 +4,12 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Ignore errors injected by Brave/Firefox iOS browser scripts (third-party browser noise)
-  ignoreErrors: [/__firefox__/, /DarkReader/],
+  // and non-Error DOM Event rejections from failed third-party resource loads (DOCS-9E9).
+  ignoreErrors: [
+    /__firefox__/,
+    /DarkReader/,
+    /Event `Event` \(type=error\) captured as promise rejection/,
+  ],
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 0.3,
@@ -38,6 +43,43 @@ Sentry.init({
     }),
     Sentry.consoleLoggingIntegration(),
   ],
+
+  // Drop frameless global-handler noise (browser extensions, failed third-party
+  // <script>/<link> loads). thirdPartyErrorFilterIntegration only covers errors
+  // that have frames; zero-frame Event rejections bypass it and become DOCS-9E9.
+  beforeSend(event) {
+    const values = event.exception?.values;
+    if (!values?.length) {
+      return event;
+    }
+
+    const framelessGlobalHandlerNoise = values.every(exception => {
+      const frames = exception.stacktrace?.frames;
+      const noFrames = !frames || frames.length === 0;
+      if (!noFrames) {
+        return false;
+      }
+
+      const mechanismType = exception.mechanism?.type ?? '';
+      const isGlobalHandler =
+        mechanismType === 'onerror' ||
+        mechanismType === 'onunhandledrejection' ||
+        mechanismType.includes('global_handlers');
+
+      const isDomErrorEvent =
+        exception.type === 'Event' ||
+        /type=error/.test(exception.value ?? '') ||
+        /captured as promise rejection/i.test(exception.value ?? '');
+
+      return isGlobalHandler || isDomErrorEvent;
+    });
+
+    if (framelessGlobalHandlerNoise) {
+      return null;
+    }
+
+    return event;
+  },
 
   // Filter sensitive metric attributes (no PII in metrics)
   beforeSendMetric: metric => {
