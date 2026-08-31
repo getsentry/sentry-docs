@@ -4,16 +4,18 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
-// AI library pages that live under agent-tracing but are also integrations.
-const AI_INTEGRATION_SLUGS = [
-  'anthropic',
-  'google-genai',
-  'langchain',
-  'langgraph',
-  'mastra',
-  'openai',
-  'vercelai',
-];
+/**
+ * Platforms whose AI library pages live under agent-tracing, mapped to where that
+ * platform keeps its integrations list. The library pages are mirrored into that
+ * list so they stay discoverable from both places.
+ */
+const INTEGRATIONS_PATH_BY_PLATFORM: Record<string, string> = {
+  javascript: 'configuration/integrations',
+  python: 'integrations',
+};
+
+/** Pages under agent-tracing that document the feature rather than a library. */
+const NON_LIBRARY_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
 
 export function PlatformSidebar({
   rootNode,
@@ -60,25 +62,33 @@ export function PlatformSidebar({
 
   // The AI library pages live under agent-tracing, but they're also integrations,
   // so mirror them into the integrations list. These are link-only entries: they
-  // sit under configuration/integrations but point at the real agent-tracing page.
-  const aiIntegrationAliases = AI_INTEGRATION_SLUGS.map(slug => {
-    const target = nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing', slug]);
-    // Not every library is supported on every platform - skip where there's no page.
-    if (!target || target.missing || target.frontmatter.draft) {
-      return undefined;
-    }
-    return {
-      context: {
-        platform: {platformName},
-        title: target.frontmatter.title,
-        sidebar_title: target.frontmatter.sidebar_title,
-        // Deliberately no sidebar_order: these sort alphabetically among the
-        // other integrations rather than carrying their agent-tracing ordering.
-        href: '/' + target.path + '/',
-      },
-      path: `/${pathRoot}/configuration/integrations/${slug}/`,
-    };
-  }).filter(n => n !== undefined);
+  // sit under the integrations path but point at the real agent-tracing page.
+  // The list is derived from whatever pages exist under agent-tracing for this
+  // platform or guide, so it needs no maintenance as libraries come and go.
+  const integrationsPath = INTEGRATIONS_PATH_BY_PLATFORM[platformName];
+  const agentTracingNode =
+    integrationsPath && nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing']);
+
+  const aiIntegrationAliases = !agentTracingNode
+    ? []
+    : agentTracingNode.children
+        .filter(
+          child =>
+            !child.missing &&
+            !child.frontmatter.draft &&
+            !NON_LIBRARY_AGENT_TRACING_PAGES.has(child.slug)
+        )
+        .map(child => ({
+          context: {
+            platform: {platformName},
+            title: child.frontmatter.title,
+            sidebar_title: child.frontmatter.sidebar_title,
+            // Deliberately no sidebar_order: these sort alphabetically among the
+            // other integrations rather than carrying their agent-tracing ordering.
+            href: '/' + child.path + '/',
+          },
+          path: `/${pathRoot}/${integrationsPath}/${child.slug}/`,
+        }));
 
   const tree = toTree([...nodes, ...aiIntegrationAliases].filter(n => !!n.context));
 
