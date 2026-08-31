@@ -10,6 +10,7 @@ import Codex from 'sentry-docs/icons/codex';
 import Cursor from 'sentry-docs/icons/cursor';
 import {DocMetrics} from 'sentry-docs/metrics';
 
+import {ExternalLink} from './externalLink';
 import styles from './home.module.scss';
 
 /** Keep in sync with /ai/agent-plugin/. */
@@ -80,13 +81,13 @@ export function HomeAiSetupCard() {
         </p>
         <p className={styles.setupDesc}>
           Use Sentry without leaving your agent conversations by setting up the{' '}
-          <Link href="https://mcp.sentry.dev/" className={styles.seeAllLink}>
+          <ExternalLink href="https://mcp.sentry.dev/" className={styles.seeAllLink}>
             Sentry MCP server
-          </Link>{' '}
+          </ExternalLink>{' '}
           and{' '}
-          <Link href="https://cli.sentry.dev/" className={styles.seeAllLink}>
+          <ExternalLink href="https://cli.sentry.dev/" className={styles.seeAllLink}>
             Sentry CLI
-          </Link>
+          </ExternalLink>
           .
         </p>
       </div>
