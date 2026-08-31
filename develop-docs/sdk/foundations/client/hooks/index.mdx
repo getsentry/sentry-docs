@@ -1,13 +1,18 @@
 ---
 title: Hooks
-description: Client lifecycle hooks, the on/emit subscription system, and user-facing hooks like before_send and before_breadcrumb.
+description: Client lifecycle hooks, the on/emit subscription system, user-facing callbacks like before_send and the samplers, and how SDKs isolate errors raised inside them.
 spec_id: sdk/foundations/client/hooks
-spec_version: 1.0.1
+spec_version: 1.1.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=3.0.0"
+  - id: sdk/telemetry/client-reports
+    version: ">=1.2.0"
 spec_changelog:
+  - version: 1.1.0
+    date: 2026-08-31
+    summary: Added callback error isolation requirements, the per-callback failure matrix, and client report obligations for callback failures; introduced the error_sampler hook; widened scope to all user-provided callbacks
   - version: 1.0.1
     date: 2026-08-03
     summary: Clarified before_send position relative to the session update; requires client spec 3.0.0
@@ -30,10 +35,14 @@ The Client supports several hook mechanisms for extensibility:
 - **`before_send_transaction`** — a user-facing callback for modifying or discarding transaction events
 - **`before_send_check_in`** — an optional callback for modifying or discarding check-in events
 - **`before_breadcrumb`** — a user-facing callback for modifying or discarding breadcrumbs
+- **`error_sampler`** — an optional callback deciding the sample rate of an individual error event
+
+[Callback Error Isolation](#callback-error-isolation) applies to every user-provided callback, including those specified elsewhere — the `before_send_*` variants for each telemetry type, the samplers, and event processors.
 
 Related specs:
-- [Client](/sdk/foundations/client/) — event pipeline and capture methods
-- [Configuration](/sdk/foundations/client/configuration/) — `before_send` and `before_breadcrumb` options
+- [Client](/sdk/foundations/client/) — event pipeline, event processors, and capture methods
+- [Configuration](/sdk/foundations/client/configuration/) — `before_send`, `before_breadcrumb`, and sampler options
+- [Client Reports](/sdk/telemetry/client-reports/) — discard reasons recorded when a callback drops an item
 
 ---
 
@@ -97,6 +106,53 @@ See the <Link to="/sdk/telemetry/check-ins/#hooks">Check-Ins spec</Link> for ful
 ### Before-Breadcrumb Hook
 
 Hook called with the breadcrumb (and on some platforms the hint) that allow the user to decide whether and how a breadcrumb should be sent.
+
+</SpecSection>
+
+<SpecSection id="error-sampler-hook" status="candidate" since="1.1.0">
+
+### Error-Sampler Hook
+
+SDKs **MAY** implement an `error_sampler` callback that decides the sample rate of an individual error event, mirroring `traces_sampler` for transactions.
+
+The callback receives the event and, on platforms that support it, the hint. It returns either a boolean, or a float between `0.0` and `1.0`. When `error_sampler` is configured, `sample_rate` **MUST** be ignored.
+
+This hook **MUST** only apply to `error` events. Unlike `before_send`, it is a sampling mechanism rather than a developer-controlled filter, so it **MUST** run at the sampling step of the [event pipeline](/sdk/foundations/client/#event-pipeline). An event it samples out **MUST** still update the session, and SDKs **MUST** record it with the `sample_rate` discard reason.
+
+</SpecSection>
+
+<SpecSection id="callback-error-isolation" status="candidate" since="1.1.0">
+
+### Callback Error Isolation
+
+A failing user callback **MUST NOT** break the host application. Where the language can recover from an error raised in a called function (`try`/`catch`, `rescue`, `recover`, `catch_unwind`), SDKs **MUST** invoke every user-provided callback inside that boundary, covering every non-local exit the language permits. A rejected promise, future, or task **MUST** be handled like a synchronous raise.
+
+On failure, SDKs **MUST** emit an error-level [internal log](/sdk/foundations/client/configuration/#debug-mode) naming the callback, **MUST NOT** re-throw, and **MUST NOT** capture the error as an event or attach it to the item. See [Never capture your own exceptions](/sdk/getting-started/principles/#never-capture-your-own-exceptions). SDKs **MAY** re-throw in a non-default test mode documented to surface SDK failures.
+
+A failure is not a return value, so SDKs **MUST NOT** infer a drop or a pass from it:
+
+| Callback | On failure | Client report |
+|---|---|---|
+| `before_send` | Drop the event | `before_send`, category `error` |
+| `before_send_transaction` | Drop the transaction | `before_send`, category `transaction` (plus [span outcomes](/sdk/telemetry/client-reports/#span-outcomes)) |
+| `before_send_log` | Drop the log | `before_send`, category `log_item` |
+| `before_send_metric` | Drop the metric | `before_send`, category `trace_metric` |
+| `before_send_feedback` | Drop the feedback | `before_send`, category `feedback` |
+| `before_send_check_in` | Drop the check-in | `before_send`, category `monitor` |
+| `before_breadcrumb` | Drop the breadcrumb | None |
+| `before_send_span` | Emit the span, discarding the return value | None |
+| Event processor | Drop the event | `event_processor`, category of the item |
+| `traces_sampler` | Fall back as if unconfigured | `sample_rate` if sampled out |
+| `profiles_sampler` | Fall back as if unconfigured | `sample_rate` if sampled out |
+| `error_sampler` | Fall back to `sample_rate` | `sample_rate` if sampled out |
+
+Filters drop because a callback that failed part-way may not have applied the redaction the user wrote it to apply. `before_send_span` keeps the span because it is specified as enrichment, not filtering — [`ignore_spans`](/sdk/telemetry/spans/filtering/) filters spans. Samplers **MUST** fall back to the behavior they would have used had no sampler been configured, including any inherited decision that takes precedence over the static rate, and **MUST NOT** substitute `0.0` or `1.0`.
+
+For the callbacks that keep the item, SDKs **SHOULD** pass a defensive copy so a partially mutated item can be restored. Where copying is impractical, SDKs **MUST** emit the item as it stands and **MUST NOT** apply any merge its own spec requires, such as the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
+
+A failure **MUST NOT** produce a billed event of any type. A dropped item **MUST** be reported exactly as it is on an explicit drop, and **MUST NOT** use a reason the callback could not otherwise produce; isolating a callback without reporting the loss is a conformance failure. Sampler failure is not distinguishable from ordinary sampling; reporting it would need a new discard reason, and `internal_sdk_error` is not a substitute because [SDK bugs are out of scope for client reports](/sdk/telemetry/client-reports/#discard-reasons).
+
+Pure C and C++ built without exceptions, and Rust built with `panic = "abort"`, cannot isolate a failing callback. Those SDKs **MUST** document that this section does not apply.
 
 </SpecSection>
 
