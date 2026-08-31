@@ -1,0 +1,245 @@
+---
+title: Mastra
+description: Learn how to set up Sentry in your Mastra app to capture agent tracing, model calls, and tool executions.
+sdk: sentry.javascript.node
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+keywords:
+  - mastra
+  - ai
+  - agents
+  - agent tracing
+---
+
+This guide will show you how to integrate Sentry into your [Mastra](https://mastra.ai/) project using Mastra's `@mastra/sentry` exporter. The exporter sends agent runs, model generations, tool calls, and workflows to [Sentry Agent Tracing](/product/agents/).
+
+Mastra can run as a standalone server, behind a server adapter, or inside another app. Configure `@mastra/sentry` on the Mastra instance in every case. For host-app errors and HTTP tracing, also follow that framework's Sentry guide.
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A Mastra application (`@mastra/core`)
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+### Install the Mastra Sentry Exporter
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Mastra Sentry exporter and observability packages:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @mastra/sentry@latest @mastra/observability@latest
+```
+
+```bash {tabTitle:yarn}
+yarn add @mastra/sentry@latest @mastra/observability@latest
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @mastra/sentry@latest @mastra/observability@latest
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Configure
+
+Add the exporter on your Mastra instance. This is the supported path for Mastra agent tracing.
+
+### Zero-Config Setup
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+With environment variables set (`SENTRY_DSN`, and optionally `SENTRY_ENVIRONMENT` and `SENTRY_RELEASE`), create the exporter with no options:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename: src/mastra/index.ts}
+import { Mastra } from "@mastra/core";
+import { Observability } from "@mastra/observability";
+import { SentryExporter } from "@mastra/sentry";
+
+export const mastra = new Mastra({
+  // agents, workflows, ...
+  observability: new Observability({
+    configs: {
+      sentry: {
+        serviceName: "my-mastra-service",
+        exporters: [new SentryExporter()],
+      },
+    },
+  }),
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Explicit Configuration
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+You can also pass credentials and options directly:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename: src/mastra/index.ts}
+import { Mastra } from "@mastra/core";
+import { Observability } from "@mastra/observability";
+import { SentryExporter } from "@mastra/sentry";
+
+export const mastra = new Mastra({
+  // agents, workflows, ...
+  observability: new Observability({
+    configs: {
+      sentry: {
+        serviceName: "my-mastra-service",
+        exporters: [
+          new SentryExporter({
+            dsn: "___PUBLIC_DSN___",
+            environment: "production",
+            tracesSampleRate: 1.0,
+          }),
+        ],
+      },
+    },
+  }),
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+Give each agent both `id` and `name` so they appear clearly in the [Agents Dashboard](/product/agents/dashboards/). See [Naming Your Agents](/product/agents/naming/).
+
+### Conversations
+
+Mastra can set `gen_ai.conversation.id` from `metadata.threadId` so multi-turn chats group in [Conversations](/product/agents/conversations/). Use a stable thread ID for each chat session.
+
+## Using Mastra With Other Frameworks
+
+AI tracing always configures `@mastra/sentry` on the Mastra instance. Host-app errors and request tracing use that host's Sentry SDK guide.
+
+### Standalone Mastra Server
+
+This is the default path (`create mastra` / `mastra build`). The exporter setup above is enough for agent tracing.
+
+### Server Adapters
+
+If you mount Mastra on Express, Hono, Fastify, Koa, NestJS, or Elysia, keep the exporter on the Mastra instance. For non-AI request errors and performance on the host server, also follow that framework's guide:
+
+- [Express](/platforms/javascript/guides/express/)
+- [Hono](/platforms/javascript/guides/hono/)
+- [Fastify](/platforms/javascript/guides/fastify/)
+- [Koa](/platforms/javascript/guides/koa/)
+- [NestJS](/platforms/javascript/guides/nestjs/)
+- [Elysia](/platforms/javascript/guides/elysia/)
+
+### Embedded in Another App
+
+If you call Mastra agents from Next.js, Astro, or a similar app:
+
+1. Keep `@mastra/sentry` on the Mastra instance (this guide).
+2. Set up the host framework SDK for the rest of the app, for example [Next.js](/platforms/javascript/guides/nextjs/) or [Astro](/platforms/javascript/guides/astro/).
+3. On serverless hosts, call `await exporter.flush()` before the runtime freezes if spans are missing.
+
+If the frontend only talks to a **separate** Mastra backend, put Sentry on that Mastra service with this guide. Instrument the frontend with its own framework guide as needed.
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is receiving Mastra agent data.
+
+### Agent Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run an agent and confirm spans show up under **Agents** in your Sentry project:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+const agent = mastra.getAgentById("weather-agent");
+const response = await agent.generate("What's the weather in San Francisco?");
+console.log(response.text);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+You should see agent runs, model generations, tool calls, and token usage in Sentry.
+
+### View Captured Data in Sentry
+
+Finally, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Next Steps
+
+- Learn more about [Sentry Agents](/product/agents/) and [naming your agents](/product/agents/naming/)
+- Review the [Mastra Sentry exporter reference](https://mastra.ai/reference/observability/tracing/exporters/sentry)
+- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="What gets captured?">
+
+Mastra maps span types to Sentry operations for the Agents dashboards:
+
+| Mastra Span Type       | Sentry Operation       |
+| ---------------------- | ---------------------- |
+| `AGENT_RUN`            | `gen_ai.invoke_agent`  |
+| `MODEL_GENERATION`     | `gen_ai.chat`          |
+| `TOOL_CALL`            | `gen_ai.execute_tool`  |
+| `MCP_TOOL_CALL`        | `gen_ai.execute_tool`  |
+| `WORKFLOW_RUN`         | `workflow.run`         |
+| `WORKFLOW_STEP`        | `workflow.step`        |
+| `WORKFLOW_CONDITIONAL` | `workflow.conditional` |
+| `WORKFLOW_PARALLEL`    | `workflow.parallel`    |
+| `WORKFLOW_LOOP`        | `workflow.loop`        |
+| `PROCESSOR_RUN`        | `ai.processor`         |
+| `GENERIC`              | `ai.span`              |
+
+`MODEL_STEP` and `MODEL_CHUNK` spans are skipped. Their data is aggregated into parent `MODEL_GENERATION` spans.
+
+Spans are tagged with `sentry.origin: auto.ai.mastra`.
+
+</Expandable>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Review the [Mastra Sentry exporter reference](https://mastra.ai/reference/observability/tracing/exporters/sentry)
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
+
+## Supported Versions
+
+- `@mastra/sentry`: `>=1.0.0`
