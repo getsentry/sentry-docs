@@ -1,15 +1,14 @@
 ---
-title: Google Gen AI
-description: "Learn about using Sentry for Google Gen AI."
+title: LiteLLM
+description: "Learn about using Sentry for LiteLLM."
+sidebar_order: 26
 ---
 
-This integration connects Sentry with the [Google Gen AI Python SDK](https://github.com/googleapis/python-genai).
+This integration connects Sentry with the [LiteLLM Python SDK](https://github.com/BerriAI/litellm).
 
 Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry dashboard that helps you understand what's going on with your AI requests.
 
 Sentry AI Observability will automatically collect information about prompts, tools, tokens, and models. Learn more about the [Agents Dashboard](/product/agents/dashboards/).
-
-<Include name="python-stream-mode-general-callout.mdx" />
 
 ## Install
 
@@ -25,11 +24,11 @@ uv add sentry-sdk
 
 ## Configure
 
-Add `GoogleGenAIIntegration()` to your `integrations` list:
+Add `LiteLLMIntegration()` to your `integrations` list:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+from sentry_sdk.integrations.litellm import LiteLLMIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
@@ -40,32 +39,35 @@ sentry_sdk.init(
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
     integrations=[
-        GoogleGenAIIntegration(),
+        LiteLLMIntegration(),
     ],
 )
 ```
 
 ## Verify
 
-Verify that the integration works by making a chat request to Google Gen AI.
+Verify that the integration works by making a chat completion request to LiteLLM.
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
-from google.genai import Client
+from sentry_sdk.integrations.litellm import LiteLLMIntegration
+import litellm
 
-sentry_sdk.init(...)  # same as above
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    integrations=[
+        LiteLLMIntegration(),
+    ],
+)
 
-client = Client(api_key="(your Google API key)")
-
-def my_llm_stuff():
-    # or sentry_sdk.traces.start_span(name="The result of the AI inference", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="The result of the AI inference"):
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
-            contents="say hello"
-        )
-        print(response.text)
+response = litellm.completion(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": "say hello"}],
+    max_tokens=100
+)
+print(response.choices[0].message.content)
 ```
 
 After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
@@ -76,19 +78,19 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 ## Behavior
 
-- The Google Gen AI integration will connect Sentry with the supported Google Gen AI methods automatically.
+- The LiteLLM integration will connect Sentry with the supported LiteLLM methods automatically.
 
-- The supported function is currently `models.generate_content` (both sync and async).
+- The supported functions are currently `completion` and `embedding` (both sync and async).
 
 - Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
 
 ## Options
 
-You can set options for `GoogleGenAIIntegration` to change its behavior:
+By adding `LiteLLMIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LiteLLMIntegration` to change its behavior:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.google_genai import GoogleGenAIIntegration
+from sentry_sdk.integrations.litellm import LiteLLMIntegration
 
 sentry_sdk.init(
     # ...
@@ -96,14 +98,14 @@ sentry_sdk.init(
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
     integrations=[
-        GoogleGenAIIntegration(
+        LiteLLMIntegration(
             include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
         ),
     ],
 )
 ```
 
-You can pass the following keyword arguments to `GoogleGenAIIntegration()`:
+You can pass the following keyword arguments to `LiteLLMIntegration()`:
 
 - `include_prompts`:
 
@@ -113,5 +115,5 @@ You can pass the following keyword arguments to `GoogleGenAIIntegration()`:
 
 ## Supported Versions
 
-- google-genai: 1.29.0+
-- Python: 3.9+
+- LiteLLM: 1.77.5+
+- Python: 3.8+
