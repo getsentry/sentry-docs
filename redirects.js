@@ -2320,6 +2320,16 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
   },
   // Agent Tracing moved to top-level feature
+  // The Laravel AI integration page only restated the Agent Tracing guide it
+  // pointed at, so it was removed in favor of that page.
+  {
+    source: '/platforms/php/guides/laravel/integrations/laravel-ai.md',
+    destination: '/platforms/php/guides/laravel/agent-tracing.md',
+  },
+  {
+    source: '/platforms/php/guides/laravel/integrations/laravel-ai/:path*',
+    destination: '/platforms/php/guides/laravel/agent-tracing/',
+  },
   // Python AI library pages moved from integrations to agent-tracing
   {
     source: '/platforms/python/integrations/anthropic.md',
