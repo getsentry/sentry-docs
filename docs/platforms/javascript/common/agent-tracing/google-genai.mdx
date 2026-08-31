@@ -1,6 +1,7 @@
 ---
-title: Anthropic
-description: "Adds instrumentation for the Anthropic SDK."
+title: Google Gen AI
+description: "Adds instrumentation for Google Gen AI SDK."
+sidebar_order: 23
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -36,7 +37,7 @@ supported:
 
 <PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
   <Alert level="warning">
-    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentAnthropicAiClient` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentGoogleGenAIClient` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
   </Alert>
 </PlatformSection>
 
@@ -44,7 +45,7 @@ supported:
 
   ## Automatic Instrumentation
 
-  _Import name: `Sentry.anthropicAIIntegration`_
+  _Import name: `Sentry.googleGenAIIntegration`_
 
   <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
     <Alert>
@@ -52,9 +53,9 @@ supported:
     </Alert>
   </PlatformSection>
 
-  The `anthropicAIIntegration` adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) API to capture spans by wrapping Anthropic SDK calls and recording LLM interactions.
+  The `googleGenAIIntegration` adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture spans by wrapping Google Gen AI SDK calls and recording LLM interactions.
 
-  In Node.js runtimes, this integration is enabled by default and automatically captures spans for Anthropic SDK calls (requires Sentry SDK version `10.28.0` or higher).
+  In Node.js runtimes, this integration is enabled by default and automatically captures spans for Google Gen AI SDK calls (requires Sentry SDK version `10.28.0` or higher).
 
   To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
 
@@ -64,30 +65,26 @@ supported:
 
   ## Manual Instrumentation
 
-  _Import name: `Sentry.instrumentAnthropicAiClient`_
+  _Import name: `Sentry.instrumentGoogleGenAIClient`_
 
-  The `instrumentAnthropicAiClient` helper adds instrumentation for the [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) API to capture spans by wrapping Anthropic SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Anthropic client instance with this helper.
+  The `instrumentGoogleGenAIClient` helper adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture spans by wrapping Google Gen AI SDK calls and recording LLM interactions with configurable input/output recording. You need to manually wrap your Google Gen AI client instance with this helper.
 
-  See the example below:
+  See example below:
 
   ```javascript
-  import Anthropic from "@anthropic-ai/sdk";
+  import { GoogleGenAI } from "@google/genai";
 
-  const anthropic = new Anthropic({
-  apiKey: "your-api-key", // Warning: API key will be exposed in browser!
-});
+  const genAI = new GoogleGenAI({
+    apiKey: "your-api-key", // Warning: API key will be exposed in browser!
+  });
 
-  const client = Sentry.instrumentAnthropicAiClient(anthropic, {
-  recordInputs: true,
-  recordOutputs: true,
-});
+  const client = Sentry.instrumentGoogleGenAIClient(genAI, {
+    recordInputs: true,
+    recordOutputs: true,
+  });
 
-  // Use the wrapped client instead of the original anthropic instance
-  const response = await client.messages.create({
-  model: "claude-3-5-sonnet-20241022",
-  max_tokens: 1024,
-  messages: [{ role: "user", content: "Hello!" }],
-});
+  // Use the wrapped client instead of the original genAI instance
+  const result = await client.models.generateContent("Hello!");
   ```
 
   To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
@@ -98,13 +95,13 @@ supported:
 
 ### Options
 
-The following options control what data is captured from Anthropic SDK calls:
+The following options control what data is captured from Google Gen AI SDK calls:
 
 #### `recordInputs`
 
 _Type: `boolean` (optional)_
 
-Records inputs to Anthropic SDK calls (such as prompts and messages).
+Records inputs to Google Gen AI SDK calls (such as prompts and messages).
 
 Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
 
@@ -112,7 +109,7 @@ Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the defa
 
 _Type: `boolean` (optional)_
 
-Records outputs from Anthropic SDK calls (such as generated text and responses).
+Records outputs from Google Gen AI SDK calls (such as generated text and responses).
 
 Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
 
@@ -120,49 +117,47 @@ Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the def
 
 <PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
-  Using the `anthropicAIIntegration` integration for **automatic instrumentation**:
+Using the `googleGenAIIntegration` integration for **automatic instrumentation**:
 
-  ```javascript
-  Sentry.init({
+```javascript
+Sentry.init({
   dsn: "____PUBLIC_DSN____",
-  // Tracing must be enabled for agent tracing to work
+   // Tracing must be enabled for agent tracing to work
   tracesSampleRate: 1.0,
   integrations: [
-  Sentry.anthropicAIIntegration({
-  // your options here
-}),
+    Sentry.googleGenAIIntegration({
+      // your options here
+    }),
   ],
 });
-  ```
+```
 
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-  Using the `instrumentAnthropicAiClient` wrapper for **manual instrumentation**:
+Using the `instrumentGoogleGenAIClient` wrapper for **manual instrumentation**:
 
-  ```javascript
-  const client = Sentry.instrumentAnthropicAiClient(anthropic, {
+```javascript
+const client = Sentry.instrumentGoogleGenAIClient(genAI, {
   // your options here
 });
-  ```
+```
 
 </PlatformSection>
 
 ## Supported Operations
 
-By default, tracing support is added to the following Anthropic SDK calls:
+By default, tracing support is added to the following Google Gen AI SDK calls:
 
-- `messages.create()` - Create messages with Claude models
-- `messages.stream()` - Stream messages with Claude models
-- `messages.countTokens()` - Count tokens for messages
-- `models.get()` - Get model information
-- `completions.create()` - Create completions (legacy)
-- `models.retrieve()` - Retrieve model details
-- `beta.messages.create()` - Beta messages API
+- `models.generateContent()` - Generate content with a given model
+- `models.generateContentStream()` - Stream content generation with a given model
+- `chats.create()` - Create chat sessions
+- `sendMessage()` - Send messages in chat sessions
+- `sendMessageStream()` - Stream messages in chat sessions
 
 Streaming and non-streaming requests are automatically detected and handled appropriately.
 
 ## Supported Versions
 
-- `@anthropic-ai/sdk`: `>=0.19.2 <1.0.0`
+- `@google/genai`: `>=0.10.0 <2`
