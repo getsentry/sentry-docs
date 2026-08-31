@@ -18,13 +18,17 @@ Sentry Logs let you send structured log data from your Next.js application. Unli
 
 ### Enable Logging
 
-Add `enableLogs: true` to your Sentry configuration in all three runtime files.
+Logs are enabled by default across all three runtime files. Initialize the SDK as usual, then use `Sentry.logger` to send logs.
 
 Logs work across all Next.js runtimes:
 
 - **Client** — Browser-side logging
 - **Server** — Node.js server-side logging
 - **Edge** — Edge runtime logging
+
+<Alert>
+  On SDK versions below `10.71.0`, logs are opt-in. Set `enableLogs: true` in your `Sentry.init` in all three runtime files to send them.
+</Alert>
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -34,7 +38,6 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  enableLogs: true,
 });
 ```
 
@@ -43,7 +46,6 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  enableLogs: true,
 });
 ```
 
@@ -52,7 +54,6 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  enableLogs: true,
 });
 ```
 
@@ -189,7 +190,6 @@ The integration parses multiple arguments as searchable attributes.
 ```typescript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  enableLogs: true,
   integrations: [
     Sentry.consoleLoggingIntegration({
       levels: ["log", "warn", "error"],
@@ -221,7 +221,6 @@ Requires SDK version `10.18.0` or higher.
 ```typescript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  enableLogs: true,
   integrations: [Sentry.pinoIntegration()],
 });
 ```
@@ -238,7 +237,7 @@ See <PlatformLink to="/configuration/integrations/pino">Pino integration docs</P
 
 Send logs from the [Consola](https://github.com/unjs/consola) logging library to Sentry.
 
-Requires SDK version `10.12.0` or higher and `enableLogs: true` in your `Sentry.init` call.
+Requires SDK version `10.12.0` or higher.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -263,7 +262,7 @@ consola.addReporter(sentryReporter);
 
 Send logs from the [Winston](https://github.com/winstonjs/winston) logging library to Sentry.
 
-Requires SDK version `9.13.0` or higher and `enableLogs: true` in your `Sentry.init` call.
+Requires SDK version `9.13.0` or higher.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -314,7 +313,6 @@ Use this to:
 ```typescript {filename:instrumentation-client.ts}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  enableLogs: true,
 
   beforeSendLog(log) {
     // Drop debug logs in production
@@ -388,7 +386,7 @@ Any attributes set via `Sentry.setAttribute()` / `Sentry.setAttributes()` (or di
 
 ### Logs not appearing
 
-Make sure `enableLogs: true` is set in **all** Sentry config files:
+On SDK versions below `10.71.0`, logs are opt-in. Make sure `enableLogs: true` is set in **all** Sentry config files:
 
 - `instrumentation-client.ts` (client)
 - `sentry.server.config.ts` (server)

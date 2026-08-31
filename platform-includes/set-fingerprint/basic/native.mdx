@@ -8,6 +8,19 @@ my_fingerprinted_function(); // events are grouped on "myFingerPrint"
 sentry_remove_fingerprint(); // clears all fingerprints
 ```
 
+To fingerprint captures for a single unit of work without changing the global fingerprint, set the fingerprint on a passed scope instead:
+
+```c
+#include <sentry.h>
+
+sentry_scope_t *scope = sentry_local_scope_new();
+sentry_scope_set_fingerprint(scope, "myFingerPrint", NULL);
+
+sentry_scope_capture_event(scope, event);
+```
+
+When the parts are built at runtime, `sentry_scope_set_fingerprints` takes a list created with `sentry_value_new_list` instead of a variadic argument list. `sentry_scope_remove_fingerprint` clears a fingerprint set on a scope.
+
 For specific, manually captured events, fingerprints can be added to the `fingerprint` key of the event. This will be prioritized over the globally set fingerprint:
 
 ```cpp

@@ -1,4 +1,4 @@
-```c {tabTitle:Global Scope} {mdExpandTabs}
+```c
 #include <sentry.h>
 
 sentry_set_tag("my-tag", "my value");
@@ -8,18 +8,24 @@ sentry_value_t user = sentry_value_new_user("42", "Jane Doe", "jane.doe@example.
 sentry_set_user(user);
 ```
 
-```c {tabTitle:Local Scope}
-#include <sentry.h>
+You can also set data on scopes you create, using the `sentry_scope_*` setters that take the scope as their first argument:
 
-sentry_scope_t *scope = sentry_local_scope_new();
-
-sentry_scope_set_tag(scope, "my-tag", "my scoped value");
-
-// Set a user with id, username, email, and ip_address
-sentry_value_t user = sentry_value_new_user("42", "Jane Doe", "jane.doe@example.com", "{{auto}}");
+```c
+sentry_scope_set_tag(scope, "my-tag", "my value");
 sentry_scope_set_user(scope, user);
-
-sentry_value_t event = sentry_value_new_event();
-/* ... */
-sentry_capture_event_with_scope(event, scope);
 ```
+
+Alongside tags and users, scopes accept breadcrumbs, contexts, extras, levels, fingerprints, attributes, and attachments:
+
+```c
+sentry_scope_add_breadcrumb(scope, breadcrumb);
+sentry_scope_set_context(scope, "character", character);
+sentry_scope_update_context(scope, "character", partial_character);
+sentry_scope_set_extra(scope, "character.name", name);
+sentry_scope_set_level(scope, SENTRY_LEVEL_WARNING);
+sentry_scope_set_fingerprint(scope, "my-fingerprint", NULL);
+sentry_scope_set_attribute(scope, "cache.backend", attribute);
+sentry_scope_attach_file(scope, "/var/local.log");
+```
+
+The ones taking a string key or path also have an `_n` variant that takes explicit lengths, such as `sentry_scope_set_tag_n` and `sentry_scope_attach_file_n`.

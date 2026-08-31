@@ -178,11 +178,11 @@ Please note that the Sentry server [limits HTTP request body size](https://devel
 
 </SdkOption>
 
-<SdkOption name="max_value_length" type='int' defaultValue='100 000'>
+<SdkOption name="max_value_length" type='Optional[int]' defaultValue='None'>
 
-The number of characters after which the values containing text in the event payload will be truncated.
+The number of characters after which the values containing text in the event payload will be truncated. If set to `None` (default), no truncation will be performed.
 
-In SDK versions prior to `2.34.0`, the default was `1024`.
+In SDK versions prior to `2.61`, the default was `100_000`. In SDK versions prior to `2.34.0`, the default was `1024`.
 
 </SdkOption>
 
@@ -626,9 +626,21 @@ Self-hosted Sentry users should set this option to `False`, as standalone `gen_a
 
 <SdkOption name="enable_logs" type='bool' defaultValue='False'>
 
-Enables Sentry structured logs, allowing you to use the `sentry_sdk.logger` APIs
-to send logs to Sentry. This option must be set to `True` to automatically capture logs from Python’s built-in logging module or other supported logging integrations.
+**Deprecated:** This option will be removed in the next major version. Use the `capture_sentry_logs` option on the [`logging`](/platforms/python/integrations/logging/#options) and [Loguru](/platforms/python/integrations/loguru/#options) integrations instead.
 
-New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
+The `sentry_sdk.logger` API works standalone and is not affected by this option.
+
+For automatic capture of logs from the standard library `logging` module and from Loguru, this option acts as a fallback. If an integration leaves `capture_sentry_logs` unset, `enable_logs=True` turns automatic capture on for that integration. Setting `capture_sentry_logs` on the integration always wins.
+
+| `enable_logs`     | `capture_sentry_logs` | Automatic capture |
+| ----------------- | --------------------- | ----------------- |
+| not set / `False` | not set               | off               |
+| `True`            | not set               | on                |
+| any               | `True`                | on                |
+| any               | `False`               | off               |
+
+In SDK versions prior to `2.68.0`, this option had to be set to `True` to use the `sentry_sdk.logger` API, and it also enabled automatic capture of logs from the standard library `logging` module and from Loguru. In version `2.68.0` only, the option had no effect at all. Upgrade to `2.68.1` or later if you rely on it.
+
+Deprecated in version `2.68.1`. New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
 
 </SdkOption>
