@@ -37,7 +37,7 @@ The Client supports several hook mechanisms for extensibility:
 - **`before_breadcrumb`** — a user-facing callback for modifying or discarding breadcrumbs
 - **`error_sampler`** — an optional callback deciding the sample rate of an individual error event
 
-[Callback Error Isolation](#callback-error-isolation) applies to every user-provided callback, including those specified elsewhere — the `before_send_*` variants for each telemetry type, the samplers, and event processors.
+[Callback Error Isolation](#callback-error-isolation) applies to every user-provided callback, including those specified elsewhere: the `before_send_*` variants for each telemetry type, the samplers, and event processors.
 
 Related specs:
 - [Client](/sdk/foundations/client/) — event pipeline, event processors, and capture methods
@@ -146,13 +146,13 @@ A failure is not a return value, so SDKs **MUST NOT** infer a drop or a pass fro
 | `profiles_sampler` | Fall back as if unconfigured | `sample_rate` if sampled out |
 | `error_sampler` | Fall back to `sample_rate` | `sample_rate` if sampled out |
 
-Filters drop because a callback that failed part-way may not have applied the redaction the user wrote it to apply. `before_send_span` keeps the span because it is specified as enrichment, not filtering — [`ignore_spans`](/sdk/telemetry/spans/filtering/) filters spans. Samplers **MUST** fall back to the behavior they would have used had no sampler been configured, including any inherited decision that takes precedence over the static rate, and **MUST NOT** substitute `0.0` or `1.0`.
+Filters drop because a callback that failed part-way may not have applied the redaction the user wrote it to apply. `before_send_span` keeps the span because it is specified as enrichment, not filtering. [`ignore_spans`](/sdk/telemetry/spans/filtering/) filters spans. Samplers **MUST** fall back to the behavior they would have used had no sampler been configured, including any inherited decision that takes precedence over the static rate, and **MUST NOT** substitute `0.0` or `1.0`.
 
 For the callbacks that keep the item, SDKs **SHOULD** pass a defensive copy so a partially mutated item can be restored. Where copying is impractical, SDKs **MUST** emit the item as it stands and **MUST NOT** apply any merge its own spec requires, such as the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
 
 A failure **MUST NOT** produce a billed event of any type. A dropped item **MUST** be reported exactly as it is on an explicit drop, and **MUST NOT** use a reason the callback could not otherwise produce; isolating a callback without reporting the loss is a conformance failure. Sampler failure is not distinguishable from ordinary sampling; reporting it would need a new discard reason, and `internal_sdk_error` is not a substitute because [SDK bugs are out of scope for client reports](/sdk/telemetry/client-reports/#discard-reasons).
 
-Pure C and C++ built without exceptions, and Rust built with `panic = "abort"`, cannot isolate a failing callback. Those SDKs **MUST** document that this section does not apply.
+This section does not apply to pure C and C++ built without exceptions, or to Rust built with `panic = "abort"`, which cannot isolate a failing callback.
 
 </SpecSection>
 
