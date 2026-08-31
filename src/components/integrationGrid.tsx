@@ -1,5 +1,4 @@
 import Link from 'next/link';
-
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
