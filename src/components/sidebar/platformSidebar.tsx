@@ -4,6 +4,17 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
+// AI library pages that live under agent-tracing but are also integrations.
+const AI_INTEGRATION_SLUGS = [
+  'anthropic',
+  'google-genai',
+  'langchain',
+  'langgraph',
+  'mastra',
+  'openai',
+  'vercelai',
+];
+
 export function PlatformSidebar({
   rootNode,
   platformName,
@@ -41,12 +52,35 @@ export function PlatformSidebar({
     return null;
   }
   const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
-  const tree = toTree(nodes.filter(n => !!n.context));
   const guide = guideName && getGuide(rootNode, platformName, guideName);
 
   const pathRoot = guide
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
+
+  // The AI library pages live under agent-tracing, but they're also integrations,
+  // so mirror them into the integrations list. These are link-only entries: they
+  // sit under configuration/integrations but point at the real agent-tracing page.
+  const aiIntegrationAliases = AI_INTEGRATION_SLUGS.map(slug => {
+    const target = nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing', slug]);
+    // Not every library is supported on every platform - skip where there's no page.
+    if (!target || target.missing || target.frontmatter.draft) {
+      return undefined;
+    }
+    return {
+      context: {
+        platform: {platformName},
+        title: target.frontmatter.title,
+        sidebar_title: target.frontmatter.sidebar_title,
+        // Deliberately no sidebar_order: these sort alphabetically among the
+        // other integrations rather than carrying their agent-tracing ordering.
+        href: '/' + target.path + '/',
+      },
+      path: `/${pathRoot}/configuration/integrations/${slug}/`,
+    };
+  }).filter(n => n !== undefined);
+
+  const tree = toTree([...nodes, ...aiIntegrationAliases].filter(n => !!n.context));
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';
