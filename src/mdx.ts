@@ -421,16 +421,21 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       }
       const guideName = guide.name;
 
-      let guideFrontmatter: FrontMatter | null = null;
+      let guideFrontmatter: (FrontMatter & PlatformConfig) | null = null;
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
       try {
         guideFrontmatter = yaml.load(
           await readFile(guideConfigPath, 'utf8')
-        ) as FrontMatter;
+        ) as FrontMatter & PlatformConfig;
       } catch (err) {
         if (err.code !== 'ENOENT') {
           throw err;
         }
+      }
+
+      // Standalone framework guides opt out of platform common/ inheritance.
+      if (!shouldInheritCommonContent(guideFrontmatter)) {
+        continue;
       }
 
       await Promise.all(
@@ -470,6 +475,28 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     }
   }
   return allFrontMatter;
+}
+
+/**
+ * Whether a guide should inherit pages from the parent platform's `common/` tree.
+ * Defaults to true when the flag is omitted.
+ */
+export function shouldInheritCommonContent(
+  config: Pick<PlatformConfig, 'inheritCommonContent'> | null | undefined
+): boolean {
+  return config?.inheritCommonContent !== false;
+}
+
+async function guideInheritCommonContentDisabled(configPath: string): Promise<boolean> {
+  try {
+    const config = yaml.load(await readFile(configPath, 'utf8')) as PlatformConfig;
+    return !shouldInheritCommonContent(config);
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      throw err;
+    }
+    return false;
+  }
 }
 
 /**
@@ -559,32 +586,42 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       )
     ).every(r => r.status === 'rejected')
   ) {
-    // Try the common folder.
+    // Try the common folder, unless this guide opted out of inheritance.
     const slugParts = slug.split('/');
-    const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
-    let commonFilePath: string | undefined;
-    if (
+    const guideSkipsCommon =
       slugParts.length >= 5 &&
       slugParts[1] === 'platforms' &&
-      slugParts[3] === 'guides'
-    ) {
-      commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
-    } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
-      commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
-      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-    }
-    if (commonFilePath) {
-      try {
-        await access(commonPath);
-        mdxPath = path.join(root, `${commonFilePath}.mdx`);
-        mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
-        mdPath = path.join(root, `${commonFilePath}.md`);
-        mdIndexPath = path.join(root, commonFilePath, 'index.md');
+      slugParts[3] === 'guides' &&
+      (await guideInheritCommonContentDisabled(
+        path.join(root, slugParts.slice(0, 5).join('/'), 'config.yml')
+      ));
+
+    if (!guideSkipsCommon) {
+      const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
+      let commonFilePath: string | undefined;
+      if (
+        slugParts.length >= 5 &&
+        slugParts[1] === 'platforms' &&
+        slugParts[3] === 'guides'
+      ) {
+        commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
+      } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
+        commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
         versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-      } catch (err) {
-        // If the common folder does not exist, we can ignore it.
-        if (err.code !== 'ENOENT') {
-          throw err;
+      }
+      if (commonFilePath) {
+        try {
+          await access(commonPath);
+          mdxPath = path.join(root, `${commonFilePath}.mdx`);
+          mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
+          mdPath = path.join(root, `${commonFilePath}.md`);
+          mdIndexPath = path.join(root, commonFilePath, 'index.md');
+          versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
+        } catch (err) {
+          // If the common folder does not exist, we can ignore it.
+          if (err.code !== 'ENOENT') {
+            throw err;
+          }
         }
       }
     }

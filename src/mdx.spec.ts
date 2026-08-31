@@ -1,6 +1,11 @@
 import {describe, expect, test} from 'vitest';
 
-import {addVersionToFilePath, getVersionedIndexPath, getVersionsFromDoc} from './mdx';
+import {
+  addVersionToFilePath,
+  getVersionedIndexPath,
+  getVersionsFromDoc,
+  shouldInheritCommonContent,
+} from './mdx';
 import {FrontMatter} from './types';
 
 const mockFm: FrontMatter[] = [
@@ -115,6 +120,22 @@ describe('mdx', () => {
       expect(addVersionToFilePath('platforms/javascript/index.mdx', '2')).toBe(
         'platforms/javascript/index__v2.mdx'
       );
+    });
+  });
+
+  describe('shouldInheritCommonContent', () => {
+    test('defaults to true when omitted', () => {
+      expect(shouldInheritCommonContent(undefined)).toBe(true);
+      expect(shouldInheritCommonContent(null)).toBe(true);
+      expect(shouldInheritCommonContent({})).toBe(true);
+    });
+
+    test('is true when explicitly enabled', () => {
+      expect(shouldInheritCommonContent({inheritCommonContent: true})).toBe(true);
+    });
+
+    test('is false when disabled for standalone framework guides', () => {
+      expect(shouldInheritCommonContent({inheritCommonContent: false})).toBe(false);
     });
   });
 });

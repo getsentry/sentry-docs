@@ -236,13 +236,13 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
         const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
         return readFile(guideConfigPath, 'utf8').then(content => ({
           guideName,
-          config: yaml.load(content) as FrontMatter,
+          config: yaml.load(content) as FrontMatter & PlatformConfig,
         }));
       })
     );
 
     // Create a map of guide configs
-    const guideConfigs = new Map<string, FrontMatter | null>();
+    const guideConfigs = new Map<string, (FrontMatter & PlatformConfig) | null>();
     guideConfigResults.forEach((result, index) => {
       const guideName = guideNames[index];
       if (result.status === 'fulfilled') {
@@ -260,6 +260,12 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     // Process each guide
     for (const guideName of guideNames) {
       const guideFrontmatter = guideConfigs.get(guideName) || null;
+
+      // Standalone framework guides opt out of platform common/ inheritance.
+      // Defaults to true when omitted (normal SDK guides).
+      if (guideFrontmatter?.inheritCommonContent === false) {
+        continue;
+      }
 
       await Promise.all(
         commonFiles.map(
