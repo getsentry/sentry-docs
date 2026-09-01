@@ -3,7 +3,8 @@
  *
  * Each item is a standalone MDX file with tagged frontmatter, rendered by the
  * interactive migration guide at
- * `docs/platforms/javascript/common/migration/v10-to-v11.mdx`. Because the page
+ * `docs/platforms/javascript/common/migration/v10-to-v11/interactive.mdx`. Because
+ * the page
  * filters, counts and serializes items based on that frontmatter, a mistyped
  * facet silently drops an item from a user's guide rather than failing loudly.
  * This script is the guard against that.
