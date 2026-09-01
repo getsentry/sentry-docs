@@ -8,16 +8,18 @@ interface FeatureBadgeProps {
   size?: BadgeSize;
 }
 
-const BADGE_CONFIG: Record<BadgeType, {label: string; className: string; title?: string}> =
-  {
-    new: {label: 'NEW', className: styles.newBadge},
-    beta: {label: 'BETA', className: styles.betaBadge},
-    early_access: {
-      label: 'EA',
-      className: styles.eaBadge,
-      title: 'Early access',
-    },
-  };
+const BADGE_CONFIG: Record<
+  BadgeType,
+  {label: string; className: string; title?: string}
+> = {
+  new: {label: 'NEW', className: styles.newBadge},
+  beta: {label: 'BETA', className: styles.betaBadge},
+  early_access: {
+    label: 'EA',
+    className: styles.eaBadge,
+    title: 'Early access',
+  },
+};
 
 export function FeatureBadge({type, size = 'default'}: FeatureBadgeProps) {
   const {label, className, title} = BADGE_CONFIG[type];
