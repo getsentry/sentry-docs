@@ -127,6 +127,11 @@ If your application never executes code from inline scripts — for example, bec
 ```javascript
 Sentry.init({
   beforeSend(event) {
+    // This heuristic only applies to errors captured in the browser
+    if (typeof window === "undefined") {
+      return event;
+    }
+
     const frames =
       event.exception?.values?.flatMap(
         (value) => value.stacktrace?.frames ?? []
