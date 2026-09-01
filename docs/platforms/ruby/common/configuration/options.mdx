@@ -80,9 +80,62 @@ config.send_client_reports = false
 
 <SdkOption name="send_default_pii" type="Boolean" defaultValue="false">
 
+<Alert level="warning">
+  `send_default_pii` is deprecated. Migrate to
+  [`data_collection`](#data_collection) for granular control over automatically
+  collected data.
+</Alert>
+
 If this flag is enabled, [certain personally identifiable information (PII)](/platforms/ruby/data-management/data-collected/) is added to Sentry events.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</SdkOption>
+
+<SdkOption name="data_collection" type="Sentry::DataCollection" availableSince="7.0.0">
+
+Controls which categories of data the SDK collects automatically. All fields are optional.
+
+In this major version, the SDK backfills these settings from `send_default_pii`, which defaults to `false`, to preserve the legacy privacy defaults. The more permissive defaults listed below will apply automatically in the next major version. Migrate from `send_default_pii` by configuring the categories you want to collect with these options.
+
+With the defaults listed below, the SDK collects rich debugging context, including user identity, HTTP request bodies, URL query parameters, database query data and queue data. It also scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
+
+```ruby
+Sentry.init do |config|
+  config.data_collection.user_info = true
+  config.data_collection.http_bodies = [:incoming_request, :outgoing_request]
+end
+```
+
+| Key                     | Type                            | Default (7.0.0) | Default (8.0.0) | Description                                                                                                                                              |
+| ----------------------- | ------------------------------- | --------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user_info`             | `Boolean`                       | `false`         | `true`          | Automatically collect user information, including the IP address inferred from Rack requests. Explicitly set user data is not gated.                     |
+| `cookies`               | `Boolean \| KeyValueCollection` | `:off`          | `:deny_list`    | Collect cookie names and values. Sensitive values are scrubbed.                                                                                          |
+| `http_headers.request`  | `Boolean \| KeyValueCollection` | `:deny_list`    | `:deny_list`    | Collect HTTP request headers.                                                                                                                            |
+| `http_headers.response` | `Boolean \| KeyValueCollection` | `:deny_list`    | `:deny_list`    | Collect HTTP response headers.                                                                                                                           |
+| `http_bodies`           | `Array<Symbol>`                 | `[]`            | all body types  | Body types to collect: `:incoming_request`, `:outgoing_request`, `:incoming_response`, and `:outgoing_response`. Set to `[]` to disable body collection. |
+| `url_query_params`      | `Boolean \| KeyValueCollection` | `:off`          | `:deny_list`    | Collect URL query parameters. Sensitive values are scrubbed.                                                                                             |
+| `database_query_data`   | `Boolean`                       | `false`         | `true`          | Collect data associated with database queries, such as bound parameters and Redis command arguments.                                                     |
+| `queues`                | `Boolean`                       | `false`         | `true`          | Collect queue or Active Job arguments and execution context where the integration supports it.                                                           |
+| `stack_frame_variables` | `Boolean`                       | `false`         | `false`         | Capture local variable values in stack frames.                                                                                                           |
+| `frame_context_lines`   | `Integer`                       | `3`             | `3`             | Source code lines captured around each stack frame.                                                                                                      |
+
+The `cookies`, `http_headers.request`, `http_headers.response`, and `url_query_params` categories use `KeyValueCollection`. You can also set these options to a boolean: `true` uses `:deny_list` mode and `false` uses `:off` mode. Set `mode` to control whether values are collected:
+
+```ruby
+# :off         -> collect no keys or values
+# :deny_list   -> collect values except those matching terms
+# :allow_list  -> send real values only for keys matching terms
+config.data_collection.http_headers.request.mode = :allow_list
+config.data_collection.http_headers.request.terms = ["content-type", "x-request-id"]
+
+config.data_collection.url_query_params.mode = :deny_list
+config.data_collection.url_query_params.terms = ["tracking_id"]
+```
+
+In `:deny_list` mode, custom `terms` extend the built-in sensitive denylist. In `:allow_list` mode, values for sensitive keys are still replaced with `[Filtered]`. String terms use a case-insensitive partial match; `Regexp` terms are also supported.
 
 </SdkOption>
 
@@ -98,6 +151,11 @@ config.send_modules = false
 </SdkOption>
 
 <SdkOption name="include_local_variables" type="Boolean" defaultValue="false">
+
+<Alert level="warning">
+  `include_local_variables` is deprecated. Use
+  `config.data_collection.stack_frame_variables` instead.
+</Alert>
 
 Whether to capture local variables from the raised exceptions frame.
 
@@ -144,6 +202,11 @@ Logger names to exclude from breadcrumbs.
 </SdkOption>
 
 <SdkOption name="context_lines" type="Integer" defaultValue="3">
+
+<Alert level="warning">
+  `context_lines` is deprecated. Use
+  `config.data_collection.frame_context_lines` instead.
+</Alert>
 
 How many lines to display before/after the line where issue occurs.
 
@@ -240,6 +303,12 @@ Determine whether to ignore exceptions caused by rake integrations.
 </SdkOption>
 
 <SdkOption name="rack_env_whitelist" type="Array<String>" defaultValue='["REMOTE_ADDR", "SERVER_NAME", "SERVER_PORT"]'>
+
+<Alert level="warning">
+  `rack_env_whitelist` is deprecated. Use
+  `config.data_collection.http_headers.request` to control request data
+  collection instead.
+</Alert>
 
 Array of rack env parameters to be included in the event sent to sentry.
 
