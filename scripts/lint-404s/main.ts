@@ -2,7 +2,7 @@ import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
 import {fileURLToPath} from 'url';
 
-import {dedupeSlugsBySource, parseDedupeMode, type DedupeMode} from './dedupe';
+import {type DedupeMode,dedupeSlugsBySource, parseDedupeMode} from './dedupe';
 
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
@@ -151,8 +151,7 @@ async function main() {
     const isLocalhost = (href_: string) =>
       href_.startsWith('http') && new URL(href_).hostname === 'localhost';
     const isIp = (href_: string) => /(\d{1,3}\.){3}\d{1,3}/.test(href_);
-    const isImage = (href_: string) =>
-      /\.(png|jpg|jpeg|gif|svg|webp)$/.test(href_);
+    const isImage = (href_: string) => /\.(png|jpg|jpeg|gif|svg|webp)$/.test(href_);
 
     return [
       isExternal,
@@ -184,7 +183,9 @@ async function main() {
     return false;
   }
 
-  async function checkSlug(slug: string): Promise<{page404s: Link[]; slug: string} | null> {
+  async function checkSlug(
+    slug: string
+  ): Promise<{page404s: Link[]; slug: string} | null> {
     const pageUrl = new URL(slug, baseURL);
     const now = performance.now();
     const html = await fetchWithFollow(pageUrl.href).then(r => r.text());

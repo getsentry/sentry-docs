@@ -69,19 +69,19 @@ Check every sitemap URL. Useful for debugging path routing or proving expand-com
 
 From recent `Lint Docs for 404s` CI on `master` (unique-source):
 
-| Phase | ~Duration |
-| --- | --- |
-| install + full `pnpm build` | ~12 min |
-| link check (~2475 pages, sequential pages) | ~1.0–1.1 min |
-| **job total** | **~14–15 min** |
+| Phase                                      | ~Duration      |
+| ------------------------------------------ | -------------- |
+| install + full `pnpm build`                | ~12 min        |
+| link check (~2475 pages, sequential pages) | ~1.0–1.1 min   |
+| **job total**                              | **~14–15 min** |
 
 Rough expectations after this change (link-check step only; build unchanged):
 
-| Mode | Pages (approx) | Link-check wall time (approx) |
-| --- | --- | --- |
-| `--unique-source` (old default) | ~2.5k | ~1 min sequential / lower with concurrency |
-| `expand-common` (new default) | ~9–10k | ~3–5 min at concurrency 8 (depends on runner) |
-| `--all-pages` | ~10k | similar to expand-common today |
+| Mode                            | Pages (approx) | Link-check wall time (approx)                 |
+| ------------------------------- | -------------- | --------------------------------------------- |
+| `--unique-source` (old default) | ~2.5k          | ~1 min sequential / lower with concurrency    |
+| `expand-common` (new default)   | ~9–10k         | ~3–5 min at concurrency 8 (depends on runner) |
+| `--all-pages`                   | ~10k           | similar to expand-common today                |
 
 Build still dominates the workflow. A closed attempt to lighten the build for this job: [#18883](https://github.com/getsentry/sentry-docs/pull/18883).
 

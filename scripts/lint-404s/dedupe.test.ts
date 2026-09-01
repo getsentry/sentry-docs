@@ -1,21 +1,15 @@
 import {describe, expect, it} from 'vitest';
 
-import {
-  dedupeSlugsBySource,
-  isPlatformCommonSource,
-  parseDedupeMode,
-} from './dedupe';
+import {dedupeSlugsBySource, isPlatformCommonSource, parseDedupeMode} from './dedupe';
 
 describe('isPlatformCommonSource', () => {
   it('detects platform common paths', () => {
     expect(
-      isPlatformCommonSource(
-        'docs/platforms/javascript/common/agent-tracing/index.mdx'
-      )
+      isPlatformCommonSource('docs/platforms/javascript/common/agent-tracing/index.mdx')
     ).toBe(true);
-    expect(
-      isPlatformCommonSource('docs/platforms/python/common/tracing/index.mdx')
-    ).toBe(true);
+    expect(isPlatformCommonSource('docs/platforms/python/common/tracing/index.mdx')).toBe(
+      true
+    );
     expect(isPlatformCommonSource('docs/product/agents/index.mdx')).toBe(false);
     expect(isPlatformCommonSource(null)).toBe(false);
   });
