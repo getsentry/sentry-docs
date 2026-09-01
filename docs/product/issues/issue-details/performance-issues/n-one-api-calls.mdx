@@ -7,6 +7,8 @@ og_image: /og-images/product-issues-issue-details-performance-issues-n-one-api-c
 
 _N+1 API Calls_ are a performance problem that happens when an application makes many simultaneous network requests to fetch a given type of resource. For example, when an application makes one network request for each item on a list instead of fetching all the information at once in a single combined network call. Each call to the server incurs performance overhead, and if the number of calls is high, it can lead to significant performance problems. This problem commonly occurs when rendering lists or grids of items, where each item needs to fetch additional information from the server.
 
+Filter HTTP client performance issues with `issue.category:http_client` in **Issues** and **Dashboards**.
+
 ## Affected Platforms
 
 Sentry detects N+1 API Calls in frontend and mobile applications. The detector is both language and platform-agnostic. You can expect to see this problem in environments like React, Vue, Angular, React Native, Android, and others. Backend environments aren't supported at this time.
@@ -34,15 +36,16 @@ You can identify the root cause of your N+1 API Call problems by looking at thre
 
 - Transaction name
 - Repeating spans - This is the URL that's receiving the repeated network calls
-- Parameters - These are the query parameters that vary between the network calls
+- Query and Path Parameters - These are the parameters that vary between the network calls
+- Waterfall trace view - Shows the parent span in which the issue occurred
 
 ![N+1 API Calls span evidence](./img/n-plus-one-api-calls-evidence.png)
 
-View it by going to the **Issues** page in Sentry, clicking on the N+1 API Call error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+View it by going to the **Issues** page in Sentry, clicking on the N+1 API Call error you want to examine, then scrolling down to the "Span Evidence" section.
 
 ## Fingerprinting
 
-Sentry computes the issue fingerprint based on the URLs of the repeating network calls. Sentry parameterizes the URLs by stripping integers, UUIDs, SHA1 hashes, and MD5 hashes. If you're finding that Sentry is failing to correctly group N+1 API Call issues, you can parameterize the `http.client` spans in your transactions by using the <PlatformLink to="/configuration/options#before-send-transaction">before-send-transaction</PlatformLink> hook if your platform supports it.
+Sentry computes the issue fingerprint based on the URLs of the repeating network calls. Sentry parameterizes the URLs by stripping integers, UUIDs, SHA1 hashes, and MD5 hashes. If you find that Sentry fails to group N+1 API Call issues correctly, you can parameterize the `http.client` spans in your transactions by using either the `before-send-transaction` or `before-send-span` <PlatformLink to="/configuration/options">hook</PlatformLink> if your platform supports it.
 
 ## Example
 
@@ -64,9 +67,7 @@ const Book({ id }) => {
 };
 ```
 
-If the list has 100 books in it, the page will make 100 network calls simultaneously. The number 100 is the "N" in "N+1 API Call". This effect is visible in the span waterfall, which shows all the simultaneous network requests:
-
-![N+1 API Calls in an example application](./img/n-plus-one-api-calls-in-book-application.png)
+If the list has 100 books in it, the page will make 100 network calls simultaneously. The number 100 is the "N" in "N+1 API Call". This effect is visible in the span waterfall, which shows all the simultaneous network requests.
 
 ## Fixing N+1 API Call Issues
 
