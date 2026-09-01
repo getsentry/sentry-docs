@@ -2,7 +2,7 @@ import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
 import {fileURLToPath} from 'url';
 
-import {type DedupeMode,dedupeSlugsBySource, parseDedupeMode} from './dedupe';
+import {type DedupeMode, dedupeSlugsBySource, parseDedupeMode} from './dedupe';
 
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
