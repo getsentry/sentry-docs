@@ -111,6 +111,55 @@ This is the case because the Sentry Loader Script and CDN Bundles are detected a
 
 </Alert>
 
+### Filtering Errors From Injected Scripts
+
+Scripts that third parties inject directly into your page as inline `<script>` elements — a common pattern for tag managers such as Google Tag Manager, ad providers, or A/B testing tools — pose a special filtering challenge.
+When such a script throws, the browser attributes the error to the document URL ("global code") rather than to a script file.
+As a result:
+
+- `allowUrls` and `denyUrls` won't match, because the stack frames don't reference the third-party script's URL.
+- `thirdPartyErrorFilterIntegration` can't classify the frames, because inline scripts are not processed by your bundler and therefore carry no application key.
+
+These errors typically surface via the global `onerror` handler with a stack trace consisting of a single frame pointing at your own page URL, often with a minified message (for example, `Error: pa`) that changes between builds of the third-party script.
+
+If your application never executes code from inline scripts — for example, because all of your code is served from bundled files under a known path — you can filter these errors with a <PlatformIdentifier name="before-send" /> hook that inspects the stack frames:
+
+```javascript
+Sentry.init({
+  beforeSend(event) {
+    const frames =
+      event.exception?.values?.flatMap(
+        (value) => value.stacktrace?.frames ?? []
+      ) ?? [];
+
+    // Adjust this check to match where your bundled application code is served from
+    const isApplicationFrame = (frame) => frame.filename?.includes("/assets/");
+    const isDocumentFrame = (frame) =>
+      frame.filename?.startsWith(`${window.location.origin}/`) &&
+      !isApplicationFrame(frame);
+
+    // Drop errors that contain no application frames and at least one frame
+    // attributed to the document itself (i.e. an inline or injected script)
+    if (
+      frames.length > 0 &&
+      !frames.some(isApplicationFrame) &&
+      frames.some(isDocumentFrame)
+    ) {
+      return null;
+    }
+
+    return event;
+  },
+});
+```
+
+<Alert>
+
+Because the browser reports inline first-party scripts and injected third-party scripts identically, this filter will also drop errors thrown by inline scripts you ship yourself.
+Only use this approach if your own inline scripts are trivial, or narrow the check accordingly.
+
+</Alert>
+
 ## Filtering Transaction Events
 
 <Alert>
