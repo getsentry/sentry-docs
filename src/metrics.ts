@@ -92,13 +92,22 @@ export const DocMetrics = {
    * @param path - Full requested path segments (the invented URL is the signal)
    * @param hasSuggestions - Whether sibling/section suggestions were returned
    * @param agent - Normalized agent name (e.g. "claude", "gptbot"), or "other"
+   * @param outcome - Why the export was missing: "redirected" (path has a redirect,
+   *   we pointed at the destination), "page_exists" (page is in the doctree, so the
+   *   static export pipeline had a gap), or "unknown_path" (agent invented the URL)
    */
-  mdExportNotFound: (path: string[], hasSuggestions: boolean, agent: string) => {
+  mdExportNotFound: (
+    path: string[],
+    hasSuggestions: boolean,
+    agent: string,
+    outcome: MdExportMissOutcome
+  ) => {
     Sentry.metrics.count('docs.md_export.not_found', 1, {
       attributes: {
         requested_path: path.join('/'),
         has_suggestions: hasSuggestions,
         agent,
+        outcome,
       },
     });
   },
@@ -184,6 +193,12 @@ export const DocMetrics = {
     });
   },
 };
+
+/**
+ * Why a Markdown export request missed the static files.
+ * Distinguishes "the agent invented a URL" from "our export pipeline has a gap".
+ */
+export type MdExportMissOutcome = 'redirected' | 'page_exists' | 'unknown_path';
 
 /**
  * Page type represents the main documentation section

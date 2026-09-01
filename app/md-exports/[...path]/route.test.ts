@@ -16,6 +16,21 @@ vi.mock('@sentry/nextjs', () => ({
   metrics: {count: metricsCount},
 }));
 
+// Hermetic redirect tables: the route unions next.config's redirects.js with the
+// middleware's legacy list, skipping pattern (`:path*`) sources.
+vi.mock('../../../redirects', () => ({
+  userDocsRedirects: [
+    {source: '/old-page/', destination: '/new-page/'},
+    {source: '/product/alerts/:path*', destination: '/product/monitors-and-alerts/'},
+  ],
+  developerDocsRedirects: [],
+}));
+
+vi.mock('../../../middleware', () => ({
+  USER_DOCS_REDIRECTS: [{from: '/product/sentry-mcp/', to: 'https://mcp.sentry.dev'}],
+  DEVELOPER_DOCS_REDIRECTS: [],
+}));
+
 const SAMPLE_DOCTREE = {
   path: '',
   slug: '',
@@ -165,6 +180,7 @@ describe('md-exports 404 catch-all route', () => {
           requested_path: 'platforms/javascript/made/up/page',
           has_suggestions: true,
           agent: 'claude',
+          outcome: 'unknown_path',
         },
       })
     );
@@ -177,5 +193,82 @@ describe('md-exports 404 catch-all route', () => {
       1,
       expect.objectContaining({attributes: expect.objectContaining({agent: 'other'})})
     );
+  });
+
+  describe('redirected paths', () => {
+    it('points internal redirects at the destination .md export', async () => {
+      const res = await callRoute(['old-page.md']);
+      const body = await res.text();
+      expect(body).toContain('# Page Moved');
+      expect(body).toContain('https://docs.sentry.io/new-page.md');
+      expect(body).toContain('title: "Page Moved"');
+    });
+
+    it('links external redirect destinations as-is', async () => {
+      const res = await callRoute(['product', 'sentry-mcp.md']);
+      const body = await res.text();
+      expect(body).toContain('# Page Moved');
+      expect(body).toContain('https://mcp.sentry.dev');
+      expect(body).not.toContain('mcp.sentry.dev.md');
+    });
+
+    it('emits the metric with a redirected outcome', async () => {
+      await callRoute(['old-page.md']);
+      expect(metricsCount).toHaveBeenCalledWith(
+        'docs.md_export.not_found',
+        1,
+        expect.objectContaining({
+          attributes: expect.objectContaining({outcome: 'redirected'}),
+        })
+      );
+    });
+
+    it('ignores pattern redirect sources', async () => {
+      const res = await callRoute(['product', 'alerts', 'foo.md']);
+      const body = await res.text();
+      expect(body).toContain('# Page Not Found');
+      expect(metricsCount).toHaveBeenCalledWith(
+        'docs.md_export.not_found',
+        1,
+        expect.objectContaining({
+          attributes: expect.objectContaining({outcome: 'unknown_path'}),
+        })
+      );
+    });
+  });
+
+  describe('pages that exist but have no export', () => {
+    it('says the export is unavailable and links the HTML page', async () => {
+      const res = await callRoute(['platforms', 'javascript.md']);
+      const body = await res.text();
+      expect(body).toContain('# Markdown Export Unavailable');
+      expect(body).toContain('https://docs.sentry.io/platforms/javascript/');
+    });
+
+    it('lists the page children as suggestions', async () => {
+      const res = await callRoute(['platforms', 'javascript.md']);
+      const body = await res.text();
+      expect(body).toContain('Pages in Browser JavaScript');
+      expect(body).toContain('Installation Methods');
+    });
+
+    it('uses a shorter cache lifetime so a fixed export takes over quickly', async () => {
+      const res = await callRoute(['platforms', 'javascript.md']);
+      expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
+    });
+
+    it('emits the metric with a page_exists outcome', async () => {
+      await callRoute(['platforms', 'javascript.md']);
+      expect(metricsCount).toHaveBeenCalledWith(
+        'docs.md_export.not_found',
+        1,
+        expect.objectContaining({
+          attributes: expect.objectContaining({
+            outcome: 'page_exists',
+            has_suggestions: true,
+          }),
+        })
+      );
+    });
   });
 });

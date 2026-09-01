@@ -3,7 +3,10 @@ import {join} from 'node:path';
 
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {AI_AGENT_PATTERN, matchPattern} from 'sentry-docs/lib/trafficClassification';
-import {DocMetrics} from 'sentry-docs/metrics';
+import {DocMetrics, MdExportMissOutcome} from 'sentry-docs/metrics';
+
+import {DEVELOPER_DOCS_REDIRECTS, USER_DOCS_REDIRECTS} from '../../../middleware';
+import {developerDocsRedirects, userDocsRedirects} from '../../../redirects';
 
 interface DocTreeNode {
   path: string;
@@ -66,6 +69,130 @@ function renderSiblingList(siblings: DocTreeNode[], baseUrl: string): string {
     .join('\n');
 }
 
+let cachedRedirectLookup: Map<string, string> | null = null;
+
+/**
+ * Literal-source redirects from both redirect tables (next.config's redirects.js
+ * and the middleware's legacy list), keyed by source path without trailing slash.
+ * Pattern sources (`:path*` etc.) are skipped — the metric will show whether they
+ * matter enough to support.
+ */
+function getRedirectLookup(): Map<string, string> {
+  if (cachedRedirectLookup) {
+    return cachedRedirectLookup;
+  }
+  const lookup = new Map<string, string>();
+  const nextConfigRedirects = isDeveloperDocs
+    ? developerDocsRedirects
+    : userDocsRedirects;
+  const middlewareRedirects = isDeveloperDocs
+    ? DEVELOPER_DOCS_REDIRECTS
+    : USER_DOCS_REDIRECTS;
+  for (const {source, destination} of nextConfigRedirects) {
+    if (!source.includes(':')) {
+      lookup.set(normalizeRedirectPath(source), destination);
+    }
+  }
+  for (const {from, to} of middlewareRedirects) {
+    if (!from.includes(':')) {
+      lookup.set(normalizeRedirectPath(from), to);
+    }
+  }
+  cachedRedirectLookup = lookup;
+  return lookup;
+}
+
+function normalizeRedirectPath(source: string): string {
+  return '/' + source.replace(/^\/+/, '').replace(/\/+$/, '');
+}
+
+/**
+ * The URL to advertise for a redirect destination. Internal destinations get the
+ * `.md` export URL; destinations with a query string (e.g. `/platform-redirect/?next=…`)
+ * and external ones are linked as-is, since no `.md` variant exists for them.
+ */
+function destinationUrl(destination: string): string {
+  if (/^https?:\/\//.test(destination)) {
+    return destination;
+  }
+  if (destination.includes('?') || destination.includes('#')) {
+    return `${BASE_URL}${destination}`;
+  }
+  return `${BASE_URL}${normalizeRedirectPath(destination)}.md`;
+}
+
+function frontmatterLines(title: string, requestedPath: string): string[] {
+  return ['---', `title: "${title}"`, `url: "${BASE_URL}/${requestedPath}"`, '---', ''];
+}
+
+function findWhatYouNeedLines(): string[] {
+  return [
+    '## Find what you need',
+    '',
+    `- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`,
+    `- [Documentation root](${BASE_URL}/index.md) — full docs overview`,
+    `- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`,
+    '',
+  ];
+}
+
+function renderMovedBody(requestedPath: string, destination: string): string {
+  return [
+    ...frontmatterLines('Page Moved', requestedPath),
+    '# Page Moved',
+    '',
+    `The page \`/${requestedPath}\` has moved to:`,
+    '',
+    `- [${destination}](${destinationUrl(destination)})`,
+    '',
+    ...findWhatYouNeedLines(),
+  ].join('\n');
+}
+
+function renderExportMissingBody(requestedPath: string, node: DocTreeNode): string {
+  const title = node.frontmatter?.title || node.slug;
+  const lines = [
+    ...frontmatterLines('Markdown Export Unavailable', requestedPath),
+    '# Markdown Export Unavailable',
+    '',
+    `The page \`/${requestedPath}\` ("${title}") exists, but its Markdown export was not available for this request. Retry shortly, or use the HTML page:`,
+    '',
+    `- [${title}](${BASE_URL}/${requestedPath}/)`,
+    '',
+  ];
+  if (node.children?.length) {
+    lines.push(
+      `## Pages in ${title}`,
+      '',
+      renderSiblingList(node.children, BASE_URL),
+      ''
+    );
+  }
+  lines.push(...findWhatYouNeedLines());
+  return lines.join('\n');
+}
+
+function renderNotFoundBody(requestedPath: string, ancestor: DocTreeNode | null): string {
+  const lines = [
+    ...frontmatterLines('Page Not Found', requestedPath),
+    '# Page Not Found',
+    '',
+    `The page \`/${requestedPath}\` does not exist.`,
+    '',
+  ];
+  if (ancestor && ancestor.children?.length) {
+    const ancestorTitle = ancestor.frontmatter?.title || ancestor.slug || 'this section';
+    lines.push(
+      `## Pages in ${ancestorTitle}`,
+      '',
+      renderSiblingList(ancestor.children, BASE_URL),
+      ''
+    );
+  }
+  lines.push(...findWhatYouNeedLines());
+  return lines.join('\n');
+}
+
 export async function GET(
   request: Request,
   {params}: {params: Promise<{path: string[]}>}
@@ -75,59 +202,31 @@ export async function GET(
 
   let body: string;
   let hasSuggestions = false;
+  let outcome: MdExportMissOutcome = 'unknown_path';
 
-  try {
-    const tree = await getDocTree();
-    const ancestor = findClosestAncestor(tree, requestedPath.split('/'));
+  const redirectDestination = getRedirectLookup().get(`/${requestedPath}`);
 
-    const lines: string[] = [
-      '---',
-      `title: "Page Not Found"`,
-      `url: "${BASE_URL}/${requestedPath}"`,
-      '---',
-      '',
-      '# Page Not Found',
-      '',
-      `The page \`/${requestedPath}\` does not exist.`,
-      '',
-    ];
+  if (redirectDestination) {
+    outcome = 'redirected';
+    body = renderMovedBody(requestedPath, redirectDestination);
+  } else {
+    try {
+      const tree = await getDocTree();
+      const ancestor = findClosestAncestor(tree, requestedPath.split('/'));
 
-    if (ancestor && ancestor.children?.length) {
-      hasSuggestions = true;
-      const ancestorTitle =
-        ancestor.frontmatter?.title || ancestor.slug || 'this section';
-      lines.push(`## Pages in ${ancestorTitle}`);
-      lines.push('');
-      lines.push(renderSiblingList(ancestor.children, BASE_URL));
-      lines.push('');
+      if (ancestor && ancestor.path === requestedPath) {
+        // The page is real — the static export is what's missing (deploy window,
+        // export-pipeline gap). Very different signal from an invented URL.
+        outcome = 'page_exists';
+        hasSuggestions = !!ancestor.children?.length;
+        body = renderExportMissingBody(requestedPath, ancestor);
+      } else {
+        hasSuggestions = !!(ancestor && ancestor.children?.length);
+        body = renderNotFoundBody(requestedPath, ancestor);
+      }
+    } catch {
+      body = renderNotFoundBody(requestedPath, null);
     }
-
-    lines.push('## Find what you need');
-    lines.push('');
-    lines.push(`- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`);
-    lines.push(`- [Documentation root](${BASE_URL}/index.md) — full docs overview`);
-    lines.push(`- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`);
-    lines.push('');
-
-    body = lines.join('\n');
-  } catch {
-    body = [
-      '---',
-      `title: "Page Not Found"`,
-      `url: "${BASE_URL}/${requestedPath}"`,
-      '---',
-      '',
-      '# Page Not Found',
-      '',
-      `The page \`/${requestedPath}\` does not exist.`,
-      '',
-      '## Find what you need',
-      '',
-      `- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`,
-      `- [Documentation root](${BASE_URL}/index.md) — full docs overview`,
-      `- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`,
-      '',
-    ].join('\n');
   }
 
   // Normalize the agent to a low-cardinality name (e.g. "claude", "gptbot") rather
@@ -137,7 +236,7 @@ export async function GET(
 
   // Track the full invented URL by agent so we can see which agents make up which
   // pages most (and whether the soft-404 had suggestions to offer them).
-  DocMetrics.mdExportNotFound(requestedPath.split('/'), hasSuggestions, agent);
+  DocMetrics.mdExportNotFound(requestedPath.split('/'), hasSuggestions, agent, outcome);
 
   // Return 200 (not 404) on purpose. This route serves a Markdown "page not found"
   // helper that links to real nearby pages so AI agents can self-correct. Many agent
@@ -151,7 +250,10 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': 'text/markdown; charset=utf-8',
-      'Cache-Control': 'public, max-age=300',
+      // page_exists misses are usually transient (deploy windows), so let a fixed
+      // export replace the helper quickly.
+      'Cache-Control':
+        outcome === 'page_exists' ? 'public, max-age=60' : 'public, max-age=300',
       'X-Robots-Tag': 'noindex',
       'X-Sentry-Docs-Not-Found': '1',
     },
