@@ -154,11 +154,11 @@ export function isItemVisible(item: MigrationItem, selected: Set<string>): boole
   return isAlwaysVisible(item) || itemMatchesFacets(item, selected);
 }
 
-/** The v11 migration page for a guide slug, or for the platform itself. */
+/** This interactive v11 guide for a guide slug, or for the platform itself. */
 export function migrationGuideHref(slug: string): string {
   return slug === 'javascript'
-    ? '/platforms/javascript/migration/v10-to-v11/'
-    : `/platforms/javascript/guides/${slug}/migration/v10-to-v11/`;
+    ? '/platforms/javascript/migration/v10-to-v11/interactive/'
+    : `/platforms/javascript/guides/${slug}/migration/v10-to-v11/interactive/`;
 }
 
 /**

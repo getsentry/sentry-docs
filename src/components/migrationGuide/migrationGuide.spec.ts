@@ -111,13 +111,13 @@ describe('compareItems', () => {
 describe('migrationGuideHref', () => {
   it('points at the guide page for a guide slug', () => {
     expect(migrationGuideHref('nextjs')).toBe(
-      '/platforms/javascript/guides/nextjs/migration/v10-to-v11/'
+      '/platforms/javascript/guides/nextjs/migration/v10-to-v11/interactive/'
     );
   });
 
   it('points at the platform page for browser JavaScript, which has no guide', () => {
     expect(migrationGuideHref('javascript')).toBe(
-      '/platforms/javascript/migration/v10-to-v11/'
+      '/platforms/javascript/migration/v10-to-v11/interactive/'
     );
   });
 });
