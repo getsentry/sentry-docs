@@ -1,0 +1,181 @@
+---
+title: Instrumentation
+description: "Learn how to add spans that measure operations in your Godot Engine game."
+sidebar_order: 20
+---
+
+<Alert>
+
+Before adding spans, <PlatformLink to="/tracing/">enable tracing</PlatformLink> by setting a trace sample rate.
+
+</Alert>
+
+The SDK for Godot Engine doesn't create spans automatically yet. Add manual instrumentation around operations whose timing helps you understand the player experience, such as loading a level, generating a world, or writing a save file.
+
+## Wrap a Synchronous Operation
+
+Use `SentrySDK.with_span()` when the operation fits inside one synchronous callable. It makes the span active while the callable runs, ends it automatically, and returns the callable's result:
+
+```GDScript
+func generate_chunk(chunk: Vector2i) -> bool:
+	# Keep telemetry from chunk generation associated with this span.
+	var generated: bool = SentrySDK.with_span(
+		"generate_chunk",
+		func(span: SentrySpan) -> bool:
+			# Identify the chunk when inspecting the trace.
+			span.set_attributes({
+				"chunk.x": chunk.x,
+				"chunk.y": chunk.y,
+			})
+
+			var succeeded := _generate_chunk(chunk)
+			# Record whether the measured operation succeeded.
+			if succeeded:
+				span.set_status(SentrySpan.SPAN_STATUS_OK)
+			else:
+				span.set_status(SentrySpan.SPAN_STATUS_ERROR)
+			return succeeded
+	)
+	return generated
+```
+
+Telemetry captured on the same thread inside the callable is connected to the span. Nested `with_span()` calls create child spans and restore the enclosing span when the inner callable returns.
+
+<Alert level="warning" title="Synchronous Callables Only">
+
+`with_span()` ends the span when the callable returns. If the callable uses `await`, the span ends at the first `await` instead of when the asynchronous work finishes. Use `start_span()` for work that crosses an asynchronous boundary.
+
+</Alert>
+
+## Control the Span Lifetime
+
+Use `SentrySDK.start_span()` when an operation crosses functions or an `await`, needs `sentry.op` set when the span starts, or needs explicit control over its parent. End every span yourself when the measured work finishes:
+
+```GDScript
+func load_level(level_path: String) -> void:
+	# Start the span before the operation begins.
+	var span := SentrySDK.start_span("load_level", {
+		"sentry.op": "asset.load",
+		"level.path": level_path,
+	})
+
+	var packed_scene: PackedScene = await _load_level_async(level_path)
+	# Record the final outcome on the span.
+	if packed_scene == null:
+		span.set_status(SentrySpan.SPAN_STATUS_ERROR)
+	else:
+		span.set_status(SentrySpan.SPAN_STATUS_OK)
+		_change_level(packed_scene)
+
+	# Spans created with start_span() must be ended explicitly.
+	span.end()
+```
+
+Pass `sentry.op` when starting the span to categorize the work in Sentry. Some platforms fix the operation when the span starts, so setting this attribute later isn't supported.
+
+<Alert level="warning" title="End Every Span">
+
+With the default static trace lifecycle, an unended root span isn't sent. End child spans before their parent; platforms can handle unfinished children differently if the parent ends first.
+
+</Alert>
+
+## Build a Span Hierarchy
+
+By default, a new span becomes a child of the active span. Once a child ends, its parent becomes active again:
+
+```GDScript
+# Start the parent span. It becomes the active span.
+var level_span := SentrySDK.start_span("prepare_level", {
+	"sentry.op": "level.prepare",
+})
+
+# The active level_span becomes this span's parent.
+var navmesh_span := SentrySDK.start_span("bake_navmesh")
+_bake_navmesh()
+# Ending the child makes level_span active again.
+navmesh_span.end()
+
+# The active level_span also becomes this span's parent.
+var lighting_span := SentrySDK.start_span("bake_lighting")
+_bake_lighting()
+lighting_span.end()
+
+# End the parent after all its children have ended.
+level_span.end()
+```
+
+Use the `parent_span` argument when the child should belong to a specific span instead of the currently active one:
+
+```GDScript
+# Group this work under the level-load span.
+var child_span := SentrySDK.start_span("stream_region", {}, level_span)
+_stream_region()
+child_span.end()
+```
+
+Pass `null` as `parent_span` to force a new root span. Call `SentrySDK.get_active_span()` when lower-level code needs to read the span attached to the current scope.
+
+## Start an Inactive Span
+
+Use an inactive span when work should be grouped under a parent but remain independent of the currently active span. Because it doesn't become active, it doesn't affect `SentrySDK.get_active_span()`, make new spans its children automatically, or add its trace context to telemetry captured alongside it.
+
+For example, measure optional asset preloading under a broader level-load span without making the preload span active:
+
+```GDScript
+func preload_optional_assets(parent_span: SentrySpan) -> void:
+	# Keep this work separate from the currently active span.
+	var span := SentrySDK.start_span(
+		"preload_optional_assets", {}, parent_span, false
+	)
+	_preload_optional_assets()
+	span.end()
+```
+
+## Group Work Across Multiple Batches
+
+An inactive parent can also group a long-running operation whose work happens in short batches across multiple frames or method calls. Start an active child for each batch by passing the parent explicitly.
+
+Errors and other telemetry captured while a batch runs carry the active child's trace context. Between batches, the inactive parent leaves the current active span unchanged.
+
+```GDScript
+var preload_span: SentrySpan
+
+func begin_asset_preload() -> void:
+	# Keep the parent open between batches without making it active.
+	preload_span = SentrySDK.start_span(
+		"preload_assets",
+		{"sentry.op": "asset.preload"},
+		null,
+		false,
+	)
+
+func preload_batch(asset_paths: Array[String]) -> void:
+	# Start an active span so errors from this batch are linked to it.
+	var batch_span := SentrySDK.start_span(
+		"preload_batch",
+		{"asset.count": asset_paths.size()},
+		preload_span,
+	)
+	for asset_path in asset_paths:
+		_preload_asset(asset_path)
+	batch_span.end()
+
+func finish_asset_preload() -> void:
+	# End the parent after every batch has finished.
+	preload_span.end()
+```
+
+## Add Span Data
+
+Use `set_attribute()` or `set_attributes()` before ending a span to add searchable details about the operation. Attribute keys must not be empty, and values can be a `bool`, `int`, `float`, or `String`; the SDK converts other types to strings.
+
+Use `set_status()` to record whether the operation succeeded or failed:
+
+- `SentrySpan.SPAN_STATUS_OK` means the operation completed successfully.
+- `SentrySpan.SPAN_STATUS_ERROR` means the operation failed.
+
+A span without an explicit status is treated as successful.
+
+## Spans and Threads
+
+Spans belong to the thread that created them. Call their methods only from that thread. If work moves to another thread, start and end its spans inside that threaded function instead of passing a span across threads.
