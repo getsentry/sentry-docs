@@ -2262,70 +2262,195 @@ const userDocsRedirects = [
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
   },
-  // Mastra moved from Agent Tracing to JavaScript integrations
-  // Map older Agent Tracing names directly to avoid redirect chains.
+  // Mastra lives under Agent Tracing alongside the other AI library pages.
+  // Map older names directly to avoid redirect chains.
   {
-    source: '/platforms/javascript/ai-agent-monitoring/mastra.md',
-    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+    source: '/platforms/javascript/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/agent-tracing/mastra.md',
   },
   {
-    source: '/platforms/javascript/ai-agent-monitoring/mastra/:path*',
-    destination:
-      '/platforms/javascript/configuration/integrations/mastra/:path*',
+    source: '/platforms/javascript/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/agent-tracing/mastra/:path*',
   },
   {
     source:
-      '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra.md',
-    destination:
       '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/mastra.md',
+    destination: '/platforms/javascript/agent-tracing/mastra.md',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/mastra/:path*',
+    destination: '/platforms/javascript/agent-tracing/mastra/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra.md',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
     destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
+      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra.md',
-    destination: '/platforms/javascript/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/agent-tracing/mastra.md',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/configuration/integrations/mastra/:path*',
+    destination: '/platforms/javascript/agent-tracing/mastra/:path*',
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
     destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
-  },
-  {
-    source: '/platforms/javascript/agent-tracing/mastra.md',
-    destination: '/platforms/javascript/configuration/integrations/mastra.md',
-  },
-  {
-    source: '/platforms/javascript/agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/configuration/integrations/mastra/:path*',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
-  },
-  {
-    source:
       '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
   },
   // Agent Tracing moved to top-level feature
+  // Python AI library pages moved from integrations to agent-tracing
+  {
+    source: '/platforms/python/integrations/anthropic.md',
+    destination: '/platforms/python/agent-tracing/anthropic.md',
+  },
+  {
+    source: '/platforms/python/integrations/anthropic/:path*',
+    destination: '/platforms/python/agent-tracing/anthropic/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/google-genai.md',
+    destination: '/platforms/python/agent-tracing/google-genai.md',
+  },
+  {
+    source: '/platforms/python/integrations/google-genai/:path*',
+    destination: '/platforms/python/agent-tracing/google-genai/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/huggingface_hub.md',
+    destination: '/platforms/python/agent-tracing/huggingface_hub.md',
+  },
+  {
+    source: '/platforms/python/integrations/huggingface_hub/:path*',
+    destination: '/platforms/python/agent-tracing/huggingface_hub/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/langchain.md',
+    destination: '/platforms/python/agent-tracing/langchain.md',
+  },
+  {
+    source: '/platforms/python/integrations/langchain/:path*',
+    destination: '/platforms/python/agent-tracing/langchain/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/langgraph.md',
+    destination: '/platforms/python/agent-tracing/langgraph.md',
+  },
+  {
+    source: '/platforms/python/integrations/langgraph/:path*',
+    destination: '/platforms/python/agent-tracing/langgraph/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/litellm.md',
+    destination: '/platforms/python/agent-tracing/litellm.md',
+  },
+  {
+    source: '/platforms/python/integrations/litellm/:path*',
+    destination: '/platforms/python/agent-tracing/litellm/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/openai.md',
+    destination: '/platforms/python/agent-tracing/openai.md',
+  },
+  {
+    source: '/platforms/python/integrations/openai/:path*',
+    destination: '/platforms/python/agent-tracing/openai/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/openai-agents.md',
+    destination: '/platforms/python/agent-tracing/openai-agents.md',
+  },
+  {
+    source: '/platforms/python/integrations/openai-agents/:path*',
+    destination: '/platforms/python/agent-tracing/openai-agents/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/pydantic-ai.md',
+    destination: '/platforms/python/agent-tracing/pydantic-ai.md',
+  },
+  {
+    source: '/platforms/python/integrations/pydantic-ai/:path*',
+    destination: '/platforms/python/agent-tracing/pydantic-ai/:path*',
+  },
+  // AI library setup pages moved from configuration/integrations to agent-tracing
+  {
+    source: '/platforms/javascript/configuration/integrations/vercelai/',
+    destination: '/platforms/javascript/agent-tracing/vercelai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/vercelai/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/vercelai/',
+  },
+  {
+    source: '/platforms/javascript/configuration/integrations/openai/',
+    destination: '/platforms/javascript/agent-tracing/openai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/openai/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/openai/',
+  },
+  {
+    source: '/platforms/javascript/configuration/integrations/anthropic/',
+    destination: '/platforms/javascript/agent-tracing/anthropic/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/anthropic/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/anthropic/',
+  },
+  {
+    source: '/platforms/javascript/configuration/integrations/google-genai/',
+    destination: '/platforms/javascript/agent-tracing/google-genai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/google-genai/',
+  },
+  {
+    source: '/platforms/javascript/configuration/integrations/langchain/',
+    destination: '/platforms/javascript/agent-tracing/langchain/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/langchain/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/langchain/',
+  },
+  {
+    source: '/platforms/javascript/configuration/integrations/langgraph/',
+    destination: '/platforms/javascript/agent-tracing/langgraph/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/langgraph/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/langgraph/',
+  },
+  // agent-tracing-browser merged into agent-tracing
+  {
+    source: '/platforms/javascript/agent-tracing-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing-browser/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
+  },
   {
     source:
       '/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module.md',
@@ -2348,17 +2473,12 @@ const userDocsRedirects = [
   {
     source:
       '/platforms/javascript/tracing/instrumentation/ai-agents-module-browser/:path*',
-    destination: '/platforms/javascript/agent-tracing-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/ai-agents-module-browser/:path*',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
-  },
-  // Browser JS doesn't have server-side Agent Tracing, redirect to browser version
-  {
-    source: '/platforms/javascript/agent-tracing/',
-    destination: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   // AI Monitoring / AI Observability → Product Agents
   // Keep singular dashboard mappings ahead of :path* catch-all rules
@@ -2437,7 +2557,7 @@ const userDocsRedirects = [
   // AI Agent Monitoring / ai-agent-tracing → Agent Tracing rename redirects
   {
     source: '/platforms/javascript/ai-agent-monitoring/',
-    destination: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/:path*',
@@ -2445,11 +2565,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring-browser/',
-    destination: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring-browser/:path*',
-    destination: '/platforms/javascript/agent-tracing-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/',
@@ -2461,7 +2581,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-monitoring-browser/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   {
     source: '/platforms/react-native/ai-agent-monitoring/',
@@ -2482,7 +2602,7 @@ const userDocsRedirects = [
   // ai-agent-tracing → agent-tracing rename redirects
   {
     source: '/platforms/javascript/ai-agent-tracing/',
-    destination: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/:path*',
@@ -2490,11 +2610,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/ai-agent-tracing-browser/',
-    destination: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing-browser/:path*',
-    destination: '/platforms/javascript/agent-tracing-browser/:path*',
+    destination: '/platforms/javascript/agent-tracing/',
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-tracing/',
@@ -2506,7 +2626,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-tracing-browser/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   {
     source: '/platforms/react-native/ai-agent-tracing/',

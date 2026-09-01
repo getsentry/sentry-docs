@@ -90,12 +90,10 @@ With auto-instrumentation, you can optionally provide Sentry options via a co-lo
 ```typescript {filename:instrument.server.ts}
 import { defineCloudflareOptions } from "@sentry/cloudflare";
 
-export const sentryOptions = (env: Env) => ({
+export default defineCloudflareOptions((env) => ({
   dsn: env.SENTRY_DSN,
   tracesSampleRate: 1.0,
-});
-
-export default defineCloudflareOptions(sentryOptions);
+}));
 ```
 
 If no `instrument.server.*` file exists, the SDK reads all configuration (DSN, release, environment, sample rate, etc.) from the Worker's `env` bindings at runtime.
@@ -104,7 +102,7 @@ Configured Durable Object, Workflow, and Agents SDK classes must be declared in 
 
 ```typescript {filename:src/worker/index.ts}
 import * as Sentry from "@sentry/cloudflare";
-import { sentryOptions } from "./instrument.server";
+import sentryOptions from "./instrument.server";
 import { MyAgent as MyAgentBase } from "./my-agent";
 
 export const MyAgent = Sentry.instrumentAgentWithSentry(

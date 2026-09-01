@@ -4,6 +4,19 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
+/**
+ * Platforms whose AI library pages live under agent-tracing, mapped to where that
+ * platform keeps its integrations list. The library pages are mirrored into that
+ * list so they stay discoverable from both places.
+ */
+const INTEGRATIONS_PATH_BY_PLATFORM: Record<string, string> = {
+  javascript: 'configuration/integrations',
+  python: 'integrations',
+};
+
+/** Pages under agent-tracing that document the feature rather than a library. */
+const NON_LIBRARY_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
+
 export function PlatformSidebar({
   rootNode,
   platformName,
@@ -41,12 +54,43 @@ export function PlatformSidebar({
     return null;
   }
   const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
-  const tree = toTree(nodes.filter(n => !!n.context));
   const guide = guideName && getGuide(rootNode, platformName, guideName);
 
   const pathRoot = guide
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
+
+  // The AI library pages live under agent-tracing, but they're also integrations,
+  // so mirror them into the integrations list. These are link-only entries: they
+  // sit under the integrations path but point at the real agent-tracing page.
+  // The list is derived from whatever pages exist under agent-tracing for this
+  // platform or guide, so it needs no maintenance as libraries come and go.
+  const integrationsPath = INTEGRATIONS_PATH_BY_PLATFORM[platformName];
+  const agentTracingNode =
+    integrationsPath && nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing']);
+
+  const aiIntegrationAliases = !agentTracingNode
+    ? []
+    : agentTracingNode.children
+        .filter(
+          child =>
+            !child.missing &&
+            !child.frontmatter.draft &&
+            !NON_LIBRARY_AGENT_TRACING_PAGES.has(child.slug)
+        )
+        .map(child => ({
+          context: {
+            platform: {platformName},
+            title: child.frontmatter.title,
+            sidebar_title: child.frontmatter.sidebar_title,
+            // Deliberately no sidebar_order: these sort alphabetically among the
+            // other integrations rather than carrying their agent-tracing ordering.
+            href: '/' + child.path + '/',
+          },
+          path: `/${pathRoot}/${integrationsPath}/${child.slug}/`,
+        }));
+
+  const tree = toTree([...nodes, ...aiIntegrationAliases].filter(n => !!n.context));
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';
