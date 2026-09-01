@@ -602,9 +602,7 @@ Plus `generate()` and `stream()` on [`ToolLoopAgent`](#toolloopagent).
 
 <Expandable title="Why do my AI spans show 'ai.toolCall' instead of 'gen_ai.execute_tool' on Vercel?">
 
-Two steps are required. `force: true` on its own is not enough — without the second step you get no AI spans at all.
-
-Add the integration with `force: true`:
+Raw names mean the AI SDK's telemetry is already on and emitting spans — Sentry's span processors just aren't registered to rename them. Add `force: true`:
 
 ```javascript {filename:sentry.server.config.ts}
 Sentry.init({
@@ -613,7 +611,7 @@ Sentry.init({
 });
 ```
 
-And pass `experimental_telemetry` on every AI SDK call:
+Keep `experimental_telemetry` on your calls. It's what produces the spans in the first place, so `force: true` without it leaves you with no AI spans at all. If only some of your spans have raw names, the remaining call sites are missing it:
 
 ```javascript
 const result = await generateText({
