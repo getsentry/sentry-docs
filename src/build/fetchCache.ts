@@ -17,9 +17,9 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
       }
       return response;
     } catch (e) {
-      if (retry !== 0) {
+      retry -= 1;
+      if (retry > 0) {
         console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
-        retry -= 1;
         continue;
       }
 
