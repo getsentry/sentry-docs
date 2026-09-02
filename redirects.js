@@ -1172,6 +1172,10 @@ const userDocsRedirects = [
     source: '/organization/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1365,6 +1369,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog-responder/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/modem/',
     destination: '/integrations/third-party-integrations/',
   },
   {
