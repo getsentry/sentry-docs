@@ -1,0 +1,46 @@
+---
+title: Redis
+description: Every new Redis key sets a TTL or is registered as accepted durable data. What that means in practice, and which commands silently drop a TTL.
+sidebar_order: 65
+---
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
+  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
+Sentry uses Redis for caches, counters, buffers, and other short-lived state. Redis holds everything in memory, and our capacity planning and cluster migrations assume that keys expire. A key that lives forever quietly turns a cache into a datastore: memory grows without bound, and the cluster can no longer be drained, resharded, or failed over without losing data nobody agreed to lose.
+
+## Every New Key Gets a TTL
+
+Every new Redis key **MUST** have a TTL.
+
+If the data genuinely cannot expire, you **MUST** instead register the key with Infrastructure Engineering as accepted durable data: what the key holds, why it cannot expire, and how to rebuild it if the cluster loses it. Infrastructure Engineering maintains the list of accepted durable keys.
+
+There is no third option. A TTL-less key that is not on the list is a leak, even if the data it holds is useful.
+
+## A Sliding TTL Is Not a Bound
+
+Calling `EXPIRE` every time you write to a key does not bound its lifetime. It resets the clock: as long as writes keep arriving, the key never expires, and neither does the data it already holds. A set you refresh on every append still holds its very first member years later.
+
+If a continuously-written key needs a real bound, bound the data instead. Shard by time window (`mykey:2026-08-27`) and give each shard a fixed TTL, so old shards age out on their own while new writes go to new shards.
+
+## Keeping a TTL Is Its Own Job
+
+Some write commands silently discard the TTL a key already has:
+
+- `SET` and `GETSET` replace the value and drop the TTL. Pass `KEEPTTL` to `SET` if you mean to keep it.
+- `SETEX` throws away the existing TTL and installs the one you pass.
+
+Others leave the TTL alone: `SADD`, `ZADD`, `HSET`, `HINCRBY`, and `INCR` modify the value without touching the expiry.
+
+None of them ever adds a TTL either. A key created through one of these commands has no expiry at all until something calls `EXPIRE` on it.
+
+This distinction is where real leaks come from: code that sets the TTL correctly in one place, then loses it through a later write to the same key. Reviewing a change by asking "does this write set an expiry?" will not catch that. The question that catches it is "does any write to this key drop one?"
+
+## Snuba, Relay, Seer, and the Uptime Checker
+
+These services live outside the `sentry` codebase and each build their own Redis client, in their own language, with no shared helper in between. Nothing there can enforce these rules mechanically.
+
+For them the rules are advisory: a TTL-less write will not fail. The expectations don't change, though, and their keys **SHOULD** carry a TTL or a registration like everyone else's.
