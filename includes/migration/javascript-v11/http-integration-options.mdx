@@ -1,0 +1,58 @@
+---
+id: http-integration-options
+title: "`httpIntegration` options were consolidated"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+features: []
+platformCategory: server
+order: 182
+---
+
+`httpIntegration` option names now match `httpServerIntegration`, `httpServerSpansIntegration`, and the other server SDKs. The deprecated `instrumentation` hooks no longer run for incoming request spans; use `onSpanCreated` for those and the `outgoing*` hooks for outgoing requests.
+
+| Removed option                                | Replacement                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| `trackIncomingRequestsAsSessions`             | `sessions`                                                                      |
+| `maxIncomingRequestBodySize`                  | `maxRequestBodySize`                                                            |
+| `ignoreIncomingRequestBody`                   | `ignoreRequestBody`                                                             |
+| `dropSpansForIncomingRequestStatusCodes`      | `ignoreStatusCodes`                                                             |
+| `incomingRequestSpanHook`                     | `onSpanCreated`                                                                 |
+| `instrumentation.requestHook`                 | `onSpanCreated` (incoming) or `outgoingRequestHook` (outgoing)                  |
+| `instrumentation.responseHook`                | `onSpanCreated` (incoming) or `outgoingResponseHook` (outgoing)                 |
+| `instrumentation.applyCustomAttributesOnSpan` | `onSpanCreated` (incoming) or `outgoingRequestApplyCustomAttributes` (outgoing) |
+
+The `instrumentation` hooks ran for both directions in v10, so pick the replacement by which spans your hook was mutating:
+
+```js
+// Before
+Sentry.httpIntegration({
+  trackIncomingRequestsAsSessions: false,
+  maxIncomingRequestBodySize: 'small',
+  ignoreIncomingRequestBody: url => url.includes('/health'),
+  dropSpansForIncomingRequestStatusCodes: [404],
+  incomingRequestSpanHook: (span, req, res) => {
+    span.setAttribute('custom', true);
+  },
+  instrumentation: {
+    responseHook: () => {
+      void flushIfServerless();
+    },
+  },
+});
+
+// After
+Sentry.httpIntegration({
+  sessions: false,
+  maxRequestBodySize: 'small',
+  ignoreRequestBody: url => url.includes('/health'),
+  ignoreStatusCodes: [404],
+  onSpanCreated: (span, req, res) => {
+    span.setAttribute('custom', true);
+  },
+  outgoingResponseHook: () => {
+    void flushIfServerless();
+  },
+});
+```

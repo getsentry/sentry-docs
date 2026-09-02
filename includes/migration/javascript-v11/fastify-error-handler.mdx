@@ -1,0 +1,36 @@
+---
+id: fastify-error-handler
+title: "Fastify errors are captured automatically"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: [fastify]
+features: []
+platformCategory: server
+order: 186
+---
+
+`fastifyIntegration` is a single, channel-based plugin now that instruments Fastify 3.21 through 5 and captures errors on its own. `setupFastifyErrorHandler(app)` is deprecated and no longer accepts `shouldHandleError`.
+
+Move the callback to the integration:
+
+```diff
+ Sentry.init({
+-  integrations: [Sentry.fastifyIntegration()],
++  integrations: [
++    Sentry.fastifyIntegration({
++      shouldHandleError(_error, _request, reply) {
++        return reply.statusCode >= 500;
++      },
++    }),
++  ],
+ });
+
+-Sentry.setupFastifyErrorHandler(app, {
+-  shouldHandleError(_error, _request, reply) {
+-    return reply.statusCode >= 500;
+-  },
+-});
+```
+
+`setShouldHandleError`, `instrumentFastify`, and `handleFastifyError` were removed with it.
