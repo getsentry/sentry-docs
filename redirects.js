@@ -2444,8 +2444,16 @@ const userDocsRedirects = [
   },
   // agent-tracing-browser merged into agent-tracing
   {
+    source: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
     source: '/platforms/javascript/agent-tracing-browser/:path*',
     destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   {
     source: '/platforms/javascript/guides/:guide/agent-tracing-browser/:path*',

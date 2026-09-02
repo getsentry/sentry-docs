@@ -40,15 +40,15 @@ export function IntegrationGrid({integrations}: Props) {
       : `/platform-redirect/?next=${encodeURIComponent(to)}`;
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 not-prose mt-4 mb-6">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 not-prose mt-4 mb-6">
       {integrations.map(({icon, title, to, description}) => (
         <Link
           key={to}
           href={hrefFor(to)}
-          className="no-underline group flex flex-row items-center gap-4 px-5 py-4 rounded-lg shadow border border-[var(--gray-5)] dark:bg-[var(--gray-4)] text-[var(--foreground)] transition-shadow hover:shadow-md"
+          className="no-underline group flex flex-row items-center gap-3 px-4 py-2 rounded-lg shadow border border-[var(--gray-5)] dark:bg-[var(--gray-4)] text-[var(--foreground)] transition-shadow hover:shadow-md"
         >
           <PlatformIcon
-            size={36}
+            size={32}
             platform={icon}
             format="lg"
             style={{
@@ -59,10 +59,10 @@ export function IntegrationGrid({integrations}: Props) {
               marginBottom: 0,
             }}
           />
-          <div className="flex-1 min-w-0">
-            <h4 className="text-base font-medium m-0 group-hover:underline truncate">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <span className="text-base font-medium leading-none group-hover:underline truncate">
               {title}
-            </h4>
+            </span>
             {description && (
               <p className="text-[length:--font-size-2] text-[var(--gray-11)] m-0 mt-0.5 truncate">
                 {description}
