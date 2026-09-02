@@ -124,7 +124,10 @@ Sentry.init({
     userInfo: false,
     genAI: { inputs: false, outputs: false },
     httpBodies: [],
-    httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    httpHeaders: {
+      request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
@@ -154,7 +157,7 @@ For more on what data Sentry collects and how to control it, see <PlatformLink t
 | `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
 | `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
 
-The `cookies`, `httpHeaders`, and `urlQueryParams` categories accept a `CollectBehavior` value:
+The `cookies` and `urlQueryParams` categories accept a `CollectBehavior` value. The `httpHeaders.request` and `httpHeaders.response` fields each accept a `CollectBehavior` value, so you can configure request and response headers independently.
 
 ```typescript
 type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
