@@ -50,7 +50,7 @@ export function IntegrationGrid({integrations}: Props) {
           <PlatformIcon
             size={32}
             platform={icon}
-            format="lg"
+            format="sm"
             style={{
               border: 0,
               boxShadow: 'none',
