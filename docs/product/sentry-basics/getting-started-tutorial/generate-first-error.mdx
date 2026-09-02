@@ -1,0 +1,95 @@
+---
+title: Capture Your First Distributed Tracing Error
+sidebar_order: 5
+description: "Learn how to capture your first error and view it in Sentry."
+---
+
+**Step 4 of 5**
+
+<TutorialProgress step={4} />
+
+Now that the sample apps are up and running on your local environment and integrated with the Sentry SDKs, you're ready to generate the first error. Please ensure you have BOTH apps running (on http://localhost:3000 and http://localhost:3001).
+
+You should see the 'One-Stop Shop' site running on http://localhost:3000. Clicking **View details** on any product card triggers a call to the backend for that product's info. As long as your Express server is running, you should see a title, image, and description for each product.
+
+## 1. Trigger an Error
+
+To start using Sentry's error monitoring feature, you need some errors first. Let's add in an obvious error that will be easy to see in Sentry.
+
+If you're using your own source code, skip this step. Instead, select your [platform](/platforms/) and follow its **Verify** step inside the **Getting Started** guide to introduce an error.
+
+1. In the `tracing-tutorial-frontend` repo, open `src/App.jsx` and find the **Nonfat Water** product card. Update its `onClick` handler by replacing the string passed to the `getProduct()` function from `nonfat-water` to `debug-sentry`.
+
+   ```jsx diff {filename:src/App.jsx}
+       <article className="product-card">
+         <div className="product-thumb">🤡</div>
+         <h3 className="product-name">Clown Shoes</h3>
+         <button className="btn" onClick={() => getProduct("clown-shoes")}>
+           View details
+         </button>
+       </article>
+       <article className="product-card">
+         <div className="product-thumb">💧</div>
+         <h3 className="product-name">Nonfat Water</h3>
+   -      <button className="btn" onClick={() => getProduct("nonfat-water")}>
+   +      <button className="btn" onClick={() => getProduct("debug-sentry")}>
+           View details
+         </button>
+       </article>
+   ```
+
+   There's a middleware function handling the `/products/debug-sentry` route in the `server.js` file of the `tracing-tutorial-backend` repo that throws a sample error:
+
+   ```javascript {filename:server.js}
+   app.get("/products/debug-sentry", (req, res) => {
+     console.log("Sentry Error thrown!");
+     throw new Error("My first Sentry error!");
+   });
+   ```
+
+1. Save the file.
+
+1. Go back to the browser window and click the **View details** button on the **Nonfat Water** card again. You'll no longer see the expected product information — instead the request fails with a `500` error.
+
+1. Open the terminal window that's running the `tracing-tutorial-backend` server. Here, you'll see a log letting you know that an error has occurred:
+
+   ```bash
+   Sentry Error thrown!
+   ```
+
+This confirms that the error we just produced on the frontend has triggered a corresponding error on the backend.
+
+## 2. View the Error in Sentry
+
+Now that you've triggered an error, let's see what it looks like in Sentry.
+
+1. Open the [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/traces/) page in Sentry.io. Make sure one (or both) of the projects you're using for this tutorial is selected in the projects dropdown.
+
+2. You should see a trace that shows both the React and Express icons, indicating that this trace traverses both projects. Click on the blue trace ID on the left to see the Trace View.
+
+3. On the [Trace View](/concepts/key-terms/tracing/trace-view/) page, you can see every span that happened within this trace. You can see the error on the React app that directly triggered the error on the Express app.
+
+### UI Walkthrough
+
+The interactive demo below walks through how to view a distributed trace in Sentry.
+
+<Arcade src="https://demo.arcade.software/ZQwun7AOomvBOi6HyD8L?embed" />
+
+## Next
+
+Congrats — you've set up Sentry with distributed tracing across your frontend and backend. That's the core of this tutorial.
+
+There's one optional step that will let Sentry identify the exact line of code where something broke:
+
+- [Enable Readable Stack Traces](/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/) — the frontend error's stack trace is currently _minified_ and barely readable. Upload source maps so Sentry shows you exactly which line in which file caused the error.
+
+To go deeper, explore:
+
+- [Suspect commits & stack trace linking](/product/issues/suspect-commits/) — connect the [GitHub integration](/integrations/source-code-mgmt/github/) so Sentry can point to the commit that likely caused an error and link each stack frame straight to your source on GitHub.
+- [Seer](/product/ai-in-sentry/seer/) — Sentry's AI debugging agent. Connect your GitHub or GitLab repo and Seer can analyze issues, find the root cause, and even open a pull request with a fix. (Seer is a paid add-on; see [Seer pricing](/pricing/#seer-pricing).)
+- [Session Replay](/product/explore/session-replay/) — see a video-like reproduction of what the user did before the error
+- [Alerts](/product/monitors-and-alerts/alerts/) — get notified in Slack or Discord about the issues you care about
+- [Dashboards](/product/dashboards/sentry-dashboards/) — track error and performance trends across your services
+- [Releases](/product/releases/) — monitor release health over time
+
+To set up Sentry on a project that isn't the sample app, head to the [Platforms](/platforms/) page and pick your stack.

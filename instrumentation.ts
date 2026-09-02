@@ -10,7 +10,6 @@ export function register() {
       enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
-      spotlight: process.env.NODE_ENV === 'development',
       integrations: [Sentry.consoleLoggingIntegration()],
 
       // Filter sensitive metric attributes (no PII in metrics)

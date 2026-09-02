@@ -1,24 +1,28 @@
-<!-- Use this checklist to make sure your PR is ready for merge. You may delete any sections you don't need. -->
+<!-- Keep the urgency section so automation can prioritize this PR. You may delete other sections you don't need. -->
 
 ## DESCRIBE YOUR PR
-*Tell us what you're changing and why. If your PR **resolves an issue**, please link it so it closes automatically.*
 
-## IS YOUR CHANGE URGENT?  
+_Tell us what you're changing and why. If your PR **resolves an issue**, please link it so it closes automatically._
+
+## IS YOUR CHANGE URGENT?
 
 Help us prioritize incoming PRs by letting us know when the change needs to go live.
-- [ ] Urgent deadline (GA date, etc.): <!-- ENTER DATE HERE -->
-- [ ] Other deadline: <!-- ENTER DATE HERE -->
-- [ ] None: Not urgent, can wait up to 1 week+
+Select exactly one option. For deadlines, replace `YYYY-MM-DD` with the due date. You can update this information later by editing the PR description.
+
+- [ ] Urgent deadline (GA date, etc.): YYYY-MM-DD
+- [ ] Other deadline: YYYY-MM-DD
+- [ ] No deadline: Not urgent, can wait up to 1 week+
 
 ## SLA
 
 - Teamwork makes the dream work, so please add a reviewer to your PRs.
-- Please give the docs team up to 1 week to review your PR unless you've added an urgent due date to it.
+- Please give the docs team up to 1 week to review your PR unless you've supplied a deadline.
+
 Thanks in advance for your help!
 
 ## PRE-MERGE CHECKLIST
 
-*Make sure you've checked the following before merging your changes:*
+_Make sure you've checked the following before merging your changes:_
 
 - [ ] Checked Vercel preview for correctness, including links
 - [ ] PR was reviewed and approved by any necessary SMEs (subject matter experts)

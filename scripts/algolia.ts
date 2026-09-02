@@ -14,6 +14,7 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import {getDevDocsFrontMatter, getDocsFrontMatter} from '../src/mdx';
 import {FrontMatter} from '../src/types';
+import {isVersioned} from '../src/versioning';
 
 const ALGOLIA_SENTRY_DSN = process.env.ALGOLIA_SENTRY_DSN;
 if (ALGOLIA_SENTRY_DSN) {
@@ -87,7 +88,13 @@ async function indexAndUpload() {
     : getDocsFrontMatter());
 
   const allPages = pageFrontMatters.filter(
-    frontMatter => !frontMatter.draft && !frontMatter.noindex && frontMatter.title
+    frontMatter =>
+      !frontMatter.draft &&
+      !frontMatter.noindex &&
+      frontMatter.title &&
+      // Versioned pages document superseded SDK majors and outrank the current
+      // docs for the same query. They stay reachable via the version selector.
+      !isVersioned(frontMatter.slug)
   );
   const pages = DRY_RUN ? allPages.slice(0, DRY_RUN_PAGE_LIMIT) : allPages;
   const uploadIndex = DRY_RUN ? null : index;

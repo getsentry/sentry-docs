@@ -1,0 +1,263 @@
+---
+title: Set Up MCP Monitoring
+sidebar_title: MCP Monitoring
+sidebar_order: 8
+sidebar_section: features
+description: "Monitor MCP server tool executions, prompt retrievals, resource access, and errors."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.bun
+  - javascript.deno
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.astro
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+---
+
+With Sentry's [MCP Monitoring](/product/mcp-servers/), you can track and debug MCP servers with full-stack context. You can monitor tool executions, prompt retrievals, resource access, and error rates alongside your other Sentry data, including logs, errors, and traces.
+
+Before you begin, <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
+
+## Instrument the MCP Server
+
+Wrap each `McpServer` instance with `wrapMcpServerWithSentry` to automatically record MCP requests, tool calls, prompt retrievals, resource reads, and handler errors.
+
+<PlatformContent includePath="mcp-monitoring/setup" />
+
+Support for `@modelcontextprotocol/server` 2.x requires Sentry JavaScript SDK version `10.70.0` or newer. For `@modelcontextprotocol/sdk` 1.x, use Sentry JavaScript SDK version `9.46.0` or newer and import `McpServer` from `@modelcontextprotocol/sdk/server/mcp.js`. The Sentry wrapper is otherwise the same.
+
+### Configure Input and Output Recording
+
+MCP inputs and outputs may contain sensitive data. Use `recordInputs` and `recordOutputs` to control collection for a specific server:
+
+```javascript
+const server = Sentry.wrapMcpServerWithSentry(mcpServer, {
+  recordInputs: false,
+  recordOutputs: false,
+});
+```
+
+These options override the corresponding `dataCollection.genAI.inputs` and `dataCollection.genAI.outputs` settings and require Sentry JavaScript SDK version `10.33.0` or newer.
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+## Preserve MCP Spans After the Response
+
+Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. With the static trace lifecycle, Sentry snapshots the request transaction when the response is returned, so MCP spans that finish later may be missing.
+
+Set `traceLifecycle: "stream"` so the SDK can send each sampled span when it finishes. This changes how spans are delivered; you still need to wrap the MCP server as shown above. Span streaming on Cloudflare requires `@sentry/cloudflare` version `10.49.0` or newer.
+
+```javascript {filename:index.js}
+import * as Sentry from "@sentry/cloudflare";
+
+const worker = {
+  async fetch(request, env, ctx) {
+    return handleMcpRequest(request, env, ctx);
+  },
+};
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    traceLifecycle: "stream",
+  }),
+  worker
+);
+```
+
+Stream mode sends span records instead of assembling one transaction event with embedded spans. `beforeSendTransaction` and `ignoreTransactions` don't apply to streamed spans. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for the `beforeSendSpan` and `ignoreSpans` configuration.
+
+If you use `McpAgent`, wrap the `McpServer` returned by its `server` getter, and wrap the Agent class separately with `instrumentAgentWithSentry` to preserve request and RPC context. Agent instrumentation, MCP server wrapping, and span streaming solve different parts of the setup; none replaces the others. See <PlatformLink to="/features/agents-sdk/">Agents SDK</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.hono"]}>
+
+## Hono on Cloudflare Workers
+
+If your Hono app runs on Cloudflare Workers, MCP work can finish after the Worker returns its response. Set `traceLifecycle: "stream"` in the Hono Sentry middleware so each sampled span is sent when it finishes:
+
+```javascript {filename:index.js}
+import { sentry } from "@sentry/hono/cloudflare";
+
+app.use(
+  sentry(app, {
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    traceLifecycle: "stream",
+  })
+);
+```
+
+This changes how spans are delivered; it doesn't replace `wrapMcpServerWithSentry`. Stream mode requires `@sentry/hono` and `@sentry/cloudflare` version `10.49.0` or newer. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
+
+</PlatformSection>
+
+## Manual Instrumentation
+
+The setup above automatically instruments MCP servers built with the official [MCP SDK](https://github.com/modelcontextprotocol/typescript-sdk) (`@modelcontextprotocol/sdk`). If your server uses a different library or a custom implementation that `wrapMcpServerWithSentry` can't wrap, you can record the same spans manually.
+
+You don't need this if you're already using `wrapMcpServerWithSentry` — it creates these spans for you. Otherwise, use [Sentry.startSpan()](/platforms/javascript/tracing/instrumentation/custom-instrumentation/#starting-a-span) to create the spans described below.
+
+## Spans
+
+### Tool Execution Span
+
+<Include name="tracing/mcp-module/tool-execution-span" />
+
+#### Example Tool Execution Span:
+
+```javascript
+// Example tool execution
+const toolName = "get_weather";
+const toolArguments = { city: "San Francisco" };
+
+await Sentry.startSpan(
+  {
+    op: "mcp.server",
+    name: `tools/call ${toolName}`,
+  },
+  async (span) => {
+    // Set MCP-specific attributes
+    span.setAttribute("mcp.tool.name", toolName);
+    span.setAttribute("mcp.method.name", "tools/call");
+
+    // Set request metadata
+    span.setAttribute("mcp.request.id", "req_123abc");
+    span.setAttribute("mcp.session.id", "session_xyz789");
+    span.setAttribute("mcp.transport", "stdio"); // or "http", "sse" for HTTP/WebSocket/SSE
+    span.setAttribute("network.transport", "pipe"); // or "tcp" for HTTP/SSE
+
+    // Set tool arguments (optional, requires recordInputs: true)
+    for (const [key, value] of Object.entries(toolArguments)) {
+      span.setAttribute(`mcp.request.argument.${key}`, value);
+    }
+
+    // Execute the tool
+    try {
+      const result = executeTool(toolName, toolArguments);
+
+      // Set result data
+      span.setAttribute("mcp.tool.result.content", JSON.stringify(result));
+      span.setAttribute("mcp.tool.result.is_error", false);
+
+      // Set result content count if applicable
+      if (
+        Array.isArray(result) ||
+        (typeof result === "object" && result !== null)
+      ) {
+        span.setAttribute(
+          "mcp.tool.result.content_count",
+          Array.isArray(result) ? result.length : Object.keys(result).length
+        );
+      }
+    } catch (error) {
+      span.setAttribute("mcp.tool.result.is_error", true);
+      throw error;
+    }
+  }
+);
+```
+
+### Prompt Retrieval Span
+
+<Include name="tracing/mcp-module/prompt-retrieval-span" />
+
+#### Example Prompt Retrieval Span:
+
+```javascript
+// Example prompt retrieval
+const promptName = "code_review";
+const promptArguments = { language: "python" };
+
+await Sentry.startSpan(
+  {
+    op: "mcp.server",
+    name: `prompts/get ${promptName}`,
+  },
+  async (span) => {
+    // Set MCP-specific attributes
+    span.setAttribute("mcp.prompt.name", promptName);
+    span.setAttribute("mcp.method.name", "prompts/get");
+
+    // Set request metadata
+    span.setAttribute("mcp.request.id", "req_456def");
+    span.setAttribute("mcp.session.id", "session_xyz789");
+    span.setAttribute("mcp.transport", "http");
+    span.setAttribute("network.transport", "tcp");
+
+    // Set prompt arguments (optional, requires recordInputs: true)
+    for (const [key, value] of Object.entries(promptArguments)) {
+      span.setAttribute(`mcp.request.argument.${key}`, value);
+    }
+
+    // Retrieve the prompt
+    const promptResult = getPrompt(promptName, promptArguments);
+
+    // Set result data
+    const messages = promptResult.messages || [];
+    span.setAttribute("mcp.prompt.result.message_count", messages.length);
+
+    // For single-message prompts, set role and content
+    if (messages.length === 1) {
+      span.setAttribute("mcp.prompt.result.message_role", messages[0].role);
+      // Content may contain sensitive data, only set if recordOutputs: true
+      span.setAttribute(
+        "mcp.prompt.result.message_content",
+        JSON.stringify(messages[0].content)
+      );
+    }
+  }
+);
+```
+
+### Resource Read Span
+
+<Include name="tracing/mcp-module/resource-read-span" />
+
+#### Example Resource Read Span:
+
+```javascript
+// Example resource access
+const resourceUri = "file:///path/to/resource.txt";
+
+await Sentry.startSpan(
+  {
+    op: "mcp.server",
+    name: `resources/read ${resourceUri}`,
+  },
+  async (span) => {
+    // Set MCP-specific attributes
+    span.setAttribute("mcp.resource.uri", resourceUri);
+    span.setAttribute("mcp.method.name", "resources/read");
+
+    // Set request metadata
+    span.setAttribute("mcp.request.id", "req_789ghi");
+    span.setAttribute("mcp.session.id", "session_xyz789");
+    span.setAttribute("mcp.transport", "http");
+    span.setAttribute("network.transport", "tcp");
+
+    // Access the resource
+    const resourceData = readResource(resourceUri);
+  }
+);
+```
+
+## Common Span Attributes
+
+<Include name="tracing/mcp-module/common-span-attributes" />
