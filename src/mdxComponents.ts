@@ -23,6 +23,7 @@ import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
 import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
+import {IntegrationGrid} from './components/integrationGrid';
 import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
@@ -102,6 +103,7 @@ export function mdxComponents(
     Expandable,
     FeatureBadge,
     GuideGrid,
+    IntegrationGrid,
     IntegrationListItem,
     JsBundleList,
     LambdaLayerDetail,
