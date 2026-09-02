@@ -1,6 +1,6 @@
 ---
 title: Options
-description: "Learn more about how the SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
+description: "Learn more about how the Sentry Native SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
 sidebar_order: 1
 ---
 
@@ -98,7 +98,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 
 <SdkOption name="before_send" type="function">
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(event)` before returning. This hook can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before_send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -106,13 +106,21 @@ By the time <PlatformIdentifier name="before_send" /> is executed, all scope dat
 
 <SdkOption name="on_crash" type="function">
 
-This function is called with a backend-specific event object, and can return a modified event object or nothing to skip reporting the event. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
+This function is called with a backend-specific event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(event)` before returning. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
 
 </SdkOption>
 
 <SdkOption name="before_transaction" type="function">
 
-This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `sentry_value_new_null()` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(tx)` before returning. One way this might be used is for manual PII stripping before sending.
+
+</SdkOption>
+
+<SdkOption name="before_send_feedback" type="function" availableSince="0.16.2">
+
+This function is called with a feedback event and a hint, and can return a modified event, or `sentry_value_new_null()` to drop the feedback. The feedback itself is nested under the event's `contexts.feedback`. To drop it, you **must** call `sentry_value_decref(event)` before returning. Use the hint to add attachments.
+
+User feedback does not go through <PlatformIdentifier name="before_send" />, so this is the only hook that sees it. See [Filtering](/platforms/native/configuration/filtering/#using-before-send-feedback).
 
 </SdkOption>
 
@@ -140,7 +148,7 @@ This option enables the [logging integration](/platforms/native/logs), which all
 
 <SdkOption name="before_send_log" type="function">
 
-This function is called with an SDK-specific log object, and can return a modified log object, or `sentry_value_new_null()` to drop the log.
+This function is called with an SDK-specific log object, and can return a modified log object, or `sentry_value_new_null()` to drop the log. In that case, you **must** call `sentry_value_decref(log)` before returning.
 
 </SdkOption>
 
@@ -150,9 +158,25 @@ Whether calls to `sentry_log_X()` expect an attributes object as the second argu
 
 </SdkOption>
 
+## Metrics Options
+
+<SdkOption name="enable_metrics" type="bool" defaultValue="true" availableSince="0.12.6">
+
+This option enables [Application Metrics](/platforms/native/metrics). When disabled, all calls to `sentry_metrics_*()` are no-ops.
+
+Metrics have been enabled by default since `0.13.5`. In earlier versions they were experimental and had to be turned on explicitly.
+
+</SdkOption>
+
+<SdkOption name="before_send_metric" type="function" availableSince="0.12.6">
+
+This function is called with an SDK-specific metric object, and can return a modified metric object, or `sentry_value_new_null()` to drop the metric. In that case, you **must** call `sentry_value_decref(metric)` before returning. An example can be found on the [Metrics page](/platforms/native/metrics/#before_send_metric).
+
+</SdkOption>
+
 ## App Hang Options
 
-These options control in-process app-hang detection. See the [App Hangs page](/platforms/native/usage/app-hangs/) for a full explanation and usage example.
+These options control in-process app-hang detection. See the [App Hangs page](/platforms/native/app-hangs/) for a full explanation and usage example.
 
 <SdkOption name="enable_app_hang_tracking" type="bool" defaultValue="false" availableSince="0.15.2">
 

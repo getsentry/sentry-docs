@@ -39,11 +39,8 @@ Trace
           └── Child span
 ```
 
-
-
 Span stream mode will be enabled by default in version `11.0.0` of the SDK.
 You can already opt into stream mode in version 10 by following the migration guide below.
-
 
 ## Prerequisites
 
@@ -64,13 +61,12 @@ If you use `beforeSendSpan` or `beforeSendTransaction`, follow these steps:
 4. [Migrate tags (`Sentry.setTag(s)`) to attributes (`Sentry.setAttribute(s)`)](#shared-attributes)
 5. [Verify the migration](#verify-your-setup)
 
-
-### Agent-Assisted migration
+### Agent-Assisted Migration
 
 Copy the following prompt and paste it into your AI agent:
 
 ```txt
-Use curl to download, read and follow https://raw.githubusercontent.com/getsentry/sentry-for-ai/refs/heads/main/skills-legacy/sentry-span-streaming-js/SKILL.md to enable and migrate to span streaming in the Sentry SDK.
+Follow ___CURRENT_URL___ to enable and migrate to span streaming in the Sentry SDK.
 ```
 
 ## Enable Stream Mode
@@ -217,7 +213,7 @@ Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span
 ### Shared Attributes
 
 Previously, transaction mode applied shared tags (`Sentry.setTag(s)`) to the service span (transaction).
-In Stream mode, tags are no longer applied to spans. 
+In Stream mode, tags are no longer applied to spans.
 Set shared attributes on a specific scope instead.
 You don't need to remove tags from your code, since they still apply to errors.
 Instead, add attributes for all data that's relevant for spans, logs metrics.
@@ -226,7 +222,7 @@ Instead, add attributes for all data that's relevant for spans, logs metrics.
 <SplitSection>
 <SplitSectionText>
 
-Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics). 
+Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics).
 These work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but they accept `string`, `number`, and `boolean` values.
 
 To attach attributes to a broader or narrower context, set them on a specific scope instead. Use the global scope for app-wide attributes and the current scope for a single operation.
@@ -260,6 +256,11 @@ Sentry.withScope((scope) => {
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+## Breadcrumbs
+
+In stream mode, breadcrumbs are no longer sent with spans.
+They remain attached to errors, so you don't need to change how you record them.
 
 ## Extended Configuration (Optional)
 
@@ -437,7 +438,6 @@ If you're auto-instrumenting and don't know what the initial name of a span is w
 
 Distributed tracing works out of the box when tracing is enabled and works the same way in stream mode. If you need to manually propagate trace context, for example,
 when the SDK can't instrument automatically, see <PlatformLink to="/tracing/distributed-tracing/custom-instrumentation/">Custom Trace Propagation</PlatformLink>.
-
 
 ## Verify Your Setup
 

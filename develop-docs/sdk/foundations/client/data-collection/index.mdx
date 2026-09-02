@@ -2,12 +2,21 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.9.1
+spec_version: 0.12.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.12.0
+    date: 2026-08-31
+    summary: Require `dataCollection` to be documented as an explicit setup step instead of a commented-out override in the init snippet.
+  - version: 0.11.0
+    date: 2026-07-30
+    summary: Require encoded URL query parameters to be stored exactly as they appear in the URL.
+  - version: 0.10.0
+    date: 2026-07-29
+    summary: Clarify that Session Replay is not gated by `dataCollection` or `sendDefaultPii` due to opposing defaults (opt-in vs. opt-out).
   - version: 0.9.1
     date: 2026-07-29
     summary: Clarify that `genAI.inputs` gates system instructions in addition to prompt messages and tool call arguments/definitions.
@@ -132,19 +141,25 @@ SDK documentation **MUST** document the default value and behavior of each `data
 
 </SpecSection>
 
-<SpecSection id="setup-snippet-opt-out" status="candidate" since="0.4.0">
+<SpecSection id="setup-step-data-collection" status="candidate" since="0.12.0">
 
-### Setup Snippet Opt-Out Comment
+### Data Collection Setup Step
 
-All SDK initialization code snippets (including documentation examples, onboarding flows, and CLI wizard output) **MUST** include a commented-out `dataCollection` override that disables `userInfo` and `httpBodies`.
-The comment **MUST** include a URL linking to the full `dataCollection` documentation matching the specific platform or guide.
+Setup instructions **MUST** present `dataCollection` as its own set-up step (similar to source maps or tunneling).
+Initialization snippets **SHOULD NOT** carry a commented-out `dataCollection` override, because commented-out code is easy to overlook and makes the snippet harder to read.
 
-```pseudocode
+The step **MUST** be included in every surface that tells users how to set up the SDK, for example setup documentation, onboarding flows, and setup tools such as CLI wizards. The surfaces might differ per platform.
+
+The step **MUST**:
+
+- state that the SDK collects all data, including user identity data by default
+- show an example snippet that disables an option. For example, `userInfo`.
+- link to the full `dataCollection` documentation of the applicable platform or guide
+
+```js
 init({
   dsn: "...",
-  // To disable sending user data and HTTP bodies, uncomment the line below. For more info visit:
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection
-  // dataCollection: { userInfo: false, httpBodies: [] },
+  dataCollection: { userInfo: false },
 })
 ```
 
@@ -198,15 +213,17 @@ URL strings in span descriptions follow the format defined in [Structuring Data]
 
 The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
 
-**Example:** Given a request to `https://example.com/api/users?token=abc123&page=5`:
+Encoded query parameters **MUST** be stored exactly as they appear in the URL.
+
+**Example:** Given a request to `https://example.com/api/users?token=abc123&q=a%20b%26c&page=5`:
 
 | Attribute | `urlQueryParams` enabled | `urlQueryParams` off |
 |---|---|---|
 | Span description | `GET https://example.com/api/users` | same |
-| `url.full` | `https://example.com/api/users?token=[Filtered]&page=5` | `https://example.com/api/users` |
+| `url.full` | `https://example.com/api/users?token=[Filtered]&q=a%20b%26c&page=5` | `https://example.com/api/users` |
 | `url.path` | `/api/users` | same |
-| `url.query` | `token=[Filtered]&page=5` | not collected |
-| `request.query_string` | `token=[Filtered]&page=5` | not collected |
+| `url.query` | `token=[Filtered]&q=a%20b%26c&page=5` | not collected |
+| `request.query_string` | `token=[Filtered]&q=a%20b%26c&page=5` | not collected |
 
 #### Cookies and URL Query Params
 
@@ -224,7 +241,7 @@ http.request.header.cookie.theme: "dark-mode"           // not sensitive — val
 http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
 ```
 
-For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is.
+For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is (see [URLs](#urls)).
 
 
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
@@ -261,6 +278,17 @@ is most natural for their API surface.
 
 When an integration exposes data-collection options, the values set on the integration **MUST** take precedence over the
 corresponding global `dataCollection` values for the data that integration collects.
+
+#### Session Replay
+
+Session Replay is **not** gated by `dataCollection` (or its predecessor `sendDefaultPii`). It is a privacy-sensitive
+feature with its own opt-in privacy model — by default it masks all text, images, and user input — which is the
+**opposite** of the `dataCollection` opt-out model. Wiring the two together would flip privacy-sensitive defaults for the
+majority of existing Replay users and create confusion about which layer controls masking.
+
+Because of this, SDKs **MUST NOT** change what Session Replay captures based on `dataCollection`.
+Replay's masking and network-capture behavior **MUST** continue to be controlled exclusively by the Replay
+integration's own privacy options. SDK documentation **SHOULD** explicitly state that `dataCollection` does not affect Session Replay so users are not surprised by the exception.
 
 </SpecSection>
 

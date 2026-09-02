@@ -13,6 +13,7 @@ import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {SpecChangelog} from 'sentry-docs/components/specChangelog';
 import {isSpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
+import {isDevelopDocsIndexablePath} from 'sentry-docs/developDocsConfig';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -372,6 +373,13 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       }
 
       noindex = pageNode.frontmatter.noindex;
+
+      // De-index deep develop docs pages to prevent them from competing with
+      // docs.sentry.io in search results. Only the homepage and the root page
+      // of each left nav section remain indexable.
+      if (isDeveloperDocs && !noindex) {
+        noindex = !isDevelopDocsIndexablePath(params.path);
+      }
 
       // Check for manual OG image override in frontmatter
       if (pageNode.frontmatter.og_image) {

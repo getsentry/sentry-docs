@@ -16,7 +16,7 @@ import {
 } from 'react';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
-import {uniqByReference} from 'sentry-docs/utils';
+import {isLocalStorageAvailable, uniqByReference} from 'sentry-docs/utils';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 import styles from './style.module.scss';
@@ -84,10 +84,8 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const pathname = usePathname();
 
-  // Auto-open selector when on /platforms/ index page (no SDK selected)
-  const isOnPlatformsIndex = pathname === '/platforms/' || pathname === '/platforms';
-
-  const [open, setOpen] = useState(alwaysOpen || isOnPlatformsIndex);
+  // Not auto-opened on /platforms/: Radix Select locks body scroll while open.
+  const [open, setOpen] = useState(alwaysOpen);
   const [searchValue, setSearchValue] = useState('');
 
   const matches = useMemo(() => {
@@ -116,7 +114,9 @@ export function PlatformSelector({
       platform => platform.key === platformKey.replace('-redirect', '')
     );
     if (platform_) {
-      localStorage.setItem('active-platform', platform_.key);
+      if (isLocalStorageAvailable()) {
+        localStorage.setItem('active-platform', platform_.key);
+      }
       // Use hard navigation for faster page load
       window.location.href = platform_.url;
     }
@@ -145,6 +145,9 @@ export function PlatformSelector({
   }, []);
 
   useLayoutEffect(() => {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
     } else {
@@ -389,7 +392,9 @@ function PlatformItem({
           style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}
           onClick={() => {
             if (typeof window !== 'undefined') {
-              localStorage.setItem('active-platform', platform.key);
+              if (isLocalStorageAvailable()) {
+                localStorage.setItem('active-platform', platform.key);
+              }
               window.location.href = platform.url;
             }
           }}
@@ -511,7 +516,9 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
         }}
         onClick={() => {
           if (typeof window !== 'undefined') {
-            localStorage.setItem('active-platform', guide.key);
+            if (isLocalStorageAvailable()) {
+              localStorage.setItem('active-platform', guide.key);
+            }
             window.location.href = guide.url;
           }
         }}

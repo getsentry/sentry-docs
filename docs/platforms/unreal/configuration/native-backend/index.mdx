@@ -49,6 +49,28 @@ Available modes:
 - `NativeStackwalking` - Walk the stack client-side in the crash daemon and send a JSON event with stack traces. No minidump is generated, resulting in faster uploads and smaller payloads.
 - `NativeStackwalkingWithMinidump` (default) - Perform client-side stack unwinding and also attach a minidump for deep debugging when needed.
 
+### Thread Stackwalk Mode
+
+Controls which threads have their stack walked client-side. You can adjust this in **Project Settings > Plugins > Sentry > General > Native > Thread stackwalk mode**.
+
+Available modes:
+- `CrashedThreadOnly` - Walk the crashed thread only. The remaining threads are still reported with their id and name, but without a stack trace.
+- `AllThreads` (default) - Walk every thread of the crashed process, providing the most context.
+
+Walking every thread of an application with a high thread count, such as an editor build, can noticeably delay crash processing. Switching to `CrashedThreadOnly` keeps the crashed thread's stack trace intact while shortening the time needed to collect a crash.
+
+This setting applies only when client-side stack unwinding is enabled, i.e. when the crash reporting mode is `NativeStackwalking` or `NativeStackwalkingWithMinidump`.
+
+### Crash Upload Mode
+
+Controls what happens after crash data has been captured. You can adjust this in **Project Settings > Plugins > Sentry > General > Native > Crash upload mode**.
+
+Available modes:
+- `Sync` (default) - Keep the crashed application blocked until the crash daemon finishes uploading the crash report.
+- `Async` - Let the crashed application terminate as soon as crash data has been captured, while the crash daemon finishes the upload in the background.
+
+`Sync` gives the crash report the best chance of reaching Sentry before the process goes away, but the application stays frozen for the duration of the upload. With large payloads, such as full minidumps, big attachments, or session replay clips, that delay is noticeable to players. `Async` removes the freeze, at the cost of the upload no longer being tied to the lifetime of the crashed process.
+
 ### Enabling Network Access on macOS
 
 <Alert>
