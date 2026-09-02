@@ -933,7 +933,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/dev-toolbar/:path*',
-    destination: '/product/sentry-toolbar/:path*',
+    destination: 'https://github.com/getsentry/sentry-toolbar',
+  },
+  {
+    source: '/product/sentry-toolbar/:path*',
+    destination: 'https://github.com/getsentry/sentry-toolbar',
   },
   {
     source: '/organization/integrations/launchdarkly/',
