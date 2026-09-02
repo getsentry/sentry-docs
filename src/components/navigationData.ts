@@ -30,10 +30,10 @@ export const moreSections: NavSection[] = [
 // Main navigation sections with dropdowns (used in TopNavClient)
 // Labels use title case with proper acronym handling (SDKs, API stay uppercase)
 export const mainSectionsWithDropdowns: NavSection[] = [
+  {label: 'Get Started', href: '/get-started/'},
   {label: 'SDKs', href: '/platforms/'},
   {label: 'Product', href: '/product/'},
   {label: 'AI', href: '/ai/'},
-  {label: 'Get Started', href: '/get-started/'},
   {label: 'Concepts', href: '/concepts/', dropdown: conceptsSections},
   {label: 'API', href: '/api/'},
   {label: 'Manage', href: '/organization/', dropdown: moreSections},
@@ -42,10 +42,10 @@ export const mainSectionsWithDropdowns: NavSection[] = [
 // Main navigation sections as simple links (used in mobile nav, header, sidebar)
 // Labels are title case for mobile/sidebar display
 export const mainSections: NavSection[] = [
+  {label: 'Get Started', href: '/get-started/'},
   {label: 'SDKs', href: '/platforms/'},
   {label: 'Product', href: '/product/'},
   {label: 'AI', href: '/ai/'},
-  {label: 'Get Started', href: '/get-started/'},
   {label: 'Concepts', href: '/concepts/'},
   {label: 'API', href: '/api/'},
   {label: 'Account Settings', href: '/account/'},
