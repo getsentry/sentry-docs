@@ -189,8 +189,9 @@ on the machine and sets up the plugin in each.
 Browse the skill library:
 - [All Skills](https://skills.sentry.dev/): Full skill index with SDK setup, workflows, and feature configuration
 - [SDK Setup](https://skills.sentry.dev/instrument): Detect your platform and install Sentry with the right features
-- [Workflows](https://skills.sentry.dev/workflows): Debug production issues, review code, upgrade SDKs
-- [Features](https://skills.sentry.dev/features): AI monitoring, alerts, OpenTelemetry setup
+- [Debug Issues](https://skills.sentry.dev/sentry-debug-issue/SKILL.md): Debug production issues, review code
+- [Create Alerts](https://skills.sentry.dev/sentry-create-alert/SKILL.md): Workflow-engine alerts and automations
+- [OTel Setup](https://skills.sentry.dev/sentry-otel-exporter-setup/SKILL.md): OpenTelemetry Collector + Sentry Exporter
 
 Source: https://github.com/getsentry/sentry-for-ai`;
 
