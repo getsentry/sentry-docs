@@ -114,7 +114,7 @@ export function LayerDetailClient({
       const layer = normalizeLayer((await response.json()) as LayerData);
       applyLayerSelection(layer, preferredRuntime, preferredRegion);
     } catch {
-      applyLayerSelection(defaultLayer);
+      applyLayerSelection(defaultLayer, preferredRuntime, preferredRegion);
       setSelectedSdkVersion(latestSdkVersion);
       setLoadError(
         'Unable to load that SDK version. Showing the latest available layer.'
