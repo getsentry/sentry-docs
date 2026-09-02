@@ -80,15 +80,19 @@ Review the data your agent handles before you enable these options in production
 
 Start Eve and send a prompt that calls a tool. Then open <Link to="/product/agents/">Agent Tracing</Link> in Sentry and select the conversation. The transcript shows the captured input and output, and the timeline shows model calls, tool calls, token use, and latency.
 
-Each turn produces a trace shaped like this:
+Eve emits spans that follow the OpenTelemetry GenAI semantic conventions. Sentry derives the span op from the `gen_ai.operation.name` attribute, so each turn shows up like this:
 
 ```text
-ai.eve.turn
-  +-- ai.streamText                   step 1
-  |     +-- ai.streamText.doStream    model call
-  |     +-- ai.toolCall               tool execution
-  +-- ai.streamText                   step 2
+ai.eve.turn                              default
+  +-- invoke_agent <agent>               gen_ai.invoke_agent
+        +-- step 1                       gen_ai.agent_step
+        |     +-- chat <model>           gen_ai.chat
+        |     +-- execute_tool <tool>    gen_ai.execute_tool
+        +-- step 2                       gen_ai.agent_step
+              +-- chat <model>           gen_ai.chat
 ```
+
+A tool that calls another agent nests a second `invoke_agent` span under its `execute_tool` span.
 
 ## Troubleshooting
 
