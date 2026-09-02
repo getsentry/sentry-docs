@@ -106,20 +106,35 @@ function parseRuntimeTable(
   lifecycle: Exclude<RuntimeLifecycle, 'preview'>,
   previewNames: Set<string> = new Set()
 ): Runtime[] {
-  return markdownSection
+  const rows = markdownSection
     .split('\n')
     .filter(line => line.trimStart().startsWith('|'))
-    .map(line => line.split('|').slice(1, -1).map(cleanCell))
+    .map(line => line.split('|').slice(1, -1).map(cleanCell));
+  const header = rows.find(
+    cells =>
+      cells.includes('Name') &&
+      cells.includes('Identifier') &&
+      cells.includes('Deprecation date')
+  );
+  if (!header) {
+    throw new Error('AWS Lambda runtime table columns were not found');
+  }
+
+  const nameIndex = header.indexOf('Name');
+  const identifierIndex = header.indexOf('Identifier');
+  const deprecationDateIndex = header.indexOf('Deprecation date');
+
+  return rows
     .filter(
       cells =>
-        cells.length === 6 &&
-        cells[0] !== 'Name' &&
+        cells.length === header.length &&
+        cells !== header &&
         !cells.every(cell => /^-+$/.test(cell))
     )
-    .map(([name, identifier, , deprecationDate]) => ({
-      identifier,
-      deprecationDate,
-      lifecycle: previewNames.has(name) ? 'preview' : lifecycle,
+    .map(cells => ({
+      identifier: cells[identifierIndex],
+      deprecationDate: cells[deprecationDateIndex],
+      lifecycle: previewNames.has(cells[nameIndex]) ? 'preview' : lifecycle,
     }));
 }
 
