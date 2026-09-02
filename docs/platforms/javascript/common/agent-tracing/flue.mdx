@@ -94,10 +94,13 @@ import { createOpenTelemetryInstrumentation } from "@flue/opentelemetry";
 import { instrument } from "@flue/runtime";
 import * as Sentry from "@sentry/node";
 
+// `clampRate` keeps the value between 0 and 1 and falls back to 0.
+const tracesSampleRate = clampRate(process.env.SENTRY_TRACES_SAMPLE_RATE, 0);
+
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   enabled: Boolean(process.env.SENTRY_DSN),
-  tracesSampleRate, // clamped from SENTRY_TRACES_SAMPLE_RATE, default 0
+  tracesSampleRate,
   traceLifecycle: "stream",
   streamGenAiSpans: true,
   enableLogs: true,
@@ -141,6 +144,10 @@ import { createOpenTelemetryInstrumentation } from "@flue/opentelemetry";
 import { instrument } from "@flue/runtime";
 import { extend } from "@flue/runtime/cloudflare";
 import * as Sentry from "@sentry/cloudflare";
+
+// The per-isolate `env` bindings exist only inside the wrapper below, so the
+// module-scope `instrument` gate reads `process.env` instead.
+const tracesSampleRate = clampRate(process.env.SENTRY_TRACES_SAMPLE_RATE, 0);
 
 export const cloudflare = extend({
   wrap: (Final) =>
