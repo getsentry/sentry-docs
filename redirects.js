@@ -587,6 +587,16 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  // Guides → Get Started restructure
+  {
+    source: '/guides/',
+    destination: '/get-started/guides/',
+  },
+  {
+    source: '/guides/:path*',
+    destination: '/get-started/guides/:path*',
+  },
+
   {
     source: '/api/guides/oauth/',
     destination: '/api/auth/',
