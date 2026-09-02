@@ -26,7 +26,7 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
   return null;
 }
 
-interface Options {
+interface Options<DataType> {
   /**
    * URL to fetch the data from
    */
@@ -35,13 +35,18 @@ interface Options {
    * The name of the registry, used for logging messages
    */
   name: string;
+  parseResponse?: (response: Response) => Promise<DataType>;
 }
 
 /**
  * Creates a `ensureData` function that fetches from a URL only once. Subsequent
  * calls will used the already fetched data.
  */
-export function makeFetchCache<DataType>({dataUrl, name}: Options) {
+export function makeFetchCache<DataType>({
+  dataUrl,
+  name,
+  parseResponse = response => response.json() as Promise<DataType>,
+}: Options<DataType>) {
   let activeFetch: Promise<any> | null = null;
   let data: DataType | null = null;
 
@@ -54,7 +59,7 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
       try {
         console.log(`Fetching registry ${name} (${dataUrl})`);
         const result = await fetchRetry(dataUrl, {retry: 5});
-        data = await result?.json();
+        data = result ? await parseResponse(result) : null;
 
         console.log(`Got data for registry ${name} (${dataUrl})`);
       } catch (err) {
