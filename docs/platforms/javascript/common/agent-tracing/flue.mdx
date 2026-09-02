@@ -1,0 +1,215 @@
+---
+title: Flue
+sidebar_title: Flue
+sidebar_order: 28
+description: "Learn how to send Flue agent traces, logs, and errors to Sentry."
+supported:
+  - javascript.node
+  - javascript.cloudflare
+---
+
+[Flue](https://flueframework.com/) is an open TypeScript framework for building AI agents, made by the Astro team. Flue ships an official Sentry blueprint that installs the Sentry SDK, wires Flue's OpenTelemetry instrumentation into it, and bridges Flue's runtime events to Sentry. You don't need to add Sentry calls to each agent or tool.
+
+One agent run sends three connected signals to Sentry:
+
+- **Traces**: Flue's `invoke_agent`, `chat`, and `execute_tool` span hierarchy with token usage, following the OpenTelemetry GenAI semantic conventions. Sentry shows these in <Link to="/product/agents/">Agent Tracing</Link>.
+- **Logs**: every `log.info`, `log.warn`, and `log.error` call from your tools and hooks as <PlatformLink to="/logs/">Sentry Logs</PlatformLink>, correlated with the trace.
+- **Issues**: terminal failures, such as a failed prompt, skill, task, or shell operation. A recovered tool error stays on the trace and does not create an issue.
+
+<PlatformSection supported={["javascript.node"]}>
+
+<Alert>
+
+The blueprint installs `@sentry/node` for the Node.js target and `@sentry/cloudflare` for the Cloudflare target. Read the <Link to="/platforms/javascript/guides/cloudflare/agent-tracing/flue/">Cloudflare version</Link> of this page if you deploy Flue agents to Cloudflare.
+
+</Alert>
+
+</PlatformSection>
+
+## Installation
+
+Run the Sentry blueprint from your project root. It creates a `sentry.ts` module next to `app.ts`, imports it once, and installs `@flue/opentelemetry` together with the Sentry SDK for your target:
+
+```bash
+flue add tooling sentry
+```
+
+## Configuration
+
+The generated module reads its configuration from environment variables. Only `SENTRY_DSN` is required.
+
+| Variable                    | Default | Purpose                                                                                                           |
+| --------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `SENTRY_DSN`                |         | Your project's <Link to="/concepts/key-terms/dsn-explainer/">DSN</Link>. Without it, all Sentry calls are no-ops. |
+| `SENTRY_ENVIRONMENT`        |         | The deployment environment, such as `production` or `staging`.                                                    |
+| `SENTRY_RELEASE`            |         | The release identifier, such as a commit SHA.                                                                     |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0`     | A value from `0` to `1`. At `0`, Flue sends errors and logs only. Above `0`, Flue also sends AI traces.           |
+| `SENTRY_AI_RECORD_INPUTS`   | `false` | Set to `true` to include prompts, system instructions, and tool definitions and arguments in spans.               |
+| `SENTRY_AI_RECORD_OUTPUTS`  | `false` | Set to `true` to include model output, tool results, and exception messages and stacks in spans.                  |
+
+<PlatformSection supported={["javascript.node"]}>
+
+```bash {filename:.env}
+SENTRY_DSN="___PUBLIC_DSN___"
+SENTRY_TRACES_SAMPLE_RATE=1
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Set the DSN as a Worker secret and the remaining values as variables in `wrangler.jsonc`:
+
+```bash
+wrangler secret put SENTRY_DSN
+```
+
+```json {filename:wrangler.jsonc}
+{
+  "vars": {
+    "SENTRY_TRACES_SAMPLE_RATE": "1",
+    "SENTRY_ENVIRONMENT": "production"
+  }
+}
+```
+
+</PlatformSection>
+
+Set `SENTRY_TRACES_SAMPLE_RATE=1` while you verify the setup. Lower it afterwards if your agent runs at high volume.
+
+### Record Prompts and Responses
+
+By default, spans carry timing, token usage, model identifiers, and correlation IDs, but no message or tool content. Set `SENTRY_AI_RECORD_INPUTS` and `SENTRY_AI_RECORD_OUTPUTS` to `true` so the Agent Tracing transcript includes the full conversation, tool arguments, and tool results. The blueprint scrubs keys such as `token`, `secret`, and `password` and truncates each attribute to 16 KiB.
+
+Review the data your agent handles before you enable these options in production.
+
+## How It Works
+
+<PlatformSection supported={["javascript.node"]}>
+
+On Node.js, the generated `sentry.ts` calls `Sentry.init` at module scope. Sentry becomes the global OpenTelemetry tracer provider, so the spans from `@flue/opentelemetry` flow to Sentry without extra wiring. The core of the generated file looks like this:
+
+```typescript {filename:src/sentry.ts}
+import { createOpenTelemetryInstrumentation } from "@flue/opentelemetry";
+import { instrument } from "@flue/runtime";
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: Boolean(process.env.SENTRY_DSN),
+  tracesSampleRate, // clamped from SENTRY_TRACES_SAMPLE_RATE, default 0
+  traceLifecycle: "stream",
+  streamGenAiSpans: true,
+  enableLogs: true,
+  // Flue already emits one `chat` span per model call, so Sentry's
+  // AI provider integrations are removed to avoid double counting.
+  integrations: (defaults) =>
+    defaults.filter((i) => !SENTRY_AI_PROVIDER_INTEGRATIONS.has(i.name)),
+});
+
+if (tracesSampleRate > 0) {
+  instrument(createOpenTelemetryInstrumentation({ content: contentPolicy() }));
+}
+
+instrument({
+  key: Symbol.for("flue.sentry.bridge"),
+  observe(event) {
+    if (event.type === "operation" && event.isError) {
+      // Terminal failures become issues.
+    }
+    if (event.type === "log") {
+      Sentry.logger[event.level](event.message, logAttributes(event));
+    }
+  },
+  interceptor: (_operation, _ctx, next) => next(),
+  async dispose() {
+    await Sentry.flush(2000);
+  },
+});
+```
+
+Because `Sentry.init` runs after the application starts importing modules, the blueprint does not enable Sentry's HTTP or database auto-instrumentation. If you need those, add the <PlatformLink to="/install/">preload setup</PlatformLink> before your application imports and verify it against the built Flue server.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, each agent conversation runs in its own Durable Object isolate, so the generated `sentry.ts` does not call `Sentry.init`. Instead, it exports a `cloudflare` extension that wraps every generated agent Durable Object with <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink>. The wrapper initializes the SDK once per isolate from the Worker's bindings:
+
+```typescript {filename:src/sentry.ts}
+import { createOpenTelemetryInstrumentation } from "@flue/opentelemetry";
+import { instrument } from "@flue/runtime";
+import { extend } from "@flue/runtime/cloudflare";
+import * as Sentry from "@sentry/cloudflare";
+
+export const cloudflare = extend({
+  wrap: (Final) =>
+    Sentry.instrumentDurableObjectWithSentry(
+      (env: Env) => ({
+        dsn: env.SENTRY_DSN,
+        enabled: Boolean(env.SENTRY_DSN),
+        environment: env.SENTRY_ENVIRONMENT,
+        release: env.SENTRY_RELEASE,
+        tracesSampleRate: clampRate(env.SENTRY_TRACES_SAMPLE_RATE, 0),
+        traceLifecycle: "stream",
+        streamGenAiSpans: true,
+        enableLogs: true,
+        integrations: (defaults) =>
+          defaults.filter((i) => !SENTRY_AI_PROVIDER_INTEGRATIONS.has(i.name)),
+      }),
+      Final
+    ),
+});
+
+if (tracesSampleRate > 0) {
+  instrument(createOpenTelemetryInstrumentation({ content: contentPolicy() }));
+}
+```
+
+Each agent module re-exports the extension so the build applies it:
+
+```typescript {filename:src/agents/support.ts}
+export { cloudflare } from "../sentry.ts";
+```
+
+The wrapper covers the agent Durable Objects only. It does not instrument the outer Worker or an authored Hono application. Wrap the Worker with <Link to="/platforms/javascript/guides/cloudflare/">`withSentry`</Link> if you also need request instrumentation. Don't use `@sentry/node` on Cloudflare.
+
+Flushes ride the platform's event lifecycle and are best-effort. Traces and issues are sent during the run. Very recently buffered logs can be cut short when an isolate shuts down.
+
+</PlatformSection>
+
+### Correlation Tags
+
+Issues, logs, and spans carry the same `flue.*` tags, such as `flue.instance.id`, `flue.agent.name`, `flue.conversation.id`, and `flue.submission.id`. Search for one of these values in Sentry to find every signal from a single agent instance. Filter by `gen_ai.agent.name` to compare token use and latency across a lead agent and its subagents.
+
+## Verify
+
+Set `SENTRY_TRACES_SAMPLE_RATE=1` against a non-production project, then:
+
+1. Prompt a tool-using agent. Open <Link to="/product/agents/">Agent Tracing</Link> and confirm one trace with `invoke_agent`, `chat`, and `execute_tool` spans and token usage on the `chat` span.
+2. Call `log.info` from a tool. Confirm the line appears in <PlatformLink to="/logs/">Logs</PlatformLink> on the same trace.
+3. Trigger one terminal failure. Confirm exactly one issue with the original error and stack trace.
+4. Confirm that the application still starts without a configured DSN.
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Also confirm that a wrapped agent delivers spans, logs, and issues from `workerd`, for example by running `wrangler dev`.
+
+</PlatformSection>
+
+## Troubleshooting
+
+- **Logs and issues arrive but no traces.** `SENTRY_TRACES_SAMPLE_RATE` defaults to `0`. Set it above `0`.
+- **Token and cost values are doubled.** Don't add a second AI tracing integration such as the <PlatformLink to="/configuration/integrations/vercelai/">Vercel AI integration</PlatformLink> or <PlatformLink to="/configuration/integrations/anthropic/">Anthropic integration</PlatformLink>. The blueprint removes them on purpose because Flue already emits the model spans.
+- **A tool error did not create an issue.** Only terminal operation and submission failures create issues. A recovered tool error stays on the trace as diagnostic context.
+
+## Supported Versions
+
+- `@sentry/node` or `@sentry/cloudflare`: `>=10.64.0`
+- `@flue/opentelemetry`: the version that matches your Flue project
+
+## Next Steps
+
+- [Instrument Flue agents with Sentry](https://sentry.io/cookbook/instrument-flue-agents-with-sentry/): a step-by-step cookbook with screenshots of the result in Sentry.
+- [Monitor AI agent spend with dashboards and alerts](https://sentry.io/cookbook/monitor-ai-agent-spend-with-dashboards-and-alerts/): build a dashboard for cost, tokens, models, and conversations.
+- [Flue's Sentry tooling page](https://flueframework.com/docs/ecosystem/tooling/sentry/) and [observability guide](https://flueframework.com/docs/guide/observability/): the same setup from the Flue side, and the event model behind it.
