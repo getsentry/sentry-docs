@@ -44,17 +44,16 @@ Don't use the AI SDK's `registerTelemetry` API (AI SDK v7 and above) together wi
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-Next.js runs your server code in two runtimes, and Sentry ships a different implementation for each. The Node implementation patches the `ai` module through OpenTelemetry. The Edge runtime can't load OpenTelemetry instrumentation, so it uses a reduced implementation that reads the spans the AI SDK emits on its own.
+Next.js runs your server code in two runtimes. In both, you must pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
 
-That difference decides where you configure the integration and which options do anything:
+Everything else depends on which runtime you're in:
 
-|                                   | Node runtime                | Edge runtime                            |
-| --------------------------------- | --------------------------- | --------------------------------------- |
-| Enabled by default                | Yes                         | No — add it to `sentry.edge.config`     |
-| `experimental_telemetry` per call | Not needed                  | Required, or no spans are created       |
-| Record inputs and outputs         | Integration or per call     | Per call only                           |
-| `force`                           | Available                   | Not available — always active           |
-| AI SDK v7                         | Supported                   | Not supported                           |
+|                           | Node runtime            | Edge runtime                        |
+| ------------------------- | ----------------------- | ----------------------------------- |
+| Enabled by default        | Yes                     | No — add it to `sentry.edge.config` |
+| Record inputs and outputs | Integration or per call | Per call only                       |
+| `force`                   | Available               | Not available — always active       |
+| AI SDK v7                 | Supported               | Not supported                       |
 
 </PlatformSection>
 
@@ -95,7 +94,7 @@ Prompts and completions are not captured until you opt in. See [Record inputs an
 
 ### Node Runtime
 
-The integration is enabled by default. No setup code is needed beyond enabling tracing:
+The integration is enabled by default:
 
 ```javascript {filename:sentry.server.config.ts}
 Sentry.init({
@@ -103,8 +102,6 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 ```
-
-If spans are missing here, your build most likely bundled the `ai` package so module detection fails. See [Troubleshooting](#troubleshooting).
 
 ### Edge Runtime
 
@@ -118,7 +115,9 @@ Sentry.init({
 });
 ```
 
-Adding the integration is not enough on its own. The Edge runtime can't patch your call sites, so you must also pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
+In both runtimes, adding the integration is not enough on its own. You must also pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
+
+If your spans have raw names like `ai.toolCall`, see [Troubleshooting](#troubleshooting).
 
 </PlatformSection>
 
@@ -237,9 +236,7 @@ const result = await generateText({
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-### Node Runtime
-
-Set the options on the integration to cover every call. Re-adding the integration replaces the default instance and configures it:
+Set the options on the integration to cover every call (Node runtime only). Re-adding the integration replaces the default instance and configures it:
 
 ```javascript {filename:sentry.server.config.ts}
 Sentry.init({
@@ -254,25 +251,13 @@ Sentry.init({
 });
 ```
 
-To record only some calls, leave the integration options unset and set them per call instead:
-
-```javascript
-const result = await generateText({
-  model: openai("gpt-4o"),
-  experimental_telemetry: {
-    recordInputs: true,
-    recordOutputs: true,
-  },
-});
-```
-
-### Edge runtime
-
 <Alert level="warning">
 
 The Edge runtime ignores `recordInputs` and `recordOutputs` on the integration. It accepts no error and logs no warning — your prompts are simply missing. Set both per call.
 
 </Alert>
+
+Or set them per call, which works in both runtimes:
 
 ```javascript
 const result = await generateText({
@@ -373,7 +358,7 @@ Every instrumented `ai` function takes an `experimental_telemetry` object. Use i
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-This applies to the **Edge** runtime only. On the Node runtime, Sentry patches your call sites for you.
+Required in both the Node and Edge runtimes.
 
 </PlatformSection>
 
@@ -443,12 +428,6 @@ Spans are captured without the `experimental_telemetry` block. Pass it only to s
 </PlatformSection>
 
 <PlatformSection supported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
-
-<PlatformSection supported={['javascript.nextjs']}>
-
-This applies to the **Edge** runtime only. On the Node runtime, Sentry patches your call sites for you — pass `experimental_telemetry` only to set `functionId` or the recording options.
-
-</PlatformSection>
 
 ```javascript
 const agent = new ToolLoopAgent({
@@ -545,7 +524,7 @@ Sentry.init({
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
-Not available in the Edge runtime, where the integration is always active once you add it.
+`force` only registers the span processors. You still need `experimental_telemetry` on every call. Not available in the Edge runtime, where the integration is always active once you add it.
 
 </PlatformSection>
 
@@ -571,13 +550,7 @@ Spans are captured for these `ai` functions:
 
 </PlatformSection>
 
-<PlatformSection supported={['javascript.nextjs']}>
-
-Spans are captured for these `ai` functions. On the Edge runtime, pass `experimental_telemetry` to each one, as described in [Turn on telemetry](#turn-on-telemetry):
-
-</PlatformSection>
-
-<PlatformSection supported={['javascript.cloudflare', 'javascript.deno']}>
+<PlatformSection supported={['javascript.cloudflare', 'javascript.deno', 'javascript.nextjs']}>
 
 Spans are captured for these `ai` functions. Pass `experimental_telemetry` to each one, as described in [Turn on telemetry](#turn-on-telemetry):
 
@@ -629,11 +602,7 @@ Plus `generate()` and `stream()` on [`ToolLoopAgent`](#toolloopagent).
 
 <Expandable title="Why do my AI spans show 'ai.toolCall' instead of 'gen_ai.execute_tool' on Vercel?">
 
-When deploying to Vercel, you may notice that AI SDK spans have raw names like `ai.toolCall` or `ai.streamText` instead of the expected semantic names like `gen_ai.execute_tool` or `gen_ai.stream_text`.
-
-This happens because the `ai` package is bundled (not externalized) in Next.js production builds, which prevents the integration from automatically detecting and instrumenting the module.
-
-To fix this, explicitly enable the integration with `force: true` in your `sentry.server.config.ts`:
+Raw names mean the AI SDK's telemetry is already on and emitting spans — Sentry's span processors just aren't registered to rename them. Add `force: true`:
 
 ```javascript {filename:sentry.server.config.ts}
 Sentry.init({
@@ -642,7 +611,14 @@ Sentry.init({
 });
 ```
 
-The `force` option ensures the integration registers its span processors regardless of module detection.
+Keep `experimental_telemetry` on your calls. It's what produces the spans in the first place, so `force: true` without it leaves you with no AI spans at all. If only some of your spans have raw names, the remaining call sites are missing it:
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: { isEnabled: true },
+});
+```
 
 </Expandable>
 
