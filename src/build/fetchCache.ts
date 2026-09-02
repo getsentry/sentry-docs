@@ -11,7 +11,11 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
 
   while (retry > 0) {
     try {
-      return await fetch(url, opts);
+      const response = await fetch(url, opts);
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      return response;
     } catch (e) {
       if (retry !== 0) {
         console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
