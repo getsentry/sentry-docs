@@ -112,7 +112,19 @@ export function captureException(exception: unknown): void {
   }
 }
 
-export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';
+export const isLocalStorageAvailable = () => {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return false;
+    }
+    const testKey = '__sentry_ls_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');

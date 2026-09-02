@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.11.0
+spec_version: 0.12.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.12.0
+    date: 2026-08-31
+    summary: Require `dataCollection` to be documented as an explicit setup step instead of a commented-out override in the init snippet.
   - version: 0.11.0
     date: 2026-07-30
     summary: Require encoded URL query parameters to be stored exactly as they appear in the URL.
@@ -138,19 +141,25 @@ SDK documentation **MUST** document the default value and behavior of each `data
 
 </SpecSection>
 
-<SpecSection id="setup-snippet-opt-out" status="candidate" since="0.4.0">
+<SpecSection id="setup-step-data-collection" status="candidate" since="0.12.0">
 
-### Setup Snippet Opt-Out Comment
+### Data Collection Setup Step
 
-All SDK initialization code snippets (including documentation examples, onboarding flows, and CLI wizard output) **MUST** include a commented-out `dataCollection` override that disables `userInfo` and `httpBodies`.
-The comment **MUST** include a URL linking to the full `dataCollection` documentation matching the specific platform or guide.
+Setup instructions **MUST** present `dataCollection` as its own set-up step (similar to source maps or tunneling).
+Initialization snippets **SHOULD NOT** carry a commented-out `dataCollection` override, because commented-out code is easy to overlook and makes the snippet harder to read.
 
-```pseudocode
+The step **MUST** be included in every surface that tells users how to set up the SDK, for example setup documentation, onboarding flows, and setup tools such as CLI wizards. The surfaces might differ per platform.
+
+The step **MUST**:
+
+- state that the SDK collects all data, including user identity data by default
+- show an example snippet that disables an option. For example, `userInfo`.
+- link to the full `dataCollection` documentation of the applicable platform or guide
+
+```js
 init({
   dsn: "...",
-  // To disable sending user data and HTTP bodies, uncomment the line below. For more info visit:
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection
-  // dataCollection: { userInfo: false, httpBodies: [] },
+  dataCollection: { userInfo: false },
 })
 ```
 
