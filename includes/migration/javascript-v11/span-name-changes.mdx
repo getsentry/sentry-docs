@@ -1,0 +1,48 @@
+---
+id: span-name-changes
+title: "Span names are low cardinality"
+phase: code-changes
+category: behavior
+severity: behavior-change
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 85
+---
+
+With span streaming on, span names follow the [Sentry span name conventions](https://getsentry.github.io/sentry-conventions/names/) and no longer contain raw URLs, paths, or other high-cardinality values. If you [opt out of span streaming](#span-streaming-opt-out), names are unchanged.
+
+| Span op                                    | Before                                                          | After                                                                                              |
+| ------------------------------------------ | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `pageload`, `navigation`                   | The parameterized route, or the raw URL path (`/users/123`)     | The parameterized route, or `Pageload` / `Navigation`                                              |
+| `http.server`                              | The method and route, or the raw URL path (`GET /users/123`)    | `GET /users/:id` when a route is known, otherwise just the method (`GET`)                           |
+| `http.client`, `http.client.stream`        | The method and sanitized URL (`GET https://api.example.com/users/123`) | The method and domain (`GET api.example.com`), or just the method                          |
+| `router`                                   | Framework-specific, sometimes the raw URL                       | The span's `http.route`, or `Router`                                                               |
+| `graphql`                                  | Phase and operation name (`query GetUser`, `graphql.resolve user.0.name`) | Operation or processing type (`GraphQL query`, `GraphQL parse`, `GraphQL resolve`)       |
+| `gen_ai.chat`, `gen_ai.embeddings`, `gen_ai.generate_content` | `{operation} unknown` when the model is missing | `{operation}` when the model is missing                                                     |
+| `gen_ai.invoke_agent`                      | LangChain chain name prefixed with `chain` (`chain format_prompt`) | `{operation} {name}` (`invoke_agent format_prompt`), or `{operation}`                            |
+| `resource.*`                               | The resource URL (`/assets/app.js`)                              | The resource domain (`cdn.example.com`), or `Resource`                                             |
+| `mcp.server`                               | The method and its target, including resource URIs               | The method alone for resource methods (`resources/read`). Tool and prompt names are unchanged     |
+| `mcp.notification.*`                       | The notification method name                                    | The notification method name, or `MCP notification`                                                |
+| `queue.publish`, `queue.process`, `queue.receive` | Integration-specific (`publish my-exchange`, `my-queue process`, `poll my-topic`) | `<operation type> <destination>` (`send my-exchange`, `process my-queue`, `receive my-topic`) |
+
+The dropped detail stays on attributes: `url.full` and the new `url.domain` on `http.client` and `resource.*` spans, `graphql.operation.name`, `graphql.field.path` and the new `graphql.processing.type` on graphql spans, `mcp.resource.uri` on MCP spans, `gen_ai.pipeline.name` on LangChain spans, and `messaging.operation.name` on messaging spans. `useOperationNameForRootSpan` no longer renames the root span, and `graphqlClientIntegration` no longer appends the operation to the outgoing request span name. AWS SQS `SendMessage`, `SendMessageBatch` and `ReceiveMessage`, and SNS `Publish`, are messaging spans now rather than `rpc`.
+
+Child spans carry the root span's name in `sentry.segment.name`, so that changes too. `ui.action.click` spans are named after the current route.
+
+`ignoreSpans` and `tracesSampler` run when a span **starts**, when an `http.server` span is still named `GET` and a pageload is still `Pageload`. Name-based rules stop matching silently, so match on attributes instead:
+
+```js
+Sentry.init({
+  // Before
+  ignoreSpans: ['/health'],
+  tracesSampler: ({ name, inheritOrSampleWith }) => inheritOrSampleWith(name === 'GET /health' ? 0 : 1),
+
+  // After
+  ignoreSpans: [{ name: 'Pageload', attributes: { 'sentry.op': 'pageload', 'url.path': '/health' } }],
+  tracesSampler: ({ attributes, inheritOrSampleWith }) =>
+    inheritOrSampleWith(attributes?.['url.path'] === '/health' ? 0 : 1),
+});
+```
+
+On `@sentry/nextjs`, the incoming-request span comes from Next.js' own OpenTelemetry instrumentation, so match on `url.full` or `http.target` if `url.path` is absent. Error grouping is not affected: the scope's transaction name still holds the full `${method} ${path}`.

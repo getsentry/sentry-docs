@@ -1,0 +1,27 @@
+---
+id: deno-http-sessions-status-codes
+title: "Deno server requests are tracked as sessions and honor `ignoreStatusCodes`"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: [deno]
+features: []
+platformCategory: server
+order: 160
+---
+
+`denoHttpIntegration` now creates sessions for incoming `node:http` requests, matching the other server SDKs, so release health starts reporting session aggregates if you have a `release` configured. `denoHttpIntegration` and `denoServeIntegration` also honor `ignoreStatusCodes` now, which was declared but never read before, with the default `[[401, 404], [301, 303], [305, 399]]`.
+
+To restore the previous behavior:
+
+```js
+Sentry.init({
+  dsn: '__DSN__',
+  integrations: [
+    Sentry.denoHttpIntegration({ sessions: false, ignoreStatusCodes: [] }),
+    Sentry.denoServeIntegration({ ignoreStatusCodes: [] }),
+  ],
+});
+```
+
+Each integration owns the option for the requests it instruments. The status code filter runs on transaction events, so it only takes effect with `traceLifecycle: 'static'`. `sessionFlushingDelayMS` is configurable and defaults to 60 seconds.

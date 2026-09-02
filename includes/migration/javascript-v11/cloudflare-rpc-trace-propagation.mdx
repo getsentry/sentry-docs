@@ -1,15 +1,26 @@
 ---
 id: cloudflare-rpc-trace-propagation
-title: "`enableRpcTracePropagation` now defaults to `true`"
-phase: verify
-category: behavior
-severity: behavior-change
+title: "`enableRpcTracePropagation` is replaced by `rpcTracePropagationBindings`"
+phase: code-changes
+category: removed-api
+severity: action-required
 frameworks: [cloudflare]
 features: [tracing]
 platformCategory: serverless
-order: 110
+order: 445
 ---
 
-Trace context is now propagated across RPC calls (service bindings, Durable Objects, and WorkerEntrypoints) by default.
+The `enableRpcTracePropagation` option was removed. Trace context is no longer appended to every RPC call on `env`. List the bindings you call in `rpcTracePropagationBindings` instead; strings match a binding name exactly and regular expressions match by pattern, both case-insensitively.
 
-Set `enableRpcTracePropagation: false` to opt out.
+```diff
+  export default Sentry.withSentry(
+    (env) => ({
+      dsn: env.SENTRY_DSN,
+-     enableRpcTracePropagation: true,
++     rpcTracePropagationBindings: ['ORDERS', /^SVC_/],
+    }),
+    handler,
+  );
+```
+
+The option only covers RPC method calls, which carry the trace context as a trailing argument that a non-Sentry receiver would see as a real argument. `stub.fetch()` and service binding `fetch()` carry it in HTTP headers and propagate regardless. Receivers no longer take the option: an instrumented Durable Object or WorkerEntrypoint reads the trace context whenever a caller sends it.
