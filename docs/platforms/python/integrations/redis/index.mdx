@@ -1,29 +1,33 @@
 ---
 title: Redis
-description: "Learn about importing the Redis integration."
+description: "Learn how to set up Sentry's Redis integration and how to capture Redis commands as breadcrumbs."
 ---
-
-The [Redis](https://redis.io/) integration hooks into the [Redis client for Python](https://pypi.org/project/redis/) and logs all Redis commands as <PlatformLink to="/enriching-events/breadcrumbs/">breadcrumbs</PlatformLink>.
 
 <Include name="python-stream-mode-general-callout.mdx" />
 
-## Install
+## Prerequisites
+You need:
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Python `3.6+`
 
-```bash {tabTitle:pip}
-pip install "sentry-sdk"
-```
+<StepConnector selector="h2" showNumbers={true}>
 
-```bash {tabTitle:uv}
-uv add "sentry-sdk"
-```
+## Install & Configure
 
-## Configure
+Follow our <PlatformLink to="/">quick start guide</PlatformLink> to set up Sentry in your Python application (make sure to enable tracing).
+Sentry's Redis integration is enabled automatically if you have the `redis` package installed.
 
-If you have the `redis` Python package in your dependencies, the Redis integration will be enabled automatically.
+The following information will be available to you on Sentry:
 
-<PlatformContent includePath="getting-started-config" />
+- Performance information about requests to Redis will be available in the waterfall diagram in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section on Sentry.
+- Redis commands will be added as [breadcrumbs](/product/issues/issue-details/breadcrumbs/).
+- If `send_default_pii` is set to `True` in your app's `sentry_sdk.init()` call, you will also see the data used in your Redis commands.
+- Sentry will never collect data of the `AUTH` command.
 
-## Verify
+## Verify Your Setup
+
+To verify that Sentry captures your Redis commands, add this code to your app, which will create a transaction called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section:
 
 ### Standard Redis
 
@@ -77,22 +81,9 @@ async def main():
 asyncio.run(main())
 ```
 
-These examples will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the redis commands.
-
-It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
-
-## Behavior
-
-With Redis integration the following information will be available to you on Sentry.io:
-
-- Performance information about requests to redis will be available in the waterfall diagram in the Performance section on Sentry.io.
-- Redis commands will be added as breadcrumbs.
-- If `send_default_pii` is set to `True` you will also see the data used in your redis commands.
-- Data of the `AUTH` command will never be collected.
-
 ## Options
 
-By adding `RedisIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `RedisIntegration` to change its behavior:
+Add `RedisIntegration` explicitly to your `sentry_sdk.init()` call to set options for `RedisIntegration` to change its behavior:
 
 ```python
 import sentry_sdk
@@ -111,22 +102,29 @@ sentry_sdk.init(
 
 You can pass the following keyword arguments to `RedisIntegration()`:
 
-- `max_data_size`
+<SdkOption name='max_data_size' type='int' defaultValue='1024'>
 
-By default `RedisIntegration()` will trim data collected after `1024` characters. You can change this behavior with the `max_data_size` parameter:
+Set `max_data_size` to an integer to control how many characters should be collected.
+When you set this option to a value that evaluates to `False` (like `0` or `None`), no trimming will take place, and the entire Redis command will be recorded.
 
-You can set `max_data_size` to an integer to control how many characters should be collected.
+By default, the integration trims data collected after `1024` characters.
 
-When you set `max_data_size` to a value that evaluates to `False` (like `0` or `None`), no trimming will take place. The whole Redis command will be recorded.
+</SdkOption>
 
-- `cache_prefixes`
+<SdkOption name='cache_prefixes' type='list[string]'>
 
-You can specify a list of prefixes to Redis keys to define a key space that should be considered as cache. Cache keys will show up in the cache-monitoring dashboard, giving you more insight into your caching strategy.
+Specify a list of prefixes for Redis keys to define a key space to consider as cache. Cache keys will show up in the cache-monitoring dashboard, giving you more insight into your caching strategy.
 
-For example, if you, set `cache_prefixes` to `["template.cache", "middleware.cache"]`, then access to all Redis keys starting with `template.cache` or `middleware.cache` will show up in your cache-monitoring dashboard.
+For example, if you set `cache_prefixes=["template.cache", "middleware.cache"]`, then access to all Redis keys starting with `template.cache` or `middleware.cache` will show up in your cache-monitoring dashboard.
 
-## Supported Versions
+</SdkOption>
 
-- Python: 3.6+
+## Next Steps
+<PlatformContent includePath="getting-started-next-steps" />
 
-<Include name="python-use-older-sdk-for-legacy-support.mdx" />
+<Expandable permalink={false} title="Are you having problems setting up the SDK or integration?">
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+</Expandable>
+
+</StepConnector>
