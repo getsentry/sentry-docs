@@ -314,7 +314,9 @@ import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 // copy is byte-identical to the upstream svg/expo.svg; once platformicons cuts
 // a release with it, bump the dependency and switch to
 // `platformicons/svg/expo.svg` (+ svg_80x80) like every other icon.
+import EveSVG from 'sentry-docs/icons/eve.svg';
 import ExpoSVG from 'sentry-docs/icons/expo.svg';
+import FlueSVG from 'sentry-docs/icons/flue.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -514,6 +516,10 @@ const formatToSVG = {
     sm: EmberSVG,
     lg: EmberSVGLarge,
   },
+  eve: {
+    sm: EveSVG,
+    lg: EveSVG,
+  },
   expo: {
     sm: ExpoSVG,
     lg: ExpoSVG,
@@ -541,6 +547,10 @@ const formatToSVG = {
   flask: {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
+  },
+  flue: {
+    sm: FlueSVG,
+    lg: FlueSVG,
   },
   flutter: {
     sm: FlutterSVG,
@@ -984,7 +994,9 @@ export const PLATFORM_TO_ICON = {
   dotnetfx: 'dotnetfx',
   electron: 'electron',
   elixir: 'elixir',
+  eve: 'eve',
   expo: 'expo',
+  flue: 'flue',
   flutter: 'flutter',
   font: 'font',
   fsharp: 'fsharp',
