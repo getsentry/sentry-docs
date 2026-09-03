@@ -7,13 +7,13 @@ supported:
   - javascript.node
 ---
 
-[Eve](https://eve.dev/) is Vercel's filesystem-first framework for building durable backend AI agents on top of the Vercel AI SDK. Eve ships an official Sentry instrumentation that exports agent traces directly to Sentry's OTLP endpoint. You don't need to install a Sentry SDK.
+[Eve](https://eve.dev/) is Vercel's filesystem-first framework for building durable backend AI agents on top of the Vercel AI SDK. Eve ships an official Sentry instrumentation that exports agent traces directly to Sentry's OTLP endpoint. You need to have a Sentry project set up before installing and configuring the OTLP.
 
-Each Eve turn produces a trace with the model calls, tool executions, token usage, and latency of that turn. Sentry shows these traces in <Link to="/product/agents/">Agent Tracing</Link>.
+Each Eve turn produces a trace with the model calls, tool executions, token usage, and latency of that turn. Sentry shows these traces in [trace explorer](/product/trace-explorer/), and builds a wider view for debugging your [agents](/product/agents/).
 
 <Alert>
 
-Eve's Sentry instrumentation sends traces only. Sentry's OTLP intake does not accept span events, so this setup does not create issues or logs. Read the <Link to="/concepts/otlp/direct/traces/">OTLP traces</Link> guide for details on what Sentry ingests.
+Eve's Sentry instrumentation sends traces only. Sentry's OTLP intake does not accept span events, so this setup does not create issues or logs. Read the [OTLP traces](/concepts/otlp/direct/traces/) guide for details on what Sentry ingests.
 
 </Alert>
 
@@ -31,7 +31,7 @@ You must have a Sentry project set up before installing and configuring the OTLP
 
 ### Set the Endpoint and Key
 
-You can find the OTLP traces endpoint and the public key in [Project settings > Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/). The public key is the value after `sentry_key=` in your DSN.
+Copy the OTLP traces endpoint and public key from the OpenTelemetry section under [Project Settings > Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/).
 
 ```bash {filename:.env}
 SENTRY_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___"
@@ -78,7 +78,7 @@ Review the data your agent handles before you enable these options in production
 
 ## Verify
 
-Start Eve and send a prompt that calls a tool. Then open <Link to="/product/agents/">Agent Tracing</Link> in Sentry and select the conversation. The transcript shows the captured input and output, and the timeline shows model calls, tool calls, token use, and latency.
+Start Eve and send a prompt that calls a tool. Then open [Agent Tracing](/product/agents/) in Sentry and select the conversation. The transcript shows the captured input and output, and the timeline shows model calls, tool calls, token use, and latency.
 
 Eve emits spans that follow the OpenTelemetry GenAI semantic conventions. Sentry derives the span op from the `gen_ai.operation.name` attribute, so each turn shows up like this:
 
