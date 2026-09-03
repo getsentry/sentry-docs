@@ -1,39 +1,101 @@
 ---
 title: Flask
-description: "Learn about using Sentry with Flask."
+description: "Learn how to set up Sentry in your Flask app, capture your first errors and traces, and view them in Sentry."
 ---
-
-The Flask integration adds support for the [Flask Web Framework](https://flask.palletsprojects.com).
 
 <Include name="python-stream-mode-general-callout.mdx" />
 
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Flask `1.1.4+`
+- Python `3.6+`
+
+<StepConnector selector="h2" showNumbers={true}>
+
 ## Install
 
-Install `sentry-sdk` from PyPI:
-
-```bash {tabTitle:pip}
-pip install sentry-sdk
-```
-
-```bash {tabTitle:uv}
-uv add sentry-sdk
-```
+<PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
-If you have the `flask` package in your dependencies, the Flask integration will be enabled automatically when you initialize the Sentry SDK.
+Choose the features you want to configure, and this guide will show you how:
 
-<PlatformContent includePath="getting-started-config" />
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
+/>
+
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
+
+Configuration should happen as **early as possible** in your application's lifecycle.
 
 <Alert>
 
-Our Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
+If you have the `flask` package in your dependencies, the Flask integration will be enabled and installed for all your apps automatically when you initialize the Sentry SDK.
+The SDK hooks into Flask's signals, not anything on the app object.
 
 </Alert>
 
-## Verify
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Import and initialize the SDK in your app's entry point:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="python.splitlayout"
+/>
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To further customize your setup, review the [Options section](#options) below.
+
+### Capturing Errors
+
+Sentry automatically captures errors and reports issues for you.
+You can also expect the following for your Django project:
+
+- If you use `flask-login`, and you've set `send_default_pii=True` in your call to `init`, user data (such as current user ID, email address, username) will be attached to error events.
+- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
+- Logs emitted by any `app.logger` or _any_ logger will be recorded by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
+
+<OnboardingOption optionId="performance">
+
+<Include name="python-uwsgi-warning.mdx" />
+
+</OnboardingOption>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+<Include name="python-quick-start-shell-warning.mdx" />
+
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
 
 ```python
+import sentry_sdk
 from flask import Flask
 
 sentry_sdk.init(...)  # same as above
@@ -46,25 +108,39 @@ def hello_world():
     return "<p>Hello, World!</p>"
 ```
 
-When you point your browser to [http://localhost:5000/](http://localhost:5000/) a transaction in the Performance section of [sentry.io](https://sentry.io) will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+<OnboardingOption optionId="performance">
 
-## Behavior
+<Include name="tracing/python-quick-start-verify-tracing-splitlayout.mdx" />
 
-<Include name="python-uwsgi-warning.mdx" />
+</OnboardingOption>
 
-After initialization:
+<OnboardingOption optionId="logs">
 
-- If you use `flask-login` and set `send_default_pii=True` in your call to `init`, user data (current user id, email address, username) will be attached to the event.
-- Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
-- Logs emitted by `app.logger` or _any_ logger will be recorded as breadcrumbs by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
+<Include name="logs/python-quick-start-verify-logs-splitlayout.mdx" />
+
+</OnboardingOption>
+
+<OnboardingOption optionId="metrics">
+
+<Include name="metrics/python-quick-start-verify-metrics-splitlayout.mdx" />
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Options
 
 <Include name="python-stream-mode-integration-option-callout.mdx" />
 
-If you add `FlaskIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `FlaskIntegration` to change its behavior:
+Add `FlaskIntegration` explicitly to your `sentry_sdk.init()` call to set options for `FlaskIntegration` to change its behavior:
 
 ```python
 import sentry_sdk
@@ -83,37 +159,53 @@ sentry_sdk.init(
 
 You can pass the following keyword arguments to `FlaskIntegration()`:
 
-- `transaction_style`:
+<SdkOption name='transaction_style' type='string' defaultValue='"endpoint"'>
 
-  Sets the format or style that transactions are named.
+How to name transactions that show up in Sentry tracing.
+The default is `"url"`.
 
-  <br />
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-  ```python
+In the code example, the transaction name will be:
+
+  - `/myurl/<foo>` if you set `transaction_style="url"`
+  - `myendpoint` if you set `transaction_style="endpoint"`
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```python
   @app.route("/myurl/<foo>")
   def myendpoint():
       return "<p>Hello, World!</p>"
-  ```
+```
 
-  In the above code, you would set the transaction to:
-  - `/myurl/<foo>` if you set `transaction_style="url"`.
-  - `myendpoint` if you set `transaction_style="endpoint"`.
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-  The default is `"endpoint"`.
+</SdkOption>
 
-- `http_methods_to_capture`:
+<SdkOption name='http_methods_to_capture' type='Tuple[str, ...]' defaultValue='("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)' availableSince='2.15.0'>
 
-  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+A tuple containing all the HTTP methods (as uppercase strings) that should create a transaction in Sentry.
+The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
 
-  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+Note that `OPTIONS` and `HEAD` are excluded by default.
 
-  (Note that `OPTIONS` and `HEAD` are missing by default.)
+</SdkOption>
 
-  <Alert title="Added in 2.15.0">The `http_methods_to_capture` option.</Alert>
+## Next Steps
 
-## Supported Versions
+<PlatformContent includePath="getting-started-next-steps" />
 
-- Flask: 1.1.4+
-- Python: 3.6+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-<Include name="python-use-older-sdk-for-legacy-support.mdx" />
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
