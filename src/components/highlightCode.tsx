@@ -1,5 +1,5 @@
+import type {Nodes} from 'hast';
 import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
-import {Nodes} from 'hastscript/lib/create-h';
 import {Fragment} from 'react';
 import {jsx, jsxs} from 'react/jsx-runtime';
 import bash from 'refractor/lang/bash.js';
