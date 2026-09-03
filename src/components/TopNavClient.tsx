@@ -4,7 +4,6 @@ import {usePathname, useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import {Platform} from 'sentry-docs/types';
-
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {mainSectionsWithDropdowns} from './navigationData';
