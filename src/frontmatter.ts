@@ -7,6 +7,7 @@ import {limitFunction} from 'p-limit';
 
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
+import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
 import {FrontMatter, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {VERSION_INDICATOR} from './versioning';
@@ -54,8 +55,15 @@ export function getDocsFrontMatter(): Promise<FrontMatter[]> {
   return getDocsFrontMatterCache;
 }
 
-async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs');
+function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
+  return getDocsFrontMatterFromDirectory(path.join(root, 'docs'), true);
+}
+
+/** @internal Only exported for testing. */
+export async function getDocsFrontMatterFromDirectory(
+  docsPath: string,
+  includeApiDocs = false
+): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
 
@@ -90,20 +98,22 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   );
 
   // Add API documentation pages (categories and endpoints)
-  const categories = await apiCategories();
-  categories.forEach(category => {
-    allFrontMatter.push({
-      title: category.name,
-      slug: `api/${category.slug}`,
-    });
-
-    category.apis.forEach(api => {
+  if (includeApiDocs) {
+    const categories = await apiCategories();
+    categories.forEach(category => {
       allFrontMatter.push({
-        title: api.name,
-        slug: `api/${category.slug}/${api.slug}`,
+        title: category.name,
+        slug: `api/${category.slug}`,
+      });
+
+      category.apis.forEach(api => {
+        allFrontMatter.push({
+          title: api.name,
+          slug: `api/${category.slug}/${api.slug}`,
+        });
       });
     });
-  });
+  }
 
   // Now process all common files for each platform and expand them into platform/guide pages
   const platformsPath = path.join(docsPath, 'platforms');
@@ -231,39 +241,28 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     }
 
     // Batch read all guide config files in parallel
-    const guideConfigResults = await Promise.allSettled(
-      guideNames.map(guideName => {
-        const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
-        return readFile(guideConfigPath, 'utf8').then(content => ({
+    const guideConfigResults = await Promise.all(
+      guideNames.map(async guideName => {
+        const guidePath = path.join(guidesPath, guideName);
+        return {
           guideName,
-          config: yaml.load(content) as FrontMatter & PlatformConfig,
-        }));
+          config: await readGuideConfig(guidePath),
+        };
       })
     );
 
     // Create a map of guide configs
-    const guideConfigs = new Map<string, (FrontMatter & PlatformConfig) | null>();
-    guideConfigResults.forEach((result, index) => {
-      const guideName = guideNames[index];
-      if (result.status === 'fulfilled') {
-        guideConfigs.set(guideName, result.value.config);
-      } else {
-        // If the file doesn't exist, use null; for other errors, throw
-        const err = result.reason;
-        if (err.code !== 'ENOENT') {
-          throw err;
-        }
-        guideConfigs.set(guideName, null);
-      }
-    });
+    const guideConfigs = new Map(
+      guideConfigResults.map(({guideName, config}) => [guideName, config] as const)
+    );
 
     // Process each guide
     for (const guideName of guideNames) {
-      const guideFrontmatter = guideConfigs.get(guideName) || null;
+      const guideFrontmatter = guideConfigs.get(guideName) || {};
 
       // Standalone framework guides opt out of platform common/ inheritance.
       // Defaults to true when omitted (normal SDK guides).
-      if (guideFrontmatter?.inheritCommonContent === false) {
+      if (!shouldInheritCommonContent(guideFrontmatter)) {
         continue;
       }
 

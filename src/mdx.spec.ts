@@ -1,12 +1,8 @@
 import {describe, expect, test} from 'vitest';
 
-import {
-  addVersionToFilePath,
-  getVersionedIndexPath,
-  getVersionsFromDoc,
-  shouldInheritCommonContent,
-} from './mdx';
-import {FrontMatter} from './types';
+import {shouldInheritCommonContent} from './guideConfig';
+import {addVersionToFilePath, getVersionedIndexPath, getVersionsFromDoc} from './mdx';
+import type {FrontMatter} from './types';
 
 const mockFm: FrontMatter[] = [
   {
