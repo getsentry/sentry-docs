@@ -3,6 +3,7 @@ import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {PlatformIcon} from './platformIcon';
+import {isPlatformSupported} from './platformSection';
 
 type Integration = {
   /** Platform icon key, e.g. "anthropic", "openai", "langchain". */
@@ -13,6 +14,10 @@ type Integration = {
   to: string;
   /** Optional one-line description shown under the title. */
   description?: string;
+  /** Platform/guide keys that hide this card, like `PlatformSection`. */
+  notSupported?: string[];
+  /** Platform/guide keys that show this card, like `PlatformSection`. */
+  supported?: string[];
 };
 
 type Props = {
@@ -39,9 +44,19 @@ export function IntegrationGrid({integrations}: Props) {
       ? currentPlatformOrGuide.url + to.slice(1)
       : `/platform-redirect/?next=${encodeURIComponent(to)}`;
 
+  const visibleIntegrations = currentPlatformOrGuide
+    ? integrations.filter(({supported, notSupported}) =>
+        isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)
+      )
+    : integrations;
+
+  if (visibleIntegrations.length === 0) {
+    return null;
+  }
+
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 not-prose mt-4 mb-6">
-      {integrations.map(({icon, title, to, description}) => (
+      {visibleIntegrations.map(({icon, title, to, description}) => (
         <Link
           key={to}
           href={hrefFor(to)}
