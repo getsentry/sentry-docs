@@ -113,6 +113,18 @@ export const MyAgent = Sentry.instrumentAgentWithSentry(
 
 Use `instrumentDurableObjectWithSentry` for a plain Durable Object or `instrumentWorkflowWithSentry` for a Workflow.
 
+#### Derived RPC Trace Propagation
+
+<AvailableSince version="10.72.0" />
+
+The plugin knows which bindings point at classes it wrapped itself: Durable Object bindings without a `script_name`, and service bindings naming this Worker. Those receivers are guaranteed to strip the trailing trace argument again, so the plugin adds their binding names to `rpcTracePropagationBindings`, which covers the calling and the receiving side alike. Traces then connect across RPC calls within one deployment, with no configuration of your own.
+
+Bindings to *other* Workers stay opt-in, because their receivers may not run Sentry. List those yourself in `instrument.server.*`; whatever you list is added on top of the derived names. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
+
+The plugin derives only the classes it wrapped itself. A class you wrapped by hand, or one re-exported from another module, runs on its own options and stays out.
+
+This applies to Vite builds only. At runtime a `DurableObjectNamespace` exposes no origin and a `Fetcher` does not say which service it points at, so a plain wrangler build still has to list its bindings.
+
 ## Options
 
 <SdkOption name="wranglerConfigPath" type="string" availableSince="10.69.0">
@@ -143,7 +155,7 @@ Experimental options that may change or be removed without notice.
 
 <SdkOption name="_experimental.autoInstrumentation" type="boolean" defaultValue="false">
 
-Automatically wraps your Worker at build time so you don't have to edit your entry. The plugin reads your wrangler config, wraps the default export with `Sentry.withSentry()` (sourcing options from a co-located `instrument.server.*` file, falling back to `env`), and wraps configured classes with the matching helper: Durable Objects with `instrumentDurableObjectWithSentry`, Workflows with `instrumentWorkflowWithSentry`, and Agents SDK classes with `instrumentAgentWithSentry` (SDK version 10.69.0 or higher). Both `vite build` and `vite dev` are instrumented.
+Automatically wraps your Worker at build time so you don't have to edit your entry. The plugin reads your wrangler config, wraps the default export with `Sentry.withSentry()` (sourcing options from a co-located `instrument.server.*` file, falling back to `env`), and wraps configured classes with the matching helper: Durable Objects with `instrumentDurableObjectWithSentry`, Workflows with `instrumentWorkflowWithSentry`, and Agents SDK classes with `instrumentAgentWithSentry` (SDK version 10.69.0 or higher). Both `vite build` and `vite dev` are instrumented. The plugin also adds the bindings that resolve to the wrapped classes to `rpcTracePropagationBindings` (SDK version 10.72.0 or higher).
 
 </SdkOption>
 
