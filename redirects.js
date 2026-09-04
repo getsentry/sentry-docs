@@ -2280,6 +2280,29 @@ const userDocsRedirects = [
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
   },
+  // Cloudflare AI pages moved from Features to Agent Tracing.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/agents-sdk.md',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/features/agents-sdk/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/workers-ai.md',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/features/workers-ai/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/:path*',
+  },
   // Mastra lives under Agent Tracing alongside the other AI library pages.
   // Map older names directly to avoid redirect chains.
   {
