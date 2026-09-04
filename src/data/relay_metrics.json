@@ -634,12 +634,6 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "minidump.compressed.count",
-    "description": "The number of times that relay receives a compressed minidump.",
-    "features": []
-  },
-  {
     "type": "Distribution",
     "name": "partition_splits",
     "description": "Measures how many splits were performed when sending out a partition.",
@@ -647,11 +641,17 @@
   },
   {
     "type": "Counter",
-    "name": "processing.event.produced",
+    "name": "processing.event.enqueued",
     "description": "Number of messages placed on the Kafka queues.\n\nWhen Relay operates as Sentry service and an Envelope item is successfully processed, each\nEnvelope item results in a dedicated message on one of the ingestion topics on Kafka.\n\nThis metric is tagged with:\n- `event_type`: The kind of message produced to Kafka.\n- `namespace` (only for metrics): The namespace that the metric belongs to.\n- `is_segment` (only for event_type span): `true` the span is the root of a segment.\n- `has_parent` (only for event_type span): `false` if the span is the root of a trace.\n- `platform` (only for event_type span): The platform from which the span was spent.\n- `metric_type` (only for event_type metric): The metric type, counter, distribution,\ngauge or set.\n- `metric_encoding` (only for event_type metric): The encoding used for distribution and\nset metrics.\n\nThe message types can be:\n\n- `event`: An error or transaction event. Error events are sent to `ingest-events`,\ntransactions to `ingest-transactions`, and errors with attachments are sent to\n`ingest-attachments`.\n- `attachment`: An attachment file associated with an error event, sent to\n`ingest-attachments`.\n- `user_report`: A message from the user feedback dialog, sent to `ingest-events`.\n- `session`: A release health session update, sent to `ingest-sessions`.",
     "features": [
       "processing"
     ]
+  },
+  {
+    "type": "Counter",
+    "name": "processing.event.produced",
+    "description": "Number of messages successfully produced to Kafka brokers.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic produced to.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
   },
   {
     "type": "Counter",
@@ -667,6 +667,24 @@
       "sentry",
       "processing"
     ]
+  },
+  {
+    "type": "Counter",
+    "name": "processing.replay",
+    "description": "Amount of replays processed.\n\nThis metric is tagged with:\n- `sdk`: low-cardinality client name\n- `has_event_id`: whether the envelope contained an event ID",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "processing.standalone_attachment",
+    "description": "Amount of standalone attachments processed.\n\nThis metric is tagged with:\n- `sdk`: low-cardinality client name\n- `has_event_id`: whether the envelope contained an event ID",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "processing.user_report",
+    "description": "Amount of user reports processed.\n\nThis metric is tagged with:\n- `sdk`: low-cardinality client name\n- `has_event_id`: whether the envelope contained an event ID",
+    "features": []
   },
   {
     "type": "Timer",

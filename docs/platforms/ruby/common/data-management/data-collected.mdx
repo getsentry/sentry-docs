@@ -1,30 +1,36 @@
 ---
 title: Data Collected
-description: "See what data is collected by the Sentry SDK."
+description: "See what data is collected by the Sentry Ruby SDK."
 sidebar_order: 1
 ---
 
 Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
 
-The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry Ruby SDK collects:
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry Ruby SDK collects. You can control automatic collection for many of these categories with <PlatformLink to="/configuration/options/#data_collection"><PlatformIdentifier name="data-collection" /></PlatformLink>.
 
 ## HTTP Headers
 
 By default, the Sentry SDK will include non-sensitive HTTP headers from a `Rack` request. Sensitive headers such as IP addresses and `HTTP_AUTHORIZATION` will be filtered out by default.
 
-To start sending all HTTP headers, set `send_default_pii = true` in the `Sentry.init` call.
+Use `config.data_collection.http_headers.request` to control request header collection. Request and response headers can be configured independently with `http_headers.request` and `http_headers.response`. Set either option to `true` to collect non-sensitive values, or `false` to disable collection.
 
 ## Cookies
 
 By default, the Sentry SDK doesn't send cookies.
 
-If you want to send cookies, set `send_default_pii = true` in the `Sentry.init` call.
+To collect cookies, set `config.data_collection.cookies` to `true`. This is shorthand for `mode: :deny_list`, which collects values except those matching the built-in sensitive data filters:
+
+```ruby
+config.data_collection.cookies = true
+```
+
+To customize which cookie values are collected, configure the `mode` and `terms` options instead.
 
 ## Users' IP Address
 
 By default, the Sentry SDK doesn't send the user's IP address.
 
-To enable sending the user's [IP addresses from the Rack environment](https://github.com/getsentry/sentry-ruby/blob/cc1dc53c0d60a21db7ad95cac05590ec23c82910/sentry-ruby/lib/sentry/interfaces/request.rb#L7-L12), set `send_default_pii = true` in the `Sentry.init` call.
+To enable sending the user's IP address, set `config.data_collection.user_info = true`.
 
 ## Request URL
 
@@ -32,11 +38,15 @@ The request URL (without query string) of outgoing and incoming HTTP requests is
 
 ## Request Query String
 
-The query string of outgoing and incoming HTTP requests is only sent to Sentry if `send_default_pii = true` since they could potentially contain PII data (such as auth tokens).
+Use `config.data_collection.url_query_params` to control the query string of outgoing and incoming HTTP requests. Set it to `false` to disable collection, or `true` to collect values except those matching the built-in sensitive data filters. To restrict which values are sent, use `:allow_list` and `terms` instead.
 
 ## Request Body
 
-The request body of incoming HTTP requests is sent to Sentry only if `send_default_pii = true`.
+Use `config.data_collection.http_bodies` to control request body collection. For example, to collect incoming and outgoing request bodies:
+
+```ruby
+config.data_collection.http_bodies = [:incoming_request, :outgoing_request]
+```
 
 We try to decode JSON and form data bodies in UTF-8 encoding. Raw byte payloads will not be sent to Sentry.
 
@@ -44,20 +54,29 @@ We try to decode JSON and form data bodies in UTF-8 encoding. Raw byte payloads 
 
 The Rails integration stores trace propagation headers in serialized Active Job payloads. You can disable this with `config.rails.active_job_propagate_traces = false`.
 
-When `send_default_pii = true`, the payload also includes the current user's `id`, `email`, and `username`. Failed-job events include serialized job arguments and, on Rails 7 or later, context set with `Rails.error.set_context` when `send_default_pii` is enabled.
+When `config.data_collection.user_info` is enabled, the payload also includes the current user's `id`, `email`, and `username`. Failed-job events include serialized job arguments and, on Rails 7 or later, context set with `Rails.error.set_context` when `config.data_collection.queues` is enabled.
 
 ## Source Context
 
 When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
 
-To opt out of sending this source context to Sentry, set `context_lines = nil`.
+To control the amount of source context sent to Sentry, set `config.data_collection.frame_context_lines`.
 
 ## Local Variables In Stack Trace
 
 By default, Sentry for Ruby does not include local variables in the frames of captured exceptions, mainly due to performance overhead reasons.
 
-You can start sending local variables to Sentry by setting `include_local_variables = true` in the `Sentry.init` call.
+You can start sending local variables to Sentry by setting `config.data_collection.stack_frame_variables = true`.
+
+## GraphQL Data
+
+The `graphql` configuration controls whether the GraphQL integration collects documents and variables. You can disable either category independently:
+
+```ruby
+config.data_collection.graphql.document = false
+config.data_collection.graphql.variables = false
+```
 
 ## SQL Queries
 
-While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password='%s' WHERE id=%s;`) is sent instead.
+SQL queries are sent to Sentry in a parameterized form. To control whether associated query data, such as bound parameter values and Redis command arguments, is collected, set `config.data_collection.database_query_data = false`.

@@ -1,0 +1,106 @@
+---
+title: Eve
+sidebar_title: Eve
+sidebar_order: 27
+description: "Learn how to send Eve agent traces to Sentry over OTLP."
+supported:
+  - javascript.node
+---
+
+[Eve](https://eve.dev/) is Vercel's filesystem-first framework for building durable backend AI agents on top of the Vercel AI SDK. Eve ships an official Sentry instrumentation that exports agent traces directly to Sentry's OTLP endpoint. You need to have a Sentry project set up before installing and configuring the OTLP.
+
+Each Eve turn produces a trace with the model calls, tool executions, token usage, and latency of that turn. Sentry shows these traces in [trace explorer](/product/trace-explorer/), and builds a wider view for debugging your [agents](/product/agents/).
+
+<Alert>
+
+Eve's Sentry instrumentation sends traces only. Sentry's OTLP intake does not accept span events, so this setup does not create issues or logs. Read the [OTLP traces](/concepts/otlp/direct/traces/) guide for details on what Sentry ingests.
+
+</Alert>
+
+## Installation
+
+Add the Sentry instrumentation from Eve's registry. The command creates `agent/instrumentation.ts` and installs the OpenTelemetry packages it needs:
+
+```bash
+eve add instrumentation/sentry
+```
+
+## Configuration
+
+You must have a Sentry project set up before installing and configuring the OTLP. The generated instrumentation reads two values from your Sentry project through environment variables.
+
+### Set the Endpoint and Key
+
+Copy the OTLP traces endpoint and public key from the OpenTelemetry section under [Project Settings > Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/).
+
+```bash {filename:.env}
+SENTRY_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___"
+SENTRY_PUBLIC_KEY="___PUBLIC_KEY___"
+```
+
+The generated instrumentation registers `@vercel/otel` with an OTLP exporter that authenticates with the `x-sentry-auth` header:
+
+```typescript {filename:agent/instrumentation.ts}
+import { OTLPHttpProtoTraceExporter, registerOTel } from "@vercel/otel";
+import { defineInstrumentation } from "eve/instrumentation";
+
+export default defineInstrumentation({
+  setup: ({ agentName }) =>
+    registerOTel({
+      serviceName: agentName,
+      traceExporter: new OTLPHttpProtoTraceExporter({
+        url: process.env.SENTRY_OTLP_TRACES_ENDPOINT!,
+        headers: {
+          "x-sentry-auth": `sentry sentry_key=${process.env.SENTRY_PUBLIC_KEY}`,
+        },
+      }),
+    }),
+});
+```
+
+Eve uses the agent name as the OpenTelemetry service name. Set a stable agent name so you can filter by it in Sentry.
+
+### Record Prompts and Responses
+
+By default, Eve records metadata only. Set `recordInputs` and `recordOutputs` to `true` to include prompts, model outputs, and tool details in the spans. This lets the Agent Tracing transcript show the full conversation.
+
+```typescript {filename:agent/instrumentation.ts}
+export default defineInstrumentation({
+  recordInputs: true,
+  recordOutputs: true,
+  setup: ({ agentName }) => {
+    // ...
+  },
+});
+```
+
+Review the data your agent handles before you enable these options in production. See Eve's [instrumentation guide](https://eve.dev/docs/guides/instrumentation) for all `defineInstrumentation` options.
+
+## Verify
+
+Start Eve and send a prompt that calls a tool. Then open [Agent Tracing](/product/agents/) in Sentry and select the conversation. The transcript shows the captured input and output, and the timeline shows model calls, tool calls, token use, and latency.
+
+Eve emits spans that follow the OpenTelemetry GenAI semantic conventions. Sentry derives the span op from the `gen_ai.operation.name` attribute, so each turn shows up like this:
+
+```text
+ai.eve.turn                              default
+  +-- invoke_agent <model>               gen_ai.invoke_agent
+        +-- step 1                       gen_ai.agent_step
+        |     +-- chat <model>           gen_ai.chat
+        |     +-- execute_tool <tool>    gen_ai.execute_tool
+        +-- step 2                       gen_ai.agent_step
+              +-- chat <model>           gen_ai.chat
+```
+
+The `invoke_agent` span is named after the model, not the agent. Read the agent name from its `gen_ai.agent.name` attribute. A tool that calls another agent nests a second `invoke_agent` span under its `execute_tool` span.
+
+## Troubleshooting
+
+- **No traces appear.** Check that `SENTRY_OTLP_TRACES_ENDPOINT` is the project-specific traces URL from your project settings, not the OTLP base URL. Check that `SENTRY_PUBLIC_KEY` contains only the public key, not the full DSN.
+- **Token and cost values are doubled.** Don't add the Sentry SDK with the <PlatformLink to="/agent-tracing/vercelai/">Vercel AI integration</PlatformLink> to the same agent. Eve already produces the AI spans, so a second producer double-counts them.
+
+## Next Steps
+
+- [Instrument Eve agents with Sentry](https://sentry.io/cookbook/send-eve-agent-traces-to-sentry/): a step-by-step cookbook with screenshots of the result in Sentry.
+- [Monitor AI agent spend with dashboards and alerts](https://sentry.io/cookbook/monitor-ai-agent-spend-with-dashboards-and-alerts/): build a dashboard for cost, tokens, models, and conversations.
+- [Eve's Sentry integration page](https://eve.dev/integrations/sentry-instrumentation): the same setup from the Eve side.

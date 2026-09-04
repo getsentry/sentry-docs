@@ -587,6 +587,16 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  // Guides → Get Started restructure
+  {
+    source: '/guides/',
+    destination: '/get-started/guides/',
+  },
+  {
+    source: '/guides/:path*',
+    destination: '/get-started/guides/:path*',
+  },
+
   {
     source: '/api/guides/oauth/',
     destination: '/api/auth/',
@@ -1172,6 +1182,10 @@ const userDocsRedirects = [
     source: '/organization/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1365,6 +1379,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog-responder/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/modem/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -2320,6 +2338,79 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
   },
   // Agent Tracing moved to top-level feature
+  // Python AI library pages moved from integrations to agent-tracing
+  {
+    source: '/platforms/python/integrations/anthropic.md',
+    destination: '/platforms/python/agent-tracing/anthropic.md',
+  },
+  {
+    source: '/platforms/python/integrations/anthropic/:path*',
+    destination: '/platforms/python/agent-tracing/anthropic/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/google-genai.md',
+    destination: '/platforms/python/agent-tracing/google-genai.md',
+  },
+  {
+    source: '/platforms/python/integrations/google-genai/:path*',
+    destination: '/platforms/python/agent-tracing/google-genai/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/huggingface_hub.md',
+    destination: '/platforms/python/agent-tracing/huggingface_hub.md',
+  },
+  {
+    source: '/platforms/python/integrations/huggingface_hub/:path*',
+    destination: '/platforms/python/agent-tracing/huggingface_hub/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/langchain.md',
+    destination: '/platforms/python/agent-tracing/langchain.md',
+  },
+  {
+    source: '/platforms/python/integrations/langchain/:path*',
+    destination: '/platforms/python/agent-tracing/langchain/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/langgraph.md',
+    destination: '/platforms/python/agent-tracing/langgraph.md',
+  },
+  {
+    source: '/platforms/python/integrations/langgraph/:path*',
+    destination: '/platforms/python/agent-tracing/langgraph/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/litellm.md',
+    destination: '/platforms/python/agent-tracing/litellm.md',
+  },
+  {
+    source: '/platforms/python/integrations/litellm/:path*',
+    destination: '/platforms/python/agent-tracing/litellm/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/openai.md',
+    destination: '/platforms/python/agent-tracing/openai.md',
+  },
+  {
+    source: '/platforms/python/integrations/openai/:path*',
+    destination: '/platforms/python/agent-tracing/openai/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/openai-agents.md',
+    destination: '/platforms/python/agent-tracing/openai-agents.md',
+  },
+  {
+    source: '/platforms/python/integrations/openai-agents/:path*',
+    destination: '/platforms/python/agent-tracing/openai-agents/:path*',
+  },
+  {
+    source: '/platforms/python/integrations/pydantic-ai.md',
+    destination: '/platforms/python/agent-tracing/pydantic-ai.md',
+  },
+  {
+    source: '/platforms/python/integrations/pydantic-ai/:path*',
+    destination: '/platforms/python/agent-tracing/pydantic-ai/:path*',
+  },
   // AI library setup pages moved from configuration/integrations to agent-tracing
   {
     source: '/platforms/javascript/configuration/integrations/vercelai/',
@@ -2371,8 +2462,16 @@ const userDocsRedirects = [
   },
   // agent-tracing-browser merged into agent-tracing
   {
+    source: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
     source: '/platforms/javascript/agent-tracing-browser/:path*',
     destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   {
     source: '/platforms/javascript/guides/:guide/agent-tracing-browser/:path*',

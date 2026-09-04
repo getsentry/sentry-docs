@@ -10,6 +10,7 @@ import Codex from 'sentry-docs/icons/codex';
 import Cursor from 'sentry-docs/icons/cursor';
 import {DocMetrics} from 'sentry-docs/metrics';
 
+import {ExternalLink} from './externalLink';
 import styles from './home.module.scss';
 
 /** Keep in sync with /ai/agent-plugin/. */
@@ -52,16 +53,7 @@ export function HomeAiSetupCard() {
           <path d="M18.5 13.5l.95 2.3 2.3.95-2.3.95-.95 2.3-.95-2.3-2.3-.95 2.3-.95.95-2.3z" />
         </svg>
       </div>
-      <div className={styles.setupRowCopy}>
-        <h2 className={styles.setupTitle}>Set up with a coding agent</h2>
-        <p className={styles.setupDesc}>
-          One command teaches Claude Code, Cursor, Codex, and Grok how to install and
-          configure Sentry for you.{' '}
-          <Link href="/ai/agent-plugin/" className={styles.seeAllLink}>
-            Read about the agent plugin
-          </Link>
-        </p>
-      </div>
+      <h2 className={styles.setupTitle}>Set up with a coding agent</h2>
       <button
         type="button"
         className={styles.commandPill}
@@ -78,6 +70,27 @@ export function HomeAiSetupCard() {
           {copied ? <Check size={14} /> : <Copy size={14} />}
         </span>
       </button>
+      <div className={styles.setupRowCopy}>
+        <p className={styles.setupDesc}>
+          One command teaches Claude Code, Cursor, Codex, and Grok how to install and
+          configure Sentry for you.{' '}
+          <Link href="/ai/agent-plugin/" className={styles.seeAllLink}>
+            Read about the agent plugin
+          </Link>
+          .
+        </p>
+        <p className={styles.setupDesc}>
+          Use Sentry without leaving your agent conversations by setting up the{' '}
+          <ExternalLink href="https://mcp.sentry.dev/" className={styles.seeAllLink}>
+            Sentry MCP server
+          </ExternalLink>{' '}
+          and{' '}
+          <ExternalLink href="https://cli.sentry.dev/" className={styles.seeAllLink}>
+            Sentry CLI
+          </ExternalLink>
+          .
+        </p>
+      </div>
     </div>
   );
 }
