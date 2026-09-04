@@ -21,6 +21,7 @@ const AGENT_TRACING_ALIAS_PATH_OVERRIDES: Record<string, Record<string, string>>
 };
 
 const UNALIASED_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
+const CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS = ['agents-sdk', 'workers-ai'];
 
 export function PlatformSidebar({
   rootNode,
@@ -96,7 +97,40 @@ export function PlatformSidebar({
           path: `/${pathRoot}/${aliasPathOverrides?.[child.slug] ?? integrationsPath}/${child.slug}/`,
         }));
 
-  const tree = toTree([...nodes, ...agentTracingAliases].filter(n => !!n.context));
+  // Expose Cloudflare-only pages from every JavaScript Agent Tracing sidebar.
+  // Their links navigate to the canonical Cloudflare guide instead of creating
+  // unsupported copies under the current guide.
+  const cloudflareAgentTracingAliases =
+    platformName !== 'javascript' || guideName === 'cloudflare' || !agentTracingNode
+      ? []
+      : CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS.map(slug => {
+          const target = nodeForPath(rootNode, [
+            'platforms',
+            'javascript',
+            'guides',
+            'cloudflare',
+            'agent-tracing',
+            slug,
+          ]);
+          if (!target || target.missing || target.frontmatter.draft) {
+            return undefined;
+          }
+          return {
+            context: {
+              platform: {platformName},
+              title: target.frontmatter.title,
+              sidebar_title: target.frontmatter.sidebar_title,
+              href: '/' + target.path + '/',
+            },
+            path: `/${pathRoot}/agent-tracing/${slug}/`,
+          };
+        }).filter(alias => alias !== undefined);
+
+  const tree = toTree(
+    [...nodes, ...agentTracingAliases, ...cloudflareAgentTracingAliases].filter(
+      n => !!n.context
+    )
+  );
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';

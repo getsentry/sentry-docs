@@ -6,23 +6,37 @@ import {isNotNil, sortPages} from 'sentry-docs/utils';
 import {isVersioned} from 'sentry-docs/versioning';
 
 type Props = {
+  /** Root-relative pages to include alongside the current page's children. */
+  additionalPages?: string[];
   exclude?: string[];
   header?: string;
 };
 
-export function PageGrid({header, exclude}: Props) {
+export function PageGrid({additionalPages = [], header, exclude}: Props) {
   const {rootNode, path: nodePath} = serverContext();
 
   const parentNode = nodeForPath(rootNode, nodePath);
-  if (!parentNode || parentNode.children.length === 0) {
+  if (!parentNode) {
     return null;
   }
 
-  const children: DocNode[] = parentNode.frontmatter.next_steps?.length
+  const childPages: DocNode[] = parentNode.frontmatter.next_steps?.length
     ? (parentNode.frontmatter.next_steps
         .map(p => nodeForPath(rootNode, path.join(parentNode.path, p)))
         .filter(isNotNil) ?? [])
     : parentNode.children;
+  const additionalPageNodes = additionalPages
+    .map(pagePath => nodeForPath(rootNode, pagePath.split('/').filter(Boolean)))
+    .filter(isNotNil);
+  const children = [
+    ...new Map(
+      [...childPages, ...additionalPageNodes].map(child => [child.path, child])
+    ).values(),
+  ];
+
+  if (children.length === 0) {
+    return null;
+  }
 
   return (
     <nav>
