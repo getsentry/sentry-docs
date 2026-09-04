@@ -39,10 +39,15 @@ export function IntegrationGrid({integrations}: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
 
-  const hrefFor = (to: string) =>
-    currentPlatformOrGuide
+  const hrefFor = (to: string) => {
+    if (to.startsWith('/platforms/')) {
+      return to;
+    }
+
+    return currentPlatformOrGuide
       ? currentPlatformOrGuide.url + to.slice(1)
       : `/platform-redirect/?next=${encodeURIComponent(to)}`;
+  };
 
   const visibleIntegrations = currentPlatformOrGuide
     ? integrations.filter(({supported, notSupported}) =>
