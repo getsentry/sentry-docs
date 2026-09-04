@@ -53,7 +53,7 @@ nextjsRoot.children = [
               {
                 path: 'platforms/javascript/guides/nextjs',
                 slug: 'nextjs',
-                frontmatter: {title: 'Next.js', slug: 'nextjs'},
+                frontmatter: {title: 'Next.js', slug: 'nextjs', icon: 'nextjs-icon'},
                 children: [],
                 missing: false,
                 sourcePath: 'docs/platforms/javascript/guides/nextjs/index.mdx',
@@ -122,6 +122,7 @@ describe('docTree', () => {
         'nextjs',
       ]);
       expect(node?.name).toBe('nextjs');
+      expect(node?.icon).toBe('nextjs-icon');
     });
 
     test('should find current guide from versioned path', () => {
