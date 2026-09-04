@@ -80,3 +80,32 @@ end
 ```
 
 This is available since v10.9.0 of the SDK.
+
+### Suppressing Failed Check-Ins While Retries Remain
+
+By default, every failed attempt of a cron job sends an `error` check-in, so a job that fails once and succeeds on retry still marks the monitor as failed. If your cron workers rely on Oban's retries, use `:should_report_error_check_in_callback` to hold off until the retries are exhausted:
+
+```elixir {filename:config/config.exs}
+config :sentry,
+  # ...,
+  integrations: [
+    oban: [
+      cron: [
+        enabled: true,
+        should_report_error_check_in_callback: fn _worker, job ->
+          job.attempt >= job.max_attempts
+        end
+      ]
+    ]
+  ]
+```
+
+The callback receives the worker module and the [`Oban.Job` struct](https://hexdocs.pm/oban/Oban.Job.html), and returns `true` to send the failed check-in or `false` to skip it. When it returns `false`, the check-in is left open instead of being closed as failed, so the retry that eventually succeeds closes that same check-in.
+
+Keep in mind:
+
+  * The callback only gates `error` check-ins. The `in_progress` check-in at the start of a job and the `ok` check-in on success always go out.
+  * If the callback raises, the SDK logs a warning and reports the failed check-in anyway, so a broken callback never hides a failure.
+  * Snoozed jobs also keep their check-in open, since Oban reschedules a snoozed job rather than finishing it.
+
+This is available since v13.5.0 of the SDK.
