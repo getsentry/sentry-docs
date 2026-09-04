@@ -33,3 +33,15 @@ ___DSN___
 2. Create a Sentry log drain in the [Supabase dashboard](https://supabase.com/dashboard/project/_/settings/log-drains). Make sure you provide the DSN you grabbed in the previous step.
 
 Then you should get logs in your Sentry project. All fields from the log event are attached as attributes to the Sentry log, which can be used for filtering and grouping in the Sentry UI.
+
+## Correlating Logs with Sentry Traces
+
+If you enable [client-side trace propagation](https://supabase.com/docs/guides/monitoring-and-debugging/client-side-tracing) in the Supabase SDK, the `trace_id` in forwarded logs will match the Sentry trace that triggered the request. This lets you navigate from a Sentry span directly to the Supabase server logs it produced.
+
+Note: this only applies to traces Sentry actually samples. By default, unsampled requests still carry a `traceparent` header but omit `tracestate` and `baggage`, so most drained logs won't have a full matching trace unless you raise your sample rate or set `respectSamplingDecision: false` on the Supabase client. If your traces and logs are sampled at different rates, [cross-event querying](https://sentry.io/changelog/cross-event-querying-is-now-ga/) lets you search for traces that specifically have logs attached, which helps close that gap. If you're calling Supabase Edge Functions directly from the browser, make sure `sentry-trace` is added to the function's CORS allow-list — otherwise the header is silently dropped and the log won't correlate even with propagation enabled.
+
+Setup instructions by platform:
+
+- **JavaScript**: [Supabase JavaScript integration](/platforms/javascript/configuration/integrations/supabase/#trace-propagation)
+- **Swift**: [Supabase Swift integration](/platforms/apple/integrations/supabase/)
+- **Flutter/Dart**: [Supabase Dart integration](/platforms/dart/integrations/supabase/)
