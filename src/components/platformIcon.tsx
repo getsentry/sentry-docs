@@ -1051,6 +1051,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
+  'javascript-mastra': 'mastra',
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
