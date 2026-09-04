@@ -1,0 +1,50 @@
+---
+id: custom-otel-setup
+title: "Custom OpenTelemetry setups must export over OTLP"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+features: [custom-otel]
+platformCategory: server
+order: 140
+---
+
+`SentryContextManager`, `SentrySampler`, and `SentrySpanProcessor` were removed, so you can no longer route spans from your own OpenTelemetry provider into Sentry as Sentry spans.
+
+Export them over OTLP instead. `Sentry.getOtlpTracesEndpoint()` turns your DSN into the endpoint URL and auth headers:
+
+```js
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import * as Sentry from '@sentry/node';
+
+const provider = new NodeTracerProvider({
+  spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter(Sentry.getOtlpTracesEndpoint('__DSN__')))],
+});
+
+provider.register();
+
+Sentry.init({
+  dsn: '__DSN__',
+  // no tracesSampleRate: OpenTelemetry owns spans, Sentry owns errors and logs
+  integrations: [Sentry.otlpIntegration()],
+});
+```
+
+Leave `tracesSampleRate` unset to avoid duplicate spans, since Sentry instruments many of the same libraries. Sentry still isolates requests with tracing off.
+
+If you do want Sentry spans alongside your own, keep `tracesSampleRate` set and drop the overlapping integrations. Turn off HTTP and fetch spans rather than the integrations, which also provide request isolation and session tracking:
+
+```js
+Sentry.init({
+  dsn: '__DSN__',
+  tracesSampleRate: 1.0,
+  integrations: integrations => [
+    ...integrations.filter(integration => integration.name !== 'Postgres'),
+    Sentry.httpIntegration({ spans: false }),
+    Sentry.nativeNodeFetchIntegration({ spans: false }),
+  ],
+});
+```

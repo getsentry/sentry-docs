@@ -1,0 +1,28 @@
+---
+id: cloudflare-instrument-d1
+title: "`instrumentD1WithSentry` was removed"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: [cloudflare]
+features: [tracing]
+platformCategory: serverless
+order: 430
+---
+
+The deprecated `instrumentD1WithSentry` export was removed. `withSentry()` instruments all D1 bindings on `env`.
+
+Use the binding directly:
+
+```diff
+  export default withSentry(
+    (env) => ({ dsn: env.SENTRY_DSN }),
+    {
+      async fetch(request, env, ctx) {
+-       const db = Sentry.instrumentD1WithSentry(env.DB);
+-       const result = await db.prepare('SELECT * FROM users').all();
++       const result = await env.DB.prepare('SELECT * FROM users').all();
+      },
+    },
+  );
+```

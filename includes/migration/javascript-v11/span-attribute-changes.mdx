@@ -1,0 +1,85 @@
+---
+id: span-attribute-changes
+title: "Span attributes were renamed to match semantic conventions"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 60
+---
+
+Span attributes follow the shared `@sentry/conventions` package now, and many were renamed.
+
+**HTTP**
+
+| v10 attribute                          | v11 attribute                     |
+| -------------------------------------- | --------------------------------- |
+| `http.host`                            | `server.address`                  |
+| `http.flavor`                          | `network.protocol.version`        |
+| `http.client_ip`                       | `client.address`                  |
+| `http.method`                          | `http.request.method`             |
+| `http.status_code`                     | `http.response.status_code`       |
+| `http.status_text`                     | `http.response.status_text`       |
+| `http.scheme`                          | `url.scheme`                      |
+| `http.user_agent`                      | `user_agent.original`             |
+| `http.request_content_length`          | `http.request.body.size`          |
+| `http.response_content_length`         | `http.response.body.size`         |
+| `http.decoded_response_content_length` | `http.response.body.decoded_size` |
+| `http.response_transfer_size`          | `http.response.size`              |
+| `http.target`                          | `url.path` + `url.query`          |
+| `http.query`                           | `url.query`                       |
+| `http.fragment`                        | `url.fragment`                    |
+| `url.same_origin`                      | `http.request.same_origin`        |
+
+`http` breadcrumb data and `http.client` span data (`SanitizedRequestData`) use `http.request.method` instead of `http.method` too. Server-side HTTP spans always report `content-length` as `http.request.body.size` and `http.response.body.size`, instead of switching to `http.request_body_size_uncompressed` when no encoding was present.
+
+**Network**
+
+| v10 attribute   | v11 attribute           |
+| --------------- | ----------------------- |
+| `net.host.name` | `server.address`        |
+| `net.host.ip`   | `network.local.address` |
+| `net.host.port` | `network.local.port`    |
+| `net.peer.name` | `server.address`        |
+| `net.peer.ip`   | `network.peer.address`  |
+| `net.peer.port` | `network.peer.port`     |
+| `net.transport` | `network.transport`     |
+
+On database and messaging client spans, `net.peer.name` and `net.peer.port` became `server.address` and `server.port`. Transport values changed from `ip_tcp` and `ip_udp` to `tcp` and `udp`, and HTTP spans report `network.protocol.name: "http"` with the version in `network.protocol.version`.
+
+**Database and messaging**
+
+- `db.system` to `db.system.name`
+- `db.name` to `db.namespace`
+- `db.operation` to `db.operation.name`
+- `db.statement` to `db.query.text`
+- `db.mongodb.collection` to `db.collection.name`
+- Redis and ioredis no longer emit `db.connection_string`. Use `server.address` and `server.port`.
+- Legacy `messaging.*` attributes on the AMQP instrumentation now use `messaging.destination.name`, `messaging.rabbitmq.destination.routing_key`, `messaging.message.id`, `messaging.message.conversation_id`, `messaging.operation.name`, `network.protocol.name`, `network.protocol.version`, and `url.full`. `messaging.destination_kind` is no longer emitted.
+
+**Gen AI**
+
+- `gen_ai.system` to `gen_ai.provider.name`
+- `gen_ai.request.available_tools` to `gen_ai.tool.definitions`
+- `gen_ai.tool.input` to `gen_ai.tool.call.arguments`
+- `gen_ai.tool.output` to `gen_ai.tool.call.result`
+- `gen_ai.usage.cache_creation_input_tokens` to `gen_ai.usage.cache_creation.input_tokens`
+- `gen_ai.usage.cache_read_input_tokens` to `gen_ai.usage.cache_read.input_tokens`
+- (Vercel AI) `gen_ai.usage.input_tokens.cached` to `gen_ai.usage.cache_read.input_tokens`
+- (Vercel AI) `gen_ai.usage.input_tokens.cache_write` to `gen_ai.usage.cache_creation.input_tokens`
+- (Vercel AI) `gen_ai.usage.output_tokens.reasoning` to `gen_ai.usage.reasoning.output_tokens`
+- (Vercel AI) `ai.pipeline.name` and `ai.streaming` to `gen_ai.pipeline.name` and `gen_ai.response.streaming`
+- (LangChain) `langchain.chain.name` to `gen_ai.pipeline.name`, omitted for unnamed chains instead of `unknown_chain`
+- `gen_ai.tool.type` is no longer set
+- (Anthropic) `gen_ai.prompt` is no longer set. The legacy Completions API's `prompt` is reported as a user message on `gen_ai.input.messages`.
+
+**Other**
+
+- `code.filepath` and `code.function` on `ui.long_animation_frame` spans to `code.file.path` and `code.function.name`
+- `fs_error` on `file` spans to `error.type`, carrying the syscall error code (such as `ENOENT`) instead of the full message
+- (Cloudflare) `sentry.cloudflare_tracer` is no longer set
+- (TanStack Router) `url.path.params.<key>` to `url.path.parameter.<key>`
+
+Update any custom instrumentation, `beforeSendSpan` callback, dashboard or alert that references these. TypeScript does not catch them.

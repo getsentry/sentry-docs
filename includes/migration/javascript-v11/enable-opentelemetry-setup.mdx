@@ -1,0 +1,29 @@
+---
+id: enable-opentelemetry-setup
+title: "`skipOpenTelemetrySetup` is replaced by `enableOpenTelemetrySetup`"
+phase: code-changes
+category: rename
+severity: action-required
+frameworks: all
+features: [custom-otel]
+platformCategory: server
+order: 130
+---
+
+`skipOpenTelemetrySetup` was replaced by `enableOpenTelemetrySetup`, with inverted meaning. It defaults to `false` for most server SDKs, and `true` for `@sentry/nextjs` and `@sentry/sveltekit`.
+
+```js
+// Before
+Sentry.init({ skipOpenTelemetrySetup: true });
+
+// After
+Sentry.init({ enableOpenTelemetrySetup: false });
+```
+
+Pick the setup you want:
+
+1. **Sentry only** (default): nothing to set.
+2. **OpenTelemetry-compatible, everything to Sentry**: set `enableOpenTelemetrySetup: true`. Spans created through `@opentelemetry/api` become Sentry spans. There is no exporter and no OTLP output.
+3. **Your own OpenTelemetry, Sentry linked to it**: leave it unset or `false`, turn Sentry tracing off, and add `Sentry.otlpIntegration()`. On `@sentry/nextjs` and `@sentry/sveltekit` you must set it to `false` explicitly.
+
+`@sentry/cloudflare/request` does not support setup 2; use the main `@sentry/cloudflare` entry point for that. Note that `skipOpenTelemetrySetup: true` also turned Sentry's HTTP and fetch spans off in v10. They are emitted whenever tracing is enabled now, regardless of `enableOpenTelemetrySetup`.

@@ -1,0 +1,41 @@
+---
+id: before-send-transaction-removed
+title: "`beforeSendTransaction` no longer runs"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+features: [tracing]
+platformCategory: all
+order: 60
+---
+
+`beforeSendTransaction` no-ops, because span streaming produces no transaction events.
+
+Move scrubbing to `beforeSendSpan` and guard on `is_segment`, and move dropping to `ignoreSpans`:
+
+```js
+// Before
+Sentry.init({
+  beforeSendTransaction: event => {
+    if (event.transaction === 'GET /health') {
+      return null;
+    }
+    event.transaction = scrubIds(event.transaction);
+    return event;
+  },
+});
+
+// After
+Sentry.init({
+  ignoreSpans: ['GET /health'],
+  beforeSendSpan: span => {
+    if (span.is_segment) {
+      span.name = scrubIds(span.name);
+    }
+    return span;
+  },
+});
+```
+
+Scope `tags` and `extra` are not carried over to streamed spans. Use `Sentry.setAttribute()` or `Sentry.setAttributes()`.

@@ -1,0 +1,36 @@
+---
+id: express-error-handler
+title: "Express errors are captured automatically"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: [express, nestjs]
+features: []
+platformCategory: server
+order: 184
+---
+
+`expressIntegration()` now captures errors thrown from route handlers on its own, so `setupExpressErrorHandler(app)` is deprecated and its `shouldHandleError` option was removed, along with the `ExpressHandlerOptions` type. By default, 5xx errors and errors without a resolvable status are captured, while 3xx and 4xx errors are not.
+
+Move the callback to the integration:
+
+```diff
+ Sentry.init({
+-  integrations: [Sentry.expressIntegration()],
++  integrations: [
++    Sentry.expressIntegration({
++      shouldHandleError(error) {
++        return Number(error.statusCode ?? 500) >= 400;
++      },
++    }),
++  ],
+ });
+
+-Sentry.setupExpressErrorHandler(app, {
+-  shouldHandleError(error) {
+-    return (error.statusCode ?? 500) >= 400;
+-  },
+-});
+```
+
+`setupExpressErrorHandler(app)` without options keeps working for now. To capture errors yourself, set `expressIntegration({ shouldHandleError: false })` and call `Sentry.captureException` from your own error middleware. `expressErrorHandler` and `patchExpressModule` are deprecated too, and both error handler exports moved from `@sentry/core` to `@sentry/server-utils`.

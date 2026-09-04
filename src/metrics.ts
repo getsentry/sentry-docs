@@ -166,13 +166,13 @@ export const DocMetrics = {
    * @param pathname - Page where the prompt was copied
    * @param skill - Skill name if present (e.g., "sentry-nextjs-sdk")
    * @param success - Whether the clipboard copy succeeded
-   * @param source - Where the copy was triggered from ('callout' for the full banner, 'inline_link' for platform list buttons)
+   * @param source - Where the copy was triggered from ('callout' for the full banner, 'inline_link' for platform list buttons, 'migration_guide' for the interactive migration checklist)
    */
   copyAIPrompt: (
     pathname: string,
     skill: string | undefined,
     success: boolean,
-    source: 'callout' | 'inline_link' | 'homepage_card' = 'callout'
+    source: 'callout' | 'inline_link' | 'homepage_card' | 'migration_guide' = 'callout'
   ) => {
     Sentry.metrics.count('docs.copy_ai_prompt', 1, {
       attributes: {

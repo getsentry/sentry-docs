@@ -1,0 +1,29 @@
+---
+id: interaction-spans-integration
+title: "Interaction spans moved to `interactionsIntegration`"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+features: [tracing]
+platformCategory: browser
+order: 215
+---
+
+The experimental `_experiments.enableInteractions` option of `browserTracingIntegration` was removed. Interaction spans now come from a dedicated opt-in integration.
+
+```js
+// Before
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({ _experiments: { enableInteractions: true } }),
+  ],
+});
+
+// After
+Sentry.init({
+  integrations: [Sentry.browserTracingIntegration(), Sentry.interactionsIntegration()],
+});
+```
+
+`idleTimeout`, `finalTimeout`, and `childSpanTimeout` for interaction spans are no longer inherited from `browserTracingIntegration`. Set them on `interactionsIntegration` instead; the defaults are unchanged.
