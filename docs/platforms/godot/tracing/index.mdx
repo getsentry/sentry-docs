@@ -1,0 +1,47 @@
+---
+title: Set Up Tracing
+sidebar_title: Tracing
+description: "Learn how to enable tracing and capture performance data from your Godot Engine game."
+sidebar_order: 4000
+sidebar_section: features
+---
+
+<AvailableSince version="2.2.0" />
+
+Tracing shows how long operations in your game take and how that work is connected. Use it to find slow level loads, world generation, save operations, and other work that affects the player experience. Errors and other telemetry captured while a span is active carry its trace context, which keeps the failure next to the work that caused it.
+
+<Alert>
+
+These pages cover the GDScript tracing API, which is supported on Windows, Linux, Android, and Web. On macOS and iOS, the SDK returns no-op spans and prints a warning the first time you start one. For C#, use the [Sentry .NET tracing API](/platforms/dotnet/tracing/).
+
+</Alert>
+
+## Configure
+
+The SDK doesn't send traces by default. To enable tracing, open **Project Settings > Sentry > Options** and set **Traces Sample Rate** to a number between `0.0` and `1.0`.
+
+Start with `1.0` while testing so every trace is sent. Before shipping, lower the value to match the amount of performance data you need. For example, `0.2` sends approximately 20% of traces. The SDK makes one sampling decision for the whole trace, so it sends either every span in that trace or none of them.
+
+If you initialize the SDK from GDScript, set `traces_sample_rate` in the configuration callback instead:
+
+```GDScript {filename:ProjectMainLoop.gd}
+class_name ProjectMainLoop
+extends SceneTree
+
+func _initialize() -> void:
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		options.traces_sample_rate = 1.0
+	)
+```
+
+Manual initialization requires disabling **Auto Init** and assigning the script as the main loop type. See <PlatformLink to="/configuration/options/#programmatic-configuration">Programmatic Configuration</PlatformLink> for the complete setup.
+
+Web exports can also stream completed spans instead of holding them until the root span ends. See the <PlatformLink to="/configuration/options/#trace_lifecycle">`trace_lifecycle` option</PlatformLink> for details and platform limitations.
+
+## Verify
+
+Create and end a span around a known operation, then run the game and confirm that the trace appears in Sentry. The SDK for Godot Engine doesn't create spans automatically yet, so continue with <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink> to add one.
+
+## Next Steps
+
+<PageGrid />
