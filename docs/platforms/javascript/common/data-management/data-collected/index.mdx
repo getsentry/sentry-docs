@@ -24,7 +24,7 @@ Regardless of these options, you can always scrub any data before it's sent to S
 
 By default, the Sentry SDK sends HTTP request and response headers.
 
-Use the `dataCollection.httpHeaders` option to control this. For example, set `dataCollection: { httpHeaders: false }` to disable it, or use `{ allow: [...] }` or `{ deny: [...] }` to restrict which header values are sent. Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are automatically scrubbed, while the keys are kept.
+Use the `dataCollection.httpHeaders` option to control this. Configure `request` and `response` separately with `false`, `{ allow: [...] }`, or `{ deny: [...] }`. Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are automatically scrubbed, while the keys are kept.
 
 ## Cookies
 
@@ -59,7 +59,10 @@ Even when this is disabled, IP addresses can still reach Sentry through collecte
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
-    httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    httpHeaders: {
+      request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
