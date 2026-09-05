@@ -1,71 +1,91 @@
 ---
 title: AWS Lambda Layer
-description: Learn how to manually set up Sentry with a Layer
+description: Learn how to add the Sentry Python Lambda Layer to use Sentry in your Lambda functions
 sidebar_order: 1000
 og_image: /og-images/platforms-python-integrations-aws-lambda-manual-layer.png
 ---
 
-This guide walks you through how to add Sentry to your AWS Lambda function by adding the Sentry AWS Lambda layer. This method can be instrumented from the Sentry product by those who have access to the AWS infrastructure and doesn't require that you make any direct updates to the code.
+The easiest way to get started with Sentry is to use the Sentry [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/adding-layers.html) instead of installing `sentry-sdk` into your deployment package [manually](/platforms/python/integrations/aws-lambda/manual-instrumentation/).
+If you follow this guide, you don't have to worry about deploying Sentry dependencies alongside your function code.
 
 <Include name="python-stream-mode-general-callout.mdx" />
 
-You can also configure this function in one of the two ways described below:
+### Should I use the Lambda Layer or install the SDK package?
 
-- **Without touching your code:**
-  This method can be instrumented from the Sentry product by those who have access to the AWS infrastructure and doesn't require that you make any direct updates to the code. See the [AWS Lambda guide](/integrations/cloud-monitoring/aws-lambda/).
-- **By adding the Sentry Lambda Layer to your function manually:**
-  While this is a quick way to add Sentry to your AWS Lambda function, it gives you limited configuration possibilities with environment vars. See <PlatformLink to="/integrations/aws-lambda/manual-layer/">AWS Lambda Layer</PlatformLink>.
+We generally recommend using the Lambda layer as it doesn't require you to deploy any Sentry dependency alongside your function.
+With the layer, you configure Sentry through environment variables and a handler wrapper.
 
-## Install The Layer
+You might still want to [install the SDK package](/platforms/python/integrations/aws-lambda/manual-instrumentation/) instead if:
 
-Navigate to your Lambda function:
+1. You need full control over `sentry_sdk.init()` (custom integrations, `before_send`, sampling logic, and so on).
+2. You already package dependencies with your function and don't want to add a (or another) Lambda layer.
+3. You're deploying a [container image](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html) — layers can't be attached to image-based functions. Use [manual instrumentation](/platforms/python/integrations/aws-lambda/manual-instrumentation/) in that case.
+
+You can also instrument Lambda functions [without touching your code](/integrations/cloud-monitoring/aws-lambda/) from the Sentry product if you have access to the AWS infrastructure.
+
+## Prerequisites
+
+Before you begin, make sure you have the following:
+
+- You have a Lambda function deployed in AWS.
+- You know the AWS region that your function is deployed to.
+- Your function uses a Python runtime listed in the layer selector.
+
+## 1. Add the Sentry Lambda Layer
+
+Navigate to your Lambda function. Scroll to **Layers** and click **Add a layer**:
 
 ![](./img/lambda-function-detail.png)
 
-Scroll down to the **Layers** section and click **Add a Layer**:
+![](./img/lambda-function-layer-add.png)
 
-![](./img/lambda-function-detail-layer.png)
+Choose the **Specify an ARN** tab:
 
-**Specify an ARN** tab as illustrated:
+![](./img/lambda-function-layer-add-detail.png)
 
-First, set the region and copy the provided ARN value:
+Choose the region, runtime, and SDK version, then copy the provided ARN:
 
 <LambdaLayerDetail canonical="aws-layer:python" />
 
-Now copy that ARN into the input box:
+Paste the ARN into the input, then click **Verify** and **Save**.
 
-![](./img/lambda-function-add-layer.png)
+## 2. Set the Sentry Handler
 
-## Configure the Sentry SDK
+The Sentry layer wraps your function handler so the SDK can initialize before your code runs.
 
-For Sentry to instrument your Lambda function, you need to change the handler of your function and set the Sentry DSN using environment variables.
-
-### Set the Sentry Handler
-
-The Sentry layer will wrap your function handler to initialise the Sentry SDK in your function.
-
-In you Lambda function, scroll to **Runtime settings** and click **Edit**:
+In your Lambda function, scroll to **Runtime settings** and click **Edit**:
 
 ![](./img/lambda-function-runtime-settings.png)
 
-Note your current **Handler** and then change it to: `sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler`
+Note your current **Handler** value (you'll need it in the next step), then change it to:
 
-![](./img/runtime-settings-handler.png)
+```text
+sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler
+```
 
-After saving, open the "Configuration" tab of your Lambda Function and set `SENTRY_INITIAL_HANDLER` to the handler you noted before:
+![](./img/lambda-function-runtime-settings-edit.png)
 
-![](./img/lambda-function-configuration.png)
+## 3. Configure Environment Variables
 
-### Configuration Options
+Set the following environment variables in your Lambda function configuration:
 
-Make sure that `SENTRY_DSN` and `SENTRY_INITIAL_HANDLER` are set in your environment at minimum. See ["Set the Sentry Handler"](#set-the-sentry-handler) above for more information.
+```bash
+SENTRY_INITIAL_HANDLER="<PATH_TO_FUNCTION_HANDLER>"
+SENTRY_DSN="___PUBLIC_DSN___"
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+```
 
-You can configure Sentry by setting the config options that can be set with an environment variable. See the [Common Options](/platforms/python/configuration/options/#common-options) to learn more.
+Set `SENTRY_INITIAL_HANDLER` to the handler you noted in step 2 (for example, `lambda_function.lambda_handler`).
 
-Additionally these environment variables can be set for your AWS Lambda function:
+To set environment variables, open the **Configuration** tab of your Lambda function and go to **Environment variables**:
 
-- `SENTRY_INITIAL_HANDLER`: The handler function of your AWS Lambda function.
-- `SENTRY_TRACES_SAMPLE_RATE`: This sets the [sampling rate](/platforms/python/sampling/#sampling-transaction-events) for transactions.
+![](./img/lambda-function-configuration-env-variables-before.png)
+
+Click **Edit**, add the variables above, and save:
+
+![](./img/lambda-function-configuration-env-variables-add.png)
+
+You can also set other SDK options via environment variables. See the [Common Options](/platforms/python/configuration/options/#common-options) to learn more.
 
 ## Verify
 
@@ -75,14 +95,8 @@ Add an error to your function and run it. If everything's working properly, it s
 
 - **Error:** `"Unable to import module 'lambda_function': urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'OpenSSL 1.0.2k-fips  26 Jan 2017'. See: https://github.com/urllib3/urllib3/issues/2168"`
 
-  This error means that you have `urllib3>=2.0` in you dependencies. The Python runtime used in AWS Lambda is not compatible with urllib3 version 2, because it still uses OpenSSL 1.0.
+  This error means that you have `urllib3>=2.0` in your dependencies. The Python runtime used in AWS Lambda is not compatible with urllib3 version 2, because it still uses OpenSSL 1.0.
 
   **Solution:** There are two solutions for this error:
   - Either use a newer Python runtime for your Lambda function. `urllib3` version 2+ is supported in AWS Lambda from the Python 3.9 Lambda runtime and newer.
   - Or pin your dependency of urllib3 to `urllib3<1.27` to make it work with the Python runtime 3.7 and 3.8 used in AWS Lambda.
-
-## Supported Versions
-
-- Lambda Layer up to Version 63: Python 3.6, 3.7, 3.8, 3.9
-- Lambda Layer Version 64+: Python 3.9, 3.10, 3.11
-- Lambda Layer Version 77+: Python 3.7, 3.8, 3.9, 3.10, 3.11
