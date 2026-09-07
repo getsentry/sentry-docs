@@ -337,6 +337,7 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     title: n.frontmatter.title,
     platform,
     sdk: n.frontmatter.sdk || `sentry.${key}`,
+    icon: n.frontmatter.icon,
     categories: n.frontmatter.categories,
     fallbackGuide: n.frontmatter.fallbackGuide,
   };
