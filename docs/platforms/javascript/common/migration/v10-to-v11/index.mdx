@@ -37,16 +37,7 @@ Version 11 has new compatibility ranges for runtimes, frameworks, and libraries.
 
 ### Node.js
 
-The minimum supported Node.js version is **20.19.0**. Node.js 18 is no longer supported, and the supported range has gaps:
-
-| Node.js version  | Supported |
-| ---------------- | --------- |
-| `<20.19.0`       | No        |
-| `20.19.0` - `21` | Yes       |
-| `22.0` - `22.11` | No        |
-| `22.12` - `22.x` | Yes       |
-| `23.0` - `23.1`  | No        |
-| `>=23.2.0`       | Yes       |
+Node.js 18 is no longer supported. The supported versions are **`>=20.19.0`**, **`>=22.12.0`**, and **`>=23.2.0`**.
 
 Move to a supported version everywhere the SDK is installed or your app is built: Dockerfiles, CI images, `engines`, `.nvmrc`, and serverless runtime settings.
 
@@ -562,13 +553,11 @@ Sentry and OpenTelemetry are separate pipelines now, and you choose how they con
 
 ### The SDK No Longer Sets Up OpenTelemetry
 
-By default, the SDK no longer registers an OpenTelemetry tracer provider. It owns the full span lifecycle and produces native Sentry spans. Only `@sentry/nextjs` and `@sentry/sveltekit` still register a light, OpenTelemetry-compatible provider, to capture the spans those frameworks emit.
+By default, the SDK no longer registers an OpenTelemetry tracer provider. It owns the full span lifecycle, produces native Sentry spans, and ignores spans created through `@opentelemetry/api`. That leaves `@opentelemetry/api` as the only OpenTelemetry dependency, so you can run your own setup next to Sentry without Sentry spans leaking into your pipeline, and without using Sentry components for export, context management, and trace propagation.
 
-You can now run your own OpenTelemetry setup next to Sentry without Sentry spans leaking into your pipeline, and without using Sentry components for export, context management, and trace propagation. `@opentelemetry/api` is the only OpenTelemetry dependency that remains.
+If you only use the Sentry SDK, tracing works as before and there's nothing to do.
 
-If you only use the Sentry SDK, tracing works as before and there's nothing to do. In that setup, spans created through `@opentelemetry/api` are ignored.
-
-The `skipOpenTelemetrySetup` option is replaced by `enableOpenTelemetrySetup`, with inverted meaning. It defaults to `false` for most server SDKs, and to `true` for `@sentry/nextjs` and `@sentry/sveltekit`.
+`skipOpenTelemetrySetup` is replaced by `enableOpenTelemetrySetup`. Turn it on and the SDK registers a minimal OpenTelemetry-compatible tracer provider, context manager, and propagator, which turns spans from `@opentelemetry/api` into Sentry spans. It's off by default, except on `@sentry/nextjs` and `@sentry/sveltekit`, which need it to capture the spans those frameworks emit.
 
 ```js
 // Before
@@ -580,8 +569,6 @@ Sentry.init({ enableOpenTelemetrySetup: false });
 
 <Expandable title="Sending spans from @opentelemetry/api to Sentry">
 
-Set `enableOpenTelemetrySetup: true` to register a minimal OpenTelemetry-compatible tracer provider, context manager, and propagator. Spans created through `@opentelemetry/api` become native Sentry spans.
-
 ```js
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -590,9 +577,7 @@ Sentry.init({
 });
 ```
 
-This is not a general OpenTelemetry pipeline. There is no exporter and no OTLP output, and Sentry refuses to register its provider if you already registered one of your own.
-
-The `@sentry/cloudflare/request` entry point doesn't support this option.
+This is not a general OpenTelemetry pipeline: no exporter, no OTLP output. Sentry also refuses to register its provider if you already registered one of your own, and the `@sentry/cloudflare/request` entry point doesn't support the option at all.
 
 </Expandable>
 
