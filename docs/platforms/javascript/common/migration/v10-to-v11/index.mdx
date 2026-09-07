@@ -1354,9 +1354,13 @@ import type { BrowserClientReplayOptions } from "@sentry/core/browser";
 
 ### Node.js and Server SDKs
 
-- The `@sentry/node/init` and `@sentry/node/preload` entry points were removed. Create your own instrument file that calls `Sentry.init()` and preload it with `node --import ./instrument.mjs app.js`.
-- The `loader` entry points were removed from every server SDK. Use `node --import @sentry/<sdk>/import` instead, for example `node --import @sentry/node/import`.
-- `preloadOpenTelemetry()` was removed. Channel-based instrumentation is set up when the instrumented module loads, so preloading is no longer needed.
+- The `init`, `preload`, and `loader` entry points were removed from every server SDK, along with `preloadOpenTelemetry()`. Either `--import` your own instrument file, or `--import` the SDK and call `Sentry.init()` in code:
+
+```bash
+node --import ./instrument.mjs app.js
+node --import @sentry/node/import app.js
+```
+
 - The `registerEsmLoaderHooks` option was removed. The SDK no longer registers `import-in-the-middle` ESM loader hooks.
 - `generateInstrumentOnce` and `SentryContextManager` are no longer exported.
 - The deprecated `SentryHttpInstrumentation` and `SentryNodeFetchInstrumentation` exports were removed. Use `instrumentHttpOutgoingRequests()` and `nativeNodeFetchIntegration` instead.
