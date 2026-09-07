@@ -612,6 +612,22 @@ Sentry.init({ enableOpenTelemetrySetup: false });
 
 <Expandable title="Sending spans from @opentelemetry/api to Sentry">
 
+Turn this on when a library you depend on, or your own code, creates spans through `@opentelemetry/api` and you want them in Sentry:
+
+```js
+import { trace } from "@opentelemetry/api";
+
+// Somewhere in your app, or inside a dependency
+const tracer = trace.getTracer("my-library");
+
+tracer.startActiveSpan("work", (span) => {
+  doWork();
+  span.end();
+});
+```
+
+With `enableOpenTelemetrySetup: true`, the span is captured, without it, the span is ignored. `enableOpenTelemetrySetup` isn't meant for setups that already run their own OpenTelemetry pipeline, which is the next section.
+
 ```js
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
