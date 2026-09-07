@@ -1125,35 +1125,47 @@ export default { initialize };
 
 The bundler plugin options of the meta-framework SDKs are all first-class build options now.
 
+<PlatformSection supported={["javascript.astro", "javascript.nuxt", "javascript.sveltekit", "javascript.solidstart", "javascript.react-router"]}>
+
 ### The `sourceMapsUploadOptions` Option Was Removed
 
-Move its fields to the top level of the SDK's build options. A few fields changed on the way:
-
-- `url` is `sentryUrl` (Nuxt, SvelteKit).
-- `enabled: false` is `sourcemaps: { disable: true }` (Astro, Nuxt, React Router, SolidStart).
-- `assets` and `filesToDeleteAfterUpload` moved into `sourcemaps` (Astro).
+Move its fields to the top level of the SDK's build options:
 
 ```js
 // Before
-sentrySvelteKit({
-  sourceMapsUploadOptions: {
-    org: "my-org",
-    project: "my-project",
-    authToken: process.env.SENTRY_AUTH_TOKEN,
-    url: "https://my-sentry.example.com",
-    sourcemaps: { assets: ["./build/**/*"] },
-  },
-});
-
-// After
-sentrySvelteKit({
+sourceMapsUploadOptions: {
   org: "my-org",
   project: "my-project",
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  sentryUrl: "https://my-sentry.example.com",
   sourcemaps: { assets: ["./build/**/*"] },
-});
+}
+
+// After
+org: "my-org",
+project: "my-project",
+authToken: process.env.SENTRY_AUTH_TOKEN,
+sourcemaps: { assets: ["./build/**/*"] },
 ```
+
+<PlatformSection supported={["javascript.nuxt", "javascript.sveltekit"]}>
+
+The `url` field is called `sentryUrl` at the top level.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.astro", "javascript.nuxt", "javascript.solidstart", "javascript.react-router"]}>
+
+The `enabled` field is gone. Use `sourcemaps: { disable: true }` instead of `enabled: false`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.astro"]}>
+
+The `assets` and `filesToDeleteAfterUpload` fields moved into `sourcemaps`.
+
+</PlatformSection>
+
+</PlatformSection>
 
 ### The `unstable_` Bundler Plugin Options Were Removed
 
