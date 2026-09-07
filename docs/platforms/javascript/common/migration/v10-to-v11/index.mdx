@@ -184,17 +184,19 @@ See the <PlatformLink to="/configuration/options/#dataCollection">`dataCollectio
 
 ## Tracing
 
-Span streaming changes how spans are sent, named, and filtered. Most of this isn't caught by TypeScript, so check your filters, dashboards, and alerts.
+Tracing moves to span streaming in v11. Instead of holding a trace in memory and sending one transaction when the root span ends, the SDK sends spans in small batches as they finish. Transactions no longer exist: what used to be one transaction event is a service span with its child spans.
+
+That changes how spans are sent, named, and filtered. Most of it isn't caught by TypeScript, so check your filters, dashboards, and alerts.
 
 ### Span Streaming Is the Default
 
-Spans are now sent in batches as they finish (<PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>), instead of being buffered until the root span ends. Spans are no longer capped at 1000 per transaction, and individual payload limits are higher.
+Spans are no longer capped at 1000 per transaction, and individual payload limits are higher. See <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> for how it works.
 
 Because no transaction events are produced, `beforeSendTransaction` and `ignoreTransactions` no longer do anything, and `beforeSendSpan` receives a different payload.
 
 #### Scope `tags` and `extra` Aren't Applied to Spans
 
-Streamed spans only carry attributes, so scope `tags` and `extra` no longer reach any span, including the segment span that replaced the transaction. They still apply to errors, so you don't have to remove them. Set attributes for everything that should be searchable on spans, which also applies them to logs and metrics:
+Streamed spans only carry attributes, so scope `tags` and `extra` no longer reach any span, including the service span that replaced the transaction. They still apply to errors, so you don't have to remove them. Set attributes for everything that should be searchable on spans, which also applies them to logs and metrics:
 
 ```js
 // Before: applied to the transaction
@@ -262,7 +264,7 @@ A `beforeSendSpan` callback that does not match your `traceLifecycle` is never i
 
 #### Replacing `beforeSendTransaction` and `ignoreTransactions`
 
-Move data changes to `beforeSendSpan` and guard on `is_segment` to target what used to be the transaction. Use `ignoreSpans` to drop spans, because `beforeSendSpan` can't drop them.
+Move data changes to `beforeSendSpan` and guard on `is_segment` to target the service span, which is what used to be the transaction. Use `ignoreSpans` to drop spans, because `beforeSendSpan` can't drop them.
 
 ```js
 // Before
@@ -286,7 +288,7 @@ Sentry.init({
 });
 ```
 
-Ignoring a segment span drops its child spans with it, which is the same result as dropping a transaction. Because `ignoreSpans` applies to every span, narrow the filter with the object form so that child spans with the same name are kept:
+Ignoring a service span drops its child spans with it, which is the same result as dropping a transaction. Because `ignoreSpans` applies to every span, narrow the filter with the object form so that child spans with the same name are kept:
 
 ```js
 Sentry.init({
@@ -371,7 +373,7 @@ A few consequences worth checking:
 - The `pg`, `postgres.js`, `mysql`, `mysql2`, `knex`, `tedious`, Prisma, Nitro `db0`, and Cloudflare D1 instrumentations name their query spans the same way now. A statement that touches no table (`SELECT NOW()`) summarizes to the bare operation. Connect and pool spans (`pg.connect`, `mysql2.connect`, `redis-connect`, `generic-pool.acquire`) keep their names.
 - Supabase query spans drop the builder call from the name, and the modifiers stay on `db.query`. Auth spans are named after the method they call (`auth.admin.createUser`).
 - AWS SQS `SendMessage`, `SendMessageBatch`, and `ReceiveMessage`, and SNS `Publish`, are messaging spans now instead of `rpc` spans. Every other command on those clients stays `rpc`.
-- Child spans carry their segment's name in `sentry.segment.name`, so that changes with it.
+- Child spans carry their service span's name in `sentry.segment.name`, so that changes with it.
 
 </Expandable>
 
