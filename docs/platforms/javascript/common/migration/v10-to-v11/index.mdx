@@ -221,7 +221,7 @@ Spans are no longer capped at 1000 per transaction, and individual payload limit
 
 <Alert level="warning">
 
-Because no transaction events are produced, `beforeSendTransaction` and `ignoreTransactions` no longer do anything, and `beforeSendSpan` [receives a different payload](#beforesendspan-receives-the-streamed-span-format).
+Because no transaction events are produced, `beforeSendTransaction` and `ignoreTransactions` no longer do anything, and `beforeSendSpan` [receives a different payload](#the-beforesendspan-payload-changed).
 
 </Alert>
 
@@ -253,7 +253,7 @@ Sentry.withScope((scope) => {
 });
 ```
 
-#### `beforeSendSpan` Receives the Streamed Span Format
+#### The `beforeSendSpan` Payload Changed
 
 The callback now runs as each span finishes and receives a `StreamedSpanJSON` object. Its fields were renamed:
 
@@ -335,7 +335,7 @@ Sentry.init({
 
 Scope `tags` and `extra` [aren't carried over to streamed spans](#scope-tags-and-extra-arent-applied-to-spans) either.
 
-#### `spanToJSON` Returns the Streamed Span Format
+#### The `spanToJSON` Return Type Changed
 
 `Sentry.spanToJSON()` now returns a `StreamedSpanJSON` object, the same shape `beforeSendSpan` receives. The `spanToStreamedSpanJSON` helper was removed, so replace calls to it with `spanToJSON`.
 
@@ -808,7 +808,7 @@ Sentry.init({
 });
 ```
 
-### `onUnhandledRejectionIntegration` Prints Less in `strict` Mode
+### Unhandled Rejections Print Less in `strict` Mode
 
 In `strict` mode, the integration printed a warning in front of every unhandled rejection. It's now printed only when the rejection reason has no stack trace, which matches Node.js. Update log processing or tests that match on that text. The process still exits with code `1`, and the reason is still written to `stderr`.
 
@@ -839,7 +839,7 @@ Sentry.init({
 
 New defaults change which events carry a stack trace and how sessions are counted.
 
-### `attachStacktrace` Defaults to `true`
+### Stack Traces Are Attached by Default
 
 `Sentry.captureMessage()` events, and non-`Error` values passed to `Sentry.captureException()`, now attach a synthetic stack trace that points to the call site. Set `attachStacktrace: false` to restore the previous behavior.
 
@@ -864,17 +864,17 @@ Sentry.init({
 });
 ```
 
-### `DOMException.code` Is No Longer Set as a Tag
+### The `DOMException.code` Tag Was Removed
 
 Events created from a `DOMException` no longer carry a `DOMException.code` tag, because the `code` property is deprecated in favor of `DOMException.name`, which is already the exception type. Switch searches and alert rules that use the tag to `error.type`.
 
-### `sendFeedback` Rejects With an `Error`
+### Feedback Rejections Are Always an `Error`
 
 `Sentry.sendFeedback()` now rejects with an `Error` in all cases. Previously it rejected with a plain string when the request timed out, was rejected with a 403, or otherwise failed to send. The message text is unchanged and is still customizable through the `errorMessages` hint, so read it from `error.message`.
 
 </PlatformCategorySection>
 
-### `tracePropagationTargets` Matching Is Case-Insensitive
+### Trace Propagation Matching Is Case-Insensitive
 
 String and regular expression matching for `tracePropagationTargets` no longer depends on casing. In browsers this was especially surprising, because the URL is normalized with `new URL()` before matching, which lower-cases the origin. A target such as `'myApi.com'` could therefore never match a request to `https://myApi.com`.
 
@@ -949,7 +949,7 @@ Web vitals also changed:
 
 Workers need a new compatibility flag, and a few APIs moved or became automatic.
 
-### `nodejs_compat` Is Required
+### Node.js Compatibility Is Required
 
 The SDK requires the `nodejs_compat` compatibility flag instead of `nodejs_als`. Update your `wrangler.toml` or `wrangler.jsonc`:
 
@@ -1014,7 +1014,7 @@ Strings match a binding name in full, regular expressions match by pattern, and 
 
 The build-time configuration moved to its own entry point, and the options deprecated in v10 were removed.
 
-### `withSentryConfig` Moved to `@sentry/nextjs/config`
+### The `withSentryConfig` Entry Point Moved
 
 ```js {filename:next.config.mjs}
 // Before
@@ -1121,7 +1121,7 @@ export default { initialize };
 
 The bundler plugin options of the meta-framework SDKs are all first-class build options now.
 
-### `sourceMapsUploadOptions` Was Removed
+### The `sourceMapsUploadOptions` Option Was Removed
 
 Move its fields to the top level of the SDK's build options. A few fields changed on the way:
 
@@ -1151,7 +1151,7 @@ sentrySvelteKit({
 });
 ```
 
-### `unstable_` Bundler Plugin Options Were Removed
+### The `unstable_` Bundler Plugin Options Were Removed
 
 The `unstable_sentry*PluginOptions` escape hatch was removed from every SDK, because the Sentry bundler plugins now live in the SDK monorepo and release in lockstep. Every supported plugin option is a first-class build option:
 
@@ -1224,7 +1224,7 @@ node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
 
 <PlatformSection supported={["javascript.sveltekit"]}>
 
-### `sentrySvelteKit` Moved to the `@sentry/sveltekit/vite` Subpath
+### The `sentrySvelteKit` Plugin Moved to a Subpath
 
 ```js {filename:vite.config.js}
 // Before
@@ -1379,7 +1379,7 @@ The legacy per-transaction profiling options were removed. Configure <PlatformLi
 
 These integrations and options kept their behavior, but changed their name.
 
-### `InboundFilters` Is Now `EventFilters`
+### The `InboundFilters` Integration Is Now `EventFilters`
 
 The `inboundFiltersIntegration` export was removed, and the integration reports itself as `EventFilters`. Update references by name, for example in `client.getIntegrationByName()`:
 
@@ -1400,7 +1400,7 @@ Sentry.init({
 <PlatformCategorySection supported={['server']}>
 <PlatformSection notSupported={["javascript.deno", "javascript.cloudflare", "javascript.wasm"]}>
 
-### `childProcess` Was Split Into `childProcess` and `workerThreads`
+### The `childProcess` Integration Was Split
 
 `childProcessIntegration` covers `child_process`, and the new `workerThreadsIntegration` covers `worker_threads`. Both are enabled by default, so no change is needed to keep the previous behavior.
 
