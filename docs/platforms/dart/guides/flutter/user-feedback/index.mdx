@@ -12,6 +12,27 @@ og_image: /og-images/platforms-dart-guides-flutter-user-feedback.png
 
 When a user experiences an error, Sentry provides the ability to collect additional feedback. You can collect feedback according to the method supported by the SDK.
 
+## Include a Session Replay
+
+To include the activity leading up to user feedback, enable buffered replays in Sentry Flutter SDK `9.0.0` or later:
+
+```dart
+await SentryFlutter.init(
+  (options) {
+    options.replay.onErrorSampleRate = 1.0;
+  },
+  appRunner: () => runApp(
+    SentryWidget(
+      child: MyApp(),
+    ),
+  ),
+);
+```
+
+The SDK keeps up to 30 seconds of replay activity on the device for every session not selected by `sessionSampleRate`. It sends the buffer when your app calls `Sentry.captureFeedback()` or opens the built-in `SentryFeedbackForm`. Capturing at form open preserves the activity that led the user to report the problem instead of recording only their interactions with the form.
+
+Buffered replays are available on iOS and Android. To adjust the percentage of sessions buffered, set `onErrorSampleRate` between `0.0` and `1.0`. See [Session Replay sampling](/platforms/dart/guides/flutter/session-replay/#sampling) for details.
+
 ## User Feedback API
 
 The user feedback API allows you to collect user feedback while utilizing your own UI. Sentry pairs the feedback with the original event, giving you additional insight into issues. Sentry needs the `associatedEventId` to be able to associate the user feedback to the corresponding event. There are several ways to get the `associatedEventId`:
