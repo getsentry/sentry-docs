@@ -2,6 +2,8 @@ import {readFileSync} from 'fs';
 import path, {dirname} from 'path';
 import {fileURLToPath} from 'url';
 
+import {type DedupeMode, dedupeSlugsBySource, parseDedupeMode} from './dedupe';
+
 const baseURL = 'http://localhost:3000/';
 type Link = {href: string; innerText: string};
 
@@ -11,7 +13,17 @@ const trimSlashes = (s: string) => s.replace(/(^\/|\/$)/g, '');
 const ignoreListFile = path.join(dirname(import.meta.url), './ignore-list.txt');
 
 const showProgress = process.argv.includes('--progress');
-const deduplicatePages = !process.argv.includes('--skip-deduplication');
+const dedupeMode: DedupeMode = parseDedupeMode(process.argv);
+
+const concurrencyIndex = process.argv.indexOf('--concurrency');
+const pageConcurrency = Math.max(
+  1,
+  Number(
+    concurrencyIndex !== -1 && process.argv[concurrencyIndex + 1]
+      ? process.argv[concurrencyIndex + 1]
+      : 8
+  ) || 8
+);
 
 // Get the path filter if specified
 const pathFilterIndex = process.argv.indexOf('--path');
@@ -34,45 +46,46 @@ async function fetchWithFollow(url: URL | string): Promise<Response> {
   return r;
 }
 
-async function deduplicateSlugs(
-  allSlugs: string[]
-): Promise<{skippedCount: number; slugsToCheck: string[]}> {
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+
+  async function run() {
+    while (true) {
+      const index = next++;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await worker(items[index], index);
+    }
+  }
+
+  const runners = Array.from({length: Math.min(concurrency, items.length)}, () => run());
+  await Promise.all(runners);
+  return results;
+}
+
+async function resolveSlugsToCheck(
+  allSlugs: string[],
+  mode: DedupeMode
+): Promise<{skippedCount: number; slugsToCheck: string[]; mode: DedupeMode}> {
+  if (mode === 'all') {
+    return {skippedCount: 0, slugsToCheck: allSlugs, mode};
+  }
+
   try {
     const sourceMap: Record<string, string | null> = await fetch(
       `${baseURL}api/source-map`
     ).then(r => r.json());
-
-    const checkedSources = new Set<string>();
-    const slugsToCheck: string[] = [];
-    let skippedCount = 0;
-
-    for (const slug of allSlugs) {
-      // Use same normalization as route.ts (remove leading and trailing slashes)
-      const normalizedSlug = slug.replace(/(^\/|\/$)/g, '');
-      const sourcePath = sourceMap[normalizedSlug];
-
-      // Always check API-generated pages (no source file)
-      if (!sourcePath) {
-        slugsToCheck.push(slug);
-        continue;
-      }
-
-      // Skip if we've already checked this source file
-      if (checkedSources.has(sourcePath)) {
-        skippedCount++;
-        continue;
-      }
-
-      // First time seeing this source file
-      checkedSources.add(sourcePath);
-      slugsToCheck.push(slug);
-    }
-
-    return {skippedCount, slugsToCheck};
+    return dedupeSlugsBySource(allSlugs, sourceMap, mode);
   } catch (error) {
-    console.warn('⚠️  Failed to fetch source map:', error.message);
+    console.warn('⚠️  Failed to fetch source map:', (error as Error).message);
     console.warn('Falling back to checking all pages...\n');
-    return {skippedCount: 0, slugsToCheck: allSlugs};
+    return {skippedCount: 0, slugsToCheck: allSlugs, mode: 'all'};
   }
 }
 
@@ -86,21 +99,40 @@ async function main() {
     .filter(slug => (pathFilter ? slug.startsWith(pathFilter) : true));
   const allSlugsSet = new Set(allSlugs);
 
-  // Deduplicate pages with same source file (default behavior)
-  const {skippedCount, slugsToCheck} = deduplicatePages
-    ? await deduplicateSlugs(allSlugs)
-    : {skippedCount: 0, slugsToCheck: allSlugs};
+  const {skippedCount, slugsToCheck, mode} = await resolveSlugsToCheck(
+    allSlugs,
+    dedupeMode
+  );
 
-  if (skippedCount > 0) {
+  if (mode === 'unique-source' && skippedCount > 0) {
     console.log(
-      'Deduplication: checking %d unique pages (skipped %d duplicates)\n',
+      'Deduplication (unique-source): checking %d unique pages (skipped %d duplicates)\n',
       slugsToCheck.length,
       skippedCount
+    );
+  } else if (mode === 'expand-common' && skippedCount > 0) {
+    console.log(
+      'Deduplication (expand-common): checking %d pages (skipped %d non-common duplicates; platform common multi-renders kept)\n',
+      slugsToCheck.length,
+      skippedCount
+    );
+  } else if (mode === 'all') {
+    console.log('Checking all pages (no source deduplication)\n');
+  } else if (mode === 'expand-common') {
+    console.log(
+      'Deduplication (expand-common): checking %d pages (no non-common duplicates to skip)\n',
+      slugsToCheck.length
     );
   }
 
   const pathInfo = pathFilter ? ` in /${pathFilter}` : '';
-  console.log('Checking 404s on %d pages%s', slugsToCheck.length, pathInfo);
+  console.log(
+    'Checking 404s on %d pages%s (concurrency=%d, mode=%s)',
+    slugsToCheck.length,
+    pathInfo,
+    pageConcurrency,
+    mode
+  );
 
   const all404s: {page404s: Link[]; slug: string}[] = [];
 
@@ -151,7 +183,9 @@ async function main() {
     return false;
   }
 
-  for (const slug of slugsToCheck) {
+  async function checkSlug(
+    slug: string
+  ): Promise<{page404s: Link[]; slug: string} | null> {
     const pageUrl = new URL(slug, baseURL);
     const now = performance.now();
     const html = await fetchWithFollow(pageUrl.href).then(r => r.text());
@@ -172,15 +206,20 @@ async function main() {
       .filter(([_, is404_]) => is404_)
       .map(([link]) => link);
 
-    if (page404s.length) {
-      all404s.push({slug, page404s});
-    }
-
     if (showProgress) {
       console.log(
         page404s.length ? '❌' : '✅',
         `in ${(performance.now() - now).toFixed(1).padStart(4, '0')} ms | ${slug}`
       );
+    }
+
+    return page404s.length ? {slug, page404s} : null;
+  }
+
+  const results = await mapPool(slugsToCheck, pageConcurrency, checkSlug);
+  for (const result of results) {
+    if (result) {
+      all404s.push(result);
     }
   }
 
