@@ -332,15 +332,21 @@ Scope `tags` and `extra` [aren't carried over to streamed spans](#scope-tags-and
 
 ### Span Names Are Low Cardinality
 
-In stream mode, span names follow the [Sentry span name conventions](https://getsentry.github.io/sentry-conventions/names/). URLs, route parameters, and other client-supplied values are no longer part of the name. They stay available as span attributes.
+In stream mode, span names follow the [Sentry span name conventions](https://getsentry.github.io/sentry-conventions/names/). URLs, route parameters, and other client-supplied values are no longer part of the name:
 
-- `http.client`: `GET https://api.example.com/users/123` becomes `GET api.example.com`. The full URL stays on `url.full`, the domain on `url.domain`.
-- `http.server`: unchanged when the SDK resolves a route (`GET /users/:id`). Requests without a route are named after the method alone (`GET`).
-- `pageload` and `navigation`: the parameterized route, or `Pageload` and `Navigation` when there is none.
-- `resource.*`: the resource domain, or `Resource`.
-- `graphql`: `GraphQL query`, `GraphQL parse`. The operation name stays on `graphql.operation.name` and the phase on the new `graphql.processing.type` attribute.
-- Messaging spans read `<operation type> <destination>` in every integration, for example `process my-queue`.
-- Database spans are named after a summary of the query (`SELECT "User"`), not the statement. The sanitized statement stays on `db.query.text`.
+| Span op                  | Before                                  | After                            |
+| ------------------------ | --------------------------------------- | -------------------------------- |
+| `http.client`            | `GET https://api.example.com/users/123` | `GET api.example.com`            |
+| `http.server`            | `GET /users/123`                        | `GET /users/:id`, or `GET`       |
+| `pageload`, `navigation` | `/users/123`                            | `/users/:id`, or `Pageload`      |
+| `resource.*`             | `/assets/app.js`                        | `cdn.example.com`, or `Resource` |
+| `graphql`                | `query GetUser`                         | `GraphQL query`                  |
+| `queue.process`          | `my-queue process`                      | `process my-queue`               |
+| `db.query`               | `SELECT * FROM "User" WHERE id = $1`    | `SELECT "User"`                  |
+
+`http.server` names are unchanged when the SDK resolves a route, and fall back to the method alone when it can't. `pageload` and `navigation` fall back to `Pageload` and `Navigation`.
+
+Whatever the name no longer carries stays on an attribute, in both trace lifecycles: `url.full` and `url.domain`, `graphql.operation.name` and the new `graphql.processing.type`, `db.query.text`, and so on.
 
 <Expandable title="Full list of span name changes">
 
