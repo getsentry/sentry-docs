@@ -2,7 +2,7 @@
 title: Attachments
 description: File attachments associated with events and traces, including screenshots, minidumps, crash reports, and view hierarchies.
 spec_id: sdk/telemetry/attachments
-spec_version: 1.6.0
+spec_version: 1.7.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -73,7 +73,7 @@ Attachments are distinguished by the `attachment_type` header on the envelope it
 
 ### Association Model
 
-Standard attachments are associated with an **event** via `event_id`. They can be sent in the same envelope as the event or separately (with caveats around independent dropping).
+Standard attachments are associated with an **event** via `event_id`. They must be sent in the same envelope as the event.
 
 Trace attachments (experimental) are associated with a **trace** via `trace_id` and are optionally linked to specific spans or logs.
 
@@ -91,8 +91,7 @@ Envelope item type `"attachment"`. Contains the raw payload of an attachment fil
 
 - This item **MAY** occur multiple times per envelope.
 - For **minidump** and **apple crash report** attachments, the corresponding `"event"` item **MUST** be sent within the same envelope.
-- Generic attachments can be ingested separately from their events. SDKs **SHOULD** send them in the same envelope, which allows for more efficient rate limiting and filtering.
-- Generic attachments sent in separate envelopes can be dropped independently of an event. To ensure consistent handling, send them in the same request.
+- Generic attachments **MUST** be sent in the same envelope as their corresponding event. This ensures consistent filtering and rate limiting.
 - The Sentry server supports special attachments to ingest event payloads for backwards compatibility. These are not part of the official public API and the behavior **MUST NOT** be relied upon.
 
 </SpecSection>
@@ -180,7 +179,7 @@ Attachment placeholders are an experimental feature, the protocol is subject to 
 
 Attachment placeholders use item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref+json"`. A placeholder contains a **reference** to an attachment uploaded elsewhere — it does _not_ contain the actual attachment payload. The purpose is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded separately.
 
-SDKs **SHOULD** send placeholders in the same envelope as the event the file is attached to.
+SDKs **MUST** send placeholders in the same envelope as the event the file is attached to.
 
 **Workflow:**
 
@@ -205,7 +204,7 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
       | ----------------- | ------ | ------------ | -------------------------------------------------------------------|
       | `attachment_type` | String | **REQUIRED** | One of the values listed in [Attachment Types](#attachment-types). |
 
-      
+
    1. Get the location response header:
       ```
       HTTP/1.1 201 Created
