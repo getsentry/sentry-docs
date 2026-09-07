@@ -188,6 +188,28 @@ Tracing moves to span streaming in v11. Instead of holding a trace in memory and
 
 That changes how spans are sent, named, and filtered. Most of it isn't caught by TypeScript, so check your filters, dashboards, and alerts.
 
+<Expandable title="Staying on transaction mode">
+
+Set `traceLifecycle: 'static'` to keep the previous model. In Node.js, Bun, Vercel Edge, and Cloudflare you can set the `SENTRY_TRACE_LIFECYCLE=static` environment variable instead.
+
+```js
+Sentry.init({
+  traceLifecycle: "static",
+
+  // `beforeSendSpan` must be wrapped with `Sentry.withStaticSpan`
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    span.description = scrub(span.description);
+    return span;
+  }),
+});
+```
+
+In transaction mode, `spanToStaticSpanJSON` returns the static `SpanJSON` format.
+
+Transaction mode only exists for backwards compatibility and will be removed in a future major version. Treat it as a temporary measure.
+
+</Expandable>
+
 ### Span Streaming Is the Default
 
 Spans are no longer capped at 1000 per transaction, and individual payload limits are higher. See <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> for how it works.
@@ -196,7 +218,9 @@ Because no transaction events are produced, `beforeSendTransaction` and `ignoreT
 
 #### Scope `tags` and `extra` Aren't Applied to Spans
 
-Streamed spans only carry attributes, so scope `tags` and `extra` no longer reach any span, including the service span that replaced the transaction. They still apply to errors, so you don't have to remove them. Set attributes for everything that should be searchable on spans, which also applies them to logs and metrics:
+Streamed spans only carry attributes, so scope `tags` and `extra` no longer reach any span, including the service span that replaced the transaction. They still apply to errors, so you don't have to remove them. In transaction mode (`traceLifecycle: 'static'`) they keep landing on the transaction as before.
+
+Set attributes for everything that should be searchable on spans, which also applies them to logs and metrics:
 
 ```js
 // Before: applied to the transaction
@@ -260,7 +284,9 @@ Sentry.init({
 
 Streamed spans always have a status, and finer-grained error statuses are mapped to `'error'`. Additional error information is available in span attributes such as `sentry.status.message`.
 
-A `beforeSendSpan` callback that does not match your `traceLifecycle` is never invoked. Turn on debug logging to see a warning about the mismatch.
+If you wrapped the callback with `withStreamedSpan()` to opt into this payload in v10, drop the wrapper. It's a no-op now that streamed payloads are the default, and it's deprecated.
+
+A callback that doesn't match your `traceLifecycle` is never invoked: an unwrapped one is ignored in transaction mode, a wrapped one in stream mode. In transaction mode, wrap it with `Sentry.withStaticSpan()` and it keeps receiving the old `SpanJSON`. Turn on debug logging to see a warning about the mismatch.
 
 #### Replacing `beforeSendTransaction` and `ignoreTransactions`
 
@@ -303,28 +329,6 @@ Scope `tags` and `extra` [aren't carried over to streamed spans](#scope-tags-and
 #### `spanToJSON` Returns the Streamed Span Format
 
 `Sentry.spanToJSON()` now returns a `StreamedSpanJSON` object, the same shape `beforeSendSpan` receives. The `spanToStreamedSpanJSON` helper was removed, so replace calls to it with `spanToJSON`.
-
-<Expandable title="Staying on transaction mode">
-
-Set `traceLifecycle: 'static'` to keep the previous model. In Node.js, Bun, Vercel Edge, and Cloudflare you can set the `SENTRY_TRACE_LIFECYCLE=static` environment variable instead.
-
-```js
-Sentry.init({
-  traceLifecycle: "static",
-
-  // `beforeSendSpan` must be wrapped with `Sentry.withStaticSpan`
-  beforeSendSpan: Sentry.withStaticSpan((span) => {
-    span.description = scrub(span.description);
-    return span;
-  }),
-});
-```
-
-In transaction mode, `spanToStaticSpanJSON` returns the static `SpanJSON` format. The `withStreamedSpan()` wrapper is now a no-op and deprecated, so you can remove it.
-
-Transaction mode only exists for backwards compatibility and will be removed in a future major version. Treat it as a temporary measure.
-
-</Expandable>
 
 ### Span Names Are Low Cardinality
 
