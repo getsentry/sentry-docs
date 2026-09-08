@@ -97,7 +97,12 @@ export const staticStrings = new Set();
 
 export function t(key, ...args) {
   const translated = translate(key, ...args);
-  staticStrings.add(translated);
+  // Only remember strings that have no interpolated placeholders (e.g. "{name}"),
+  // since an interpolated result can contain user data ("Hello " + name) even
+  // though the template itself is static copy.
+  if (translated === translate(key)) {
+    staticStrings.add(translated);
+  }
   return translated;
 }
 ```
@@ -112,7 +117,7 @@ Sentry.replayIntegration({
 });
 ```
 
-This is the same pattern Sentry uses in its own web app: static UI copy (labels, button text, empty states) rendered through the translation function is unmasked automatically, while everything else — usernames, issue titles, free-text fields — stays masked. New UI copy is safe by construction, since it flows through the same `t()` call, so nobody has to remember to add a `sentry-unmask` class to it later.
+This is the same pattern Sentry uses in its own web app: static UI copy (labels, button text, empty states) rendered through the translation function is unmasked automatically, while everything else — usernames, issue titles, free-text fields — stays masked. New UI copy is safe by construction, since it flows through the same `t()` call, so nobody has to remember to add a `sentry-unmask` class to it later. Skipping the cache when the translation was interpolated is the important part: `t("greeting", {name})` should stay masked, because the rendered string ("Hello Ryan") contains the user's name, even though the *template* ("Hello {name}") is static.
 
 ### Make privacy explicit in shared React components
 
