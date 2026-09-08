@@ -93,7 +93,7 @@ If your app renders copy through a translation function (`t()`, `formatMessage()
 
 ```javascript
 // i18n.js — track every string that comes out of the translation layer
-const staticStrings = new Set();
+export const staticStrings = new Set();
 
 export function t(key, ...args) {
   const translated = translate(key, ...args);
@@ -104,6 +104,8 @@ export function t(key, ...args) {
 
 ```javascript
 // sentry.js
+import {staticStrings} from "./i18n";
+
 Sentry.replayIntegration({
   maskAllText: true,
   maskFn: (text) => (staticStrings.has(text) ? text : text.replace(/\S/g, "*")),
@@ -135,6 +137,18 @@ export function StaticCopy({children, ...props}) {
   );
 }
 ```
+
+<Alert level="warning">
+
+Starting with SDK v8, `unblock` and `unmask` no longer add default DOM selectors. If you use `data-sentry-unmask` (or `sentry-unmask`) anywhere in your codebase, you must also opt in explicitly:
+
+```javascript
+Sentry.replayIntegration({
+  unmask: ["[data-sentry-unmask]"],
+});
+```
+
+</Alert>
 
 Or centralize the decision in a small HOC so reviewers only need to check the primitive once, not every call site:
 
