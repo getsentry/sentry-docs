@@ -169,7 +169,7 @@ export async function Home() {
             <AgentQuickLink
               to="/agent-tracing/mastra/"
               title="Mastra"
-              desc="Export Mastra AI tracing to Sentry."
+              desc="Trace Mastra agents, workflows, and tool calls."
               icon={<PlatformIcon platform="mastra" />}
             />
             <AgentQuickLink
