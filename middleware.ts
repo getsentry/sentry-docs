@@ -16,6 +16,13 @@ const BASE_URL = isDeveloperDocs
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
 
+const CANONICAL_HOST = new URL(BASE_URL).hostname;
+
+// Production domains whose content should be indexable by search engines.
+// All other hostnames (Vercel preview/deployment URLs, old production deployments)
+// get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
+const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -30,6 +37,11 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  const buildUrlRedirect = redirectProductionBuildUrlToCanonical(request);
+  if (buildUrlRedirect) {
+    return buildUrlRedirect;
+  }
+
   // Classify once per request and record it as a counter. This metric — not
   // trace sampling — is the source of truth for agent/bot/user traffic: the
   // middleware root span is created by Next.js before any request data reaches
@@ -38,17 +50,103 @@ export function middleware(request: NextRequest) {
   const classification = classifyTraffic(request);
   recordClassification(request, classification);
 
-  // First, handle canonical URL redirects for deprecated paths
-  const canonicalRedirect = handleRedirects(request);
-  if (canonicalRedirect) {
-    return canonicalRedirect;
-  }
+  // First handle canonical URL redirects for deprecated paths, then check for
+  // AI/LLM clients and redirect to markdown if appropriate.
+  const response = applyNoindexForNonProductionDomains(
+    request,
+    handleRedirects(request) ?? handleAIClientRedirect(request, classification)
+  );
 
-  // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  return handleAIClientRedirect(request, classification);
+  annotateMiddlewareSpan(request, classification, response);
+
+  return response;
+}
+
+/** Redirects page requests on noncanonical production hosts, leaving previews public. */
+function redirectProductionBuildUrlToCanonical(
+  request: NextRequest
+): NextResponse | null {
+  if (
+    process.env.VERCEL_ENV !== 'production' ||
+    (request.method !== 'GET' && request.method !== 'HEAD')
+  ) {
+    return null;
+  }
+  if (request.nextUrl.hostname === CANONICAL_HOST) {
+    return null;
+  }
+  const url = request.nextUrl.clone();
+  url.protocol = 'https:';
+  url.host = CANONICAL_HOST;
+  url.port = '';
+  return NextResponse.redirect(url, 308);
+}
+
+/**
+ * Adds X-Robots-Tag: noindex to responses served from non-production domains.
+ * This prevents search engines from indexing stale Vercel deployment URLs
+ * (e.g., sentry-docs-<hash>.vercel.app) or old production deployments that
+ * are still accessible but no longer current.
+ *
+ * Production domains (docs.sentry.io, develop.sentry.dev) are not affected.
+ */
+function applyNoindexForNonProductionDomains(
+  request: NextRequest,
+  response: NextResponse
+): NextResponse {
+  const hostname = request.nextUrl.hostname;
+  if (!INDEXABLE_HOSTNAMES.has(hostname)) {
+    response.headers.set('X-Robots-Tag', 'noindex');
+  }
+  return response;
 }
 
 type TrafficClassification = ReturnType<typeof classifyTraffic>;
+
+type MiddlewareOutcome = 'redirect' | 'rewrite' | 'passthrough';
+
+function middlewareOutcome(response: NextResponse): MiddlewareOutcome {
+  if (response.status >= 300 && response.status < 400) {
+    return 'redirect';
+  }
+  // Set by NextResponse.rewrite(). If Next.js renames it we degrade to
+  // 'passthrough' rather than throwing.
+  return response.headers.has('x-middleware-rewrite') ? 'rewrite' : 'passthrough';
+}
+
+/**
+ * The tracesSampler can't classify this span (no request data at sampling time),
+ * so the detail it needs to stay useful is attached here instead, where the
+ * request is in hand. `traffic_type` keeps bots filterable at query time and
+ * `middleware.outcome` gives the redirect/rewrite/passthrough breakdown.
+ *
+ * Attributes only — deliberately no `updateName`. The SDK's
+ * `enhanceMiddlewareRootSpan` rewrites the name of every `Middleware.execute`
+ * span to `middleware {METHOD}` on the send path, reading Next.js'
+ * `next.span_name` attribute and ignoring `sentry.source`, so any name set here
+ * is silently discarded. Outcome and path live as attributes rather than in the
+ * transaction name — which also keeps name cardinality flat, since the docs
+ * site has thousands of paths plus every file under /mdx-images/.
+ */
+function annotateMiddlewareSpan(
+  request: NextRequest,
+  classification: TrafficClassification,
+  response: NextResponse
+): void {
+  const activeSpan = Sentry.getActiveSpan();
+  if (!activeSpan) {
+    return;
+  }
+
+  const rootSpan = Sentry.getRootSpan(activeSpan);
+
+  rootSpan.setAttributes({
+    'middleware.outcome': middlewareOutcome(response),
+    'url.path': request.nextUrl.pathname,
+    traffic_type: classification.trafficType,
+    device_type: classification.deviceType,
+  });
+}
 
 /**
  * Records the per-request traffic classification as a counter metric.
@@ -1396,55 +1494,55 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-frontend/upload-source-maps/',
-    to: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    to: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/upload-source-maps/',
-    to: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
+    to: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     from: '/guides/integrate-frontend/configure-scms/',
-    to: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/configure-scms/',
-    to: '/product/sentry-basics/integrate-frontend/configure-scms/',
+    to: '/integrations/source-code-mgmt/github/',
   },
   {
     from: '/guides/integrate-frontend/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    to: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/create-new-project/',
-    to: '/product/sentry-basics/integrate-frontend/create-new-project/',
+    to: '/product/sentry-basics/getting-started-tutorial/create-new-project/',
   },
   {
     from: '/guides/integrate-frontend/initialize-sentry-sdk/',
-    to: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    to: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/initialize-sentry-sdk/',
-    to: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
+    to: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     from: '/guides/integrate-frontend/generate-first-error/',
-    to: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    to: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-frontend/generate-first-error/',
-    to: '/product/sentry-basics/integrate-frontend/generate-first-error/',
+    to: '/product/sentry-basics/getting-started-tutorial/generate-first-error/',
   },
   {
     from: '/basics/',
@@ -1532,35 +1630,35 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/guides/integrate-backend/capturing-errors/',
-    to: '/product/sentry-basics/integrate-backend/capturing-errors/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/capturing-errors/',
-    to: '/product/sentry-basics/integrate-backend/capturing-errors/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/',
-    to: '/product/sentry-basics/integrate-backend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/',
-    to: '/product/sentry-basics/integrate-backend/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/configuration-options/',
-    to: '/product/sentry-basics/integrate-backend/configuration-options/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/configuration-options/',
-    to: '/product/sentry-basics/integrate-backend/configuration-options/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/guides/integrate-backend/getting-started/',
-    to: '/product/sentry-basics/integrate-backend/getting-started/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/product/sentry-basics/guides/integrate-backend/getting-started/',
-    to: '/product/sentry-basics/integrate-backend/getting-started/',
+    to: '/product/sentry-basics/getting-started-tutorial/',
   },
   {
     from: '/ssl/',
@@ -1897,6 +1995,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/mcp-module/',
+    to: '/platforms/javascript/guides/:guide/mcp-monitoring/',
   },
   {
     from: '/learn/cli/configuration/',
@@ -2689,39 +2791,43 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/errors/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/errors/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/errors/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/errors/',
+  },
+  {
+    from: '/product/discover-queries/',
+    to: '/product/errors/',
   },
   {
     from: '/product/crons/alerts/',
@@ -3438,119 +3544,185 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/',
-    to: '/ai/observability/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/product/insights/ai/agents/privacy/',
-    to: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/product/insights/ai/agents/dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/product/agents/dashboard/',
+    to: '/product/agents/dashboards/',
+  },
+  // MCP moved from /product/agents/mcp/ to /product/mcp-servers/
+  {
+    from: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
+  },
+  {
+    from: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
+  },
+  {
+    from: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/ai/observability/agents/dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/product/insights/ai/agents/costs/',
-    to: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/product/insights/ai/agents/getting-started/',
-    to: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/ai/observability/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/ai/observability/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/ai/observability/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
-  // AI Monitoring → AI Observability rename redirects
+  // AI Monitoring / AI Observability → Product Agents
   {
     from: '/ai/monitoring/',
-    to: '/ai/observability/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/monitoring/agents/',
-    to: '/ai/observability/agents/',
+    to: '/product/agents/',
   },
   {
     from: '/ai/monitoring/agents/getting-started/',
-    to: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
   },
   {
     from: '/ai/monitoring/agents/dashboards/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/monitoring/agents/dashboard/',
-    to: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
   },
   {
     from: '/ai/monitoring/agents/naming/',
-    to: '/ai/observability/agents/naming/',
+    to: '/product/agents/naming/',
   },
   {
     from: '/ai/monitoring/agents/privacy/',
-    to: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
   },
   {
     from: '/ai/monitoring/agents/costs/',
-    to: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
   },
   {
     from: '/ai/monitoring/agents/sampling/',
-    to: '/ai/observability/agents/sampling/',
+    to: '/product/agents/sampling/',
   },
   {
     from: '/ai/monitoring/conversations/',
-    to: '/ai/observability/conversations/',
+    to: '/product/agents/conversations/',
   },
   {
     from: '/ai/monitoring/mcp/',
-    to: '/ai/observability/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/monitoring/mcp/getting-started/',
-    to: '/ai/observability/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/monitoring/mcp/dashboard/',
-    to: '/ai/observability/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
+  },
+  {
+    from: '/ai/observability/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/observability/agents/',
+    to: '/product/agents/',
+  },
+  {
+    from: '/ai/observability/agents/getting-started/',
+    to: '/product/agents/getting-started/',
+  },
+  {
+    from: '/ai/observability/agents/dashboards/',
+    to: '/product/agents/dashboards/',
+  },
+  {
+    from: '/ai/observability/agents/naming/',
+    to: '/product/agents/naming/',
+  },
+  {
+    from: '/ai/observability/agents/privacy/',
+    to: '/product/agents/privacy/',
+  },
+  {
+    from: '/ai/observability/agents/costs/',
+    to: '/product/agents/costs/',
+  },
+  {
+    from: '/ai/observability/agents/sampling/',
+    to: '/product/agents/sampling/',
+  },
+  {
+    from: '/ai/observability/conversations/',
+    to: '/product/agents/conversations/',
+  },
+  {
+    from: '/ai/observability/mcp/',
+    to: '/product/mcp-servers/',
+  },
+  {
+    from: '/ai/observability/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
+  },
+  {
+    from: '/ai/observability/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',
     to: 'https://mcp.sentry.dev',
   },
-  // Removed: /product/metrics/, /product/profiling/, /product/discover-queries/,
+  // Removed: /product/metrics/, /product/profiling/,
   // /product/session-replay/ are now canonical paths (previously redirected to /product/explore/*)
+  // /product/discover-queries/ now redirects to /product/errors/
   {
     from: '/enriching-error-data/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',

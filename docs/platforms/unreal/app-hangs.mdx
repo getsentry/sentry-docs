@@ -1,0 +1,75 @@
+---
+title: App Hangs and ANRs
+sidebar_order: 5100
+description: "Detect app hangs and app-not-responding events in Unreal Engine games."
+sidebar_section: features
+---
+
+Unreal Engine uses **App Not Responding** for mobile UI-thread detection and **App Hang** for game-thread detection. They are separate feature families with different options and defaults.
+
+## App Hangs
+
+Game-thread app hang tracking is disabled by default:
+
+| Option                  | Default   | Platforms                                                                   |
+| ----------------------- | --------- | --------------------------------------------------------------------------- |
+| `EnableHangTracking`    | Disabled  | Windows, Linux; required for the native watchdog on all supported platforms |
+| `HangTimeoutDuration`   | 5 seconds | Windows, Linux, macOS, Android                                              |
+| `UseNativeHangTracking` | Disabled  | Windows, Linux, macOS, Android                                              |
+
+### Engine Watcher
+
+On Windows and Linux, `EnableHangTracking` uses Unreal Engine's `FThreadHeartBeat` watcher. It requires a packaged build and `HangDuration` greater than `0`:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+EnableHangTracking=True
+
+[Core.System]
+HangDuration=25
+```
+
+The engine watcher waits for the greater of `HangTimeoutDuration` and Unreal Engine's `StuckDuration` before capturing a stuck thread's stack trace. It uses Unreal Engine's existing heartbeat system plus a Sentry watchdog thread.
+
+### Native Watchdog
+
+Enable `UseNativeHangTracking` to use sentry-native's watchdog instead:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+EnableHangTracking=True
+UseNativeHangTracking=True
+HangTimeoutDuration=5.0
+```
+
+The native watchdog sends an `OnEndFrame` game-thread heartbeat while the app is active and foregrounded, and runs a background watchdog thread. It does not require Unreal Engine's heartbeat configuration. On macOS, it requires the [native backend](/platforms/unreal/configuration/native-backend/). On Android, it runs alongside JVM ANR detection, so a freeze that blocks both threads can create an ANR and an `AppHang` event.
+
+## App Not Responding
+
+App Not Responding detection is enabled by default on mobile platforms:
+
+| Option                           | Default   | Platforms                                           |
+| -------------------------------- | --------- | --------------------------------------------------- |
+| `EnableAppNotRespondingTracking` | Enabled   | Android, iOS, macOS with Cocoa backend              |
+| `AppNotRespondingTimeout`        | 5 seconds | iOS, macOS with Cocoa backend, Android below API 30 |
+
+On iOS and macOS with the default Cocoa backend, these options configure Cocoa app hang detection. On macOS with the native backend, use native hang tracking instead. On Android, they configure JVM ANR detection. Android 11 and later reads ANRs from `ApplicationExitInfo` during a subsequent SDK initialization, so the operating system controls the timeout.
+
+To preserve the behavior from before SDK version `1.13.0`, explicitly disable App Not Responding tracking:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+EnableAppNotRespondingTracking=False
+```
+
+## Queries
+
+App hang events use the `AppHang` mechanism. Search for:
+
+```
+error.mechanism.type:AppHang
+```
+
+Android JVM ANRs use `ANR`, `AppExitInfo`, or `HistoricalAppExitInfo` depending on the Android version and event source.
+
+For native watchdog behavior, see [Native SDK app hangs](/platforms/native/app-hangs/). For mobile platform details, see [Android NDK app hang detection](/platforms/android/configuration/using-ndk/#app-hang-detection) and [Apple app hangs](/platforms/apple/guides/ios/configuration/app-hangs/).

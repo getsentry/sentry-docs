@@ -51,9 +51,11 @@ If you want to learn more about the rationale behind Debug IDs, we suggest takin
 
 
 <PlatformSection notSupported={["react-native"]}>
-1. **A globally unique Debug ID is generated**: During the build process, if you are using one of Sentry's Bundler Plugins or Sentry CLI a Debug ID is generated, which is globally unique and ideally deterministic.
+When you upload source maps, Sentry's bundler plugins or Sentry CLI prepare the artifacts before sending them to Sentry. During this upload workflow:
 
-2. **Debug IDs are embedded in minified files**: Each minified JavaScript file includes a special comment, such as `//# debugId=DEBUG_ID`, where `DEBUG_ID` is the unique identifier generated in the previous step.
+1. **A globally unique Debug ID is generated**: The upload tooling generates a Debug ID that is ideally deterministic.
+
+2. **The Debug ID is embedded in the minified file**: The tooling adds a comment such as `//# debugId=DEBUG_ID` to each minified JavaScript file. This happens when the artifacts are prepared for upload, not when your application source is originally compiled. If you upload with Sentry CLI, run `sentry-cli sourcemaps inject` before `sentry-cli sourcemaps upload`.
 </PlatformSection>
 <PlatformSection supported={["react-native"]}>
 1. **A globally unique Debug ID is generated**: During the build process, if you are using [Sentry's Metro Plugin](/platforms/react-native/manual-setup/metro/) a Debug ID is generated, which is globally unique and ideally deterministic.
@@ -61,7 +63,7 @@ If you want to learn more about the rationale behind Debug IDs, we suggest takin
 2. **Debug IDs are embedded in the output files**: Each JavaScript file includes a special comment, such as `//# debugId=DEBUG_ID`, where `DEBUG_ID` is the unique identifier generated in the previous step.
 </PlatformSection>
 
-3. **The same Debug ID is added to source maps**: Source maps also include the same Debug ID as a new attribute, linking the minified JavaScript file to its corresponding source map.
+3. **The same Debug ID is added to source maps**: The same workflow adds the Debug ID to each source map as a new attribute, linking the minified JavaScript file to its corresponding source map.
 
 4. **Stack traces in Sentry link the Debug ID**: When an error occurs, Sentry's event contains the Debug ID, which allows Sentry to automatically link the error to the correct source map. This ensures the stack trace is resolved back to the original source code, providing you with clearer and more accurate debugging information—even if the JavaScript has been minified or transformed.
 

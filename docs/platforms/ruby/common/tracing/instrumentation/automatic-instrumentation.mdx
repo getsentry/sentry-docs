@@ -7,9 +7,10 @@ supported:
 description: "Learn what instrumentation automatically captures transactions."
 ---
 
-Many integrations for popular frameworks automatically capture transactions. If you use have any of the following frameworks set up for Sentry error reporting and use the relevant Sentry gem, you will start to see traces immediately:
+Many integrations for popular frameworks automatically capture transactions. If you have any of the following frameworks set up for Sentry error reporting and use the relevant Sentry gem, you'll start to see traces immediately:
 
 - Ruby on Rails (`sentry-rails`)
+- Active Job (`sentry-rails`)
 - Sidekiq (`sentry-sidekiq`)
 - Delayed Job (`sentry-delayed_job`)
 - Resque (`sentry-resque`)
@@ -20,7 +21,10 @@ Spans are instrumented for the following operations within a transaction:
   - includes common database systems such as Postgres and MySQL
 - Outgoing HTTP requests made with `Net::HTTP`
 - Redis operations
+- Active Job enqueueing (`queue.publish`)
+
+Active Job execution creates a `queue.process` transaction and continues the trace from the enqueue operation. Learn more in the [Active Job integration guide](/platforms/ruby/guides/rails/integrations/active-job/).
 
 The SDK also captures **queue time** as transaction data (not a child span) when a `X-Request-Start` header is present from your reverse proxy (Nginx, HAProxy, or Heroku). See <PlatformLink to="/tracing/instrumentation/performance-metrics/#automatic-queue-time-capture">Automatic Queue Time Capture</PlatformLink> for setup instructions.
 
-Spans are only created within an existing transaction. If you're not using any of the supported frameworks, you'll need to <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">create transactions manually</PlatformLink>.
+Child spans are only created within an existing transaction. If you're not using any of the supported frameworks, you'll need to <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">create transactions manually</PlatformLink>.

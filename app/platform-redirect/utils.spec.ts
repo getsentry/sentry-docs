@@ -9,6 +9,45 @@ describe('sanitizeNext', () => {
     expect(sanitizeNext('//example.com')).toBe('');
   });
 
+  it('should reject backslash-based external URLs', () => {
+    // Browsers normalize backslashes to forward slashes, so these would
+    // otherwise resolve to an external origin.
+    expect(sanitizeNext('/\\example.com')).toBe('');
+    expect(sanitizeNext('/\\/example.com')).toBe('');
+    expect(sanitizeNext('\\\\example.com')).toBe('');
+    expect(sanitizeNext('\\/example.com')).toBe('');
+    expect(sanitizeNext('%2F%5Cexample.com')).toBe('');
+    expect(sanitizeNext('///example.com')).toBe('');
+  });
+
+  it('should reject control characters that resolve to an external origin', () => {
+    // The URL parser strips tabs and newlines, so `/<tab>/host` becomes `//host`
+    expect(sanitizeNext('/%09/example.com')).toBe('');
+    expect(sanitizeNext('/%0a/example.com')).toBe('');
+    expect(sanitizeNext('/%0d/example.com')).toBe('');
+  });
+
+  it('should never return a protocol-relative path', () => {
+    // Stripping unsafe characters must not leave adjacent slashes behind
+    expect(sanitizeNext('/,/example.com')).toBe('/examplecom');
+    expect(sanitizeNext('/a//b')).toBe('/a/b');
+  });
+
+  it('should reject non-http schemes', () => {
+    // eslint-disable-next-line no-script-url -- asserting this is rejected
+    expect(sanitizeNext('javascript:alert(1)')).toBe('');
+    expect(sanitizeNext('data:text/html,x')).toBe('');
+  });
+
+  it('should resolve dot segments', () => {
+    expect(sanitizeNext('/a/./b')).toBe('/a/b');
+    expect(sanitizeNext('/a/../../b')).toBe('/b');
+  });
+
+  it('should normalize backslashes within a path', () => {
+    expect(sanitizeNext('/path\\to/resource')).toBe('/path/to/resource');
+  });
+
   it('should prepend a slash if missing', () => {
     expect(sanitizeNext('path/to/resource')).toBe('/path/to/resource');
   });

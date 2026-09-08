@@ -14,15 +14,31 @@ Rails catches exceptions in the `ActionDispatch::ShowExceptions` or `ActionDispa
 You can disable this by setting it to `false`:
 
 ```ruby
-config.rails.report_rescued_exceptions
+config.rails.report_rescued_exceptions = false
 ```
 
 `rails.skippable_job_adapters`
 
-If you don't want to report events from a certain ActiveJob adapter, or you already have a better setup for it, you can use this option to skip ActiveJob reporting on that adapter.
+Use this option to disable Active Job error reporting, tracing, and context propagation for an adapter. Queue-specific integrations for Sidekiq, Delayed Job, and Resque add their adapters automatically to prevent duplicate instrumentation.
 
 ```ruby
 config.rails.skippable_job_adapters = ["ActiveJob::QueueAdapters::MyAdapter"]
+```
+
+`rails.active_job_propagate_traces`
+
+Controls whether Sentry connects Active Job execution to the trace that enqueued it. The default is `true`. Disabling this option still records enqueue spans and job execution transactions, but they won't be connected.
+
+```ruby
+config.rails.active_job_propagate_traces = false
+```
+
+`rails.active_job_report_on_retry_error`
+
+By default, Sentry reports an Active Job failure after all `retry_on` attempts are exhausted. Set this option to `true` to report every failed attempt.
+
+```ruby
+config.rails.active_job_report_on_retry_error = true
 ```
 
 `rails.tracing_subscribers`

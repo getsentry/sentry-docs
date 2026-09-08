@@ -23,6 +23,7 @@ import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
 import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
+import {IntegrationGrid} from './components/integrationGrid';
 import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
@@ -66,6 +67,7 @@ import {
 import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
+import {TutorialProgress} from './components/tutorialProgress';
 import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
@@ -101,6 +103,7 @@ export function mdxComponents(
     Expandable,
     FeatureBadge,
     GuideGrid,
+    IntegrationGrid,
     IntegrationListItem,
     JsBundleList,
     LambdaLayerDetail,
@@ -137,6 +140,7 @@ export function mdxComponents(
     StatusBadge,
     StepComponent,
     StepConnector,
+    TutorialProgress,
     VimeoEmbed,
     VersionRequirement,
     a: SmartLink,

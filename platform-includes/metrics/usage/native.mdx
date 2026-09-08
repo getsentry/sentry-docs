@@ -65,3 +65,20 @@ For `gauge` and `distribution` metrics, specify a unit to help Sentry display va
 sentry_metrics_gauge("memory.usage", 1024, SENTRY_UNIT_BYTE, sentry_value_new_null());
 sentry_metrics_distribution("latency", 42.5, SENTRY_UNIT_MILLISECOND, sentry_value_new_null());
 ```
+
+### Recording With a Scope
+
+When a group of metrics shares the same attributes, put them on a scope once instead of repeating them at every call site. `sentry_scope_capture_metric()` records a metric of any of the three types, carrying the scope's attributes:
+
+```c
+sentry_scope_t *scope = sentry_scope_new();
+sentry_scope_set_attribute(scope, "region",
+    sentry_value_new_attribute(sentry_value_new_string("us-west"), NULL));
+
+sentry_scope_capture_metric(scope, SENTRY_METRIC_COUNT, "api.calls",
+    sentry_value_new_int64(1), NULL, sentry_value_new_null());
+
+sentry_scope_free(scope);
+```
+
+The scope constructor determines who frees the scope; see <PlatformLink to="/enriching-events/scopes/#creating-a-scope">Scopes</PlatformLink>. For how per-call, scope, and global attributes are applied, see <PlatformLink to="/enriching-events/attributes/#setting-attributes-on-a-scope">Attributes</PlatformLink>.

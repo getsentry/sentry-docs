@@ -33,11 +33,8 @@ const FEATURE_DATA: Record<
           <strong>Issues</strong>
         </ExternalLink>{' '}
         page and select an error from the issues list to view the full details and context
-        of this error. For more details, see this{' '}
-        <a href="/product/sentry-basics/integrate-frontend/generate-first-error/#ui-walkthrough">
-          interactive walkthrough
-        </a>
-        .
+        of this error. For more details, see the{' '}
+        <a href="/product/issues/issue-details/">Issue Details documentation</a>.
       </Fragment>
     ),
   },
@@ -54,7 +51,7 @@ const FEATURE_DATA: Record<
         </ExternalLink>{' '}
         page and select a trace to reveal more information about each span, its duration,
         and any errors. For an interactive UI walkthrough, click{' '}
-        <a href="/product/sentry-basics/distributed-tracing/generate-first-error/#ui-walkthrough">
+        <a href="/product/sentry-basics/getting-started-tutorial/generate-first-error/#ui-walkthrough">
           here
         </a>
         .

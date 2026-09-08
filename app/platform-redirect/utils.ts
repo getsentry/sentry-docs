@@ -1,33 +1,37 @@
+// Parse base only — never part of the return value, and only compared against itself
+const PARSE_BASE = 'https://sanitize.invalid';
+
 export const sanitizeNext = (next: string) => {
-  // Safely decode URI component
-  let sanitizedNext: string;
+  let decoded: string;
   try {
-    sanitizedNext = decodeURIComponent(next);
+    decoded = decodeURIComponent(next);
   } catch {
-    // Return empty string if decoding fails
     return '';
   }
 
-  // Validate that next is an internal path
-  if (
-    sanitizedNext.startsWith('//') ||
-    sanitizedNext.startsWith('http') ||
-    sanitizedNext.includes(':')
-  ) {
-    // Reject potentially malicious redirects
-    sanitizedNext = '';
+  // No docs path contains a colon; also keeps `javascript:`/`data:` out of the parser
+  if (decoded.includes(':')) {
+    return '';
   }
 
-  // Ensure next starts with a forward slash and only contains safe characters
-  if (sanitizedNext && !sanitizedNext.startsWith('/')) {
-    sanitizedNext = '/' + sanitizedNext;
+  let url: URL;
+  try {
+    // WHATWG normalization matches the browser: backslashes and control chars
+    // become/collapse to slashes and dot segments resolve, so anything escaping
+    // our origin shows up as a foreign `origin` rather than as a path to untangle
+    url = new URL(decoded, PARSE_BASE);
+  } catch {
+    return '';
   }
 
-  // Discard hash and path parameters
-  const [pathname] = sanitizedNext.split('#')[0].split('?');
+  if (url.origin !== PARSE_BASE) {
+    return '';
+  }
 
-  // Only allow alphanumeric, hyphens
-  sanitizedNext = pathname.replace(/[^\w\-\/]/g, '');
+  const pathname = url.pathname
+    .replace(/[^\w\-\/]/g, '')
+    // stripping can leave `//`, which would resolve as protocol-relative
+    .replace(/\/{2,}/g, '/');
 
-  return sanitizedNext === '/' ? '' : sanitizedNext;
+  return pathname === '/' ? '' : pathname;
 };

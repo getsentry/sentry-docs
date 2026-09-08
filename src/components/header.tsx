@@ -11,7 +11,6 @@ import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 import {Platform} from 'sentry-docs/types';
 
 import {MagicIcon} from './cutomIcons/magic';
-import {useHomeSearchVisibility} from './homeSearchVisibility';
 import {mainSections} from './navigationData';
 import sidebarStyles from './sidebar/style.module.scss';
 import {ThemeToggle} from './theme-toggle';
@@ -49,17 +48,9 @@ export function Header({
   platforms = [],
 }: Props) {
   const isHomePage = pathname === '/';
-  const [homeSearchVisible, setHomeSearchVisible] = useState(true);
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
-  // Listen for home search visibility changes
-  useHomeSearchVisibility(
-    useCallback((isVisible: boolean) => {
-      setHomeSearchVisible(isVisible);
-    }, [])
-  );
 
   // Close mobile overlays on navigation
   useEffect(() => {
@@ -175,47 +166,20 @@ export function Header({
     return () => window.removeEventListener('resize', handleResize);
   }, [sidebarOpen]);
 
-  // Show header search if: not on home page, OR on home page but home search is scrolled out of view
-  const showHeaderSearch = !isHomePage || !homeSearchVisible;
-
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0 flex items-center min-h-[64px]">
       {/* define a header-height variable for consumption by other components */}
       <style>{`
         :root { --header-height: 64px; }
-        /* Home page: align header content with max-w-screen-xl (1280px) content */
-        /* The nav element has px-4 (16px) on mobile, md:pl-3 (12px) on desktop */
-        /* Home content uses px-4 (16px), sm:px-8 (32px), lg:px-[50px] */
-        /* So we subtract the nav's padding from the content's padding */
+        /* Home page: full-width nav that spans the viewport (matches the old
+         * homepage). No max-width cap — the nav's own edge padding
+         * (px-4 / md:pl-3 and the right block's lg:pr-6) handles spacing. */
         .header-content-home {
-          max-width: 1280px;
-          margin-left: auto;
-          margin-right: auto;
+          max-width: none;
+          margin-left: 0;
+          margin-right: 0;
           padding-left: 0;
           padding-right: 0;
-        }
-        @media (min-width: 640px) {
-          .header-content-home {
-            /* 32px (content) - 16px (nav px-4) = 16px */
-            padding-left: 16px;
-            padding-right: 16px;
-          }
-        }
-        @media (min-width: 768px) {
-          .header-content-home {
-            /* 32px (content) - 12px (nav md:pl-3) = 20px on left */
-            /* 32px (content) - 16px (nav md:pr-4) = 16px on right */
-            padding-left: 20px;
-            padding-right: 16px;
-          }
-        }
-        @media (min-width: 1024px) {
-          .header-content-home {
-            /* 50px (content) - 12px (nav md:pl-3) = 38px on left */
-            /* 50px (content) - 24px (right div lg:pr-6) = 26px on right */
-            padding-left: 38px;
-            padding-right: 26px;
-          }
         }
         /* Doc pages: fluid centering to match sidebar offset at wide viewports */
         .header-content:not(.header-content-home) {
@@ -328,8 +292,6 @@ export function Header({
             <div
               className="flex flex-shrink-0 items-center gap-2"
               style={{
-                visibility: showHeaderSearch ? 'visible' : 'hidden',
-                pointerEvents: showHeaderSearch ? 'auto' : 'none',
                 width: '340px',
                 minWidth: '340px',
               }}

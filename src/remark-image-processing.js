@@ -1,8 +1,8 @@
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 
-import getImageSize from 'image-size';
 import path from 'path';
+import sharp from 'sharp';
 import {visit} from 'unist-util-visit';
 
 /**
@@ -16,24 +16,37 @@ import {visit} from 'unist-util-visit';
  * The content hash (?v=xxx) ensures browsers/CDN fetch fresh images when content changes.
  */
 export default function remarkImageProcessing(options) {
-  return tree =>
+  return async tree => {
+    // sharp only exposes an async metadata API, so collect the nodes first and
+    // resolve their dimensions together.
+    const imageNodes = [];
     visit(tree, 'image', node => {
       // don't process external images
       if (node.url.startsWith('http') || node.url.startsWith('//')) {
         return;
       }
-      const fullImagePath = path.join(
-        // if the path starts with / it's a public asset, otherwise it's a relative path
-        node.url.startsWith('/') ? options.publicFolder : options.sourceFolder,
-        node.url
-      );
-
-      // Read file buffer once for both operations to avoid redundant disk I/O
-      const imageBuffer = readFileSync(fullImagePath);
-      const imageSize = getImageSize(imageBuffer);
-      const contentHash = createHash('md5').update(imageBuffer).digest('hex').slice(0, 8);
-
-      // Add content hash as query param (for CDN cache busting) and size as hash
-      node.url += `?v=${contentHash}#${imageSize.width}x${imageSize.height}`;
+      imageNodes.push(node);
     });
+
+    await Promise.all(
+      imageNodes.map(async node => {
+        const fullImagePath = path.join(
+          // if the path starts with / it's a public asset, otherwise it's a relative path
+          node.url.startsWith('/') ? options.publicFolder : options.sourceFolder,
+          node.url
+        );
+
+        // Read file buffer once for both operations to avoid redundant disk I/O
+        const imageBuffer = readFileSync(fullImagePath);
+        const {width, height} = await sharp(imageBuffer).metadata();
+        const contentHash = createHash('md5')
+          .update(imageBuffer)
+          .digest('hex')
+          .slice(0, 8);
+
+        // Add content hash as query param (for CDN cache busting) and size as hash
+        node.url += `?v=${contentHash}#${width}x${height}`;
+      })
+    );
+  };
 }

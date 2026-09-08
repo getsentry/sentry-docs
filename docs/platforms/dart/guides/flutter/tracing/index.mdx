@@ -1,7 +1,7 @@
 ---
 title: Set Up Tracing
 sidebar_title: Tracing
-description: "Learn how to enable tracing in your app and discover valuable performance insights of your application."
+description: "Learn how to enable tracing in your app using the Sentry Flutter SDK and discover valuable performance insights of your application."
 sidebar_order: 4000
 sidebar_section: features
 ---
@@ -40,6 +40,25 @@ Verify that tracing is working correctly by using our <PlatformLink to="/tracing
 Test out tracing by starting and finishing a transaction/service span, which you _must_ do so data can be sent to Sentry. Learn how in our <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> content.
 
 While you're testing, set <PlatformIdentifier name="traces-sample-rate" /> to `1.0`, as that ensures that every transaction/service span will be sent to Sentry. Once testing is complete, you may want to set a lower <PlatformIdentifier name="traces-sample-rate" /> value, or switch to using <PlatformIdentifier name="traces-sampler" /> to selectively sample and filter your transactions/service spans, based on contextual data.
+
+## Standalone App Start Tracing
+
+<Alert level="info">
+
+This feature is experimental and available since [version 9.26.0](https://github.com/getsentry/sentry-dart/blob/main/CHANGELOG.md#9260). The API is subject to change and may introduce breaking changes in future releases.
+
+</Alert>
+
+By default, app start data is attached to the first `ui.load` transaction in your app. Standalone app start tracing sends the app start as its own transaction instead, which gives you more accurate app start measurements because they no longer depend on a screen transaction being started. It's supported on Android and iOS.
+
+```dart
+await SentryFlutter.init((options) {
+  options.tracesSampleRate = 1.0;
+  options.enableStandaloneAppStartTracing = true;
+});
+```
+
+For more details, including how to extend the app start past the first frame, see <PlatformLink to="/integrations/app-start-instrumentation/#standalone-app-start-tracing">App Start Instrumentation</PlatformLink>.
 
 ## Next Steps
 

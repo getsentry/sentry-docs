@@ -1,5 +1,5 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
-import {withSentryConfig} from '@sentry/nextjs';
+import {withSentryConfig} from '@sentry/nextjs/config';
 
 import {redirects} from './redirects.js';
 import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
@@ -141,6 +141,8 @@ const nextConfig = {
     // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
     // Edge runtime doesn't have access to server env vars at request time.
     DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Freeze this per-deployment value for middleware, matching the pattern above.
+    VERCEL_ENV: process.env.VERCEL_ENV,
   },
   redirects,
   rewrites: () => [
@@ -181,10 +183,9 @@ module.exports = withSentryConfig(nextConfig, {
     reactComponentAnnotation: {
       enabled: true,
     },
-    unstable_sentryWebpackPluginOptions: {
-      applicationKey: 'sentry-docs',
-    },
   },
+
+  applicationKey: 'sentry-docs',
 
   _experimental: {
     thirdPartyOriginStackFrames: true,

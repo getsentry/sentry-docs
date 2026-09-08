@@ -493,6 +493,39 @@ MockApiClient.addMockResponse({
 });
 ```
 
+### Mocking pending responses
+
+Use `asyncDelay` when a test needs to observe behavior while a request is still in flight. Prefer a promise-backed delay so the test controls when the response lands:
+
+```tsx
+import {act, render, screen} from 'sentry-test/reactTestingLibrary';
+
+it('disables submit while saving', async () => {
+  let resolveRequest!: () => void;
+  const promise = new Promise<void>(resolve => {
+    resolveRequest = resolve;
+  });
+
+  MockApiClient.addMockResponse({
+    url: '/projects/',
+    asyncDelay: promise,
+    body: [{id: 1, name: 'my project'}],
+  });
+
+  render(<ProjectList />);
+
+  expect(screen.getByRole('button', {name: 'Save'})).toBeDisabled();
+
+  act(() => resolveRequest());
+
+  expect(await screen.findByText('my project')).toBeInTheDocument();
+});
+```
+
+Resolve the promise before the test ends so the request and its callbacks can finish cleanly. A numeric `asyncDelay` also works, but a controlled promise avoids arbitrary timers and makes the state transition explicit.
+
+Do not test every loading state by default. Add this kind of test when the pending state has meaningful behavior to protect, such as disabling a destructive action, preventing duplicate submissions, or showing content users rely on while they wait. If the test only proves that a generic spinner renders, it usually adds little value.
+
 ### Common pitfalls
 
 #### Waiting for your queries to respond

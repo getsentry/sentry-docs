@@ -53,15 +53,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # NODE_OPTIONS is scoped to the indexing script, NOT the job: setting it job-wide (as #17283
+      # did) let `next build` claim more heap than the runner has and got the whole runner
+      # OOM-killed. The script itself batches its uploads, so this is headroom, not a requirement.
       - name: Build index for user docs
-        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/algolia.ts
+        run: pnpm enforce-redirects && pnpm generate-doctree && pnpm next build && NODE_OPTIONS=--max-old-space-size=8192 npx tsx --tsconfig ./scripts/tsconfig.json ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
           DOCS_INDEX_NAME: ${{ secrets.DOCS_INDEX_NAME }}
-          NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
-          NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
           ALGOLIA_SENTRY_DSN: ${{ secrets.ALGOLIA_SENTRY_DSN }}
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
@@ -73,8 +74,6 @@ jobs:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
           DOCS_INDEX_NAME: ${{ secrets.DEVELOP_DOCS_INDEX_NAME }}
-          NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
-          NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
           ALGOLIA_SENTRY_DSN: ${{ secrets.ALGOLIA_SENTRY_DSN }}
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0

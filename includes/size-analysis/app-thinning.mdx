@@ -1,8 +1,15 @@
 App Thinning is Apple's technology that automatically optimizes the delivery of iOS apps to reduce their download size for end users. When your app is uploaded to the App Store, Apple creates device-specific variants that only include the resources needed for each device type. For example, an iPhone SE doesn't need images intended for iPads.
 
-Sentry Size Analysis **does not perform any app thinning** as part of the analysis, the underlying app is untouched and results shown as-is.
+Sentry Size Analysis **does not perform any app thinning** as part of the analysis. The underlying app is untouched and results are shown as-is.
 
-If you want results targeting a specific device type (recommended), apply app thinning **before** uploading to Sentry. This can be configured via Export Options when building the app. First create an `export_options.plist` file with the desired device type:
+If you want results targeting a specific device type (recommended), apply app thinning **before** uploading to Sentry. To do this, first create an XCArchive, then export a thinned IPA from it.
+
+Create an `export_options.plist` file that specifies the desired device model:
+
+<Alert title="Important">
+  Xcode doesn't support thinning when the export method is `app-store-connect`.
+  Use `release-testing` as shown below.
+</Alert>
 
 ```xml {filename:export_options.plist}
 <?xml version="1.0" encoding="UTF-8"?>
@@ -10,8 +17,8 @@ If you want results targeting a specific device type (recommended), apply app th
 <plist version="1.0">
 <dict>
 <key>method</key>
-<string>ad-hoc</string>
-<key>team_id</key>
+<string>release-testing</string>
+<key>teamID</key>
 <string>your-team-id</string> <!-- set to your ID -->
 <key>thinning</key>
 <string>iPhone17,1</string> <!-- set to your device type -->
@@ -19,6 +26,17 @@ If you want results targeting a specific device type (recommended), apply app th
 </plist>
 ```
 
-And then pass this file to `xcodebuild` via the `-exportOptionsPlist export_options.plist` flag when building the app. This will produce a `app-thinning.plist` file in your build directory with information on the created app variants and where they are located on disk. Pick the appropriate IPA when uploading to Sentry.
+Then export a thinned IPA from the archive with `xcodebuild`:
+
+```bash
+xcodebuild -exportArchive \
+  -archivePath app.xcarchive \
+  -exportPath build/size-analysis \
+  -exportOptionsPlist export_options.plist
+```
+
+This produces an `app-thinning.plist` file in the export directory with information about the created app variants and their locations. Pick the appropriate IPA for your device type.
+
+To retain the original XCArchive's dSYM information, upload a modified copy of the XCArchive that contains the app from the thinned IPA. See the [Hacker News sample app's Fastfile](https://github.com/EmergeTools/hackernews/blob/6eea866e77e956a32fe8435b7427501284f47517/ios/fastlane/Fastfile#L188-L193) for an example of how to do this.
 
 If a build is uploaded without first being thinned, you may see multiple copies of your images (ex. different idiom and colorspace values) in your build analysis. We recommend uploading the thinned build to Sentry for the best results.

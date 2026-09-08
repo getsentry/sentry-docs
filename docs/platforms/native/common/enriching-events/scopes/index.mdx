@@ -1,6 +1,6 @@
 ---
-title: Scopes and Hubs
-description: "SDKs will typically automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
+title: Scopes
+description: "A scope holds the data the SDK attaches to your events. Learn how the Native SDK's global scope works, and when to create a scope of your own."
 notSupported:
   - native.breakpad
   - native.crashpad
@@ -8,61 +8,108 @@ notSupported:
   - native.wasm
 ---
 
-When an event is captured and sent to Sentry, SDKs will merge that event data with extra
-information from the current scope. SDKs will typically automatically manage the scopes
-for you in the framework integrations and you don't need to think about them. However,
-you should know what a scope is and how you can use it for your advantage.
+Scopes store extra data that the SDK adds to your event when sending the event to Sentry. Some of it you set yourself and some the SDK fills in, so it's worth knowing what a scope holds and how one gets applied.
 
-## What's a Scope, What's a Hub
+## What's a Scope
 
-You can think of the hub as the central point that our SDKs use to route an
-event to Sentry. When you call `init()` a hub is created and a client and a
-blank scope are created on it. That hub is then associated with the current
-thread and will internally hold a stack of scopes.
+A scope holds the data that rides along with your telemetry: <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, <PlatformLink to="/enriching-events/context/">contexts</PlatformLink>, <PlatformLink to="/enriching-events/breadcrumbs/">breadcrumbs</PlatformLink>, <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, severity level, fingerprint, <PlatformLink to="/enriching-events/attachments/">attachments</PlatformLink>, and  <PlatformLink to="/enriching-events/attributes/">attributes</PlatformLink> carried by [logs](/platforms/native/logs/) and [metrics](/platforms/native/metrics/). Each has a `sentry_scope_*` setter taking the scope as its first argument, alongside the `sentry_set_*` function that writes the same data globally.
 
-The scope will hold useful information that should be sent along with the
-event. For instance [contexts](../context/) or
-[breadcrumbs](../breadcrumbs/) are stored on
-the scope. When a scope is pushed, it inherits all data from the parent scope
-and when it pops all modifications are reverted.
+Two scopes can apply to a capture: the global scope, which the SDK creates during `sentry_init()` and applies to everything it sends, and, optionally, a scope you create and hand to a capture function. A scope you create doesn't replace the global scope, it layers on top of it, so the event still gets the global scope's release, environment, tags, and user.
 
-The default SDK integrations will push and pop scopes intelligently. For
-instance web framework integrations will create and destroy scopes around your
-routes or controllers.
+<Alert level="warning" title="Crash Events Only Carry the Global Scope">
 
-## How the Scope and Hub Work
+A scope you create reaches Sentry only through the `sentry_scope_capture_*` functions. Crash events don't use it because, at crash time, the SDK can only rely on the global scope.
 
-As you start using an SDK, a scope and hub are automatically created for you out
-of the box. It's unlikely that you'll interact with the hub directly unless you're
-writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call various setters at any point in
-time to modify data stored on the scope. This is useful for doing things like
-[modifying the context](../context/).
-
-When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
-discovers the current hub and asks it to capture an event. Internally the hub will
-then merge the event with the topmost scope's data.
-
-<Alert level="warning" title="Hub Abstraction Is Not Implemented">
-
-The Native SDK currently only provides a single scope shared by all threads in the program and maintains no thread-local state by way of a hub. Because of this limitation, you must make sure that your threads don't logically interfere with each other's changes to the global scope, even though they are safe to do so purely from a data-race perspective. This affects use cases where, for example, you want to track many users in server-like programs while capturing events or when you want to trace multiple threads in tracing.
-
-For details on how this affects tracing, check out the [Connect Errors With Spans](/platforms/native/tracing/instrumentation/custom-instrumentation/#connect-errors-with-spans) section of "Custom Instrumentation".
+Put anything a crash report needs — a build identifier, the signed-in user, or the asset being processed — on the global scope.
 
 </Alert>
 
-## Configuring the Scope
+## The Global Scope
 
-The Native SDK maintains most data in a global scope, but allows creating transient
-local scopes for capturing individual events.
-
-You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
+The global scope applies to every event, log, metric, and crash, so it's where long-lived data belongs — the signed-in user, the build channel, a machine identifier. The SDK owns it: it's created during `sentry_init()` and released by `sentry_close()`.
 
 <PlatformContent includePath="enriching-events/scopes/configure-scope" />
 
-You can also apply this configuration when unsetting a user at logout:
+<Alert level="warning" title="One Global Scope, Shared by All Threads">
 
-<PlatformContent includePath="enriching-events/unset-user" />
+The Native SDK keeps a single global scope shared by every thread, and no thread-local state. Writes to it are safe from a data-race perspective, but they aren't isolated: a tag one thread sets is visible to events captured on every other thread.
 
-To learn what useful information can be associated with scopes see
-[the context documentation](../context/).
+If your program handles several users or requests concurrently, capture with a scope per unit of work instead.
+
+For how this affects tracing, see [Connect Errors With Spans](/platforms/native/tracing/instrumentation/custom-instrumentation/#connect-errors-with-spans).
+
+</Alert>
+
+## Creating a Scope
+
+Create a scope when the data describes a unit of work rather than the whole program, such as the asset being decoded or the request being handled. Set the data on the scope, then pass it to a capture function.
+
+The constructor you choose determines the scope's lifetime. Use `sentry_local_scope_new` for a one-shot scope when the data applies to a single capture:
+
+```c
+sentry_scope_t *scope = sentry_local_scope_new();
+sentry_scope_set_tag(scope, "asset.kind", "texture");
+sentry_scope_attach_file(scope, "/var/log/asset-loader.log");
+
+sentry_value_t event = sentry_value_new_message_event(
+    SENTRY_LEVEL_ERROR, "asset-loader", "Failed to decode texture");
+
+// Takes ownership of the scope and frees it.
+sentry_scope_capture_event(scope, event);
+```
+
+`sentry_scope_new` creates a scope you own. Configure it once and reuse it for as many captures as you need when the
+same context would otherwise be rebuilt each time, such as for a worker thread, subsystem, or connected client:
+
+```c
+sentry_scope_t *scope = sentry_scope_new();
+sentry_scope_set_tag(scope, "worker", "asset-loader");
+sentry_scope_set_user(scope, user);
+
+// Applied, but not freed.
+sentry_scope_capture_event(scope, first_event);
+sentry_scope_capture_event(scope, second_event);
+
+sentry_scope_free(scope);
+```
+
+Lifetime is the only thing that separates the two. Both are a `sentry_scope_t *` and take the same setters, so the constructor you chose is the only thing that decides who cleans up, and getting it wrong means either a double free or a leak. Every `sentry_scope_capture_*` function follows this rule.
+
+## Capturing With a Scope
+
+Scope data isn't just for errors. Feedback, logs, and metrics each can take a scope through their own
+`sentry_scope_capture_*` function, so the context you build for one capture can enrich any of them:
+
+```c
+sentry_scope_capture_event(scope, event);
+sentry_scope_capture_feedback(scope, feedback, hint);
+sentry_scope_capture_log(scope, SENTRY_LEVEL_INFO, "Cache miss", attributes);
+sentry_scope_capture_metric(
+    scope, SENTRY_METRIC_COUNT, "cache.miss", sentry_value_new_int64(1), NULL, attributes);
+```
+
+## How Scope Data Is Applied
+
+When you capture with a scope, the SDK combines that scope with the global scope. Data set in only one place is still included, so events captured with their own scope continue to carry global values such as release, environment, and user. When the same key is set in more than one place, the most specific one wins: **event data** > **passed scope** > **global scope**. Data you set directly on the event value therefore survives whatever the scopes carry.
+
+Logs and metrics resolve attributes from the call site as well, which is the most specific source of the three: **per-call attributes** > **passed scope** > **global scope**. See [Attributes](/platforms/native/enriching-events/attributes/) for how to build them.
+
+## Clearing and Copying Scopes
+
+To clear a scope, use `sentry_scope_clear` to discard most data while preserving the trace:
+
+```c
+sentry_scope_clear(scope); // Ready for the next request.
+```
+
+`sentry_scope_clone` copies a scope so you can branch off a configured base. Top-level fields are copied and nested values are shared by reference. The copy is always one you own, even when cloned from a scope created with `sentry_local_scope_new`, so you must free it yourself:
+
+```c
+sentry_scope_t *request_scope = sentry_scope_clone(base_scope);
+sentry_scope_set_tag(request_scope, "request.id", request_id);
+
+sentry_scope_capture_event(request_scope, event);
+sentry_scope_free(request_scope);
+```
+
+To learn what else you can put on a scope, see [the context documentation](../context/).

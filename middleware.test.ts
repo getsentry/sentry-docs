@@ -100,6 +100,92 @@ describe('middleware redirect set selection', () => {
   });
 });
 
+describe('production build-url redirect to canonical (Deployment Protection off)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function makeHostRequest(url: string, method = 'GET'): NextRequest {
+    return new NextRequest(new URL(url), {method});
+  }
+
+  it('redirects a non-canonical production host to the canonical host', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-abc123.vercel.app/platforms/javascript/')
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe(
+      'https://docs.sentry.io/platforms/javascript/'
+    );
+  });
+
+  it('preserves query strings when redirecting', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-git-master-getsentry.vercel.app/search/?q=x')
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe('https://docs.sentry.io/search/?q=x');
+  });
+
+  it('redirects to develop.sentry.dev in developer docs mode', async () => {
+    const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://develop-docs-abc123.vercel.app/getting-started/')
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe(
+      'https://develop.sentry.dev/getting-started/'
+    );
+  });
+
+  it('does not redirect requests already on the canonical host', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(makeHostRequest('https://docs.sentry.io/platforms/'));
+    expect(res.status).not.toBe(308);
+  });
+
+  it('leaves preview deployments accessible (no redirect)', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-git-my-branch.sentry.dev/getting-started/')
+    );
+    expect(res.status).not.toBe(308);
+  });
+
+  it('does nothing locally (VERCEL_ENV unset)', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', '');
+    const res = middleware(makeHostRequest('https://sentry-docs-abc123.vercel.app/foo/'));
+    expect(res.status).not.toBe(308);
+  });
+
+  it('redirects HEAD requests', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-abc123.vercel.app/foo/', 'HEAD')
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe('https://docs.sentry.io/foo/');
+  });
+
+  it('does not redirect non-page requests', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-abc123.vercel.app/foo/', 'POST')
+    );
+    expect(res.status).not.toBe(308);
+  });
+});
+
 describe('canonical Link header on .md responses', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -145,9 +231,12 @@ describe('canonical Link header on .md responses', () => {
 describe('wantsMarkdownViaAccept: text/plain no longer triggers markdown', () => {
   it('does not serve markdown for Accept: application/json, text/plain, */*', async () => {
     const {middleware} = await importMiddleware({});
-    const req = new NextRequest(new URL('/platforms/apple/cocoa/', 'http://localhost:3000'), {
-      headers: {'Accept': 'application/json, text/plain, */*'},
-    });
+    const req = new NextRequest(
+      new URL('/platforms/apple/cocoa/', 'http://localhost:3000'),
+      {
+        headers: {Accept: 'application/json, text/plain, */*'},
+      }
+    );
     const res = middleware(req);
     // Should not rewrite to .md — Next rewrite changes the URL; a plain next() keeps it
     expect(res.headers.get('x-middleware-rewrite')).toBeNull();
@@ -155,9 +244,12 @@ describe('wantsMarkdownViaAccept: text/plain no longer triggers markdown', () =>
 
   it('still serves markdown for explicit text/markdown Accept header', async () => {
     const {middleware} = await importMiddleware({});
-    const req = new NextRequest(new URL('/platforms/apple/cocoa/', 'http://localhost:3000'), {
-      headers: {'Accept': 'text/markdown'},
-    });
+    const req = new NextRequest(
+      new URL('/platforms/apple/cocoa/', 'http://localhost:3000'),
+      {
+        headers: {Accept: 'text/markdown'},
+      }
+    );
     const res = middleware(req);
     // A rewrite to .md will set x-middleware-rewrite
     expect(res.headers.get('x-middleware-rewrite')).toContain('.md');

@@ -1,0 +1,32 @@
+Hono uses a runtime-specific Sentry entrypoint. Import Sentry from the entrypoint that matches your deployment:
+
+```javascript {tabTitle:Cloudflare Workers} {filename:mcp-server.js}
+import * as Sentry from "@sentry/hono/cloudflare";
+```
+
+```javascript {tabTitle:Node.js} {filename:mcp-server.js}
+import * as Sentry from "@sentry/hono/node";
+```
+
+```javascript {tabTitle:Bun} {filename:mcp-server.js}
+import * as Sentry from "@sentry/hono/bun";
+```
+
+```javascript {tabTitle:Deno} {filename:mcp-server.js}
+import * as Sentry from "@sentry/hono/deno";
+```
+
+Then wrap the MCP server instance before connecting it to a transport:
+
+```javascript {filename:mcp-server.js}
+import { McpServer } from "@modelcontextprotocol/server";
+
+const server = Sentry.wrapMcpServerWithSentry(
+  new McpServer({
+    name: "my-mcp-server",
+    version: "1.0.0",
+  })
+);
+```
+
+Register tools, prompts, and resources on `server` as usual. The wrapper returns the same server instance.

@@ -19,12 +19,6 @@ import {SidebarNavigation} from './sidebarNavigation';
 import styles from './style.module.scss';
 import {SidebarProps} from './types';
 
-// Pages that have different paths on different platforms but are conceptually equivalent
-const EQUIVALENT_PATHS: Record<string, string> = {
-  'agent-tracing': 'agent-tracing-browser',
-  'agent-tracing-browser': 'agent-tracing',
-};
-
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
@@ -61,19 +55,9 @@ export async function Sidebar({path, versions}: SidebarProps) {
           // take the :path in /platforms/:platformName/:path
           // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
           const currentPathParts = path.slice(currentGuide ? 4 : 2);
-          const lastPart = currentPathParts[currentPathParts.length - 1];
-          const equivalentPath = EQUIVALENT_PATHS[lastPart];
 
           const platformPageForCurrentPath =
             nodeForPath(rootNode, ['platforms', platform.name, ...currentPathParts]) ||
-            // try equivalent path (e.g., agent-tracing <-> agent-tracing-browser)
-            (equivalentPath &&
-              nodeForPath(rootNode, [
-                'platforms',
-                platform.name,
-                ...currentPathParts.slice(0, -1),
-                equivalentPath,
-              ])) ||
             // try to go one page higher, example: go to /usage/ from /usage/something
             nodeForPath(rootNode, [
               'platforms',
@@ -88,24 +72,13 @@ export async function Sidebar({path, versions}: SidebarProps) {
                 ? '/' + platformPageForCurrentPath.path + '/'
                 : platform.url,
             guides: platform.guides.map(guide => {
-              const guidePageForCurrentPath =
-                nodeForPath(rootNode, [
-                  'platforms',
-                  platform.name,
-                  'guides',
-                  guide.name,
-                  ...currentPathParts,
-                ]) ||
-                // try equivalent path (e.g., agent-tracing <-> agent-tracing-browser)
-                (equivalentPath &&
-                  nodeForPath(rootNode, [
-                    'platforms',
-                    platform.name,
-                    'guides',
-                    guide.name,
-                    ...currentPathParts.slice(0, -1),
-                    equivalentPath,
-                  ]));
+              const guidePageForCurrentPath = nodeForPath(rootNode, [
+                'platforms',
+                platform.name,
+                'guides',
+                guide.name,
+                ...currentPathParts,
+              ]);
               return guidePageForCurrentPath && !guidePageForCurrentPath.missing
                 ? {
                     ...guide,

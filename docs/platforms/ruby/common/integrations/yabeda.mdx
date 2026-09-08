@@ -24,12 +24,11 @@ bundle install
 
 ## Configure
 
-Initialize Sentry with metrics enabled. The Yabeda adapter registers itself automatically when `sentry-yabeda` is required — there's no extra setup:
+Initialize Sentry. Metrics are enabled by default, and the Yabeda adapter registers itself automatically when `sentry-yabeda` is required — there's no extra setup:
 
 ```ruby
 Sentry.init do |config|
   config.dsn = ENV["SENTRY_DSN"]
-  config.enable_metrics = true
 end
 ```
 
@@ -66,7 +65,7 @@ Add the plugin gems and they'll start forwarding metrics to Sentry immediately.
 
 Some Yabeda plugins use `collect` blocks to gather metrics. This is a pull-based pattern designed for Prometheus, where a scrape request triggers collection. Since Sentry is push-based, `sentry-yabeda` runs a background thread that calls `Yabeda.collect!` every 15 seconds to drive these plugins.
 
-This collector starts automatically when `enable_metrics` is `true`. Event-driven metrics (counters, histograms) flow to Sentry immediately — only pull-based gauges (like GC stats or Puma thread pool metrics) depend on the collector.
+This collector starts automatically when Sentry is initialized. Event-driven metrics (counters, histograms) flow to Sentry immediately — only pull-based gauges (like GC stats or Puma thread pool metrics) depend on the collector.
 
 <Alert>
 

@@ -7,10 +7,8 @@ export function register() {
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       tracesSampler,
       traceLifecycle: 'stream',
-      enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
-      spotlight: process.env.NODE_ENV === 'development',
       integrations: [Sentry.consoleLoggingIntegration()],
 
       // Filter sensitive metric attributes (no PII in metrics)
@@ -33,7 +31,6 @@ export function register() {
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       tracesSampler,
       traceLifecycle: 'stream',
-      enableLogs: true,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
       integrations: [Sentry.consoleLoggingIntegration()],

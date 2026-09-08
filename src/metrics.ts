@@ -172,7 +172,7 @@ export const DocMetrics = {
     pathname: string,
     skill: string | undefined,
     success: boolean,
-    source: 'callout' | 'inline_link' = 'callout'
+    source: 'callout' | 'inline_link' | 'homepage_card' = 'callout'
   ) => {
     Sentry.metrics.count('docs.copy_ai_prompt', 1, {
       attributes: {
@@ -191,7 +191,7 @@ export const DocMetrics = {
  */
 export type PageType =
   // Main product docs (from productSidebarItems in sidebarNavigation.tsx)
-  | 'guides' // Guides
+  | 'get-started' // Get Started
   | 'account' // Account Settings
   | 'organization' // Organization Settings
   | 'product' // Product Walkthroughs

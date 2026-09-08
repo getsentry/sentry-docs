@@ -1,0 +1,69 @@
+---
+title: Attributes
+description: "Attributes automatically enrich logs and metrics with typed key-value data. Use them to add business context that you can filter and search in Sentry."
+---
+
+<AvailableSince version="6.7.0" />
+
+**Attributes** are key-value pairs you can attach to your telemetry. Unlike [tags](../tags/), which are indexed string pairs attached to events, attributes are designed for <PlatformLink to="/logs">logs</PlatformLink> and <PlatformLink to="/metrics">metrics</PlatformLink>.
+
+Common uses include subscription tiers, feature flags, and other business context that helps you filter and query your telemetry. Attribute values can be strings, integers, floats, booleans, or values that can be serialized as JSON.
+
+## Add Attributes to Logs and Metrics
+
+Use `Sentry.set_attribute` to add an attribute to the current scope. Sentry includes scope attributes on logs and metrics for the current request or session:
+
+```ruby
+Sentry.set_attribute("subscription.tier", "pro")
+Sentry.set_attribute("feature.new_checkout", true)
+Sentry.set_attribute("order.item_count", 3)
+```
+
+You can set multiple attributes at once with `Sentry.set_attributes`:
+
+```ruby
+Sentry.set_attributes(
+  "org_id" => user.org_id,
+  "user_tier" => user.tier,
+  "service" => "checkout"
+)
+```
+
+Attributes set on the scope are used as defaults. Attributes passed directly to a log or metric take precedence when they use the same key:
+
+```ruby
+Sentry.set_attribute("checkout.step", "payment")
+
+Sentry.logger.info(
+  "Payment processed",
+  "checkout.step" => "confirmation"
+)
+```
+
+## Add Measurement Units
+
+To attach a measurement unit to a numeric value, pass the `unit:` keyword argument. Sentry sends the value and unit as a typed attribute:
+
+```ruby
+Sentry.set_attribute("checkout.duration", 3600, unit: "second")
+```
+
+You can also provide the value and unit as a hash. This is useful when building attributes dynamically:
+
+```ruby
+Sentry.set_attribute(
+  "checkout.duration",
+  value: 3600,
+  unit: "second"
+)
+```
+
+## Remove Attributes
+
+Remove an attribute from the current scope when it no longer applies:
+
+```ruby
+Sentry.remove_attribute("checkout.step")
+```
+
+Scope attributes enrich logs and metrics. To add searchable context to error events, use [tags](../tags/) or [structured contexts](../context/) instead.

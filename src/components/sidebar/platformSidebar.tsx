@@ -4,6 +4,25 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
+/**
+ * Platforms whose AI pages live under agent-tracing, mapped to where those pages
+ * are mirrored in the sidebar by default.
+ */
+const INTEGRATIONS_PATH_BY_PLATFORM: Record<string, string> = {
+  javascript: 'configuration/integrations',
+  python: 'integrations',
+};
+
+const AGENT_TRACING_ALIAS_PATH_OVERRIDES: Record<string, Record<string, string>> = {
+  'javascript.cloudflare': {
+    'agents-sdk': 'features',
+    'workers-ai': 'features',
+  },
+};
+
+const UNALIASED_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
+const CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS = ['agents-sdk', 'workers-ai'];
+
 export function PlatformSidebar({
   rootNode,
   platformName,
@@ -41,12 +60,77 @@ export function PlatformSidebar({
     return null;
   }
   const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
-  const tree = toTree(nodes.filter(n => !!n.context));
   const guide = guideName && getGuide(rootNode, platformName, guideName);
 
   const pathRoot = guide
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
+
+  // Mirror Agent Tracing pages elsewhere in the sidebar as link-only entries.
+  // Most are integrations; guide-specific overrides can place pages in a more
+  // appropriate section while keeping Agent Tracing as their canonical location.
+  const integrationsPath = INTEGRATIONS_PATH_BY_PLATFORM[platformName];
+  const aliasPathOverrides = guideName
+    ? AGENT_TRACING_ALIAS_PATH_OVERRIDES[`${platformName}.${guideName}`]
+    : undefined;
+  const agentTracingNode =
+    integrationsPath && nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing']);
+
+  const agentTracingAliases = !agentTracingNode
+    ? []
+    : agentTracingNode.children
+        .filter(
+          child =>
+            !child.missing &&
+            !child.frontmatter.draft &&
+            !UNALIASED_AGENT_TRACING_PAGES.has(child.slug)
+        )
+        .map(child => ({
+          context: {
+            platform: {platformName},
+            title: child.frontmatter.title,
+            sidebar_title: child.frontmatter.sidebar_title,
+            // Deliberately no sidebar_order: aliases sort alphabetically in their
+            // secondary location instead of using their Agent Tracing order.
+            href: '/' + child.path + '/',
+          },
+          path: `/${pathRoot}/${aliasPathOverrides?.[child.slug] ?? integrationsPath}/${child.slug}/`,
+        }));
+
+  // Expose Cloudflare-only pages from every JavaScript Agent Tracing sidebar.
+  // Their links navigate to the canonical Cloudflare guide instead of creating
+  // unsupported copies under the current guide.
+  const cloudflareAgentTracingAliases =
+    platformName !== 'javascript' || guideName === 'cloudflare' || !agentTracingNode
+      ? []
+      : CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS.map(slug => {
+          const target = nodeForPath(rootNode, [
+            'platforms',
+            'javascript',
+            'guides',
+            'cloudflare',
+            'agent-tracing',
+            slug,
+          ]);
+          if (!target || target.missing || target.frontmatter.draft) {
+            return undefined;
+          }
+          return {
+            context: {
+              platform: {platformName},
+              title: target.frontmatter.title,
+              sidebar_title: target.frontmatter.sidebar_title,
+              href: '/' + target.path + '/',
+            },
+            path: `/${pathRoot}/agent-tracing/${slug}/`,
+          };
+        }).filter(alias => alias !== undefined);
+
+  const tree = toTree(
+    [...nodes, ...agentTracingAliases, ...cloudflareAgentTracingAliases].filter(
+      n => !!n.context
+    )
+  );
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';

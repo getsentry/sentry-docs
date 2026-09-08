@@ -1,6 +1,6 @@
 ---
 title: Filtering
-description: "Learn more about how to configure your SDK to filter events reported to Sentry."
+description: "Learn more about how to configure your Sentry Native SDK to filter events reported to Sentry."
 sidebar_order: 60
 ---
 
@@ -22,9 +22,42 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/issues/issue-details/breadcrumbs/).
 
+## Filtering User Feedback
+
+User feedback doesn't pass through <PlatformIdentifier name="before-send" />, so filtering it needs its own hook.
+
+### Using <PlatformIdentifier name="before-send-feedback" />
+
+`before_send_feedback` is called with a feedback event and a hint, with the feedback itself nested under the event's `contexts.feedback`. Return the event to send it, or call `sentry_value_decref(event)` and return `sentry_value_new_null()` to drop it. The hint is always provided, so you can also use this hook to attach files to every feedback.
+
+```c
+static sentry_value_t
+before_send_feedback_callback(
+    sentry_value_t event, sentry_hint_t *hint, void *user_data)
+{
+    (void)user_data;
+
+    sentry_value_t feedback = sentry_value_get_by_key(
+        sentry_value_get_by_key(event, "contexts"), "feedback");
+
+    // Drop feedback that didn't come with a contact address
+    if (sentry_value_is_null(sentry_value_get_by_key(feedback, "contact_email"))) {
+        sentry_value_decref(event);
+        return sentry_value_new_null();
+    }
+
+    sentry_hint_attach_file(hint, "/var/log/last-session.log");
+    return event;
+}
+
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_before_send_feedback(options, before_send_feedback_callback, NULL);
+sentry_init(options);
+```
+
 ## Filtering Transaction Events
 
-To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
+To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
 
 ### Using <PlatformIdentifier name="traces-sampler" />
 
@@ -43,9 +76,9 @@ If the transaction currently being processed has a parent transaction (from an u
 
 Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
 
-### Using <PlatformIdentifier name="before-send-transaction" />
+### Using <PlatformIdentifier name="before-transaction" />
 <Alert>
-When discarding a transaction in a `before_send_transaction` callback, one must call `sentry_value_decref(tx)` and return a `sentry_value_new_null()`.
+When discarding a transaction in a `before_transaction` callback, one must call `sentry_value_decref(tx)` and return a `sentry_value_new_null()`.
 </Alert>
 
 <PlatformContent includePath="configuration/before-send-transaction" />
