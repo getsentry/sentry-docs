@@ -1,17 +1,17 @@
 The Sentry Cloudflare SDK automatically propagates traces for incoming and outgoing HTTP requests if you've setup the SDK to send traces.
 
-For RPC calls within Cloudflare (Worker-to-Durable Object, Worker-to-Worker via service bindings), trace propagation must be explicitly enabled. See [RPC Trace Propagation](#rpc-trace-propagation) below.
+For RPC calls within Cloudflare (Worker-to-Durable Object, Worker-to-Worker via service bindings), you name the bindings that should carry the trace. See [RPC Trace Propagation](#rpc-trace-propagation) below.
 
 ### RPC Trace Propagation
 
 <AvailableSince version="10.52.0" />
 
-By default, traces are not propagated across [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) between Workers and Durable Objects. This is because [Cap'n Proto](https://capnproto.org/) (which powers Cloudflare RPC) has no native support for headers or metadata.
+By default, traces are not propagated across [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) between Workers and Durable Objects. This is because [Cap'n Proto](https://capnproto.org/) (which powers Cloudflare RPC) has no native support for headers or metadata. The SDK carries the trace context in a trailing argument instead, and the receiving SDK strips it before your method runs.
 
-To enable trace propagation for RPC method calls, set `enableRpcTracePropagation: true` on **both** the caller and receiver sides.
+That trailing argument is why propagation is opt-in per binding: only a Sentry-instrumented receiver strips it again. List the bindings whose receiver you know runs Sentry in `rpcTracePropagationBindings` (SDK version 10.72.0 or higher). Setting the option also turns on the receiver side, so a Worker that both calls and receives needs nothing else.
 
-<Alert level="warning" title="Performance Consideration">
-  RPC trace propagation requires instrumenting the environment bindings, which adds overhead to every RPC call. Only enable this option if you need distributed tracing across service boundaries.
+<Alert>
+  If you build with the <PlatformLink to="/features/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink> and its `autoInstrumentation` option, the plugin configures the bindings that point at classes in the same Worker. You only need to list bindings to other Workers.
 </Alert>
 
 **Worker Side (Caller):**
@@ -23,7 +23,8 @@ export default Sentry.withSentry(
   (env) => ({
     dsn: env.SENTRY_DSN,
     tracesSampleRate: 1.0,
-    enableRpcTracePropagation: true,
+    // Propagate to `env.MY_DURABLE_OBJECT` and every `env.SVC_*` binding
+    rpcTracePropagationBindings: ["MY_DURABLE_OBJECT", /^SVC_/],
   }),
   {
     async fetch(request, env, ctx) {
@@ -39,7 +40,15 @@ export default Sentry.withSentry(
 );
 ```
 
+Strings match a binding name exactly, so `"DB"` does not also match `MY_DB`. Use a regular expression for pattern matching. For the full definition, see <PlatformLink to="/configuration/options/#rpcTracePropagationBindings">`rpcTracePropagationBindings`</PlatformLink>.
+
+<Alert level="warning" title="Only List Receivers You Control">
+  A Worker that is not instrumented with Sentry never strips the trailing trace argument, so your method sees an extra parameter it was not called with. This is harmless for methods with fixed parameter lists, but changes behavior if your method uses rest parameters `(...args)` or reads `arguments.length`. Leave those bindings off the list.
+</Alert>
+
 **Durable Object Side (Receiver):**
+
+The receiver continues the trace it is sent, creates a span per RPC method, and strips the trailing argument, so your method signatures are unaffected. A Durable Object that only receives opts in with an empty list.
 
 ```typescript
 import * as Sentry from "@sentry/cloudflare";
@@ -54,17 +63,14 @@ export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
   (env: Env) => ({
     dsn: env.SENTRY_DSN,
     tracesSampleRate: 1.0,
-    enableRpcTracePropagation: true,
+    // Receive traces over RPC, but propagate to nothing when calling out
+    rpcTracePropagationBindings: [],
   }),
   MyDurableObjectBase
 );
 ```
 
-The SDK propagates trace context (`sentry-trace` and `baggage`) by appending a trailing argument to outgoing RPC calls. The receiving SDK automatically strips it before your method is executed. Your method signatures are unaffected.
-
-<Alert>
-  If the receiving Worker is not instrumented with Sentry (or `enableRpcTracePropagation` is not enabled), the trailing trace argument won't be stripped and will be passed through to your method. This is harmless for methods with fixed parameter lists, but may cause unexpected behavior if your method relies on rest parameters `(...args)` or `arguments.length`.
-</Alert>
+Listing bindings here does no harm, so you can reuse the caller's list and share one options object across the whole deployment. Every name on it already points at a Sentry receiver, and a binding the Durable Object never calls is simply never matched.
 
 ### Custom Instrumentation
 
