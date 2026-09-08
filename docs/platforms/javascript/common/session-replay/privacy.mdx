@@ -83,6 +83,110 @@ replayIntegration({
 
 <PlatformContent includePath="replay/privacy-configuration" />
 
+## Best Practices for Masking and Blocking in Your Codebase
+
+Manually classifying every screen as sensitive or safe doesn't scale as your app grows. Instead, bake privacy rules into the shared primitives your UI is built from — your i18n layer, your design-system components, your avatar component — so every screen inherits the right behavior automatically.
+
+### Hook into your i18n layer to unmask known-safe static text
+
+If your app renders copy through a translation function (`t()`, `formatMessage()`, and similar), you already have a reliable signal for "this string came from my translation catalog, not from user data." Record every string that flows through that function, then wire it into a custom `maskFn` so only text that *didn't* come from your catalog (which is more likely to be dynamic or user-generated) gets masked:
+
+```javascript
+// i18n.js — track every string that comes out of the translation layer
+const staticStrings = new Set();
+
+export function t(key, ...args) {
+  const translated = translate(key, ...args);
+  staticStrings.add(translated);
+  return translated;
+}
+```
+
+```javascript
+// sentry.js
+Sentry.replayIntegration({
+  maskAllText: true,
+  maskFn: (text) => (staticStrings.has(text) ? text : text.replace(/\S/g, "*")),
+});
+```
+
+This is the same pattern Sentry uses in its own web app: static UI copy (labels, button text, empty states) rendered through the translation function is unmasked automatically, while everything else — usernames, issue titles, free-text fields — stays masked. New UI copy is safe by construction, since it flows through the same `t()` call, so nobody has to remember to add a `sentry-unmask` class to it later.
+
+### Make privacy explicit in shared React components
+
+Rather than auditing individual pages, add `data-sentry-mask`, `data-sentry-block`, or `data-sentry-unmask` to the low-level components your app is built from, so every consumer inherits the right behavior for free:
+
+```jsx
+// components/SensitiveText.jsx — wrap any field that can hold user data
+export function SensitiveText({children, ...props}) {
+  return (
+    <span data-sentry-mask {...props}>
+      {children}
+    </span>
+  );
+}
+
+// components/StaticCopy.jsx — for copy you control, like labels and headings
+export function StaticCopy({children, ...props}) {
+  return (
+    <span data-sentry-unmask {...props}>
+      {children}
+    </span>
+  );
+}
+```
+
+Or centralize the decision in a small HOC so reviewers only need to check the primitive once, not every call site:
+
+```jsx
+export function withReplayMask(Component) {
+  return function Wrapped(props) {
+    return (
+      <span data-sentry-mask>
+        <Component {...props} />
+      </span>
+    );
+  };
+}
+
+export const CustomerName = withReplayMask(RawCustomerName);
+```
+
+### Block avatar and profile image components
+
+`img`, `svg`, and `video` elements are blocked by default, but many avatar components render the image as a CSS `background-image` on a `div` — for letter-avatar fallbacks, Gravatar, or a custom image pipeline. The default element blocklist only matches actual media elements, so a `background-image` avatar can slip through unblocked. Add `data-sentry-block` explicitly wherever that happens:
+
+```jsx
+function ProfileAvatar({user}) {
+  if (user.avatarUrl) {
+    return (
+      <div
+        data-sentry-block
+        className="avatar"
+        style={{backgroundImage: `url(${user.avatarUrl})`}}
+        role="img"
+        aria-label={user.name}
+      />
+    );
+  }
+
+  // Fallback initials avatar — still block it, since initials can be identifying.
+  return (
+    <div data-sentry-block className="avatar avatar--letter">
+      {user.initials}
+    </div>
+  );
+}
+```
+
+Putting `data-sentry-block` directly inside a shared `Avatar` component means every place that renders a user, team, or organization avatar is protected — nobody has to remember to add it page by page.
+
+<Alert level="info">
+
+As a rule of thumb: put `sentry-mask`/`sentry-block`/`sentry-unmask` in your design-system primitives (`Avatar`, `UserName`, `Input`, and so on) rather than on individual pages, and consider a lint rule or snapshot test that fails when a new component rendering user- or account-identifying data ships without one.
+
+</Alert>
+
 ## Network Request and Response Bodies and Headers
 
 Collecting request and response bodies is an opt-in feature. That's because the best way to avoid getting PII into Sentry is by not adding URLs of endpoints that may contain PII.
