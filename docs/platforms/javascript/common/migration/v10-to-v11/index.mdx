@@ -37,7 +37,7 @@ Version 11 has new compatibility ranges for runtimes, frameworks, and libraries.
 
 ### Node.js
 
-Node.js 18 is no longer supported. The supported versions are **`>=20.19.0`**, **`>=22.12.0`**, and **`>=23.2.0`**.
+Node.js 18 is no longer supported. The minimum is **20.19.0**, and Node.js 22 needs **22.12** or higher while Node.js 23 needs **23.2** or higher (`>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0`).
 
 Move to a supported version everywhere the SDK is installed or your app is built: Dockerfiles, CI images, `engines`, `.nvmrc`, and serverless runtime settings.
 
@@ -1058,6 +1058,10 @@ The bundler-specific `webpack.reactComponentAnnotation` and `_experimental.turbo
 
 On Turbopack, component annotation requires Next.js 16 or higher. The SDK warns at build time when annotation is enabled on an older version, where it previously did nothing.
 
+### The Default Environment on Vercel Lost Its Prefix
+
+On Vercel, the SDK defaults `environment` to `VERCEL_TARGET_ENV` (`production`, `preview`, or your own environment name) instead of `vercel-production` and `vercel-preview`. Update alert rules, dashboards, and saved searches that use the old names, or set `environment` explicitly to keep them.
+
 ### Vercel AI Is Not Instrumented on the Edge Runtime
 
 The instrumentation relies on diagnostics channels, which the Edge runtime doesn't support. The `vercelAIIntegration` export stays available as a no-op on Edge builds.
@@ -1160,6 +1164,10 @@ The `assets` and `filesToDeleteAfterUpload` fields moved into `sourcemaps`.
 </PlatformSection>
 
 </PlatformSection>
+
+### Vercel Deploys Use the Plain Environment Name
+
+Deploys that the bundler plugins create on Vercel use `VERCEL_TARGET_ENV` as their environment now, instead of `vercel-production` and `vercel-preview`. That matches the runtime default. If your events use a different environment, set `release.deploy.env` to the same value, or set `release.deploy` to `false` to opt out.
 
 ### The `unstable_` Bundler Plugin Options Were Removed
 
