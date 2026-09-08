@@ -199,6 +199,17 @@ describe('canonical Link header on .md responses', () => {
     );
   });
 
+  it.each([
+    '/platforms/java/migration/7.x-to-8.0',
+    '/platforms/python/migration/1.x-to-2.x',
+  ])('does not add a trailing slash to a dotted document path: %s', async path => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest(`${path}.md`));
+    expect(res.headers.get('Link')).toBe(
+      `<https://docs.sentry.io${path}>; rel="canonical"`
+    );
+  });
+
   it('maps /index.md to the root canonical URL', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest('/index.md'));

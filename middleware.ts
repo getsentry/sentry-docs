@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
+import {canonicalPath} from 'sentry-docs/canonical';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
@@ -21,7 +22,11 @@ const CANONICAL_HOST = new URL(BASE_URL).hostname;
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
 // get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
-const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
+const INDEXABLE_HOSTNAMES = new Set([
+  'docs.sentry.io',
+  'develop.sentry.dev',
+  'localhost',
+]);
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
@@ -309,7 +314,7 @@ function rewriteWithClassification(
 function mdToCanonicalPath(mdPathname: string): string {
   const withoutExt = mdPathname.replace(/\.md$/, '');
   if (withoutExt === '/index') return '/';
-  return withoutExt.endsWith('/') ? withoutExt : `${withoutExt}/`;
+  return canonicalPath(withoutExt);
 }
 
 /**
