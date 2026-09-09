@@ -64,6 +64,7 @@ export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
   deprecated: boolean;
+  experimental: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -148,6 +149,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           method,
           name: cleanName,
           deprecated: isDeprecated,
+          experimental: apiData['x-sentry-experimental'] === true,
           server,
           slug: slugify(cleanName),
           summary: apiData.summary
