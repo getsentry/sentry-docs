@@ -45,7 +45,6 @@ await SentryFlutter.init(
   ),
 );
 ```
-
 For more details on the available properties, see the [SentryReplayOptions](https://pub.dev/documentation/sentry_flutter/latest/sentry_flutter/SentryReplayOptions-class.html), which is part of [SentryFlutterOptions](https://pub.dev/documentation/sentry_flutter/latest/sentry_flutter/SentryFlutterOptions-class.html).
 
 ## Verify
@@ -62,22 +61,17 @@ The session will be terminated if the application has spent in the background mo
 
 ### Buffered Replays for Errors and User Feedback
 
-If you don't want to send every replay, set `onErrorSampleRate` to buffer up to 30 seconds of activity on the device. The SDK sends the buffer when it captures an error or user feedback. For the built-in <PlatformLink to="/user-feedback/#sentryfeedbackwidget">`SentryFeedbackWidget`</PlatformLink>, the SDK sends the buffer when the widget opens so the replay shows what happened before the user started entering feedback.
-
-```dart
-options.replay.onErrorSampleRate = 1.0;
-```
-
-A value of `1.0` buffers every session that wasn't selected by `sessionSampleRate`. After the SDK sends the buffer, it continues recording until the session ends. This behavior is available on iOS and Android in Sentry Flutter SDK `9.0.0` and later.
+If you prefer not to record an entire session, you can elect to capture a replay only when an error occurs or when a user submits feedback. In this case, the integration will buffer up to 30 seconds worth of events prior to the trigger. It will continue to record the session, following the rules above regarding session life and activity. For the built-in <PlatformLink to="/user-feedback/#sentryfeedbackform">`SentryFeedbackForm`</PlatformLink>, the buffer is sent when the form opens, so the replay shows what happened before the user started entering feedback. Read the [sampling](#sampling) section for configuration options.
 
 ## Sampling
 
-Sampling controls how much of your app's traffic results in a Session Replay. You can configure two sample rates:
+Sampling allows you to control how much of your app's traffic will result in a Session Replay. There are two sample rates you can adjust to get the replays relevant to you:
 
-1. `sessionSampleRate` - The sample rate for replays that the SDK sends throughout the user's session.
-2. `onErrorSampleRate` - The sample rate for replays that the SDK buffers and sends when it captures an error or user feedback. The replay includes up to 30 seconds of activity before the trigger and continues recording until the session ends.
+1. `sessionSampleRate` - The sample rate for replays that begin recording immediately and last the entirety of a user's session.
+2. `onErrorSampleRate` - The sample rate for replays that are recorded when an error happens or when a user submits feedback. This type of replay will record
+   up to 30 seconds of events prior to the trigger and continue recording until the session ends.
 
-Sampling starts when a session begins. The SDK evaluates `sessionSampleRate` first. If the session isn't selected, it evaluates `onErrorSampleRate`. When selected by `onErrorSampleRate`, the SDK keeps the replay in a rolling buffer and sends it only after an error, a call to `Sentry.captureFeedback()`, or the built-in feedback widget opens.
+Sampling starts as soon as a session begins. The `sessionSampleRate` is then evaluated. If the session is sampled, replay recording will start immediately. If not, `onErrorSampleRate` will be evaluated. If the session is sampled at this point, the replay will be buffered and will only be uploaded to Sentry if an error occurs, your app calls `Sentry.captureFeedback()`, or the built-in feedback form opens.
 
 ## PII & Privacy Considerations
 
