@@ -156,12 +156,14 @@ async function main() {
     const isExternal =
       resolvedUrl.origin !== baseURL.origin && resolvedUrl.hostname !== 'docs.sentry.io';
     const hasUnsupportedScheme = !['http:', 'https:'].includes(resolvedUrl.protocol);
+    const isExplicitLocalhost = /^(?:https?:)?\/\/localhost(?::\d+)?(?:\/|$)/.test(href);
     const isIp = (href_: string) => /(\d{1,3}\.){3}\d{1,3}/.test(href_);
     const isImage = (href_: string) => /\.(png|jpg|jpeg|gif|svg|webp)$/.test(href_);
 
     return (
       isExternal ||
       hasUnsupportedScheme ||
+      isExplicitLocalhost ||
       ignoreList.includes(trimSlashes(resolvedUrl.pathname)) ||
       isImage(resolvedUrl.pathname) ||
       isIp(resolvedUrl.hostname)
