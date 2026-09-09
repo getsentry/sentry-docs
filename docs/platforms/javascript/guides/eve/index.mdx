@@ -113,7 +113,7 @@ Sentry.init({
 });
 ```
 
-Because Eve runs this file before your agent and the AI SDK load, the SDK can instrument everything from the first turn — you don't need the `--import` flag or any extra bootstrapping, and you don't need to initialize `@sentry/node` anywhere else.
+With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. Eve runs `agent/instrumentation.ts` before your agent and the AI SDK load, so this works from the first turn without the `--import` flag, and you don't initialize `@sentry/node` anywhere else. To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below.
 
 <OnboardingOption optionId="performance">
 
@@ -172,27 +172,26 @@ export default defineHook(
 
 ## Instrument Other Dependencies
 
-The basic setup instruments the AI SDK and HTTP/fetch calls. To also instrument other libraries — such as database clients like `pg` or `mysql` — preload the Sentry ESM loader and keep those packages external so the loader can transform them.
-
-Start Eve with the loader preloaded:
+The setup above instruments the AI SDK, HTTP, and `fetch` with no bootstrapping. To also instrument the rest of your Node app — database clients like `pg` or `mysql`, and other libraries that patch themselves as they load — start Eve with Sentry's ESM loader preloaded, so it can hook those modules at load time:
 
 ```bash
 NODE_OPTIONS='--import=@sentry/node/import' eve start
 ```
 
-Then list the packages you want instrumented under `externalDependencies` in `agent/agent.ts`:
+The loader can only transform modules that Eve leaves external to its server bundle. If Eve inlines a dependency, the loader can't hook it, so the module is silently never instrumented. Rather than hardcode that list, use `getInstrumentedModuleNames()` from `@sentry/node` to keep every package Sentry instruments external in `agent/agent.ts`:
 
 ```typescript {filename:agent/agent.ts}
+import { getInstrumentedModuleNames } from "@sentry/node";
 import { defineAgent } from "eve";
 
 export default defineAgent({
   build: {
-    externalDependencies: ["pg", "mysql"],
+    externalDependencies: getInstrumentedModuleNames(),
   },
 });
 ```
 
-If Eve inlines a dependency into the server bundle, the loader can't hook it, so keeping it external leaves it a real module the transform can instrument. The AI SDK doesn't need this — it uses a native diagnostics channel.
+`getInstrumentedModuleNames()` returns the authoritative set of packages Sentry instruments through the loader (database clients like `pg` and `mysql`, and others), so you don't have to maintain the list yourself. The AI SDK isn't part of it — it reports through a native diagnostics channel that works without the loader.
 
 ## Next Steps
 
