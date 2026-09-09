@@ -1,5 +1,6 @@
 ---
 title: Cloudflare Agents SDK
+sidebar_title: Agents SDK
 description: "Instrument Cloudflare Agents SDK classes with Sentry and link chats to the Conversations view."
 ---
 
@@ -26,11 +27,14 @@ export const MyAgent = Sentry.instrumentAgentWithSentry(
   (env: Env) => ({
     dsn: "___PUBLIC_DSN___",
     tracesSampleRate: 1.0,
-    enableRpcTracePropagation: true,
+    // Lets the agent continue a trace sent over RPC. See RPC Trace Propagation.
+    rpcTracePropagationBindings: [],
   }),
   MyAgentBase
 );
 ```
+
+The Worker that calls the agent names its binding in `rpcTracePropagationBindings`. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
 
 `instrumentAgentWithSentry` works with `Agent` from `agents`, `AIChatAgent` from `@cloudflare/ai-chat`, and `McpAgent` from `agents/mcp`. When you build with the <PlatformLink to="/features/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>'s `autoInstrumentation`, the plugin detects and wraps Agent classes automatically.
 
@@ -87,7 +91,7 @@ Populate the Conversations **User** column with `Sentry.setUser` on every reques
 
 ## Related
 
-- <PlatformLink to="/features/workers-ai/">Workers AI</PlatformLink>
+- <PlatformLink to="/agent-tracing/workers-ai/">Workers AI</PlatformLink>
 - <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>
 - <PlatformLink to="/features/vite-plugin/">Vite Plugin</PlatformLink>
 - <PlatformLink to="/agent-tracing/#tracking-conversations">

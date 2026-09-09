@@ -113,6 +113,12 @@ export interface PlatformConfig {
    */
   fallbackPlatform?: string;
   /**
+   * When `false` on a guide, skip inheriting the parent platform's `common/`
+   * pages. The guide only renders pages that exist under its own directory.
+   * Defaults to `true` (inherit) when omitted.
+   */
+  inheritCommonContent?: boolean;
+  /**
    * The icon to use for this platform. This is the name of the icon as defined
    */
   icon?: string;

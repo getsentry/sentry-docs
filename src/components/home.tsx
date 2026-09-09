@@ -15,6 +15,8 @@ import {Header} from './header';
 import styles from './home.module.scss';
 import {HomeAiSetupCard} from './homeAiSetupCard';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
+import {PreferredPlatformLink} from './preferredPlatformLink';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export async function Home() {
@@ -156,6 +158,45 @@ export async function Home() {
               icon={<Cursor width={20} height={20} aria-hidden />}
             />
           </div>
+          <p className="mt-8 mb-4">
+            Start{' '}
+            <Link href="/product/agents/" className={styles.seeAllLink}>
+              debugging your agents
+            </Link>{' '}
+            with one of these agent integrations.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <AgentQuickLink
+              to="/agent-tracing/mastra/"
+              title="Mastra"
+              desc="Export Mastra AI tracing to Sentry."
+              icon={<PlatformIcon platform="mastra" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/eve/"
+              title="Eve"
+              desc="Send Eve agent traces to Sentry over OTLP."
+              icon={<PlatformIcon platform="eve" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/flue/"
+              title="Flue"
+              desc="Send Flue traces, logs, and errors to Sentry."
+              icon={<PlatformIcon platform="flue" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/vercelai/"
+              title="Vercel AI"
+              desc="Instrument the Vercel AI SDK."
+              icon={<PlatformIcon platform="vercel" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/openai/"
+              title="OpenAI"
+              desc="Instrument the OpenAI SDK."
+              icon={<PlatformIcon platform="openai" />}
+            />
+          </div>
         </section>
 
         <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16">
@@ -249,6 +290,28 @@ function QuickLink({
       </div>
       <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
     </Link>
+  );
+}
+
+function AgentQuickLink({
+  to,
+  title,
+  desc,
+  icon,
+}: {
+  desc: string;
+  icon: ReactNode;
+  title: string;
+  to: string;
+}) {
+  return (
+    <PreferredPlatformLink to={to} className={`${styles.quickLink} no-underline`}>
+      <div className={styles.quickLinkTitle}>
+        {icon}
+        {title}
+      </div>
+      <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
+    </PreferredPlatformLink>
   );
 }
 

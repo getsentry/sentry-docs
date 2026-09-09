@@ -111,7 +111,7 @@ const SDK_AGNOSTIC_PATH_PREFIXES = [
   '/product/',
   '/concepts/',
   '/cli/',
-  '/guides/',
+  '/get-started/',
   '/integrations/',
 ];
 

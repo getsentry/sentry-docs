@@ -1,5 +1,5 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
-import {withSentryConfig} from '@sentry/nextjs';
+import {withSentryConfig} from '@sentry/nextjs/config';
 
 import {redirects} from './redirects.js';
 import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
@@ -183,10 +183,9 @@ module.exports = withSentryConfig(nextConfig, {
     reactComponentAnnotation: {
       enabled: true,
     },
-    unstable_sentryWebpackPluginOptions: {
-      applicationKey: 'sentry-docs',
-    },
   },
+
+  applicationKey: 'sentry-docs',
 
   _experimental: {
     thirdPartyOriginStackFrames: true,

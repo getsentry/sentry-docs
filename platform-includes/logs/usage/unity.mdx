@@ -11,17 +11,46 @@ SentrySdk.Logger.LogInfo("A simple debug log message");
 SentrySdk.Logger.LogError("A {0} log message", "formatted");
 ```
 
+### Custom Attributes
+
+Values baked into the message text, like a player ID or the active scene, can only be found with a text search. Attaching them as attributes instead lets you filter and group logs by those values in the Logs UI, or add them as a dedicated column.
+
+To attach attributes, pass a delegate that configures the `SentryLog` before it's sent:
+
+```csharp
+SentrySdk.Logger.LogWarning(log =>
+{
+    log.SetAttribute("player_id", playerId);
+    log.SetAttribute("scene", SceneManager.GetActiveScene().name);
+    log.SetAttribute("level", 42);
+    log.SetAttribute("health", 12.5f);
+    log.SetAttribute("is_premium", true);
+}, "Player {0} is low on health", playerId);
+```
+
+Every log level method (`LogTrace`, `LogDebug`, `LogInfo`, `LogWarning`, `LogError`, and `LogFatal`) has an overload that takes this delegate as its first argument.
+
+Supported attribute types are:
+- Textual: `string` and `char`
+- Logical: `bool`
+- Integral: `sbyte`, `byte`, `short`, `ushort`, `int`, `uint`, `long` and `nint`
+- Floating-point: `float` and `double`
+
+Unsupported numeric types such as `ulong`, `nuint`, `decimal`, as well as all other types including `object`, are treated as `string` via `ToString()`.
+
+To attach an attribute to every log the SDK sends, including logs forwarded from `Debug.Log`, set it once in the [before-log handler](#before-log-handler) instead of repeating it at each call site.
+
 ### Automatic Logging Integration
 
-Because Unity's `LogType` does not match `SentryLogLevel`, the SDKs logging integration maps them as follows:
+Because Unity's `LogType` does not match `SentryLogLevel`, the SDK's logging integration maps them as follows:
 
-| Unity LogLevel | Sentry Logs UI Severity |
+| Unity `LogType` | Sentry Logs UI Severity |
 | --- | --- |
-| Debug | INFO |
+| Log | INFO |
 | Warning | WARN |
 | Assert | ERROR |
 | Error | ERROR |
-| Fatal | FATAL |
+| Exception | ERROR |
 
 ```csharp
 // Standard Unity logging - automatically captured when severity levels are enabled
@@ -37,20 +66,3 @@ You can configure whether these logs are sent as:
 <Alert level="info">
 With **Structured Logs** enabled additional breadcrumb attachment to events needs to be explicitly enabled with `AddBreadcrumbsWithStructuredLogs = true`.
 </Alert>
-
-## Capture with Attributes
-
-```csharp
-SentrySdk.Logger.LogWarning(static log =>
-{
-    log.SetAttribute("my.attribute", "value");
-}, "A log message with additional attributes.");
-```
-
-Supported attribute types are:
-- Textual: `string` and `char`
-- Logical: `bool`
-- Integral: `sbyte`, `byte`, `short`, `ushort`, `int`, `uint`, `long` and `nint`
-- Floating-point: `float` and `double`
-
-Unsupported numeric types such as `ulong`, `nuint`, `decimal`, as well as all other types including `object`, are treated as `string` via `ToString()`.
