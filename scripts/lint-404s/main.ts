@@ -7,6 +7,8 @@ import {unified} from 'unified';
 import {visit} from 'unist-util-visit';
 import {fileURLToPath} from 'url';
 
+import {resolveLinkUrl} from './url';
+
 const baseUrlIndex = process.argv.indexOf('--base-url');
 const baseURL = new URL(
   baseUrlIndex !== -1 && process.argv[baseUrlIndex + 1]
@@ -151,8 +153,7 @@ async function main() {
     return pathnameSlug === '' || allSlugsSet.has(pathnameSlug);
   };
 
-  function shouldSkipLink(href: string, pageUrl: URL) {
-    const resolvedUrl = new URL(href, pageUrl);
+  function shouldSkipLink(href: string, resolvedUrl: URL) {
     const isExternal =
       resolvedUrl.origin !== baseURL.origin && resolvedUrl.hostname !== 'docs.sentry.io';
     const hasUnsupportedScheme = !['http:', 'https:'].includes(resolvedUrl.protocol);
@@ -171,11 +172,14 @@ async function main() {
   }
 
   async function is404(link: Link, pageUrl: URL): Promise<boolean> {
-    if (shouldSkipLink(link.href, pageUrl)) {
+    const resolvedUrl = resolveLinkUrl(link.href, pageUrl);
+    if (!resolvedUrl) {
+      return true;
+    }
+    if (shouldSkipLink(link.href, resolvedUrl)) {
       return false;
     }
 
-    const resolvedUrl = new URL(link.href, pageUrl);
     const fullUrl =
       resolvedUrl.hostname === 'docs.sentry.io' && resolvedUrl.origin !== baseURL.origin
         ? new URL(
