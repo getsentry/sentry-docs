@@ -1,0 +1,86 @@
+---
+title: Custom Trace Propagation
+description: "Learn how to attach trace headers to requests and start separate traces in your Godot game."
+sidebar_order: 10
+---
+
+To follow an operation from your game into a backend service, attach the span's trace headers to the outgoing request. First, <PlatformLink to="/tracing/distributed-tracing/">set up distributed tracing</PlatformLink> in both your game and backend.
+
+## Add Trace Headers to Requests
+
+`SentrySpan.get_trace_headers(url)` returns a `PackedStringArray` of `Name: Value` strings. You can pass these directly to `HTTPRequest.request()`, `HTTPClient.request()`, or `WebSocketPeer.handshake_headers`. Pass the destination URL so the SDK applies your <PlatformLink to="/tracing/distributed-tracing/limiting-trace-propagation/">trace propagation targets</PlatformLink>.
+
+This example measures a leaderboard request and adds tracing headers:
+
+```GDScript {filename:leaderboard.gd}
+extends Node
+
+func fetch_scores() -> void:
+	var url := "https://api.example.com/scores"
+
+	# Add the request node to the scene tree and limit how long it can wait.
+	var request := HTTPRequest.new()
+	request.timeout = 10.0
+	add_child(request)
+
+	# Start an inactive span to measure the request, using the active span as its parent if available.
+	var span := SentrySDK.start_span(
+		"GET /scores",
+		{"sentry.op": "http.client"},
+		SentrySDK.get_active_span(),
+		false, # Keep it inactive so telemetry captured while it runs isn't associated with it.
+	)
+
+	# Get trace headers to connect the backend operation to this span.
+	# Passing the URL applies the configured trace propagation targets.
+	var headers := span.get_trace_headers(url)
+
+	var error := request.request(url, headers)
+	if error != OK:
+		# The request couldn't start, so end the span and clean up immediately.
+		span.set_status(SentrySpan.SPAN_STATUS_ERROR)
+		span.set_attribute("error.message", error_string(error))
+		span.end()
+		request.queue_free()
+		return
+
+	# Keep the span open until the request completes or fails.
+	var response: Array = await request.request_completed
+	var result: int = response[0]
+	var status_code: int = response[1]
+	# Record the HTTP status and check for both network and HTTP errors.
+	span.set_attribute("http.response.status_code", status_code)
+	if result == HTTPRequest.RESULT_SUCCESS and status_code < 400:
+		span.set_status(SentrySpan.SPAN_STATUS_OK)
+	else:
+		span.set_status(SentrySpan.SPAN_STATUS_ERROR)
+	# Finish measuring the request and remove the temporary request node.
+	span.end()
+	request.queue_free()
+```
+
+The span is <PlatformLink to="/tracing/instrumentation/#start-an-inactive-span">inactive</PlatformLink>, so telemetry captured while it runs isn't associated with it. Its trace headers still connect the backend operation to the span.
+
+Read the headers before ending the span and from the thread that created it. An ended span or a call from another thread returns an empty array and reports an error.
+
+## Start a New Trace
+
+Start a separate trace when one piece of work ends and unrelated work begins. For example, call `SentrySDK.start_new_trace()` before each match so its spans and events are grouped separately from earlier matches:
+
+```GDScript
+func prepare_match(match_id: String) -> void:
+	SentrySDK.start_new_trace()
+	SentrySDK.with_span("prepare_match", func(span: SentrySpan) -> void:
+		span.set_attribute("match.id", match_id)
+		_load_arena()
+		_spawn_players()
+	)
+```
+
+Existing spans keep the trace they started on, as does telemetry captured while they are active. End the previous operation's spans before starting a new trace if you want subsequent work to use only the new trace.
+
+## Verify
+
+Run the request with a sample rate of `1.0`. Inspect the outgoing headers using your backend's request logging or, for Web exports, the browser's network tools. Confirm that `sentry-trace` and `baggage` reach the backend, along with `traceparent` if enabled.
+
+Then check Sentry for the game span and backend operation in the same trace. Headers alone confirm that the game sent the context; the connected trace confirms that the backend continued it. If a Web request is blocked, check <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">CORS configuration</PlatformLink>.
