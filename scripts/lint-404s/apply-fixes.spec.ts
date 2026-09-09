@@ -1,6 +1,10 @@
+import {mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+
 import {describe, expect, test} from 'vitest';
 
-import {replaceLinkDestinations, validateFix} from './apply-fixes';
+import {applyFixes, replaceLinkDestinations, validateFix} from './apply-fixes';
 
 describe('validateFix', () => {
   test('accepts internal URL replacements in documentation files', () => {
@@ -66,5 +70,48 @@ describe('replaceLinkDestinations', () => {
     expect(replaceLinkDestinations(content, fix)).toBe(
       content.replace('to="./old/"', 'to="/new/"')
     );
+  });
+
+  test('does not replace link-shaped values in frontmatter', () => {
+    const content = [
+      '---',
+      'title: "[Metadata](./old/)"',
+      '---',
+      '',
+      '[Rendered](./old/)',
+    ].join('\n');
+
+    expect(replaceLinkDestinations(content, fix)).toBe(
+      content.replace('[Rendered](./old/)', '[Rendered](/new/)')
+    );
+  });
+});
+
+describe('applyFixes', () => {
+  test('rejects chained replacements before modifying a file', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'lint-404-fixes-'));
+    const docs = path.join(root, 'docs');
+    const file = path.join(docs, 'example.mdx');
+    const original = '[First](/a/)\n[Second](/b/)\n';
+
+    try {
+      await mkdir(docs);
+      await writeFile(file, original);
+
+      await expect(
+        applyFixes(
+          {
+            fixes: [
+              {file: 'docs/example.mdx', oldUrl: '/a/', newUrl: '/b/'},
+              {file: 'docs/example.mdx', oldUrl: '/b/', newUrl: '/c/'},
+            ],
+          },
+          root
+        )
+      ).rejects.toThrow('Chained link fixes are not allowed');
+      expect(await readFile(file, 'utf8')).toBe(original);
+    } finally {
+      await rm(root, {recursive: true, force: true});
+    }
   });
 });

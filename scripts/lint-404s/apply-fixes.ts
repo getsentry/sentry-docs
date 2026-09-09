@@ -1,4 +1,5 @@
-import {lstat, readFile, writeFile} from 'node:fs/promises';
+import {constants} from 'node:fs';
+import {open, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -45,13 +46,19 @@ export function validateFix(fix: LinkFix): void {
 export function replaceLinkDestinations(content: string, fix: LinkFix): string {
   validateFix(fix);
   const ranges: Array<{end: number; start: number}> = [];
+  const frontmatterEnd = content.match(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\r?\n/)?.[0]
+    .length;
   const tree = createProcessor({format: 'mdx'}).parse(content);
 
   visit(tree, node => {
     if (node.type === 'link' && node.url === fix.oldUrl && node.position) {
       const start = node.position.start.offset;
       const end = node.position.end.offset;
-      if (start === undefined || end === undefined) {
+      if (
+        start === undefined ||
+        end === undefined ||
+        (frontmatterEnd !== undefined && start < frontmatterEnd)
+      ) {
         return;
       }
       const source = content.slice(start, end);
@@ -83,7 +90,11 @@ export function replaceLinkDestinations(content: string, fix: LinkFix): string {
         }
         const start = attribute.position.start.offset;
         const end = attribute.position.end.offset;
-        if (start === undefined || end === undefined) {
+        if (
+          start === undefined ||
+          end === undefined ||
+          (frontmatterEnd !== undefined && start < frontmatterEnd)
+        ) {
           continue;
         }
         const source = content.slice(start, end);
@@ -126,7 +137,7 @@ export async function applyFixes(
     throw new Error('Expected between 1 and 50 link fixes.');
   }
 
-  const changedFiles = new Set<string>();
+  const fixesByFile = new Map<string, LinkFix[]>();
   const seen = new Set<string>();
   for (const fix of input.fixes) {
     validateFix(fix);
@@ -135,24 +146,60 @@ export async function applyFixes(
       throw new Error(`Duplicate link fix: ${fix.file} ${fix.oldUrl}`);
     }
     seen.add(key);
-
-    const absolutePath = path.resolve(root, fix.file);
-    const relativePath = path.relative(root, absolutePath);
-    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-      throw new Error(`Link fix escapes the repository: ${fix.file}`);
-    }
-    const stats = await lstat(absolutePath);
-    if (!stats.isFile() || stats.isSymbolicLink()) {
-      throw new Error(`Link fix target must be a regular file: ${fix.file}`);
-    }
-
-    const content = await readFile(absolutePath, 'utf8');
-    const updated = replaceLinkDestinations(content, fix);
-    await writeFile(absolutePath, updated);
-    changedFiles.add(fix.file);
+    const fileFixes = fixesByFile.get(fix.file) ?? [];
+    fileFixes.push(fix);
+    fixesByFile.set(fix.file, fileFixes);
   }
 
-  return [...changedFiles];
+  for (const [file, fixes] of fixesByFile) {
+    const oldUrls = new Set(fixes.map(fix => fix.oldUrl));
+    for (const fix of fixes) {
+      if (oldUrls.has(fix.newUrl)) {
+        throw new Error(`Chained link fixes are not allowed in ${file}: ${fix.newUrl}`);
+      }
+    }
+  }
+
+  for (const [file, fixes] of fixesByFile) {
+    const absolutePath = path.resolve(root, file);
+    const relativePath = path.relative(root, absolutePath);
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      throw new Error(`Link fix escapes the repository: ${file}`);
+    }
+
+    const handle = await open(absolutePath, constants.O_RDWR | constants.O_NOFOLLOW);
+    try {
+      const stats = await handle.stat();
+      if (!stats.isFile()) {
+        throw new Error(`Link fix target must be a regular file: ${file}`);
+      }
+
+      let updated = await handle.readFile('utf8');
+      for (const fix of fixes) {
+        updated = replaceLinkDestinations(updated, fix);
+      }
+
+      const data = Buffer.from(updated);
+      await handle.truncate(0);
+      let offset = 0;
+      while (offset < data.length) {
+        const {bytesWritten} = await handle.write(
+          data,
+          offset,
+          data.length - offset,
+          offset
+        );
+        if (bytesWritten === 0) {
+          throw new Error(`Failed to write link fixes to ${file}`);
+        }
+        offset += bytesWritten;
+      }
+    } finally {
+      await handle.close();
+    }
+  }
+
+  return [...fixesByFile.keys()];
 }
 
 async function main(): Promise<void> {
