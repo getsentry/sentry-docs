@@ -74,14 +74,14 @@ The `Weekly Full 404 Check` workflow runs every Sunday at 04:00 UTC. It builds
 workflow artifact.
 
 When the scan finds broken links, the workflow uses Claude Code with the
-repository's existing `ANTHROPIC_API_KEY` to implement and validate fixes. It
-then restricts changes to existing Markdown and MDX documentation files, runs
-tests and a second full scan, and uses a narrowly scoped internal GitHub App
-token to push a stable bot branch and open one pull request for human review.
-Claude cannot change executable redirect or source files and does not receive
-the write token or Git/PR tools. If that PR is still open on the next run, the
-workflow adds the new report URL to it instead of creating a duplicate. The
-workflow never enables auto-merge.
+repository's existing `ANTHROPIC_API_KEY` to propose schema-validated URL
+replacements. Claude has read/search tools only and cannot edit files. A trusted
+script accepts only exact link-destination substitutions in existing Markdown
+and MDX documentation, rejects executable or textual changes, runs tests and a
+second full scan, and uses a narrowly scoped internal GitHub App token to push a
+stable bot branch and open one pull request for human review. If that PR is
+still open on the next run, the workflow adds the new report URL to it instead
+of creating a duplicate. The workflow never enables auto-merge.
 
 The workflow depends on the same `SENTRY_INTERNAL_APP_ID` and
 `SENTRY_INTERNAL_APP_PRIVATE_KEY` configuration used by the existing scheduled
