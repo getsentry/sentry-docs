@@ -17,8 +17,8 @@ Move scrubbing to `beforeSendSpan` and guard on `is_segment`, and move dropping 
 ```js
 // Before
 Sentry.init({
-  beforeSendTransaction: event => {
-    if (event.transaction === 'GET /health') {
+  beforeSendTransaction: (event) => {
+    if (event.transaction === "GET /health") {
       return null;
     }
     event.transaction = scrubIds(event.transaction);
@@ -28,8 +28,8 @@ Sentry.init({
 
 // After
 Sentry.init({
-  ignoreSpans: ['GET /health'],
-  beforeSendSpan: span => {
+  ignoreSpans: ["GET /health"],
+  beforeSendSpan: (span) => {
     if (span.is_segment) {
       span.name = scrubIds(span.name);
     }
@@ -38,4 +38,6 @@ Sentry.init({
 });
 ```
 
-Scope `tags` and `extra` are not carried over to streamed spans. Use `Sentry.setAttribute()` or `Sentry.setAttributes()`.
+Ignoring a service span drops its children too. Because `ignoreSpans` applies to every span, [narrow filters with attributes](#ignore-transactions-removed) when child spans share a name.
+
+Scope `tags` and `extra` [no longer apply to spans](#scope-attributes). Use `Sentry.setAttribute()` or `Sentry.setAttributes()`.

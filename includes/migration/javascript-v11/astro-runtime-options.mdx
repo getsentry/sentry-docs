@@ -14,14 +14,14 @@ Runtime SDK options (`dsn`, `environment`, `release` as a string, `sampleRate`, 
 
 Keep build-time options in `astro.config.mjs`:
 
-```ts
+```js {filename:astro.config.mjs}
 export default defineConfig({
   integrations: [
     sentry({
-      org: 'my-org',
-      project: 'my-project',
+      org: "my-org",
+      project: "my-project",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-      release: { name: '1.0.0' },
+      release: { name: "1.0.0" },
       debug: true,
     }),
   ],
@@ -30,15 +30,17 @@ export default defineConfig({
 
 Move runtime options to `sentry.client.config.ts` or `sentry.server.config.ts`:
 
-```ts
-import * as Sentry from '@sentry/astro';
+```ts {filename:sentry.client.config.ts}
+import * as Sentry from "@sentry/astro";
 
 Sentry.init({
-  dsn: 'https://example@sentry.io/123',
-  release: '1.0.0',
-  environment: 'production',
+  dsn: "___PUBLIC_DSN___",
+  release: "1.0.0",
+  environment: "production",
   tracesSampleRate: 0.5,
 });
 ```
 
 To customize or remove Replay, create a `sentry.client.config.ts`.
+
+On `sentryAstro()`, `release` configures source map uploads and `debug` controls build-time logging. If you have no config files, the generated default snippets still pick up those values. The generated client snippet includes Replay with default sample rates.

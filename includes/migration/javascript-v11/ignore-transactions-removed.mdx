@@ -10,20 +10,24 @@ platformCategory: all
 order: 70
 ---
 
-`ignoreTransactions` no-ops. `ignoreSpans` now takes effect when a span starts, and dropping a segment span drops its children with it.
+`ignoreTransactions` has no effect in stream mode because no transaction events are produced. `ignoreSpans` now takes effect when a span starts, and dropping a service span drops its children with it.
 
 ```js
 // Before
-Sentry.init({ ignoreTransactions: ['GET /health'] });
+Sentry.init({ ignoreTransactions: ["GET /health"] });
 
 // After
-Sentry.init({ ignoreSpans: ['GET /health'] });
+Sentry.init({ ignoreSpans: ["GET /health"] });
 ```
 
 `ignoreSpans` matches on span `name` and applies to every span, so narrow the filter if child spans share a name:
 
 ```js
 Sentry.init({
-  ignoreSpans: [{ name: 'GET /health', attributes: { 'sentry.op': 'http.server' } }],
+  ignoreSpans: [
+    { name: "GET /health", attributes: { "sentry.op": "http.server" } },
+  ],
 });
 ```
+
+Span names may change after a span starts. For rules based on URLs or query text, [match on attributes available at span start](#span-name-changes).

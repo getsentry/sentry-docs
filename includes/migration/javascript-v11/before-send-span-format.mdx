@@ -25,10 +25,10 @@ Update the callback:
 ```js
 // Before
 Sentry.init({
-  beforeSendSpan: span => {
-    if (span.op === 'db.query') {
+  beforeSendSpan: (span) => {
+    if (span.op === "db.query") {
       span.description = scrub(span.description);
-      span.data['db.statement'] = scrub(span.data['db.statement']);
+      span.data["db.statement"] = scrub(span.data["db.statement"]);
     }
     return span;
   },
@@ -36,14 +36,18 @@ Sentry.init({
 
 // After
 Sentry.init({
-  beforeSendSpan: span => {
-    if (span.attributes?.['sentry.op'] === 'db.query') {
+  beforeSendSpan: (span) => {
+    if (span.attributes["sentry.op"] === "db.query") {
       span.name = scrub(span.name);
-      span.attributes['db.statement'] = scrub(span.attributes['db.statement']);
+      span.attributes["db.query.text"] = scrub(
+        span.attributes["db.query.text"]
+      );
     }
     return span;
   },
 });
 ```
 
-Use `ignoreSpans` to drop spans; returning `null` is a no-op. A callback that does not match your `traceLifecycle` is never invoked: wrap it in `Sentry.withStaticSpan()` for `'static'`, leave it unwrapped for `'stream'`.
+The `status` field is always set to `'ok'` or `'error'`. The finer-grained v10 statuses map to `'error'`, with the original value kept in `attributes['sentry.status.message']`.
+
+Use `ignoreSpans` to drop spans. `beforeSendSpan` can only change spans, not drop them. A callback that does not match your `traceLifecycle` is never invoked: wrap it in `Sentry.withStaticSpan()` for `'static'`, leave it unwrapped for `'stream'`. Turn on debug logging to see a warning about a mismatch.

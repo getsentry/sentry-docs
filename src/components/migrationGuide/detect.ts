@@ -203,7 +203,16 @@ export const FRAMEWORK_PACKAGES: Array<{
   {pkg: '@sentry/react', guides: ['react'], pattern: /"@sentry\/react"\s*:/},
   {
     pkg: '@sentry/node',
-    guides: ['node', 'connect', 'express', 'fastify', 'firebase', 'hapi', 'koa'],
+    guides: [
+      'node',
+      'connect',
+      'express',
+      'fastify',
+      'firebase',
+      'hapi',
+      'koa',
+      'mastra',
+    ],
     pattern: /"@sentry\/node"\s*:/,
   },
   // The bare browser SDK belongs to the platform page rather than a guide, which

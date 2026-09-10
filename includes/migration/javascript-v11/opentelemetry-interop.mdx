@@ -5,15 +5,13 @@ phase: code-changes
 category: behavior
 severity: behavior-change
 frameworks: all
-features: [tracing]
+features: [tracing, custom-otel]
 platformCategory: server
 order: 120
 ---
 
-Most server SDKs no longer set up an OpenTelemetry tracer provider and produce native Sentry spans instead. Only `@sentry/nextjs` and `@sentry/sveltekit` still register a lightweight OpenTelemetry-compatible provider. `@opentelemetry/api` is the only remaining OpenTelemetry dependency.
+Most server SDKs no longer register an OpenTelemetry tracer provider. They produce native Sentry spans and ignore spans created through `@opentelemetry/api`. Only `@sentry/nextjs` and `@sentry/sveltekit` register a lightweight OpenTelemetry-compatible provider by default to capture framework spans.
 
-Nothing to do if you only use the Sentry SDK. If you run your own OpenTelemetry setup, read these:
+If you only use the Sentry SDK, tracing works as before. If your code or a library creates spans through `@opentelemetry/api`, set [`enableOpenTelemetrySetup: true`](#enable-opentelemetry-setup) to send those spans to Sentry.
 
-- [`skipOpenTelemetrySetup` is replaced by `enableOpenTelemetrySetup`](#enable-opentelemetry-setup)
-- [Custom OpenTelemetry setups must export over OTLP](#custom-otel-setup)
-- [`otlpIntegration` moved and lost its exporter options](#otlp-integration-changes)
+If you run your own OpenTelemetry pipeline, follow [Custom OpenTelemetry setups](#custom-otel-setup) and use [`openTelemetryIntegration()`](#otlp-integration-changes) to connect Sentry events to it.

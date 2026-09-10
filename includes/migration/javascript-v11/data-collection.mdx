@@ -10,7 +10,7 @@ platformCategory: all
 order: 10
 ---
 
-`sendDefaultPii` was replaced by `dataCollection`, which controls each category individually. Leaving `dataCollection` unset collects most categories by default, where the unset `sendDefaultPii` was restrictive.
+`sendDefaultPii` was replaced by `dataCollection`, which controls each category individually. Leaving `dataCollection` unset collects everything by default. In v10, an unset `sendDefaultPii` was restrictive.
 
 | Category              | v10 default (`sendDefaultPii` off) | v11 default          |
 | --------------------- | ---------------------------------- | -------------------- |
@@ -34,11 +34,11 @@ Sentry.init({
     userInfo: false,
     cookies: false,
     httpHeaders: {
-      request: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
-      response: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+      request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     },
     httpBodies: [],
-    urlQueryParams: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+    urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     genAI: { inputs: false, outputs: false },
     databaseQueryData: false,
     graphQL: { document: false, variables: false },
@@ -46,4 +46,6 @@ Sentry.init({
 });
 ```
 
-Review your data-scrubbing config, especially for request and response bodies. `cookies`, `urlQueryParams`, and the `httpHeaders` fields also accept `{ allow: string[] }` or `{ deny: string[] }`. See the [`dataCollection` docs](https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection).
+Sentry scrubs values whose key looks sensitive, such as `auth`, `token`, `secret`, or `password`. This is best effort and matches on the key name. Credentials in other fields can still reach Sentry. Review your <PlatformLink to="/data-management/sensitive-data/">data scrubbing</PlatformLink> configuration, especially for request and response bodies.
+
+`cookies`, `urlQueryParams`, and the `httpHeaders` fields also accept `true`, `false`, `{ allow: string[] }`, or `{ deny: string[] }`. See the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> for all categories.
