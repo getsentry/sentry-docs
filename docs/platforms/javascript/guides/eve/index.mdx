@@ -1,0 +1,205 @@
+---
+title: Eve
+description: Learn how to send Eve agent traces, conversations, and errors to Sentry with the Sentry Node SDK.
+sdk: sentry.javascript.node
+fallbackGuide: javascript.node
+icon: eve
+categories:
+  - javascript
+  - server
+  - server-node
+keywords:
+  - eve
+  - ai
+  - agents
+  - agent tracing
+---
+
+[Eve](https://eve.dev/) is Vercel's filesystem-first framework for building durable backend AI agents on top of the Vercel AI SDK. This guide sets up the `@sentry/node` SDK inside an Eve app so agent turns, model calls, tool executions, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Alert>
+
+This guide covers the Sentry SDK-based setup, which replaces the earlier OTLP instrumentation. It requires JavaScript SDK version `11.0.0-beta.3` or later.
+
+</Alert>
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- An Eve application.
+- `@sentry/node` version `11.0.0-beta.3` or later. The SDK runs in Node.js only; it doesn't support browser or edge runtimes.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+Then install the Sentry Node SDK:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.0.0-beta.3
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.0.0-beta.3
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.0.0-beta.3
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.0.0-beta.3 @sentry/profiling-node@^11.0.0-beta.3
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.0.0-beta.3 @sentry/profiling-node@^11.0.0-beta.3
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.0.0-beta.3 @sentry/profiling-node@^11.0.0-beta.3
+```
+
+</OnboardingOption>
+
+## Configure
+
+Create `agent/instrumentation.ts` and initialize Sentry. Eve auto-discovers `agent/instrumentation.ts` and runs it at server startup, before it loads your agent and the AI SDK:
+
+```typescript {filename:agent/instrumentation.ts}
+import * as Sentry from "@sentry/node";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/node/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set profileSessionSampleRate to 1.0 to profile every session.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+```
+
+With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. Eve runs `agent/instrumentation.ts` before your agent and the AI SDK load, so this works from the first turn without the `--import` flag, and you don't initialize `@sentry/node` anywhere else. To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below.
+
+<OnboardingOption optionId="performance">
+
+To also capture prompts, model outputs, and tool details on your agent spans — so the Agent Tracing transcript shows the full exchange — add `dataCollection`:
+
+```typescript {filename:agent/instrumentation.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  // Record generative AI inputs and outputs on your agent spans
+  dataCollection: {},
+});
+```
+
+Passing `dataCollection: {}` opts generative AI inputs and outputs **on**, along with other permissive defaults (bodies, cookies, user info, and more). Review the data your agent handles and tighten these before production. See the <PlatformLink to="/agent-tracing/#privacy-controls">Agent Tracing privacy controls</PlatformLink> for how to turn inputs and outputs off.
+
+</OnboardingOption>
+
+## Verify
+
+Start Eve and send a prompt that calls a tool. Then open [Agent Tracing](/product/agents/) in Sentry and select the run. The timeline shows the model calls, tool calls, token usage, and latency for that turn, plus any errors your agent threw.
+
+If no data appears, confirm that:
+
+- The `dsn` belongs to the Sentry project you're viewing.
+- `tracesSampleRate` is greater than `0`.
+- Your app completed at least one agent turn after you added `agent/instrumentation.ts`.
+
+</StepConnector>
+
+## Link Conversations
+
+Each Eve turn is its own durable workflow, so a session's turns land in separate traces. To group them into a single [Conversation](/product/agents/conversations/) in the Agents dashboards, add the `eveConversationHook` in an `agent/hooks/sentry.ts` file:
+
+```typescript {filename:agent/hooks/sentry.ts}
+import * as Sentry from "@sentry/node";
+import { defineHook } from "eve/hooks";
+
+export default defineHook(Sentry.eveConversationHook());
+```
+
+This tags every turn of a session with the durable session id (`ctx.session.id`) as the Sentry conversation id, so all of the session's AI spans share the same `gen_ai.conversation.id` and group into one conversation.
+
+To derive the conversation id yourself — for example, to group a subagent's turns under a root or parent session — pass `getConversationId`:
+
+```typescript {filename:agent/hooks/sentry.ts}
+import * as Sentry from "@sentry/node";
+import { defineHook } from "eve/hooks";
+
+export default defineHook(
+  Sentry.eveConversationHook({
+    getConversationId: (context) => context.session.id,
+  })
+);
+```
+
+## Instrument Other Dependencies
+
+The setup above instruments the AI SDK, HTTP, and `fetch` with no bootstrapping. To also instrument the rest of your Node app — database clients like `pg` or `mysql`, and other libraries that patch themselves as they load — start Eve with Sentry's ESM loader preloaded, so it can hook those modules at load time:
+
+```bash
+NODE_OPTIONS='--import=@sentry/node/import' eve start
+```
+
+The loader can only transform modules that Eve leaves external to its server bundle. If Eve inlines a dependency, the loader can't hook it, so the module is silently never instrumented. Rather than hardcode that list, use `getInstrumentedModuleNames()` from `@sentry/node` to keep every package Sentry instruments external in `agent/agent.ts`:
+
+```typescript {filename:agent/agent.ts}
+import { getInstrumentedModuleNames } from "@sentry/node";
+import { defineAgent } from "eve";
+
+export default defineAgent({
+  build: {
+    externalDependencies: getInstrumentedModuleNames(),
+  },
+});
+```
+
+`getInstrumentedModuleNames()` returns the authoritative set of packages Sentry instruments through the loader (database clients like `pg` and `mysql`, and others), so you don't have to maintain the list yourself. The AI SDK isn't part of it — it reports through a native diagnostics channel that works without the loader.
+
+## Next Steps
+
+- [Name your agents](/product/agents/naming/) so you can identify them in the Agents Dashboard.
+- [Track AI agent spend with dashboards and alerts](https://sentry.io/cookbook/monitor-ai-agent-spend-with-dashboards-and-alerts/): build a dashboard for cost, tokens, models, and conversations.
+- Review Eve's [instrumentation guide](https://eve.dev/docs/guides/instrumentation) for the framework side of the setup.
+
+## Supported Versions
+
+- `@sentry/node`: `>=11.0.0-beta.3`
+- `eve`: tested with `0.52.3` and later

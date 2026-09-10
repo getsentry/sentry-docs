@@ -175,7 +175,7 @@ export async function Home() {
             <AgentQuickLink
               to="/agent-tracing/eve/"
               title="Eve"
-              desc="Send Eve agent traces to Sentry over OTLP."
+              desc="Send Eve agent traces, conversations, and errors to Sentry."
               icon={<PlatformIcon platform="eve" />}
             />
             <AgentQuickLink
