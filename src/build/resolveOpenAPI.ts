@@ -98,6 +98,11 @@ function slugify(s: string): string {
 
 const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
 
+// Sentry prepends this notice to the description of every experimental operation, so
+// that consumers with no badge of their own still warn the reader. We render a badge,
+// so strip it rather than saying the same thing twice.
+const EXPERIMENTAL_NOTICE_REGEX = /^\*\*Experimental:\*\*[^\n]*\n+/;
+
 function isDeprecatedOperationId(operationId: string | undefined): boolean {
   return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
 }
@@ -136,6 +141,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
       const isDeprecated =
         isDeprecatedOperationId(apiData.operationId) ||
         isDeprecatedOperationId(apiData.summary);
+      const isExperimental = apiData['x-sentry-experimental'] === true;
       const titleSource = apiData.summary || apiData.operationId || '';
       const cleanName = stripDeprecatedPrefix(titleSource);
 
@@ -149,13 +155,15 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           method,
           name: cleanName,
           deprecated: isDeprecated,
-          experimental: apiData['x-sentry-experimental'] === true,
+          experimental: isExperimental,
           server,
           slug: slugify(cleanName),
           summary: apiData.summary
             ? stripDeprecatedPrefix(apiData.summary)
             : apiData.summary,
-          descriptionMarkdown: apiData.description,
+          descriptionMarkdown: isExperimental
+            ? apiData.description?.replace(EXPERIMENTAL_NOTICE_REGEX, '')
+            : apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],
