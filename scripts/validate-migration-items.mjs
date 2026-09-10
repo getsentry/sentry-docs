@@ -3,11 +3,9 @@
  *
  * Each item is a standalone MDX file with tagged frontmatter, rendered by the
  * interactive migration guide at
- * `docs/platforms/javascript/common/migration/v10-to-v11/interactive.mdx`. Because
- * the page
- * filters, counts and serializes items based on that frontmatter, a mistyped
- * facet silently drops an item from a user's guide rather than failing loudly.
- * This script is the guard against that.
+ * `docs/platforms/javascript/common/migration/v10-to-v11/interactive.mdx`.
+ * Frontmatter controls platform filtering, reading order and item anchors.
+ * Validate it so mistakes cannot silently drop items from the guide.
  *
  * `loadItems` is called from `migrationGuide.spec.ts`, so `pnpm test` fails on
  * invalid frontmatter. Run `pnpm migration-items` for the breakdown by phase,
@@ -35,14 +33,6 @@ export const CATEGORIES = [
   'type',
 ];
 export const SEVERITIES = ['action-required', 'behavior-change', 'informational'];
-export const FEATURES = [
-  'tracing',
-  'profiling',
-  'logs',
-  'metrics',
-  'ai-agents',
-  'custom-otel',
-];
 export const PLATFORM_CATEGORIES = ['browser', 'server', 'serverless', 'all'];
 
 /** Reads and validates every item. Returns `{items, errors}`. */
@@ -97,10 +87,6 @@ export function loadItems(root = process.cwd()) {
           .forEach(f => fail(`unknown framework "${f}"`));
       }
     }
-    (data.features ?? [])
-      .filter(f => !FEATURES.includes(f))
-      .forEach(f => fail(`unknown feature "${f}"`));
-
     // Items are meant to be scannable: what changed, then what to do about it.
     // These checks keep the collection from drifting back into prose.
     const body = content.trim();
@@ -117,8 +103,8 @@ export function loadItems(root = process.cwd()) {
     if (/[\u2014\u2013]/.test(body)) {
       fail('uses an em or en dash, rewrite the sentence');
     }
-    // Items are re-ordered by severity and hidden by the reader's filters, so
-    // "the next three items" can point at nothing. Link the item by anchor.
+    // Different platforms show different items, so "the next three items"
+    // can point at nothing. Link the item by anchor.
     for (const positional of [
       /\b(next|previous|following|preceding)\s+(\w+\s+)?items?\b/i,
       /\bitems?\s+(that\s+)?(follows?|precedes?)\b/i,
@@ -166,16 +152,6 @@ function main() {
   CATEGORIES.forEach(c =>
     console.log(`  ${pad(c, 16)}${count(items, i => i.category === c)}`)
   );
-
-  const unusedFeatures = FEATURES.filter(
-    f => !count(items, i => (i.features ?? []).includes(f))
-  );
-  if (unusedFeatures.length) {
-    // A facet no item carries renders a checkbox that filters nothing, which
-    // reads as broken to anyone who ticks it.
-    console.log('\nWARNING: facets with no items (remove them from the filter panel):');
-    unusedFeatures.forEach(f => console.log(`  ${f}`));
-  }
 
   if (errors.length) {
     console.log(`\n${errors.length} error(s):`);
