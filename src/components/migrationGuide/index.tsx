@@ -1,6 +1,6 @@
 import {readdirSync} from 'fs';
 import path from 'path';
-import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
+import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
@@ -39,13 +39,6 @@ export async function MigrationGuide() {
   // only universal items apply.
   const framework = platformOrGuide?.type === 'guide' ? platformOrGuide.name : undefined;
   const categories: PlatformCategory[] = platformOrGuide?.categories ?? [];
-
-  // Use the full platform title ("Browser JavaScript") instead of the picker label.
-  const scopeNode = platformOrGuide
-    ? nodeForPath(rootNode, platformOrGuide.url.split('/').filter(Boolean))
-    : undefined;
-  const scopeLabel =
-    scopeNode?.frontmatter.title ?? platformOrGuide?.title ?? 'your setup';
 
   const slugs = readdirSync(path.join(process.cwd(), ITEMS_DIR))
     .filter(file => file.endsWith('.mdx'))
@@ -96,8 +89,6 @@ export async function MigrationGuide() {
         body: <ItemBody key={item.id} mdxSource={item.mdxSource} />,
       }))}
       framework={framework ?? 'javascript'}
-      frameworkLabel={scopeLabel}
-      totalItems={slugs.length}
     />
   );
 }

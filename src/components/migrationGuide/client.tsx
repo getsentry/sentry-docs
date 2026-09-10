@@ -6,6 +6,8 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
+import {AgentPromptCallout} from '../agentSetupCallout/promptCallout';
+import calloutStyles from '../agentSetupCallout/style.module.scss';
 import {MigrationItem, PHASES, SEVERITIES} from './constants';
 import styles from './styles.module.scss';
 
@@ -21,20 +23,10 @@ type Props = {
   bodies: ItemBody[];
   /** Guide slug, used to scope checklist storage and label the agent prompt. */
   framework: string;
-  /** Human-readable platform or guide name, for the headline. */
-  frameworkLabel: string;
   items: MigrationItem[];
-  /** Item count before framework filtering, used for the headline. */
-  totalItems: number;
 };
 
-export function MigrationGuideClient({
-  items,
-  bodies: renderedBodies,
-  framework,
-  frameworkLabel,
-  totalItems,
-}: Props) {
+export function MigrationGuideClient({items, bodies: renderedBodies, framework}: Props) {
   const bodies = useMemo(
     () => new Map(renderedBodies.map(({id, body}) => [id, body])),
     [renderedBodies]
@@ -78,14 +70,7 @@ export function MigrationGuideClient({
 
   return (
     <div className={styles.guide}>
-      <Summary
-        total={totalItems}
-        applicable={items.length}
-        frameworkLabel={frameworkLabel}
-        actionRequired={items.filter(item => item.severity === 'action-required').length}
-      />
-
-      <Toolbar items={items} framework={framework} />
+      <MigrationAgentCallout items={items} framework={framework} />
 
       {PHASES.map(phase => {
         const phaseItems = items.filter(item => item.phase === phase.id);
@@ -129,29 +114,13 @@ function toggled(set: Set<string>, id: string): Set<string> {
   return next;
 }
 
-function Summary({
-  total,
-  applicable,
-  frameworkLabel,
-  actionRequired,
+function MigrationAgentCallout({
+  items,
+  framework,
 }: {
-  actionRequired: number;
-  applicable: number;
-  frameworkLabel: string;
-  total: number;
+  framework: string;
+  items: MigrationItem[];
 }) {
-  return (
-    <div className={styles.summary}>
-      <p className={styles.summaryHeadline}>
-        <strong>{total}</strong> changes in v11 · <strong>{applicable}</strong> steps for{' '}
-        {frameworkLabel} · <strong>{actionRequired}</strong> marked &quot;Action
-        required&quot;
-      </p>
-    </div>
-  );
-}
-
-function Toolbar({items, framework}: {framework: string; items: MigrationItem[]}) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
   const {emit} = usePlausibleEvent();
@@ -191,16 +160,20 @@ function Toolbar({items, framework}: {framework: string; items: MigrationItem[]}
   }, [items, framework, emit]);
 
   return (
-    <div className={styles.toolbar} data-mdast="ignore">
-      <button type="button" className={styles.copyButton} onClick={copy}>
-        {copied ? 'Copied' : 'Copy for AI agent'}
-      </button>
-      <span className={styles.toolbarHint}>
-        {failed
-          ? 'Could not copy. Your browser blocked clipboard access, so select the steps below and copy them instead.'
-          : 'Paste into Claude Code, Cursor or any coding agent with access to your repo.'}
-      </span>
-    </div>
+    <AgentPromptCallout
+      title="Agent-Assisted Migration"
+      promptPreview="Upgrade the Sentry JavaScript SDK from v10 to v11."
+      copied={copied}
+      onCopy={copy}
+    >
+      <div className={calloutStyles.subRow}>
+        <span className={calloutStyles.description}>
+          {failed
+            ? 'Could not copy. Your browser blocked clipboard access, so select the steps below and copy them instead.'
+            : 'Copy the migration steps for your AI agent. Works with Cursor, Claude Code, Codex, and more.'}
+        </span>
+      </div>
+    </AgentPromptCallout>
   );
 }
 
