@@ -185,9 +185,40 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
   <PlatformSection notSupported={["javascript.deno"]}>
     ## Database Queries
 
-    By default, the Sentry SDK sends SQL queries to Sentry. The SQL queries can include PII information if the statement is not parametrized.
+    By default, the Sentry SDK sends database queries to Sentry. The query text is parameterized: literal data values are replaced with placeholders. This applies to SQL and MongoDB queries.
 
-    MongoDB queries are sent as well, but the Sentry SDK will not send the full MongoDB query. Instead, it will send a parameterized version of the query.
+    The SDK also sends the data inside those queries by default: bound query parameters, write payloads, and returned rows. This data can include PII. Use the `dataCollection.databaseQueryData` option to control it. Set it to `false` to stop sending this data:
+
+    ```JavaScript
+    Sentry.init({
+      dsn: "___PUBLIC_DSN___",
+      dataCollection: {
+        databaseQueryData: false,
+      },
+    });
+    ```
+
+    The parameterized query text and structural metadata, such as the database system, the operation, and the table, are always sent. If you turn this option off, you keep the query performance data.
+
+  </PlatformSection>
+
+  <PlatformSection notSupported={["javascript.deno"]}>
+    ## Queue Message Data
+
+    By default, the Sentry SDK sends the data passed to tasks within queues. For Kafka, this is the message key. Producers often use a user ID or a tenant ID as the message key, so this value can include PII.
+
+    Use the `dataCollection.queues` option to control this. Set it to `false` to stop sending the message key:
+
+    ```JavaScript
+    Sentry.init({
+      dsn: "___PUBLIC_DSN___",
+      dataCollection: {
+        queues: false,
+      },
+    });
+    ```
+
+    Structural metadata, such as the messaging system, the topic, the partition, and the offset, is always sent. If you turn this option off, you keep the queue performance data.
 
   </PlatformSection>
 
