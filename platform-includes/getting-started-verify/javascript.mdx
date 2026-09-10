@@ -46,22 +46,26 @@ To test your tracing configuration, update the previous code to simulate a longe
 
 Open the page in a browser and click the button to throw an error and create a trace.
 
+Look for `Example Frontend Span` in Sentry's **Traces** page. If you click the button while the pageload span is active, the manual span appears as its child.
+
+In SDK v11, the default `traceLifecycle: "stream"` sends spans in span envelopes instead of transaction envelopes. The pageload span and its completed child spans can arrive together in one span envelope.
+
 </SplitSectionText>
 
 <SplitSectionCode>
 
 ```html
 <script>
-  function triggerError() {
-       await Sentry.startSpan(
-        { name: "Example Frontend Span", op: "test" },
-        async () => {
-          await new Promise(resolve => setTimeout(resolve, 200));
+  async function triggerError() {
+    await Sentry.startSpan(
+      { name: "Example Frontend Span", op: "test" },
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
-          throw new Error("Sentry Test Error");
-        },
-      );
-     }
+        throw new Error("Sentry Test Error");
+      }
+    );
+  }
 </script>
 
 <button onclick="triggerError()">Break the World</button>
