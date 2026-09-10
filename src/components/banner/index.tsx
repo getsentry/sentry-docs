@@ -67,11 +67,11 @@ const BANNERS: BannerType[] = [
   },
   {
     appearsOn: ['^/product/agents/$', '^/platforms/.*/agent-tracing/'],
-    text: 'Join our',
+    text: "Join Sentry's",
     linkURL: 'https://sentry.io/resources/agent-tracing-series/',
-    linkText: 'Agent debugging series',
+    linkText: 'agent debugging series',
     textAfterLink:
-      ' on October 7th and 14th to learn best practices, including how Sentry debugs their own Agents.',
+      ' on October 7th and 14th to learn best practices, including how the Sentry team debugs their own agents.',
     expiresOn: '2026-10-13T23:59:59Z',
   },
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
