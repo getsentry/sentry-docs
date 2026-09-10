@@ -1,5 +1,6 @@
+import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
-import {open, readFile} from 'node:fs/promises';
+import {open, readFile, rename, rm} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -46,19 +47,15 @@ export function validateFix(fix: LinkFix): void {
 export function replaceLinkDestinations(content: string, fix: LinkFix): string {
   validateFix(fix);
   const ranges: Array<{end: number; start: number}> = [];
-  const frontmatterEnd = content.match(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\r?\n/)?.[0]
-    .length;
+  const frontmatterEnd =
+    content.match(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\r?\n/)?.[0].length ?? 0;
   const tree = createProcessor({format: 'mdx'}).parse(content);
 
   visit(tree, node => {
     if (node.type === 'link' && node.url === fix.oldUrl && node.position) {
       const start = node.position.start.offset;
       const end = node.position.end.offset;
-      if (
-        start === undefined ||
-        end === undefined ||
-        (frontmatterEnd !== undefined && start < frontmatterEnd)
-      ) {
+      if (start === undefined || end === undefined || start < frontmatterEnd) {
         return;
       }
       const source = content.slice(start, end);
@@ -90,11 +87,7 @@ export function replaceLinkDestinations(content: string, fix: LinkFix): string {
         }
         const start = attribute.position.start.offset;
         const end = attribute.position.end.offset;
-        if (
-          start === undefined ||
-          end === undefined ||
-          (frontmatterEnd !== undefined && start < frontmatterEnd)
-        ) {
+        if (start === undefined || end === undefined || start < frontmatterEnd) {
           continue;
         }
         const source = content.slice(start, end);
@@ -167,35 +160,41 @@ export async function applyFixes(
       throw new Error(`Link fix escapes the repository: ${file}`);
     }
 
-    const handle = await open(absolutePath, constants.O_RDWR | constants.O_NOFOLLOW);
+    const handle = await open(absolutePath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    let mode: number;
+    let updated: string;
     try {
       const stats = await handle.stat();
       if (!stats.isFile()) {
         throw new Error(`Link fix target must be a regular file: ${file}`);
       }
 
-      let updated = await handle.readFile('utf8');
+      mode = stats.mode;
+      updated = await handle.readFile('utf8');
       for (const fix of fixes) {
         updated = replaceLinkDestinations(updated, fix);
       }
-
-      const data = Buffer.from(updated);
-      await handle.truncate(0);
-      let offset = 0;
-      while (offset < data.length) {
-        const {bytesWritten} = await handle.write(
-          data,
-          offset,
-          data.length - offset,
-          offset
-        );
-        if (bytesWritten === 0) {
-          throw new Error(`Failed to write link fixes to ${file}`);
-        }
-        offset += bytesWritten;
-      }
     } finally {
       await handle.close();
+    }
+
+    const temporaryPath = `${absolutePath}.lint-404-${randomUUID()}.tmp`;
+    try {
+      const temporaryHandle = await open(
+        temporaryPath,
+        constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW,
+        mode
+      );
+      try {
+        await temporaryHandle.writeFile(updated, 'utf8');
+        await temporaryHandle.sync();
+      } finally {
+        await temporaryHandle.close();
+      }
+      await rename(temporaryPath, absolutePath);
+    } catch (error) {
+      await rm(temporaryPath, {force: true});
+      throw error;
     }
   }
 

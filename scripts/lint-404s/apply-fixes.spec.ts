@@ -88,6 +88,28 @@ describe('replaceLinkDestinations', () => {
 });
 
 describe('applyFixes', () => {
+  test('atomically applies a valid replacement', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'lint-404-fixes-'));
+    const docs = path.join(root, 'docs');
+    const file = path.join(docs, 'example.mdx');
+
+    try {
+      await mkdir(docs);
+      await writeFile(file, '[Link](/old/)\n');
+
+      await applyFixes(
+        {
+          fixes: [{file: 'docs/example.mdx', oldUrl: '/old/', newUrl: '/new/'}],
+        },
+        root
+      );
+
+      expect(await readFile(file, 'utf8')).toBe('[Link](/new/)\n');
+    } finally {
+      await rm(root, {recursive: true, force: true});
+    }
+  });
+
   test('rejects chained replacements before modifying a file', async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'lint-404-fixes-'));
     const docs = path.join(root, 'docs');
