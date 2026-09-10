@@ -5,7 +5,6 @@ import {useState} from 'react';
 import Select from 'react-select';
 import type {LayerData, SdkVersionIndex} from 'sentry-docs/build/awsLambdaLayerRegistry';
 import type {Runtime} from 'sentry-docs/build/awsLambdaRuntimes';
-import {BASE_REGISTRY_URL} from 'sentry-docs/build/shared';
 
 import {CodeBlock} from './codeBlock';
 import {CodeTabs} from './codeTabs';
@@ -106,7 +105,7 @@ export function LayerDetailClient({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${BASE_REGISTRY_URL}/aws-lambda-layers/${runtime}/${encodeURIComponent(sdkVersion)}`
+        `/api/aws-lambda-layers/${runtime}/${encodeURIComponent(sdkVersion)}`
       );
       if (!response.ok) {
         throw new Error(`The release registry returned HTTP ${response.status}.`);

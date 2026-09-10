@@ -1,4 +1,4 @@
-import {makeFetchCache} from './fetchCache';
+import { makeFetchCache } from './fetchCache';
 
 const RUNTIMES_URL = 'https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.md';
 
