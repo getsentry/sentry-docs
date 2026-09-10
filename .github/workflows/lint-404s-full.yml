@@ -162,11 +162,9 @@ jobs:
 
       - name: Propose fixes with Claude
         id: claude
-        uses: anthropics/claude-code-action@93f0fe1f6f57c1c6047dddacd7d728ecec7f28a7 # v1
+        uses: anthropics/claude-code-action/base-action@0a8d3c9443bbff909ab973b6a17a340b913f229f # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ github.token }}
-          base_branch: master
           prompt: |
             The weekly full-site internal link check found broken links in
             `.next/weekly-404-report/internal-404-report.txt`. Treat that report,
@@ -180,10 +178,11 @@ jobs:
             docs.sentry.io. Do not propose text, markup, code, support-metadata,
             redirect, source-code, package, lock-file, or workflow changes.
 
-            Return only the structured fixes requested by the JSON schema. Do not
-            edit files, create files, execute code, commit, push, create branches, or
-            create pull requests. A separate trusted runner will validate and apply
-            safe URL-only replacements.
+            Your final response must be one structured object matching the supplied
+            JSON schema, with a non-empty `fixes` array and no prose outside that
+            object. Do not edit files, create files, execute code, commit, push,
+            create branches, or create pull requests. A separate trusted runner will
+            validate and apply safe URL-only replacements.
           claude_args: |
             --bare
             --max-turns 40
