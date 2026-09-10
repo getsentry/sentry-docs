@@ -2,12 +2,15 @@
 title: Attachments
 description: File attachments associated with events and traces, including screenshots, minidumps, crash reports, and view hierarchies.
 spec_id: sdk/telemetry/attachments
-spec_version: 1.6.0
+spec_version: 1.7.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.7.0
+    date: 2026-09-08
+    summary: Disallowed sending attachments in separate envelopes
   - version: 1.6.0
     date: 2026-02-24
     summary: Added attachment placeholders for resumable uploads (experimental)
@@ -73,7 +76,7 @@ Attachments are distinguished by the `attachment_type` header on the envelope it
 
 ### Association Model
 
-Standard attachments are associated with an **event** via `event_id`. They can be sent in the same envelope as the event or separately (with caveats around independent dropping).
+Standard attachments are associated with an **event** via `event_id`. They must be sent in the same envelope as the event.
 
 Trace attachments (experimental) are associated with a **trace** via `trace_id` and are optionally linked to specific spans or logs.
 
@@ -91,8 +94,7 @@ Envelope item type `"attachment"`. Contains the raw payload of an attachment fil
 
 - This item **MAY** occur multiple times per envelope.
 - For **minidump** and **apple crash report** attachments, the corresponding `"event"` item **MUST** be sent within the same envelope.
-- Generic attachments can be ingested separately from their events. SDKs **SHOULD** send them in the same envelope, which allows for more efficient rate limiting and filtering.
-- Generic attachments sent in separate envelopes can be dropped independently of an event. To ensure consistent handling, send them in the same request.
+- Generic attachments **MUST** be sent in the same envelope as their corresponding event. This ensures consistent filtering and rate limiting.
 - The Sentry server supports special attachments to ingest event payloads for backwards compatibility. These are not part of the official public API and the behavior **MUST NOT** be relied upon.
 
 </SpecSection>
@@ -180,7 +182,7 @@ Attachment placeholders are an experimental feature, the protocol is subject to 
 
 Attachment placeholders use item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref+json"`. A placeholder contains a **reference** to an attachment uploaded elsewhere — it does _not_ contain the actual attachment payload. The purpose is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded separately.
 
-SDKs **SHOULD** send placeholders in the same envelope as the event the file is attached to.
+SDKs **MUST** send placeholders in the same envelope as the event the file is attached to.
 
 **Workflow:**
 
@@ -205,7 +207,7 @@ SDKs **SHOULD** send placeholders in the same envelope as the event the file is 
       | ----------------- | ------ | ------------ | -------------------------------------------------------------------|
       | `attachment_type` | String | **REQUIRED** | One of the values listed in [Attachment Types](#attachment-types). |
 
-      
+
    1. Get the location response header:
       ```
       HTTP/1.1 201 Created
@@ -376,6 +378,8 @@ Attachments **SHOULD** offer a flag `addToTransactions` that specifies whether t
 
 ```
 {"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
 {"type":"attachment","length":12,"filename":"log.txt","content_type":"text/plain"}
 Hello World!
 ```
@@ -394,6 +398,8 @@ Hello World!
 
 ```
 {"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
 {"type":"attachment","length":245,"filename":"view-hierarchy.json","content_type":"application/json","attachment_type":"event.view_hierarchy"}
 {"rendering_system":"compose","windows":[{"type":"com.example.MyActivity","width":1080,"height":1920,"visible":true,"children":[{"type":"android.widget.TextView","width":200,"height":48,"visible":true}]}]}
 ```
@@ -402,6 +408,8 @@ Hello World!
 
 ```
 {"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
 {"type":"attachment","content_type":"application/vnd.sentry.attachment-ref+json","length":123,"attachment_length":212341234,"filename":"myfile.log"}
 {"location":"/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz","content_type":"text/plain"}
 ```
