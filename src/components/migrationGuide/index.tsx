@@ -60,7 +60,6 @@ export async function MigrationGuide() {
         frameworks: data.frameworks as string[] | 'all',
         platformCategory: data.platformCategory as PlatformCategory | 'all',
         order: data.order as number,
-        markdown: doc.matter?.content ?? '',
         mdxSource: doc.mdxSource,
       };
     })

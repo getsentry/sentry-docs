@@ -4,11 +4,11 @@ import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback, useState} from 'react';
+import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 import {CodeBlock} from '../codeBlock';
-import {AgentPromptCallout} from './promptCallout';
 import {buildPrompt} from './shared';
 import styles from './style.module.scss';
 
@@ -58,12 +58,20 @@ export function AgentSetupCallout({skill, platformName}: Props) {
     : 'Your agent will set up Sentry automatically.';
 
   return (
-    <AgentPromptCallout
-      title="Agent-Assisted Setup"
-      promptPreview={prompt}
-      copied={copied}
-      onCopy={copyPrompt}
-    >
+    <div className={styles.wrapper} data-mdast="ignore">
+      <div className={styles.mainRow}>
+        <div className={styles.left}>
+          <span className={styles.title}>Agent-Assisted Setup</span>
+        </div>
+        <div className={styles.promptArea}>
+          <code className={styles.promptText}>{prompt}</code>
+        </div>
+        <button className={styles.copyButton} onClick={copyPrompt} type="button">
+          <Copy size={14} />
+          {copied ? 'Copied!' : 'Copy Prompt'}
+        </button>
+      </div>
+
       <div className={styles.subRow}>
         <span className={styles.description}>
           {description} Works with Cursor, Claude Code, Codex, and more.
@@ -98,6 +106,6 @@ export function AgentSetupCallout({skill, platformName}: Props) {
           </CodeBlock>
         </div>
       </details>
-    </AgentPromptCallout>
+    </div>
   );
 }

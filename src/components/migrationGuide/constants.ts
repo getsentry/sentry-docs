@@ -42,8 +42,6 @@ export type Severity = keyof typeof SEVERITIES;
 export interface MigrationItem {
   category: string;
   id: string;
-  /** Raw MDX body, used to build the copy-for-agent output. */
-  markdown: string;
   /** Curated position within a phase, from the item frontmatter. */
   order: number;
   phase: PhaseId;

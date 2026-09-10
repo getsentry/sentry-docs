@@ -1,13 +1,8 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import classNames from 'classnames';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-import {DocMetrics} from 'sentry-docs/metrics';
 
-import {AgentPromptCallout} from '../agentSetupCallout/promptCallout';
-import calloutStyles from '../agentSetupCallout/style.module.scss';
 import {MigrationItem, PHASES, SEVERITIES} from './constants';
 import styles from './styles.module.scss';
 
@@ -21,7 +16,7 @@ type Props = {
    * divergence instead of failing.
    */
   bodies: ItemBody[];
-  /** Guide slug, used to scope checklist storage and label the agent prompt. */
+  /** Guide slug, used to scope checklist storage. */
   framework: string;
   items: MigrationItem[];
 };
@@ -70,8 +65,6 @@ export function MigrationGuideClient({items, bodies: renderedBodies, framework}:
 
   return (
     <div className={styles.guide}>
-      <MigrationAgentCallout items={items} framework={framework} />
-
       {PHASES.map(phase => {
         const phaseItems = items.filter(item => item.phase === phase.id);
         if (phaseItems.length === 0) {
@@ -112,69 +105,6 @@ function toggled(set: Set<string>, id: string): Set<string> {
     next.add(id);
   }
   return next;
-}
-
-function MigrationAgentCallout({
-  items,
-  framework,
-}: {
-  framework: string;
-  items: MigrationItem[];
-}) {
-  const [copied, setCopied] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const {emit} = usePlausibleEvent();
-
-  const copy = useCallback(async () => {
-    emit('Copy AI Prompt', {
-      props: {page: window.location.pathname, title: 'v11 Migration Guide'},
-    });
-
-    try {
-      setFailed(false);
-      await navigator.clipboard.writeText(buildAgentPrompt(items, framework));
-      setCopied(true);
-      DocMetrics.copyAIPrompt(
-        window.location.pathname,
-        framework,
-        true,
-        'migration_guide'
-      );
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      // Denied permission, a non-secure context, or Safari's focus rules. Say so
-      // rather than leaving the button looking inert.
-      Sentry.logger.warn('clipboard.writeText failed', {
-        error: (error as Error)?.message,
-        errorName: (error as Error)?.name,
-      });
-      DocMetrics.copyAIPrompt(
-        window.location.pathname,
-        framework,
-        false,
-        'migration_guide'
-      );
-      setCopied(false);
-      setFailed(true);
-    }
-  }, [items, framework, emit]);
-
-  return (
-    <AgentPromptCallout
-      title="Agent-Assisted Migration"
-      promptPreview="Upgrade the Sentry JavaScript SDK from v10 to v11."
-      copied={copied}
-      onCopy={copy}
-    >
-      <div className={calloutStyles.subRow}>
-        <span className={calloutStyles.description}>
-          {failed
-            ? 'Could not copy. Your browser blocked clipboard access, so select the steps below and copy them instead.'
-            : 'Copy the migration steps for your AI agent. Works with Cursor, Claude Code, Codex, and more.'}
-        </span>
-      </div>
-    </AgentPromptCallout>
-  );
 }
 
 function Item({
@@ -219,51 +149,4 @@ function Item({
       <div className={styles.itemBody}>{body}</div>
     </div>
   );
-}
-
-/**
- * Builds the copy-for-agent payload with every step for the selected platform.
- */
-export function buildAgentPrompt(items: MigrationItem[], framework: string): string {
-  const lines = [
-    '# Upgrade the Sentry JavaScript SDK from v10 to v11',
-    '',
-    'Review the following migration steps and apply those relevant to this repository.',
-    '',
-    'Rules:',
-    '- Check each step against the repository dependencies and configuration. Some steps',
-    '  only apply to specific integrations or options. Skip those the repository does not use.',
-    '- For applicable steps marked "Action required", make the required changes. Steps',
-    '  marked "Behavior change" or "FYI" usually need no code edit. Read them and act if needed.',
-    '- Run the project type-check and test suite after each step that changes code.',
-    '- Do not invent APIs. If a step is ambiguous for this codebase, stop and ask.',
-    '- Some steps affect dashboards or alerts in Sentry rather than code. Call those out',
-    '  in your summary instead of trying to change them.',
-    '',
-    `Platform: ${framework}.`,
-    `${items.length} steps to review.`,
-    '',
-    '---',
-    '',
-  ];
-
-  for (const phase of PHASES) {
-    const phaseItems = items.filter(item => item.phase === phase.id);
-    if (phaseItems.length === 0) {
-      continue;
-    }
-    lines.push(`## ${phase.title}`, '');
-    for (const item of phaseItems) {
-      lines.push(
-        `### ${item.title}`,
-        '',
-        `_${SEVERITIES[item.severity].label}_`,
-        '',
-        item.markdown.trim(),
-        ''
-      );
-    }
-  }
-
-  return lines.join('\n');
 }
