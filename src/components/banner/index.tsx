@@ -50,10 +50,11 @@ type BannerType = {
 const BANNERS: BannerType[] = [
   {
     appearsOn: ['^/integrations/feature-flag/launchdarkly/$'],
-    text: 'Join a workshop on September 23rd about',
+    text: '',
     linkURL: 'https://sentry.io/resources/launchdarkly-workshop/',
-    linkText: 'protecting releases and fixing bugs with Sentry & LaunchDarkly',
-    textAfterLink: '.',
+    linkText: 'Join a workshop',
+    textAfterLink:
+      ' on September 23rd about protecting releases and fixing bugs with Sentry & LaunchDarkly.',
     expiresOn: '2026-09-22T23:59:59Z',
   },
   {
