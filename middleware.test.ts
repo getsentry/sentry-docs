@@ -100,6 +100,14 @@ describe('middleware redirect set selection', () => {
   });
 });
 
+describe('non-production host indexing', () => {
+  it('adds a noindex header on localhost', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/java/'));
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
+  });
+});
+
 describe('production build-url redirect to canonical (Deployment Protection off)', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

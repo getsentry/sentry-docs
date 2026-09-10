@@ -22,11 +22,7 @@ const CANONICAL_HOST = new URL(BASE_URL).hostname;
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
 // get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
-const INDEXABLE_HOSTNAMES = new Set([
-  'docs.sentry.io',
-  'develop.sentry.dev',
-  'localhost',
-]);
+const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev']);
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
