@@ -602,6 +602,10 @@ const userDocsRedirects = [
     destination: '/api/auth/',
   },
   {
+    source: '/api/guides/',
+    destination: '/api/',
+  },
+  {
     source: '/product/codecov/:path*',
     destination: '/integrations/',
   },
@@ -2095,6 +2099,10 @@ const userDocsRedirects = [
     destination: '/platforms/react-native/guides/expo/',
   },
   {
+    source: '/platforms/react-native/manual-setup/expo.md',
+    destination: '/platforms/react-native/guides/expo.md',
+  },
+  {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
     destination:
       '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
@@ -2130,6 +2138,10 @@ const userDocsRedirects = [
     source: '/platforms/react-native/tracing/instrumentation/expo-resources/',
     destination:
       '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/configuration/integrations/:path*',
+    destination: '/platforms/react-native/guides/:guide/integrations/:path*',
   },
   {
     source:
@@ -2641,6 +2653,18 @@ const userDocsRedirects = [
     destination: '/platforms/react-native/agent-tracing/:path*',
   },
   {
+    source: '/platforms/react-native/ai-agent-monitoring.md',
+    destination: '/platforms/react-native/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
+  },
+  {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
     destination: '/platforms/php/guides/laravel/agent-tracing/',
   },
@@ -2684,6 +2708,18 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/ai-agent-tracing/:path*',
     destination: '/platforms/react-native/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-tracing.md',
+    destination: '/platforms/react-native/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',

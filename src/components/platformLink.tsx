@@ -129,7 +129,7 @@ export function PlatformLink({
 
         const targetNode = nodeForPath(rootNode, [...platformPath, ...pathParts]);
 
-        if (targetNode) {
+        if (targetNode && !targetNode.missing) {
           contentExistsInChain = true;
           break;
         }
