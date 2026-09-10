@@ -15,6 +15,7 @@
  */
 import {readdirSync, readFileSync} from 'fs';
 import path from 'path';
+import {pathToFileURL} from 'url';
 
 import matter from 'gray-matter';
 
@@ -185,6 +186,9 @@ function main() {
   console.log('\nAll items valid.');
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+) {
   main();
 }

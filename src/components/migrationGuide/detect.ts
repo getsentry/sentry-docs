@@ -154,7 +154,7 @@ export const FRAMEWORK_PACKAGES: Array<{
   {pkg: '@sentry/svelte', guides: ['svelte'], pattern: /"@sentry\/svelte"\s*:/},
   {
     pkg: '@sentry/astro',
-    guides: ['astro', 'azure-functions'],
+    guides: ['astro'],
     pattern: /"@sentry\/astro"\s*:/,
   },
   {pkg: '@sentry/remix', guides: ['remix'], pattern: /"@sentry\/remix"\s*:/},
@@ -205,6 +205,7 @@ export const FRAMEWORK_PACKAGES: Array<{
     pkg: '@sentry/node',
     guides: [
       'node',
+      'azure-functions',
       'connect',
       'express',
       'fastify',
