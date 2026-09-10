@@ -81,7 +81,7 @@ Extend your app's default Next.js options by adding `withSentryConfig` into your
 
 ```typescript {tabTitle:Webpack} {filename:next.config.ts}
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   // Your existing Next.js configuration
@@ -112,7 +112,7 @@ export default withSentryConfig(nextConfig, {
 
 ```typescript {tabTitle:Turbopack} {filename:next.config.ts}
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   // Your existing Next.js configuration
@@ -137,7 +137,7 @@ export default withSentryConfig(nextConfig, {
 
 Create the following files in your application's root directory (or `src` folder if you have one):
 
-- `sentry.client.config.ts` - Client-side SDK initialization
+- `instrumentation-client.ts` - Client-side SDK initialization
 - `sentry.server.config.ts` - Server-side SDK initialization
 - `sentry.edge.config.ts` - Edge runtime SDK initialization (if using edge routes)
 
@@ -146,10 +146,16 @@ Create the following files in your application's root directory (or `src` folder
   variable like `NEXT_PUBLIC_SENTRY_DSN`.
 </Alert>
 
+<Alert level="warning" title="Don't use sentry.client.config.ts">
+
+Older setups initialized the browser SDK in `sentry.client.config.ts`. That file is deprecated and is **ignored entirely by Turbopack builds**, which leaves your app with no browser SDK and no build error to tell you. Use `instrumentation-client.ts` instead — it works with both Turbopack and Webpack.
+
+</Alert>
+
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {tabTitle:Client} {mdExpandTabs} {filename:sentry.client.config.ts}
+```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
@@ -174,6 +180,8 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ session-replay
 });
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 ```
 
 ```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
@@ -211,6 +219,43 @@ Sentry.init({
 Monitor your [usage stats](https://sentry.io/orgredirect/organizations/:orgslug/settings/stats/?dataCategory=spans) and adjust `tracesSampleRate` based on your traffic volume. Learn more about [sampling configuration](/platforms/javascript/guides/nextjs/configuration/sampling/).
 
 </Alert>
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Register Server-Side SDK
+
+Creating `sentry.server.config.ts` isn't enough on its own — nothing imports it. Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.ts` in your project root (or `src` folder) to load it at server startup.
+
+The `onRequestError` export is what captures server-side errors in the Pages Router, including errors thrown in API routes and `getServerSideProps`.
+
+<Alert level="info">
+  The `onRequestError` hook requires `@sentry/nextjs` version `8.28.0` or higher
+  and Next.js 15.
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+
+// Capture errors from API routes, getServerSideProps, and middleware
+export const onRequestError = Sentry.captureRequestError;
+```
 
 </SplitSectionCode>
 </SplitSection>
@@ -332,7 +377,7 @@ Session Replay captures video-like reproductions of user sessions. It's configur
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename:sentry.client.config.ts}
+```typescript {filename:instrumentation-client.ts}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
@@ -453,16 +498,33 @@ Automatically create [Cron Monitors](/product/monitors-and-alerts/monitors/crons
 
 ### Enable Automatic Cron Monitoring
 
-Add the `automaticVercelMonitors` option to your `next.config.ts`.
+There are two ways to do this, depending on how you build:
+
+- `_experimental.vercelCronsMonitoring` creates check-ins from spans. It works with both Turbopack and Webpack, and with both routers. Prefer this one.
+- `webpack.automaticVercelMonitors` wraps your route handlers at build time. It only works with Webpack and the Pages Router.
+
+If you enable both, the SDK uses the span-based approach and logs a warning telling you to drop the other one.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+```typescript {tabTitle:Span-based} {mdExpandTabs} {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
-  automaticVercelMonitors: true,
+  _experimental: {
+    vercelCronsMonitoring: true,
+  },
+});
+```
+
+```typescript {tabTitle:Webpack} {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs/config";
+
+export default withSentryConfig(nextConfig, {
+  webpack: {
+    automaticVercelMonitors: true,
+  },
 });
 ```
 
