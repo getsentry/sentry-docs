@@ -1,0 +1,150 @@
+---
+title: Cloudflare Pages
+description: "Learn how to instrument a Cloudflare Pages application with Sentry using the sentryPagesPlugin middleware."
+---
+
+<Alert>
+
+Cloudflare recommends [migrating to Workers with static assets](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/). Workers covers most Pages use cases with a broader feature set, and it's where new Cloudflare features land. Pages keeps working, so this page stays accurate, but start new projects on Workers and follow the <PlatformLink to="/">Cloudflare guide</PlatformLink> instead.
+
+After migrating, you replace `sentryPagesPlugin` with the Vite plugin or `withSentry`, depending on how you build.
+
+</Alert>
+
+Cloudflare Pages applications are instrumented with the `sentryPagesPlugin` middleware instead of the `withSentry` wrapper that Workers use. The rest of the SDK behaves the same, so the <PlatformLink to="/">Cloudflare guide</PlatformLink> still applies for installation, Wrangler configuration, source maps, and the options reference.
+
+## Install
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+### Wrangler Configuration
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare"
+/>
+
+### Add the Middleware
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To use the Sentry SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
+
+<Include name="cloudflare-pages-middleware-intro.mdx" />
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:functions/_middleware.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export const onRequest = [
+  // Make sure Sentry is the first middleware
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
+
+    dataCollection: {
+      // Any dataCollection object (including {}) uses permissive defaults:
+      // userInfo, cookies, HTTP bodies, genAI prompts/responses, and more.
+      // Uncomment to tighten. Details:
+      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#dataCollection
+      // userInfo: false,
+      // httpBodies: [],
+      // genAI: { inputs: false, outputs: false },
+    },
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+    tracesSampleRate: 1.0,
+  })),
+  // Add more middlewares here
+];
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="Don't have access to onRequest?">
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// hooks.server.js
+import * as Sentry from "@sentry/cloudflare";
+
+export const handle = ({ event, resolve }) => {
+  const requestHandlerOptions = {
+    options: {
+      dsn: event.platform.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+    },
+    request: event.request,
+    context: event.platform.ctx,
+  };
+  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
+};
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</Expandable>
+
+## Verify Your Setup
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Create a new route that throws an error when called by adding the following code snippet to a file in your `functions` directory, such as `functions/debug-sentry.js`:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:debug-sentry.js}
+export async function onRequest(context) {
+  throw new Error("My first Sentry error!");
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To test your tracing configuration, start a span around the failing code:
+
+```javascript {filename:debug-sentry.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export async function onRequest(context) {
+  await Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Span",
+    },
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for 100ms
+      throw new Error("My first Sentry error!");
+    }
+  );
+}
+```
+
+Then head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+## Known Limitations
+
+The <PlatformLink to="/#known-limitations">limitations of the Cloudflare Workers runtime</PlatformLink> apply to Pages Functions as well, including zero-duration spans for CPU-bound work.

@@ -2280,6 +2280,18 @@ const userDocsRedirects = [
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
   },
+  // Cloudflare setup pages moved from Features to Installation Methods.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/vite-plugin.md',
+    destination:
+      '/platforms/javascript/guides/cloudflare/install/vite-plugin.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/features/vite-plugin/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/install/vite-plugin/:path*',
+  },
   // Cloudflare AI pages moved from Features to Agent Tracing.
   {
     source: '/platforms/javascript/guides/cloudflare/features/agents-sdk.md',

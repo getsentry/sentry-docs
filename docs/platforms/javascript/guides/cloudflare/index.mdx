@@ -1,6 +1,6 @@
 ---
 title: Cloudflare
-description: "Learn how to manually set up Sentry for Cloudflare Workers and Cloudflare Pages and capture your first errors."
+description: "Learn how to manually set up Sentry for Cloudflare Workers and capture your first errors."
 sdk: sentry.javascript.cloudflare
 categories:
   - javascript
@@ -11,7 +11,9 @@ categories:
 
 <AgentSetupCallout skill="sentry-cloudflare-sdk" platformName="Cloudflare" />
 
-Use this guide for general instructions on using the Sentry SDK with Cloudflare. If you're using any of the listed frameworks, follow their specific setup instructions:
+This guide covers Cloudflare Workers. If you're deploying a Cloudflare Pages application, see <PlatformLink to="/features/pages/">Cloudflare Pages</PlatformLink> instead, which is set up with middleware rather than a wrapper.
+
+If you're using any of the listed frameworks, follow their specific setup instructions:
 
 - **[Astro](/platforms/javascript/guides/cloudflare/frameworks/astro/)**
 - **[Hono](/platforms/javascript/guides/hono/)** (with @sentry/hono)
@@ -66,40 +68,52 @@ Importing Sentry from the `@sentry/cloudflare/nodejs_compat` entrypoint unlocks 
 
 ## Configure
 
-The main Sentry configuration should happen as early as possible in your app's lifecycle.
+This guide sets Sentry up through Vite, which is what we recommend for Cloudflare Workers. The plugin does the wiring at build time, so your Worker code stays untouched.
 
-### Build Tooling
+<Alert>
 
-We recommend building your Worker with **Vite** and the <PlatformLink to="/features/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>. It instruments bundled dependencies (like database clients) at build time, giving you more traces in the Cloudflare Workers runtime, where runtime monkey-patching isn't available. If you deploy with `wrangler` directly, everything below still works — you just miss out on that build-time instrumentation.
+Not using Vite? See the <PlatformLink to="/install/wrangler/">Wrangler setup</PlatformLink> for the manual instrumentation.
 
-With Vite, add the plugin to your `vite.config.ts`, then run `vite build` before `wrangler deploy`. With plain Wrangler, there's no extra build step.
+</Alert>
 
-```typescript {tabTitle:Vite (Recommended)} {filename:vite.config.ts} {mdExpandTabs}
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
-import { defineConfig } from "vite";
+### Add the Vite Plugin
 
-export default defineConfig({
-  plugins: [
-    cloudflare(),
-    sentryCloudflareVitePlugin({
-      _experimental: {
-        useDiagnosticsChannelInjection: true,
-      },
-    }),
-  ],
-});
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add the Sentry plugin to your existing `vite.config.ts`, next to `cloudflare()`. Both behaviors are experimental in this version, so turn them on explicitly.
+
+`autoInstrumentation` wraps your Worker entry, and any Durable Object, Workflow or Agents SDK class in your wrangler config, at build time, so you don't have to call `Sentry.withSentry()` yourself. `useDiagnosticsChannelInjection` instruments bundled dependencies such as database clients, which is the only way to trace them in the Workers runtime, where the SDK can't patch them at runtime.
+
+To see its options, which packages it instruments, and how to opt out of either behavior, see <PlatformLink to="/install/vite-plugin/">Vite Plugin</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:vite.config.ts} {diff}
+ import { cloudflare } from "@cloudflare/vite-plugin";
++import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+ import { defineConfig } from "vite";
+
+ export default defineConfig({
+   plugins: [
+     cloudflare(),
++    sentryCloudflareVitePlugin({
++      _experimental: {
++        autoInstrumentation: true,
++        useDiagnosticsChannelInjection: true,
++      },
++    }),
+   ],
+ });
 ```
 
-```bash {tabTitle:Wrangler}
-# No extra build tooling — deploy with wrangler as usual:
-wrangler deploy
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-# You can switch to Vite later. See the Migrating From Wrangler guide:
-# https://docs.sentry.io/platforms/javascript/guides/cloudflare/features/vite-plugin/#migrating-from-wrangler
-```
-
-See the <PlatformLink to="/features/vite-plugin/">Vite plugin docs</PlatformLink> for options and <PlatformLink to="/features/vite-plugin/#migrating-from-wrangler">migration steps</PlatformLink>.
+Run `vite build` before `wrangler deploy`, and use `vite dev` in place of `wrangler dev` for local development.
 
 ### Wrangler Configuration
 
@@ -108,132 +122,51 @@ See the <PlatformLink to="/features/vite-plugin/">Vite plugin docs</PlatformLink
   platform="javascript.cloudflare"
 />
 
-### Setup for Cloudflare Workers
+### Add Your Sentry Options
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-Wrap your exported handler with `Sentry.withSentry()` to start capturing errors and traces from your Worker:
+Create an `instrument.server.ts` file next to your Worker entry, the file that `main` points at in your wrangler config. If `main` is `src/index.ts`, the file belongs at `src/instrument.server.ts`, not at the project root.
+
+The name is fixed. The plugin looks for `instrument.server` with a `.ts`, `.mts`, `.js`, `.mjs` or `.cjs` extension, and passes its default export to `withSentry`. Use `defineCloudflareOptions` to get the options type-checked.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename:index.ts}
-import * as Sentry from "@sentry/cloudflare";
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
 
-export default Sentry.withSentry(
-  (env: Env) => ({
-    dsn: "___PUBLIC_DSN___",
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
 
-    dataCollection: {
-      // Any dataCollection object (including {}) uses permissive defaults:
-      // userInfo, cookies, HTTP bodies, genAI prompts/responses, and more.
-      // Uncomment to tighten. Details:
-      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#dataCollection
-      // userInfo: false,
-      // httpBodies: [],
-      // genAI: { inputs: false, outputs: false },
-    },
-    // ___PRODUCT_OPTION_START___ performance
+  dataCollection: {
+    // Any dataCollection object (including {}) uses permissive defaults:
+    // userInfo, cookies, HTTP bodies, genAI prompts/responses, and more.
+    // Uncomment to tighten. Details:
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#dataCollection
+    // userInfo: false,
+    // httpBodies: [],
+    // genAI: { inputs: false, outputs: false },
+  },
+  // ___PRODUCT_OPTION_START___ performance
 
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-  }),
-  {
-    async fetch(request, env, ctx) {
-      // Your worker logic here
-      return new Response("Hello World!");
-    },
-  }
-);
+  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+}));
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
 
-If you're using the <PlatformLink to="/features/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, its experimental `autoInstrumentation` option can wrap your Worker for you at build time, so you don't need `withSentry` in your code.
+<Expandable title="Prefer to configure Sentry with bindings?">
 
-### Setup for Cloudflare Pages
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To use the Sentry SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
-
-<Include name="cloudflare-pages-middleware-intro.mdx" />
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:functions/_middleware.js}
-import * as Sentry from "@sentry/cloudflare";
-
-export const onRequest = [
-  // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => ({
-    dsn: "___PUBLIC_DSN___",
-
-    dataCollection: {
-      // Any dataCollection object (including {}) uses permissive defaults:
-      // userInfo, cookies, HTTP bodies, genAI prompts/responses, and more.
-      // Uncomment to tighten. Details:
-      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#dataCollection
-      // userInfo: false,
-      // httpBodies: [],
-      // genAI: { inputs: false, outputs: false },
-    },
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-  })),
-  // Add more middlewares here
-];
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<Expandable title="Don't have access to onRequest?">
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-If you don't have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-// hooks.server.js
-import * as Sentry from "@sentry/cloudflare";
-
-export const handle = ({ event, resolve }) => {
-  const requestHandlerOptions = {
-    options: {
-      dsn: event.platform.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
-    },
-    request: event.request,
-    context: event.platform.ctx,
-  };
-  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
-};
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+If you don't add an `instrument.server.*` file, the SDK reads its configuration from the Worker's `env` at runtime instead: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_DEBUG`, `SENTRY_TUNNEL` and `SENTRY_TRACE_LIFECYCLE`. Set them as secrets or vars in your wrangler config.
 
 </Expandable>
 
@@ -252,8 +185,6 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 ### Issues
 
 First, let's make sure Sentry is correctly capturing errors and creating issues in your project.
-
-#### Cloudflare Workers
 
 <SplitLayout>
 <SplitSection>
@@ -283,34 +214,13 @@ export default {
 </SplitSection>
 </SplitLayout>
 
-#### Cloudflare Pages
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Create a new route that throws an error when called by adding the following code snippet to a file in your `functions` directory, such as `functions/debug-sentry.js`:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:debug-sentry.js}
-export async function onRequest(context) {
-  throw new Error("My first Sentry error!");
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <OnboardingOption optionId="performance">
 ### Tracing
 To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes to run your code.
 
-#### Cloudflare Workers
-
 ```javascript {filename:index.js}
+import * as Sentry from "@sentry/cloudflare";
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -319,7 +229,7 @@ export default {
       await Sentry.startSpan(
         {
           op: "test",
-          name: "My First Test Transaction",
+          name: "My First Test Span",
         },
         async () => {
           await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for 100ms
@@ -332,23 +242,6 @@ export default {
     return new Response("...");
   },
 };
-```
-
-#### Cloudflare Pages
-
-```javascript {filename:debug-sentry.js}
-export async function onRequest(context) {
-  await Sentry.startSpan(
-    {
-      op: "test",
-      name: "My First Test Transaction",
-    },
-    async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for 100ms
-      throw new Error("My first Sentry error!");
-    }
-  );
-}
 ```
 
 </OnboardingOption>
@@ -372,56 +265,6 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 Server-side spans will display `0ms` for their durations. In the Cloudflare Workers runtime, `performance.now()` and `Date.now()` only advance after I/O occurs. CPU-bound operations will show zero duration. This is a security measure Cloudflare implements to [mitigate against timing attacks](https://developers.cloudflare.com/workers/runtime-apis/performance/).
 
 This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
-
-### Spans in `waitUntil()`
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) lets work continue after the Worker returns a response. With the static trace lifecycle, Sentry snapshots the request transaction when the response is returned, so spans that finish later may be missing.
-
-Set `traceLifecycle: "stream"` so the SDK can send each sampled span when it finishes. Span streaming on Cloudflare requires `@sentry/cloudflare` version `10.49.0` or newer.
-
-Stream mode sends span records instead of assembling one transaction event with embedded spans. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for filtering and migration details.
-
-If you need to keep the static lifecycle, use `forceTransaction: true` on the background operation instead. This records the work as a separate transaction. `forceTransaction` isn't available in stream mode.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:index.js}
-import * as Sentry from "@sentry/cloudflare";
-
-const worker = {
-  async fetch(request, env, ctx) {
-    ctx.waitUntil(
-      Sentry.startSpan({ name: "background.task", op: "task" }, () =>
-        updateCacheAndDatabase()
-      )
-    );
-
-    return processRequest(request);
-  },
-};
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    traceLifecycle: "stream",
-  }),
-  worker
-);
-
-async function updateCacheAndDatabase() {
-  // Deferred work and any child spans are captured when they finish.
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Next Steps
 
