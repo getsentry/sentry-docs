@@ -695,9 +695,23 @@ shamefully-hoist=true
   <Expandable permalink title="Spans from waitUntil() or other work after the response are missing">
     Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) lets work continue after the Worker returns a response. Whether those spans arrive depends on your trace lifecycle.
 
-    On the static lifecycle, which is the default, the SDK snapshots the request transaction when the response is returned, so anything finishing later is dropped. Streaming sends each sampled span as it finishes instead, which captures deferred work.
+    On the static lifecycle, the SDK snapshots the request transaction when the response is returned, so anything finishing later is dropped. Streaming sends each sampled span as it finishes instead, which captures deferred work.
 
-    Set `traceLifecycle: "stream"`, which needs `@sentry/cloudflare` version `10.49.0` or newer:
+    From version `11.0.0`, the SDK streams by default, so this is only a problem if something set the static lifecycle explicitly. Remove it:
+
+    ```javascript {filename:index.js}
+    export default Sentry.withSentry(
+      (env) => ({
+        dsn: env.SENTRY_DSN,
+        tracesSampleRate: 1.0,
+        // Remove this to stream spans as they finish
+        // traceLifecycle: "static",
+      }),
+      worker
+    );
+    ```
+
+    On version `10.x` the static lifecycle is the default, so missing deferred spans are expected until you opt in. Set `traceLifecycle: "stream"`, which needs `@sentry/cloudflare` version `10.49.0` or newer:
 
     ```javascript {filename:index.js}
     export default Sentry.withSentry(
@@ -710,7 +724,7 @@ shamefully-hoist=true
     );
     ```
 
-    If you need to keep the static lifecycle, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` isn't available in stream mode.
+    If you need the static lifecycle for another reason, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` has no effect while streaming.
 
     ```javascript {filename:index.js}
     ctx.waitUntil(

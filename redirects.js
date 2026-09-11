@@ -2292,6 +2292,22 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/cloudflare/install/vite-plugin/:path*',
   },
+  // The nodejs_compat entrypoint was removed in v11; the guide covers the single entry.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/nodejs-compat.md',
+    destination: '/platforms/javascript/guides/cloudflare.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/features/nodejs-compat/:path*',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  // honoIntegration was removed in v11 in favor of the @sentry/hono SDK.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/configuration/integrations/hono/:path*',
+    destination: '/platforms/javascript/guides/hono/',
+  },
   // Cloudflare AI pages moved from Features to Agent Tracing.
   {
     source: '/platforms/javascript/guides/cloudflare/features/agents-sdk.md',
