@@ -106,7 +106,7 @@ Controls legacy collection of personally identifiable information (PII) by activ
 
 For backwards compatibility, `sendDefaultPii` keeps its existing behavior when no Data Collection field is configured. As soon as you configure any `dataCollection` field, Data Collection becomes the source of truth for its categories and `sendDefaultPii` no longer controls them.
 
-File paths and unencoded Logback messages aren't Data Collection categories. OpenTelemetry-derived HTTP header attributes also aren't controlled by Data Collection yet. These paths continue to use `sendDefaultPii`.
+Unencoded Logback messages aren't a Data Collection category. To include original message templates and parameters when an encoder is configured, use the Logback appender's `includeUnencodedMessage` option. The legacy `sendDefaultPii` behavior remains supported for compatibility. OpenTelemetry-derived HTTP header attributes also aren't controlled by Data Collection yet and continue to use `sendDefaultPii`.
 
 </SdkOption>
 
@@ -127,6 +127,7 @@ Passing an empty `DataCollection` or configuring any field enables Data Collecti
 | `graphql.document`     | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                                                                          |
 | `graphql.variables`    | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                                                                          |
 | `databaseQueryData`    | `boolean`                    | `true`         | Allows supported integrations to collect associated query data, such as bound parameters, write payloads, and results. Sanitized statements and structural metadata aren't affected. |
+| `filePaths`            | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled.                                            |
 
 Configure only the fields that differ from these defaults:
 
@@ -137,6 +138,7 @@ import io.sentry.Sentry;
 Sentry.init(
     options -> {
       options.getDataCollection().setUserInfo(false);
+      options.getDataCollection().setFilePaths(false);
       options
           .getDataCollection()
           .setUrlQueryParams(KeyValueCollectionBehavior.off());
@@ -171,9 +173,10 @@ data-collection.url-query-params.mode=off
 data-collection.graphql.document=false
 data-collection.graphql.variables=false
 data-collection.database-query-data=false
+data-collection.file-paths=false
 ```
 
-Environment variables use the same names in uppercase with the `SENTRY_` prefix, for example, `SENTRY_DATA_COLLECTION_USER_INFO` and `SENTRY_DATA_COLLECTION_HTTP_BODIES`.
+Environment variables use the same names in uppercase with the `SENTRY_` prefix, for example, `SENTRY_DATA_COLLECTION_USER_INFO`, `SENTRY_DATA_COLLECTION_HTTP_BODIES`, and `SENTRY_DATA_COLLECTION_FILE_PATHS`.
 
 Spring Boot uses the `sentry.` prefix and kebab-case enum values:
 
@@ -183,6 +186,7 @@ sentry.data-collection.http-bodies=incoming-request,outgoing-request
 sentry.data-collection.http-headers.request.mode=allow-list
 sentry.data-collection.http-headers.request.terms=content-type,x-request-id
 sentry.data-collection.url-query-params.mode=off
+sentry.data-collection.file-paths=false
 ```
 
 ### Migrating From `sendDefaultPii`
@@ -195,7 +199,7 @@ Data Collection preserves existing applications until you opt in:
 | An empty `DataCollection` | All Data Collection categories use the defaults above.                                                                                       |
 | Any Data Collection field | That field uses its configured value, omitted fields use the defaults above, and `sendDefaultPii` is ignored for Data Collection categories. |
 
-If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, an empty `DataCollection` opts into the new filtered defaults. Keep `sendDefaultPii=true` only if you also need file paths, unencoded Logback messages, or the legacy OpenTelemetry header behavior.
+If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, an empty `DataCollection` opts into the new filtered defaults. For unencoded Logback messages, use `includeUnencodedMessage` as described in the [Logback documentation](/platforms/java/guides/logback/). Keep `sendDefaultPii=true` only if you need the legacy OpenTelemetry header behavior.
 
 </SdkOption>
 

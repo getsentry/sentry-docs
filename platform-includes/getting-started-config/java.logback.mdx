@@ -128,3 +128,20 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
 </appender>
 ```
 </OnboardingOption>
+
+### Encoded Messages
+
+A Logback encoder can mask or remove sensitive values before Sentry receives a log entry. When you configure an encoder on `SentryAppender`, Sentry sends the encoded message and omits the original message template and parameters by default.
+
+Set `includeUnencodedMessage` to `true` when you also need the original template and parameters:
+
+```xml {filename:logback.xml}
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <encoder>
+        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <includeUnencodedMessage>true</includeUnencodedMessage>
+</appender>
+```
+
+Original templates and parameters can contain sensitive data. Prefer this scoped appender option to `sendDefaultPii`; the legacy `sendDefaultPii=true` behavior remains supported for compatibility.

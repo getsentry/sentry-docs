@@ -102,8 +102,6 @@ Controls legacy collection of personally identifiable information (PII) by activ
 
 For backwards compatibility, `sendDefaultPii` keeps its existing behavior when no Data Collection field is configured. As soon as you configure any `dataCollection` field, Data Collection becomes the source of truth for its categories and `sendDefaultPii` no longer controls them.
 
-File paths aren't a Data Collection category. They continue to use `sendDefaultPii`.
-
 <Alert>
 
 Read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) when completing Apple App Store or Google Play privacy details.
@@ -118,17 +116,18 @@ Controls which categories of data SDK integrations collect automatically. Data C
 
 Passing an empty `DataCollection` or configuring any field enables Data Collection. Omitted fields then use these defaults:
 
-| Field                  | Type                         | Default        | Behavior                                                                                                                      |
-| ---------------------- | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `userInfo`             | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                     |
-| `cookies`              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                |
-| `httpHeaders.request`  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                        |
-| `httpHeaders.response` | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                       |
-| `httpBodies`           | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                  |
-| `urlQueryParams`       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                   |
-| `graphql.document`     | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                   |
-| `graphql.variables`    | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                   |
-| `databaseQueryData`    | `boolean`                    | `true`         | Allows supported integrations to collect associated query data. Sanitized statements and structural metadata aren't affected. |
+| Field                  | Type                         | Default        | Behavior                                                                                                                                  |
+| ---------------------- | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`             | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
+| `cookies`              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
+| `httpHeaders.request`  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
+| `httpHeaders.response` | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
+| `httpBodies`           | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                              |
+| `urlQueryParams`       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
+| `graphql.document`     | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
+| `graphql.variables`    | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
+| `databaseQueryData`    | `boolean`                    | `true`         | Allows supported integrations to collect associated query data. Sanitized statements and structural metadata aren't affected.             |
+| `filePaths`            | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
 
 Configure Data Collection in `AndroidManifest.xml`:
 
@@ -149,6 +148,9 @@ Configure Data Collection in `AndroidManifest.xml`:
   <meta-data
       android:name="io.sentry.data-collection.url-query-params.mode"
       android:value="off" />
+  <meta-data
+      android:name="io.sentry.data-collection.file-paths"
+      android:value="false" />
 </application>
 ```
 
@@ -163,6 +165,7 @@ Supported manifest keys are:
 - `io.sentry.data-collection.graphql.document`
 - `io.sentry.data-collection.graphql.variables`
 - `io.sentry.data-collection.database-query-data`
+- `io.sentry.data-collection.file-paths`
 
 The `cookies`, HTTP header, and URL query parameter fields support `off`, `deny_list`, and `allow_list`. Matching terms are comma-separated. Matching is partial and case-insensitive, and the built-in sensitive list always applies. Filtered values are replaced with `"[Filtered]"`.
 
@@ -174,6 +177,7 @@ import io.sentry.android.core.SentryAndroid
 
 SentryAndroid.init(this) { options ->
   options.dataCollection.userInfo = false
+  options.dataCollection.filePaths = false
   options.dataCollection.urlQueryParams = KeyValueCollectionBehavior.off()
   options.dataCollection.httpHeaders.request =
     KeyValueCollectionBehavior.allowList("content-type", "x-request-id")
@@ -190,7 +194,7 @@ Data Collection preserves existing applications until you opt in:
 | An empty `DataCollection` | All Data Collection categories use the defaults above.                                                                                       |
 | Any Data Collection field | That field uses its configured value, omitted fields use the defaults above, and `sendDefaultPii` is ignored for Data Collection categories. |
 
-If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, an empty `DataCollection` opts into the new filtered defaults. Keep `sendDefaultPii=true` only if you also need file paths.
+If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, an empty `DataCollection` opts into the new filtered defaults.
 
 Data Collection doesn't control Session Replay. Configure Replay's URL, header, and body collection separately in the <PlatformLink to="/session-replay/configuration/">Session Replay options</PlatformLink>.
 
