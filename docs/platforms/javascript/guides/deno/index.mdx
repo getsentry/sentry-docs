@@ -35,14 +35,37 @@ Choose the features you want to configure, and this guide will show you how:
 <SplitSection>
 <SplitSectionText>
 
-Import the Sentry Deno SDK directly from the npm registry, before importing any other modules:
+Import the Sentry Deno SDK directly from the npm registry, before importing any other modules. The first line registers the hook that instruments your database drivers, message queues, AI libraries and web frameworks. It only works as the first import of your entry file:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```javascript {filename: main.ts}
+import "___SDK_PACKAGE___/import";
 import * as Sentry from "___SDK_PACKAGE___";
 // your other imports
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+The hook reads your dependencies from a local `node_modules` directory, not from Deno's global npm cache. Set `nodeModulesDir` in your `deno.json`:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```json {filename: deno.json}
+{
+  "imports": {
+    "@sentry/deno": "npm:@sentry/deno"
+  },
+  "nodeModulesDir": "auto"
+}
 ```
 
 </SplitSectionCode>
@@ -63,6 +86,7 @@ Initialize Sentry as early as possible in your app:
 <SplitSectionCode>
 
 ```javascript {filename: main.ts}
+import "___SDK_PACKAGE___/import";
 import * as Sentry from "___SDK_PACKAGE___";
 // your other imports
 
@@ -85,43 +109,42 @@ Sentry.init({
 </SplitSection>
 </SplitLayout>
 
-### Enable Network Access
+### Grant Permissions
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-To make sure the SDK can send events, enable network access for your Sentry ingestion domain:
+Deno blocks access to the network, the file system and system information until you grant it. Start your app with all four permissions so that the SDK can send complete events. Add the other hosts your app talks to, separated by commas:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```bash
-deno run --allow-net=___ORG_INGEST_DOMAIN___ index.ts
+deno run \
+  --allow-net=___ORG_INGEST_DOMAIN___ \
+  --allow-env \
+  --allow-read=. \
+  --allow-sys=hostname,osRelease \
+  main.ts
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
 
-### Allow Access to Source Files
+<Expandable permalink={false} title="What each permission gives you">
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+| Flag                             | What it gives you                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------------- |
+| `--allow-net=<host>`             | Delivery of events to Sentry. If a host is missing, Deno names it in the error.              |
+| `--allow-env`                    | The import hook. Without it, your app stops at start with `NotCapable: Requires env access`. |
+| `--allow-read=.`                 | Source code in stack traces, and `app:///` paths instead of absolute paths.                  |
+| `--allow-sys=hostname,osRelease` | The server name and the operating system version on events.                                  |
 
-Grant read access to your source files so that the SDK can include your source code in stack traces:
+If you omit `--allow-read` or `--allow-sys`, the SDK sends events without that data and prints no warning.
 
-</SplitSectionText>
-<SplitSectionCode>
-
-```bash
-deno run --allow-read=./src index.ts
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+</Expandable>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
