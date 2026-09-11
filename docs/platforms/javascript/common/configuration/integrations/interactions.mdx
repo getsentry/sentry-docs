@@ -1,0 +1,81 @@
+---
+title: Interactions
+description: "Capture clicks and the work they trigger as browser spans."
+notSupported:
+  - javascript.cordova
+  - javascript.capacitor
+  - javascript.electron
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nitro
+  - javascript.nestjs
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.bun
+  - javascript.effect
+  - javascript.elysia
+  - javascript.firebase
+  - javascript.mastra
+---
+
+<Alert>
+
+This integration only works inside a browser environment. Requires JavaScript SDK version 11 or later.
+
+</Alert>
+
+_Import name: `Sentry.interactionsIntegration`_
+
+The Interactions integration captures clicks and the work they trigger as spans. Use it with <PlatformLink to="/configuration/integrations/browsertracing/">BrowserTracing</PlatformLink> or your framework's routing integration to associate interactions with the current route.
+
+<Alert level="warning">
+
+This integration is experimental and can generate a large number of spans.
+
+</Alert>
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.interactionsIntegration(),
+  ],
+});
+```
+
+Clicks outside an active pageload or navigation create a `ui.action.click` span. Requests and other spans started during the interaction become its children. The integration also captures individual clicks as `ui.interaction.click` spans through the browser's Event Timing API.
+
+<PlatformLink to="/configuration/integrations/webvitals/">
+  WebVitals
+</PlatformLink>
+collects INP independently of this integration.
+
+## Configuration Options
+
+These timeouts apply to interaction spans, independently of BrowserTracing's pageload and navigation timeouts.
+
+<SdkOption name="idleTimeout" type="number" defaultValue="1000">
+
+Time in milliseconds to wait before finishing an interaction span when no unfinished child spans remain.
+
+</SdkOption>
+
+<SdkOption name="finalTimeout" type="number" defaultValue="30000">
+
+Maximum duration of an interaction span in milliseconds, including time spent waiting for child spans.
+
+</SdkOption>
+
+<SdkOption name="childSpanTimeout" type="number" defaultValue="15000">
+
+Maximum time in milliseconds a child span can run before the interaction span finishes.
+
+</SdkOption>

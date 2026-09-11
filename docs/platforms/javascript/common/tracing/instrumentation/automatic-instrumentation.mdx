@@ -29,7 +29,7 @@ Once you enable tracing, the SDK automatically captures performance data without
 | **Page loads**        | Full page load performance       | LCP, CLS, TTFB        |
 | **Navigations**       | Client-side route changes        | Duration, Web Vitals  |
 | **HTTP requests**     | All fetch/XHR calls              | Duration, status, URL |
-| **User interactions** | Clicks, inputs that trigger work | INP (responsiveness)  |
+| **Responsiveness**    | Interaction to Next Paint       | INP                   |
 | **Long tasks**        | Main thread blocking > 50ms      | Duration, attribution |
 
 <PlatformContent includePath="performance/what-instrumentation-provides" />
@@ -118,35 +118,59 @@ Exclude requests from tracing, such as health checks or analytics pings:
 
 </SdkOption>
 
+<PlatformCategorySection supported={['browser']}>
+
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
 ## Web Vitals & Interactions
 
-### Interaction to Next Paint (INP)
+BrowserTracing automatically adds <PlatformLink to="/configuration/integrations/webvitals/">WebVitals</PlatformLink> to collect loading, visual stability, and responsiveness metrics. Individual click spans and the work they trigger require the separate <PlatformLink to="/configuration/integrations/interactions/">Interactions integration</PlatformLink>.
 
-<SdkOption name="enableInp" type='boolean' defaultValue='true' availableSince='7.104.0' defaultNote="See note">
+### Configure Web Vitals
 
-Automatically captures [INP](/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) events to measure responsiveness. Results appear in the [Web Vitals](/product/dashboards/sentry-dashboards/frontend/web-vitals/) module.
+<SdkOption name="webVitals" type="WebVitalsOptions" availableSince="11.0.0">
 
-Default: `true` in SDK 8.x+, `false` in 7.x.
+Configure the automatically added WebVitals integration:
 
-<Alert level="info" title="INP replaces FID">
+- `ignore`: Web Vitals to skip, from `"cls"`, `"inp"`, and `"lcp"`. Defaults to `[]`.
+- `softNavigations`: Collect vitals for browser-detected soft navigations. Defaults to `true` in supporting browsers with stream mode.
+- `bfcache`: Collect vitals after back/forward-cache restoration. Defaults to `false`.
 
-As of SDK version 10.0.0, First Input Delay (FID) is no longer reported. Google deprecated FID in favor of INP, which provides a more comprehensive measure of responsiveness. If you have alerts or dashboards based on FID, update them to use INP instead.
-
-</Alert>
+For example, to disable INP collection:
 
 <PlatformContent includePath="performance/enable-inp-example" />
 
-</SdkOption>
-
-<SdkOption name="interactionsSampleRate" type='number' defaultValue='1.0'>
-
-Sample rate for INP spans, applied on top of `tracesSampleRate`. For example, `interactionsSampleRate: 0.5` with `tracesSampleRate: 0.1` results in 5% of interactions captured.
+If you explicitly add `webVitalsIntegration()`, configure these options on that integration instead. See <PlatformLink to="/configuration/integrations/webvitals/">WebVitals</PlatformLink> for details and browser support requirements.
 
 </SdkOption>
+
+### Interaction to Next Paint (INP)
+
+[INP](/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) measures responsiveness and is collected by default. In SDK version 11, its value is sent as the `browser.web_vital.inp.value` attribute on a Web Vital span, including in static mode. Update custom dashboards and alerts that read INP as a span measurement. Built-in dashboards do not need adjustments.
+
+<SdkOption name="enableInp" type="boolean" defaultValue="true" availableSince="7.104.0">
+
+Deprecated in SDK version 11. Use `webVitals: { ignore: ["inp"] }` to disable INP. Explicitly adding `webVitalsIntegration()` takes precedence over this option.
+
+</SdkOption>
+
+</PlatformSection>
+
+</PlatformCategorySection>
 
 ## Advanced Options
 
 <Expandable title="Timing & Timeout Options">
+
+These timeouts control pageload and navigation spans.
+
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
+Configure timeouts for click-triggered work on the <PlatformLink to="/configuration/integrations/interactions/">Interactions integration</PlatformLink> separately.
+
+</PlatformSection>
+</PlatformCategorySection>
 
 <SdkOption name="idleTimeout" type='number' defaultValue='1000'>
 
@@ -181,6 +205,20 @@ Enable/disable automatic `pageload` span creation on initial page load.
 Enable/disable automatic `navigation` span creation on history changes.
 
 </SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
+<SdkOption name="instrumentBfcacheRestore" type="boolean" defaultValue="true" availableSince="11.0.0">
+
+Start a navigation span when the page is restored from the back/forward cache. This starts a new trace for activity after the restore. It is independent of `instrumentNavigation`.
+
+To also collect Web Vitals for restored pages, set `webVitals: { bfcache: true }`. See <PlatformLink to="/configuration/integrations/webvitals/#bfcache">WebVitals</PlatformLink> for requirements.
+
+</SdkOption>
+
+</PlatformSection>
+</PlatformCategorySection>
 
 <SdkOption name="enableLongTask" type='boolean' defaultValue='true'>
 
@@ -250,21 +288,24 @@ Sentry.init({
 
 </SdkOption>
 
-<SdkOption name="ignorePerformanceApiSpans" type='Array<string | RegExp>' defaultValue='[]' availableSince='9.23.0'>
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
 
-Ignore spans created from `performance.mark()` and `performance.measure()`:
+Starting with SDK version 11, capturing `performance.mark()` and `performance.measure()` entries requires the <PlatformLink to="/configuration/integrations/usertiming/">UserTiming integration</PlatformLink>. Use its `ignore` option to filter entries by name:
 
 ```javascript
 Sentry.init({
   integrations: [
-    Sentry.browserTracingIntegration({
-      ignorePerformanceApiSpans: ["myMeasurement", /myMark/],
+    Sentry.browserTracingIntegration(),
+    Sentry.userTimingIntegration({
+      ignore: ["myMeasurement", /myMark/],
     }),
   ],
 });
 ```
 
-</SdkOption>
+</PlatformSection>
+</PlatformCategorySection>
 
 <SdkOption name="onRequestSpanStart" type="(span: Span, requestInformation: { headers?: WebFetchHeaders }): void">
 
