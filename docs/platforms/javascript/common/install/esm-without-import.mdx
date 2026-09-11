@@ -17,23 +17,15 @@ supported:
   [installation methods](../).
 </Alert>
 
+When running your application in ESM mode, you'll most likely want to <PlatformLink to="/install/esm">follow the ESM instructions</PlatformLink>.
 
-When running your application in ESM mode, you will most likely want to <PlatformLink to="/install/esm">follow the ESM instructions</PlatformLink>. However, if you can't use the `--import` command line option, you can either use [direct imports](#direct-imports) or [SEA bootstrap setup](#nodejs-single-executable-applications) if you are using a Node.js Single Executable Application (SEA).
+If you can't pass the `--import` command line option, pick one of these instead:
 
-## Direct Imports
+- Use a [bundler plugin with a top-level import](#bundler-plugin-and-top-level-import) if you bundle your server code.
+- Use a [deferred entry point](#deferred-entry-point) if you don't bundle it.
+- Use the [SEA bootstrap setup](#nodejs-single-executable-applications) if you build a Node.js Single Executable Application.
 
-
-<Alert level='warning' title='Restrictions of this installation method'>
-
-This installation method has the fundamental restriction that only native Node.js APIs can be instrumented (such as `fetch` and the `http` module).
-
-As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
-
-We recommend using this only if the `--import` flag is not an option for you.
-
-</Alert>
-
-You need to create a file named `instrument.mjs` that imports and initializes Sentry:
+All three need an `instrument.mjs` file that initializes Sentry:
 
 ```javascript {tabTitle:ESM} {filename: instrument.mjs}
 import * as Sentry from "@sentry/node";
@@ -48,16 +40,78 @@ Sentry.init({
 });
 ```
 
-You need to import the `instrument.mjs` file before importing any other modules in your application. This is necessary to ensure that Sentry can automatically instrument all modules in your application:
+## Why a Top-Level Import Alone Isn't Enough
+
+ESM evaluates every `import` in a file before it runs the first line of that file. So even when `import "./instrument.mjs"` is written above your other imports, the modules below it are already loaded by the time `Sentry.init()` runs, and the SDK can no longer wrap them.
+
+What that costs depends on the library. Express, Fastify, Hapi and Hono register their instrumentation at runtime, so they still report spans and errors. Koa does not: it loses its router and middleware spans, its route names, and, without the deprecated `Sentry.setupKoaErrorHandler(app)` call, its error capture.
+
+The patterns below work around this. The bundler plugin instruments your dependencies at build time, so the order no longer matters. The deferred entry point loads your application only after `Sentry.init()` has run.
+
+## Bundler Plugin and Top-Level Import
+
+Instrument your dependencies at build time with the Sentry bundler plugin, then import `instrument.mjs` at the top of your entry point. Because the instrumentation is baked into the bundle, it no longer depends on `Sentry.init()` running before the imports.
+
+The plugin ships for Vite, Rollup, webpack and esbuild:
+
+```javascript {tabTitle:Vite} {filename: vite.config.mjs}
+import { sentryVitePlugin } from "@sentry/node/vite";
+
+export default {
+  plugins: [sentryVitePlugin()],
+};
+```
+
+```javascript {tabTitle:Rollup} {filename: rollup.config.mjs}
+import { sentryRollupPlugin } from "@sentry/node/rollup";
+
+export default {
+  plugins: [sentryRollupPlugin()],
+};
+```
+
+```javascript {tabTitle:webpack} {filename: webpack.config.mjs}
+import { sentryWebpackPlugin } from "@sentry/node/webpack";
+
+export default {
+  plugins: [sentryWebpackPlugin()],
+};
+```
+
+```javascript {tabTitle:esbuild} {filename: build.mjs}
+import { sentryEsbuildPlugin } from "@sentry/node/esbuild";
+
+await esbuild.build({
+  plugins: [sentryEsbuildPlugin()],
+});
+```
+
+Then import your instrument file first:
 
 ```javascript {filename: app.mjs}
 // Import this first!
-import "./instrument";
+import "./instrument.mjs";
 
 // Now import other modules
-import http from "http";
+import express from "express";
 
 // Your application code goes here
+```
+
+## Deferred Entry Point
+
+Without a bundler, split the entry point in two. The static import runs `Sentry.init()`, and the dynamic `import()` loads your application afterwards, so your application's modules are wrapped:
+
+```javascript {filename: main.mjs}
+import "./instrument.mjs";
+
+await import("./app.mjs");
+```
+
+Your application code stays in `app.mjs` and needs no changes. Start it as usual:
+
+```bash
+node main.mjs
 ```
 
 ## Node.js Single Executable Applications
@@ -85,16 +139,7 @@ async function startApp() {
 startApp();
 ```
 
-Keep your Sentry setup in `instrument.mjs`:
-
-```javascript {tabTitle:ESM} {filename: instrument.mjs}
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-});
-```
+This is the deferred entry point pattern above, packaged for SEA. Keep your Sentry setup in `instrument.mjs`.
 
 Then configure SEA to use `sea-main.cjs` as its main script:
 
