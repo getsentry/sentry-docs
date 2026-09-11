@@ -1,93 +1,81 @@
 ---
 title: Data Collected
-description: "See what data is collected by the Sentry Android SDK and how to control automatic collection."
+description: "See what data is collected by the Sentry Android SDK."
 sidebar_order: 1
 ---
 
-The Sentry Android SDK collects crashes, errors, traces, logs, and device context through the integrations you enable. Review this page before release so the SDK's automatic collection matches your mobile privacy disclosures and requirements.
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
 
-Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control supported categories. The first Data Collection field you configure activates the documented Data Collection defaults for every omitted field. If you don't configure Data Collection, the SDK preserves the existing <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink> behavior.
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Android SDK collects. Use <PlatformLink to="/configuration/options/#dataCollection"><PlatformIdentifier name="data-collection" /></PlatformLink> to control automatic collection for supported categories.
+
+After you configure any Data Collection field or pass an empty `DataCollection`, unconfigured fields use their documented defaults.
 
 Data Collection controls only data added automatically by SDK integrations. Data you add through scopes, event processors, `beforeSend`, or other APIs is still sent.
 
-<Alert>
-
-Read our [mobile data privacy FAQ](/security-legal-pii/security/mobile-privacy/) when completing Apple App Store or Google Play privacy details.
-
-</Alert>
-
-## Filtering Key-Value Data
-
-Cookies, HTTP headers, and URL query parameters support three collection modes:
-
-- `OFF` collects nothing in the category.
-- `DENY_LIST` collects values except those matching the built-in sensitive list or your additional terms.
-- `ALLOW_LIST` sends plaintext values only for keys matching your terms. The built-in sensitive list still applies.
-
-Matching is partial and case-insensitive. Sensitive values are replaced with `"[Filtered]"` rather than removed. See the <PlatformLink to="/configuration/options/#dataCollection">Data Collection option</PlatformLink> for manifest and manual-initialization examples.
-
-## User Information and IP Addresses
-
-The SDK assigns a random installation ID when an event has no user ID. This ID is generated once per app installation and isn't controlled by Data Collection.
-
-`dataCollection.userInfo` controls other user information populated automatically, including the `"{{auto}}"` IP address value that asks Sentry to infer the address from the connection. The Data Collection default is `true`. Set it to `false` to prevent automatic IP enrichment.
-
-User information you set explicitly with `Sentry.setUser()` or on a scope isn't removed.
-
 ## HTTP Headers
 
-`dataCollection.httpHeaders.request` and `dataCollection.httpHeaders.response` control request and response headers independently. With the default `DENY_LIST` mode, supported HTTP client integrations collect available headers and replace sensitive values with `"[Filtered]"`.
+Request and response headers use `DENY_LIST` by default. Supported integrations collect header names and non-sensitive values while replacing sensitive values with `"[Filtered]"`.
 
-This applies to captured errors from OkHttp, Ktor Client, and Apollo 3 and 4. Cookie headers are filtered separately through `dataCollection.cookies`.
+Use `dataCollection.httpHeaders.request` and `dataCollection.httpHeaders.response` to control header collection. OkHttp, Ktor Client, and Apollo 3 and 4 can attach available request and response headers to captured HTTP client errors.
 
-Session Replay network details use separate options. See <PlatformLink to="/session-replay/configuration/">Session Replay Configuration</PlatformLink>.
+Session Replay network details use [separate options](/platforms/android/session-replay/configuration/).
 
 ## Cookies
 
-`dataCollection.cookies` controls cookies collected by supported HTTP client integrations. The default `DENY_LIST` mode collects cookie names while filtering values with the built-in sensitive list.
+Cookies use `DENY_LIST` by default. Supported integrations collect cookies while replacing sensitive values with `"[Filtered]"`. Use `dataCollection.cookies` to control cookie collection.
 
-Set the mode to `OFF` to omit cookies, or use `ALLOW_LIST` to expose only selected non-sensitive values.
+## Information About Logged-in User
 
-## Request URLs and Query Parameters
+The SDK assigns a random installation ID when an event has no user ID. This ID is generated once per app installation and isn't controlled by Data Collection.
 
-The base request URL is sent without its query string or fragment where an HTTP client integration records a request. URL fragments may be sent in a separate field and aren't controlled by Data Collection, so avoid placing sensitive values in fragments or scrub them with `beforeSend`.
+`dataCollection.userInfo` allows integrations to populate other user identity information automatically. It defaults to `true`. Set it to `false` to disable automatic user enrichment. User information you set explicitly with `Sentry.setUser()` or on a scope isn't removed.
 
-`dataCollection.urlQueryParams` controls query parameters for instrumented outgoing URLs. The default `DENY_LIST` mode keeps parameter names and non-sensitive values while replacing sensitive values with `"[Filtered]"`. Set the mode to `OFF` to omit the query string.
+## Users' IP Addresses
 
-## HTTP Bodies
+When `dataCollection.userInfo` is `true`, the SDK adds `"{{auto}}"` as the user's IP address so Sentry can infer it from the connection. Set `dataCollection.userInfo=false` to disable automatic IP enrichment.
 
-`dataCollection.httpBodies` can control incoming and outgoing request and response bodies, but an integration collects a body only when that body is available.
+## Request URL
 
-On Android, Apollo 3 and 4 can collect outgoing GraphQL request bodies and incoming GraphQL response bodies. OkHttp and Ktor Client error events collect body sizes, not body content. Use an empty set to disable all body collection.
+The request URL (without the query string) of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
 
-Session Replay's network body collection remains separate. See <PlatformLink to="/session-replay/configuration/">Session Replay Configuration</PlatformLink>.
+## Request Query String
 
-## GraphQL Data
+Query parameters use `DENY_LIST` by default. Use `dataCollection.urlQueryParams` to filter or disable query string collection for instrumented request URLs.
 
-`dataCollection.graphql.document` controls GraphQL documents, and `dataCollection.graphql.variables` controls variables. Both default to `true` when Data Collection is active.
+## Request and Response Bodies
 
-These fields apply to Apollo 3 and 4. Operation metadata used for tracing and grouping can still be collected when document or variable content is disabled.
+All request and response body directions are enabled by default, but integrations collect bodies only where supported. Some integrations collect body content, while others collect only body sizes.
 
-## Device Context
-
-The SDK automatically collects device and operating-system context. This can include battery level, memory use, storage state, orientation, boot time, emulator status, and connectivity.
-
-Static device context, such as the manufacturer and hardware model, is collected independently of Data Collection. Set <PlatformLink to="/configuration/options/#collectAdditionalContext">`collectAdditionalContext=false`</PlatformLink> to reduce additional dynamic context.
+Use `dataCollection.httpBodies` to choose which directions to collect or an empty set to disable body collection. Session Replay network body collection uses [separate options](/platforms/android/session-replay/configuration/).
 
 ## Source Context
 
-The Sentry Gradle plugin can upload source code to Sentry so Issue Details can show the lines around an error. This is opt-in and configured separately. See <PlatformLink to="/source-context/">Source Context</PlatformLink>.
+Our build tool plugins for Gradle and Maven can upload your source code to Sentry, which can then used to show the lines of code where an error happened in the Issue Details page.
+
+To opt into sending this source context to Sentry, you have to enable the feature as described in <PlatformLink to="/source-context/">the Source Context documentation</PlatformLink>.
 
 ## File I/O
 
-`dataCollection.filePaths` controls file names and absolute paths added by File I/O instrumentation. The Data Collection default is `true`. Set it to `false` to omit file names and the `file.path` span data; file extensions and byte counts remain available.
+File I/O instrumentation collects file names and absolute paths by default. Set `dataCollection.filePaths=false` to omit them. File extensions and byte counts remain available when paths are disabled.
+
+## Device Context
+
+The SDK automatically collects device and operating-system context, including the manufacturer, model, architecture, orientation, display details, boot time, timezone, memory size, and emulator status.
+
+Set <PlatformLink to="/configuration/options/#collectAdditionalContext">`collectAdditionalContext=false`</PlatformLink> to reduce additional dynamic context such as battery level, available memory, storage state, and connectivity.
+
+## GraphQL Data
+
+GraphQL document and variable collection default to `true`. Use `dataCollection.graphql.document` and `dataCollection.graphql.variables` to disable either category. Operation metadata used for tracing and grouping can still be collected when document or variable content is disabled.
+
+## SQL Queries
+
+While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password=? WHERE id=?;`) is sent instead.
 
 ## Logs
 
-Data Collection doesn't filter log messages or breadcrumb content. Avoid placing sensitive values in logs, and use `beforeBreadcrumb` or `beforeSend` when you need application-specific filtering.
+Log messages, parameters, and breadcrumb content may contain application data. Data Collection doesn't filter this content. Use `beforeBreadcrumb` or `beforeSend` when you need application-specific filtering.
 
 ## Session Replay
 
-Session Replay has separate privacy defaults and configuration. By default, Replay masks text, images, webviews, and user input. Data Collection doesn't change Replay's URL, header, body, masking, or screenshot settings.
-
-See <PlatformLink to="/session-replay/privacy/">Session Replay Privacy</PlatformLink> for details.
+By default, our Session Replay SDK masks all text content, images, webviews, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/privacy/">more details in the Session Replay documentation</PlatformLink>.
