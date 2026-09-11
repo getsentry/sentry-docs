@@ -32,7 +32,11 @@ Run the command for your preferred package manager to add the Sentry SDK to your
 
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
+### Initialize the SDK
+
+Initializing the Sentry SDK enables core features such as **Error Monitoring**, **Logs**, and **Application Metrics** by default. While Sentry automatically reports errors, you'll need to send logs and metrics manually. We'll show you how that works in steps [#3](#send-logs-optional) and [#4](#send-application-metrics-optional-).
+
+Choose additional features you want to configure, and this guide will show you how to get set up:
 
 <OnboardingOptionButtons
   options={[
@@ -44,8 +48,6 @@ Choose the features you want to configure, and this guide will show you how:
 />
 
 <Include name="quick-start-features-expandable" />
-
-### Initialize the SDK
 
 <SplitLayout>
 <SplitSection>
@@ -66,8 +68,8 @@ import * as Sentry from "@sentry/ember";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
   // ___PRODUCT_OPTION_START___ session-replay
+
   integrations: [
     Sentry.replayIntegration(),
     // ___PRODUCT_OPTION_START___ user-feedback
@@ -78,8 +80,8 @@ Sentry.init({
     // ___PRODUCT_OPTION_END___ user-feedback
   ],
   // ___PRODUCT_OPTION_END___ session-replay
-
   // ___PRODUCT_OPTION_START___ performance
+
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
   // We recommend adjusting this value in production
@@ -120,6 +122,85 @@ export default class App extends Application {
 ### Control the Data You Send to Sentry (Optional)
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs (Optional)
+
+Logs are enabled by default and let you send, view, and query logs from your app within Sentry.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.logger` to send logs at different levels, such as `info` or `warn`, and attach a message.
+You can pass any attributes you want and search or filter by them later.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and the syntax for formatting messages.
+
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// a simple "info" level log
+Sentry.logger.info("User example action completed");
+
+// "warn" log with attributes
+Sentry.logger.warn("Slow operation detected", {
+  operation: "data_fetch",
+  duration: 3500,
+});
+
+// "error" log with attributes
+Sentry.logger.error("Validation failed", {
+  form_field: "email",
+  reason: "Invalid email",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+
+## Send Application Metrics (Optional) <FeatureBadge type="new" />
+
+Application Metrics are enabled by default and allow you to send, view, and query various metrics from your app.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry.
+You can pass any attributes you want and search or filter by them later.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+// a simple "count" metric
+Sentry.metrics.count("checkout.failed", 1)
+
+// "gauge" metric with one attribute
+Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+
+// "count" metric with multiple attributes attached
+Sentry.metrics.count("api_calls", 1, {
+  attributes: {
+    endpoint: "/api/orders",
+    user_tier: "pro",
+    region: "us-west",
+    user_id: user.id,
+    order_id: order.id,
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ## Verify Your Setup
 
@@ -211,14 +292,6 @@ export default class ApplicationController extends Controller {
 
 </OnboardingOption>
 
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
-
 ### View Captured Data in Sentry
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
@@ -233,9 +306,8 @@ Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to [manually capture errors](/platforms/javascript/guides/ember/usage/)
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 - Continue to [customize your configuration](/platforms/javascript/guides/ember/configuration/)
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

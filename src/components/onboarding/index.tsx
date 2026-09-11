@@ -354,7 +354,15 @@ export function OnboardingOptionButtons({
   const codeContext = useContext(CodeContext);
   const {emit} = usePlausibleEvent();
 
-  const normalizedOptions = initialOptions
+  // temporary filter to remove error-monitoring from rendering even if it is requested
+  const filteredOptions = initialOptions.filter(option => {
+    if (typeof option === 'string') {
+      return option !== 'error-monitoring';
+    }
+    return true;
+  });
+
+  const normalizedOptions = filteredOptions
     .map(option => {
       if (typeof option === 'string') {
         return {
