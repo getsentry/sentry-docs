@@ -7,25 +7,30 @@ supported:
   - javascript.node
   - javascript.aws-lambda
   - javascript.azure-functions
+  - javascript.bun
+  - javascript.cloudflare
   - javascript.connect
+  - javascript.deno
+  - javascript.effect
+  - javascript.electron
+  - javascript.elysia
   - javascript.express
   - javascript.fastify
+  - javascript.firebase
   - javascript.gcp-functions
   - javascript.hapi
   - javascript.hono
   - javascript.koa
   - javascript.nestjs
-  - javascript.bun
-  - javascript.deno
+  - javascript.nitro
+  - javascript.astro
   - javascript.nextjs
   - javascript.nuxt
-  - javascript.astro
+  - javascript.react-router
+  - javascript.remix
   - javascript.solidstart
   - javascript.sveltekit
-  - javascript.remix
-  - javascript.cloudflare
   - javascript.tanstackstart-react
-  - javascript.nitro
 ---
 
 If your AI library does not have automatic instrumentation, create spans manually. Spans need well-defined names and data attributes so agent data shows up correctly.
@@ -388,4 +393,18 @@ async function callLLMStreaming(model, messages) {
 
 <Include name="tracing/ai-agents-module/token-cost-gotchas" />
 
-Sentry derives [model cost](/product/agents/costs/) from the model name and token counts. You do not need to set `gen_ai.cost.*` attributes. Pass the raw provider model string unchanged so pricing can resolve.
+By default, Sentry derives [model cost](/product/agents/costs/) from the model name and token counts. Pass the raw provider model string unchanged so pricing can resolve.
+
+## Provide Custom Costs
+
+If your provider reports costs or you use custom pricing, set costs as numeric USD values on each AI span. Always set `gen_ai.cost.total_tokens`, even when you provide a breakdown:
+
+```javascript
+span.setAttributes({
+  "gen_ai.cost.input_tokens": result.cost.input,
+  "gen_ai.cost.output_tokens": result.cost.output,
+  "gen_ai.cost.total_tokens": result.cost.total,
+});
+```
+
+A numeric total tells Sentry to preserve your cost attributes instead of replacing them with estimates. See [Model Costs](/product/agents/costs/#send-custom-costs) for all supported breakdown attributes.

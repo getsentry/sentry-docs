@@ -89,6 +89,7 @@ import LitellmSVG from 'platformicons/svg/litellm.svg';
 import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
+import MastraSVG from 'platformicons/svg/mastra.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import McpSVG from 'platformicons/svg/mcp.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
@@ -145,6 +146,7 @@ import TrytonSVG from 'platformicons/svg/tryton.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
 import UnrealSVG from 'platformicons/svg/unreal.svg';
+import VercelSVG from 'platformicons/svg/vercel.svg';
 import VisualbasicSVG from 'platformicons/svg/visual-basic.svg';
 import VueSVG from 'platformicons/svg/vue.svg';
 import WasmSVG from 'platformicons/svg/wasm.svg';
@@ -242,6 +244,7 @@ import LitellmSVGLarge from 'platformicons/svg_80x80/litellm.svg';
 import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
+import MastraSVGLarge from 'platformicons/svg_80x80/mastra.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import McpSVGLarge from 'platformicons/svg_80x80/mcp.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
@@ -299,6 +302,7 @@ import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
 import UnrealSVGLarge from 'platformicons/svg_80x80/unreal.svg';
+import VercelSVGLarge from 'platformicons/svg_80x80/vercel.svg';
 import VisualbasicSVGLarge from 'platformicons/svg_80x80/visual-basic.svg';
 import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
@@ -310,7 +314,9 @@ import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 // copy is byte-identical to the upstream svg/expo.svg; once platformicons cuts
 // a release with it, bump the dependency and switch to
 // `platformicons/svg/expo.svg` (+ svg_80x80) like every other icon.
+import EveSVG from 'sentry-docs/icons/eve.svg';
 import ExpoSVG from 'sentry-docs/icons/expo.svg';
+import FlueSVG from 'sentry-docs/icons/flue.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -510,6 +516,10 @@ const formatToSVG = {
     sm: EmberSVG,
     lg: EmberSVGLarge,
   },
+  eve: {
+    sm: EveSVG,
+    lg: EveSVG,
+  },
   expo: {
     sm: ExpoSVG,
     lg: ExpoSVG,
@@ -537,6 +547,10 @@ const formatToSVG = {
   flask: {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
+  },
+  flue: {
+    sm: FlueSVG,
+    lg: FlueSVG,
   },
   flutter: {
     sm: FlutterSVG,
@@ -685,6 +699,10 @@ const formatToSVG = {
   loguru: {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
+  },
+  mastra: {
+    sm: MastraSVG,
+    lg: MastraSVGLarge,
   },
   maui: {
     sm: MauiSVG,
@@ -915,6 +933,10 @@ const formatToSVG = {
     sm: VisualbasicSVG,
     lg: VisualbasicSVGLarge,
   },
+  vercel: {
+    sm: VercelSVG,
+    lg: VercelSVGLarge,
+  },
   vue: {
     sm: VueSVG,
     lg: VueSVGLarge,
@@ -972,7 +994,9 @@ export const PLATFORM_TO_ICON = {
   dotnetfx: 'dotnetfx',
   electron: 'electron',
   elixir: 'elixir',
+  eve: 'eve',
   expo: 'expo',
+  flue: 'flue',
   flutter: 'flutter',
   font: 'font',
   fsharp: 'fsharp',
@@ -1027,6 +1051,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
+  'javascript-mastra': 'mastra',
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
@@ -1049,6 +1074,7 @@ export const PLATFORM_TO_ICON = {
   langgraph: 'langgraph',
   litellm: 'litellm',
   linux: 'linux',
+  mastra: 'mastra',
   mcp: 'mcp',
   native: 'nativec',
   'native-qt': 'qt',
@@ -1143,6 +1169,8 @@ export const PLATFORM_TO_ICON = {
   ue4: 'unreal',
   unreal: 'unreal',
   unrealengine: 'unreal',
+  vercel: 'vercel',
+  vercelai: 'vercel',
   visualbasic: 'visual-basic',
   windows: 'windows',
   xbox: 'xbox',

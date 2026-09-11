@@ -1,0 +1,22 @@
+---
+id: span-streaming-default
+title: "Span streaming is now the default"
+phase: code-changes
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 40
+---
+
+Tracing moves to span streaming in v11. Instead of holding a trace in memory and sending one transaction when the root span ends, the SDK sends spans in small batches as they finish. Transactions no longer exist: what used to be one transaction event is a service span with its child spans.
+
+That changes how spans are sent, named, and filtered. Most of it isn't caught by TypeScript, so check your filters, dashboards, and alerts.
+
+Spans are no longer capped at 1000 per transaction, and individual payload limits are higher. See <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> for how it works.
+
+<Alert level="warning">
+
+Because no transaction events are produced, `beforeSendTransaction` and `ignoreTransactions` no longer do anything, and `beforeSendSpan` [receives a different payload](#before-send-span-format).
+
+</Alert>

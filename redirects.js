@@ -587,9 +587,23 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  // Guides → Get Started restructure
+  {
+    source: '/guides/',
+    destination: '/get-started/guides/',
+  },
+  {
+    source: '/guides/:path*',
+    destination: '/get-started/guides/:path*',
+  },
+
   {
     source: '/api/guides/oauth/',
     destination: '/api/auth/',
+  },
+  {
+    source: '/api/guides/',
+    destination: '/api/',
   },
   {
     source: '/product/codecov/:path*',
@@ -1172,6 +1186,10 @@ const userDocsRedirects = [
     source: '/organization/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1365,6 +1383,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog-responder/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/modem/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -2077,6 +2099,10 @@ const userDocsRedirects = [
     destination: '/platforms/react-native/guides/expo/',
   },
   {
+    source: '/platforms/react-native/manual-setup/expo.md',
+    destination: '/platforms/react-native/guides/expo.md',
+  },
+  {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
     destination:
       '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
@@ -2112,6 +2138,10 @@ const userDocsRedirects = [
     source: '/platforms/react-native/tracing/instrumentation/expo-resources/',
     destination:
       '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/configuration/integrations/:path*',
+    destination: '/platforms/react-native/guides/:guide/integrations/:path*',
   },
   {
     source:
@@ -2261,6 +2291,29 @@ const userDocsRedirects = [
   {
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
+  },
+  // Cloudflare AI pages moved from Features to Agent Tracing.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/agents-sdk.md',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/features/agents-sdk/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/workers-ai.md',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/features/workers-ai/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/:path*',
   },
   // Mastra lives under Agent Tracing alongside the other AI library pages.
   // Map older names directly to avoid redirect chains.
@@ -2444,8 +2497,16 @@ const userDocsRedirects = [
   },
   // agent-tracing-browser merged into agent-tracing
   {
+    source: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
     source: '/platforms/javascript/agent-tracing-browser/:path*',
     destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   {
     source: '/platforms/javascript/guides/:guide/agent-tracing-browser/:path*',
@@ -2592,6 +2653,18 @@ const userDocsRedirects = [
     destination: '/platforms/react-native/agent-tracing/:path*',
   },
   {
+    source: '/platforms/react-native/ai-agent-monitoring.md',
+    destination: '/platforms/react-native/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
+  },
+  {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
     destination: '/platforms/php/guides/laravel/agent-tracing/',
   },
@@ -2635,6 +2708,18 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/ai-agent-tracing/:path*',
     destination: '/platforms/react-native/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-tracing.md',
+    destination: '/platforms/react-native/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',

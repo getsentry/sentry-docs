@@ -1,0 +1,31 @@
+---
+id: browser-user-timing
+title: "`performance.mark()` spans moved to `userTimingIntegration`"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: browser
+order: 210
+---
+
+`browserTracingIntegration` no longer captures `performance.mark()` and `performance.measure()` spans by default. The `ignorePerformanceApiSpans` option moved to `userTimingIntegration` as `ignore`.
+
+```js
+// Before
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      ignorePerformanceApiSpans: ["third-party-mark"],
+    }),
+  ],
+});
+
+// After
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.userTimingIntegration({ ignore: ["third-party-mark"] }),
+  ],
+});
+```

@@ -1,0 +1,52 @@
+---
+id: before-send-span-format
+title: "`beforeSendSpan` receives the streamed span format"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 50
+---
+
+`beforeSendSpan` now runs as each span finishes and receives a `StreamedSpanJSON` object. Its fields were renamed:
+
+| Before (`SpanJSON`) | After (`StreamedSpanJSON`)     |
+| ------------------- | ------------------------------ |
+| `description`       | `name`                         |
+| `data`              | `attributes`                   |
+| `op`                | `attributes['sentry.op']`      |
+| `timestamp`         | `end_timestamp`                |
+| `status` (`string`) | `status` (`'ok'` or `'error'`) |
+
+```js
+// Before
+Sentry.init({
+  beforeSendSpan: (span) => {
+    if (span.op === "db.query") {
+      span.description = scrub(span.description);
+      span.data["db.statement"] = scrub(span.data["db.statement"]);
+    }
+    return span;
+  },
+});
+
+// After
+Sentry.init({
+  beforeSendSpan: (span) => {
+    if (span.attributes["sentry.op"] === "db.query") {
+      span.name = scrub(span.name);
+      span.attributes["db.query.text"] = scrub(
+        span.attributes["db.query.text"]
+      );
+    }
+    return span;
+  },
+});
+```
+
+The `status` field of that payload is always set, and holds only `'ok'` or `'error'`. The finer-grained statuses of v10 (`internal_error`, `not_found`, and the rest) all map to `'error'`, with the original value kept on the span's `sentry.status.message` attribute.
+
+If you used `withStreamedSpan()`, [remove the wrapper](#with-streamed-span-noop).
+
+A callback that doesn't match your `traceLifecycle` is never invoked: an unwrapped one is ignored in transaction mode, a wrapped one in stream mode. In transaction mode, wrap it with `Sentry.withStaticSpan()` and it keeps receiving the old `SpanJSON`. Turn on debug logging to see a warning about the mismatch.
