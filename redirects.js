@@ -982,14 +982,17 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
+    source: '/platforms/javascript/guides/connect/',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/connect/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
     source: '/platforms/javascript/guides/node/install/lightweight/',
     destination:
       '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
-  },
-  {
-    source: '/platforms/javascript/guides/connect/install/lightweight/',
-    destination:
-      '/platforms/javascript/guides/connect/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/express/install/lightweight/',
