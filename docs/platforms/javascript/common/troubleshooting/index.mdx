@@ -691,4 +691,75 @@ shamefully-hoist=true
   </Expandable>
 </PlatformSection>
 
+<PlatformSection supported={['javascript.cloudflare']}>
+  <Expandable permalink title="Spans from waitUntil() or other work after the response are missing">
+    Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) lets work continue after the Worker returns a response. Whether those spans arrive depends on your trace lifecycle.
+
+    On the static lifecycle, which is the default, the SDK snapshots the request transaction when the response is returned, so anything finishing later is dropped. Streaming sends each sampled span as it finishes instead, which captures deferred work.
+
+    Set `traceLifecycle: "stream"`, which needs `@sentry/cloudflare` version `10.49.0` or newer:
+
+    ```javascript {filename:index.js}
+    export default Sentry.withSentry(
+      (env) => ({
+        dsn: env.SENTRY_DSN,
+        tracesSampleRate: 1.0,
+        traceLifecycle: "stream",
+      }),
+      worker
+    );
+    ```
+
+    If you need to keep the static lifecycle, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` isn't available in stream mode.
+
+    ```javascript {filename:index.js}
+    ctx.waitUntil(
+      Sentry.startSpan(
+        { name: "background.task", op: "task", forceTransaction: true },
+        () => updateCacheAndDatabase()
+      )
+    );
+    ```
+
+    See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for how streaming changes filtering with `beforeSendSpan` and `ignoreSpans`.
+
+  </Expandable>
+
+  <Expandable permalink title="My events have no release, or the wrong one">
+    The SDK resolves the release from the `release` option you pass, then the `SENTRY_RELEASE` environment variable, then the `CF_VERSION_METADATA.id` binding. The first one that is set wins. Reading the binding automatically needs `@sentry/cloudflare` version `10.35.0` or newer; on earlier versions, pass it as the `release` option yourself, as shown at the end of this entry.
+
+    If your events carry no release, check that the binding is declared in your wrangler config:
+
+    ```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+    {
+      "version_metadata": {
+        "binding": "CF_VERSION_METADATA"
+      }
+    }
+    ```
+
+    ```toml {tabTitle:Toml} {filename:wrangler.toml}
+    [version_metadata]
+    binding = "CF_VERSION_METADATA"
+    ```
+
+    The binding only carries a meaningful version ID on a deployed Worker. In local development the value is [not applicable or accurate](https://developers.cloudflare.com/workers/local-development/), so events from `wrangler dev` or `vite dev` won't match a release in Sentry.
+
+    If your events carry a release you didn't expect, something further up the list is set. A `SENTRY_RELEASE` variable left over in your Worker's environment overrides the binding, and an explicit `release` option overrides both.
+
+    To pin the release to the Cloudflare version ID no matter what else is set, pass it yourself:
+
+    ```javascript
+    Sentry.withSentry(
+      (env) => ({
+        dsn: "___PUBLIC_DSN___",
+        release: env.CF_VERSION_METADATA?.id,
+      })
+      // ...
+    );
+    ```
+
+  </Expandable>
+</PlatformSection>
+
 If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

@@ -1,0 +1,109 @@
+---
+title: Wrangler
+description: "Learn how to instrument a Cloudflare Worker built with Wrangler, using the withSentry wrapper."
+---
+
+<Alert>
+
+We recommend building your Worker with Vite and the <PlatformLink to="/install/vite-plugin/">Sentry Vite plugin</PlatformLink>. It wraps your entry for you and is the only way to trace bundled dependencies in the Workers runtime. To move an existing Wrangler project over, see <PlatformLink to="/install/vite-plugin/#migrating-from-wrangler">Migrating From Wrangler</PlatformLink>.
+
+</Alert>
+
+If you deploy with `wrangler` directly rather than building with Vite, wrap your Worker entry yourself with `Sentry.withSentry()`.
+
+Everything else is the same: install, Wrangler configuration, source maps, and the options reference all carry over from the quick start.
+
+## What You Give Up
+
+`withSentry` gives you the same errors and request traces as the plugin. What a plain Wrangler build can't do is instrument your bundled dependencies.
+
+The Workers runtime doesn't let the SDK patch modules at runtime, so packages like database and AI clients are only traced when something rewrites them during the build. That's what the Vite plugin's `_experimental.useDiagnosticsChannelInjection` does. Without it, spans from those packages are missing, and you only get the spans the SDK creates itself.
+
+You also have to keep the wrapper in your code, and list your RPC trace propagation bindings by hand, because a plain build can't derive them. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
+
+## Configure
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Wrap your exported handler with `Sentry.withSentry()` to start capturing errors and traces from your Worker:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:index.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+
+    dataCollection: {
+      // Any dataCollection object (including {}) uses permissive defaults:
+      // userInfo, cookies, HTTP bodies, genAI prompts/responses, and more.
+      // Uncomment to tighten. Details:
+      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#dataCollection
+      // userInfo: false,
+      // httpBodies: [],
+      // genAI: { inputs: false, outputs: false },
+    },
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+    tracesSampleRate: 1.0,
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // Your worker logic here
+      return new Response("Hello World!");
+    },
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+Durable Objects, Workflows, and Agents SDK classes each need their own wrapper. Use `instrumentDurableObjectWithSentry`, `instrumentWorkflowWithSentry`, and `instrumentAgentWithSentry`, passing the same options callback you gave `withSentry`. See <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>, <PlatformLink to="/features/workflows/">Workflows</PlatformLink>, and <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>.
+
+## Verify Your Setup
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add a `/debug-sentry` route to your Worker that throws when called:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:index.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+  }),
+  {
+    async fetch(request) {
+      const url = new URL(request.url);
+
+      if (url.pathname === "/debug-sentry") {
+        throw new Error("My first Sentry error!");
+      }
+
+      // Your existing routes and logic here...
+      return new Response("...");
+    },
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+Then head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
