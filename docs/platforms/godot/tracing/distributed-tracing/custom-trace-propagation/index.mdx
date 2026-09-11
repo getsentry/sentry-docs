@@ -23,12 +23,16 @@ func fetch_scores() -> void:
 	request.timeout = 10.0
 	add_child(request)
 
-	# Start an inactive span to measure the request, using the active span as its parent if available.
+	# Start an inactive span to measure the request,
+	# using the active span as its parent if available.
 	var span := SentrySDK.start_span(
 		"GET /scores",
-		{"sentry.op": "http.client"},
+		{
+			"sentry.op": "http.client",
+			"server.address": "api.example.com", # Group requests by domain in Sentry.
+		},
 		SentrySDK.get_active_span(),
-		false, # Keep it inactive so telemetry captured while it runs isn't associated with it.
+		false, # Keep inactive to avoid associating ongoing telemetry.
 	)
 
 	# Get trace headers to connect the backend operation to this span.
