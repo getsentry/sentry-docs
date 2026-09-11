@@ -9,7 +9,13 @@ platformCategory: all
 order: 10
 ---
 
-`sendDefaultPii` was replaced by `dataCollection`, which controls each category individually. Leaving `dataCollection` unset collects everything by default. In v10, an unset `sendDefaultPii` was restrictive.
+`sendDefaultPii` is replaced by `dataCollection`, which controls each category of collected data separately. Our blog post [The Data Collection Control Panel](https://blog.sentry.io/datacollection-control-panel/) covers the thinking behind it.
+
+<Alert level="warning">
+
+This is a behavior change, not a rename. In v10, an unset `sendDefaultPii` was restrictive. In v11, an unset `dataCollection` collects everything by default.
+
+</Alert>
 
 | Category              | v10 default (`sendDefaultPii` off) | v11 default          |
 | --------------------- | ---------------------------------- | -------------------- |
@@ -25,7 +31,11 @@ order: 10
 
 If you set `sendDefaultPii: true`, remove it. The v11 default matches that behavior.
 
-If you relied on the v10 default, set the baseline explicitly:
+If you relied on the v10 default, set the baseline explicitly.
+
+Sentry scrubs values whose key looks sensitive (e.g. `auth`, `token`, `secret`, `password`). The match runs on the key name, so treat it as best effort: a credential in a field that isn't named like one still reaches Sentry. Review your <PlatformLink to="/data-management/sensitive-data/">data scrubbing</PlatformLink> config for the categories v11 collects now, especially request and response bodies.
+
+<Expandable title="Keeping the v10 collection defaults">
 
 ```js
 Sentry.init({
@@ -45,6 +55,8 @@ Sentry.init({
 });
 ```
 
-Sentry scrubs values whose key looks sensitive, such as `auth`, `token`, `secret`, or `password`. This is best effort and matches on the key name. Credentials in other fields can still reach Sentry. Review your <PlatformLink to="/data-management/sensitive-data/">data scrubbing</PlatformLink> configuration, especially for request and response bodies.
+The `cookies`, `urlQueryParams`, and `httpHeaders` fields also accept `true`, `false`, `{ allow: string[] }`, or `{ deny: string[] }`.
 
-`cookies`, `urlQueryParams`, and the `httpHeaders` fields also accept `true`, `false`, `{ allow: string[] }`, or `{ deny: string[] }`. See the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> for all categories.
+</Expandable>
+
+See the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> for the full list of categories.
