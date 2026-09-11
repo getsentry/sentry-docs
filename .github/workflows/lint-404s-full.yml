@@ -123,6 +123,8 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --state open \
             --label 404 \
+            --search '"Weekly internal 404 report" in:title' \
+            --limit 100 \
             --json number,title \
             --jq 'map(select(.title == "Weekly internal 404 report"))[0].number // empty')
 
@@ -130,11 +132,24 @@ jobs:
             {
               printf 'The weekly full-site scan found broken internal links.\n\n'
               printf 'Scan run: [%s](%s)\n\n' "$GITHUB_RUN_ID" "$RUN_URL"
-              printf 'The complete scan report is included below and is also available as a workflow artifact.\n\n'
-              while IFS= read -r line || [ -n "$line" ]; do
-                printf '    %s\n' "$line"
-              done < "$REPORT_PATH"
+              printf 'The scan report is included below. The complete report is also available as a workflow artifact.\n\n'
             } > "$RUNNER_TEMP/weekly-404-issue.md"
+            body_size=$(wc -c < "$RUNNER_TEMP/weekly-404-issue.md")
+            report_truncated=false
+
+            while IFS= read -r line || [ -n "$line" ]; do
+              line_size=$(printf '    %s\n' "$line" | wc -c)
+              if [ "$((body_size + line_size))" -gt 60000 ]; then
+                report_truncated=true
+                break
+              fi
+              printf '    %s\n' "$line" >> "$RUNNER_TEMP/weekly-404-issue.md"
+              body_size=$((body_size + line_size))
+            done < "$REPORT_PATH"
+
+            if [ "$report_truncated" = "true" ]; then
+              printf '\n_Report truncated. Download the workflow artifact for the complete report._\n' >> "$RUNNER_TEMP/weekly-404-issue.md"
+            fi
 
             if [ -n "$existing_issue" ]; then
               gh issue edit "$existing_issue" \

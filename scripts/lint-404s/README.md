@@ -74,9 +74,10 @@ The `Weekly Full 404 Check` workflow runs every Sunday at 04:00 UTC. It builds
 workflow artifact.
 
 When the scan finds broken links, the workflow creates an issue with the `404`
-label and includes the complete scan report. Later failing scans update the same
-open issue instead of creating duplicates. When a later scan finds no broken
-internal links, the workflow closes the issue.
+label and includes the scan report. If the report is too large for a GitHub issue,
+the issue contains a truncated report and links to the complete workflow artifact.
+Later failing scans update the same open issue instead of creating duplicates.
+When a later scan finds no broken internal links, the workflow closes the issue.
 
 ## External Link Checking
 
