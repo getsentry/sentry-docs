@@ -1,0 +1,77 @@
+---
+title: WebVitals
+description: "Configure browser Web Vitals collection, including INP, LCP, and CLS."
+notSupported:
+  - javascript.cordova
+  - javascript.capacitor
+  - javascript.electron
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nitro
+  - javascript.nestjs
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.bun
+  - javascript.effect
+  - javascript.elysia
+  - javascript.firebase
+  - javascript.mastra
+---
+
+<Alert>
+
+This integration only works inside a browser environment. Requires JavaScript SDK version 11 or later.
+
+</Alert>
+
+_Import name: `Sentry.webVitalsIntegration`_
+
+The WebVitals integration captures LCP, CLS, and INP for the [Web Vitals dashboard](/product/dashboards/sentry-dashboards/frontend/web-vitals/).
+
+<PlatformLink to="/configuration/integrations/browsertracing/">
+  BrowserTracing
+</PlatformLink>
+adds this integration automatically. Configure it through BrowserTracing's
+`webVitals` option:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      webVitals: {
+        ignore: ["inp"],
+      },
+    }),
+  ],
+});
+```
+
+You can also add `Sentry.webVitalsIntegration({ ... })` directly to `integrations`. Its options take precedence over BrowserTracing's Web Vitals settings.
+
+## Configuration Options
+
+<SdkOption name="ignore" type="Array<'cls' | 'inp' | 'lcp'>" defaultValue="[]">
+
+Web Vitals to skip. By default, all supported Web Vitals are collected.
+
+</SdkOption>
+
+<SdkOption name="softNavigations" type="boolean" defaultValue="true">
+
+Collect LCP, CLS, and INP for each soft navigation detected by the browser's Soft Navigations API. Requires <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">stream mode</PlatformLink> and a browser that supports this API. Set to `false` to collect one set of vitals for the page lifetime.
+
+</SdkOption>
+
+<SdkOption name="bfcache" type="boolean" defaultValue="false">
+
+Collect LCP, CLS, and INP when a page is restored from the back/forward cache. Requires stream mode and BrowserTracing with `instrumentBfcacheRestore` enabled.
+
+</SdkOption>

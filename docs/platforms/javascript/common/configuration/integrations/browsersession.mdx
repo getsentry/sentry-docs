@@ -40,11 +40,19 @@ Sentry.init({
 
 ## Configuration Options
 
-<SdkOption name="lifecycle" type="'route' | 'page'" defaultValue="'route'" availableSince="10.39.0">
+<SdkOption name="lifecycle" type="'route' | 'page'" defaultValue="'page'" availableSince="10.39.0">
 
 Controls how long one session lasts and when a new session is started.
 
-- `'route'`: A new session is started when the route changes, based on the [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API). This is the default behavior. If you're building a single-page application (SPA), this will result in one session being created per soft navigation.
-- `'page'`: A new session is started when the page changes on a hard page reload or navigation. This is useful if you're building a single-page application (SPA) and want to track one session across multiple routes as users navigate through your application.
+- `'page'`: Starts a session on page load. Client-side route changes keep the same session. This is the default.
+- `'route'`: Starts a session on page load and on each navigation detected through the [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API).
+
+To create a session on each client-side navigation in a single-page application, set `lifecycle` to `'route'`:
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.browserSessionIntegration({ lifecycle: "route" })],
+});
+```
 
 </SdkOption>
