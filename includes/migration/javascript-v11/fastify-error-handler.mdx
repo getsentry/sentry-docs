@@ -36,27 +36,8 @@ platformCategory: server
 order: 186
 ---
 
-`fastifyIntegration` is a single, channel-based plugin now that instruments Fastify 3.21 through 5 and captures errors on its own. `setupFastifyErrorHandler(app)` is deprecated and no longer accepts `shouldHandleError`.
+Fastify errors are captured by `fastifyIntegration()` now, so `setupFastifyErrorHandler(app)` is no longer needed. It is deprecated and will be removed in the next major version.
 
-Move the callback to the integration:
+Because the integration owns error capture, `shouldHandleError` moved to `fastifyIntegration()`.
 
-```diff
- Sentry.init({
--  integrations: [Sentry.fastifyIntegration()],
-+  integrations: [
-+    Sentry.fastifyIntegration({
-+      shouldHandleError(_error, _request, reply) {
-+        return reply.statusCode >= 500;
-+      },
-+    }),
-+  ],
- });
-
--Sentry.setupFastifyErrorHandler(app, {
--  shouldHandleError(_error, _request, reply) {
--    return reply.statusCode >= 500;
--  },
--});
-```
-
-`setShouldHandleError`, `instrumentFastify`, and `handleFastifyError` were removed with it.
+The deprecated `instrumentFastify`, `handleFastifyError`, and `setShouldHandleError` exports were removed.

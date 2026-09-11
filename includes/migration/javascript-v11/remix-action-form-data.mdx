@@ -9,19 +9,21 @@ platformCategory: all
 order: 30
 ---
 
-`captureActionFormDataKeys` is an integration-level override now, so it no longer requires `dataCollection.httpBodies` to include `'incomingRequest'`. Captured fields are reported as `remix.action_form_data.<field>` span attributes on every runtime, where Node.js previously used `formData.<field>`.
+`captureActionFormDataKeys` is an integration-level override now, so it opts in on its own and no longer needs `dataCollection.httpBodies` to include `'incomingRequest'`:
 
 ```js
-// v10: both were required
+// Before
 Sentry.init({
   captureActionFormDataKeys: { username: true },
   dataCollection: { httpBodies: ["incomingRequest"] },
 });
 
-// v11
+// After
 Sentry.init({
   captureActionFormDataKeys: { username: true },
 });
 ```
 
-Update dashboards, alerts, and saved searches that query `formData.*`. If you do not set `captureActionFormDataKeys`, all form fields are captured when `dataCollection.httpBodies` includes `'incomingRequest'`, which is the v11 default. Values with sensitive-looking field names are replaced by `[Filtered]`.
+If you don't set the option, all form fields are captured when `dataCollection.httpBodies` includes `'incomingRequest'`, which is the v11 default. Values with a sensitive-looking field name (`password`, `token`) are replaced with `[Filtered]`.
+
+The captured fields are reported as `remix.action_form_data.<field>` span attributes on every runtime. On Node.js they were `formData.<field>` before, so update dashboards, alerts, or saved searches that query them.

@@ -9,17 +9,13 @@ platformCategory: all
 order: 60
 ---
 
-`beforeSendTransaction` no-ops, because span streaming produces no transaction events.
-
-Move scrubbing to `beforeSendSpan` and guard on `is_segment`, and move dropping to `ignoreSpans`:
+Move data changes to `beforeSendSpan` and guard on `is_segment` to target the service span, which is what used to be the transaction. Use `ignoreSpans` to drop spans: `beforeSendSpan` can only change spans, not drop them.
 
 ```js
 // Before
 Sentry.init({
+  ignoreTransactions: ["GET /health"],
   beforeSendTransaction: (event) => {
-    if (event.transaction === "GET /health") {
-      return null;
-    }
     event.transaction = scrubIds(event.transaction);
     return event;
   },
@@ -37,6 +33,4 @@ Sentry.init({
 });
 ```
 
-Ignoring a service span drops its children too. Because `ignoreSpans` applies to every span, [narrow filters with attributes](#ignore-transactions-removed) when child spans share a name.
-
-Scope `tags` and `extra` [no longer apply to spans](#scope-attributes). Use `Sentry.setAttribute()` or `Sentry.setAttributes()`.
+Scope `tags` and `extra` [aren't carried over to streamed spans](#scope-attributes) either.

@@ -9,6 +9,9 @@ platformCategory: all
 order: 40
 ---
 
-`attachStacktrace` now defaults to `true`, so `Sentry.captureMessage` events and non-`Error` values passed to `Sentry.captureException` get a synthetic stack trace. Expect new issue groups, and expect these events to mark sessions as errored (crash-free rate is unaffected).
+`Sentry.captureMessage()` events, and non-`Error` values passed to `Sentry.captureException()`, now attach a synthetic stack trace that points to the call site. Set `attachStacktrace: false` to restore the previous behavior.
 
-Set `attachStacktrace: false` to restore the previous behavior. For purely informational output, use Sentry Logs instead.
+Two consequences are worth checking after you upgrade:
+
+- **Issue grouping:** Sentry groups events with and without stack traces differently, so you may see new issue groups.
+- **Release health:** Events with a stack trace count as errors, so a `captureMessage()` call marks the current session as errored. Crash-free session rate is not affected. For purely informational output, consider [Sentry Logs](/product/logs/) instead.

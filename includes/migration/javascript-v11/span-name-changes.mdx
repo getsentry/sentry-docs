@@ -52,7 +52,7 @@ Whatever the name no longer carries stays on an attribute, in both trace lifecyc
 | `db` (Supabase)             | The query builder call and table (`select(...) from(users)`), or `auth <method>`    | The operation and table (`select users`), or the dotted auth method (`auth.signInWithPassword`)                                           |
 | `db.query` (Redis, ioredis) | The serialized command with redacted arguments (`set test-key [1 other arguments]`) | The operation and connection (`SET localhost:6379`), the operation and redis function for `FCALL`, or `redis`                             |
 
-Check the following behavior changes:
+A few consequences worth checking:
 
 - `useOperationNameForRootSpan` no longer renames the enclosing root span. The operations stay on that span's `sentry.graphql.operation` attribute.
 - `graphqlClientIntegration` no longer appends the operation to the outgoing request span name. It's on `graphql.operation.name` and `graphql.operation.type` instead.
@@ -68,7 +68,7 @@ Check the following behavior changes:
 
 <Alert level="warning">
 
-`ignoreSpans` and `tracesSampler` both run when a span starts, so a span may not have its final name yet. Match on attributes instead:
+`ignoreSpans` and `tracesSampler` both run when a span **starts**, so a span may not have its final name yet. Match on attributes instead:
 
 ```js
 Sentry.init({

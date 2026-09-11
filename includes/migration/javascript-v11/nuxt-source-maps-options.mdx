@@ -9,21 +9,24 @@ platformCategory: all
 order: 360
 ---
 
-The deprecated `sourceMapsUploadOptions` module option was removed. `url` was renamed to `sentryUrl`, and `enabled: false` became `sourcemaps: { disable: true }`.
+The `sourceMapsUploadOptions` option was removed. Move its fields to the top level of the SDK's build options:
 
-Move its fields to the root of the `sentry` module options:
+```js
+// Before
+sourceMapsUploadOptions: {
+  org: "my-org",
+  project: "my-project",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { assets: ["./build/**/*"] },
+}
 
-```ts {filename:nuxt.config.ts}
-export default defineNuxtConfig({
-  modules: ["@sentry/nuxt/module"],
-  sentry: {
-    org: "my-org",
-    project: "my-project",
-    authToken: process.env.SENTRY_AUTH_TOKEN,
-    sentryUrl: "https://my-sentry.example.com",
-    sourcemaps: {
-      assets: ["./dist/**/*"],
-    },
-  },
-});
+// After
+org: "my-org",
+project: "my-project",
+authToken: process.env.SENTRY_AUTH_TOKEN,
+sourcemaps: { assets: ["./build/**/*"] },
 ```
+
+The `url` field is called `sentryUrl` at the top level.
+
+The `enabled` field is gone. Use `sourcemaps: { disable: true }` instead of `enabled: false`.

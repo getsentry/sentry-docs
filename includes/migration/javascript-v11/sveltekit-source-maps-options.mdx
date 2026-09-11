@@ -9,23 +9,22 @@ platformCategory: all
 order: 370
 ---
 
-The deprecated `sourceMapsUploadOptions` option was removed from `sentrySvelteKit()`. `url` was renamed to `sentryUrl`.
+The `sourceMapsUploadOptions` option was removed. Move its fields to the top level of the SDK's build options:
 
-Move its fields to the root of the `sentrySvelteKit()` options:
+```js
+// Before
+sourceMapsUploadOptions: {
+  org: "my-org",
+  project: "my-project",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { assets: ["./build/**/*"] },
+}
 
-```ts {filename:vite.config.ts}
-export default defineConfig({
-  plugins: [
-    sentrySvelteKit({
-      org: "my-org",
-      project: "my-project",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      sentryUrl: "https://my-sentry.example.com",
-      sourcemaps: {
-        assets: ["./build/**/*"],
-      },
-    }),
-    sveltekit(),
-  ],
-});
+// After
+org: "my-org",
+project: "my-project",
+authToken: process.env.SENTRY_AUTH_TOKEN,
+sourcemaps: { assets: ["./build/**/*"] },
 ```
+
+The `url` field is called `sentryUrl` at the top level.

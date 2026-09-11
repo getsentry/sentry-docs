@@ -9,15 +9,12 @@ platformCategory: all
 order: 170
 ---
 
-These exports and options were removed from `@sentry/core` and every SDK that re-exported them:
+The following APIs were removed:
 
-- `addAutoIpAddressToUser`
-- `Scope.clear()`. Use `withScope` or `withIsolationScope` for a fresh scope.
-- The positional `spanOrigin` argument of `instrumentFetchRequest`. Pass `{ spanOrigin }` as the last argument.
-- `createSpanEnvelope`, and the `SpanEnvelope` and `SpanItem` types.
-- `disableInstrumentationWarnings` and the `MissingInstrumentationContext` type.
-- The `semanticAttributes` re-export. Import span attribute constants from `@sentry/core` directly.
-- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE` (`sentry.source`). Use `SENTRY_SEGMENT_NAME_SOURCE` (`sentry.segment.name.source`), which is only set on the root span.
-- The `propagateTrace` option of `getHttpClientSubscriptions` and `patchHttpModuleClient`. It is called `tracePropagation` now, as it already was on `httpIntegration` and `nativeNodeFetchIntegration`.
+- `Scope.clear()` was removed. To reset scope state, re-initialize the SDK or run your code in a fresh scope with `withScope` or `withIsolationScope`.
+- The `disableInstrumentationWarnings` option and the `MissingInstrumentationContext` type were removed. With channel-based instrumentation, the SDK can no longer detect that a framework was imported before `Sentry.init()`.
+- `createSpanEnvelope` and the `SpanEnvelope` and `SpanItem` types were removed. Standalone spans are gone: spans are sent on their transaction, or as streamed spans.
+- The positional `spanOrigin` argument of `instrumentFetchRequest` was removed. Pass an options object as the last argument instead.
+- The internal `addAutoIpAddressToUser` export was removed.
 
-Check direct imports and configuration for these removals, especially in plain JavaScript where TypeScript cannot report them.
+The low-level `propagateTrace` option of `getHttpClientSubscriptions` and `patchHttpModuleClient` is called `tracePropagation` now, matching the `httpIntegration` option of the same name.

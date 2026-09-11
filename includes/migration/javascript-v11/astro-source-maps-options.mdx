@@ -9,21 +9,24 @@ platformCategory: all
 order: 395
 ---
 
-The deprecated `sourceMapsUploadOptions` option was removed from `sentryAstro()`. `assets` and `filesToDeleteAfterUpload` moved into `sourcemaps`, and `enabled: false` became `sourcemaps: { disable: true }`.
+The `sourceMapsUploadOptions` option was removed. Move its fields to the top level of the SDK's build options:
 
-Move its fields to the top level:
+```js
+// Before
+sourceMapsUploadOptions: {
+  org: "my-org",
+  project: "my-project",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { assets: ["./build/**/*"] },
+}
 
-```js {filename:astro.config.mjs}
-export default defineConfig({
-  integrations: [
-    sentry({
-      org: "my-org",
-      project: "my-project",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      sourcemaps: {
-        assets: ["./dist/**/*"],
-      },
-    }),
-  ],
-});
+// After
+org: "my-org",
+project: "my-project",
+authToken: process.env.SENTRY_AUTH_TOKEN,
+sourcemaps: { assets: ["./build/**/*"] },
 ```
+
+The `enabled` field is gone. Use `sourcemaps: { disable: true }` instead of `enabled: false`.
+
+The `assets` and `filesToDeleteAfterUpload` fields moved into `sourcemaps`.

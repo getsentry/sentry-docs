@@ -9,23 +9,22 @@ platformCategory: all
 order: 390
 ---
 
-The `sourceMapsUploadOptions` build option was removed from SolidStart 1 setups using `withSentry()` or `sentrySolidStartVite()`. `enabled: false` became `sourcemaps: { disable: true }`.
+The `sourceMapsUploadOptions` option was removed. Move its fields to the top level of the SDK's build options:
 
-Move its fields to the top level:
+```js
+// Before
+sourceMapsUploadOptions: {
+  org: "my-org",
+  project: "my-project",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { assets: ["./build/**/*"] },
+}
 
-```ts {filename:app.config.ts}
-export default defineConfig(
-  withSentry(
-    {},
-    {
-      telemetry: false,
-      sourcemaps: {
-        disable: false,
-        filesToDeleteAfterUpload: ["./dist/**/*.map"],
-      },
-    }
-  )
-);
+// After
+org: "my-org",
+project: "my-project",
+authToken: process.env.SENTRY_AUTH_TOKEN,
+sourcemaps: { assets: ["./build/**/*"] },
 ```
 
-The build options also accept `applicationKey`, `sentryUrl`, `headers`, `silent`, `errorHandler`, `release`, and `moduleMetadata` now.
+The `enabled` field is gone. Use `sourcemaps: { disable: true }` instead of `enabled: false`.

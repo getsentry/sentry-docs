@@ -36,9 +36,9 @@ platformCategory: server
 order: 320
 ---
 
-`childProcessIntegration` was split into `childProcessIntegration` for `child_process` and `workerThreadsIntegration` for `worker_threads`. Both are on by default. The `captureWorkerErrors` option was removed, and worker thread errors are always captured as events.
+`childProcessIntegration` covers `child_process`, and the new `workerThreadsIntegration` covers `worker_threads`. Both are enabled by default, so no change is needed to keep the previous behavior.
 
-To opt out of worker thread errors, remove the new integration instead:
+The `captureWorkerErrors` option was removed, and worker thread errors are always captured as events. To opt out, remove the integration:
 
 ```js
 // Before
@@ -55,4 +55,4 @@ Sentry.init({
 });
 ```
 
-The `worker_thread` breadcrumb that `captureWorkerErrors: false` produced is gone, so this drops worker thread errors entirely. `includeChildProcessArgs` stays on `childProcessIntegration`. The mechanism type of worker thread errors changed from `auto.child_process.worker_thread` to `auto.node.worker_threads`, so adjust alerts or filters that match on it.
+Note that `captureWorkerErrors: false` used to downgrade worker thread errors to a breadcrumb. That breadcrumb is gone, so removing the integration drops those errors entirely. The mechanism type also changed from `auto.child_process.worker_thread` to `auto.node.worker_threads`.
