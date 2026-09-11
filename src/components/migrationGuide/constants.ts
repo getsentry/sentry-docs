@@ -19,12 +19,12 @@ export const PHASES = [
   {
     id: 'verify',
     title: 'Verify behavior changes',
-    description: 'Things that changed underneath you. Check dashboards and alerts.',
+    description: 'Check dashboards and alerts.',
   },
   {
     id: 'cleanup',
     title: 'Optional cleanup',
-    description: 'Deprecations and type tightening you can address at your own pace.',
+    description: 'Deprecations and type tightening you can address later.',
   },
 ] as const;
 
