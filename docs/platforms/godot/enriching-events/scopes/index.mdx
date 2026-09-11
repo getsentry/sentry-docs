@@ -103,6 +103,16 @@ Crash reports are the exception. They carry only what was set on the global scop
 
 </Alert>
 
+## Scopes and Active Spans
+
+By default, starting an active span with `SentrySDK.start_span()` forks the current scope and makes the fork current on the calling thread. Data you write to the scope through `SentrySDK.get_current_scope()` enriches telemetry captured while that scope is in effect. When the span ends, the previous scope becomes current again, and those changes no longer apply.
+
+If you explicitly pass a `parent_span` that was started as active, the SDK forks that parent's scope instead, even when another span is currently active. The fork inherits that parent's scope data at the moment the child starts. If the parent was started as inactive, the SDK forks the current scope.
+
+`SentrySDK.with_span()` forks a scope the same way and restores the previous scope when its callable returns. Starting an inactive span with `active` set to `false` doesn't fork or change the current scope.
+
+Data you write through `SentrySDK` methods still goes to the global scope, even while a span is active. Use those methods for data that should outlive the span.
+
 ## Scopes and Threads
 
 The current scope belongs to the thread that created it. Write to it from another thread and the SDK rejects the call with an error and drops the data.
