@@ -73,19 +73,11 @@ The `Weekly Full 404 Check` workflow runs every Sunday at 04:00 UTC. It builds
 `master`, checks every rendered page with `--full`, and uploads the report as a
 workflow artifact.
 
-When the scan finds broken links, the workflow uses Claude Code with the
-repository's existing `ANTHROPIC_API_KEY` to propose schema-validated URL
-replacements. Claude has read/search tools only and cannot edit files. A trusted
-script accepts only exact link-destination substitutions in existing Markdown
-and MDX documentation, rejects executable or textual changes, runs tests and a
-second full scan, and uses a narrowly scoped internal GitHub App token to push a
-stable bot branch and open one pull request for human review. If that PR is
-still open on the next run, the workflow adds the new report URL to it instead
-of creating a duplicate. The workflow never enables auto-merge.
-
-The workflow depends on the same `SENTRY_INTERNAL_APP_ID` and
-`SENTRY_INTERNAL_APP_PRIVATE_KEY` configuration used by the existing scheduled
-docs automation.
+When the scan finds broken links, the workflow creates an issue with the `404`
+label and includes the scan report. If the report is too large for a GitHub issue,
+the issue contains a truncated report and links to the complete workflow artifact.
+Later failing scans update the same open issue instead of creating duplicates.
+When a later scan finds no broken internal links, the workflow closes the issue.
 
 ## External Link Checking
 
