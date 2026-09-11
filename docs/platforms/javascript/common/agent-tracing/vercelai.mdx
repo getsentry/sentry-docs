@@ -63,16 +63,9 @@ Everything else depends on which runtime you're in:
 
 <PlatformSection supported={['javascript.cloudflare']}>
 
-Cloudflare Workers can't load OpenTelemetry instrumentation. On both entrypoints, Sentry reads the spans the AI SDK emits on its own instead of patching your call sites, so you must pass `experimental_telemetry` on every call. The <PlatformLink to="/features/nodejs-compat">`@sentry/cloudflare/nodejs_compat`</PlatformLink> entrypoint adds the Node.js APIs the AI SDK v7 telemetry channel needs.
+Cloudflare Workers can't load OpenTelemetry instrumentation. Sentry reads the spans the AI SDK emits on its own instead of patching your call sites, so you must pass `experimental_telemetry` on every call.
 
-Your entrypoint decides the rest:
-
-|                              | `@sentry/cloudflare` | `@sentry/cloudflare/nodejs_compat` |
-| ---------------------------- | -------------------- | ---------------------------------- |
-| Record inputs and outputs    | Per call only        | Integration or per call            |
-| AI SDK v7                    | Not supported        | Supported                          |
-| Minimum Sentry SDK           | `10.6.0`             | `10.64.0`                          |
-| Minimum `compatibility_date` | `2024-09-23`         | `2026-02-19`                       |
+The AI SDK v7 telemetry channel needs Node.js APIs, which the Worker gets from the `nodejs_compat` compatibility flag. Set a `compatibility_date` of `2026-02-19` or later to record AI SDK v7 spans.
 
 </PlatformSection>
 
@@ -146,10 +139,10 @@ Deno can't load OpenTelemetry instrumentation, so Sentry can't patch your call s
 
 ### AI SDK v7
 
-Use the <PlatformLink to="/features/nodejs-compat">`@sentry/cloudflare/nodejs_compat`</PlatformLink> entrypoint and enable the Wrangler `nodejs_compat` flag:
+Enable the Wrangler `nodejs_compat` flag and set a `compatibility_date` of `2026-02-19` or later:
 
 ```javascript
-import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
   (env) => ({
@@ -199,7 +192,7 @@ export default Sentry.withSentry(
 );
 ```
 
-On both entrypoints, adding the integration is not enough on its own. Cloudflare can't patch your call sites, so you must also pass `experimental_telemetry` on every call — including on `nodejs_compat`. See [Turn on telemetry](#turn-on-telemetry).
+Adding the integration is not enough on its own. Cloudflare can't patch your call sites, so you must also pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
 
 </PlatformSection>
 
@@ -286,12 +279,12 @@ const result = await generateText({
 
 <PlatformSection supported={['javascript.cloudflare']}>
 
-### `@sentry/cloudflare/nodejs_compat`
+### On the integration
 
 Set the options on the integration to cover every call:
 
 ```javascript
-import * as Sentry from "@sentry/cloudflare/nodejs_compat";
+import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
   (env) => ({
@@ -312,13 +305,9 @@ export default Sentry.withSentry(
 );
 ```
 
-### `@sentry/cloudflare`
+### Per call
 
-<Alert level="warning">
-
-The default entrypoint ignores `recordInputs` and `recordOutputs` on the integration. It accepts no error and logs no warning — your prompts are simply missing. Set both per call.
-
-</Alert>
+Or set them on a single call, which overrides the integration for that call:
 
 ```javascript
 const result = await generateText({
@@ -470,7 +459,7 @@ Pass these to `Sentry.vercelAIIntegration()`. The Edge runtime accepts `enableTr
 
 <PlatformSection supported={['javascript.cloudflare']}>
 
-Pass these to `Sentry.vercelAIIntegration()`. The default `@sentry/cloudflare` entrypoint accepts `enableTruncation` only; <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink> also accepts `recordInputs` and `recordOutputs`. Neither has module detection to override, so `force` does not apply.
+Pass these to `Sentry.vercelAIIntegration()`. Cloudflare accepts `enableTruncation`, `recordInputs` and `recordOutputs`. It has no module detection to override, so `force` does not apply.
 
 </PlatformSection>
 
@@ -603,8 +592,8 @@ Plus `generate()` and `stream()` on [`ToolLoopAgent`](#toolloopagent).
 
 <PlatformSection supported={['javascript.cloudflare']}>
 
-- Sentry SDK: `10.6.0`+ with `@sentry/cloudflare`
-- Sentry SDK: `10.64.0`+ with `@sentry/cloudflare/nodejs_compat`, required for `ai` v7
+- Sentry SDK: `10.6.0`+
+- `compatibility_date`: `2026-02-19`+, required for `ai` v7
 
 </PlatformSection>
 

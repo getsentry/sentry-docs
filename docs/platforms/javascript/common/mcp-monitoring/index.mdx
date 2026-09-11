@@ -57,30 +57,11 @@ These options override the corresponding `dataCollection.genAI.inputs` and `data
 
 ## Preserve MCP Spans After the Response
 
-Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. With the static trace lifecycle, Sentry snapshots the request transaction when the response is returned, so MCP spans that finish later may be missing.
+Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. The SDK streams spans by default, sending each sampled span as it finishes, so this work is captured without extra configuration. You still need to wrap the MCP server as shown above.
 
-Set `traceLifecycle: "stream"` so the SDK can send each sampled span when it finishes. This changes how spans are delivered; you still need to wrap the MCP server as shown above. Span streaming on Cloudflare requires `@sentry/cloudflare` version `10.49.0` or newer.
+If you set `traceLifecycle: "static"`, the SDK snapshots the request transaction when the response is returned and MCP spans that finish later are dropped. Remove the option to get them back.
 
-```javascript {filename:index.js}
-import * as Sentry from "@sentry/cloudflare";
-
-const worker = {
-  async fetch(request, env, ctx) {
-    return handleMcpRequest(request, env, ctx);
-  },
-};
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    traceLifecycle: "stream",
-  }),
-  worker
-);
-```
-
-Stream mode sends span records instead of assembling one transaction event with embedded spans. `beforeSendTransaction` and `ignoreTransactions` don't apply to streamed spans. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for the `beforeSendSpan` and `ignoreSpans` configuration.
+Streaming sends span records instead of assembling one transaction event with embedded spans. `beforeSendTransaction` and `ignoreTransactions` don't apply to streamed spans. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for the `beforeSendSpan` and `ignoreSpans` configuration.
 
 If you use `McpAgent`, wrap the `McpServer` returned by its `server` getter, and wrap the Agent class separately with `instrumentAgentWithSentry` to preserve request and RPC context. Agent instrumentation, MCP server wrapping, and span streaming solve different parts of the setup; none replaces the others. See <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>.
 
@@ -90,7 +71,7 @@ If you use `McpAgent`, wrap the `McpServer` returned by its `server` getter, and
 
 ## Hono on Cloudflare Workers
 
-If your Hono app runs on Cloudflare Workers, MCP work can finish after the Worker returns its response. Set `traceLifecycle: "stream"` in the Hono Sentry middleware so each sampled span is sent when it finishes:
+If your Hono app runs on Cloudflare Workers, MCP work can finish after the Worker returns its response. The middleware streams spans by default, sending each sampled span as it finishes, so that work is captured on its own:
 
 ```javascript {filename:index.js}
 import { sentry } from "@sentry/hono/cloudflare";
@@ -99,12 +80,11 @@ app.use(
   sentry(app, {
     dsn: "___PUBLIC_DSN___",
     tracesSampleRate: 1.0,
-    traceLifecycle: "stream",
   })
 );
 ```
 
-This changes how spans are delivered; it doesn't replace `wrapMcpServerWithSentry`. Stream mode requires `@sentry/hono` and `@sentry/cloudflare` version `10.49.0` or newer. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
+Setting `traceLifecycle: "static"` drops the spans that finish after the response. Streaming changes how spans are delivered; it doesn't replace `wrapMcpServerWithSentry`. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
 
 </PlatformSection>
 
