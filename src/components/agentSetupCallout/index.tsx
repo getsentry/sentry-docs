@@ -101,7 +101,7 @@ export function AgentSetupCallout({skill, platformName}: Props) {
           </p>
           <CodeBlock language="bash">
             <pre className="language-bash">
-              <code>npx @sentry/ai install</code>
+              <code>npx @sentry/agent-plugin install</code>
             </pre>
           </CodeBlock>
         </div>
