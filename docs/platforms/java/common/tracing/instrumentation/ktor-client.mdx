@@ -19,6 +19,7 @@ The `sentry-ktor-client` library provides [Ktor Client](https://ktor.io/) suppor
 
 On this page, we get you up and running with Sentry's Ktor Client Integration.
 The integration supports:
+
 - Adding breadcrumbs for each HTTP request.
 - Capturing spans for each HTTP Request, with support for distributed tracing. The span will be created as a child of the current span bound to the scope (if any).
 - Capturing certain request failures as errors in Sentry.
@@ -26,9 +27,13 @@ The integration supports:
 The Sentry Ktor Client integration supports Ktor Client version `3.x`.
 
 <Alert level="warning">
-  If you're using Ktor Client with OKHttp as the engine, and you're already using the [Sentry OkHttp integration](/platforms/java/tracing/instrumentation/okhttp/),
-  you should avoid using this integration, otherwise the SDK will produce duplicate data, instrumenting each HTTP request twice.
-  Use the [Sentry OkHttp integration](/platforms/java/tracing/instrumentation/okhttp/) instead, as it provides more detailed information about HTTP request.
+  If you're using Ktor Client with OKHttp as the engine, and you're already
+  using the [Sentry OkHttp
+  integration](/platforms/java/tracing/instrumentation/okhttp/), you should
+  avoid using this integration, otherwise the SDK will produce duplicate data,
+  instrumenting each HTTP request twice. Use the [Sentry OkHttp
+  integration](/platforms/java/tracing/instrumentation/okhttp/) instead, as it
+  provides more detailed information about HTTP request.
 </Alert>
 
 ## Install
@@ -142,13 +147,20 @@ val ktorClient = HttpClient(Java) {
 }
 ```
 
-By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control the request and response headers, cookies, and URL query parameters attached to error events. For example, allow selected request headers and omit cookies:
 
 ```kotlin
+import io.sentry.KeyValueCollectionBehavior
+import io.sentry.Sentry
+
 Sentry.init { options ->
-  options.isSendDefaultPii = true
+  options.dataCollection.httpHeaders.request =
+    KeyValueCollectionBehavior.allowList("content-type", "x-request-id")
+  options.dataCollection.cookies = KeyValueCollectionBehavior.off()
 }
 ```
+
+Configuring either field activates the Data Collection defaults for omitted fields. Sensitive values still use the built-in filtering rules.
 
 Those events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
 

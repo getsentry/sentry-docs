@@ -1,81 +1,94 @@
 ---
 title: Data Collected
-description: "See what data is collected by the Sentry Java SDK."
+description: "See what data is collected by the Sentry Java SDK and how to control automatic collection."
 sidebar_order: 1
 ---
 
-Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+The Sentry Java SDK collects errors, traces, logs, and debugging context through the integrations you enable. Review this page before production rollout so the SDK's automatic collection matches your privacy requirements.
 
-The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Java SDK collects.
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control supported categories. The first Data Collection field you configure activates the documented Data Collection defaults for every omitted field. If you don't configure Data Collection, the SDK preserves the existing <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink> behavior.
 
-For many of the categories listed here it is required to enable the <PlatformLink to="/configuration/options/#sendDefaultPii">sendDefaultPii option</PlatformLink>.
+Data Collection controls only data added automatically by SDK integrations. Data you add through scopes, event processors, `beforeSend`, or other APIs is still sent.
+
+## Filtering Key-Value Data
+
+Cookies, HTTP headers, and URL query parameters support three collection modes:
+
+- `OFF` collects nothing in the category.
+- `DENY_LIST` collects values except those matching the built-in sensitive list or your additional terms.
+- `ALLOW_LIST` sends plaintext values only for keys matching your terms. The built-in sensitive list still applies.
+
+Matching is partial and case-insensitive. Sensitive values are replaced with `"[Filtered]"` rather than removed. See the <PlatformLink to="/configuration/options/#dataCollection">Data Collection option</PlatformLink> for configuration examples.
+
+## User Information and IP Addresses
+
+`dataCollection.userInfo` controls user information populated automatically by integrations. This includes Spring Security usernames and the `"{{auto}}"` IP address value, which asks Sentry to infer the address from the connection.
+
+The Data Collection default is `true`. Set it to `false` to prevent automatic user enrichment. User information you set explicitly with `Sentry.setUser()` or on a scope isn't removed.
 
 ## HTTP Headers
 
-### Outgoing Requests
+`dataCollection.httpHeaders.request` and `dataCollection.httpHeaders.response` control request and response headers independently. With the default `DENY_LIST` mode, integrations collect available headers and replace sensitive values with `"[Filtered]"`.
 
-By default, the Sentry SDK doesn't send any headers for outgoing HTTP requests. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) in place, which filters out any headers that contain sensitive data.
+Header availability depends on the integration. Servlet and Spring integrations can collect incoming request headers, while OkHttp, Ktor Client, and Apollo can collect request and response headers for captured HTTP client errors.
 
-To send all HTTP headers, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>.
-
-### Incoming Requests
-
-By default, the Sentry SDK sends headers for incoming HTTP requests to Sentry but filters out any headers that contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) that are filtered).
-
-To send all HTTP headers, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>.
+Cookie headers are filtered separately through `dataCollection.cookies`.
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cookies that contain sensitive information, such as the Session ID and CSRF Token cookies.
+`dataCollection.cookies` controls cookies collected by supported Spring and HTTP client integrations. The default `DENY_LIST` mode collects cookie names while filtering values with the built-in sensitive list.
 
-If you want to send cookies, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+Set the mode to `OFF` to omit cookies, or use `ALLOW_LIST` to expose only selected non-sensitive values.
 
-## Information About Logged-in User
+## Request URLs and Query Parameters
 
-By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+The base request URL is sent without its query string or fragment where an integration records an HTTP request. URL fragments may be sent in a separate field and aren't controlled by Data Collection, so avoid placing sensitive values in fragments or scrub them with `beforeSend`.
 
-To start sending logged-in user information, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+`dataCollection.urlQueryParams` controls query parameters for instrumented incoming and outgoing URLs, including HTTP spans and breadcrumbs created by integrations such as Spring and OpenFeign. The default `DENY_LIST` mode keeps parameter names and non-sensitive values while replacing sensitive values with `"[Filtered]"`. Set the mode to `OFF` to omit the query string.
 
-## Users' IP Addresses
+## HTTP Bodies
 
-By default, the Sentry SDK doesn't send the user's IP address. Once enabled, the Sentry backend services will infer the user ip address based on the incoming request, unless certain integrations you can enable override this behavior.
+`dataCollection.httpBodies` controls four body directions independently:
 
-To enable sending the user's IP address, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+- `INCOMING_REQUEST`
+- `OUTGOING_REQUEST`
+- `INCOMING_RESPONSE`
+- `OUTGOING_RESPONSE`
 
-## Request URL
+All four are enabled by the Data Collection defaults, but an integration collects a body only when that body is available. For example, Spring can collect supported incoming request bodies, GraphQL server instrumentation can collect request and response data, and Apollo 3 and 4 can collect GraphQL client request and response bodies. OkHttp and Ktor Client error events collect body sizes, not body content.
 
-The full request URL of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+For Spring request bodies, <PlatformLink to="/configuration/options/#maxRequestBodySize">`maxRequestBodySize`</PlatformLink> also limits collection and defaults to `NONE`. Spring collects only supported JSON and form bodies within that size limit.
 
-## Request Query String
+Use an empty set to disable all body collection.
 
-The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+## GraphQL Data
 
-## Request Body
+`dataCollection.graphql.document` controls GraphQL documents, and `dataCollection.graphql.variables` controls variables. Both default to `true` when Data Collection is active.
 
-The request body of incoming HTTP requests can be sent to Sentry. Whether it's sent or not, depends on the type and size of request body as described below:
+These fields apply to supported GraphQL server instrumentation and Apollo 3 and 4. Operation metadata used for tracing and grouping can still be collected when document or variable content is disabled.
 
-- **The type of the request body:**
-  - JSON and form bodies are sent
-- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#maxRequestBodySize">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
+## Database Query Data
+
+The SDK sends SQL statements in parameterized form. For example, it sends `UPDATE app_user SET password=? WHERE id=?` instead of literal values.
+
+`dataCollection.databaseQueryData` controls additional query data, such as bound parameters, write payloads, or results, where an integration supports it. Sanitized statements and structural database metadata remain available when this option is `false`.
+
+## OpenTelemetry Attributes
+
+Data Collection can't distinguish attributes added automatically by OpenTelemetry instrumentation from attributes your application adds explicitly. Configure the OpenTelemetry instrumentation that produces those attributes, or scrub them with `beforeSendTransaction`.
+
+Sentry's legacy extraction of OpenTelemetry HTTP header attributes continues to use `sendDefaultPii` and isn't controlled by Data Collection yet.
 
 ## Source Context
 
-Our build tool plugins for Gradle and Maven can upload your source code to Sentry, which can then used to show the lines of code where an error happened in the Issue Details page.
-
-To opt into sending this source context to Sentry, you have to enable the feature as described in <PlatformLink to="/source-context/">the Source Context documentation</PlatformLink>.
+The Gradle and Maven plugins can upload source code to Sentry so Issue Details can show the lines around an error. This is opt-in and configured separately. See <PlatformLink to="/source-context/">Source Context</PlatformLink>.
 
 ## File I/O
 
-By default the Sentry SDK does not send the name or path of files when instrumenting File I/O.
-
-If you want to send file names and paths, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+File names and paths aren't part of Data Collection yet. File I/O instrumentation omits them unless <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>.
 
 ## Log Messages
 
-By default the Sentry SDK does not send unencoded Logback messages and parameters if an encoder has been set. It will however send the encoded message.
+Data Collection doesn't filter log messages or breadcrumb content. Avoid placing sensitive values in logs, and use `beforeBreadcrumb` or `beforeSend` when you need application-specific filtering.
 
-If you want to send the unencoded message and parameters, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
-
-## SQL Queries
-
-While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password=? WHERE id=?;`) is sent instead.
+When a Logback encoder is configured, unencoded messages and parameters continue to use <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink>. The encoded message is still sent.

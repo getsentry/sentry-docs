@@ -12,6 +12,7 @@ The `sentry-ktor-client` library provides [Ktor Client](https://ktor.io/) suppor
 
 On this page, we get you up and running with Sentry's Ktor Client Integration.
 The integration supports:
+
 - Adding breadcrumbs for each HTTP request.
 - Capturing spans for each HTTP Request, with support for distributed tracing. The span will be created as a child of the current span bound to the scope (if any).
 - Capturing certain request failures as errors in Sentry.
@@ -19,9 +20,14 @@ The integration supports:
 The Sentry Ktor Client integration supports Ktor Client version `3.x`.
 
 <Alert level="warning">
-  If you're using Ktor Client with OKHttp as the engine, and you're already using the [Sentry OkHttp integration](/platforms/android/integrations/okhttp/),
-  either with manual or automatic installation (via the Sentry Android Gradle Plugin), you should avoid using this integration, otherwise the SDK will produce duplicate data, instrumenting each HTTP request twice.
-  Use the [Sentry OkHttp integration](/platforms/android/integrations/okhttp/) instead, as it provides more detailed information about HTTP request.
+  If you're using Ktor Client with OKHttp as the engine, and you're already
+  using the [Sentry OkHttp
+  integration](/platforms/android/integrations/okhttp/), either with manual or
+  automatic installation (via the Sentry Android Gradle Plugin), you should
+  avoid using this integration, otherwise the SDK will produce duplicate data,
+  instrumenting each HTTP request twice. Use the [Sentry OkHttp
+  integration](/platforms/android/integrations/okhttp/) instead, as it provides
+  more detailed information about HTTP request.
 </Alert>
 
 ## Install
@@ -36,7 +42,6 @@ implementation 'io.sentry:sentry-ktor-client:{{@inject packages.version('sentry.
 ## Configure
 
 Create the Ktor HTTP Client with your preferred engine, and install the Sentry Ktor Client Plugin:
-
 
 ```kotlin
 import io.ktor.client.*
@@ -76,7 +81,7 @@ suspend fun run(url: String): String? {
 
 <Alert>
 
-  Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
 
 </Alert>
 
@@ -143,13 +148,23 @@ val ktorClient = HttpClient(Android) {
 }
 ```
 
-By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control the request and response headers, cookies, and URL query parameters attached to error events. For example, allow selected request headers and omit cookies:
 
 ```xml {filename:AndroidManifest.xml}
 <application>
-  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-headers.request.mode"
+      android:value="allow_list" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-headers.request.terms"
+      android:value="content-type,x-request-id" />
+  <meta-data
+      android:name="io.sentry.data-collection.cookies.mode"
+      android:value="off" />
 </application>
 ```
+
+Configuring any field activates the Data Collection defaults for omitted fields. Sensitive values still use the built-in filtering rules.
 
 Those events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
 
