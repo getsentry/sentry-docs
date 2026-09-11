@@ -9,20 +9,34 @@ platformCategory: server
 order: 130
 ---
 
-`skipOpenTelemetrySetup` was replaced by `enableOpenTelemetrySetup`, with inverted meaning. It defaults to `false` for most server SDKs, and `true` for `@sentry/nextjs` and `@sentry/sveltekit`.
+`skipOpenTelemetrySetup` is replaced by `enableOpenTelemetrySetup`. Turn it on and the SDK registers a custom OpenTelemetry tracer provider, context manager, and propagator, which turns spans from `@opentelemetry/api` into Sentry spans. It's off by default, except on `@sentry/nextjs` and `@sentry/sveltekit`, which need it to capture the spans those frameworks emit.
+
+<Expandable title="Sending spans from @opentelemetry/api to Sentry">
+
+Turn this on when a library you depend on, or your own code, creates spans through `@opentelemetry/api` and you want them in Sentry:
 
 ```js
-// Before
-Sentry.init({ skipOpenTelemetrySetup: true });
+import { trace } from "@opentelemetry/api";
 
-// After
-Sentry.init({ enableOpenTelemetrySetup: false });
+// Somewhere in your app, or inside a dependency
+const tracer = trace.getTracer("my-library");
+
+tracer.startActiveSpan("work", (span) => {
+  doWork();
+  span.end();
+});
 ```
 
-Pick the setup you want:
+With `enableOpenTelemetrySetup: true`, the span is captured, without it, the span is ignored. `enableOpenTelemetrySetup` isn't meant for setups that already run their own OpenTelemetry pipeline. See [Running your own OpenTelemetry setup](#custom-otel-setup).
 
-1. **Sentry only** (default): nothing to set.
-2. **OpenTelemetry-compatible, everything to Sentry**: set `enableOpenTelemetrySetup: true`. Spans created through `@opentelemetry/api` become Sentry spans. There is no exporter and no OTLP output. Sentry refuses to register its provider if you already registered one of your own.
-3. **Your own OpenTelemetry, Sentry linked to it**: leave it unset or `false`, turn Sentry tracing off, and add `Sentry.openTelemetryIntegration()`. On `@sentry/nextjs` and `@sentry/sveltekit` you must set it to `false` explicitly.
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  enableOpenTelemetrySetup: true,
+});
+```
 
-`@sentry/cloudflare/request` does not support setup 2; use the main `@sentry/cloudflare` entry point for that. Note that `skipOpenTelemetrySetup: true` also turned Sentry's HTTP and fetch spans off in v10. They are emitted whenever tracing is enabled now, regardless of `enableOpenTelemetrySetup`.
+This is not a general OpenTelemetry pipeline: no exporter, no OTLP output. Sentry also refuses to register its provider if you already registered one of your own, and the `@sentry/cloudflare/request` entry point doesn't support the option at all.
+
+</Expandable>
