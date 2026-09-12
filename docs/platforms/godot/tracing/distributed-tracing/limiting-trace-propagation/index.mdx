@@ -1,0 +1,25 @@
+---
+title: Limiting Trace Propagation
+description: "Learn how to restrict outgoing trace headers to trusted backend services in your Godot game."
+sidebar_order: 100
+---
+
+By default, the SDK returns tracing headers for any destination URL. To restrict propagation to specific services, configure <PlatformLink to="/configuration/options/#trace_propagation_targets">`trace_propagation_targets`</PlatformLink>:
+
+```GDScript {filename:ProjectMainLoop.gd}
+class_name ProjectMainLoop
+extends SceneTree
+
+func _initialize() -> void:
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		options.trace_propagation_targets = [
+			RegEx.create_from_string("^https://api\\.example\\.com/"),
+		]
+	)
+```
+
+This matches URLs such as `https://api.example.com/scores`. See <PlatformLink to="/configuration/options/#programmatic-configuration">Programmatic Configuration</PlatformLink> for the manual initialization setup.
+
+Pass the destination URL to `get_trace_headers(url)` to apply these targets. Unmatched URLs receive no tracing headers; an empty target list blocks all URLs. Calling `get_trace_headers()` without a URL bypasses filtering. You still need to <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">attach the returned headers to your request</PlatformLink>.
+
+The <PlatformLink to="/configuration/options/#trace_propagation_targets">option reference</PlatformLink> explains string and regular expression matching and configuration through Project Settings.

@@ -1,0 +1,27 @@
+---
+title: Dealing with CORS Issues
+description: "Learn how to allow Sentry trace headers on requests from Godot Web exports to your backend."
+sidebar_order: 80
+---
+
+If your Web game calls a backend on another origin, adding tracing headers can cause the browser to block the request unless the backend allows them. For example, a game at `https://game.example.com` calling `https://api.example.com` needs the backend's permission to make that cross-origin request.
+
+## Allow Trace Headers on Your Backend
+
+Configure your backend's CORS headers to allow `sentry-trace` and `baggage`:
+
+```http
+Access-Control-Allow-Headers: sentry-trace, baggage
+```
+
+The exact server configuration depends on your setup.
+
+If you enable <PlatformLink to="/configuration/options/#propagate_traceparent">`propagate_traceparent`</PlatformLink>, also allow that header:
+
+```http
+Access-Control-Allow-Headers: sentry-trace, baggage, traceparent
+```
+
+## Check the SDK Targets Too
+
+If you've restricted <PlatformLink to="/tracing/distributed-tracing/limiting-trace-propagation/">trace propagation targets</PlatformLink>, make sure they include your backend URL so `get_trace_headers(url)` returns tracing headers for it.
