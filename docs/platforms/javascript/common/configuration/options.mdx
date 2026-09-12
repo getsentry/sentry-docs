@@ -123,6 +123,8 @@ Sentry.init({
   dataCollection: {
     userInfo: false,
     genAI: { inputs: false, outputs: false },
+    databaseQueryData: false,
+    queues: false,
     httpBodies: [],
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
@@ -151,6 +153,8 @@ For more on what data Sentry collects and how to control it, see <PlatformLink t
 | `httpBodies`          | `HttpBodyCollectionTarget[]` | all types  | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable.    |
 | `urlQueryParams`      | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
 | `genAI`               | `{ inputs?, outputs? }`      | both `true`| Collect generative AI input/output content. Metadata is always collected.                                                                |
+| `databaseQueryData`   | `boolean`                    | `true`     | Collect the data inside database queries: bound query parameters, write payloads, and returned rows. The parameterized query text and structural metadata are always collected. |
+| `queues`              | `boolean`                    | `true`     | Collect the data passed to tasks within queues. For Kafka, this is the message key. Structural metadata, such as the messaging system, the topic, and the partition, is always collected. |
 | `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
 | `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
 
@@ -265,7 +269,7 @@ Set this option to `false` to disable sending of client reports. Client reports 
 
 Set this option to `true` to add stack local variables to stack traces.
 
-<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno"]}>
+<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno", "javascript.effect", "javascript.elysia", "javascript.firebase", "javascript.nitro"]}>
 
 For more advanced configuration options, see the documentation on the <PlatformLink to="/configuration/integrations/localvariables">Local Variables integration options</PlatformLink>.
 
@@ -523,7 +527,7 @@ For example, the Sentry Nuxt SDK does not attach an error handler as it's captur
 
 <Alert>
 
-If you're using <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, tracing options work the same way as described but apply to service spans instead of transactions.
+If you're using <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>, tracing options work the same way as described but apply to service spans instead of transactions.
 
 </Alert>
 
@@ -668,7 +672,7 @@ A list of strings or regex patterns matching spans that shouldn't be sent to Sen
 If a matching span is a transaction or service span, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
 By default, no spans are ignored.
 
-In <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
+In <PlatformLink to="/tracing/streamed-spans" fallbackPlatform="javascript">stream mode</PlatformLink>, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
 
 <Alert level="warning" title="Migrating from transaction mode?">
 
@@ -729,7 +733,7 @@ If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org
 This header is attached in addition to the `sentry-trace` and `baggage` headers.
 Set this option to `true` if your backend services are instrumented with e.g. OpenTelemetry or other W3C Trace Context compatible libraries and you want to continue traces from the client.
 
-<PlatformSection notSupported={["javascript.cordova"]}>
+<PlatformSection notSupported={["javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.cordova", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.node"]}>
 
 **Important:** Make sure that your backend services' CORS configuration allows the `traceparent` header.
 Otherwise, requests might be blocked.
@@ -757,13 +761,13 @@ Self-hosted Sentry users should set this option to `false`, as standalone `gen_a
 Controls how spans are sent to Sentry:
 
 - In transaction mode (`'static'`, the default), all spans are collected in memory and sent to Sentry as a single transaction once the root span ends.
-- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`'stream'`), spans are sent in batches as they finish.
+- In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink> (`'stream'`), spans are sent in batches as they finish.
 
 <PlatformCategorySection supported={["browser"]}>
 <Alert>
 
 You don't need to use this option if you're using a browser-based SDK (for example, React or Vue) or a framework SDK that handles client-side rendering (for example Next.js or Remix).
-Instead, <PlatformLink to="/tracing/streamed-spans">enable stream mode</PlatformLink> by adding `spanStreamingIntegration` to your integrations when initializing the SDK.
+Instead, <PlatformLink to="/tracing/streamed-spans" fallbackPlatform="javascript">enable stream mode</PlatformLink> by adding `spanStreamingIntegration` to your integrations when initializing the SDK.
 
 </Alert>
 
@@ -839,8 +843,8 @@ The sample rate for replays that are recorded when an error happens. This type o
 
 <SdkOption name="profileSessionSampleRate" type='number' availableSince="7.4.0" defaultValue="0">
 
-A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. 
-The sampling decision is made once at the beginning of a session. 
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none.
+The sampling decision is made once at the beginning of a session.
 This option is required to enable profiling (default is `0`).
 
 </SdkOption>
@@ -850,7 +854,7 @@ This option is required to enable profiling (default is `0`).
 Determines how profiling sessions are controlled. It has two modes:
 
 - `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling">profiling API documentation</PlatformLink>.</PlatformSection>
-- `'trace'`: Profiling starts and stops automatically with transactions (or service spans if you're using <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>), as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+- `'trace'`: Profiling starts and stops automatically with transactions (or service spans if you're using <PlatformLink to="/tracing/streamed-spans" fallbackPlatform="javascript">stream mode</PlatformLink>), as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
 
 </SdkOption>
 
@@ -868,8 +872,8 @@ A number between `0` and `1`, controlling the percentage chance a given sampled 
 
 <SdkOption name="profileSessionSampleRate" type='number' availableSince="10.27.0" defaultValue="0">
 
-A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none. 
-The sampling decision is made once at the beginning of a session. 
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none.
+The sampling decision is made once at the beginning of a session.
 This option is required to enable profiling (default is `0`).
 
 <PlatformCategorySection categorySupported={["server", "serverless"]}>

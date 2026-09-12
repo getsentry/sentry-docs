@@ -1,0 +1,22 @@
+---
+id: ignore-transactions-removed
+title: "`ignoreTransactions` is replaced by `ignoreSpans`"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 70
+---
+
+`ignoreTransactions` no longer does anything in stream mode because no transaction events are produced. Use `ignoreSpans` to drop spans.
+
+Ignoring a service span drops its child spans with it, which is the same result as dropping a transaction. Because `ignoreSpans` applies to every span, narrow the filter with the object form so that child spans with the same name are kept:
+
+```js
+Sentry.init({
+  ignoreSpans: [
+    { name: "GET /health", attributes: { "sentry.op": "http.server" } },
+  ],
+});
+```

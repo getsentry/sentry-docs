@@ -6,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '3e255fe236889afd4646e1eab9e1e6f21b756a90';
+const SENTRY_API_SCHEMA_SHA = '612a94ace1e673655b4c78fe1c0b0ec17061940f';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -64,6 +64,7 @@ export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
   deprecated: boolean;
+  experimental: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -96,6 +97,11 @@ function slugify(s: string): string {
 }
 
 const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+// Sentry prepends this notice to the description of every experimental operation, so
+// that consumers with no badge of their own still warn the reader. We render a badge,
+// so strip it rather than saying the same thing twice.
+const EXPERIMENTAL_NOTICE_REGEX = /^\*\*Experimental:\*\*[^\n]*\n+/;
 
 function isDeprecatedOperationId(operationId: string | undefined): boolean {
   return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
@@ -135,6 +141,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
       const isDeprecated =
         isDeprecatedOperationId(apiData.operationId) ||
         isDeprecatedOperationId(apiData.summary);
+      const isExperimental = apiData['x-sentry-experimental'] === true;
       const titleSource = apiData.summary || apiData.operationId || '';
       const cleanName = stripDeprecatedPrefix(titleSource);
 
@@ -148,12 +155,15 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           method,
           name: cleanName,
           deprecated: isDeprecated,
+          experimental: isExperimental,
           server,
           slug: slugify(cleanName),
           summary: apiData.summary
             ? stripDeprecatedPrefix(apiData.summary)
             : apiData.summary,
-          descriptionMarkdown: apiData.description,
+          descriptionMarkdown: isExperimental
+            ? apiData.description?.replace(EXPERIMENTAL_NOTICE_REGEX, '')
+            : apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],

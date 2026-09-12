@@ -1,0 +1,92 @@
+---
+id: http-integration-options
+title: "`httpIntegration` options were consolidated"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks:
+  [
+    astro,
+    aws-lambda,
+    azure-functions,
+    bun,
+    connect,
+    effect,
+    elysia,
+    express,
+    fastify,
+    firebase,
+    gcp-functions,
+    hapi,
+    hono,
+    koa,
+    mastra,
+    nestjs,
+    nextjs,
+    nitro,
+    node,
+    nuxt,
+    react-router,
+    remix,
+    solidstart,
+    sveltekit,
+    tanstackstart-react,
+  ]
+platformCategory: server
+order: 182
+---
+
+The deprecated `instrumentation.requestHook`, `instrumentation.responseHook`, and `instrumentation.applyCustomAttributesOnSpan` hooks were removed, and several options were renamed. This only matters if you configured `httpIntegration` or `httpServerSpansIntegration` yourself.
+
+<Expandable title="httpIntegration hook and option changes">
+
+In v10 the `instrumentation` hooks ran for incoming and outgoing spans, so which replacement you need depends on the spans your hook changed:
+
+```js
+// Before
+Sentry.httpIntegration({
+  instrumentation: {
+    requestHook: (span, req) => {
+      span.setAttribute("custom", true);
+    },
+  },
+});
+
+// After: incoming (server) spans
+Sentry.httpIntegration({
+  onSpanCreated: (span, req, res) => {
+    span.setAttribute("custom", true);
+  },
+});
+
+// After: outgoing (client) spans
+Sentry.httpIntegration({
+  outgoingRequestHook: (span, req) => {
+    span.setAttribute("custom", true);
+  },
+});
+```
+
+The other `httpIntegration` options were renamed to match the other server SDKs:
+
+| Removed option                           | Replacement          |
+| ---------------------------------------- | -------------------- |
+| `trackIncomingRequestsAsSessions`        | `sessions`           |
+| `maxIncomingRequestBodySize`             | `maxRequestBodySize` |
+| `ignoreIncomingRequestBody`              | `ignoreRequestBody`  |
+| `dropSpansForIncomingRequestStatusCodes` | `ignoreStatusCodes`  |
+| `incomingRequestSpanHook`                | `onSpanCreated`      |
+
+`ignoreStatusCodes` is deprecated on `httpIntegration` and `httpServerSpansIntegration`, and will be removed in v12 without a replacement. It filters finished transaction events, so it only has an effect with `traceLifecycle: 'static'`. In stream mode, child spans are sent before the response status is known. To keep requests out of Sentry, decide before they're instrumented, with `tracesSampler`, `ignoreSpans` or `ignoreIncomingRequests`:
+
+```js
+Sentry.init({
+  integrations: [
+    Sentry.httpIntegration({
+      ignoreIncomingRequests: (urlPath) => urlPath.startsWith("/admin"),
+    }),
+  ],
+});
+```
+
+</Expandable>
