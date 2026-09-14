@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: "Troubleshoot and resolve edge cases regarding known limitations and bundling."
+description: 'Troubleshoot and resolve edge cases regarding known limitations and bundling.'
 sidebar_order: 9000
 ---
 
@@ -16,7 +16,7 @@ When errors occur in your Flutter app, you might notice that some error reports 
 
 Sentry automatically captures error details and stack traces using Flutter and Dart's built-in error handling such as `FlutterError.onError`. However, sometimes the stack trace information is not available or becomes incomplete, especially when using `async` and `await` in your code.
 
-When this happens, Sentry does its best to give you *some* debugging information, for example by calling `StackTrace.current` if there is none given by the `onError` hook, but it might not give you the complete picture.
+When this happens, Sentry does its best to give you _some_ debugging information, for example by calling `StackTrace.current` if there is none given by the `onError` hook, but it might not give you the complete picture.
 
 ### Example of the Problem
 
@@ -57,6 +57,7 @@ This happens because Dart's async/await implementation can cause stack trace inf
 ### What Can You Do?
 
 In order to get better debugging information for these cases you can:
+
 - Add relevant context to your Sentry events using [custom tags](/platforms/dart/guides/flutter/enriching-events/tags/) and [breadcrumbs](/platforms/dart/guides/flutter/enriching-events/breadcrumbs/) for critical paths in your application
 - Consider using [Sentry's Structured Logs](/platforms/dart/logs/) to capture additional debugging data alongside your errors
 
@@ -170,27 +171,18 @@ If you encounter any issues, you can set the `SENTRY_NATIVE_BACKEND` environment
 
 On Linux, compiling your Flutter Desktop app with the crashpad backend can fail if your clang toolchain is out of date.
 
- - Update your clang to at least version 13, then try again.
- - If you still encounter errors, please file an issue on our [Sentry Dart GitHub repository](https://github.com/getsentry/sentry-dart/issues/).
+- Update your clang to at least version 13, then try again.
+- If you still encounter errors, please file an issue on our [Sentry Dart GitHub repository](https://github.com/getsentry/sentry-dart/issues/).
 
-### Java or JNI Errors when compiling on Flutter Desktop
+### JNI Dependency Conflicts
 
-Since Sentry Flutter SDK version `9.0.0`, we improved how the SDK works on Android by switching from method channels to JNI (Java Native Interface) for certain operations.
+Sentry Flutter SDK v10 requires `jni >=1.0.0 <1.1.0`. If dependency resolution fails after upgrading, check whether another package or a `dependency_overrides` entry requires an older JNI version. Update that dependency rather than overriding Sentry to use an incompatible JNI version.
 
-However, there's a current limitation: Flutter automatically compiles the Dart JNI plugin for all platforms (iOS, Android, etc.), even when you're only building for one platform.
+For Android build errors, use Flutter 3.44 or later. The Sentry plugin relies on Flutter's Kotlin support and no longer applies its own Kotlin Gradle Plugin.
 
-For example on Windows it will compile components such as `dartjni.dll` which requires a JDK (Java Development Kit) to be installed on your system.
+### Apple Dependency Resolution
 
-Ideally it is possible to compile only for the chosen target platform to avoid unnecessary work, but this is currently blocked by [this Dart JNI issue](https://github.com/dart-lang/native/issues/1023).
-
-If you run into problems, make sure you have a JDK installed on your computer. We recommend using version 17.
-
-<Alert level="info">
-
-This does not affect your end users. Since we only use JNI code on Android, users on other platforms do not need Java installed.
-The JDK is only necessary as the developer because the Flutter tooling will compile the Dart JNI plugin for all platforms.
-
-</Alert>
+Sentry Flutter SDK v10 requires Swift Package Manager on iOS and macOS. CocoaPods cannot install the v10 Sentry Flutter plugin. Enable Swift Package Manager and set the deployment targets to iOS 15.0 or macOS 12.0 or later, as described in <PlatformLink to="/manual-setup/#apple-platform-setup">Apple Platform Setup</PlatformLink>.
 
 ### `SentryFlutter.init` Throws a `sentry_init failed` Error
 
@@ -235,6 +227,7 @@ If you encounter a circular dependency error when building your Android app with
 ### Error Example
 
 You might see an error similar to:
+
 ```
 Circular dependency between the following tasks:
 :app:compileReleaseJavaWithJavac
@@ -331,7 +324,7 @@ SentryFlutter.init(
 Copy the `main.dart` file into the `lib` folder of your existing project. This file already contains the code of the `multi_view_app.dart` from the [`flutter documentation`](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
 Next, copy the `flutter_bootstrap.js` file and the `index.html` file into the `web` folder.
 
-Make sure you're using **Flutter 3.24** or newer and run the application.
+Make sure you're using **Flutter 3.44** or newer and run the application.
 
 Now you should be able to see **two** instances of the same application side by side, with different **ViewIds** in the `body`.
 

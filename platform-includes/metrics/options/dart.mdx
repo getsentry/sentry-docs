@@ -4,7 +4,7 @@
 
 ### beforeSendMetric
 
-Filter or modify metrics before sending. Return `null` to drop a metric.
+Filter or modify metrics before sending. The callback receives a metric and a `Hint`; return `null` to drop the metric. On SDK v9, the callback takes only the metric parameter.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -14,7 +14,7 @@ import 'package:sentry/sentry.dart';
 
 await Sentry.init((options) {
   options.dsn = '___PUBLIC_DSN___';
-  options.beforeSendMetric = (metric) {
+  options.beforeSendMetric = (metric, hint) {
     // Drop specific metrics
     if (metric.attributes.containsKey('debug')) {
       return null;
@@ -32,9 +32,9 @@ await Sentry.init((options) {
 <SplitSection>
 <SplitSectionText>
 
-### Disable Metrics
+### Drop All Metrics
 
-Set `enableMetrics: false` to disable metrics collection entirely.
+Metrics are always enabled in SDK v10. To prevent metrics from being sent, return `null` from `beforeSendMetric`. The `enableMetrics` option has been removed.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -45,7 +45,7 @@ import 'package:sentry/sentry.dart';
 // Disable metrics
 await Sentry.init((options) {
   options.dsn = '___PUBLIC_DSN___';
-  options.enableMetrics = false;
+  options.beforeSendMetric = (metric, hint) => null;
 });
 ```
 

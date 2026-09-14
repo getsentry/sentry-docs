@@ -1,6 +1,6 @@
 ---
 title: Options
-description: "Learn more about how the Sentry Flutter SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
+description: 'Learn more about how the Sentry Flutter SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized.'
 sidebar_order: 1
 ---
 
@@ -8,7 +8,7 @@ sidebar_order: 1
 
 ## Core Options
 
-<TableOfContents ignoreIds={["core-options"]} />
+<TableOfContents ignoreIds={['core-options']} />
 
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
@@ -64,7 +64,7 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 <SdkOption name="sampleRate" type="float" defaultValue="1.0">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly. In v10, sampling happens after event processors and `beforeSend`, so these callbacks also run for events that are later sampled out.
 
 </SdkOption>
 
@@ -84,7 +84,7 @@ The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/enve
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
-This option is turned off by default.
+This option is enabled by default.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
@@ -114,12 +114,6 @@ Most SDKs will attempt to auto-discover this value.
 
 </SdkOption>
 
-<SdkOption name="autoSessionTracking" type="bool" defaultValue="true">
-
-When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
-
-</SdkOption>
-
 <SdkOption name="considerInAppFramesByDefault" type="bool">
 
 Configures whether stack trace frames are considered as in app frames by default.
@@ -131,7 +125,7 @@ This value is used only if Sentry can not find the origin of the frame.
 
 </SdkOption>
 
-<SdkOption name="inAppInclude" type="array">
+<SdkOption name="inAppIncludes" type="array">
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
@@ -139,11 +133,11 @@ Sentry differentiates stack frames that are directly related to your application
 
 </SdkOption>
 
-<SdkOption name="inAppExclude" type="array">
+<SdkOption name="inAppExcludes" type="array">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using <PlatformIdentifier name="inAppInclude" />.
+This option can be overridden using <PlatformIdentifier name="inAppIncludes" />.
 
 </SdkOption>
 
@@ -233,12 +227,12 @@ Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</Platfo
 
 </Alert>
 
-This function is called with a span event object `SentrySpanV2` and can return a modified span object. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
+In SDK v10, this function receives a `SentrySpanV2` and a `Hint`. Modify the span in place; the callback returns `void` or `Future<void>`. On SDK v9, it takes only the span parameter. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
 
 <Expandable title="Examples">
 
 ```dart
-options.beforeSendSpan = (span) {
+options.beforeSendSpan = (span, hint) {
   span.removeAttribute('http.request.body');
 };
 ```
@@ -344,21 +338,15 @@ Controls whether the SDK should propagate the W3C `traceparent` HTTP header alon
 
 </SdkOption>
 
-<SdkOption name="enableStandaloneAppStartTracing" type="bool" defaultValue="false" availableSince="9.26.0">
-
-Set this boolean to `true` to report the app start as its own `app.start` transaction instead of attaching it to the first `ui.load` transaction. Requires tracing to be enabled and is only supported on Android and iOS. This option is experimental. Learn more in our <PlatformLink to="/integrations/app-start-instrumentation/#standalone-app-start-tracing">App Start Instrumentation</PlatformLink> docs.
-
-</SdkOption>
-
-## Experimental Features
-
-<SdkOption name="experimental" type="object">
-
-An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
-
-</SdkOption>
+App start is automatically reported as a standalone `app.start` root on Android and iOS when tracing is enabled. See <PlatformLink to="/integrations/app-start-instrumentation/">App Start Instrumentation</PlatformLink> for sampling and extension APIs.
 
 ## Hybrid SDK Options
+
+<SdkOption name="captureNativeFailedRequests" type="bool" defaultValue="false">
+
+Set this option to `true` to capture failed HTTP requests made by the native iOS and macOS SDK's network instrumentation. It is independent of `captureFailedRequests`, which controls Dart-side capture through `SentryHttpClient` and `sentry_dio`. The option is non-nullable in v10 and no longer falls back to `captureFailedRequests`.
+
+</SdkOption>
 
 <SdkOption name="autoInitializeNativeSdk" type="bool" defaultValue="true">
 
@@ -380,9 +368,9 @@ Set this boolean to `false` to disable the [release health](/product/releases/he
 
 </SdkOption>
 
-<SdkOption name="sessionTrackingIntervalMillis" type="int" defaultValue="30000">
+<SdkOption name="autoSessionTrackingInterval" type="Duration" defaultValue="Duration(seconds: 30)">
 
-Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
+Sets how long the app can remain in the background before the SDK ends the session. For example, use `options.autoSessionTrackingInterval = const Duration(seconds: 60);` for a one-minute interval.
 
 </SdkOption>
 
