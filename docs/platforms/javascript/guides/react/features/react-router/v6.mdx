@@ -10,6 +10,12 @@ Starting with SDK version `10.59.0`, Sentry provides version-agnostic APIs that 
 
 </Alert>
 
+<Alert>
+
+These snippets render with `ReactDOM.createRoot` from `react-dom/client`, which needs React 18 or later. On React 17, render with `ReactDOM.render` from `react-dom` instead.
+
+</Alert>
+
 Apply the following setup steps based on your routing method and create a [custom error boundary](#set-up-a-custom-error-boundary) to make sure Sentry automatically captures rendering errors:
 
 <TableOfContents ignoreIds={["set-up-a-custom-error-boundary", "next-steps"]} />
@@ -62,7 +68,7 @@ If you're using the `<Routes />` component to define your routes, update your `S
 
 ```javascript {3-11, 18-24, 29, 33-35}
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import {
   Routes,
   Route,
@@ -91,7 +97,7 @@ Sentry.init({
 
 const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes);
 
-ReactDOM.render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <SentryRoutes>
       <Route path="/" element={<div>Home</div>} />
@@ -113,9 +119,11 @@ Call `wrapUseRoutesV6` outside of a React component, as in the example below. We
 
 </Alert>
 
-```javascript {2-10, 15-21, 26, 29-31}
+```javascript {2-12, 17-23, 28, 31-33}
 import React from "react";
+import ReactDOM from "react-dom/client";
 import {
+  BrowserRouter,
   createRoutesFromChildren,
   matchRoutes,
   useLocation,
@@ -123,7 +131,7 @@ import {
   useRoutes,
 } from "react-router-dom";
 
-import { wrapUseRoutes } from "@sentry/react";
+import * as Sentry from "@sentry/react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -139,7 +147,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-const useSentryRoutes = wrapUseRoutesV6(useRoutes);
+const useSentryRoutes = Sentry.wrapUseRoutesV6(useRoutes);
 
 function App() {
   return useSentryRoutes([
@@ -147,11 +155,10 @@ function App() {
   ]);
 }
 
-ReactDOM.render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <App />
-  </BrowserRouter>,
-  document.getElementById("root")
+  </BrowserRouter>
 );
 ```
 
@@ -213,7 +220,8 @@ To send errors to Sentry while using a custom error boundary, use the `Sentry.ca
 
 ```jsx {11, 28}
 // router setup
-const sentryCreateBrowserRouter = wrapCreateBrowserRouterV6(createBrowserRouter);
+const sentryCreateBrowserRouter =
+  wrapCreateBrowserRouterV6(createBrowserRouter);
 const router = sentryCreateBrowserRouter([
   {
     path: "/",
@@ -236,7 +244,7 @@ import { useRouteError } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 
 export function YourCustomRootErrorBoundary() {
-  const error = useRouteError() as Error;
+  const error = useRouteError();
 
   React.useEffect(() => {
     Sentry.captureException(error);
@@ -248,7 +256,6 @@ export function YourCustomRootErrorBoundary() {
     </div>
   );
 }
-
 ```
 
 ## Next Steps
