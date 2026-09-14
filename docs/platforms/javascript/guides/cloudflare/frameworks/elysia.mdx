@@ -1,0 +1,102 @@
+---
+title: Elysia on Cloudflare
+description: "Learn how to instrument your Elysia app on Cloudflare Workers and capture your first errors."
+---
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Elysia `1.4.0` or above
+- `nodejs_compat` enabled in your `wrangler.jsonc`
+
+## Install
+
+Install the Cloudflare SDK alongside Elysia. `@sentry/cloudflare` supplies the Sentry client, and only `withElysia` is used from `@sentry/elysia`:
+
+```bash {tabTitle:npm}
+npm install @sentry/cloudflare @sentry/elysia elysia
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cloudflare @sentry/elysia elysia
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cloudflare @sentry/elysia elysia
+```
+
+<Alert level="warning">
+
+Don't call `init()` from `@sentry/elysia` on Workers. It imports `node:os` and `@sentry/bun`, so the Worker fails to build. `Sentry.withSentry()` from `@sentry/cloudflare` supplies the client instead.
+
+</Alert>
+
+## Configure
+
+Wrap the Elysia instance with `withElysia` before you register any route, and export the fetch handler through `Sentry.withSentry()`:
+
+```javascript {filename: src/index.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { withElysia } from "@sentry/elysia";
+import { Elysia } from "elysia";
+
+// Ahead-of-time compilation has to be off: Elysia's generated handler calls
+// `new Function` in global scope, which workerd refuses to start.
+const app = withElysia(new Elysia({ aot: false })).get(
+  "/users/:id",
+  ({ params }) => params.id
+);
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: env.SENTRY_DSN,
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+  }),
+  {
+    fetch: (request) => app.fetch(request),
+  }
+);
+```
+
+<Alert>
+
+`withElysia` has to wrap the instance before any route is registered. Wrap it later and only the error path reports the route name.
+
+</Alert>
+
+## Add Database Spans (Optional)
+
+A `wrangler`-bundled Worker emits no database spans. To get them, build with Vite and point wrangler at the emitted config:
+
+```javascript {filename: vite.config.ts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+When you use `mysql2`, pass `disableEval: true` in the connection options and create the pool at module scope.
+
+## Known Limitations
+
+- **No Elysia lifecycle spans.** Every transaction comes back with an empty span list. The handler that emits lifecycle spans depends on state that only the Bun path populates, so the Request, Parse, Handle and other phases aren't recorded on Workers.
+- **No database spans from a `wrangler`-bundled Worker.** Use the Vite build above.
+
+## What Works
+
+- Unhandled errors, through Elysia's global error hook
+- Parameterized route names
+- Per-request isolation and incoming trace continuation
+- Outgoing `fetch` spans, with `sentry-trace` and `baggage` headers
+- `Sentry.logger` logs
+- Database spans, through the Vite build

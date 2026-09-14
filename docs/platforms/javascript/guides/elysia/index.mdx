@@ -22,7 +22,11 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - An Elysia application (`v1.4.0+`)
-- Bun or Node.js 18+ (with [@elysiajs/node](https://elysiajs.com/integrations/node) adapter)
+- One of these runtimes:
+  - Bun
+  - Node.js 18+ (with the [@elysiajs/node](https://elysiajs.com/integrations/node) adapter)
+  - Deno (with `@sentry/deno` alongside `@sentry/elysia`)
+  - Cloudflare Workers, see [Elysia on Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/elysia/)
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -30,9 +34,7 @@ You need:
 
 Choose the features you want to configure, and this guide will show you how:
 
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance" ]}
-/>
+<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
 
 <Include name="quick-start-features-expandable" />
 
@@ -62,6 +64,10 @@ npm install @sentry/elysia @elysiajs/node
 yarn add @sentry/elysia @elysiajs/node
 # or
 pnpm add @sentry/elysia @elysiajs/node
+```
+
+```bash {tabTitle:Deno}
+npm install @sentry/elysia @sentry/deno elysia
 ```
 
 </SplitSectionCode>
@@ -126,9 +132,43 @@ const app = Sentry.withElysia(new Elysia({ adapter: node() }))
   .listen(3000);
 ```
 
+```javascript {tabTitle:Deno} {filename: index.ts}
+import * as Sentry from "@sentry/deno";
+import { withElysia } from "@sentry/elysia";
+import { Elysia } from "elysia";
+
+// On Deno, initialize with `@sentry/deno` so that `Deno.serve` is
+// instrumented. `@sentry/elysia`'s own `init()` targets Bun.
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+// withElysia returns the app instance, so you can chain routes directly
+const app = withElysia(new Elysia()).get("/", () => "Hello World");
+
+Deno.serve({ port: 3000 }, app.fetch);
+```
+
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+<Alert>
+
+On Deno, set `"nodeModulesDir": "manual"` in your `deno.json` and install the packages with npm, so that Deno resolves them from a real `node_modules` directory.
+
+If you prefer to keep `Sentry.init()` from `@sentry/elysia`, pass `integrations: [denoServeIntegration()]` from `@sentry/deno` instead. Without one of these two wirings there is no `http.server` span, every lifecycle phase becomes its own root transaction, and incoming trace headers are ignored.
+
+</Alert>
 
 ### Customize Automatic Error Capturing (Optional)
 

@@ -1,12 +1,14 @@
 The `BrowserTracing` integration creates a new transaction for each page load and navigation event, and creates a child span for every `XMLHttpRequest` or `fetch` request that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/concepts/key-terms/tracing/distributed-tracing/).
 
-The SDK creates spans for every Elysia lifecycle phase: Request, Parse, Transform, BeforeHandle, Handle, AfterHandle, MapResponse, AfterResponse, and Error.
+On Bun, Node.js and Deno, the SDK creates spans for every Elysia lifecycle phase: Request, Parse, Transform, BeforeHandle, Handle, AfterHandle, MapResponse, AfterResponse, and Error.
 
 - The Handle span uses `op: 'request_handler.elysia'`; all other lifecycle spans use `op: 'middleware.elysia'`
-- Transactions use parameterized route names (e.g., `GET /users/:id`)
+- Transactions use parameterized route names (e.g., `GET /users/:id`) on Bun, Node.js and Deno
 - Named function handlers show their function name in spans; arrow functions show as `anonymous`
 
 ### Runtime Behavior
 
 - **Bun**: The SDK creates root server spans via Elysia's `.wrap()` API with `continueTrace` for trace propagation. No additional runtime instrumentation needed.
 - **Node.js**: The SDK uses Node's HTTP instrumentation for root spans and updates the transaction name with the parameterized route from Elysia.
+- **Deno**: Root server spans come from `denoServeIntegration`, so initialize with `@sentry/deno` or pass that integration to `Sentry.init()`.
+- **Cloudflare Workers**: `Sentry.withSentry()` from `@sentry/cloudflare` creates the root span. Lifecycle spans aren't created, because the handler that emits them depends on state only the Bun path populates. See [Elysia on Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/elysia/).
