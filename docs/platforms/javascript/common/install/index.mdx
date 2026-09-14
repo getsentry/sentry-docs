@@ -37,28 +37,41 @@ notSupported:
 
 ## How To Decide Which Installation Method To Use
 
-Most node applications today are either written in CommonJS (CJS), or compiled to CJS before running them.
-CommonJS uses `require()` to load modules. Our recommended installation method when using CommonJS is to require the `instrument.js` file at the top of your application. However, if your application is run in ESM mode, this will not work. In this case, you can follow the [ESM docs](./esm).
+The SDK has to wrap the modules your application uses before your application imports them. How you arrange that is the only difference between the methods below. `--import` works for both ESM and CommonJS applications, so the module system your application uses no longer decides the method.
 
-Note that even if your application is written in ESM (using `import`), it may still be _run_ in CJS. In this case, you should follow the [CommonJS instructions](./commonjs).
+### Load Your Instrument File With `--import` (Recommended)
 
-### My application is in TypeScript
+Put `Sentry.init()` in an instrument file and load it with the `--import` flag:
 
-If you're using TypeScript, your application is likely compiled to CommonJS before running it. In this case, you should follow the [CommonJS instructions](./commonjs).
+```bash
+node --import ./instrument.mjs app.mjs
+```
 
-### My application uses `require`
+This runs `Sentry.init()` before any of your application's modules load, so every instrumented library is wrapped and every error during startup is captured. Use this unless one of the cases below applies to you.
 
-If you are using `require()` in your application, you should follow the [CommonJS instructions](./commonjs).
+`--import` works for CommonJS applications too, with an `instrument.js` file:
 
-### My application uses `import`
+```bash
+node --import ./instrument.js app.js
+```
 
-If you are using `import` in your application, your installation method depends on how your application is _run_. If you compile your application (e.g. into a `/dist` folder or similar) before running this, you need to check how the compiled code looks like. Is the compiled code using `require`? Then you should follow the [CommonJS instructions](./commonjs). If the compiled code is using `import`, you should follow the [ESM instructions](./esm).
+Note that `--require` is no longer supported for initialization. See <PlatformLink to="/install/esm">ESM (MJS)</PlatformLink> and <PlatformLink to="/install/commonjs">CommonJS (CJS)</PlatformLink>.
 
-If you do not compile your code, you'll need to follow the [ESM instructions](./esm).
+### Bundler Plugin and a Top-Level Import
 
-### I don't need automatic spans/transactions
+If you can't pass a flag to the Node.js binary, instrument your dependencies at build time with the Sentry bundler plugin and import `instrument.mjs` at the top of your entry file. See <PlatformLink to="/install/esm-without-import">ESM without CLI Flag</PlatformLink>.
 
-If you don't need spans emitted by OpenTelemetry instrumentation, you can use `@sentry/node-core` in [Lightweight Mode](./lightweight) without OpenTelemetry dependencies. You still get errors, logs, metrics, breadcrumbs, and more. This mode is experimental.
+A top-level import on its own isn't equivalent to `--import`, because ESM evaluates every import in a file before it runs the first line of that file. That page explains what you lose and how to avoid it.
+
+### Load the SDK With `--import` and Initialize Later
+
+If you can't call `Sentry.init()` at startup, for example because you fetch your DSN from an external source, `--import` the SDK itself and call `Sentry.init()` at a later point:
+
+```bash
+node --import @sentry/node/import main.mjs
+```
+
+See <PlatformLink to="/install/late-initialization">Late Initialization</PlatformLink>.
 
 </PlatformCategorySection>
 
