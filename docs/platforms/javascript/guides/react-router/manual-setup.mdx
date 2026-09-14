@@ -413,7 +413,7 @@ If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, im
 <SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
-+import './instrument.server';
++import '../instrument.server';
  import * as Sentry from '@sentry/react-router';
  import { createReadableStreamFromReadable } from '@react-router/node';
  import { renderToPipeableStream } from 'react-dom/server';
@@ -445,7 +445,7 @@ First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
-import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router';
+import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router/vite';
 import { defineConfig } from 'vite';
 
 const sentryConfig: SentryReactRouterBuildOptions = {
@@ -499,14 +499,14 @@ Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
 import type { Config } from "@react-router/dev/config";
-import { sentryOnBuildEnd } from "@sentry/react-router";
+import { sentryOnBuildEnd } from "@sentry/react-router/vite";
 
 export default {
   ssr: true,
   buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
     // ...
     // Call this at the end of the hook
-    +(await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
++    await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
   },
 } satisfies Config;
 ```
