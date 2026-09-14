@@ -1,6 +1,6 @@
 ---
 title: App Start Instrumentation
-description: "Learn more about the Sentry App Start Instrumentation for the Flutter SDK."
+description: 'Learn more about the Sentry App Start Instrumentation for the Flutter SDK.'
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.dart.flutter
@@ -20,83 +20,32 @@ App start instrumentation is available on **iOS** and **Android**.
 
 </Alert>
 
-## Instrumentation Behaviour
+## Instrumentation Behavior
 
-Before diving into the configuration, it's important to understand how app start instrumentation behaves:
+On Android and iOS, the SDK measures startup from native process initialization to the first rendered frame. In v10, it reports this as a standalone root named `App Start` with the `app.start` operation, independently of screen-navigation transactions.
 
-App start instrumentation tracks the duration between the earliest native process initialization and the first frame rendered (as reported by [addTimingsCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addTimingsCallback.html)). Once the app start is processed, the callback is removed to avoid additional overhead.
+The root includes startup breakdown spans and mobile vitals, including the cold or warm start duration. In transaction mode, these are sent together when the transaction finishes. In stream mode, the SDK uses the streaming span APIs.
 
-When the SDK receives the start and end times of the app launch, the SDK:
-
-- Creates a transaction named `ui.load`
-- Attaches a span with either `app.start.cold` or `app.start.warm` operation
-- Adds app start metrics to the transaction
-
-If you'd rather have the app start reported as its own transaction, see [Standalone App Start Tracing](#standalone-app-start-tracing).
-
-<Alert>
-
-Sentry's App Start instrumentation aims to be as comprehensive and representative of the user experience as possible, and adheres to guidelines by the platform vendors. For this reason, App Starts reported by Sentry might be longer than what you see in other tools.
-
-</Alert>
+On web and desktop platforms, a separate integration measures initial display timing. It does not report the native Android/iOS app-start measurements described here.
 
 ## Prerequisites
 
-Before starting, ensure:
+Initialize <PlatformLink to="/manual-setup/#configure">SentryFlutter</PlatformLink> as early as possible and <PlatformLink to="/tracing/">enable tracing</PlatformLink>. Native app-start instrumentation runs automatically on Android and iOS; no additional enable flag is needed.
 
-1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/dart/guides/flutter/#configure)
-2. Tracing is set up. Learn more [here](/platforms/dart/guides/flutter/tracing/).
-
-## Configure
-
-This instrumentation is automatically enabled. There is no need for further configuration.
-
-<Alert>
-
-App start instrumentation is designed specifically for pure Flutter applications and requires UI rendering to function properly. If you're using Flutter in an add-to-app integration scenario, the app start metrics will not provide accurate measurements. In such cases, we recommend disabling this instrumentation.
-
-</Alert>
+App-start measurements assume a pure Flutter application. For add-to-app integrations, native process startup may not represent the Flutter UI startup you want to measure. See [Disable App Start Instrumentation](#disable-app-start-instrumentation) if those measurements aren't useful for your app.
 
 ## Verify
 
-### 1. Launch Your App:
-
-Launch your Sentry configured app.
-
-### 2. Locate Your Transaction:
-
-Open the [sentry.io performance page](https://sentry.io/performance), find, and select the 'root /' transaction and navigate to the trace view of a sampled event.
-
-### 3. View App Start Metrics:
-
-Select the event within your transaction. Sentry displays the app start metrics on the right side of the screen in the **Mobile Vitals** section.
+Launch your app with tracing enabled. In your Sentry project, find a sampled `App Start` root with operation `app.start`, then inspect its breakdown spans and mobile vitals. It is separate from the first screen's `ui.load` transaction.
 
 ## Standalone App Start Tracing
 
-<Alert level="info">
+Standalone app start tracing is the default in v10. The old `enableStandaloneAppStartTracing` option has been removed. Transaction mode remains the default trace lifecycle; switching to stream mode is optional.
 
-This feature is experimental and available since [version 9.26.0](https://github.com/getsentry/sentry-dart/blob/main/CHANGELOG.md#9260). The API is subject to change and may introduce breaking changes in future releases.
-
-</Alert>
-
-By default, app start data is attached to the first `ui.load` transaction in your app, which mixes startup timing with screen-display timing. Standalone app start tracing sends the app start as its own `App Start` transaction with the `app.start` operation instead. This gives you more accurate measurements, because they no longer depend on a screen transaction being started, and it lets you sample app starts independently.
-
-To enable it:
-
-```dart
-await SentryFlutter.init((options) {
-  options.tracesSampleRate = 1.0;
-  options.enableStandaloneAppStartTracing = true;
-});
-```
-
-Standalone app start tracing requires tracing to be enabled and is only supported on Android and iOS. On every other platform the SDK keeps attaching app start data to the first `ui.load` transaction.
-
-Because the app start uses the `app.start` operation, you can use `tracesSampler` to give app starts a dedicated sample rate without raising your overall sample rate. Where you read that operation depends on your trace lifecycle: transaction mode exposes it on the transaction context, while <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink> carries it as the span's `sentry.op` attribute.
+App start has its own sampling decision. To sample it independently, inspect the operation in `tracesSampler`: transaction mode exposes it on the transaction context, while stream mode carries it in the span's `sentry.op` attribute.
 
 ```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 await SentryFlutter.init((options) {
-  options.enableStandaloneAppStartTracing = true;
   options.tracesSampler = (samplingContext) {
     if (samplingContext.transactionContext.operation == 'app.start') {
       return 1.0;
@@ -108,7 +57,7 @@ await SentryFlutter.init((options) {
 
 ```dart {tabTitle:Stream Mode}
 await SentryFlutter.init((options) {
-  options.enableStandaloneAppStartTracing = true;
+  options.traceLifecycle = SentryTraceLifecycle.stream;
   options.tracesSampler = (samplingContext) {
     final operation = samplingContext.spanContext.attributes['sentry.op']?.value;
     if (operation == 'app.start') {
@@ -129,7 +78,6 @@ The only requirement is that `extendAppStart()` runs before the first frame rend
 await SentryFlutter.init(
   (options) {
     options.tracesSampleRate = 1.0;
-    options.enableStandaloneAppStartTracing = true;
   },
   appRunner: () async {
     SentryFlutter.extendAppStart();
@@ -195,11 +143,16 @@ try {
 SentryFlutter.extendAppStart();
 
 try {
-  await Sentry.startSpan(
-    'Fetch remote config',
-    (span) => fetchRemoteConfig(),
-    parentSpan: SentryFlutter.getExtendedAppStartSpanV2(),
-  );
+  final parent = SentryFlutter.getExtendedAppStartSpanV2();
+  if (parent != null) {
+    await Sentry.startSpan(
+      'Fetch remote config',
+      (span) => fetchRemoteConfig(),
+      parentSpan: parent,
+    );
+  } else {
+    await fetchRemoteConfig();
+  }
 } finally {
   await SentryFlutter.finishExtendedAppStart();
 }
@@ -207,7 +160,7 @@ try {
 
 In stream mode, `startSpan` ends the child for you once the callback completes, so it only needs the parent. The extension span isn't the active span, which is why you have to pass it as `parentSpan` rather than relying on automatic nesting.
 
-Both getters return `null` when the app start isn't extended. In transaction mode the null-aware calls take care of that. In stream mode, passing `parentSpan: null` means "start a root span", so guard the call if a stray root would be a problem.
+Both getters return `null` when the app start isn't extended. In transaction mode the null-aware calls take care of that. In stream mode, the example checks for a parent because passing `parentSpan: null` starts a root span instead of a child.
 
 Spans you start under the extension keep the app start open until they finish, so finish them too if they shouldn't delay it.
 
@@ -219,27 +172,27 @@ Always finish what you extend. While an extension is open the app start is still
 
 <Alert>
 
-Extending requires standalone app start tracing to be enabled. `extendAppStart()` does nothing when standalone app start tracing is off, when the first frame has already rendered, or when the app start is already extended. Each of those cases is logged rather than reported back to the caller.
+Extending requires an active, sampled app start on Android or iOS. `extendAppStart()` does nothing if there is no eligible app start, the first frame has already rendered, or an extension has already been requested.
 
 </Alert>
 
 ## Disable App Start Instrumentation
 
-App start ships as two integrations: `NativeAppStartIntegration` for the default `ui.load`-attached path, and `StandaloneAppStartIntegration` for standalone app start tracing. The SDK registers both and each one stands down at runtime depending on your configuration, so remove both to turn app start off no matter how it's configured.
+To disable native app-start tracing on Android and iOS, remove `StandaloneAppStartIntegration` during initialization. This requires an internal import, which can change between SDK versions.
 
 ```dart
-// ignore_for_file: implementation_imports
+// ignore_for_file: implementation_imports, invalid_use_of_internal_member
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sentry_flutter/src/app_start/standalone/standalone_app_start_integration.dart';
-import 'package:sentry_flutter/src/app_start/ui_load_attached/native_app_start_integration.dart';
 
 await SentryFlutter.init((options) {
-  for (final integration in options.integrations) {
-    if (integration is NativeAppStartIntegration ||
-        integration is StandaloneAppStartIntegration) {
-      options.removeIntegration(integration);
-    }
+  final appStartIntegrations = options.integrations
+      .whereType<StandaloneAppStartIntegration>()
+      .toList();
+  for (final integration in appStartIntegrations) {
+    options.removeIntegration(integration);
   }
 });
 ```
 
-App start integrations are only registered on the platforms that support them, so don't assume either one is present — looking them up with `firstWhere` throws when they aren't.
+The integration is only registered on supported platforms. This lookup is safe when it is absent. Web and desktop initial-display tracking is handled separately by `GenericAppStartIntegration`.

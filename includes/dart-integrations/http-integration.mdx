@@ -1,6 +1,6 @@
 ---
 title: HTTP Integration
-description: "Learn more about the Sentry HTTP integration for the Dart SDK."
+description: 'Learn more about the Sentry HTTP integration for the Dart SDK.'
 sidebar_order: 2
 platforms:
   - dart
@@ -78,7 +78,6 @@ Response details:
 - Status code
 
 This is an opt-out feature. The following example shows how to disable it:
-
 
 ```dart
 import 'package:sentry/sentry.dart';
@@ -177,7 +176,6 @@ try {
 
 By default, `failedRequestTargets` is set to `['.*']`, which matches all URLs. This means all failed requests are captured (subject to `failedRequestStatusCodes`).
 
-
 ## Tracing for HTTP Requests
 
 <Alert>
@@ -224,3 +222,11 @@ await Sentry.startSpan('webrequest', (span) async {
   }
 }, parentSpan: null);
 ```
+
+## HTTP Error and Span Data
+
+In v10, failed status responses use the stable exception type `SentryHttpClientError` with a message such as `HTTP Client Error with status code: 500`. The message has no `Exception:` prefix. Requests to the configured Sentry DSN host are excluded from failed-request capture.
+
+HTTP spans use `url.full` for the URL and `http.response.body.size` for the response body size. Use these keys in custom span processing and queries.
+
+On iOS and macOS, Dart-side `captureFailedRequests` does not enable capture by native network instrumentation. Set `captureNativeFailedRequests = true` separately if you need native failed-request events.
