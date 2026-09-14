@@ -124,19 +124,13 @@ Exclude requests from tracing, such as health checks or analytics pings:
 
 ## Web Vitals & Interactions
 
-BrowserTracing automatically adds <PlatformLink to="/configuration/integrations/webvitals/">WebVitals</PlatformLink> to collect loading, visual stability, and responsiveness metrics. Individual click spans and the work they trigger require the separate <PlatformLink to="/configuration/integrations/interactions/">Interactions integration</PlatformLink>.
+BrowserTracing automatically captures Web Vitals. To capture clicks and the work they trigger as spans, add the <PlatformLink to="/configuration/integrations/interactions/">Interactions integration</PlatformLink>.
 
 ### Configure Web Vitals
 
 <SdkOption name="webVitals" type="WebVitalsOptions" availableSince="11.0.0">
 
-Configure the automatically added WebVitals integration:
-
-- `ignore`: Web Vitals to skip, from `"cls"`, `"inp"`, and `"lcp"`. Defaults to `[]`.
-- `softNavigations`: Collect vitals for browser-detected soft navigations. Defaults to `true` in supporting browsers with stream mode.
-- `bfcache`: Collect vitals after back/forward-cache restoration. Defaults to `false`.
-
-For example, to disable INP collection:
+Configure which Web Vitals BrowserTracing collects. For example, to disable INP collection:
 
 <PlatformContent includePath="performance/enable-inp-example" />
 
@@ -146,9 +140,11 @@ If you explicitly add `webVitalsIntegration()`, configure these options on that 
 
 ### Interaction to Next Paint (INP)
 
-[INP](/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) measures responsiveness and is collected by default. In SDK version 11, its value is sent as the `browser.web_vital.inp.value` attribute on a Web Vital span, including in static mode. Update custom dashboards and alerts that read INP as a span measurement. Built-in dashboards do not need adjustments.
+BrowserTracing automatically captures [INP](/product/dashboards/sentry-dashboards/frontend/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) to measure responsiveness. Results appear in the [Web Vitals](/product/dashboards/sentry-dashboards/frontend/web-vitals/) module.
 
-<SdkOption name="enableInp" type="boolean" defaultValue="true" availableSince="7.104.0">
+<SdkOption name="enableInp" type="boolean" defaultValue="true" defaultNote="since version 8.0.0" availableSince="7.104.0">
+
+Enable or disable INP collection. Defaults to `true` in SDK 8 and later, and `false` in SDK 7.x.
 
 Deprecated in SDK version 11. Use `webVitals: { ignore: ["inp"] }` to disable INP. Explicitly adding `webVitalsIntegration()` takes precedence over this option.
 
@@ -213,7 +209,7 @@ Enable/disable automatic `navigation` span creation on history changes.
 
 Start a navigation span when the page is restored from the back/forward cache. This starts a new trace for activity after the restore. It is independent of `instrumentNavigation`.
 
-To also collect Web Vitals for restored pages, set `webVitals: { bfcache: true }`. See <PlatformLink to="/configuration/integrations/webvitals/#bfcache">WebVitals</PlatformLink> for requirements.
+Web Vitals for restored pages are collected by default in stream mode. Set `webVitals: { bfcacheNavigations: false }` to disable this collection. See <PlatformLink to="/configuration/integrations/webvitals/#bfcachenavigations">WebVitals</PlatformLink> for requirements.
 
 </SdkOption>
 
@@ -291,7 +287,7 @@ Sentry.init({
 <PlatformCategorySection supported={['browser']}>
 <PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
 
-Starting with SDK version 11, capturing `performance.mark()` and `performance.measure()` entries requires the <PlatformLink to="/configuration/integrations/usertiming/">UserTiming integration</PlatformLink>. Use its `ignore` option to filter entries by name:
+Use the <PlatformLink to="/configuration/integrations/usertiming/">UserTiming integration</PlatformLink> to capture `performance.mark()` and `performance.measure()` entries. To ignore entries by name:
 
 ```javascript
 Sentry.init({
