@@ -126,17 +126,27 @@ Passing an empty `DataCollection` or explicitly configuring any field enables Da
 
 </Alert>
 
-| Field                  | Type                         | Default        | Behavior                                                                                                                                  |
-| ---------------------- | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `userInfo`             | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
-| `cookies`              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
-| `httpHeaders.request`  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
-| `httpHeaders.response` | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
-| `httpBodies`           | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                              |
-| `urlQueryParams`       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
-| `graphql.document`     | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
-| `graphql.variables`    | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
-| `filePaths`            | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
+| Field                    | Type                         | Default        | Behavior                                                                                                                                  |
+| ------------------------ | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`               | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
+| `cookies`\*              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
+| `httpHeaders.request`\*  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
+| `httpHeaders.response`\* | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
+| `httpBodies`             | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                              |
+| `urlQueryParams`\*       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
+| `graphql.document`       | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
+| `graphql.variables`      | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
+| `filePaths`              | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
+
+\* Fields marked with an asterisk take a single `KeyValueCollectionBehavior` value in code. Properties, environment variables, Spring Boot, and Android manifest metadata expose that value as separate `mode` and `terms` settings. `terms` contains additional matching terms for deny-list or allow-list behavior.
+
+The `cookies`, `httpHeaders.request`, `httpHeaders.response`, and `urlQueryParams` fields support three modes:
+
+- `OFF`: Don't collect the category.
+- `DENY_LIST`: Collect values except those matching the built-in sensitive list or additional configured terms.
+- `ALLOW_LIST`: Include plaintext values only for keys that match configured terms and don't match the built-in sensitive list. Sensitive values are always replaced with `"[Filtered]"`.
+
+Matching is partial and case-insensitive. The built-in list includes terms such as `auth`, `token`, `secret`, `password`, `key`, `session`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
 
 Configure only the fields that differ from these defaults:
 
@@ -160,14 +170,6 @@ Sentry.init(
     });
 ```
 
-The `cookies`, `httpHeaders.request`, `httpHeaders.response`, and `urlQueryParams` fields support three modes:
-
-- `OFF`: Don't collect the category.
-- `DENY_LIST`: Collect values except those matching the built-in sensitive list or additional configured terms.
-- `ALLOW_LIST`: Include plaintext values only when their keys match configured terms. The built-in sensitive list still applies.
-
-Matching is partial and case-insensitive. The built-in list includes terms such as `auth`, `token`, `secret`, `password`, `key`, `session`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
-
 You can also configure Data Collection through external properties:
 
 ```properties {filename:sentry.properties}
@@ -186,6 +188,8 @@ data-collection.file-paths=false
 
 Environment variables use the same names in uppercase with the `SENTRY_` prefix, for example, `SENTRY_DATA_COLLECTION_USER_INFO`, `SENTRY_DATA_COLLECTION_HTTP_BODIES`, and `SENTRY_DATA_COLLECTION_FILE_PATHS`.
 
+<PlatformSection supported={["java.spring-boot"]}>
+
 Spring Boot uses the `sentry.` prefix and kebab-case enum values:
 
 ```properties {filename:application.properties}
@@ -196,6 +200,8 @@ sentry.data-collection.http-headers.request.terms=content-type,x-request-id
 sentry.data-collection.url-query-params.mode=off
 sentry.data-collection.file-paths=false
 ```
+
+</PlatformSection>
 
 ### Migrating From `sendDefaultPii`
 

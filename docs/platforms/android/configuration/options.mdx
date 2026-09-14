@@ -124,17 +124,27 @@ Passing an empty `DataCollection` or explicitly configuring any field enables Da
 
 </Alert>
 
-| Field                  | Type                         | Default        | Behavior                                                                                                                                  |
-| ---------------------- | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `userInfo`             | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
-| `cookies`              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
-| `httpHeaders.request`  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
-| `httpHeaders.response` | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
-| `httpBodies`           | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                              |
-| `urlQueryParams`       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
-| `graphql.document`     | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
-| `graphql.variables`    | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
-| `filePaths`            | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
+| Field                    | Type                         | Default        | Behavior                                                                                                                                  |
+| ------------------------ | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`               | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
+| `cookies`\*              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
+| `httpHeaders.request`\*  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
+| `httpHeaders.response`\* | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
+| `httpBodies`             | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                              |
+| `urlQueryParams`\*       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
+| `graphql.document`       | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
+| `graphql.variables`      | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
+| `filePaths`              | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
+
+\* Fields marked with an asterisk take a single `KeyValueCollectionBehavior` value in code. Properties, environment variables, Spring Boot, and Android manifest metadata expose that value as separate `mode` and `terms` settings. `terms` contains additional matching terms for deny-list or allow-list behavior.
+
+The marked fields support three modes:
+
+- `OFF`: Don't collect the category.
+- `DENY_LIST`: Collect values except those matching the built-in sensitive list or additional configured terms.
+- `ALLOW_LIST`: Include plaintext values only for keys that match configured terms and don't match the built-in sensitive list. Sensitive values are always replaced with `"[Filtered]"`.
+
+Matching is partial and case-insensitive. The built-in list includes terms such as `auth`, `token`, `secret`, `password`, `key`, `session`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
 
 Configure Data Collection in `AndroidManifest.xml`:
 
@@ -172,8 +182,6 @@ Supported manifest keys are:
 - `io.sentry.data-collection.graphql.document`
 - `io.sentry.data-collection.graphql.variables`
 - `io.sentry.data-collection.file-paths`
-
-The `cookies`, HTTP header, and URL query parameter fields support `off`, `deny_list`, and `allow_list`. Matching terms are comma-separated. Matching is partial and case-insensitive, and the built-in sensitive list always applies. Filtered values are replaced with `"[Filtered]"`.
 
 For manual initialization, use the same Java API as the Java SDK:
 
