@@ -2,12 +2,15 @@
 title: Feedback
 description: Collecting qualitative user input with optional attachments, replay links, and error associations.
 spec_id: sdk/telemetry/feedbacks
-spec_version: 1.4.0
+spec_version: 1.5.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.5.0
+    date: 2026-09-15
+    summary: Added draft client-side input validation requirements, clarified Unicode message length and server limits
   - version: 1.4.0
     date: 2026-09-08
     summary: Disallowed sending attachments in separate envelopes
@@ -34,6 +37,7 @@ spec_changelog:
 User feedback allows Sentry to collect qualitative input directly from users — free-form comments describing what happened, optionally accompanied by contact information, linked errors, replay recordings, and file attachments. An SDK sends feedback as a `feedback` envelope item containing an event payload with a `feedback` context object.
 
 Related specs:
+
 - [Envelopes](/sdk/foundations/envelopes/) — transport format
 - [Event Payloads](/sdk/foundations/envelopes/event-payloads/) — base event attributes
 - [User Report (Deprecated)](/sdk/telemetry/user-reports/) — deprecated predecessor
@@ -67,6 +71,51 @@ SDKs **MUST** apply scope data to the feedback event, including tags, user, trac
 SDKs **MUST** apply [rate limiting](/sdk/foundations/transport/rate-limiting/) to feedbacks in the same way as it is applied to events.
 
 There is no sample rate for feedbacks — they are always sent. However, a feedback can be discarded at any pipeline stage (rate limiting, invalid message, etc.). SDKs **SHOULD** report dropped feedbacks through [client reports](/sdk/telemetry/client-reports/).
+
+</SpecSection>
+
+<SpecSection id="input-validation" status="draft" since="1.5.0">
+
+### Client-Side Input Validation
+
+Feedback can pass transport checks but still be discarded during ingestion. SDKs **MUST** validate user input locally so users can correct their feedback before submitting it.
+
+#### Payload Validation
+
+These requirements apply to SDK-provided feedback forms and the manual capture API:
+
+- `message` **MUST** be a string containing at least one non-whitespace character. Missing, empty, and whitespace-only messages **MUST NOT** be sent.
+- `message` **MUST NOT** exceed **4,096 Unicode code points**. SDKs **MUST** count the value that will be sent, including any whitespace it retains. This matches Python's `len(message)` in Sentry. For well-formed Unicode, code points are equivalent to Unicode scalars, not UTF-8 bytes, UTF-16 code units, or user-perceived characters (grapheme clusters).
+- If an `associated_event_id` is supplied, the SDK **MUST** validate that it is a UUID before sending it, unless the SDK's identifier type already guarantees this.
+- SDKs **MUST** validate the final feedback payload after event processors and `beforeSendFeedback` have run, before enqueueing it for transport. Feedback that fails validation **MUST** be discarded, using the SDK's existing failure reporting conventions and the [client report guidance](#sdk-pipeline).
+
+For example, precomposed `\u00E9` counts as one code point, while decomposed `e\u0301` counts as two. A character outside the Basic Multilingual Plane counts as one code point, even though UTF-16 represents it with two code units. Swift implementations can use `unicodeScalars.count`, Java can use `codePointCount`, and JavaScript can iterate over the string. Native string-length APIs and HTML `maxlength` alone do not consistently match this limit.
+
+#### Feedback Forms
+
+Forms **MUST** check the message before calling the capture API. When validation fails, the form **MUST** prevent submission, preserve the user's input, and display an accessible error explaining how to correct it. Forms **MUST NOT** silently truncate an overlong message and submit it as if the user had entered the shortened version.
+
+Forms **MUST** enforce configured required name and email fields. Otherwise, name and email remain optional, and anonymous feedback **MUST** be accepted.
+
+Forms **SHOULD** update validation as the user edits the input. A live character counter is **OPTIONAL**. If provided, it **MUST** use the same code-point count as validation and be accessible to assistive technology. This specification does not require a particular counter layout or visual design.
+
+#### Server Limits
+
+These limits distinguish the modern `feedback` item from the deprecated `user_report` item:
+
+- **Sentry:** [Feedback ingestion](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/feedback/usecases/ingest/create_feedback.py#L180-L214) rejects missing or whitespace-only messages, messages above the configured limit, and malformed associated event IDs. The [`feedback.message.max-size` option](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/options/defaults.py#L593-L598) defaults to 4,096 code points. This is a rejection limit, not automatic truncation.
+- **Relay:** The [feedback context](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-schema/src/protocol/contexts/mod.rs#L88-L90) has a shared `max_bytes = 8192` normalization budget. Its [schema](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-schema/src/protocol/contexts/user_report_v2.rs#L11-L20) does not declare separate message, name, email, or URL length limits. Relay's [trimming processor](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-normalization/src/trimming.rs) can trim or remove context data. This shared normalization budget is not an 8,192-character allowance for each field and does not replace Sentry's message validation. Feedback also remains subject to [envelope size limits](/sdk/foundations/envelopes/#size-limits).
+- **Legacy user reports:** The [128-character name and 75-character email limits](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/models/userreport.py#L16-L20) belong to `user_report`. They are not per-field limits for `contexts.feedback` and **MUST NOT** be imposed on modern feedback solely to match the legacy endpoint.
+
+#### Implementation Coverage
+
+This section is a draft because existing implementations do not yet meet all of these requirements:
+
+- [JavaScript forms](https://github.com/getsentry/sentry-javascript/blob/352266199adb82af024b489483d37e94a2a17e81/packages/feedback/src/modal/components/Form.tsx) trim input, check required fields, and use the browser's email input validation, but do not enforce message length. [`sendFeedback`](https://github.com/getsentry/sentry-javascript/blob/352266199adb82af024b489483d37e94a2a17e81/packages/feedback/src/core/sendFeedback.ts) rejects empty messages, while the core [`captureFeedback`](https://github.com/getsentry/sentry-javascript/blob/352266199adb82af024b489483d37e94a2a17e81/packages/core/src/feedback.ts) API does not validate input.
+- [Java's feedback model](https://github.com/getsentry/sentry-java/blob/cdb89fd96cbd13d6b53f9722c1096d7b015f54b8/sentry/src/main/java/io/sentry/protocol/Feedback.java#L91-L98) silently truncates messages to 4,096 UTF-16 code units. This can split a surrogate pair and is not equivalent to Sentry's code-point limit. The [Android form](https://github.com/getsentry/sentry-java/blob/cdb89fd96cbd13d6b53f9722c1096d7b015f54b8/sentry-android-core/src/main/java/io/sentry/android/core/SentryUserFeedbackForm.java#L301-L329) trims input and checks required fields, but does not show a length validation error before constructing that model.
+- [Cocoa PR #8973](https://github.com/getsentry/sentry-cocoa/pull/8973) proposes managed-form validation using Unicode scalars and a live counter. It does not establish validation for every capture path or make the counter mandatory for other SDKs.
+
+SDK validation tests **SHOULD** cover missing, empty, and whitespace-only messages, exactly 4,096 and 4,097 code points, decomposed characters, supplementary-plane characters, pasted or prefilled input, and messages modified by event processors or `beforeSendFeedback`.
 
 </SpecSection>
 
@@ -147,24 +196,24 @@ _None_
 
 Below is a recap of the [required attributes](/sdk/foundations/envelopes/event-payloads/#required-attributes) for the event payload. For the full list of attributes, see [Event Payloads](/sdk/foundations/envelopes/event-payloads/).
 
-| Field | Type | Required | Since | Description |
-|-------|------|----------|-------|-------------|
-| `event_id` | String | **REQUIRED** | 1.0.0 | Hexadecimal string representing a UUID v4 value. |
+| Field       | Type   | Required     | Since | Description                                      |
+| ----------- | ------ | ------------ | ----- | ------------------------------------------------ |
+| `event_id`  | String | **REQUIRED** | 1.0.0 | Hexadecimal string representing a UUID v4 value. |
 | `timestamp` | Number | **REQUIRED** | 1.0.0 | UNIX timestamp of the current time (in seconds). |
-| `platform` | String | **REQUIRED** | 1.0.0 | Platform of the SDK. |
+| `platform`  | String | **REQUIRED** | 1.0.0 | Platform of the SDK.                             |
 
 #### Feedback Context Attributes
 
 The `contexts.feedback` object carries user-provided feedback data:
 
-| Field | Type | Required | Since | Description |
-|-------|------|----------|-------|-------------|
-| `message` | String | **REQUIRED** | 1.0.0 | Comments of the user, describing what happened and/or sharing feedback. Max length: **4096 characters**. |
-| `contact_email` | String | **OPTIONAL** | 1.0.0 | Email of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in from user context. Anonymous feedbacks (no name or email) are accepted. |
-| `name` | String | **OPTIONAL** | 1.0.0 | Name of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in from user context. |
-| `url` | String | **OPTIONAL** | 1.0.0 | URL of the webpage the user was on when submitting feedback. May be used for search or alerts. |
-| `associated_event_id` | String | **OPTIONAL** | 1.0.0 | Identifier of an error event in the same project. Links a related error in the feedback UI. |
-| `replay_id` | String | **OPTIONAL** | 1.0.0 | Identifier of a related Session Replay in the same project. Sentry uses this to render a Replay clip in the feedback UI. |
+| Field                 | Type   | Required     | Since | Description                                                                                                                                                                           |
+| --------------------- | ------ | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `message`             | String | **REQUIRED** | 1.0.0 | Comments of the user, describing what happened and/or sharing feedback. Max length: **4,096 Unicode code points**. See [Client-Side Input Validation](#client-side-input-validation). |
+| `contact_email`       | String | **OPTIONAL** | 1.0.0 | Email of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in from user context. Anonymous feedbacks (no name or email) are accepted.      |
+| `name`                | String | **OPTIONAL** | 1.0.0 | Name of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in from user context.                                                            |
+| `url`                 | String | **OPTIONAL** | 1.0.0 | URL of the webpage the user was on when submitting feedback. May be used for search or alerts.                                                                                        |
+| `associated_event_id` | String | **OPTIONAL** | 1.0.0 | Identifier of an error event in the same project. Links a related error in the feedback UI.                                                                                           |
+| `replay_id`           | String | **OPTIONAL** | 1.0.0 | Identifier of a related Session Replay in the same project. Sentry uses this to render a Replay clip in the feedback UI.                                                              |
 
 </SpecSection>
 
@@ -191,11 +240,13 @@ captureFeedback(feedback) -> eventId
 ```
 
 **Parameters:**
+
 - `feedback` — Object containing at minimum `message`. Optionally includes `contact_email`, `name`, `url`, `associated_event_id`, and `replay_id`.
 
 **Returns:** The `eventId` (string).
 
 Naming **SHOULD** follow the SDK's language conventions:
+
 - `captureFeedback` (JavaScript, Java)
 - `capture_feedback` (Python, Ruby)
 - `CaptureFeedback` (Go, .NET)
@@ -278,14 +329,16 @@ Naming **SHOULD** follow the SDK's language conventions:
 ### Example Implementations
 
 User Feedback class:
- * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/9eedc425727f0daccca1bd2be6021f6c3d9c654c/Sources/Sentry/SentryUserFeedback.m)
- * [Java](https://github.com/getsentry/sentry-java/blob/671f9e0b8b709ef18e8b0788c31df44f99d09d35/sentry/src/main/java/io/sentry/UserFeedback.java#L7)
- * [C#](https://github.com/getsentry/sentry-dotnet/blob/6ddf8363170bffee74a8c3cbf44335797d39ca9c/src/Sentry/Protocol/UserFeedback.cs#L10)
+
+- [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/9eedc425727f0daccca1bd2be6021f6c3d9c654c/Sources/Sentry/SentryUserFeedback.m)
+- [Java](https://github.com/getsentry/sentry-java/blob/671f9e0b8b709ef18e8b0788c31df44f99d09d35/sentry/src/main/java/io/sentry/UserFeedback.java#L7)
+- [C#](https://github.com/getsentry/sentry-dotnet/blob/6ddf8363170bffee74a8c3cbf44335797d39ca9c/src/Sentry/Protocol/UserFeedback.cs#L10)
 
 Envelope item:
- * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/fd3e46efe59324e894d5601a7b3028824a588dda/Sources/Sentry/SentryEnvelope.m#L145-L162)
- * [Java](https://github.com/getsentry/sentry-java/blob/b2e8dd43ea2ef37201b215ec409655e49e3231c8/sentry/src/main/java/io/sentry/SentryEnvelopeItem.java#L131-L155)
- * [C#](https://github.com/getsentry/sentry-dotnet/blob/3bc6c66a14e653982a6a25df033d68d8ad12c4af/src/Sentry/Protocol/Envelopes/EnvelopeItem.cs#L170-L178)
+
+- [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/fd3e46efe59324e894d5601a7b3028824a588dda/Sources/Sentry/SentryEnvelope.m#L145-L162)
+- [Java](https://github.com/getsentry/sentry-java/blob/b2e8dd43ea2ef37201b215ec409655e49e3231c8/sentry/src/main/java/io/sentry/SentryEnvelopeItem.java#L131-L155)
+- [C#](https://github.com/getsentry/sentry-dotnet/blob/3bc6c66a14e653982a6a25df033d68d8ad12c4af/src/Sentry/Protocol/Envelopes/EnvelopeItem.cs#L170-L178)
 
 ---
 
