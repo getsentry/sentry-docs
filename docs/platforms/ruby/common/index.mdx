@@ -2,45 +2,92 @@
 
 <PlatformContent includePath="alert-using-a-framework" noGuides />
 
-## Prerequisites
+<PlatformContent includePath="getting-started-prerequisites" />
 
-- You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- Ruby 2.4+ or any of the most recent JRuby versions
-
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/profiling/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs"]}
-/>
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
+
+Installing the Sentry SDK enables core features such as **Error Monitoring**, **Logs**, and **Application Metrics** by default. While Sentry automatically reports errors, you'll need to send logs and metrics manually. We'll show you how that works in [Verify Your Setup](#verify-your-setup).
+
+Choose additional features you want to configure, and this guide will show you how to get set up:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+<Include name="quick-start-features-expandable" />
+
+### Install the Sentry SDK
 
 <PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
+### Initialize the Sentry SDK
 Configuration should happen as early as possible in your application's lifecycle.
 
 <PlatformContent includePath="getting-started-config" />
 
-## Verify
+### Control the Data You Send to Sentry (Optional)
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+By default, the SDK sends user identity data (IP address, ID, and similar) and other data like HTTP bodies and URL query parameters. This will give you rich debugging context.
+
+The SDK always filters sensitive values whose keys match a built-in denylist, such as `auth` or `password`, and sends `[Filtered]` instead.
+
+To send less data, turn off the categories you don't need in the dataCollection option. For the full list of categories and their defaults, <PlatformLink to="/configuration/options/#data_collection">see the `dataCollection` options</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+require 'sentry-ruby'
+
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+
+  config.data_collection.user_info = false
+  config.data_collection.http_bodies = []
+  # other categories
+end
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-</Alert>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
+- Learn more about <PlatformLink to="/usage/">manually capturing errors or messages</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
