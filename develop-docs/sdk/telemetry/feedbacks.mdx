@@ -85,7 +85,7 @@ Feedback can pass transport checks but still be discarded during ingestion. SDKs
 These requirements apply to SDK-provided feedback forms and the manual capture API:
 
 - `message` **MUST** be a string containing at least one non-whitespace character. Missing, empty, and whitespace-only messages **MUST NOT** be sent.
-- `message` **MUST NOT** exceed **4,096 Unicode code points**. SDKs **MUST** count the value that will be sent, including any whitespace it retains. This matches Python's `len(message)` in Sentry. For well-formed Unicode, code points are equivalent to Unicode scalars, not UTF-8 bytes, UTF-16 code units, or user-perceived characters (grapheme clusters).
+- `message` **MUST NOT** exceed **4,096 Unicode code points**. Sentry validates Python string length with `len(message)`, which counts Unicode code points. SDKs **MUST** match this count for the value that will be sent, including any whitespace it retains. For well-formed Unicode, counting Unicode scalars produces the same result. Counting UTF-8 bytes, UTF-16 code units, or user-perceived characters (grapheme clusters) does not.
 - If an `associated_event_id` is supplied, the SDK **MUST** validate that it is a UUID before sending it, unless the SDK's identifier type already guarantees this.
 - SDKs **MUST** validate the final feedback payload after event processors and `beforeSendFeedback` have run, before enqueueing it for transport. Feedback that fails validation **MUST** be discarded, using the SDK's existing failure reporting conventions and the [client report guidance](#sdk-pipeline).
 
@@ -97,7 +97,9 @@ Forms **MUST** check the message before calling the capture API. When validation
 
 Forms **MUST** enforce configured required name and email fields. Otherwise, name and email remain optional, and anonymous feedback **MUST** be accepted.
 
-Forms **SHOULD** update validation as the user edits the input. A live character counter is **OPTIONAL**. If provided, it **MUST** use the same code-point count as validation and be accessible to assistive technology. This specification does not require a particular counter layout or visual design.
+Forms **SHOULD** update validation as the user edits the input. To avoid visual clutter before the message approaches the limit, forms **MUST** hide the length counter below 90% of the maximum length. At **3,687 code points** (`ceil(0.9 × 4096)`) and above, forms **MUST** display a live label in the format `X / 4096`, where `X` is the current code-point count used for validation.
+
+The label **MUST** be accessible to assistive technology, remain visible when the message exceeds the limit, and hide again if the count drops below 3,687. The same visibility rules **MUST** apply to typed, pasted, and prefilled input.
 
 #### Server Limits
 
@@ -106,16 +108,6 @@ These limits distinguish the modern `feedback` item from the deprecated `user_re
 - **Sentry:** [Feedback ingestion](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/feedback/usecases/ingest/create_feedback.py#L180-L214) rejects missing or whitespace-only messages, messages above the configured limit, and malformed associated event IDs. The [`feedback.message.max-size` option](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/options/defaults.py#L593-L598) defaults to 4,096 code points. This is a rejection limit, not automatic truncation.
 - **Relay:** The [feedback context](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-schema/src/protocol/contexts/mod.rs#L88-L90) has a shared `max_bytes = 8192` normalization budget. Its [schema](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-schema/src/protocol/contexts/user_report_v2.rs#L11-L20) does not declare separate message, name, email, or URL length limits. Relay's [trimming processor](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-normalization/src/trimming.rs) can trim or remove context data. This shared normalization budget is not an 8,192-character allowance for each field and does not replace Sentry's message validation. Feedback also remains subject to [envelope size limits](/sdk/foundations/envelopes/#size-limits).
 - **Legacy user reports:** The [128-character name and 75-character email limits](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/models/userreport.py#L16-L20) belong to `user_report`. They are not per-field limits for `contexts.feedback` and **MUST NOT** be imposed on modern feedback solely to match the legacy endpoint.
-
-#### Implementation Coverage
-
-This section is a draft because existing implementations do not yet meet all of these requirements:
-
-- [JavaScript forms](https://github.com/getsentry/sentry-javascript/blob/352266199adb82af024b489483d37e94a2a17e81/packages/feedback/src/modal/components/Form.tsx) trim input, check required fields, and use the browser's email input validation, but do not enforce message length. [`sendFeedback`](https://github.com/getsentry/sentry-javascript/blob/352266199adb82af024b489483d37e94a2a17e81/packages/feedback/src/core/sendFeedback.ts) rejects empty messages, while the core [`captureFeedback`](https://github.com/getsentry/sentry-javascript/blob/352266199adb82af024b489483d37e94a2a17e81/packages/core/src/feedback.ts) API does not validate input.
-- [Java's feedback model](https://github.com/getsentry/sentry-java/blob/cdb89fd96cbd13d6b53f9722c1096d7b015f54b8/sentry/src/main/java/io/sentry/protocol/Feedback.java#L91-L98) silently truncates messages to 4,096 UTF-16 code units. This can split a surrogate pair and is not equivalent to Sentry's code-point limit. The [Android form](https://github.com/getsentry/sentry-java/blob/cdb89fd96cbd13d6b53f9722c1096d7b015f54b8/sentry-android-core/src/main/java/io/sentry/android/core/SentryUserFeedbackForm.java#L301-L329) trims input and checks required fields, but does not show a length validation error before constructing that model.
-- [Cocoa PR #8973](https://github.com/getsentry/sentry-cocoa/pull/8973) proposes managed-form validation using Unicode scalars and a live counter. It does not establish validation for every capture path or make the counter mandatory for other SDKs.
-
-SDK validation tests **SHOULD** cover missing, empty, and whitespace-only messages, exactly 4,096 and 4,097 code points, decomposed characters, supplementary-plane characters, pasted or prefilled input, and messages modified by event processors or `beforeSendFeedback`.
 
 </SpecSection>
 
