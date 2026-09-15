@@ -146,7 +146,7 @@ async function writeCacheFile(file: string, data: string) {
 }
 
 function formatSlug(slug: string) {
-  return slug.replace(/\.(mdx|md)/, '');
+  return slug.replace(/\\/g, '/').replace(/\.(mdx|md)$/, '');
 }
 const isSupported = (
   frontmatter: FrontMatter,
@@ -262,7 +262,7 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     await Promise.all(
       files.map(file =>
         limit(async () => {
-          const fileName = file.slice(docsPath.length + 1);
+          const fileName = file.slice(docsPath.length + 1).replace(/\\/g, '/');
           if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
             return undefined;
           }
@@ -272,7 +272,7 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
           return {
             ...(frontmatter as FrontMatter),
             slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-            sourcePath: path.join(folder, fileName),
+            sourcePath: path.posix.join(folder, fileName),
           };
         })
       )
@@ -317,7 +317,7 @@ export async function getAllFilesFrontMatter(
   await Promise.all(
     files.map(file =>
       limit(async () => {
-        const fileName = file.slice(docsPath.length + 1);
+        const fileName = file.slice(docsPath.length + 1).replace(/\\/g, '/');
         if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
           return;
         }
@@ -331,7 +331,7 @@ export async function getAllFilesFrontMatter(
         allFrontMatter.push({
           ...(frontmatter as FrontMatter),
           slug: formatSlug(fileName),
-          sourcePath: path.join('docs', fileName),
+          sourcePath: path.posix.join('docs', fileName),
         });
       })
     )
@@ -386,9 +386,12 @@ export async function getAllFilesFrontMatter(
             return;
           }
 
-          const subpath = f.commonFileName.slice(commonPath.length + 1);
+          const subpath = f.commonFileName
+            .slice(commonPath.length + 1)
+            .replace(/\\/g, '/');
           const slug = f.commonFileName
             .slice(docsPath.length + 1)
+            .replace(/\\/g, '/')
             .replace(/\/common\//, '/');
           const noFrontMatter = (
             await Promise.allSettled([
@@ -404,7 +407,8 @@ export async function getAllFilesFrontMatter(
             allFrontMatter.push({
               ...frontmatter,
               slug: formatSlug(slug),
-              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+              sourcePath:
+                'docs/' + f.commonFileName.slice(docsPath.length + 1).replace(/\\/g, '/'),
             });
           }
         })
@@ -438,13 +442,11 @@ export async function getAllFilesFrontMatter(
               return;
             }
 
-            const subpath = f.commonFileName.slice(commonPath.length + 1);
-            const slug = path.join(
-              'platforms',
-              platformName,
-              'guides',
-              guideName,
-              subpath
+            const subpath = f.commonFileName
+              .slice(commonPath.length + 1)
+              .replace(/\\/g, '/');
+            const slug = ['platforms', platformName, 'guides', guideName, subpath].join(
+              '/'
             );
             try {
               await access(path.join(docsPath, slug));
@@ -460,7 +462,8 @@ export async function getAllFilesFrontMatter(
             allFrontMatter.push({
               ...frontmatter,
               slug: formatSlug(slug),
-              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+              sourcePath:
+                'docs/' + f.commonFileName.slice(docsPath.length + 1).replace(/\\/g, '/'),
             });
           })
         )
@@ -489,7 +492,7 @@ export const getVersionedIndexPath = (
     }
   }
 
-  return path.join(pathRoot, versionedSlug);
+  return path.posix.join(pathRoot.replace(/\\/g, '/'), versionedSlug);
 };
 
 export const addVersionToFilePath = (filePath: string, version: string) => {
