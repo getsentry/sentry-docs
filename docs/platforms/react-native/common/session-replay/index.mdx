@@ -119,6 +119,87 @@ Sentry.init({
 });
 ```
 
+## Manually Controlling Session Replay
+
+_Available in React Native SDK 8.27.0 and later_
+
+You can control the replay lifecycle at runtime from anywhere in your code. Get the active replay instance with `Sentry.getReplay()`:
+
+```javascript
+const replay = Sentry.getReplay();
+```
+
+`getReplay()` returns the active Session Replay integration, or `undefined` if Session Replay isn't set up. The same API works on iOS, Android, and React Native Web.
+
+### Starting a Replay
+
+Start recording regardless of your sample rates:
+
+```javascript
+// Start recording the whole session immediately
+Sentry.getReplay()?.start();
+
+// OR: start in buffer mode — keep the most recent segment in memory and only
+// upload it when you call flush() or an error is sampled
+Sentry.getReplay()?.startBuffering();
+```
+
+This is useful when you initialize with both <PlatformIdentifier name="replays-session-sample-rate" /> and <PlatformIdentifier name="replays-on-error-sample-rate" /> set to `0` and want to decide in code when recording begins, or when you want to start a new replay after stopping a previous one. If a replay is already recording, `start()` and `startBuffering()` do nothing (a debug message is logged).
+
+### Stopping a Replay
+
+Stop the current replay and end the session:
+
+```javascript
+await Sentry.getReplay()?.stop();
+```
+
+This flushes any pending recording data and stops recording. A later `start()` begins a fresh replay session.
+
+### Pausing and Resuming a Replay
+
+Pause recording without ending the session, then resume it later:
+
+```javascript
+Sentry.getReplay()?.pause();
+// ...
+Sentry.getReplay()?.resume();
+```
+
+While paused, recording stays paused across background/foreground transitions and automatic restarts until you call `resume()`.
+
+<Alert>
+
+`pause()` and `resume()` are supported on iOS and Android only. On React Native Web they are no-ops (a debug message is logged), because the browser Session Replay SDK doesn't expose them.
+
+</Alert>
+
+### Flushing Recording Data
+
+Upload the currently buffered replay data to Sentry:
+
+```javascript
+await Sentry.getReplay()?.flush();
+```
+
+In buffer mode this uploads the buffered segment and then continues recording as a session, the same as when an error is sampled with <PlatformIdentifier name="replays-on-error-sample-rate" />. If recording is stopped, `flush()` starts a new session replay.
+
+By default, recording continues after the flush. Pass `continueRecording: false` to stop recording once the flush completes:
+
+```javascript
+await Sentry.getReplay()?.flush({ continueRecording: false });
+```
+
+### Getting the Replay ID
+
+Get the ID of the active replay, for example to link it with your support tooling:
+
+```javascript
+const replayId = Sentry.getReplay()?.getReplayId();
+```
+
+This returns the current replay ID, or a nullish value if no replay is active.
+
 ## Privacy
 
 The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out any sensitive data, using the APIs described below.
