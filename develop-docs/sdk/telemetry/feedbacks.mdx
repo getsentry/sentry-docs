@@ -89,17 +89,27 @@ These requirements apply to SDK-provided feedback forms and the manual capture A
 - If an `associated_event_id` is supplied, the SDK **MUST** validate that it is a UUID before sending it, unless the SDK's identifier type already guarantees this.
 - SDKs **MUST** validate the final feedback payload after event processors and `beforeSendFeedback` have run, before enqueueing it for transport. Feedback that fails validation **MUST** be discarded, using the SDK's existing failure reporting conventions and the [client report guidance](#sdk-pipeline).
 
-For example, precomposed `\u00E9` counts as one code point, while decomposed `e\u0301` counts as two. A character outside the Basic Multilingual Plane counts as one code point, even though UTF-16 represents it with two code units. Swift implementations can use `unicodeScalars.count`, Java can use `codePointCount`, and JavaScript can iterate over the string. Native string-length APIs and HTML `maxlength` alone do not consistently match this limit.
+For example, precomposed `é` (`\u00E9`) and decomposed `é` (`e\u0301`) both represent the visible character **é**. The precomposed form counts as one code point, while the decomposed form counts as two: `e` followed by a combining acute accent. A character outside the Basic Multilingual Plane counts as one code point, even though UTF-16 represents it with two code units. Swift implementations can use `unicodeScalars.count`, Java can use `codePointCount`, and JavaScript can iterate over the string. Native string-length APIs and HTML `maxlength` alone do not consistently match this limit.
 
 #### Feedback Forms
 
-Forms **MUST** check the message before calling the capture API. When validation fails, the form **MUST** prevent submission, preserve the user's input, and display an accessible error explaining how to correct it. Forms **MUST NOT** silently truncate an overlong message and submit it as if the user had entered the shortened version.
+Forms **MUST** check the message before calling the capture API. When validation fails, the form **MUST** prevent submission, preserve the user's input, and display an accessible error explaining how to correct it.
+
+Forms **MUST** allow users to type or paste beyond the message limit rather than block further input or truncate the text. This preserves the full message so users can choose what to shorten.
 
 Forms **MUST** enforce configured required name and email fields. Otherwise, name and email remain optional, and anonymous feedback **MUST** be accepted.
 
 Forms **SHOULD** update validation as the user edits the input. To avoid visual clutter before the message approaches the limit, forms **MUST** hide the length counter below 90% of the maximum length. At **3,687 code points** (`ceil(0.9 × 4096)`) and above, forms **MUST** display a live label in the format `X / 4096`, where `X` is the current code-point count used for validation.
 
 The label **MUST** be accessible to assistive technology, remain visible when the message exceeds the limit, and hide again if the count drops below 3,687. The same visibility rules **MUST** apply to typed, pasted, and prefilled input.
+
+Forms **MUST** handle the message limit as follows:
+
+- **At or below 4,096 code points:** Use neutral styling for the visible counter. Exactly 4,096 code points is valid, and submission **MUST** be allowed if all other fields are valid.
+- **Above 4,096 code points:** Preserve all input, use error styling for the counter, and show an accessible error such as "Shorten your message to 4096 characters or fewer." Submission **MUST** remain blocked. If the user attempts to submit, the form **SHOULD** focus the message field.
+- **After correction:** Clear the length error, restore the counter's neutral styling or hide it according to the 90% threshold, and allow submission if all other fields are valid.
+
+Forms **SHOULD** defer length-error updates until an active input-method composition finishes, without interrupting typing. Assistive technology **SHOULD** announce changes in the validation state rather than every counter update.
 
 #### Server Limits
 
