@@ -37,7 +37,7 @@ supported:
 
 <PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
   <Alert level="warning">
-    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentLangGraph` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
+    For meta-framework applications running on both client and server, we recommend **setting up the integration manually** using the [`instrumentStateGraph` or `instrumentCreateReactAgent` wrapper](#manual-instrumentation) to ensure consistent instrumentation across all runtimes.
   </Alert>
 </PlatformSection>
 
@@ -65,11 +65,16 @@ supported:
 
   ## Manual Instrumentation
 
-  _Import name: `Sentry.instrumentLangGraph`_
+  _Import names: `Sentry.instrumentStateGraph`, `Sentry.instrumentCreateReactAgent`_
 
-  The `instrumentLangGraph` helper adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture spans by wrapping a `StateGraph` before compilation and recording agent interactions with configurable input/output recording. You need to call this helper on the graph **before** calling `.compile()`.
+  There are two manual instrumentation helpers, depending on how you build your agent:
 
-  See example below:
+  - **`instrumentStateGraph`** — for graphs you build yourself with `StateGraph`. Call it on the graph **before** calling `.compile()`.
+  - **`instrumentCreateReactAgent`** — for LangGraph's prebuilt `createReactAgent`. Wrap the factory, then use the wrapped version exactly like `createReactAgent`. This also captures the model and wraps tools, so you get `execute_tool` spans as well.
+
+  Both accept the same input/output recording options.
+
+  Instrumenting a `StateGraph`:
 
   ```javascript
   import { ChatOpenAI } from "@langchain/openai";
@@ -97,7 +102,7 @@ supported:
     .addEdge('agent', END);
 
   // Instrument the graph before compiling
-  Sentry.instrumentLangGraph(agent, {
+  Sentry.instrumentStateGraph(agent, {
     recordInputs: true,
     recordOutputs: true,
   });
@@ -111,6 +116,17 @@ supported:
       new HumanMessage("Hello!"),
     ],
   });
+  ```
+
+  Instrumenting a prebuilt `createReactAgent`:
+
+  ```javascript
+  import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+  // Instrument createReactAgent, then use the wrapped version in its place
+  const instrumentedCreateReactAgent = Sentry.instrumentCreateReactAgent(createReactAgent);
+
+  const agent = instrumentedCreateReactAgent({ llm, tools });
   ```
 
   To customize what data is captured (such as inputs and outputs), see the [Options](#options) in the Configuration section.
@@ -162,10 +178,10 @@ Sentry.init({
 
 <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
-Using the `instrumentLangGraph` wrapper for **manual instrumentation**:
+Using the `instrumentStateGraph` wrapper for **manual instrumentation**:
 
 ```javascript
-Sentry.instrumentLangGraph(graph, {
+Sentry.instrumentStateGraph(graph, {
   // your options here
 });
 ```
