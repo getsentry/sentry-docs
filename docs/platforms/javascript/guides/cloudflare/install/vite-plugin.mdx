@@ -1,0 +1,119 @@
+---
+title: Vite Plugin
+description: "Learn how to use the Sentry Cloudflare Vite plugin to instrument bundled dependencies at build time."
+---
+
+<AvailableSince version="10.68.0" />
+
+<Alert>
+  The Sentry Cloudflare Vite plugin has **experimental** stability.
+  Configuration options and behavior may change or be removed in any release.
+</Alert>
+
+The Sentry Cloudflare Vite plugin (`sentryCloudflareVitePlugin`) instruments your Worker at build time. It can:
+
+1. **Instrument bundled dependencies**: instruments supported packages in your bundle, such as database clients and AI SDKs, giving you more traces out of the box.
+2. **Auto-instrument your Worker entry**: wraps your default export with `Sentry.withSentry()`, and Durable Object, Workflow, and Agents SDK classes with the matching `instrument*WithSentry` helper at build time, so you don't need to modify your code.
+
+Both are opt-in while the plugin is experimental. Turn them on with [`_experimental.useDiagnosticsChannelInjection`](#_experimentalusediagnosticschannelinjection) and [`_experimental.autoInstrumentation`](#_experimentalautoinstrumentation).
+
+<PlatformLink to="/">The quick start</PlatformLink> covers adding the plugin and
+creating `instrument.server.ts`. This page documents what it instruments, its
+options, and the details that matter once it's running.
+
+## Auto-instrumentation
+
+The plugin reads your wrangler config (probing `wrangler.json`, `wrangler.jsonc`, and `wrangler.toml` at the Vite root, or the file set with [`wranglerConfigPath`](#wranglerconfigpath)) to find the entry point, Durable Objects, workflows, and Agents SDK classes. It wraps Agents SDK classes (`Agent`, `AIChatAgent`, `McpAgent`) with `instrumentAgentWithSentry`, which also gives them automatic conversation IDs (see <PlatformLink to="/agent-tracing/agents-sdk/">Cloudflare Agents SDK</PlatformLink>).
+
+An entry you wrapped with `withSentry` yourself is left untouched, so manual instrumentation keeps working next to the plugin. If you'd rather wrap the entry yourself, leave `_experimental.autoInstrumentation` off and follow the <PlatformLink to="/install/wrangler/">Wrangler setup</PlatformLink>.
+
+With auto-instrumentation, you can optionally provide Sentry options via a co-located `instrument.server.*` file (`.ts`, `.mts`, `.js`, `.mjs`, or `.cjs`) next to your Worker entry. The plugin resolves this location from `main` in your wrangler config. For example, if `main` is `src/worker/index.ts`, place the file at `src/worker/instrument.server.ts`, not at the project root. Use `defineCloudflareOptions` for full type-checking:
+
+```typescript {filename:instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+}));
+```
+
+If no `instrument.server.*` file exists, the SDK reads all configuration (DSN, release, environment, sample rate, etc.) from the Worker's `env` bindings at runtime.
+
+Configured Durable Object, Workflow, and Agents SDK classes must be declared in the Worker entry for the plugin to wrap them automatically. The plugin cannot rewrite a class that the entry only imports or re-exports from another module. In that case, wrap the imported class in the entry with its matching helper and pass it the options callback from `instrument.server.*`:
+
+```typescript {filename:src/worker/index.ts}
+import * as Sentry from "@sentry/cloudflare";
+import sentryOptions from "./instrument.server";
+import { MyAgent as MyAgentBase } from "./my-agent";
+
+export const MyAgent = Sentry.instrumentAgentWithSentry(
+  sentryOptions,
+  MyAgentBase
+);
+```
+
+Use `instrumentDurableObjectWithSentry` for a plain Durable Object or `instrumentWorkflowWithSentry` for a Workflow.
+
+### Derived RPC Trace Propagation
+
+<AvailableSince version="10.72.0" />
+
+The plugin knows which bindings point at classes it wrapped itself: Durable Object bindings without a `script_name`, and service bindings naming this Worker. Those receivers are guaranteed to strip the trailing trace argument again, so the plugin adds their binding names to <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">rpcTracePropagationBindings</PlatformLink>, which covers the calling and the receiving side alike. Traces then connect across RPC calls within one deployment, with no configuration of your own.
+
+Bindings to _other_ Workers stay opt-in, because their receivers may not run Sentry. List those yourself in `instrument.server.*`; whatever you list is added on top of the derived names.
+
+The plugin derives only the classes it wrapped itself. A class you wrapped by hand, or one re-exported from another module, runs on its own options and stays out.
+
+This applies to Vite builds only. At runtime a `DurableObjectNamespace` exposes no origin and a `Fetcher` does not say which service it points at, so a plain wrangler build still has to list its bindings.
+
+## Options
+
+<SdkOption name="wranglerConfigPath" type="string" availableSince="10.69.0">
+
+Path to your wrangler config file. By default the plugin probes `wrangler.json`, `wrangler.jsonc`, and `wrangler.toml` at the Vite root. Set this when your config lives at a custom path, for example to mirror the `configPath` option of the Cloudflare Vite plugin:
+
+```typescript {filename:vite.config.ts}
+export default defineConfig({
+  plugins: [
+    cloudflare({ configPath: "./wrangler.agent.jsonc" }),
+    sentryCloudflareVitePlugin({
+      wranglerConfigPath: "./wrangler.agent.jsonc",
+      _experimental: {
+        autoInstrumentation: true,
+      },
+    }),
+  ],
+});
+```
+
+</SdkOption>
+
+<SdkOption name="_experimental" type="object">
+
+Experimental options that may change or be removed without notice.
+
+</SdkOption>
+
+<SdkOption name="_experimental.useDiagnosticsChannelInjection" type="boolean" defaultValue="false">
+
+Build-time instrumentation of supported dependencies. The plugin injects `diagnostics_channel.tracingChannel` calls into the bundled packages, and next to each one a snippet that registers the matching Sentry channel subscriber, which the SDK picks up in `Sentry.withSentry()`. This is how those packages get traced in the Workers runtime, where the SDK can't monkey-patch them. Both `vite build` and `vite dev` are instrumented.
+
+A package is only instrumented if it's actually bundled. A dependency you mark as external is resolved at runtime and never passes through the build, so it stays untraced.
+
+</SdkOption>
+
+<SdkOption name="_experimental.autoInstrumentation" type="boolean" defaultValue="false">
+
+Wraps your Worker at build time so you don't have to edit your entry. The plugin reads your wrangler config, wraps the default export with `Sentry.withSentry()` (sourcing options from a co-located `instrument.server.*` file, falling back to `env`), and wraps configured classes with the matching helper: Durable Objects with `instrumentDurableObjectWithSentry`, Workflows with `instrumentWorkflowWithSentry`, and Agents SDK classes with `instrumentAgentWithSentry` (SDK version 10.69.0 or higher). Both `vite build` and `vite dev` are instrumented. Entries you wrapped yourself are left alone, so this is safe alongside manual instrumentation. The plugin also adds the bindings that resolve to the wrapped classes to `rpcTracePropagationBindings` (SDK version 10.72.0 or higher).
+
+</SdkOption>
+
+## Migrating From Wrangler
+
+If you deploy with `wrangler` directly, moving to Vite is straightforward:
+
+1. Set up the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/get-started/) and add a `vite.config.ts` with the `cloudflare()` and `sentryCloudflareVitePlugin()` plugins as shown above.
+2. Run `vite build` before `wrangler deploy`, and use `vite dev` in place of `wrangler dev` for local development.
+
+Your existing `wrangler.jsonc` becomes the input config, and the plugin generates the deployed output during the build. For the full list of fields that change or become redundant, see Cloudflare's [Migrating from Wrangler](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/) guide.
