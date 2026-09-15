@@ -78,11 +78,11 @@ There is no sample rate for feedbacks — they are always sent. However, a feedb
 
 ### Client-Side Input Validation
 
-Feedback can pass transport checks but still be discarded during ingestion. SDKs **MUST** validate user input locally so users can correct their feedback before submitting it.
+Feedback can pass transport checks but still be discarded during ingestion. SDKs **MAY** validate user input locally so users can correct their feedback before submitting it.
 
 #### Payload Validation
 
-These requirements apply to SDK-provided feedback forms and the manual capture API:
+For SDKs that implement local payload validation, the following requirements apply to SDK-provided feedback forms and the manual capture API:
 
 - `message` **MUST** be a string containing at least one non-whitespace character. Missing, empty, and whitespace-only messages **MUST NOT** be sent.
 - `message` **MUST NOT** exceed **4,096 Unicode code points**. Sentry validates Python string length with `len(message)`, which counts Unicode code points. SDKs **MUST** match this count for the value that will be sent, including any whitespace it retains. For well-formed Unicode, counting Unicode scalars produces the same result. Counting UTF-8 bytes, UTF-16 code units, or user-perceived characters (grapheme clusters) does not.
@@ -93,7 +93,9 @@ For example, precomposed `é` (`\u00E9`) and decomposed `é` (`e\u0301`) both r
 
 #### Feedback Forms
 
-Forms **MUST** check the message before calling the capture API. When validation fails, the form **MUST** prevent submission, preserve the user's input, and display an accessible error explaining how to correct it.
+Forms **MAY** check the message before calling the capture API. The following requirements apply to forms that implement this validation.
+
+When validation fails, the form **MUST** prevent submission, preserve the user's input, and display an accessible error explaining how to correct it.
 
 Forms **MUST** allow users to type or paste beyond the message limit rather than block further input or truncate the text. This preserves the full message so users can choose what to shorten.
 
