@@ -11,9 +11,9 @@ You can configure the error handler using the `setupFastifyErrorHandler` functio
 
 ```javascript
 import * as Sentry from "@sentry/node";
-import { setupFastifyErrorHandler } from "@sentry/fastify";
+import Fastify from "fastify";
 
-const app = fastify();
+const app = Fastify();
 
 // Initialize Sentry
 Sentry.init({
@@ -21,7 +21,7 @@ Sentry.init({
 });
 
 // Setup the error handler
-setupFastifyErrorHandler(app);
+Sentry.setupFastifyErrorHandler(app);
 ```
 
 ## Options
@@ -41,7 +41,7 @@ declare function shouldHandleError(
 ```
 
 ```javascript
-setupFastifyErrorHandler(app, {
+Sentry.setupFastifyErrorHandler(app, {
   shouldHandleError(error, request, reply) {
     return reply.statusCode >= 500 || reply.statusCode <= 399;
   },
@@ -53,7 +53,7 @@ If using TypeScript, you can cast the request and reply to get full type safety.
 ```typescript
 import { FastifyRequest, FastifyReply } from "fastify";
 
-setupFastifyErrorHandler(app, {
+Sentry.setupFastifyErrorHandler(app, {
   shouldHandleError(error, minimalRequest, minimalReply) {
     const request = minimalRequest as FastifyRequest;
     const reply = minimalReply as FastifyReply;
