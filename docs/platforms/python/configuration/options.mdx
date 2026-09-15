@@ -287,7 +287,6 @@ def before_send_span(span, hint):
 
 sentry_sdk.init(
     # ...
-    trace_lifecycle="stream",
     before_send_span=before_send_span,
 )
 ```
@@ -410,22 +409,7 @@ If you want to disable all tracing you need to set `traces_sample_rate=None`. In
 
 <PlatformContent includePath="/performance/traces-sampler-config-option" />
 
-<SdkOption name="trace_lifecycle" type='string' defaultValue='"static"' availableSince='2.62.0'>
-
-Controls how spans are sent to Sentry:
-
-- In transaction mode (`"static"`, the default), all spans are collected in memory and sent to Sentry as a single transaction once the root span ends.
-- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`"stream"`), spans are sent in batches as they finish.
-
-</SdkOption>
-
 <SdkOption name="ignore_spans" type='list[str | Pattern | dict]' defaultValue='[]' availableSince='2.62.0'>
-
-<Alert>
-
-Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>.
-
-</Alert>
 
 A list of strings, compiled regular expressions, or dictionaries describing spans that shouldn't be sent to Sentry. When using strings, a span name containing the string will be filtered out. For exact or more complex pattern matching, use compiled regular expressions instead. You can also provide a dictionary with `name` and/or `attributes` keys to match on multiple conditions. At least one key must be provided.
 
@@ -441,7 +425,6 @@ import re
 import sentry_sdk
 
 sentry_sdk.init(
-    trace_lifecycle="stream",
     ignore_spans=[
         # String match against span name
         "/health",
@@ -616,39 +599,6 @@ Either this or `profiles_sample_rate` must be defined to enable profiling. Addit
 <SdkOption name="profile_session_sample_rate" type='float' defaultValue='None'>
 
 A number between `0` and `1`, controlling the percentage chance a given session will be profiled. The sampling decision is evaluated only once at SDK initialization.
-
-</SdkOption>
-
-<SdkOption name="stream_gen_ai_spans" type='bool' defaultValue='True' defaultNote='since version 2.64.0' availableSince='2.60.0'>
-
-When enabled, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
-
-This is enabled by default starting with SDK version `2.64.0` (before that, it defaulted to `False`). Set it to `False` to send `gen_ai` spans as part of the transaction instead.
-
-Self-hosted Sentry users should set this option to `False`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
-
-</SdkOption>
-
-## Logs Options
-
-<SdkOption name="enable_logs" type='bool' defaultValue='False'>
-
-**Deprecated:** This option will be removed in the next major version. Use the `capture_sentry_logs` option on the [`logging`](/platforms/python/integrations/logging/#options) and [Loguru](/platforms/python/integrations/loguru/#options) integrations instead.
-
-The `sentry_sdk.logger` API works standalone and is not affected by this option.
-
-For automatic capture of logs from the standard library `logging` module and from Loguru, this option acts as a fallback. If an integration leaves `capture_sentry_logs` unset, `enable_logs=True` turns automatic capture on for that integration. Setting `capture_sentry_logs` on the integration always wins.
-
-| `enable_logs`     | `capture_sentry_logs` | Automatic capture |
-| ----------------- | --------------------- | ----------------- |
-| not set / `False` | not set               | off               |
-| `True`            | not set               | on                |
-| any               | `True`                | on                |
-| any               | `False`               | off               |
-
-In SDK versions prior to `2.68.0`, this option had to be set to `True` to use the `sentry_sdk.logger` API, and it also enabled automatic capture of logs from the standard library `logging` module and from Loguru. In version `2.68.0` only, the option had no effect at all. Upgrade to `2.68.1` or later if you rely on it.
-
-Deprecated in version `2.68.1`. New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
 
 </SdkOption>
 
