@@ -60,12 +60,6 @@ Run the command for your preferred package manager to add the Sentry SDK to your
 </SplitSection>
 </SplitLayout>
 
-<Alert>
-
-Importing Sentry from the `@sentry/cloudflare/nodejs_compat` entrypoint unlocks additional Node.js SDK features on Cloudflare. It requires SDK version `10.64.0` or higher and will become the default in the next major version. [Learn more](./features/nodejs-compat).
-
-</Alert>
-
 ## Configure
 
 This guide sets Sentry up through Vite, which is what we recommend for Cloudflare Workers. The plugin does the wiring at build time, so your Worker code stays untouched.
@@ -82,9 +76,9 @@ Not using Vite? See the <PlatformLink to="/install/wrangler/">Wrangler setup</Pl
 <SplitSection>
 <SplitSectionText>
 
-Add the Sentry plugin to your existing `vite.config.ts`, next to `cloudflare()`. Both behaviors are experimental in this version, so turn them on explicitly.
+Add the Sentry plugin to your existing `vite.config.ts`, next to `cloudflare()`. It needs no options.
 
-`autoInstrumentation` wraps your Worker entry, and any Durable Object, Workflow or Agents SDK class in your wrangler config, at build time, so you don't have to call `Sentry.withSentry()` yourself. `useDiagnosticsChannelInjection` instruments bundled dependencies such as database clients, which is the only way to trace them in the Workers runtime, where the SDK can't patch them at runtime.
+The plugin wraps your Worker entry, and any Durable Object, Workflow or Agents SDK class in your wrangler config, at build time, so you don't have to call `Sentry.withSentry()` yourself. It also instruments bundled dependencies such as database clients, which is the only way to trace them in the Workers runtime, where the SDK can't patch them at runtime.
 
 To see its options, which packages it instruments, and how to opt out of either behavior, see <PlatformLink to="/install/vite-plugin/">Vite Plugin</PlatformLink>.
 
@@ -97,15 +91,8 @@ To see its options, which packages it instruments, and how to opt out of either 
  import { defineConfig } from "vite";
 
  export default defineConfig({
-   plugins: [
-     cloudflare(),
-+    sentryCloudflareVitePlugin({
-+      _experimental: {
-+        autoInstrumentation: true,
-+        useDiagnosticsChannelInjection: true,
-+      },
-+    }),
-   ],
+-  plugins: [cloudflare()],
++  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
  });
 ```
 
