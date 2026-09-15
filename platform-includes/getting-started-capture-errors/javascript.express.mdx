@@ -1,0 +1,22 @@
+### Report Unhandled Exceptions
+
+`expressIntegration` captures errors from your routes and middleware automatically, so you don't need to register a Sentry error handler. Errors with a 3xx or 4xx status code are skipped, since they're usually expected redirects or client errors.
+
+To change which errors are captured, pass a `shouldHandleError` callback to `expressIntegration()`. Return `true` to capture an error or `false` to skip it:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.expressIntegration({
+      shouldHandleError(error) {
+        const status = Number(error.status ?? error.statusCode ?? 500);
+        // Capture 401/403 in addition to the default 5xx errors
+        return status === 401 || status === 403 || status >= 500;
+      },
+    }),
+  ],
+});
+```
+
+If you capture errors yourself in your own error-handling middleware, set `shouldHandleError: false` to avoid duplicate events.
