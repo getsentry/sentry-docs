@@ -100,6 +100,10 @@ AndroidManifest.xml key: `io.sentry.additional-context`.
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations.
 
+This is a legacy flag. Use [`dataCollection`](#dataCollection) for granular control over automatically collected data.
+
+For backwards compatibility, `sendDefaultPii` keeps its existing behavior when no Data Collection field is configured. As soon as you configure any `dataCollection` field, Data Collection becomes the source of truth for its categories and `sendDefaultPii` no longer controls them.
+
 <Alert>
 
 If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
@@ -107,6 +111,106 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 </Alert>
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</SdkOption>
+
+<SdkOption name="dataCollection" type="DataCollection" availableSince="8.57.0">
+
+Controls which categories of data SDK integrations collect automatically. Data Collection applies only where an integration supports the category. It doesn't remove data you add explicitly through scopes, event processors, or callbacks such as `beforeSend`.
+
+<Alert>
+
+Passing an empty `DataCollection` or explicitly configuring any field enables Data Collection. All fields you don't configure use the defaults below, and the `sendDefaultPii` option is ignored.
+
+</Alert>
+
+| Field                    | Type                         | Default        | Behavior                                                                                                                                  |
+| ------------------------ | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`               | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
+| `cookies`\*              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
+| `httpHeaders.request`\*  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
+| `httpHeaders.response`\* | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
+| `httpBodies`             | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body collection.                              |
+| `urlQueryParams`\*       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
+| `graphql.document`       | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
+| `graphql.variables`      | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
+| `filePaths`              | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
+
+\* Fields marked with an asterisk take a single `KeyValueCollectionBehavior` value in code. Properties, environment variables, Spring Boot, and Android manifest metadata expose that value as separate `mode` and `terms` settings. `terms` contains additional matching terms for deny-list or allow-list behavior.
+
+The marked fields support three modes:
+
+- `OFF`: Don't collect the category.
+- `DENY_LIST`: Collect values except those matching the built-in sensitive list or additional configured terms.
+- `ALLOW_LIST`: Include plaintext values only for keys that match configured terms and don't match the built-in sensitive list. Sensitive values are always replaced with `"[Filtered]"`.
+
+Matching is partial and case-insensitive. The built-in list includes terms such as `auth`, `token`, `secret`, `password`, `key`, `session`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
+
+Configure Data Collection in `AndroidManifest.xml`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data
+      android:name="io.sentry.data-collection.user-info"
+      android:value="false" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-bodies"
+      android:value="incoming_request,outgoing_request" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-headers.request.mode"
+      android:value="allow_list" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-headers.request.terms"
+      android:value="content-type,x-request-id" />
+  <meta-data
+      android:name="io.sentry.data-collection.url-query-params.mode"
+      android:value="off" />
+  <meta-data
+      android:name="io.sentry.data-collection.file-paths"
+      android:value="false" />
+</application>
+```
+
+Supported manifest keys are:
+
+- `io.sentry.data-collection.user-info`
+- `io.sentry.data-collection.http-bodies`
+- `io.sentry.data-collection.cookies.mode` and `.terms`
+- `io.sentry.data-collection.http-headers.request.mode` and `.terms`
+- `io.sentry.data-collection.http-headers.response.mode` and `.terms`
+- `io.sentry.data-collection.url-query-params.mode` and `.terms`
+- `io.sentry.data-collection.graphql.document`
+- `io.sentry.data-collection.graphql.variables`
+- `io.sentry.data-collection.file-paths`
+
+For manual initialization, use the same Java API as the Java SDK:
+
+```kotlin
+import io.sentry.KeyValueCollectionBehavior
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.dataCollection.userInfo = false
+  options.dataCollection.filePaths = false
+  options.dataCollection.urlQueryParams = KeyValueCollectionBehavior.off()
+  options.dataCollection.httpHeaders.request =
+    KeyValueCollectionBehavior.allowList("content-type", "x-request-id")
+}
+```
+
+### Migrating From `sendDefaultPii`
+
+Data Collection preserves existing applications until you opt in:
+
+| Configuration             | Result                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| No Data Collection fields | Existing `sendDefaultPii` behavior is preserved.                                                                                             |
+| An empty `DataCollection` | All Data Collection categories use the defaults above.                                                                                       |
+| Any Data Collection field | That field uses its configured value, omitted fields use the defaults above, and `sendDefaultPii` is ignored for Data Collection categories. |
+
+If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, an empty `DataCollection` opts into the new filtered defaults.
+
+Data Collection doesn't control Session Replay. Configure Replay's URL, header, and body collection separately in the <PlatformLink to="/session-replay/configuration/">Session Replay options</PlatformLink>.
 
 </SdkOption>
 
