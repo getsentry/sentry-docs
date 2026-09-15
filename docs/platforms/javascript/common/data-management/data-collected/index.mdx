@@ -98,7 +98,11 @@ Without `dataCollection` (and with `sendDefaultPii` unset or `false`), Sentry on
 </PlatformSection>
 
 <PlatformSection supported={["javascript.remix"]}>
-  When `dataCollection` is used, HTTP body collection is enabled by default, so Form Data can be sent with `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#server-side-configuration">server-side configuration</PlatformLink>. When not using `dataCollection`, this requires the deprecated `sendDefaultPii: true`.
+  Remix action form data is captured when `dataCollection.httpBodies` includes `"incomingRequest"`, which is the default. All form fields are captured, and values with a sensitive-looking field name (like `password` or `token`) are replaced with `[Filtered]`.
+
+  To capture only specific fields, set `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#configure-server-side-sentry">server-side configuration</PlatformLink>. This option works on its own and doesn't require `dataCollection.httpBodies` to include `"incomingRequest"`. To stop capturing form data, remove `captureActionFormDataKeys` and exclude `"incomingRequest"` from `dataCollection.httpBodies`.
+
+  Captured fields are sent as `remix.action_form_data.<field>` span attributes. Before version 11, the Node.js SDK sent them as `formData.<field>`, so update any dashboards, alerts, or saved searches that query the old attribute names.
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.effect", "javascript.electron", "javascript.elysia", "javascript.ember", "javascript.firebase", "javascript.gatsby", "javascript.nitro", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
