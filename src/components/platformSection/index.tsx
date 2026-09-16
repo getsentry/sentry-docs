@@ -1,19 +1,49 @@
-import {DocNode, getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTree';
+import {
+  DocNode,
+  getCurrentPlatformOrGuide,
+  getGuide,
+  getPlatform,
+} from 'sentry-docs/docTree';
+import {isPlatformSupported as resolvePlatformSupport} from 'sentry-docs/platformSupport';
 import {serverContext} from 'sentry-docs/serverContext';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import styles from './style.module.css';
 
-function getPlatformsWithFallback(
+function getPlatformSupportKeys(
   rootNode: DocNode,
   platformOrGuide: Platform | PlatformGuide
-) {
-  const result = [platformOrGuide.key];
-  let curPlatform: Platform | PlatformGuide | undefined = platformOrGuide;
-  while (curPlatform?.fallbackPlatform) {
-    result.push(curPlatform.fallbackPlatform);
-    curPlatform = getPlatform(rootNode, curPlatform.fallbackPlatform);
+): string[] {
+  const result: string[] = [];
+  const visited = new Set<string>();
+  let current: Platform | PlatformGuide | undefined = platformOrGuide;
+
+  while (current && !visited.has(current.key)) {
+    result.push(current.key);
+    visited.add(current.key);
+
+    if (current.type === 'guide') {
+      const parentPlatform = current.platform;
+      if (current.fallbackGuide && !visited.has(current.fallbackGuide)) {
+        const fallbackGuide = current.fallbackGuide;
+        const [platform, ...guideParts] = fallbackGuide.split('.');
+        const fallback = getGuide(rootNode, platform, guideParts.join('.'));
+        if (fallback) {
+          current = fallback;
+          continue;
+        }
+        result.push(fallbackGuide);
+        visited.add(fallbackGuide);
+      }
+      current = getPlatform(rootNode, parentPlatform);
+      continue;
+    }
+
+    current = current.fallbackPlatform
+      ? getPlatform(rootNode, current.fallbackPlatform)
+      : undefined;
   }
+
   return result;
 }
 
@@ -23,20 +53,6 @@ type Props = {
   notSupported?: string[];
   platform?: string;
   supported?: string[];
-};
-
-const isSupported = (
-  platformKey: string,
-  supported: string[],
-  notSupported: string[]
-): boolean | null => {
-  if (supported.length && supported.find(p => p === platformKey)) {
-    return true;
-  }
-  if (notSupported.length && notSupported.find(p => p === platformKey)) {
-    return false;
-  }
-  return null;
 };
 
 /**
@@ -49,20 +65,10 @@ export function isPlatformSupported(
   supported: string[] = [],
   notSupported: string[] = []
 ): boolean {
-  const platformsToSearch = getPlatformsWithFallback(rootNode, platformOrGuide);
-
-  let result: boolean | null = null;
-
-  for (const platformKey of platformsToSearch) {
-    result = isSupported(platformKey, supported, notSupported);
-    if (result !== null) {
-      break;
-    }
-  }
-  if (result === false) {
-    return false;
-  }
-  return result === true || supported.length === 0;
+  return resolvePlatformSupport(getPlatformSupportKeys(rootNode, platformOrGuide), {
+    supported,
+    notSupported,
+  });
 }
 
 /**
