@@ -113,24 +113,9 @@ Sentry.init({
 });
 ```
 
-With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. Eve runs `agent/instrumentation.ts` before your agent and the AI SDK load, so this works from the first turn without the `--import` flag, and you don't initialize `@sentry/node` anywhere else. To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below.
+With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. Prompts and model outputs are recorded on your agent spans by default, so the Agent Tracing transcript shows the full exchange without any extra configuration.
 
-<OnboardingOption optionId="performance">
-
-To also capture prompts, model outputs, and tool details on your agent spans — so the Agent Tracing transcript shows the full exchange — add `dataCollection`:
-
-```typescript {filename:agent/instrumentation.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  // Record generative AI inputs and outputs on your agent spans
-  dataCollection: {},
-});
-```
-
-Passing `dataCollection: {}` opts generative AI inputs and outputs **on**, along with other permissive defaults (bodies, cookies, user info, and more). Review the data your agent handles and tighten these before production. See [Privacy Controls](#privacy-controls) for how to turn inputs and outputs off.
-
-</OnboardingOption>
+To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below. To review what's captured and turn recording of prompts and responses off, see [Privacy Controls](#privacy-controls).
 
 ## Verify
 
@@ -146,7 +131,7 @@ If no data appears, confirm that:
 
 ## Privacy Controls
 
-With `dataCollection: {}` (or any `dataCollection` config), generative AI inputs and outputs default to **on**. To turn them off, set `genAI.inputs` and `genAI.outputs` to `false`:
+Generative AI inputs and outputs — the prompts your agent sends and the model responses it receives — are recorded on your agent spans by default. Review the data your agent handles and tighten this before production. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
 
 ```typescript {filename:agent/instrumentation.ts}
 Sentry.init({
@@ -156,8 +141,6 @@ Sentry.init({
   },
 });
 ```
-
-You can also set `recordInputs` / `recordOutputs` on a specific AI integration to control input and output recording per integration.
 
 ## Link Conversations
 
