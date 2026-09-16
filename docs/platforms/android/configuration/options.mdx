@@ -146,6 +146,8 @@ The marked fields support three modes:
 
 Matching is partial and case-insensitive. The built-in terms are `auth`, `token`, `secret`, `password`, `passwd`, `pwd`, `key`, `jwt`, `bearer`, `sso`, `saml`, `csrf`, `xsrf`, `credentials`, `session`, `sid`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
 
+When migrating from `sendDefaultPii`, review your header configuration. The legacy header filtering omitted sensitive headers such as `X-Forwarded-For`, `X-Real-IP`, and `Remote-Addr` in supported integrations. After you configure any Data Collection field, `sendDefaultPii` no longer controls these headers. Data Collection's default deny list filters credential and secret values but doesn't automatically match those identifying headers. To continue filtering them, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a deny list. These terms also match keys such as `CF-Connecting-IP` and `X-User-Id`. Add them to `cookies`, `httpHeaders.request`, `httpHeaders.response`, or `urlQueryParams` as needed.
+
 Configure Data Collection in `AndroidManifest.xml`:
 
 ```xml {filename:AndroidManifest.xml}
@@ -158,10 +160,10 @@ Configure Data Collection in `AndroidManifest.xml`:
       android:value="outgoing_request,incoming_response" />
   <meta-data
       android:name="io.sentry.data-collection.http-headers.request.mode"
-      android:value="allow_list" />
+      android:value="deny_list" />
   <meta-data
       android:name="io.sentry.data-collection.http-headers.request.terms"
-      android:value="content-type,x-request-id" />
+      android:value="forwarded,-ip,remote-,via,-user" />
   <meta-data
       android:name="io.sentry.data-collection.url-query-params.mode"
       android:value="off" />
@@ -194,7 +196,7 @@ SentryAndroid.init(this) { options ->
   options.dataCollection.filePaths = false
   options.dataCollection.urlQueryParams = KeyValueCollectionBehavior.off()
   options.dataCollection.httpHeaders.request =
-    KeyValueCollectionBehavior.allowList("content-type", "x-request-id")
+    KeyValueCollectionBehavior.denyList("forwarded", "-ip", "remote-", "via", "-user")
 }
 ```
 

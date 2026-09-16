@@ -148,6 +148,8 @@ The `cookies`, `httpHeaders.request`, `httpHeaders.response`, and `urlQueryParam
 
 Matching is partial and case-insensitive. The built-in terms are `auth`, `token`, `secret`, `password`, `passwd`, `pwd`, `key`, `jwt`, `bearer`, `sso`, `saml`, `csrf`, `xsrf`, `credentials`, `session`, `sid`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
 
+When migrating from `sendDefaultPii`, review your header configuration. The legacy header filtering omitted sensitive headers such as `X-Forwarded-For`, `X-Real-IP`, and `Remote-Addr` in supported integrations. After you configure any Data Collection field, `sendDefaultPii` no longer controls these headers. Data Collection's default deny list filters credential and secret values but doesn't automatically match those identifying headers. To continue filtering them, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a deny list. These terms also match keys such as `CF-Connecting-IP` and `X-User-Id`. Add them to `cookies`, `httpHeaders.request`, `httpHeaders.response`, or `urlQueryParams` as needed.
+
 Configure only the fields that differ from these defaults:
 
 ```java
@@ -165,8 +167,8 @@ Sentry.init(
           .getDataCollection()
           .getHttpHeaders()
           .setRequest(
-              KeyValueCollectionBehavior.allowList(
-                  "content-type", "x-request-id"));
+              KeyValueCollectionBehavior.denyList(
+                  "forwarded", "-ip", "remote-", "via", "-user"));
     });
 ```
 
@@ -177,8 +179,8 @@ data-collection.user-info=false
 data-collection.http-bodies=incoming_request,outgoing_request
 data-collection.cookies.mode=deny_list
 data-collection.cookies.terms=session-id,tracking-id
-data-collection.http-headers.request.mode=allow_list
-data-collection.http-headers.request.terms=content-type,x-request-id
+data-collection.http-headers.request.mode=deny_list
+data-collection.http-headers.request.terms=forwarded,-ip,remote-,via,-user
 data-collection.http-headers.response.mode=off
 data-collection.url-query-params.mode=off
 data-collection.graphql.document=false
@@ -195,8 +197,8 @@ Spring Boot uses the `sentry.` prefix and kebab-case enum values:
 ```properties {filename:application.properties}
 sentry.data-collection.user-info=false
 sentry.data-collection.http-bodies=incoming-request,outgoing-request
-sentry.data-collection.http-headers.request.mode=allow-list
-sentry.data-collection.http-headers.request.terms=content-type,x-request-id
+sentry.data-collection.http-headers.request.mode=deny-list
+sentry.data-collection.http-headers.request.terms=forwarded,-ip,remote-,via,-user
 sentry.data-collection.url-query-params.mode=off
 sentry.data-collection.file-paths=false
 ```
