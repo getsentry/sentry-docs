@@ -3,23 +3,23 @@ title: Agent Tracing
 sidebar_order: 75
 description: >-
   Learn about how Sentry's agent tracing features help you track and
-  understand how your agents behave across agent runs, tool calls and handoffs.  
+  understand how your agents behave across agent runs, tool calls, and handoffs.  
 ---
 
 ## What Is Agent Tracing?
 
-[**Agent tracing**](/product/agents/) follows an agent throughout an entire run. It captures every model call, tool call, and handoff as a sequence of spans within a single [trace](/concepts/key-terms/tracing/#whats-a-trace). It shows you input, output, latency, and cost at each step of its workflow. Instead of looking at a single isolated LLM request, agent tracing gives you the entire chain of events from user input to final response.
+[**Agent tracing**](/product/agents/) follows an agent throughout an entire run. It captures every model call, tool call, and handoff as a sequence of [spans](/concepts/key-terms/tracing/#whats-a-span) within a single [trace](/concepts/key-terms/tracing/#whats-a-trace). It shows you input, output, latency, and cost at each step of its workflow. Instead of looking at a single isolated LLM request, agent tracing gives you the entire chain of events from first input to final response.
 
 Agent tracing uses the standard distributed tracing model from modern observability. Agent spans show up beside HTTP, database, and queue spans in the same trace. This combined view is what makes agent observability most valuable: understanding whether the agent was successfully deployed, and what happened along the way.
 
 If you want to jump to how Sentry brings this data together to help you fix or improve your agents, skip to [How Agent Tracing Can Help You Debug](#how-agent-tracing-can-help-you-debug).
 
-### How Agent Tracing Differs from LLM Monitoring
+### How Agent Tracing Differs From LLM Monitoring
 
-Both LLM monitoring and agent tracing are part of AI observability. They are used to track your AI-powered systems in production. While LLM monitoring tracks one call to a model, agent tracing tracks a full agent run, including LLM monitoring data. 
+Both LLM monitoring and agent tracing are part of AI observability. They are used to track your AI-powered systems in production. While LLM monitoring often tracks one call to a model, and converts that into monitoring tools like dashboards, agent tracing tracks a full agent run, including LLM monitoring data, to provide everything you need to not only monitor, but debug and improve your agents. 
 
 
-1. Data you see.
+1. Data you see in AI Observability.
 
    - **LLM monitoring**: prompt, completion, tokens, latency, cost, model version.
    - **Agent tracing**: the full decision path. Which tools the agent called, in which order, with which inputs and outputs, and where each LLM call fits in that path.
@@ -50,7 +50,7 @@ This whole sequence is one agent run, from user input to final confirmation resp
 
 ### What's a Model Call Span?
 
-A **model call span** is a type of span that records a single request to an LLM. It tells you what model was called, the input and output, token usage, cost, and duration. For instance, in the previous agent run example where the agent tries to figure out what to check first:
+A **model call span** is a type of span that records a single request to an LLM. This is the same data used in LLM monitoring. It tells you what model was called, the input and output, token usage, cost, and duration. For instance, in the previous agent run example where the agent tries to figure out what to check first:
 
 |              |                                            |
 | ------------ | ------------------------------------------ |
@@ -65,7 +65,7 @@ If something went wrong, like it is the wrong model, there's a missing piece of 
 
 ### What's a Tool Call Span?
 
-A **tool call span** is a type of [span](/concepts/key-terms/tracing/#whats-a-span) that's part of the agent run. It records a single function or tool call made by an agent. The span tells you which tool was called, its input and output, and how long it took. It's often one of the first things to look at when a run goes wrong. For example, when an agent reads a file, for example. `test_auth.py`, the tool call span for that would look something like this:
+A **tool call span** is a type of [span](/concepts/key-terms/tracing/#whats-a-span) that's part of the agent run. It records a single function or tool call made by an agent. The span tells you which tool was called, its input, output, and how long it took. It's often one of the first things to look at when a run goes wrong. For example, when an agent reads a file, like `test_auth.py`, the tool call span for that would look something like this:
 
 |              |                              |
 | ------------ | ---------------------------- |
@@ -74,7 +74,7 @@ A **tool call span** is a type of [span](/concepts/key-terms/tracing/#whats-a-sp
 | **Output**   | *The file contents*          |
 | **Duration** | 42ms                         |
 
-If something went wrong, like the wrong file got called, a bad argument got passed, or there is a silent tool failure, a tool call span like this would tell you what was requested and what was returned at that one step.
+If something went wrong, like the wrong file got called, a bad argument got passed, or there is a silent tool failure, a tool call span like this would tell you what was requested and what was returned at that one step. Having this span within a trace will give visibility into not only the agent's actions, but what else was happening in your application for this session. 
 
 ### What's an Agent Handoff?
 
@@ -87,9 +87,9 @@ An **agent handoff** is the process where an agent delegates tasks to other agen
 
 To the user, this happens seamlessly. But behind the scenes, control and context are passed around from one agent to another.
 
-### What's a Conversation?
+### What's an Agent Conversation?
 
-A [**conversation**](/product/agents/conversations/) is a collection of spans that share the same `gen_ai.conversation.id`, providing a single, chat-like view into a user's full session. While an agent run covers a single exchange, a conversation can contain multiple runs. Sending messages in a chat can trigger multiple agent runs, each producing their own set of spans. `gen_ai.conversation.id` stitches those separate spans into a single connected view.
+An agent [**conversation**](/product/agents/conversations/) is a collection of spans that share the same `gen_ai.conversation.id`, providing a single, chat-like view into a user's full session. While an agent run covers a single exchange, a conversation can contain multiple runs. Sending messages in a chat can trigger multiple agent runs, each producing their own set of spans. `gen_ai.conversation.id` stitches those separate spans into a single connected view. A conversation can exist across multiple traces, and multiple conversations can exist inside one trace.
 
 ## How to Use Agent Tracing in Sentry
 
@@ -107,7 +107,7 @@ Because these spans sit inside the same trace as your regular application, you c
 
 ### Explore Agent Conversations
 
-[**Conversations**](/product/agents/conversations/) let you monitor past conversations with your agents. You can see a list of conversations, filtering by project, agent, environments, time range, and attributes. At a high level, the list will show:
+[**Conversations**](/product/agents/conversations/) let you review past conversations with your agents. You can see a list of conversations, filtering by project, agent, environments, time range, and attributes. At a high level, the list will show:
 
 - **Conversation**: Title, project, conversation ID, and user. The title comes from the first user message, uses that message text until a generated title is available, or shows **Untitled conversation** when there are no user messages.
 - **Duration**: Total time spent in model-generation spans.
@@ -175,7 +175,7 @@ Nothing in your error monitoring would ever catch that.
 
 The tool call span for that step shows you exactly what was requested and what came back, so you can see the actual cause instead of guessing from the final response alone. Since agents are non-deterministic, re-creating a silent tool failure can be nearly impossible. The next time it runs, it might pass the correct customer ID, and find the order without any issues.
 
-### Find the Slow Step in a Multi-step Workflow
+### Find the Slow Step in a Multi-Step Workflow
 
 An agent run taking several seconds doesn't tell you where that time was spent. For example:
 
@@ -203,7 +203,7 @@ With agent tracing, each model call span shows you exactly how much it costs and
 
 [Learn how to build an agent spend dashboard with alerts →](https://sentry.io/cookbook/monitor-ai-agent-spend-with-dashboards-and-alerts/)
 
-### Debug Multi-agent Handoffs
+### Debug Multi-Agent Handoffs
 
 Agent handoffs can sometimes go wrong despite getting routed to the right agent. For example:
 
