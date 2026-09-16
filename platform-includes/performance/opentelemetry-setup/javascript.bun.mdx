@@ -1,86 +1,57 @@
-To use an existing OpenTelemetry setup, set `enableOpenTelemetrySetup: false` in your `init({})` config, then set up all the components that Sentry needs yourself. Finish by installing `@sentry/opentelemetry` and adding the following:
+Add an OTLP trace exporter to your existing OpenTelemetry provider to send spans to Sentry. `Sentry.getOtlpTracesEndpoint()` returns the endpoint URL and authentication headers for your DSN. Keep your existing sampler, context manager, propagator, and instrumentation.
+
+The examples below show the Sentry-specific additions using `NodeTracerProvider` or `NodeSDK`. Install `@opentelemetry/exporter-trace-otlp-http` if you do not already use it.
 
 ```javascript {tabTitle: NodeTracerProvider}
 import * as Sentry from "@sentry/bun";
-import { SentryContextManager, validateOpenTelemetrySetup } from "@sentry/node-core";
-import { SentrySpanProcessor, SentryPropagator, SentrySampler } from "@sentry/opentelemetry";
-
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
-const sentryClient = Sentry.init({
-  dsn: "___DSN___",
-  enableOpenTelemetrySetup: false,
+const dsn = "___PUBLIC_DSN___";
 
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-  // Filter out the BunServer integration in case you want to avoid sending spans from there:
-  // integrations: (integrations) =>
-  //    integrations.filter((i) => i.name !== "BunServer")
-});
-
-// Note: This could be BasicTracerProvider or any other provider depending on
-// how you are using the OpenTelemetry SDK
 const provider = new NodeTracerProvider({
-  // Ensure the correct subset of traces is sent to Sentry
-  // This also ensures trace propagation works as expected
-  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
   spanProcessors: [
-    // Ensure spans are correctly linked & sent to Sentry
-    new SentrySpanProcessor(),
-    // Add additional processors here
+    new BatchSpanProcessor(
+      new OTLPTraceExporter(Sentry.getOtlpTracesEndpoint(dsn))
+    ),
+    // Keep any other span processors you already use.
   ],
 });
 
-provider.register({
-  // Ensure trace propagation works
-  // This relies on the SentrySampler for correct propagation
-  propagator: new SentryPropagator(),
-  // Ensure context & request isolation are correctly managed
-  contextManager: new SentryContextManager(),
-});
+provider.register();
 
-// Validate that the setup is correct
-validateOpenTelemetrySetup();
+Sentry.init({
+  dsn,
+  enableOpenTelemetrySetup: false,
+  // Leave tracesSampleRate and tracesSampler unset. OpenTelemetry owns tracing.
+  integrations: [Sentry.openTelemetryIntegration()],
+});
 ```
 
 ```javascript {tabTitle: NodeSDK}
 import * as Sentry from "@sentry/bun";
-import { SentryContextManager, validateOpenTelemetrySetup } from "@sentry/node-core";
-import { SentryPropagator, SentrySampler } from "@sentry/opentelemetry";
-
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 
-const sentryClient = Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  enableOpenTelemetrySetup: false,
-
-   // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-  // Filter out the BunServer integration in case you want to avoid sending spans from there:
-  // integrations: (integrations) =>
-  //    integrations.filter((i) => i.name !== "BunServer")
-});
+const dsn = "___PUBLIC_DSN___";
 
 const sdk = new NodeSDK({
-  // Ensure the correct subset of traces is sent to Sentry
-  // This also ensures trace propagation works as expected
-  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
   spanProcessors: [
-    // Ensure spans are correctly linked & sent to Sentry
-    new SentrySpanProcessor(),
-    // Add additional processors here
+    new BatchSpanProcessor(
+      new OTLPTraceExporter(Sentry.getOtlpTracesEndpoint(dsn))
+    ),
+    // Keep any other span processors you already use.
   ],
-  // Ensure trace propagation works
-  // This relies on the SentrySampler for correct propagation
-  textMapPropagator: new SentryPropagator(),
-  // Ensure context & request isolation are correctly managed
-  contextManager: new SentryContextManager()
 });
 
 sdk.start();
 
-// Validate that the setup is correct
-validateOpenTelemetrySetup();
+Sentry.init({
+  dsn,
+  enableOpenTelemetrySetup: false,
+  // Leave tracesSampleRate and tracesSampler unset. OpenTelemetry owns tracing.
+  integrations: [Sentry.openTelemetryIntegration()],
+});
 ```
-
-Make sure that all [Required OpenTelemetry Instrumentation](./#required-instrumentation) is set up correctly. Otherwise, the Sentry SDK may not work as expected.
