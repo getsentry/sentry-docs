@@ -31,6 +31,7 @@ import getAllFilesRecursively from './files';
 import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
 import remarkDefList from './mdx-deflist';
 import {DocMetrics} from './metrics';
+import {getGuideSupportKeys, isPlatformSupported} from './platformSupport';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -148,30 +149,6 @@ async function writeCacheFile(file: string, data: string) {
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
-const isSupported = (
-  frontmatter: FrontMatter,
-  platformName: string,
-  guideName?: string
-): boolean => {
-  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-  if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.indexOf(canonical) !== -1) {
-      return true;
-    }
-    if (frontmatter.supported.indexOf(platformName) === -1) {
-      return false;
-    }
-  }
-  if (
-    frontmatter.notSupported &&
-    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
-      frontmatter.notSupported.indexOf(platformName) !== -1)
-  ) {
-    return false;
-  }
-  return true;
-};
-
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
@@ -382,7 +359,7 @@ export async function getAllFilesFrontMatter(
     await Promise.all(
       commonFiles.map(f =>
         limit(async () => {
-          if (!isSupported(f.frontmatter, platformName)) {
+          if (!isPlatformSupported([platformName], f.frontmatter)) {
             return;
           }
 
@@ -418,13 +395,23 @@ export async function getAllFilesFrontMatter(
       continue;
     }
 
+    const guideNames: string[] = [];
     for await (const guide of await opendir(guidesPath)) {
-      if (guide.isFile()) {
-        continue;
+      if (!guide.isFile()) {
+        guideNames.push(guide.name);
       }
-      const guideName = guide.name;
+    }
+    const guideConfigs = new Map(
+      await Promise.all(
+        guideNames.map(
+          async guideName =>
+            [guideName, await readGuideConfig(path.join(guidesPath, guideName))] as const
+        )
+      )
+    );
 
-      const guideFrontmatter = await readGuideConfig(path.join(guidesPath, guideName));
+    for (const guideName of guideNames) {
+      const guideFrontmatter = guideConfigs.get(guideName) || {};
 
       // Standalone framework guides opt out of platform common/ inheritance.
       if (!shouldInheritCommonContent(guideFrontmatter)) {
@@ -434,7 +421,12 @@ export async function getAllFilesFrontMatter(
       await Promise.all(
         commonFiles.map(f =>
           limit(async () => {
-            if (!isSupported(f.frontmatter, platformName, guideName)) {
+            if (
+              !isPlatformSupported(
+                getGuideSupportKeys(platformName, guideName, guideConfigs),
+                f.frontmatter
+              )
+            ) {
               return;
             }
 

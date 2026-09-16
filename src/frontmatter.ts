@@ -8,6 +8,7 @@ import {limitFunction} from 'p-limit';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
+import {getGuideSupportKeys, isPlatformSupported} from './platformSupport';
 import {FrontMatter, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {VERSION_INDICATOR} from './versioning';
@@ -21,30 +22,6 @@ const root = process.cwd();
 const FILE_CONCURRENCY_LIMIT = 200;
 
 const formatSlug = (slug: string): string => slug.replace(/\.(mdx|md)$/, '');
-
-const isSupported = (
-  frontmatter: FrontMatter,
-  platformName: string,
-  guideName?: string
-): boolean => {
-  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-  if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.includes(canonical)) {
-      return true;
-    }
-    if (!frontmatter.supported.includes(platformName)) {
-      return false;
-    }
-  }
-  if (
-    frontmatter.notSupported &&
-    (frontmatter.notSupported.includes(canonical) ||
-      frontmatter.notSupported.includes(platformName))
-  ) {
-    return false;
-  }
-  return true;
-};
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
@@ -191,7 +168,7 @@ export async function getDocsFrontMatterFromDirectory(
       commonFiles.map(
         limitFunction(
           commonFile => {
-            if (!isSupported(commonFile.frontmatter, platformName)) {
+            if (!isPlatformSupported([platformName], commonFile.frontmatter)) {
               return;
             }
 
@@ -270,7 +247,12 @@ export async function getDocsFrontMatterFromDirectory(
         commonFiles.map(
           limitFunction(
             commonFile => {
-              if (!isSupported(commonFile.frontmatter, platformName, guideName)) {
+              if (
+                !isPlatformSupported(
+                  getGuideSupportKeys(platformName, guideName, guideConfigs),
+                  commonFile.frontmatter
+                )
+              ) {
                 return;
               }
 
