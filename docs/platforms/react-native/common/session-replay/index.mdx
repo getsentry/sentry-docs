@@ -169,13 +169,13 @@ Sentry.getReplay()?.resume();
 
 ### Stop or Flush Recording
 
-Call `stop()` to end the current replay. It flushes any pending recording data and stops recording. A later call to `start()` or `startBuffering()` creates a new replay session.
+Call `stop()` to end the current replay. In session mode, the SDK sends any pending segment before stopping. In buffer mode, it discards the unsent buffer. A later call to `start()` or `startBuffering()` creates a new replay session.
 
 ```javascript
 await Sentry.getReplay()?.stop();
 ```
 
-Call `flush()` to send the current replay data without stopping the recording. In buffer mode it uploads the buffered segment and then continues recording as a session, the same as when an error is sampled with <PlatformIdentifier name="replays-on-error-sample-rate" />. Calling `flush()` while recording is stopped starts a new session replay.
+Call `flush()` to send the current replay data without stopping the recording. In session mode, it sends the pending segment and continues recording. In buffer mode, it uploads the buffered segment and then switches to session mode, the same as when an error is sampled with <PlatformIdentifier name="replays-on-error-sample-rate" />. Calling `flush()` while recording is stopped starts a new full-session replay.
 
 ```javascript
 await Sentry.getReplay()?.flush();
