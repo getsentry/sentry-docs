@@ -71,29 +71,31 @@ Values below `1` are clamped to `1`, since a lower cap would drop all reason dat
 
 ## Emitted Metrics
 
-| Metric                          | Type         | Description                                                                                      |
-| ------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
-| `browser.bfcache.navigation`    | counter      | One per back/forward navigation, split by outcome (`hit` or `miss`).                             |
-| `browser.bfcache.not_restored`  | counter      | One per not-restored reason on a miss. Chromium-only.                                            |
-| `browser.bfcache.reload.duration` | distribution | Duration (in milliseconds) of the fallback reload when a back/forward navigation missed the bfcache. |
+| Metric                            | Type         | Description                                                                                                                                            |
+| --------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `browser.bfcache.navigation`      | counter      | One per back/forward navigation, split by outcome (`hit` or `miss`).                                                                                   |
+| `browser.bfcache.not_restored`    | counter      | One per not-restored reason on a miss. Chromium-only.                                                                                                  |
+| `browser.bfcache.reload.duration` | distribution | Duration (in milliseconds) of the fallback reload when a back/forward navigation missed the bfcache. Only emitted when the browser reports a duration. |
 
 ### Attributes
 
 `browser.bfcache.navigation` includes:
 
-| Attribute                                    | Description                                                                                   |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `browser.bfcache.outcome`                    | `hit` if the page was restored from the bfcache, `miss` if it was reloaded.                    |
-| `browser.bfcache.not_restored_reason_count`  | The number of reasons the browser reported for a miss. `0` when the browser reported none.     |
-| `sentry.segment.name`                        | The route the navigation landed on. Falls back to `window.location.pathname` without tracing.  |
+| Attribute                                   | Description                                                                                                                             |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `browser.bfcache.outcome`                   | `hit` if the page was restored from the bfcache, `miss` if it was reloaded.                                                             |
+| `browser.bfcache.not_restored_reason_count` | The number of reasons the browser reported for a miss. Omitted on hits and on misses where the browser reported no reasons.             |
+| `sentry.segment.name`                       | The route the navigation landed on, taken from the scope's transaction name. Falls back to `window.location.pathname` when none is set. |
 
 `browser.bfcache.not_restored` includes:
 
-| Attribute                 | Description                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `browser.bfcache.reason`  | A browser-reported reason the page was not restored (for example, `unload-listener`, `websocket`). |
-| `browser.bfcache.frame`   | Where the reason originated: the `top` document or a `child` frame.                              |
-| `sentry.segment.name`     | The route the navigation landed on.                                                              |
+| Attribute                | Description                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `browser.bfcache.reason` | A browser-reported reason the page was not restored (for example, `unload-listener`, `websocket`). |
+| `browser.bfcache.frame`  | Where the reason originated: the `top` document or a `child` frame.                                |
+| `sentry.segment.name`    | The route the navigation landed on.                                                                |
+
+`browser.bfcache.reload.duration` includes `sentry.segment.name` only.
 
 ## A Note on Reasons
 
