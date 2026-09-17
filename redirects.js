@@ -609,11 +609,12 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/opentelemetry/integration/',
     destination:
-      '/platforms/javascript/guides/:guide/opentelemetry/#api-reference',
+      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
-    destination: '/platforms/javascript/guides/:guide/opentelemetry.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
   },
 
   // Guides → Get Started restructure
