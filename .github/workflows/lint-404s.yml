@@ -55,17 +55,17 @@ jobs:
       - name: Lint docs for 404s
         if: steps.filter.outputs.docs == 'true'
         run: |
-          pnpm start &
+          setsid pnpm start &
           server_pid=$!
           cleanup() {
             exit_code=$?
             trap - EXIT
-            port_pids="$(lsof -t -i:3000 || true)"
-            if [[ -n "$port_pids" ]]; then
-              kill $port_pids || true
-            fi
-            kill "$server_pid" 2>/dev/null || true
+            kill -- "-$server_pid" 2>/dev/null || true
             wait "$server_pid" 2>/dev/null || true
+            if lsof -t -i:3000 >/dev/null; then
+              echo "Docs server still owns port 3000 after cleanup" >&2
+              exit 1
+            fi
             exit "$exit_code"
           }
           trap cleanup EXIT
@@ -90,17 +90,17 @@ jobs:
       - name: Lint developer docs for 404s
         if: steps.filter.outputs.dev-docs == 'true'
         run: |
-          pnpm start &
+          setsid pnpm start &
           server_pid=$!
           cleanup() {
             exit_code=$?
             trap - EXIT
-            port_pids="$(lsof -t -i:3000 || true)"
-            if [[ -n "$port_pids" ]]; then
-              kill $port_pids || true
-            fi
-            kill "$server_pid" 2>/dev/null || true
+            kill -- "-$server_pid" 2>/dev/null || true
             wait "$server_pid" 2>/dev/null || true
+            if lsof -t -i:3000 >/dev/null; then
+              echo "Docs server still owns port 3000 after cleanup" >&2
+              exit 1
+            fi
             exit "$exit_code"
           }
           trap cleanup EXIT
