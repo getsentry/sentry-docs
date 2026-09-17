@@ -1,0 +1,91 @@
+---
+title: OpenTelemetry
+description: "Connect Sentry errors, logs, metrics, and crons to your OpenTelemetry traces with openTelemetryIntegration, and configure OTLP export with getOtlpTracesEndpoint."
+supported:
+  - javascript.nextjs
+  - javascript.node
+  - javascript.eve
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.bun
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nitro
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.remix
+  - javascript.react-router
+  - javascript.tanstackstart-react
+notSupported:
+  - javascript
+---
+
+<AvailableSince version="11.0.0" />
+
+_Import name: `Sentry.openTelemetryIntegration`_
+
+Use this integration when your application runs its own OpenTelemetry pipeline. It attaches the active OpenTelemetry span's trace ID and span ID to Sentry errors, logs, metrics, and cron check-ins. The integration reports its name as `OpenTelemetry` and takes no options.
+
+The integration does not create or export spans. Your OpenTelemetry SDK handles sampling, propagation, and export. To send those spans to Sentry, configure an OTLP exporter using [`getOtlpTracesEndpoint`](#getotlptracesendpoint).
+
+## Setup
+
+This integration runs on the server and is not enabled by default. Import your OpenTelemetry configuration before initializing Sentry:
+
+```javascript {filename: instrument.mjs}
+import "./otel.config.mjs";
+import * as Sentry from "___SDK_PACKAGE___";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableOpenTelemetrySetup: false,
+  // Leave tracesSampleRate and tracesSampler unset. OpenTelemetry owns tracing.
+  integrations: [Sentry.openTelemetryIntegration()],
+});
+```
+
+In this example, `otel.config.mjs` registers your existing OpenTelemetry provider, context manager, propagator, and instrumentation. In frameworks with their own instrumentation entry point, initialize OpenTelemetry there before calling `Sentry.init()`.
+
+Keep `enableOpenTelemetrySetup` set to `false`. This is already the default except in `@sentry/nextjs` and `@sentry/sveltekit`. Leave `tracesSampleRate` and `tracesSampler` unset to keep Sentry tracing off. Your OpenTelemetry propagator handles outgoing trace propagation.
+
+An active Sentry span takes precedence over the OpenTelemetry span.
+
+If there is no active OpenTelemetry span, or its span context is invalid, Sentry uses its own trace context.
+
+For exporter examples, sampling, and trace propagation, see <PlatformLink to="/opentelemetry/#run-your-own-opentelemetry-pipeline">the OpenTelemetry setup guide</PlatformLink>.
+
+## `getOtlpTracesEndpoint`
+
+`Sentry.getOtlpTracesEndpoint(dsn)` converts a Sentry DSN into configuration for an OpenTelemetry HTTP trace exporter. It takes a DSN string and returns an object with these fields:
+
+| Field     | Type                     | Description                                                         |
+| --------- | ------------------------ | ------------------------------------------------------------------- |
+| `url`     | `string`                 | The project's Sentry OTLP traces endpoint.                          |
+| `headers` | `Record<string, string>` | Authentication headers for the endpoint, including `X-Sentry-Auth`. |
+
+If the helper cannot parse the DSN, it returns `undefined`. The helper does not register a provider or send spans.
+
+Pass the result to `OTLPTraceExporter` from `@opentelemetry/exporter-trace-otlp-http`:
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
+const endpoint = Sentry.getOtlpTracesEndpoint("___PUBLIC_DSN___");
+
+if (!endpoint) {
+  throw new Error("Could not parse the Sentry DSN");
+}
+
+const exporter = new OTLPTraceExporter(endpoint);
+```
+
+Add this exporter to your existing provider with a `BatchSpanProcessor`, as shown in the <PlatformLink to="/opentelemetry/#send-opentelemetry-spans-to-sentry">OTLP setup examples</PlatformLink>. If you only want to associate Sentry errors with traces exported elsewhere, keep your existing exporter and omit this helper.

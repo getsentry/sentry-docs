@@ -1,0 +1,49 @@
+```javascript
+import * as Sentry from "@sentry/bun";
+import { SentryContextManager } from "@sentry/node-core";
+import { SentryPropagator, SentrySampler } from "@sentry/opentelemetry";
+
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-otlp-http";
+import { registerInstrumentations } from "@opentelemetry/instrumentation";
+
+const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  // Skipping the OpenTelemetry setup automatically disables emitting spans in the httpIntegration with `spans: false`
+  skipOpenTelemetrySetup: true,
+
+  // Important: We do not define a tracesSampleRate here at all!
+  // This leads to tracing being disabled
+
+  integrations: (integrations) =>
+    // Filter out the BunServer integration to avoid emitting spans from there
+    integrations.filter((i) => i.name !== "BunServer")
+});
+
+// Create and configure e.g. NodeTracerProvider
+const provider = new NodeTracerProvider({
+  // This ensures trace propagation works as expected
+  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+});
+
+provider.addSpanProcessor(
+  new BatchSpanProcessor(
+    new OTLPTraceExporter({
+      url: "http://OTLP-ENDPOINT.com/api",
+    })
+  )
+);
+
+// Initialize the provider
+provider.register({
+  propagator: new SentryPropagator(),
+  contextManager: new SentryContextManager(),
+});
+
+registerInstrumentations({
+  instrumentations: [
+    // Add OTEL instrumentation here
+  ],
+});
+```
