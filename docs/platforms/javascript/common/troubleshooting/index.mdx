@@ -553,6 +553,8 @@ shamefully-hoist=true
 
 <PlatformSection supported={['javascript.nuxt']}>
   <Expandable permalink title="Failed to register 'import-in-the-middle' during build time">
+    This applies to SDK version 10 and earlier. Version 11 and above don't use `import-in-the-middle`.
+
     After adding `sentry.server.config.ts` and building the project, you might get an error like this:
     `Failed to register ESM hook import-in-the-middle/hook.mjs`. You can add an override (npm/pnpm) or a resolution (yarn)
     for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output. See the [underlying issue in the Nitro project](https://github.com/nitrojs/nitro/issues/2703).
@@ -584,6 +586,8 @@ shamefully-hoist=true
 
   <Expandable permalink title="pnpm dev: Cannot find package 'import-in-the-middle'">
 
+    This applies to SDK version 10 and earlier. Version 11 and above don't use `import-in-the-middle`.
+
     Sentry injects `import "import-in-the-middle/hook.mjs"` in your server entry. This import acts as a hint for node bundlers to really include this file.
     As pnpm implements a strict dependency isolation, this import might cause problems.
     Per default, `shamefully-hoist` is `false` ([pnpm docs here](https://pnpm.io/next/npmrc#shamefully-hoist)) and this prevents accessing non-declared dependencies.
@@ -596,13 +600,26 @@ shamefully-hoist=true
   </Expandable>
 
   <Expandable permalink title="Nuxt: Server-side Nitro is not sending events">
-    Nuxt builds the server-side Nitro application as ES Modules, which introduces limitations for server-side tracing during development.
-    Currently, trace collection is only supported when building and running the application. Development mode (`nuxt dev`) is currently not supported.
+    The SDK bundles `sentry.server.config.ts` into the Nitro server build and initializes Sentry when the server starts, in production and in development mode.
+    Read more about this in <PlatformLink to="/install">Server-Side Initialization</PlatformLink>.
 
-    When running the build output, Sentry needs to be initialized before running the rest of the application. This is done automatically, but might not work for your use case.
-    Read more about this in <PlatformLink to="/install">installation methods</PlatformLink>.
+    If the server side doesn't send events, check the following:
+
+    - The `sentry.server.config.ts` file is in the root of your project, next to `nuxt.config.ts`.
+    - Enable `debug` in the `sentry` options of your `nuxt.config.ts`. The SDK then prints a message during the build when it bundles the server config.
+    - Remove the deprecated `autoInjectServerSentry` option, so that the SDK uses the bundled initialization.
+    - With a Cloudflare Nitro preset, the SDK doesn't use `sentry.server.config.ts`. Use the [Cloudflare Nitro plugin](/platforms/javascript/guides/cloudflare/frameworks/nuxt/) instead.
+    - The SDK doesn't initialize while Nitro prerenders pages at build time, so builds don't send events.
 
     ---
+
+    **SDK version 10 and earlier**
+
+    Nuxt builds the server-side Nitro application as ES Modules, which introduces limitations for server-side tracing during development.
+    Trace collection is only supported when building and running the application. Development mode (`nuxt dev`) is not supported.
+
+    When running the build output, Sentry needs to be initialized before running the rest of the application.
+    Read more about this in the [installation methods for version 10](/platforms/javascript/guides/nuxt/install__v10.x/).
 
     We are currently investigating an issue where the server-side is not correctly initialized with a recent update of Nitro (the server-side toolkit in Nuxt).
 

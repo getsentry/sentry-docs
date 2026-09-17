@@ -1,12 +1,97 @@
 ---
-title: Installation Methods
+title: Server-Side Initialization
 sidebar_order: 1.5
-description: "Review our alternate installation methods."
+description: "Learn how the Nuxt SDK initializes Sentry on the server side, and which installation options are deprecated."
 ---
 
-Nuxt uses ES Modules for server-side builds, which requires Sentry to register Node [customization hooks](https://nodejs.org/api/module.html#customization-hooks).
-Those customization hooks need to be registered before the rest of the application.
+<Alert>
+  This page applies to SDK version `11.0.0` and above. Version 10 and earlier
+  need the Node `--import` flag. For those versions, see the [installation
+  methods for version 10](/platforms/javascript/guides/nuxt/install__v10.x/).
+</Alert>
 
-To be able to run Sentry before the rest of the application and fully monitor the server-side, Sentry can be initialized using one of those two approaches:
+## How the SDK Initializes on the Server
 
-<PageGrid />
+The SDK bundles your `sentry.server.config.ts` file into the Nitro server build. A Nitro plugin that the SDK generates imports this file, so `Sentry.init()` runs when the server starts.
+
+The SDK adds its instrumentation at build time. Because of this, Sentry doesn't have to load before the rest of your application, and you don't need the Node `--import` flag.
+
+This has the following effects:
+
+- You start your application without additional flags, in production and in development mode.
+- You don't need a platform-specific setup on hosts where you can't set Node CLI flags, such as Vercel or Netlify.
+
+```bash
+# Production: start your app after building your project with `nuxi build`
+node .output/server/index.mjs
+
+# Development
+nuxt dev
+```
+
+To confirm that the SDK bundled your server config, enable `debug` in the `sentry` options of your `nuxt.config.ts`. The SDK then prints a message during the build.
+
+### Prerendering
+
+The SDK doesn't initialize Sentry while Nitro prerenders your pages at build time. As a result, builds don't send events to Sentry, and prerendered HTML doesn't contain trace meta tags.
+
+### Cloudflare
+
+With a Cloudflare Nitro preset, the SDK doesn't use `sentry.server.config.ts`. Set up the SDK with the [Cloudflare Nitro plugin](/platforms/javascript/guides/cloudflare/frameworks/nuxt/) instead.
+
+## Upgrade From Version 10
+
+### Remove the `--import` Flag
+
+Remove the `--import` flag from the command that starts your production build:
+
+```bash
+# Before
+node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+
+# After
+node .output/server/index.mjs
+```
+
+Do the same in development mode:
+
+```bash
+# Before
+NODE_OPTIONS='--import ./.nuxt/dev/sentry.server.config.mjs' nuxt dev
+
+# After
+nuxt dev
+```
+
+Also remove the flag from the `NODE_OPTIONS` environment variable of your hosting provider, if you set it there.
+
+Existing start commands continue to work. The SDK still writes a file to `.output/server/sentry.server.config.mjs`, but this file only prints a reminder to remove the flag.
+
+If you preload your own file that calls `Sentry.init()`, that call initializes the SDK. The SDK then skips the bundled initialization and prints a notice.
+
+### Deprecated Options
+
+Because a preload is no longer necessary, the following `sentry` module options are deprecated. They continue to work in version 11 and will be removed in the next major version.
+
+| Option                                                  | Replacement                                 |
+| ------------------------------------------------------- | ------------------------------------------- |
+| `autoInjectServerSentry: "top-level-import"`            | Remove the option. The default replaces it. |
+| `autoInjectServerSentry: "experimental_dynamic-import"` | Remove the option. The default replaces it. |
+| `experimental_entrypointWrappedFunctions`               | Remove the option. It has no replacement.   |
+
+If you set `autoInjectServerSentry`, the SDK uses that mode instead of the bundled initialization and prints a deprecation warning during the build. Remove the option to use the bundled initialization.
+
+```typescript {filename:nuxt.config.ts}
+// Before
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+  sentry: {
+    autoInjectServerSentry: "top-level-import",
+  },
+});
+
+// After
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+});
+```
