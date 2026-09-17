@@ -128,28 +128,27 @@ Mastra automatically maps its span types to Sentry operations for proper visuali
 
 <Expandable title="Captured Data">
 
-The Sentry exporter captures comprehensive trace data following OpenTelemetry semantic conventions:
+The Sentry exporter captures trace data using Sentry's Agent Tracing attribute names. Use these standard `gen_ai.*` fields when querying Mastra traces in Sentry:
 
-#### Common Attributes (All spans)
+#### Common Attributes (All Spans)
 
 - `sentry.origin`: `auto.ai.mastra` (identifies spans from Mastra)
 - `ai.span.type`: Mastra span type
 
 #### Model Generation Spans
 
-- `gen_ai.operation.name`: Operation name (e.g., `chat`)
-- `gen_ai.system`: Model provider (e.g., OpenAI, Anthropic)
-- `gen_ai.request.model`: Model identifier
-- `gen_ai.request.messages`: Input messages/prompts (JSON)
+- `gen_ai.operation.name`: Operation name, for example `chat`
+- `gen_ai.provider.name`: Model provider, for example `openai` or `anthropic`
+- `gen_ai.request.model`: Requested model identifier
+- `gen_ai.input.messages`: Input messages/prompts (JSON string)
 - `gen_ai.response.model`: Response model
-- `gen_ai.response.text`: Output text
-- `gen_ai.response.tool_calls`: Tool calls made during generation
+- `gen_ai.output.messages`: Output messages and tool calls (JSON string)
 - `gen_ai.usage.input_tokens`: Input token count
 - `gen_ai.usage.output_tokens`: Output token count
 - `gen_ai.usage.total_tokens`: Total tokens used
-- `gen_ai.request.stream`: Whether streaming was used
+- `gen_ai.response.streaming`: Whether streaming was used
 - `gen_ai.request.temperature`: Temperature parameter
-- `gen_ai.completion_start_time`: Time to first token
+- `gen_ai.response.time_to_first_chunk`: Time to first streamed chunk
 
 #### Tool Call Spans
 
@@ -157,8 +156,8 @@ The Sentry exporter captures comprehensive trace data following OpenTelemetry se
 - `gen_ai.tool.name`: Tool identifier
 - `gen_ai.tool.type`: `function`
 - `gen_ai.tool.call.id`: Tool call ID
-- `gen_ai.tool.input`: Tool input parameters
-- `gen_ai.tool.output`: Tool output result
+- `gen_ai.tool.call.arguments`: Tool input parameters (JSON string)
+- `gen_ai.tool.call.result`: Tool output result (JSON string)
 - `tool.success`: Success flag
 
 #### Agent Run Spans
@@ -166,9 +165,9 @@ The Sentry exporter captures comprehensive trace data following OpenTelemetry se
 - `gen_ai.operation.name`: `invoke_agent`
 - `gen_ai.agent.name`: Agent identifier
 - `gen_ai.pipeline.name`: Agent name
-- `gen_ai.agent.instructions`: Agent instructions/system prompt
+- `gen_ai.system_instructions`: Agent instructions/system prompt
 - `gen_ai.response.model`: Model from child generation
-- `gen_ai.response.text`: Output from child generation
+- `gen_ai.output.messages`: Output from child generation (JSON string)
 - `gen_ai.usage.*`: Token usage aggregated from child spans
 
 </Expandable>
