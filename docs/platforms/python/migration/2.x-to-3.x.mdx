@@ -1,0 +1,198 @@
+---
+title: Migrate from 2.x to 3.x
+sidebar_order: 8997
+description: "Learn about migrating from sentry-python 2.x to 3.x"
+---
+
+This guide describes the common patterns involved in migrating to version 3.x of the `sentry-python` SDK.
+
+The top-level API stays the same for the most part, but `3.0` drops a number of older dependency versions, removes APIs that were deprecated in `2.x`, and stops auto-enabling some integrations. This guide captures the changes that will affect most users. For the full list, check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md).
+
+## Python Version Support
+
+Sentry Python SDK `3.0` requires Python 3.7 or higher. If you're on Python 3.6, stay on `2.x`.
+
+Because `contextvars` is always available on Python 3.7+, you no longer need the `aiocontextvars` backport. You can drop it from your dependencies.
+
+## Dependency Support
+
+`3.0` raises the minimum supported version of many instrumented packages. If you're below one of these, the SDK won't instrument that package anymore:
+
+| Package       | Minimum |
+| ------------- | ------- |
+| aiohttp       | 3.7     |
+| Celery        | 5.0     |
+| Chalice       | 1.22    |
+| Django        | 2.0     |
+| Falcon        | 3.0     |
+| FastAPI       | 0.85    |
+| Flask         | 2.0     |
+| gevent        | 20.9    |
+| greenlet      | 0.4.17  |
+| huey          | 2.0     |
+| Litestar      | 2.0     |
+| MCP           | 2.0     |
+| OpenAI Agents | 0.10.3  |
+| Pydantic AI   | 1.76    |
+| Pyramid       | 2.0     |
+| PySpark       | 3.0     |
+| Quart         | 0.19    |
+| redis-py      | 4.2     |
+| RQ            | 1.0     |
+| Sanic         | 22.0    |
+| SQLAlchemy    | 1.4     |
+| Starlette     | 0.20    |
+| trytond       | 5.4     |
+
+## Install Extras
+
+Most `sentry-sdk[extra-name]` extras were removed. Install the base package instead — there's no difference in functionality:
+
+```bash diff
+- pip install "sentry-sdk[flask]"
++ pip install "sentry-sdk"
+```
+
+The `asyncio`, `flask`, `grpcio`, `http2`, `opentelemetry-otlp`, `pure-eval`, and `quart` extras remain, because those integrations need additional dependencies.
+
+## Configuration Options
+
+Several options were removed:
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Replace enable_tracing
+-   enable_tracing=True,
++   traces_sample_rate=1.0,
+
+    # Sentry's logging API now works without opting in
+-   enable_logs=True,
+
+    # Replace propagate_traces
+-   propagate_traces=False,
++   trace_propagation_targets=[],
+
+    # Replace continuous_profiling_mode
+-   _experiments={"continuous_profiling_mode": "thread"},
++   profiler_mode="thread",
+)
+```
+
+`enable_metrics`, `stream_gen_ai_spans`, `trace_ignore_status_codes`, and the experimental `max_spans`, `otel_powered_performance`, and `suppress_asgi_chained_exceptions` options were also removed. The experimental `before_send_log`, `before_send_metric`, `before_send_span`, and `ignore_spans` options are now top-level options of the same name.
+
+`attach_stacktrace` now defaults to `True`, so the SDK attaches stack traces to messages unless you turn it off.
+
+The `failed_request_status_codes` integration option now only accepts a set of integers. Lists and other containers are no longer supported.
+
+`sentry_sdk.init()` can no longer be used as a context manager.
+
+## Integrations That No Longer Auto-Enable
+
+The standard library `logging`, Loguru, and Strawberry integrations are no longer turned on for you. Add the ones you need to `integrations`:
+
+```python diff
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.loguru import LoguruIntegration
+from sentry_sdk.integrations.strawberry import StrawberryIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
++   integrations=[
++       LoggingIntegration(),
++       LoguruIntegration(),
++       StrawberryIntegration(async_execution=True),  # or False
++   ],
+)
+```
+
+`StrawberryIntegration` requires you to set `async_execution` explicitly, to either `True` or `False` depending on whether your app is async or sync.
+
+Going the other way, `UnraisablehookIntegration` is now a <PlatformLink to="/integrations/default-integrations/#unraisablehook">default integration</PlatformLink>, so exceptions raised in places like `__del__` finalizers are reported without any setup.
+
+## Logging and Loguru Options
+
+Both logging integrations were reorganized around Sentry logs. Enabling either one now captures Sentry logs and breadcrumbs, and creates events only if you opt in with `event_level`.
+
+| Old name              | New name           | Old default | New default | What it does                                           |
+| --------------------- | ------------------ | ----------- | ----------- | ------------------------------------------------------ |
+| `sentry_logs_level`   | `level`            | `INFO`      | `INFO`      | Captures logs of that level and higher as Sentry logs. |
+| `level`               | `breadcrumb_level` | `INFO`      | `INFO`      | Captures logs of that level and higher as breadcrumbs. |
+| `event_level`         | `event_level`      | `ERROR`     | `None`      | Captures logs of that level and higher as events.      |
+| `capture_sentry_logs` | removed            | `False`     | n/a         | Use `level=None` to opt out of capturing Sentry logs.  |
+
+```python diff
+import logging
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        LoggingIntegration(
+-           capture_sentry_logs=True,
+-           sentry_logs_level=logging.INFO,
+-           level=logging.INFO,
++           level=logging.INFO,
++           breadcrumb_level=logging.INFO,
+            event_level=logging.ERROR,
+        ),
+    ],
+)
+```
+
+The logger helpers in `sentry_sdk.integrations.logging` were renamed to match. `ignore_logger` now silences a logger for Sentry logs; use `ignore_logger_for_events` for the old behavior of silencing breadcrumbs and events. The same applies to `unignore_logger` and `unignore_logger_for_events`. `SentryHandler` was removed — use `EventHandler`.
+
+See the <PlatformLink to="/integrations/logging/">logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration pages for the full current behavior.
+
+## Tracing
+
+Transactions are gone. All tracing now uses spans, and every span is streamed. The `trace_lifecycle` option was removed along with transaction mode — stream is the only mode, so there's nothing to set. If you have custom instrumentation built on `start_transaction`, `Transaction`, or `start_child`, follow the <PlatformLink to="/tracing/streamed-spans/migration-guide/">stream mode migration guide</PlatformLink> to update it.
+
+`update_current_span` and the deprecated `set_measurement` API were removed, and the `@trace` decorator no longer accepts a `template` parameter.
+
+Transaction-based profiling was removed along with transactions. Continuous profiling is the only mode, and `start_profile_session` and `stop_profile_session` are now `start_profiler` and `stop_profiler`.
+
+## Scopes
+
+`push_scope` and `configure_scope` were deprecated in `2.x` and are now removed, along with the `Hub` class and every hub-based API.
+
+```python diff
+import sentry_sdk
+
+- with sentry_sdk.push_scope() as scope:
++ with sentry_sdk.new_scope() as scope:
+      scope.set_tag("key", "value")
+
+- with sentry_sdk.configure_scope() as scope:
+-     scope.set_tag("key", "value")
++ scope = sentry_sdk.get_current_scope()
++ scope.set_tag("key", "value")
+```
+
+Direct assignment to `Scope.level` and `Scope.user` was removed. Use `Scope.set_level()` and `Scope.set_user()` instead. `Scope.iter_headers` was also removed.
+
+## OpenTelemetry
+
+`SentrySpanProcessor`, `SentryPropagator`, the `instrumenter` option, the `SentryPropagator` entry point, and the `opentelemetry` and `opentelemetry-experimental` extras were all removed. Use the <PlatformLink to="/integrations/otlp/">OTLP integration</PlatformLink> instead.
+
+## Other Behavior Changes
+
+- The FastAPI and Starlette integrations no longer eagerly read the request body. It's only included in events if your handler already parsed it with `Request.json()` or `Request.form()` before the event was captured.
+- The ASGI and asyncio integrations no longer suppress chained exceptions by default.
+- The SDK no longer sets any tags on its own.
+- `SanicIntegration` no longer accepts `unsampled_statuses`.
+- The `RedisIntegration` `max_data_size` option and the `LangchainIntegration` `max_spans` option were removed.
+- `LaunchDarklyIntegration` no longer accepts a specific client.
+- The Django Spotlight integration was removed.
+- `ThreadingIntegration` no longer accepts the deprecated `propagate_hub` parameter. Use `propagate_scope`.
+- The deprecated `@ai_track` decorator and the `auto_session_tracing` decorator were removed. Use `track_session` in place of the latter.
+- Deprecation warnings are now always emitted with `warnings.warn()`; other warnings use `logger.warning()`.
+
+## Transport
+
+`Transport.capture_event` and function transports were removed. Custom transports must subclass `sentry_sdk.transport.Transport` and implement `capture_envelope`. `Baggage.from_options` and `configure_debug_hub` were also removed.
