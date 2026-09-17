@@ -49,16 +49,9 @@ Don't use the AI SDK's `registerTelemetry` API (AI SDK v7 and above) together wi
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-Next.js runs your server code in two runtimes. In both, you must pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
+Next.js runs your server code in two runtimes, but Sentry only instruments the AI SDK in the Node runtime. The instrumentation relies on diagnostics channels, which the Edge runtime doesn't support.
 
-Everything else depends on which runtime you're in:
-
-|                           | Node runtime            | Edge runtime                        |
-| ------------------------- | ----------------------- | ----------------------------------- |
-| Enabled by default        | Yes                     | No — add it to `sentry.edge.config` |
-| Record inputs and outputs | Integration or per call | Per call only                       |
-| `force`                   | Available               | Not available — always active       |
-| AI SDK v7                 | Supported               | Not supported                       |
+In the Edge runtime, `vercelAIIntegration` does nothing. You can still import it from `@sentry/nextjs` without errors, but it captures no spans. To monitor AI calls, run them in the Node runtime. See the <PlatformLink to="/migration/v10-to-v11/#vercel-ai-is-not-instrumented-on-the-edge-runtime">migration guide</PlatformLink>.
 
 </PlatformSection>
 
@@ -98,9 +91,7 @@ Prompts and completions are not captured until you opt in. See [Record inputs an
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-### Node Runtime
-
-The integration is enabled by default:
+The integration is enabled by default in the Node runtime:
 
 ```javascript {filename:sentry.server.config.ts}
 Sentry.init({
@@ -109,19 +100,7 @@ Sentry.init({
 });
 ```
 
-### Edge Runtime
-
-The integration is not enabled by default. Add it yourself:
-
-```javascript {filename:sentry.edge.config.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  integrations: [Sentry.vercelAIIntegration()],
-});
-```
-
-In both runtimes, adding the integration is not enough on its own. You must also pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
+You must also pass `experimental_telemetry` on every call. See [Turn on telemetry](#turn-on-telemetry).
 
 If your spans have raw names like `ai.toolCall`, see [Troubleshooting](#troubleshooting).
 
@@ -249,7 +228,7 @@ const result = await generateText({
 
 <PlatformSection supported={['javascript.nextjs']}>
 
-Set the options on the integration to cover every call (Node runtime only). Re-adding the integration replaces the default instance and configures it:
+Set the options on the integration to cover every call. Re-adding the integration replaces the default instance and configures it:
 
 ```javascript {filename:sentry.server.config.ts}
 Sentry.init({
@@ -264,13 +243,7 @@ Sentry.init({
 });
 ```
 
-<Alert level="warning">
-
-The Edge runtime ignores `recordInputs` and `recordOutputs` on the integration. It accepts no error and logs no warning — your prompts are simply missing. Set both per call.
-
-</Alert>
-
-Or set them per call, which works in both runtimes:
+Or set them per call:
 
 ```javascript
 const result = await generateText({
@@ -369,12 +342,6 @@ Every instrumented `ai` function takes an `experimental_telemetry` object. Use i
 
 ### Turn on Telemetry
 
-<PlatformSection supported={['javascript.nextjs']}>
-
-Required in both the Node and Edge runtimes.
-
-</PlatformSection>
-
 Set `isEnabled` to `true` on every instrumented call. Without it, the AI SDK emits no spans and Sentry has nothing to capture:
 
 ```javascript
@@ -463,12 +430,6 @@ const result = await agent.generate({
 
 ## Options
 
-<PlatformSection supported={['javascript.nextjs']}>
-
-Pass these to `Sentry.vercelAIIntegration()`. The Edge runtime accepts `enableTruncation` only.
-
-</PlatformSection>
-
 <PlatformSection supported={['javascript.cloudflare']}>
 
 Pass these to `Sentry.vercelAIIntegration()`. The default `@sentry/cloudflare` entrypoint accepts `enableTruncation` only; <PlatformLink to="/features/nodejs-compat">`nodejs_compat`</PlatformLink> also accepts `recordInputs` and `recordOutputs`. Neither has module detection to override, so `force` does not apply.
@@ -537,7 +498,7 @@ Sentry.init({
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
-`force` only registers the span processors. You still need `experimental_telemetry` on every call. Not available in the Edge runtime, where the integration is always active once you add it.
+`force` only registers the span processors. You still need `experimental_telemetry` on every call.
 
 </PlatformSection>
 
@@ -592,7 +553,7 @@ Plus `generate()` and `stream()` on [`ToolLoopAgent`](#toolloopagent).
 <PlatformSection supported={['javascript.nextjs']}>
 
 - Sentry SDK: `10.6.0`+
-- Edge runtime: `ai` v7 is not supported. Use v6 or below, or run the call in the Node runtime.
+- Edge runtime: Not supported in Sentry SDK `11.0.0`+. Run AI calls in the Node runtime instead.
 
 </PlatformSection>
 
