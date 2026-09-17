@@ -58,13 +58,15 @@ jobs:
           pnpm start &
           server_pid=$!
           cleanup() {
+            exit_code=$?
+            trap - EXIT
             port_pids="$(lsof -t -i:3000 || true)"
             if [[ -n "$port_pids" ]]; then
               kill $port_pids || true
             fi
             kill "$server_pid" 2>/dev/null || true
             wait "$server_pid" 2>/dev/null || true
-            ! lsof -t -i:3000 >/dev/null
+            exit "$exit_code"
           }
           trap cleanup EXIT
           for _ in {1..60}; do
@@ -91,13 +93,15 @@ jobs:
           pnpm start &
           server_pid=$!
           cleanup() {
+            exit_code=$?
+            trap - EXIT
             port_pids="$(lsof -t -i:3000 || true)"
             if [[ -n "$port_pids" ]]; then
               kill $port_pids || true
             fi
             kill "$server_pid" 2>/dev/null || true
             wait "$server_pid" 2>/dev/null || true
-            ! lsof -t -i:3000 >/dev/null
+            exit "$exit_code"
           }
           trap cleanup EXIT
           for _ in {1..60}; do
