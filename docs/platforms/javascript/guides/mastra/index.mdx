@@ -19,11 +19,9 @@ keywords:
 
 <Alert>
 
-This guide covers the Sentry SDK-based setup, which replaces the earlier `@mastra/sentry` exporter. It requires JavaScript SDK version `11.0.0-rc.0` or later.
+This guide covers the Sentry SDK-based setup, which replaces the earlier `@mastra/sentry` exporter. It requires JavaScript SDK version `11.0.0-rc.0` or later. If you previously used the `@mastra/sentry` exporter, remove it from your Mastra `exporters` — it calls `Sentry.init()` itself and conflicts with the built-in integration.
 
 </Alert>
-
-The Sentry SDK instruments Mastra on its own. Therefore, there's no exporter to register and no manual wiring. Sentry's Mastra integration is enabled by default and reads Mastra's AI telemetry, so a plain `Sentry.init()` is all you need.
 
 ## Prerequisites
 
@@ -31,19 +29,23 @@ Before you begin, you need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
 - A Mastra application using `@mastra/core` version `1.63.2` or later.
-- `@sentry/node` (or `@sentry/cloudflare`) version `11.0.0-rc.0` or later, and `@mastra/observability`. The SDK runs in Node.js and on Cloudflare Workers; it doesn't support browser runtimes.
-
-<Alert level="warning">
-
-Don't run this setup alongside the community `@mastra/sentry` exporter. It calls `Sentry.init()` itself and exports spans in parallel, which conflicts with the built-in integration. Remove `@mastra/sentry` from your Mastra `exporters`.
-
-</Alert>
+- `@mastra/observability`. Sentry's Mastra integration needs it to attach to Mastra's telemetry pipeline.
+- `@sentry/node` (or `@sentry/cloudflare`) version `11.0.0-rc.0` or later. The SDK runs in Node.js and on Cloudflare Workers; it doesn't support browser runtimes.
 
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Install the Sentry Node SDK and Mastra's observability package:
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+  defaults={["performance"]}
+/>
+
+Then install the Sentry Node SDK and Mastra's observability package:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
 
 ```bash {tabTitle:npm}
 npm install @sentry/node@^11.0.0-rc.0 @mastra/observability@latest
@@ -57,11 +59,29 @@ yarn add @sentry/node@^11.0.0-rc.0 @mastra/observability@latest
 pnpm add @sentry/node@^11.0.0-rc.0 @mastra/observability@latest
 ```
 
-Sentry's Mastra integration needs `@mastra/observability` present so it can attach its exporter to Mastra's telemetry pipeline. If Mastra can't load it, the integration warns and creates no spans.
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0 @mastra/observability@latest
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0 @mastra/observability@latest
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0 @mastra/observability@latest
+```
+
+</OnboardingOption>
+
+If Mastra can't load `@mastra/observability`, the integration warns and creates no spans.
 
 <Expandable title="Set up on Cloudflare Workers instead">
 
-To run Mastra on Cloudflare Workers, use `@sentry/cloudflare` in place of `@sentry/node`.
+To run Mastra on Cloudflare Workers, use `@sentry/cloudflare` in place of `@sentry/node`. Profiling (`@sentry/profiling-node`) isn't available on Workers, so the profiling option doesn't apply to this setup.
 
 Install the packages:
 
@@ -94,9 +114,12 @@ Create an `instrument.server.ts` file next to your Worker entry (the file named 
 ```typescript {filename:src/instrument.server.ts}
 export default (env: Env) => ({
   dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
   // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
   // We recommend adjusting this value in production.
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
@@ -120,14 +143,35 @@ Place the file in your Mastra `public/` directory. `mastra build` copies `public
 
 ```javascript {filename:src/mastra/public/instrument.mjs}
 import * as Sentry from "@sentry/node";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of spans for tracing.
   // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/node/configuration/options/#tracesSampleRate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set profileSessionSampleRate to 1.0 to profile every session.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
 });
 ```
 
