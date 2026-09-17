@@ -31,6 +31,20 @@ nuxt dev
 
 To confirm that the SDK bundled your server config, enable `debug` in the `sentry` options of your `nuxt.config.ts`. The SDK then prints a message during the build.
 
+### Development Mode
+
+In `nuxt dev`, spans from some libraries can be missing. Errors and request traces always work, and production builds are not affected.
+
+In a production build, Sentry prepares your libraries for tracing while Nuxt builds your app.
+The dev server has no build step, so Sentry can only prepare a library that loads after Sentry starts.
+Nuxt loads most libraries before that, for example your database client.
+
+Some libraries send tracing data on their own through [tracing channels](https://nodejs.org/api/diagnostics_channel.html#class-tracingchannel).
+Sentry always picks up this data, also in development mode.
+This includes recent versions of `ioredis`, `redis`, `mysql2`, and `mongoose`.
+
+To see all spans, test with a production build: run `nuxi build`, then start your app.
+
 ### Prerendering
 
 The SDK doesn't initialize Sentry while Nitro prerenders your pages at build time. As a result, builds don't send events to Sentry, and prerendered HTML doesn't contain trace meta tags.
