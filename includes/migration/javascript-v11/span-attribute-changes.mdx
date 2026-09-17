@@ -1,0 +1,103 @@
+---
+id: span-attribute-changes
+title: "Span attributes were renamed to match semantic conventions"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 60
+---
+
+Legacy span attributes were replaced by their semantic-convention equivalents. Update any custom instrumentation, `beforeSendSpan` logic, dashboards, or alerts that reference them.
+
+<Expandable title="HTTP and network attributes">
+
+| v10 attribute                          | v11 attribute                     |
+| -------------------------------------- | --------------------------------- |
+| `http.host`                            | `server.address`                  |
+| `http.flavor`                          | `network.protocol.version`        |
+| `http.client_ip`                       | `client.address`                  |
+| `http.method`                          | `http.request.method`             |
+| `http.status_code`                     | `http.response.status_code`       |
+| `http.status_text`                     | `http.response.status_text`       |
+| `http.scheme`                          | `url.scheme`                      |
+| `http.user_agent`                      | `user_agent.original`             |
+| `http.request_content_length`          | `http.request.body.size`          |
+| `http.response_content_length`         | `http.response.body.size`         |
+| `http.decoded_response_content_length` | `http.response.body.decoded_size` |
+| `http.response_transfer_size`          | `http.response.size`              |
+| `http.target`                          | `url.path` + `url.query`          |
+| `http.query`                           | `url.query`                       |
+| `http.fragment`                        | `url.fragment`                    |
+| `url.same_origin`                      | `http.request.same_origin`        |
+| `net.host.name`, `net.peer.name`       | `server.address`                  |
+| `net.host.ip`                          | `network.local.address`           |
+| `net.host.port`                        | `network.local.port`              |
+| `net.peer.ip`                          | `network.peer.address`            |
+| `net.peer.port`                        | `network.peer.port`               |
+| `net.transport`                        | `network.transport`               |
+
+`SanitizedRequestData`, the shape used for `http` breadcrumb data and `http.client` span data, uses `http.request.method` as the key for the request method now.
+
+Transport values change from `ip_tcp` and `ip_udp` to `tcp` and `udp`. HTTP instrumentation reports the protocol as `network.protocol.name` and its version as `network.protocol.version`.
+
+On server-side HTTP spans, the `content-length` header is always reported as `http.request.body.size` and `http.response.body.size`, instead of switching to `http.request_body_size_uncompressed` when no encoding was present.
+
+</Expandable>
+
+<Expandable title="Database and messaging attributes">
+
+| v10 attribute           | v11 attribute        |
+| ----------------------- | -------------------- |
+| `db.system`             | `db.system.name`     |
+| `db.name`               | `db.namespace`       |
+| `db.operation`          | `db.operation.name`  |
+| `db.statement`          | `db.query.text`      |
+| `db.mongodb.collection` | `db.collection.name` |
+| `net.peer.name`         | `server.address`     |
+| `net.peer.port`         | `server.port`        |
+
+SQL query spans carry a new `db.query.summary` attribute, holding the summary of the sanitized statement (`SELECT "User"`). It's set in both trace lifecycles.
+
+Mongoose spans report `db.system.name: 'mongodb'` instead of `'mongoose'`, because Mongoose is an ODM, not a database system.
+
+The Redis and ioredis instrumentations no longer emit `db.connection_string`. The connection is described by `server.address` and `server.port` instead.
+
+The AMQP instrumentation reports `messaging.destination.name`, `messaging.rabbitmq.destination.routing_key`, `messaging.message.id`, `messaging.message.conversation_id`, `messaging.operation.name`, `network.protocol.name`, `network.protocol.version`, and `url.full`. It no longer emits `messaging.destination_kind`.
+
+</Expandable>
+
+<Expandable title="Gen AI attributes">
+
+| v10 attribute                              | v11 attribute                              |
+| ------------------------------------------ | ------------------------------------------ |
+| `gen_ai.system`                            | `gen_ai.provider.name`                     |
+| `gen_ai.request.available_tools`           | `gen_ai.tool.definitions`                  |
+| `gen_ai.tool.input`                        | `gen_ai.tool.call.arguments`               |
+| `gen_ai.tool.output`                       | `gen_ai.tool.call.result`                  |
+| `gen_ai.usage.cache_creation_input_tokens` | `gen_ai.usage.cache_creation.input_tokens` |
+| `gen_ai.usage.cache_read_input_tokens`     | `gen_ai.usage.cache_read.input_tokens`     |
+| `gen_ai.usage.input_tokens.cached`         | `gen_ai.usage.cache_read.input_tokens`     |
+| `gen_ai.usage.input_tokens.cache_write`    | `gen_ai.usage.cache_creation.input_tokens` |
+| `gen_ai.usage.output_tokens.reasoning`     | `gen_ai.usage.reasoning.output_tokens`     |
+| `ai.pipeline.name`                         | `gen_ai.pipeline.name`                     |
+| `ai.streaming`                             | `gen_ai.response.streaming`                |
+| `langchain.chain.name`                     | `gen_ai.pipeline.name`                     |
+
+`gen_ai.tool.type` is no longer set on tool spans. `gen_ai.pipeline.name` is omitted for unnamed chains, instead of holding `unknown_chain`.
+
+The Anthropic integration no longer sets `gen_ai.prompt`. The legacy Completions API prompt is reported as a user message on `gen_ai.input.messages`, like every other request shape.
+
+</Expandable>
+
+<Expandable title="Other attributes and constants">
+
+- On `ui.long_animation_frame` spans, `code.filepath` and `code.function` became `code.file.path` and `code.function.name`.
+- On `file` spans, `fs_error` became `error.type` and holds the syscall error code (`ENOENT`) instead of the full message.
+- The TanStack Router integration reports path parameters as `url.path.parameter.<key>` instead of `url.path.params.<key>`.
+- The Cloudflare-specific `sentry.cloudflare_tracer` attribute is no longer set.
+- Import attribute constants from `@sentry/core` directly. The `semanticAttributes` re-export was removed.
+- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE` (`sentry.source`) was replaced by `SENTRY_SEGMENT_NAME_SOURCE` (`sentry.segment.name.source`), which is only set on the root span.
+
+</Expandable>

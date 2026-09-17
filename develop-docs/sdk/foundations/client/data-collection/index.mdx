@@ -2,12 +2,18 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.11.0
+spec_version: 0.13.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.13.0
+    date: 2026-09-08
+    summary: Add `filePaths`, defaulting to `true`, to control automatic collection of file and directory paths.
+  - version: 0.12.0
+    date: 2026-08-31
+    summary: Require `dataCollection` to be documented as an explicit setup step instead of a commented-out override in the init snippet.
   - version: 0.11.0
     date: 2026-07-30
     summary: Require encoded URL query parameters to be stored exactly as they appear in the URL.
@@ -94,6 +100,7 @@ Personally Identifiable Information (PII) or user-linked data. Examples include,
 - Contact (email, phone number, address)
 - IP address
 - Cookies and headers that identify the user or session
+- File and directory paths that identify a user, tenant, or document
 - HTTP request data or database query parameters (TBD)
 - Arguments passed to tasks within a queue
 
@@ -138,19 +145,25 @@ SDK documentation **MUST** document the default value and behavior of each `data
 
 </SpecSection>
 
-<SpecSection id="setup-snippet-opt-out" status="candidate" since="0.4.0">
+<SpecSection id="setup-step-data-collection" status="candidate" since="0.12.0">
 
-### Setup Snippet Opt-Out Comment
+### Data Collection Setup Step
 
-All SDK initialization code snippets (including documentation examples, onboarding flows, and CLI wizard output) **MUST** include a commented-out `dataCollection` override that disables `userInfo` and `httpBodies`.
-The comment **MUST** include a URL linking to the full `dataCollection` documentation matching the specific platform or guide.
+Setup instructions **MUST** present `dataCollection` as its own set-up step (similar to source maps or tunneling).
+Initialization snippets **SHOULD NOT** carry a commented-out `dataCollection` override, because commented-out code is easy to overlook and makes the snippet harder to read.
 
-```pseudocode
+The step **MUST** be included in every surface that tells users how to set up the SDK, for example setup documentation, onboarding flows, and setup tools such as CLI wizards. The surfaces might differ per platform.
+
+The step **MUST**:
+
+- state that the SDK collects all data, including user identity data by default
+- show an example snippet that disables an option. For example, `userInfo`.
+- link to the full `dataCollection` documentation of the applicable platform or guide
+
+```js
 init({
   dsn: "...",
-  // To disable sending user data and HTTP bodies, uncomment the line below. For more info visit:
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection
-  // dataCollection: { userInfo: false, httpBodies: [] },
+  dataCollection: { userInfo: false },
 })
 ```
 
@@ -428,6 +441,25 @@ class KeyValueCollectionBehavior {
 
 ---
 
+#### File Path Collection
+
+File and directory paths can contain user names, tenant identifiers, document names, and other PII. SDKs that automatically instrument file-system operations **MUST** gate any collected path arguments with `filePaths`.
+
+When `filePaths` is `false`, SDKs **MUST NOT** attach full paths, file names or base names obtained from file-system operation arguments. SDKs **MAY** retain non-identifying metadata such as the operation name, file extension, byte count, or whether the target is a file or directory.
+
+This option does not apply to:
+
+- Source-code locations in stack frames, profile frames, or debug images
+- Attachment names or paths explicitly supplied by the user
+- SDK-internal paths used only for local storage and never attached to telemetry
+
+
+Examples:
+- `/home/usr1/file.txt` may become `[Filtered].txt`
+- `some-file.md` may become `[Filtered].md`
+
+---
+
 #### HTTP Header Collection
 
 SDKs **MUST** allow users to configure request and response header collection independently. Each direction supports the same key-value collection modes described above.
@@ -589,6 +621,7 @@ init({
     },
     databaseQueryData?: boolean,                   // default: true
     queues?: boolean,                              // default: true
+    filePaths?: boolean,                           // default: true
     stackFrameVariables?: boolean | KeyValueCollectionBehavior, // default: true
     frameContextLines?: integer,                   // default: 5 (see boolean fallback below)
   },
@@ -606,6 +639,7 @@ init({
 | `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs. This gates system instructions, prompt messages, tool definitions, and tool call arguments. <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). <br /><br /> Metadata such as model name and token counts is always collected regardless of these settings. |
 | `databaseQueryData` | Boolean | `true` | 0.6.0 | Include data that's associated with database queries. This controls collection of bound query parameters, data payloads for write operations, and returned result data.<br /><br />Sanitized or parameterized DB statements (`db.query.text`) are **not** controlled by this property. Structural metadata such as the database system, query summary, operation name, or the table being acted upon is also **always** collected. |
 | `queues` | Boolean | `true` | 0.7.0 | Include arguments passed to tasks within queues. |
+| `filePaths` | Boolean | `true` | 0.13.0 | Include file and directory paths collected automatically by file-system instrumentation, such as paths passed to file read, write, move, copy, or delete operations. This option does **not** control source-code locations in stack frames, profile frames, or debug images, and it does **not** gate attachment names or paths explicitly supplied by the user. |
 | `stackFrameVariables` | Boolean or key-value collection | `true` | 0.1.0 | Include local variable values captured within stack frames. Accepts a Boolean (`true` collects all variables, `false` collects none) or a `KeyValueCollectionBehavior` to filter which variables are sent by name (see [Filtering Stack Frame Variables](#filtering-stack-frame-variables)). Key-value collection added in 0.9.0. |
 | `frameContextLines` | Integer (`Boolean` fallback) | `5` (`true`) | 0.1.0 | Number of source code lines to include above and below each stack frame. <br/> **`Boolean` fallback:** Not all platforms support integer configuration values. SDKs **MAY** accept a boolean, where `true` is equivalent to the platform default (typically `5`) and `false` is equivalent to `0` (no context lines). SDKs **SHOULD** prefer accepting an integer when their platform supports it. |
 
@@ -693,7 +727,7 @@ init({
 - **`sendDefaultPii: true`** (legacy) → omit `dataCollection` entirely; the new defaults already populate `user.*` and collect HTTP bodies. Add overrides only to restrict collection.
 - **`sendDefaultPii: false`** (legacy) → opt out of the categories the new defaults collect.
 
-The new defaults collect **more data** than either legacy setting did. User identity, generative AI content, and HTTP request/response bodies are now on by default, and more HTTP headers and cookies are collected. This config restricts collection to roughly match the previous behavior of `sendDefaultPii: false`:
+The new defaults collect **more data** than either legacy setting did. User identity, generative AI content, HTTP request/response bodies, and file paths are now on by default, and more HTTP headers and cookies are collected. This config restricts collection to roughly match the previous behavior of `sendDefaultPii: false`:
 
 ```typescript
 init({
@@ -711,6 +745,7 @@ init({
     },
     databaseQueryData: false,
     queues: false,
+    filePaths: false,
     httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },

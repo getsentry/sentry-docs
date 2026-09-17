@@ -1,0 +1,90 @@
+---
+id: span-name-changes
+title: "Span names are low cardinality"
+phase: code-changes
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 85
+---
+
+In stream mode, span names follow the [Sentry span name conventions](https://getsentry.github.io/sentry-conventions/names/). URLs, route parameters, and other client-supplied values are no longer part of the name:
+
+| Span op                  | Before                                  | After                                    |
+| ------------------------ | --------------------------------------- | ---------------------------------------- |
+| `http.client`            | `GET https://api.example.com/users/123` | `GET api.example.com`                    |
+| `http.server`            | `GET /users/123`                        | `GET /users/:id`, or `GET`               |
+| `pageload`, `navigation` | `/users/123`                            | `/users/:id`, or `Pageload`              |
+| `resource.*`             | `/assets/app.js`                        | `cdn.example.com`, or `Resource`         |
+| `graphql`                | `query GetUser`                         | `GraphQL query`                          |
+| `queue.*`                | `my-queue process`, `poll my-topic`     | `process my-queue`, `receive my-topic`   |
+| `db.query`               | `SELECT * FROM "User" WHERE "id" = $1`  | `SELECT "User"`, or `Database operation` |
+
+`http.server` names are unchanged when the SDK resolves a route, and fall back to the method alone when it can't. `pageload` and `navigation` fall back to `Pageload` and `Navigation`.
+
+Database spans work the same way: a statement that touches no table (`SELECT NOW()`) summarizes to the bare operation (`SELECT`), and without a statement to summarize the name falls back to the database namespace, then to `Database operation`.
+
+Whatever the name no longer carries stays on an attribute, in both trace lifecycles: `url.full` and `url.domain`, `graphql.operation.name` and the new `graphql.processing.type`, `db.query.text`, and so on.
+
+<Expandable title="Full list of span name changes">
+
+| Span op                     | Before                                                                              | After                                                                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `pageload`, `navigation`    | The route, or the raw URL path (`/users/123`)                                       | The route, or `Pageload` and `Navigation`                                                                                                 |
+| `http.server`               | The method and route, or the raw URL path (`GET /users/123`)                        | `GET /users/:id`, or the method alone (`GET`)                                                                                             |
+| `http.client*`              | The method and sanitized URL (`GET https://api.example.com/users/123`)              | The method and domain (`GET api.example.com`), or the method alone                                                                        |
+| `router`                    | Framework-specific, sometimes the raw URL (`SvelteKit Route Change`)                | The span's `http.route`, or `Router`                                                                                                      |
+| `handler`                   | Framework-specific, often with the request method (`GET /users/:id`, `getUser`)     | The span's `http.route`, or `Request handler`                                                                                             |
+| `graphql`                   | The phase and operation name (`query GetUser`, `graphql.resolve user.0.name`)       | The operation or processing type (`GraphQL query`, `GraphQL parse`)                                                                       |
+| `gen_ai` inference ops      | `{operation} {model}`, or `{operation} unknown` (`chat unknown`)                    | `{operation} {model}`, or `{operation}` (`chat`)                                                                                          |
+| `gen_ai.invoke_agent`       | The LangChain chain name, prefixed with `chain` (`chain format_prompt`)             | `{operation} {name}` from `gen_ai.agent.name`, `gen_ai.pipeline.name`, or `gen_ai.function_id`, or `{operation}`                          |
+| `resource.*`                | The resource URL (`/assets/app.js`)                                                 | The resource domain (`cdn.example.com`), or `Resource`                                                                                    |
+| `mcp.server`                | The method and its target (`resources/read file:///docs/api.md`)                    | The method alone for resource methods (`resources/read`). Tool and prompt names are unchanged                                             |
+| `mcp.notification.*`        | The notification method name                                                        | The notification method name, or `MCP notification`                                                                                       |
+| `queue.publish`             | Integration-specific (`publish my-exchange`, `send my-topic`)                       | The operation type and destination (`send my-exchange`), or the operation type alone                                                      |
+| `queue.process`             | Integration-specific (`my-queue process`)                                           | The operation type and destination (`process my-queue`), or the operation type alone                                                      |
+| `queue.receive`             | The kafkajs operation name (`poll my-topic`)                                        | The operation type and destination (`receive my-topic`)                                                                                   |
+| `cache.*`                   | The cache keys (`user:123`), or for dataloader the operation and loader name        | The cache operation (`cache.get`, `cache.put`, `cache.remove`)                                                                            |
+| `db`, `db.query` (SQL)      | The statement the driver ran (`SELECT * FROM "User" WHERE "id" = $1`)               | A summary of it (`SELECT "User"`), or, without a statement, the operation and table, the namespace, or the database system (`postgresql`) |
+| `db` (MongoDB)              | The serialized command, or `mongodb.<operation>` (`mongodb.find`)                   | The operation and collection (`find users`), the database namespace, or `mongodb`                                                         |
+| `db` (Mongoose)             | `mongoose.<Model>.<operation>` (`mongoose.BlogPost.findOne`)                        | The operation and collection (`findOne blogposts`), the database namespace, or `mongodb`                                                  |
+| `db` (Supabase)             | The query builder call and table (`select(...) from(users)`), or `auth <method>`    | The operation and table (`select users`), or the dotted auth method (`auth.signInWithPassword`)                                           |
+| `db.query` (Redis, ioredis) | The serialized command with redacted arguments (`set test-key [1 other arguments]`) | The operation and connection (`SET localhost:6379`), the operation and redis function for `FCALL`, or `redis`                             |
+
+A few consequences worth checking:
+
+- `useOperationNameForRootSpan` no longer renames the enclosing root span. The operations stay on that span's `sentry.graphql.operation` attribute.
+- `graphqlClientIntegration` no longer appends the operation to the outgoing request span name. It's on `graphql.operation.name` and `graphql.operation.type` instead.
+- Only the Express, Koa, and Hapi integrations resolve a route for `router` spans. Angular, Ember, and SvelteKit router spans are named `Router`.
+- Express, Fastify, Hapi, and Elysia resolve a route for `handler` spans. NestJS has none at span start, so its handler spans are named `Request handler`. The handler function name moved to `nestjs.callback` for NestJS and `code.function.name` for Elysia.
+- Cache keys are no longer part of a cache span name. They stay on `cache.key`, and every cache span carries the new `cache.operation` attribute (`get`, `put`, `remove`). This affects the Redis and ioredis cache spans, the Nuxt and Nitro storage spans, and the dataloader spans, which report the loader name on `db.collection.name` now. A Redis command matching `cachePrefixes` starts as a cache span now instead of turning into one at response time, and `maxCacheKeyLength` has no effect in stream mode.
+- The `pg`, `postgres.js`, `mysql`, `mysql2`, `knex`, `tedious`, Prisma, Nitro `db0`, and Cloudflare D1 instrumentations name their query spans the same way now. A statement that touches no table (`SELECT NOW()`) summarizes to the bare operation. Connect and pool spans (`pg.connect`, `mysql2.connect`, `redis-connect`, `generic-pool.acquire`) keep their names.
+- Supabase query spans drop the builder call from the name, and the modifiers stay on `db.query`. Auth spans are named after the method they call (`auth.admin.createUser`).
+- AWS SQS `SendMessage`, `SendMessageBatch`, and `ReceiveMessage`, and SNS `Publish`, are messaging spans now instead of `rpc` spans. Every other command on those clients stays `rpc`.
+- Child spans carry their service span's name in `sentry.segment.name`, so that changes with it.
+
+</Expandable>
+
+<Alert level="warning">
+
+`ignoreSpans` and `tracesSampler` both run when a span **starts**, so a span may not have its final name yet. Match on attributes instead:
+
+```js
+Sentry.init({
+  // Before
+  ignoreSpans: ["/health", "SELECT * FROM health_check"],
+  tracesSampler: ({ name, inheritOrSampleWith }) =>
+    inheritOrSampleWith(name === "GET /health" ? 0 : 1),
+
+  // After
+  ignoreSpans: [
+    { attributes: { "sentry.op": "pageload", "url.path": "/health" } },
+    { attributes: { "db.query.text": "SELECT * FROM health_check" } },
+  ],
+  tracesSampler: ({ attributes, inheritOrSampleWith }) =>
+    inheritOrSampleWith(attributes["url.path"] === "/health" ? 0 : 1),
+});
+```
+
+</Alert>

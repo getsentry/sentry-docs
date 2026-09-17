@@ -23,12 +23,14 @@ import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
 import {GradleUploadInstructions} from './components/gradleUploadInstructions';
 import {GuideGrid} from './components/guideGrid';
+import {IntegrationGrid} from './components/integrationGrid';
 import {IntegrationListItem} from './components/integrationLink';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
+import {MigrationGuide} from './components/migrationGuide';
 import {
   OnboardingOption,
   OnboardingOptionButtons,
@@ -102,12 +104,14 @@ export function mdxComponents(
     Expandable,
     FeatureBadge,
     GuideGrid,
+    IntegrationGrid,
     IntegrationListItem,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
     LLMSteering,
+    MigrationGuide,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
