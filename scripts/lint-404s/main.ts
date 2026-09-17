@@ -7,7 +7,7 @@ import {unified} from 'unified';
 import {visit} from 'unist-util-visit';
 import {fileURLToPath} from 'url';
 
-import {resolveLinkUrl} from './url';
+import {isInternalUrl, resolveInternalUrl, resolveLinkUrl} from './url';
 
 const baseUrlIndex = process.argv.indexOf('--base-url');
 const baseURL = new URL(
@@ -15,6 +15,11 @@ const baseURL = new URL(
     ? process.argv[baseUrlIndex + 1]
     : 'http://localhost:3000/'
 );
+const internalHostnameIndex = process.argv.indexOf('--internal-hostname');
+const internalHostname =
+  internalHostnameIndex !== -1 && process.argv[internalHostnameIndex + 1]
+    ? process.argv[internalHostnameIndex + 1]
+    : 'docs.sentry.io';
 type Link = {href: string; innerText: string};
 
 const trimSlashes = (s: string) => s.replace(/(^\/|\/$)/g, '');
@@ -154,8 +159,7 @@ async function main() {
   };
 
   function shouldSkipLink(href: string, resolvedUrl: URL) {
-    const isExternal =
-      resolvedUrl.origin !== baseURL.origin && resolvedUrl.hostname !== 'docs.sentry.io';
+    const isExternal = !isInternalUrl(resolvedUrl, baseURL, internalHostname);
     const hasUnsupportedScheme = !['http:', 'https:'].includes(resolvedUrl.protocol);
     const isExplicitLocalhost = /^(?:https?:)?\/\/localhost(?::\d+)?(?:\/|$)/.test(href);
     const isIp = (href_: string) => /(\d{1,3}\.){3}\d{1,3}/.test(href_);
@@ -180,13 +184,7 @@ async function main() {
       return false;
     }
 
-    const fullUrl =
-      resolvedUrl.hostname === 'docs.sentry.io' && resolvedUrl.origin !== baseURL.origin
-        ? new URL(
-            `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`,
-            baseURL
-          )
-        : resolvedUrl;
+    const fullUrl = resolveInternalUrl(resolvedUrl, baseURL, internalHostname);
 
     if (isInSitemap(fullUrl.href)) {
       return false;

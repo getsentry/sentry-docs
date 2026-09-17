@@ -65,7 +65,12 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Lint 404s
-        run: npx tsx ./scripts/lint-404s/main.ts
+        run: |
+          if [[ "${{ steps.filter.outputs.dev-docs }}" == "true" ]]; then
+            npx tsx ./scripts/lint-404s/main.ts --internal-hostname develop.sentry.dev
+          else
+            npx tsx ./scripts/lint-404s/main.ts
+          fi
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
 
       - name: Kill Http Server
