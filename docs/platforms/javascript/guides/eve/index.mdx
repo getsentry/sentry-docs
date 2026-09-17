@@ -15,11 +15,14 @@ keywords:
   - agent tracing
 ---
 
-[Eve](https://eve.dev/) is Vercel's filesystem-first framework for building durable backend AI agents on top of the Vercel AI SDK. This guide sets up the `@sentry/node` SDK inside an Eve app so agent turns, model calls, tool executions, and errors flow into [Sentry Agent Tracing](/product/agents/).
+[Eve](https://eve.dev/) is Vercel's filesystem-first framework for building durable backend AI agents on top of the Vercel AI SDK. You can monitor Eve with the Sentry Node SDK or Eve's OpenTelemetry exporter:
+
+- **Sentry Node SDK**: Sends errors, traces, and agent telemetry. Use this for broader coverage. This setup requires `@sentry/node` version `11.0.0-rc.0` or later.
+- **Eve OpenTelemetry exporter**: Sends agent traces directly to Sentry's OTLP endpoint. Use this when you only need agent traces.
 
 <Alert>
 
-This guide covers the Sentry SDK-based setup, which replaces the earlier OTLP instrumentation. It requires JavaScript SDK version `11.0.0-rc.0` or later.
+Choose one setup for the Eve agent runtime. Both setups produce AI spans and configure OpenTelemetry, so combining them duplicates spans, token totals, and costs.
 
 </Alert>
 
@@ -29,7 +32,7 @@ Before you begin, you need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
 - An Eve application.
-- `@sentry/node` version `11.0.0-rc.0` or later. The SDK runs in Node.js only; it doesn't support browser or edge runtimes.
+- For the Sentry Node SDK setup, `@sentry/node` version `11.0.0-rc.0` or later. The SDK runs in Node.js only; it doesn't support browser or edge runtimes.
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -129,6 +132,61 @@ If no data appears, confirm that:
 - Your app completed at least one agent turn after you added `agent/instrumentation.ts`.
 
 </StepConnector>
+
+## Use Eve's OpenTelemetry Exporter Instead
+
+Eve's official Sentry instrumentation exports OpenTelemetry GenAI spans directly to Sentry. This setup sends traces only. It doesn't create Sentry issues or logs because Sentry's OTLP intake doesn't accept span events.
+
+If `@sentry/node` is initialized in the Eve agent runtime, remove it before using this setup. With tracing enabled, the Node SDK includes its Vercel AI integration by default, even when `vercelAIIntegration()` isn't listed in the configuration. Leaving both enabled produces duplicate AI spans.
+
+Add the Sentry instrumentation from Eve's registry. The command creates `agent/instrumentation.ts` and installs the OpenTelemetry packages it needs:
+
+```bash
+eve add instrumentation/sentry
+```
+
+Copy the OTLP traces endpoint and public key from the OpenTelemetry section under [Project Settings > Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/):
+
+```bash {filename:.env}
+SENTRY_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___"
+SENTRY_PUBLIC_KEY="___PUBLIC_KEY___"
+```
+
+The generated instrumentation registers an OTLP exporter that authenticates with the `x-sentry-auth` header:
+
+```typescript {filename:agent/instrumentation.ts}
+import { OTLPHttpProtoTraceExporter, registerOTel } from "@vercel/otel";
+import { defineInstrumentation } from "eve/instrumentation";
+
+export default defineInstrumentation({
+  setup: ({ agentName }) =>
+    registerOTel({
+      serviceName: agentName,
+      traceExporter: new OTLPHttpProtoTraceExporter({
+        url: process.env.SENTRY_OTLP_TRACES_ENDPOINT!,
+        headers: {
+          "x-sentry-auth": `sentry sentry_key=${process.env.SENTRY_PUBLIC_KEY}`,
+        },
+      }),
+    }),
+});
+```
+
+Eve records span metadata by default. After you review the data your agent handles, set `recordInputs` and `recordOutputs` to `true` to include prompts, model outputs, and tool details:
+
+```typescript {filename:agent/instrumentation.ts}
+export default defineInstrumentation({
+  recordInputs: true,
+  recordOutputs: true,
+  setup: ({ agentName }) => {
+    // Keep the generated exporter setup.
+  },
+});
+```
+
+Preserve the generated `setup` callback and exporter when you change these options. Eve emits its durable session ID as `gen_ai.conversation.id`, so you don't need to set a separate per-request conversation ID.
+
+To verify the setup, send a prompt that calls a tool. In [Agent Tracing](/product/agents/), confirm the trace contains `invoke_agent`, `chat`, and `execute_tool` spans. If no traces appear, check that `SENTRY_OTLP_TRACES_ENDPOINT` is the project-specific traces URL, not the OTLP base URL, and that `SENTRY_PUBLIC_KEY` contains only the public key instead of the full DSN.
 
 ## Privacy Controls
 
