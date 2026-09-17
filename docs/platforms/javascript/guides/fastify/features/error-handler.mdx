@@ -1,36 +1,38 @@
 ---
 title: Fastify Error Handler
-description: "Learn about Sentry's Fastify SDK Error Handler and how to configure it."
+description: "Learn how Sentry's Fastify integration captures errors and how to configure it."
 ---
 
-The Fastify error handler integration automatically captures errors in your Fastify application and sends them to Sentry. By default, it captures all errors with status codes 5xx and above, as well as errors with status codes 2xx and below.
+The `fastifyIntegration` captures errors in your Fastify application and sends them to Sentry. It's enabled by default, so you only need to add it to your `Sentry.init` call to configure it.
+
+By default, errors with status codes 5xx and above, as well as errors with status codes 2xx and below, are captured. Errors with 3xx and 4xx status codes aren't sent to Sentry.
 
 ## Configuration
 
-You can configure the error handler using the `setupFastifyErrorHandler` function:
+To control which errors are captured, pass `shouldHandleError` to `Sentry.fastifyIntegration`:
 
 ```javascript
 import * as Sentry from "@sentry/node";
-import Fastify from "fastify";
 
-const app = Fastify();
-
-// Initialize Sentry
 Sentry.init({
   dsn: "your-dsn",
+  integrations: [
+    Sentry.fastifyIntegration({
+      shouldHandleError(error, request, reply) {
+        return reply.statusCode >= 500;
+      },
+    }),
+  ],
 });
-
-// Setup the error handler
-Sentry.setupFastifyErrorHandler(app);
 ```
 
 ## Options
 
 `Sentry.fastifyIntegration` accepts the following options:
 
-- `shouldHandleError` _version 9.9.0+_
+- `shouldHandleError`
 
-A function that determines whether an error should be captured. Set it on `fastifyIntegration()` so that it applies to every supported Fastify version.
+A function that determines whether an error should be captured.
 
 ```typescript
 declare function shouldHandleError(
@@ -40,35 +42,16 @@ declare function shouldHandleError(
 ): boolean;
 ```
 
-```javascript
-Sentry.init({
-  dsn: "your-dsn",
-  integrations: [
-    Sentry.fastifyIntegration({
-      shouldHandleError(error, request, reply) {
-        return reply.statusCode >= 500 || reply.statusCode <= 399;
-      },
-    }),
-  ],
-});
-```
-
 If using TypeScript, you can cast the request and reply to get full type safety.
 
 ```typescript
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 
 Sentry.fastifyIntegration({
   shouldHandleError(error, minimalRequest, minimalReply) {
     const request = minimalRequest as FastifyRequest;
     const reply = minimalReply as FastifyReply;
-    return reply.statusCode >= 500 || reply.statusCode <= 399;
+    return reply.statusCode >= 500;
   },
 });
 ```
-
-<Alert level="warning">
-
-Passing `shouldHandleError` to `Sentry.setupFastifyErrorHandler` is deprecated and will be removed in version 11.0.0. Set the option on `Sentry.fastifyIntegration` instead.
-
-</Alert>
