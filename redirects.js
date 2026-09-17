@@ -1048,6 +1048,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/arg0-app/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/toolbar/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1244,6 +1248,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
   {
