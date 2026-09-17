@@ -146,6 +146,65 @@ Specifies the timeout duration in milliseconds after which the application is co
 
 </SdkOption>
 
+## Tracing Options
+
+<SdkOption name="traces_sample_rate" type="float" defaultValue="0.0" availableSince="2.2.0">
+
+Controls the percentage of traces sent to Sentry. Set this value between 0.0 (send no traces) and 1.0 (send all traces). The SDK samples each trace as a whole, so it sends either all spans in a trace or none of them.
+
+See <PlatformLink to="/tracing/">Set Up Tracing</PlatformLink> for configuration and testing guidance.
+
+</SdkOption>
+
+<SdkOption name="trace_lifecycle" type="SentryOptions.TraceLifecycle" defaultValue="TRACE_LIFECYCLE_STATIC" availableSince="2.2.0">
+
+Controls how the SDK sends traces:
+
+- `SentryOptions.TRACE_LIFECYCLE_STATIC` holds completed spans and sends each root span and its children as a transaction when that root span ends.
+- `SentryOptions.TRACE_LIFECYCLE_STREAM` sends completed spans independently.
+
+This option currently only affects Web exports; other platforms always use the static lifecycle. Streamed spans use the Span v2 format, which Sentry SaaS ingests but self-hosted Sentry doesn't currently support.
+
+</SdkOption>
+
+<SdkOption name="trace_propagation_targets" type="Array" defaultValue={'[".*"]'} availableSince="2.2.0">
+
+Controls which downstream services can receive tracing headers.
+
+When you pass a URL to `SentrySpan.get_trace_headers(url)`, the SDK returns headers only if that URL matches one of the targets.
+
+- A `String` matches when it appears anywhere in the URL. The special string `".*"` matches every URL and is the only entry by default.
+- A `RegEx` searches the complete URL. Use an anchored expression to match a specific origin.
+- An empty array blocks headers for all URLs passed to `get_trace_headers(url)`.
+
+Omitting the URL when calling `get_trace_headers()` bypasses this option, including an empty target list. This option doesn't attach headers automatically.
+
+In **Project Settings > Sentry > Options**, **Trace Propagation Targets** accepts strings only. Add `RegEx` entries in your initialization callback. See <PlatformLink to="/tracing/distributed-tracing/limiting-trace-propagation/">Limiting Trace Propagation</PlatformLink> for an example.
+
+</SdkOption>
+
+<SdkOption name="propagate_traceparent" type="bool" defaultValue="false" availableSince="2.2.0">
+
+Controls whether outgoing tracing headers include the W3C `traceparent` header alongside `sentry-trace` and `baggage`.
+
+Set this option to `true` when your backend uses OpenTelemetry or another W3C Trace Context-compatible library to continue traces. `SentrySpan.get_trace_headers()` then includes `traceparent` in the returned headers.
+
+[`trace_propagation_targets`](#trace_propagation_targets) controls where this header is allowed when you pass a URL. For Web exports, also <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">allow `traceparent` in your backend's CORS configuration</PlatformLink>.
+
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
+
+</SdkOption>
+
+<SdkOption name="org_id" type="String" defaultValue={'""'} availableSince="2.2.0">
+
+The organization ID for your Sentry project.
+
+The SDK tries to extract the ID from your DSN. If it can't be found, or you need to override it when using self-hosted Sentry or a local Relay, set it with this option.
+
+The ID is included as `sentry-org_id` in the outgoing `baggage` header. Downstream services can use it to check whether an incoming trace belongs to the same organization before continuing it.
+
+</SdkOption>
+
 ## GUI-only Options
 
 These options are only available in the **Project Settings** window.
@@ -173,11 +232,11 @@ This option is turned off by default.
 
 <SdkOption name="enable_logs" type="bool" defaultValue="true" availableSince="1.2.0">
 
-If `true`, enables [Sentry's structured logs](/product/logs/) feature. When enabled, logs you record with the dedicated logging APIs through `SentrySDK.logger` are sent to Sentry. When disabled, those logging APIs remain safe to call, but they won't send logs.
+**Deprecated:** This compatibility option is a no-op: it always returns `true`, and assigning it has no effect. It will be removed in version 3.0.
 
-Godot logger events can also be captured automatically as Sentry Logs. To enable this, add the events you want to capture to [`godot_logger.log_mask`](#godot_logger.log_mask). This mask is empty by default, so no Godot logger events are captured as logs unless you configure it. Use [`godot_logger.enabled`](#godot_logger.enabled) and the other [`godot_logger` options](#godot-logger-options) to control how the SDK captures Godot errors and log output, including `print()` statements.
+[Sentry's structured logs](/product/logs/) are always enabled. Logs you record through `SentrySDK.logger` are sent to Sentry.
 
-This option is turned on by default.
+To capture Godot logger events automatically, see [`godot_logger.log_mask`](#godot_logger.log_mask).
 
 </SdkOption>
 
@@ -219,9 +278,9 @@ options.SetBeforeSendLog(log =>
 
 <SdkOption name="enable_metrics" type="bool" defaultValue="true" availableSince="2.0.0">
 
-If `true`, enables [Sentry's Application Metrics](https://docs.sentry.io/product/metrics/) functionality, allowing you to emit custom counters, gauges, and distributions through `SentrySDK.metrics`. See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for usage details.
+**Deprecated:** This compatibility option is a no-op: it always returns `true`, and assigning it has no effect. It will be removed in version 3.0.
 
-This option is turned on by default.
+[Sentry's Application Metrics](/product/metrics/) are always enabled. Use `SentrySDK.metrics` to emit custom counters, gauges, and distributions. See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for usage details.
 
 </SdkOption>
 
@@ -270,7 +329,7 @@ The previous flat `logger_*` options (such as `logger_event_mask` and `logger_li
 
 <SdkOption name="godot_logger.enabled" type="bool" defaultValue="true">
 
-If `true`, the SDK captures Godot logger output as events, logs, and/or breadcrumbs. Which items are captured depends on [`godot_logger.event_mask`](#godot_logger.event_mask), [`godot_logger.log_mask`](#godot_logger.log_mask), and [`godot_logger.breadcrumb_mask`](#godot_logger.breadcrumb_mask). Crashes are always captured. See also [`enable_logs`](#enable_logs).
+If `true`, the SDK captures Godot logger output as events, logs, and/or breadcrumbs. Which items are captured depends on [`godot_logger.event_mask`](#godot_logger.event_mask), [`godot_logger.log_mask`](#godot_logger.log_mask), and [`godot_logger.breadcrumb_mask`](#godot_logger.breadcrumb_mask). Crashes are always captured.
 
 This option is turned on by default.
 
@@ -321,7 +380,7 @@ options.GodotLogger.EventMask = mask;
 
 <SdkOption name="godot_logger.log_mask" type="int" defaultValue="0 (None)" availableSince="2.0.0">
 
-Specifies the Godot logger events captured as [Sentry Logs](/product/logs/). Accepts a single value or a bitwise combination of `GodotLoggerEventMask` masks. Empty by default, so no Godot logger events are captured as logs. Requires [`enable_logs`](#enable_logs) to be turned on.
+Specifies the Godot logger events captured as [Sentry Logs](/product/logs/). Accepts a single value or a bitwise combination of `GodotLoggerEventMask` masks. Empty by default, so no Godot logger events are captured as logs.
 
 ```gdscript {tabTitle:GDScript} {mdExpandTabs}
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_WARNING | SentryOptions.MASK_SCRIPT | SentryOptions.MASK_SHADER | SentryOptions.MASK_MESSAGE
@@ -459,6 +518,14 @@ options.SetBeforeSend((sentryEvent, hint) =>
 ```
 
 In C#, `options.SetBeforeSend` covers managed events only. To filter native events from C# (such as engine, GDScript, and GDExtension errors), use [`Native.SetBeforeSend`](#Native.SetBeforeSend).
+
+</SdkOption>
+
+<SdkOption name="before_send_feedback" type="Callable" availableSince="2.2.0">
+
+Feedback events don't pass through [`before_send`](#before_send). Use this callback to inspect, modify, or drop user feedback before the SDK sends it to Sentry. You can only set it [programmatically](#programmatic-configuration).
+
+The submitted message, name, contact email, and associated event ID are included in the event's `feedback` context. See <PlatformLink to="/configuration/filtering/#filtering-user-feedback">Filtering User Feedback</PlatformLink> for callback behavior, setup, and platform support.
 
 </SdkOption>
 
