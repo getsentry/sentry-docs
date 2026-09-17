@@ -3,6 +3,7 @@ import {
   copyFileSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -11,6 +12,28 @@ import {tmpdir} from 'os';
 import path from 'path';
 import {pathToFileURL} from 'url';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+
+import {loadItems} from './validate-migration-items.mjs';
+
+describe('migration collections', () => {
+  it.each(['javascript-v11', 'flutter-v10'])('validates %s', collection => {
+    const {items, errors} = loadItems(process.cwd(), collection);
+    expect(items.length).toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+  });
+
+  it('includes every Flutter checklist item exactly once in the full guide', () => {
+    const {items} = loadItems(process.cwd(), 'flutter-v10');
+    const guide = readFileSync(
+      'docs/platforms/dart/guides/flutter/migration/v9-to-v10/index.mdx',
+      'utf8'
+    );
+    const included = [...guide.matchAll(/name="migration\/flutter-v10\/([^"]+)"/g)]
+      .map(match => match[1])
+      .sort();
+    expect(included).toEqual(items.map(item => item.file.replace(/\.mdx$/, '')).sort());
+  });
+});
 
 describe('migration item validator CLI', () => {
   let root: string;

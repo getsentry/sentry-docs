@@ -16,20 +16,19 @@ type Props = {
    * divergence instead of failing.
    */
   bodies: ItemBody[];
-  /** Guide slug, used to scope checklist storage. */
-  framework: string;
+  /** Scopes saved progress to a migration and platform or guide. */
+  storageKey: string;
   items: MigrationItem[];
 };
 
-export function MigrationGuideClient({items, bodies: renderedBodies, framework}: Props) {
+export function MigrationGuideClient({items, bodies: renderedBodies, storageKey}: Props) {
   const bodies = useMemo(
     () => new Map(renderedBodies.map(({id, body}) => [id, body])),
     [renderedBodies]
   );
 
-  // Checklist progress is scoped per framework: someone migrating a monorepo
-  // has separate checklists for their Next.js app and their Node service.
-  const storageKey = `sentry-v11-migration:${framework}`;
+  // The parent keys this component by storageKey, so changing migrations or
+  // frameworks starts a fresh hydration before any progress is written.
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [hydrated, setHydrated] = useState(false);
 
