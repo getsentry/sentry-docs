@@ -55,6 +55,29 @@ Sentry.init({
 });
 ```
 
+### ANR Profiling on Android
+
+When a foreground ANR is detected on Android, the SDK can capture a stack profile of the main thread and attach it to the ANR event on the next app start. This gives you a flamegraph on the issue details page, showing what the main thread was doing at the time of the ANR. This is independent of the JVM-based ANR detection (which is always on by default) and of UI/transaction profiling configured via `profilesSampleRate`.
+
+<Alert>
+
+ANR profiles are powered by the Profiling platform and require a plan with profiling enabled. They're billed as UI Profile Hours. See the [pricing page](https://sentry.io/pricing/) for more details.
+
+</Alert>
+
+ANR profiling is disabled by default. To enable it, set the `anrProfilingSampleRate` option to a value between `0.0` and `1.0`. This controls the probability that a profile is collected for each detected foreground ANR (`0.0` represents 0% while `1.0` represents 100%):
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  anrProfilingSampleRate: 1.0,
+});
+```
+
+To read more about how ANR profiles are captured, check out the `sentry-java` [documentation](/platforms/android/configuration/app-not-respond/#anr-profiling).
+
 ### Pause and Resume App Hang Tracking (iOS only)
 
 Starting with version 8.13.0, you can pause and resume app hang tracking at runtime. This is useful when showing system dialogs (for example, permission prompts) that block the main thread but aren't real app hangs.

@@ -150,6 +150,11 @@ const nextConfig = {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',
     },
+    {
+      source: '/api/aws-lambda-layers/:runtime/:sdkVersion',
+      destination:
+        'https://release-registry.services.sentry.io/aws-lambda-layers/:runtime/:sdkVersion',
+    },
   ],
   sassOptions: {
     silenceDeprecations: ['legacy-js-api'],

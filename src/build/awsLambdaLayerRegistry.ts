@@ -1,22 +1,49 @@
 import {makeFetchCache} from './fetchCache';
 import {BASE_REGISTRY_URL} from './shared';
 
-type LayerData = {
+export type LayerData = {
   account_number: string;
   canonical: string;
+  compatible_runtimes: string[];
   layer_name: string;
-  main_docs_url: string;
-  name: string;
-  regions: Array<{region: string; version: string}>;
-  repo_url: string;
+  regions: Array<{layer_version: string; region: string}>;
+  runtime: string;
   sdk_version: string;
 };
 
-const getLayerMap = makeFetchCache<Record<string, LayerData>>({
-  name: 'aws lambda layers',
-  dataUrl: `${BASE_REGISTRY_URL}/aws-lambda-layers`,
+type SdkVersionMetadata = {
+  compatible_runtimes: string[];
+};
+
+export type SdkVersionIndex = {
+  versions: string[];
+  version_metadata: Record<string, SdkVersionMetadata>;
+};
+
+export const getLayerIndex = makeFetchCache<Record<string, LayerData>>({
+  name: 'layer index',
+  dataUrl: `${BASE_REGISTRY_URL}/aws-lambda-layers/index`,
 });
 
-const awsLambdaRegistry = {getLayerMap};
+const sdkVersionFetchers = new Map<
+  string,
+  ReturnType<typeof makeFetchCache<SdkVersionIndex>>
+>();
 
-export default awsLambdaRegistry;
+export async function getSdkVersionIndex(runtime: string): Promise<SdkVersionIndex> {
+  let fetchSdkVersions = sdkVersionFetchers.get(runtime);
+  if (!fetchSdkVersions) {
+    fetchSdkVersions = makeFetchCache<SdkVersionIndex>({
+      name: `${runtime} layer SDK versions`,
+      dataUrl: `${BASE_REGISTRY_URL}/aws-lambda-layers/${runtime}/versions`,
+    });
+    sdkVersionFetchers.set(runtime, fetchSdkVersions);
+  }
+
+  const versionIndex = await fetchSdkVersions();
+  if (!versionIndex) {
+    throw new Error(`Could not load layer SDK versions for ${runtime}`);
+  }
+
+  return versionIndex;
+}

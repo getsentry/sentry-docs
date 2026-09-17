@@ -16,12 +16,108 @@ Configure your SDK to filter error events by using the <PlatformIdentifier name=
 
 ### Using <PlatformIdentifier name="before-send" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `null`, based on custom logic and the data available on the event.
+All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event's data or drop it completely by returning `null`, based on custom logic and the data available on the event.
 
 <PlatformContent includePath="configuration/before-send/" />
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/issues/issue-details/breadcrumbs/).
 
+#### Event Hints
+
+If you need access to the original error, exception, or attachments that produced an event, use `beforeSendWithHint` instead of `beforeSend`. When `beforeSendWithHint` is configured, it is called **instead of** `beforeSend`. The callback receives both the `event` and a `hint` that holds additional context.
+
+Typically, a `hint` holds the original exception so that additional data can be extracted or grouping is affected. In this example, the event is dropped if the original error belongs to a domain you want to ignore:
+
+<PlatformContent includePath="configuration/before-send-hint" />
+
+<Alert>
+
+Hints are available in Sentry Cocoa SDK version `9.28.0` and above.
+
+`beforeSendWithHint` and `beforeBreadcrumbWithHint` are transitional APIs. In the next major version, the hint parameter will be added to `beforeSend` and `beforeBreadcrumb` directly.
+
+</Alert>
+
+When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from an `NSError` or `NSException` instance. For better customization, the SDK sends these objects to certain callbacks (`beforeSendWithHint`, `beforeBreadcrumbWithHint`).
+
+### Using Hints
+
+Hints are available in two places:
+
+1. `beforeSendWithHint` / `beforeBreadcrumbWithHint`
+2. The `hint` parameter on `SentrySDK.capture` methods
+
+Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
+
+For events, hints contain properties such as `originalError`, `originalException`, and `attachments` (the list of attachments that will be sent with the event, including screenshots and view hierarchies when enabled).
+
+For breadcrumbs, hints contain the `urlRequest` and `httpResponse` when the breadcrumb originates from a network operation.
+
+#### Hints for Events
+
+`originalError`
+
+The original `Error` (typically an `NSError`) that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+
+`originalException`
+
+The original `NSException` that caused the Sentry SDK to create the event.
+
+`attachments`
+
+The attachments that will be sent alongside the event. The SDK pre-populates this list (including screenshots and view hierarchies when enabled) before the callback runs. You can add or remove attachments by modifying this array.
+
+#### Hints for Breadcrumbs
+
+Similarly, when `beforeBreadcrumbWithHint` is configured, it is called **instead of** `beforeBreadcrumb`.
+
+<PlatformContent includePath="configuration/breadcrumb-hints" />
+
+#### Custom Hint Values
+
+You can store arbitrary key-value data on a hint using `setHintValue(_:forKey:)` and `hintValue(forKey:)`. This is useful when passing hints through the capture methods:
+
+```swift {tabTitle:Swift}
+let hint = Hint()
+hint.setHintValue("custom-data", forKey: "myKey")
+
+SentrySDK.capture(event: event, hint: hint)
+```
+
+```objc {tabTitle:Objective-C}
+SentryHint *hint = [[SentryHint alloc] init];
+[hint setHintValue:@"custom-data" forKey:@"myKey"];
+
+[SentrySDK captureEvent:event withScope:SentrySDK.currentHub.scope hint:hint];
+```
+
+#### Passing Hints to Capture Methods
+
+All public capture methods on `SentrySDK` accept an optional `hint` parameter. The hint is passed through to `beforeSendWithHint`, allowing you to forward contextual information from the capture site to the callback:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+// Capture an error with a hint
+let hint = Hint(error: myError)
+hint.setHintValue("checkout-flow", forKey: "source")
+SentrySDK.capture(error: myError, hint: hint)
+
+// Capture an event with a hint
+SentrySDK.capture(event: event, hint: hint)
+
+// Capture an exception with a hint
+SentrySDK.capture(exception: myException, hint: Hint(exception: myException))
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+// Capture an error with a hint
+SentryHint *hint = [[SentryHint alloc] initWithError:myError];
+[hint setHintValue:@"checkout-flow" forKey:@"source"];
+[SentrySDK captureError:myError withScope:SentrySDK.currentHub.scope hint:hint];
+```
 
 ## Filtering Spans
 
