@@ -45,35 +45,50 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      - name: Build docs
+        run: pnpm build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: pnpm build:developer-docs
+      - name: Lint docs for 404s
+        if: steps.filter.outputs.docs == 'true'
+        run: |
+          pnpm start &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for _ in {1..60}; do
+            curl --silent --fail http://localhost:3000/sitemap.xml >/dev/null && break
+            kill -0 "$server_pid"
+            sleep 1
+          done
+          curl --silent --fail http://localhost:3000/sitemap.xml >/dev/null
+          npx tsx ./scripts/lint-404s/main.ts
+        env:
+          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+
+      - name: Build developer docs
+        run: pnpm build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - name: Start Http Server
-        run: pnpm start &
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+      - name: Lint developer docs for 404s
+        if: steps.filter.outputs.dev-docs == 'true'
+        run: |
+          pnpm start &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for _ in {1..60}; do
+            curl --silent --fail http://localhost:3000/sitemap.xml >/dev/null && break
+            kill -0 "$server_pid"
+            sleep 1
+          done
+          curl --silent --fail http://localhost:3000/sitemap.xml >/dev/null
+          npx tsx ./scripts/lint-404s/main.ts --internal-hostname develop.sentry.dev
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-
-      - name: Lint 404s
-        run: |
-          if [[ "${{ steps.filter.outputs.dev-docs }}" == "true" ]]; then
-            npx tsx ./scripts/lint-404s/main.ts --internal-hostname develop.sentry.dev
-          else
-            npx tsx ./scripts/lint-404s/main.ts
-          fi
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
-
-      - name: Kill Http Server
-        run: kill $(lsof -t -i:3000) || true
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
-        continue-on-error: true
