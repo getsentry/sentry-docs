@@ -588,6 +588,34 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/custom-setup/',
+    destination:
+      '/platforms/javascript/guides/:guide/opentelemetry/#run-your-own-opentelemetry-pipeline',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/custom-setup.md',
+    destination: '/platforms/javascript/guides/:guide/opentelemetry.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/using-opentelemetry-apis/',
+    destination:
+      '/platforms/javascript/guides/:guide/opentelemetry/#capture-spans-from-opentelemetry-apis',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/using-opentelemetry-apis.md',
+    destination: '/platforms/javascript/guides/:guide/opentelemetry.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/integration/',
+    destination:
+      '/platforms/javascript/guides/:guide/opentelemetry/#api-reference',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
+    destination: '/platforms/javascript/guides/:guide/opentelemetry.md',
+  },
+
   // Guides → Get Started restructure
   {
     source: '/guides/',
