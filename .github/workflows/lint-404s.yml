@@ -57,7 +57,16 @@ jobs:
         run: |
           pnpm start &
           server_pid=$!
-          trap 'kill "$server_pid" || true' EXIT
+          cleanup() {
+            port_pids="$(lsof -t -i:3000 || true)"
+            if [[ -n "$port_pids" ]]; then
+              kill $port_pids || true
+            fi
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+            ! lsof -t -i:3000 >/dev/null
+          }
+          trap cleanup EXIT
           for _ in {1..60}; do
             curl --silent --fail http://localhost:3000/sitemap.xml >/dev/null && break
             kill -0 "$server_pid"
@@ -81,7 +90,16 @@ jobs:
         run: |
           pnpm start &
           server_pid=$!
-          trap 'kill "$server_pid" || true' EXIT
+          cleanup() {
+            port_pids="$(lsof -t -i:3000 || true)"
+            if [[ -n "$port_pids" ]]; then
+              kill $port_pids || true
+            fi
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+            ! lsof -t -i:3000 >/dev/null
+          }
+          trap cleanup EXIT
           for _ in {1..60}; do
             curl --silent --fail http://localhost:3000/sitemap.xml >/dev/null && break
             kill -0 "$server_pid"
