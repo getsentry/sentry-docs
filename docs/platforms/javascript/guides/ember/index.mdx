@@ -51,16 +51,16 @@ Choose the features you want to configure, and this guide will show you how:
 <SplitSection>
 <SplitSectionText>
 
-Configuration should happen as early as possible in your application's lifecycle. Add the following to your `app/app.js` file:
+Call `Sentry.init()` in `app/app.ts` before defining your `Application` class. Replace `my-app` in the config import with your application's module prefix.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename:app.js}
+```typescript {filename:app/app.ts}
 import Application from "@ember/application";
 import Resolver from "ember-resolver";
 import loadInitializers from "ember-load-initializers";
-import config from "./config/environment";
+import config from "my-app/config/environment";
 
 import * as Sentry from "@sentry/ember";
 
@@ -103,11 +103,45 @@ export default class App extends Application {
   podModulePrefix = config.podModulePrefix;
   Resolver = Resolver;
 }
+
+loadInitializers(App, config.modulePrefix);
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+<OnboardingOption optionId="performance">
+
+### Enable Performance Instrumentation
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To capture page loads, navigation, classic component renders, and runloop timings, create an instance initializer that calls `instrumentAppInstancePerformance()`. The `tracesSampleRate` option in `Sentry.init()` controls how much tracing data Sentry captures.
+
+The SDK skips this instrumentation during FastBoot server rendering. To customize it, see <PlatformLink to="/configuration/ember-options/">Ember Options</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:app/instance-initializers/sentry-performance.ts}
+import type ApplicationInstance from "@ember/application/instance";
+import { instrumentAppInstancePerformance } from "@sentry/ember";
+
+export function initialize(appInstance: ApplicationInstance): void {
+  instrumentAppInstancePerformance(appInstance);
+}
+
+export default { initialize };
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
