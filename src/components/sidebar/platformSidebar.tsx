@@ -145,17 +145,17 @@ export function PlatformSidebar({
   const standaloneGuideAgentTracingAliases =
     platformName !== 'javascript' || !agentTracingNode
       ? []
-      : STANDALONE_AGENT_TRACING_GUIDES.filter(({guide}) => guide !== guideName).map(
-          ({guide, slug, title, sidebar_order}) => ({
-            context: {
-              platform: {platformName},
-              title,
-              sidebar_order,
-              href: `/platforms/javascript/guides/${guide}/`,
-            },
-            path: `/${pathRoot}/agent-tracing/${slug}/`,
-          })
-        );
+      : STANDALONE_AGENT_TRACING_GUIDES.filter(
+          guideData => guideData.guide !== guideName
+        ).map(guideData => ({
+          context: {
+            platform: {platformName},
+            title: guideData.title,
+            sidebar_order: guideData.sidebar_order,
+            href: `/platforms/javascript/guides/${guideData.guide}/`,
+          },
+          path: `/${pathRoot}/agent-tracing/${guideData.slug}/`,
+        }));
 
   const tree = toTree(
     [
