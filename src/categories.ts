@@ -20,3 +20,13 @@ export function hasServerCategory(categories?: PlatformCategory[] | null): boole
 export function hasBrowserCategory(categories?: PlatformCategory[] | null): boolean {
   return !!categories?.includes('browser');
 }
+
+/** Whether the platform/guide runs exclusively in the browser (no server side). */
+export function isBrowserOnly(categories?: PlatformCategory[] | null): boolean {
+  return !!categories?.includes('browser-only');
+}
+
+/** Whether the platform/guide runs exclusively on a server (no browser side). */
+export function isServerOnly(categories?: PlatformCategory[] | null): boolean {
+  return !!categories?.includes('server-only');
+}
