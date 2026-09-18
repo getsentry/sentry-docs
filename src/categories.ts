@@ -12,15 +12,11 @@ import {PlatformCategory} from './types';
  */
 
 /** Whether the categories include a server-side runtime (`server` or `serverless`). */
-export function hasServerCategory(
-  categories?: PlatformCategory[] | null
-): boolean {
+export function hasServerCategory(categories?: PlatformCategory[] | null): boolean {
   return !!categories?.some(c => c === 'server' || c === 'serverless');
 }
 
 /** Whether the categories include the browser runtime. */
-export function hasBrowserCategory(
-  categories?: PlatformCategory[] | null
-): boolean {
+export function hasBrowserCategory(categories?: PlatformCategory[] | null): boolean {
   return !!categories?.includes('browser');
 }
