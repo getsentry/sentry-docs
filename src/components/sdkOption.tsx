@@ -1,3 +1,4 @@
+import {hasBrowserCategory, hasServerCategory} from 'sentry-docs/categories';
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
@@ -31,9 +32,7 @@ export function SdkOption({
   const shouldShowEnvVar = () => {
     if (!currentPlatformOrGuide) return false;
 
-    const isServerPlatform =
-      currentPlatformOrGuide.categories?.includes('server') ||
-      currentPlatformOrGuide.categories?.includes('serverless');
+    const isServerPlatform = hasServerCategory(currentPlatformOrGuide.categories);
 
     const isExcludedPlatform =
       currentPlatformOrGuide.key === 'javascript.nextjs' ||
@@ -91,25 +90,16 @@ export function getPlatformHints(categorySupported: PlatformCategory[]) {
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
 
-  // We only handle browser, server & serverless here for now
-  const currentIsBrowser = currentCategories.includes('browser');
-  const currentIsServer = currentCategories.includes('server');
-  const currentIsServerless = currentCategories.includes('serverless');
-  const currentIsServerLike = currentIsServer || currentIsServerless;
-
   const hasCategorySupported = categorySupported.length > 0;
   const supportedBrowserOnly =
-    categorySupported.includes('browser') &&
-    !categorySupported.includes('server') &&
-    !categorySupported.includes('serverless');
+    hasBrowserCategory(categorySupported) && !hasServerCategory(categorySupported);
   const supportedServerLikeOnly =
-    !categorySupported.includes('browser') &&
-    (categorySupported.includes('server') || categorySupported.includes('serverless'));
+    !hasBrowserCategory(categorySupported) && hasServerCategory(categorySupported);
 
   const showBrowserOnly =
-    hasCategorySupported && supportedBrowserOnly && currentIsServerLike;
+    hasCategorySupported && supportedBrowserOnly && hasServerCategory(currentCategories);
   const showServerLikeOnly =
-    hasCategorySupported && supportedServerLikeOnly && currentIsBrowser;
+    hasCategorySupported && supportedServerLikeOnly && hasBrowserCategory(currentCategories);
 
   return {showBrowserOnly, showServerLikeOnly};
 }
