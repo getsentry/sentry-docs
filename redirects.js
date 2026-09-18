@@ -588,6 +588,11 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  // Connect guide removed (SDK no longer supports Connect) → Node
+  {
+    source: '/platforms/javascript/guides/connect/:path*',
+    destination: '/platforms/javascript/guides/node/:path*',
+  },
   // Guides → Get Started restructure
   {
     source: '/guides/',
