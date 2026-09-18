@@ -167,9 +167,9 @@ The registry polls meters that only expose their current or cumulative value eve
 | `FunctionTimer` count           | Positive counter delta                 | `${exportedName}.count`      |
 | `FunctionTimer` total time      | Positive counter delta in milliseconds | `${exportedName}.total_time` |
 
-The first successful poll of a function meter establishes its baseline and sends nothing. Later polls send positive changes. A lower value indicates that the meter reset and establishes a new baseline.
+The first successful finite poll establishes a function meter's baseline and sends nothing. For `FunctionTimer`, count and total time are polled and baselined independently. Later polls send positive deltas for each value. If a value decreases, the integration treats it as a reset and establishes a new baseline without sending a delta.
 
-`FunctionTimer` doesn't expose individual durations, so the integration can't produce a distribution or percentiles for it. To calculate a weighted mean, divide the sum of `${exportedName}.total_time` by the sum of `${exportedName}.count`.
+`FunctionTimer` doesn't expose individual durations, so the integration can't produce a distribution or percentiles. Count and total-time deltas can cover different polling windows after a failed or non-finite read or an independent reset, so they can't always be combined to calculate a reliable mean.
 
 ## Configure Polling
 
