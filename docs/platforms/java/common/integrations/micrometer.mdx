@@ -141,35 +141,35 @@ class CheckoutMetrics(private val registry: MeterRegistry) {
 }
 ```
 
-Call `recordCompletedOrder`, then open [Metrics in Sentry](/product/metrics/) and query for `checkout.completed`. The default naming convention preserves dot-separated metric names. The `payment_method` tag is available as a metric attribute.
+Call `recordCompletedOrder`, then open [Metrics in Sentry](/product/metrics/) and query for `checkout.completed`. The default naming convention preserves metric names exactly as written. For example, `server.request_url` is exported as `server.request_url`. The `payment_method` tag is available as a metric attribute.
 
 ## Metric Mappings
 
-The registry applies its configured Micrometer `NamingConvention` to metric names, tag keys, and tag values. It defaults to `NamingConvention.dot`, which preserves names as written. You can configure another naming convention on `SentryMeterRegistry` without affecting other registries.
+The registry applies its configured Micrometer `NamingConvention` to metric names, tag keys, and tag values. It defaults to `NamingConvention.identity`, which doesn't replace or normalize any characters. You can configure another naming convention on `SentryMeterRegistry` without affecting other registries.
 
 The registry forwards active meters when your application records them:
 
-| Micrometer Meter      | Sentry Metric                | Name           |
-| --------------------- | ---------------------------- | -------------- |
-| `Counter`             | Counter increment            | Converted name |
-| `Timer`               | Distribution in milliseconds | Converted name |
-| `DistributionSummary` | Distribution                 | Converted name |
+| Micrometer Meter      | Sentry Metric                | Name          |
+| --------------------- | ---------------------------- | ------------- |
+| `Counter`             | Counter increment            | Exported name |
+| `Timer`               | Distribution in milliseconds | Exported name |
+| `DistributionSummary` | Distribution                 | Exported name |
 
 The registry polls meters that only expose their current or cumulative value every 60 seconds by default:
 
-| Micrometer Meter                | Sentry Metric                          | Name                          |
-| ------------------------------- | -------------------------------------- | ----------------------------- |
-| `Gauge`                         | Gauge                                  | Converted name                |
-| `TimeGauge`                     | Gauge in milliseconds                  | Converted name                |
-| `LongTaskTimer` active tasks    | Gauge                                  | `${convertedName}.active`     |
-| `LongTaskTimer` active duration | Gauge in milliseconds                  | `${convertedName}.duration`   |
-| `FunctionCounter`               | Positive counter delta                 | Converted name                |
-| `FunctionTimer` count           | Positive counter delta                 | `${convertedName}.count`      |
-| `FunctionTimer` total time      | Positive counter delta in milliseconds | `${convertedName}.total_time` |
+| Micrometer Meter                | Sentry Metric                          | Name                         |
+| ------------------------------- | -------------------------------------- | ---------------------------- |
+| `Gauge`                         | Gauge                                  | Exported name                |
+| `TimeGauge`                     | Gauge in milliseconds                  | Exported name                |
+| `LongTaskTimer` active tasks    | Gauge                                  | `${exportedName}.active`     |
+| `LongTaskTimer` active duration | Gauge in milliseconds                  | `${exportedName}.duration`   |
+| `FunctionCounter`               | Positive counter delta                 | Exported name                |
+| `FunctionTimer` count           | Positive counter delta                 | `${exportedName}.count`      |
+| `FunctionTimer` total time      | Positive counter delta in milliseconds | `${exportedName}.total_time` |
 
 The first successful poll of a function meter establishes its baseline and sends nothing. Later polls send positive changes. A lower value indicates that the meter reset and establishes a new baseline.
 
-`FunctionTimer` doesn't expose individual durations, so the integration can't produce a distribution or percentiles for it. To calculate a weighted mean, divide the sum of `${convertedName}.total_time` by the sum of `${convertedName}.count`.
+`FunctionTimer` doesn't expose individual durations, so the integration can't produce a distribution or percentiles for it. To calculate a weighted mean, divide the sum of `${exportedName}.total_time` by the sum of `${exportedName}.count`.
 
 ## Configure Polling
 
