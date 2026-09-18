@@ -23,6 +23,8 @@ This guide covers the Sentry SDK-based setup, which replaces the earlier `@mastr
 
 </Alert>
 
+Running Mastra on Cloudflare Workers? Follow the [Cloudflare Quick Start](./cloudflare/) instead.
+
 ## Prerequisites
 
 Before you begin, you need:
@@ -30,7 +32,7 @@ Before you begin, you need:
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
 - A Mastra application using `@mastra/core` version `1.63.2` or later.
 - `@mastra/observability`. Sentry's Mastra integration needs it to attach to Mastra's telemetry pipeline.
-- `@sentry/node` (or `@sentry/cloudflare`) version `11.0.0-rc.0` or later. The SDK runs in Node.js and on Cloudflare Workers; it doesn't support browser runtimes.
+- `@sentry/node` version `11.0.0-rc.0` or later. The SDK runs in Node.js; it doesn't support browser runtimes.
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -79,67 +81,11 @@ pnpm add @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0 @mastra/o
 
 If Mastra can't load `@mastra/observability`, the integration warns and creates no spans.
 
-<Expandable title="Set up on Cloudflare Workers instead">
-
-To run Mastra on Cloudflare Workers, use `@sentry/cloudflare` in place of `@sentry/node`. Profiling (`@sentry/profiling-node`) isn't available on Workers, so the profiling option doesn't apply to this setup.
-
-Install the packages:
-
-```bash {tabTitle:npm}
-npm install @sentry/cloudflare@^11.0.0-rc.0 @mastra/observability@latest
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/cloudflare@^11.0.0-rc.0 @mastra/observability@latest
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/cloudflare@^11.0.0-rc.0 @mastra/observability@latest
-```
-
-Add the Sentry Vite plugin to your Vite config. It wraps your Worker entry with Sentry at build time:
-
-```typescript {filename:vite.config.mts}
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
-});
-```
-
-Create an `instrument.server.ts` file next to your Worker entry (the file named in wrangler's `main`). The plugin picks it up by convention and uses its default export as the Sentry options:
-
-```typescript {filename:src/instrument.server.ts}
-export default (env: Env) => ({
-  dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-  // We recommend adjusting this value in production.
-  tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-});
-```
-
-Enable Node.js compatibility in your `wrangler.toml` so Mastra and the SDK can run on Workers:
-
-```toml {filename:wrangler.toml}
-main = "src/index.ts"
-compatibility_date = "2026-04-26"
-compatibility_flags = ["nodejs_compat"]
-```
-
-With the plugin in place, `Sentry.init()` runs automatically — you don't add an instrument file or `--import` flag as you do for Node. Continue to [Verify](#verify).
-
-</Expandable>
-
 ## Configure
 
 Create an instrument file that calls `Sentry.init()`, and preload it so Sentry starts before Mastra and the AI SDK load.
 
-Place the file in your Mastra `public/` directory. `mastra build` copies `public/` into the build output, so the file lands next to the compiled server as `instrument.mjs`, where `--import=./instrument.mjs` can resolve it:
+Place the file in your Mastra `public/` directory. `mastra build` and `mastra dev` copy `public/` into the build output, so the file lands next to the compiled server as `instrument.mjs`, where `--import=./instrument.mjs` can resolve it:
 
 ```javascript {filename:src/mastra/public/instrument.mjs}
 import * as Sentry from "@sentry/node";
@@ -218,7 +164,9 @@ Sentry.init({
 
 ## Link Conversations
 
-To group a multi-turn chat into a single [Conversation](/product/agents/conversations/) in the Agents dashboards, pass a stable thread id when you call an agent. Mastra maps the memory thread id to `gen_ai.conversation.id`, so every run that shares a thread id groups into one conversation:
+Sentry groups a multi-turn chat into a single [Conversation](/product/agents/conversations/) automatically — there's no Sentry-specific setup. Mastra maps its memory thread id to `gen_ai.conversation.id`, so agent runs that share a thread id group into one conversation.
+
+Threads come from Mastra's own memory feature. If your app already passes a thread when it calls an agent — as multi-turn chat apps do — Sentry picks it up as the conversation id with no extra work:
 
 ```typescript
 const result = await agent.generate(message, {
