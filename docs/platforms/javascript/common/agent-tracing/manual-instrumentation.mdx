@@ -268,26 +268,6 @@ Child `gen_ai.chat` and `gen_ai.execute_tool` spans should also set `gen_ai.agen
   <Include name="tracing/ai-agents-module/invoke-agent-span" />
 </Expandable>
 
-## Handoff Span
-
-Use a `gen_ai.handoff` span when one agent delegates control to another agent. Start the span around the delegation so the receiving agent's `gen_ai.invoke_agent` span becomes its child.
-
-```javascript
-await Sentry.startSpan(
-  {
-    op: "gen_ai.handoff",
-    name: "handoff Refund Agent",
-    attributes: {
-      "gen_ai.operation.name": "handoff",
-      "gen_ai.agent.name": "Refund Agent",
-    },
-  },
-  () => refundAgent.run(billingContext)
-);
-```
-
-Use `gen_ai.agent.name` for the receiving agent. Keep the sending agent's `gen_ai.invoke_agent` span active as the parent of the handoff so the trace shows where the delegation started.
-
 ## Execute Tool Span
 
 This span represents the execution of a tool or function that was requested by an AI model, including the input arguments and resulting output.
