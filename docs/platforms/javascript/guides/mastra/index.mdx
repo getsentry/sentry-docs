@@ -134,22 +134,9 @@ Preload the instrument file when you start Mastra by passing it through `--custo
 
 With this setup, Sentry captures errors thrown by your agents and AI spans for every run (agent runs, model generations, tool calls, workflows, token usage, and latency) along with outgoing HTTP and `fetch` requests. Prompts and model outputs are recorded on your AI spans by default.
 
-To review what's captured and turn recording of prompts and responses off, see [Privacy Controls](#privacy-controls).
+To review what's captured and turn recording of prompts and responses off, see [Privacy Controls](#privacy-controls) below.
 
-## Verify
-
-Run one of your Mastra agents, then open [Agent Tracing](/product/agents/) in Sentry and select the run. The timeline shows the model generations, tool calls, token usage, and latency for that run, plus any errors your agent threw.
-
-If no data appears, confirm that:
-
-- The `dsn` belongs to the Sentry project you're viewing.
-- `tracesSampleRate` is greater than `0`.
-- `@mastra/observability` is installed, so the integration can attach to Mastra's telemetry.
-- Your application completed at least one agent run after you added the setup.
-
-</StepConnector>
-
-## Privacy Controls
+### Privacy Controls
 
 The SDK will record generative AI inputs and outputs (the prompts your agent sends and the model responses it receives) by default. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
 
@@ -164,7 +151,7 @@ Sentry.init({
 
 See [`dataCollection` documentation](./configuration/options/#dataCollection) for details on privacy control options.
 
-## Link Conversations
+### Link Conversations
 
 Sentry groups a multi-turn chat into a single [Conversation](/product/agents/conversations/) automatically — there's no Sentry-specific setup. Mastra maps its memory thread id to `gen_ai.conversation.id`, so agent runs that share a thread id group into one conversation.
 
@@ -180,6 +167,19 @@ const result = await agent.generate(message, {
 ```
 
 Your agent needs a storage provider configured before Mastra accepts the `memory` option. Reuse the same thread id across the messages in a session.
+
+## Verify
+
+Run one of your Mastra agents, then open [Agent Tracing](/product/agents/) in Sentry and select the run. The timeline shows the model generations, tool calls, token usage, and latency for that run, plus any errors your agent threw.
+
+If no data appears, confirm that:
+
+- The `dsn` belongs to the Sentry project you're viewing.
+- `tracesSampleRate` is greater than `0`.
+- `@mastra/observability` is installed, so the integration can attach to Mastra's telemetry.
+- Your application completed at least one agent run after you added the setup.
+
+</StepConnector>
 
 ## Next Steps
 
