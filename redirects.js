@@ -444,7 +444,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/backend/cross-region-replication/',
-    destination: '/application-architecture/multi-region-deployment/cross-region-replication/',
+    destination:
+      '/application-architecture/multi-region-deployment/cross-region-replication/',
   },
   {
     source: '/backend/cross-region-rpc/',
@@ -1047,6 +1048,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/arg0-app/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/toolbar/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1243,6 +1248,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1449,7 +1458,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
-    destination: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
+    destination:
+      '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     source: '/product/sentry-basics/integrate-frontend/generate-first-error/',
@@ -1457,7 +1467,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
-    destination: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
+    destination:
+      '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     source: '/product/sentry-basics/integrate-frontend/configure-scms/',
@@ -2104,13 +2115,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
-    destination:
-      '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/expo-updates/',
-    destination:
-      '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/gradle/',
@@ -2161,7 +2170,7 @@ const userDocsRedirects = [
     source: '/ai/sentry-cli/',
     destination: 'https://cli.sentry.dev',
   },
-   // Redirects for Insights → Product Agents migration
+  // Redirects for Insights → Product Agents migration
   {
     source: '/product/insights/llm-monitoring/',
     destination: '/product/agents/',
@@ -2307,23 +2316,19 @@ const userDocsRedirects = [
   // Cloudflare AI pages moved from Features to Agent Tracing.
   {
     source: '/platforms/javascript/guides/cloudflare/features/agents-sdk.md',
-    destination:
-      '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk.md',
+    destination: '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk.md',
   },
   {
-    source:
-      '/platforms/javascript/guides/cloudflare/features/agents-sdk/:path*',
+    source: '/platforms/javascript/guides/cloudflare/features/agents-sdk/:path*',
     destination:
       '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/:path*',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/features/workers-ai.md',
-    destination:
-      '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai.md',
+    destination: '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai.md',
   },
   {
-    source:
-      '/platforms/javascript/guides/cloudflare/features/workers-ai/:path*',
+    source: '/platforms/javascript/guides/cloudflare/features/workers-ai/:path*',
     destination:
       '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/:path*',
   },
@@ -2338,15 +2343,13 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/agent-tracing/mastra/:path*',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
     destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/mastra.md',
@@ -2361,10 +2364,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra.md',
@@ -2379,10 +2380,52 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
   },
   {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+  },
+  // Eve lifted from the Agent Tracing integration page to a standalone guide
+  {
+    source: '/platforms/javascript/agent-tracing/eve.md',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/eve/:path*',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/eve.md',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/eve/:path*',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  // Browser and mobile Agent Tracing pages now point to the Node.js guides.
+  {
+    source: '/platforms/javascript/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
+  },
+  {
     source:
-      '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+      '/platforms/javascript/guides/:guide(angular|electron|ember|gatsby|react|solid|svelte|vue)/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|electron|ember|gatsby|react|solid|svelte|vue)/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/react-native/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   // Agent Tracing moved to top-level feature
   // Python AI library pages moved from integrations to agent-tracing
@@ -2488,7 +2531,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/agent-tracing/google-genai/',
   },
   {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
     destination: '/platforms/javascript/guides/:guide/agent-tracing/google-genai/',
   },
   {
@@ -2536,7 +2580,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/ai-agents-module/:path*',
-    destination: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source:
@@ -2634,7 +2678,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/:path*',
-    destination: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring-browser/',
@@ -2658,15 +2702,15 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/react-native/ai-agent-monitoring/',
-    destination: '/platforms/react-native/agent-tracing/',
+    destination: '/platforms/javascript/guides/node/agent-tracing/',
   },
   {
     source: '/platforms/react-native/ai-agent-monitoring/:path*',
-    destination: '/platforms/react-native/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source: '/platforms/react-native/ai-agent-monitoring.md',
-    destination: '/platforms/react-native/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
   },
   {
     source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
@@ -2691,7 +2735,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/:path*',
-    destination: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing-browser/',
@@ -2715,15 +2759,15 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/react-native/ai-agent-tracing/',
-    destination: '/platforms/react-native/agent-tracing/',
+    destination: '/platforms/javascript/guides/node/agent-tracing/',
   },
   {
     source: '/platforms/react-native/ai-agent-tracing/:path*',
-    destination: '/platforms/react-native/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source: '/platforms/react-native/ai-agent-tracing.md',
-    destination: '/platforms/react-native/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
   },
   {
     source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
