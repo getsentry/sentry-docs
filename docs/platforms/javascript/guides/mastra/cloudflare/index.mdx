@@ -1,0 +1,79 @@
+---
+title: Cloudflare Quick Start
+sidebar_order: 0.5
+description: Learn how to send Mastra agent traces, model calls, tool executions, and errors to Sentry from Cloudflare Workers.
+---
+
+Use this setup when your Mastra application runs on Cloudflare Workers. The Sentry Vite plugin wraps your Worker entry at build time and initializes the SDK before Mastra loads.
+
+Before you begin, you need `@mastra/core` version `1.63.2` or later.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Install the Sentry Cloudflare SDK and Mastra's observability package:
+
+```bash {tabTitle:npm}
+npm install @sentry/cloudflare@^11.0.0-rc.0 @mastra/observability@latest
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cloudflare@^11.0.0-rc.0 @mastra/observability@latest
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cloudflare@^11.0.0-rc.0 @mastra/observability@latest
+```
+
+Sentry's Mastra integration needs `@mastra/observability` so it can attach its exporter to Mastra's telemetry pipeline. If Mastra can't load it, the integration warns and creates no spans.
+
+## Configure
+
+Add the Sentry Vite plugin to your Vite config. It wraps your Worker entry with Sentry at build time:
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+Create an `instrument.server.ts` file next to your Worker entry (the file named in Wrangler's `main`). The plugin picks it up by convention and uses its default export as the Sentry options:
+
+```typescript {filename:src/instrument.server.ts}
+export default (env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+});
+```
+
+Enable Node.js compatibility in `wrangler.toml` so Mastra and the SDK can run on Workers:
+
+```toml {filename:wrangler.toml}
+main = "src/index.ts"
+compatibility_date = "2026-04-26"
+compatibility_flags = ["nodejs_compat"]
+```
+
+With the plugin in place, `Sentry.init()` runs automatically. You don't need to add an instrument file or `--import` flag as you do for Node.js.
+
+## Verify
+
+Run one of your Mastra agents, then open [Agent Tracing](/product/agents/) in Sentry and select the run. The timeline shows the model generations, tool calls, token usage, and latency for that run, plus any errors your agent threw.
+
+If no data appears, confirm that:
+
+- The `dsn` belongs to the Sentry project you're viewing.
+- `tracesSampleRate` is greater than `0`.
+- `@mastra/observability` is installed.
+- Your application completed at least one agent run after you added the setup.
+
+</StepConnector>
+
+For privacy controls, conversation linking, and supported versions, return to the [default Mastra Quick Start](../).
