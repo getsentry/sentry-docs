@@ -14,6 +14,7 @@ import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createInsightsClient} from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {safeLocalStorage} from 'sentry-docs/lib/localStorage';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 import {MagicIcon} from '../cutomIcons/magic';
@@ -136,9 +137,9 @@ export function Search({
     const isSdkAgnosticPath = SDK_AGNOSTIC_PATH_PREFIXES.some(prefix =>
       pathname?.startsWith(prefix)
     );
-    const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
+    const storedPlatforms = safeLocalStorage.getItem(STORAGE_KEY) ?? '[]';
     if (!storedPlatforms) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
     } else if (
       storedPlatforms &&
       searchPlatforms.length === 0 &&
@@ -156,7 +157,7 @@ export function Search({
   // Update stored platforms when they change
   useEffect(() => {
     if (searchPlatforms.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
       setCurrentSearchPlatforms(searchPlatforms);
     }
   }, [searchPlatforms]);
