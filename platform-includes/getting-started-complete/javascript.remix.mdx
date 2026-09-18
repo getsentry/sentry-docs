@@ -186,8 +186,8 @@ Sentry.init({
   profileSessionSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ profiling
 
-  // Optionally capture action formData attributes with errors.
-  // This requires `sendDefaultPii` set to true as well.
+  // Optionally limit which action formData fields are captured.
+  // Without this option, all fields are captured.
   captureActionFormDataKeys: {
     key_x: true,
     key_y: true,
@@ -208,8 +208,6 @@ Then run your Remix server using the `--import` command line option and point it
 
 ```bash
 NODE_OPTIONS='--import=./instrument.server.mjs' remix-serve build
-# or
-NODE_OPTIONS='--require=./instrument.server.cjs' remix-serve build
 ```
 
 </SplitSectionCode>
@@ -227,10 +225,9 @@ If you use the Express server instead of the built-in Remix server, you can impo
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename: server.(mjs|cjs)}
+```typescript {filename: server.mjs}
 // import the Sentry instrumentation file before anything else.
 import "./instrument.server.mjs";
-// alternatively `require('./instrument.server.cjs')`
 
 // ...
 
@@ -248,6 +245,59 @@ const app = express();
 </ PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Create a Worker entry file, for example `server.ts` in your project's root folder, and set it as `main` in your wrangler config.
+
+In this file, instrument your Remix server build with `instrumentBuild` from `@sentry/remix/cloudflare`, pass it to `createRequestHandler`, and wrap the exported handler with `Sentry.withSentry()` from `@sentry/cloudflare`. `withSentry` isolates each request, so scope data like tags and users stays on the request that set it.
+
+<Alert level="warning">
+
+Don't also wrap `createRequestHandler` with `makeWrappedCreateRequestHandler`. Combined with `withSentry`, it reports every request twice, as two `http.server` transactions in two different traces.
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:server.ts}
+import { createRequestHandler } from "@remix-run/cloudflare";
+import * as Sentry from "@sentry/cloudflare";
+import { instrumentBuild } from "@sentry/remix/cloudflare";
+// The server build produced by `remix vite:build`
+import * as remixBuild from "./build/server/index.js";
+
+const handleRequest = createRequestHandler(instrumentBuild(remixBuild));
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+  }),
+  {
+    async fetch(request, env, ctx) {
+      return handleRequest(request, { env, ctx });
+    },
+  }
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<Expandable title="Deploying to Cloudflare Pages?">
 
 <SplitLayout>
 <SplitSection>
@@ -276,8 +326,8 @@ export const onRequest = [
     tracesSampleRate: 1.0,
     // ___PRODUCT_OPTION_END___ performance
 
-    // Optionally capture action formData attributes with errors.
-    // This requires `sendDefaultPii` set to true as well.
+    // Optionally limit which action formData fields are captured.
+    // Without this option, all fields are captured.
     captureActionFormDataKeys: {
       key_x: true,
       key_y: true,
@@ -291,15 +341,22 @@ export const onRequest = [
 </SplitSection>
 </SplitLayout>
 
+</Expandable>
+
 </ PlatformSection>
 
 ### Capture Server-Side Errors
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-To automatically capture server-side errors, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point (`entry.server.tsx`). You can wrap your custom error handler with `wrapHandleErrorWithSentry` or directly use `sentryHandleError`:
+To automatically capture server-side errors, export a [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function from your server entry point (`entry.server.tsx`). Choose one of the two options:
+
+- Wrap your custom error handler with `wrapHandleErrorWithSentry`.
+- Use `sentryHandleError` directly if you don't have a custom error handler.
 
 <Alert level="success" title="Tip">
 
@@ -310,7 +367,7 @@ Sentry's Remix SDK automatically records your [`action`](https://remix.run/docs/
 </SplitSectionText>
 <SplitSectionCode>
 
-```typescript {filename: entry.server.tsx}
+```typescript {tabTitle:Custom Error Handler} {filename: entry.server.tsx}
 import * as Sentry from "@sentry/remix";
 
 export const handleError = Sentry.wrapHandleErrorWithSentry(
@@ -318,14 +375,48 @@ export const handleError = Sentry.wrapHandleErrorWithSentry(
     // Custom handleError implementation
   }
 );
+```
 
-// Alternative: Use the Sentry utility function if you don't need to wrap a custom function
+```typescript {tabTitle:Default Error Handler} {filename: entry.server.tsx}
+import * as Sentry from "@sentry/remix";
+
 export const handleError = Sentry.sentryHandleError;
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To automatically capture server-side errors, export `sentryHandleError` as the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function from your server entry point (`entry.server.tsx`). Without this export, Remix handles errors thrown in loaders and actions itself, and Sentry doesn't receive them.
+
+<Alert level="warning">
+
+Import from `@sentry/remix/cloudflare`, not from `@sentry/remix`. In a Cloudflare server build, `sentryHandleError` from `@sentry/remix` is `undefined`, and no errors are captured.
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename: entry.server.tsx}
+import { sentryHandleError } from "@sentry/remix/cloudflare";
+
+export const handleError = sentryHandleError;
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
@@ -338,13 +429,114 @@ export const handleError = Sentry.sentryHandleError;
 
 </ PlatformSection>
 
+### Configure Vite
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add `sentryRemixVitePlugin` from `@sentry/remix/vite` to your `vite.config.ts`. The plugin:
+
+- Parameterizes client-side transaction names with your route patterns, for example `/users/:id`.
+- Instruments supported server-side dependencies, such as database clients, at build time.
+
+<Alert title="Not using Vite?">
+
+You can skip this step. Client-side transaction names then use the URL instead of the route pattern.
+
+</Alert>
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:vite.config.ts} {2, 10}
+import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryRemixVitePlugin } from "@sentry/remix/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    remix({
+      // ... your Remix plugin options
+    }),
+    sentryRemixVitePlugin(),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add two Sentry plugins to your `vite.config.ts`, next to the Remix plugin:
+
+- `sentryRemixVitePlugin` from `@sentry/remix/vite` parameterizes transaction names with your route patterns, for example `/users/:id`.
+- `sentryCloudflareVitePlugin` from `@sentry/cloudflare/vite` instruments supported bundled dependencies at build time, so you get spans for database clients like `mysql`. Without it, database calls produce no spans and no warning.
+
+Set `ssr.target` to `webworker` and bundle the Sentry packages and any database client you want traced with `ssr.noExternal`. Setting `noExternal: true` bundles every dependency, which works too.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:vite.config.ts} {2-3, 11-12, 14-17}
+import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { sentryRemixVitePlugin } from "@sentry/remix/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    remix({
+      // ... your Remix plugin options
+    }),
+    sentryRemixVitePlugin(),
+    sentryCloudflareVitePlugin(),
+  ],
+  ssr: {
+    target: "webworker",
+    noExternal: ["mysql", /^@sentry\//, "@opentelemetry/api"],
+  },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Build your app with `remix vite:build`. Under Vite 6, a plain `vite build` only builds the client and skips `build/server`, without an error.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash
+npx remix vite:build
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</PlatformSection>
+
 ### Add Readable Stack Traces With Source Maps (Optional)
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.ts` file:
+To upload source maps for clear error stack traces, install the Sentry Vite plugin:
 
 <Alert title="Not using Vite?">
 
@@ -356,9 +548,33 @@ alternative setup options.
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename:vite.config.ts} {3, 10-17,20-23}
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/vite-plugin --save-dev
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Then add `sentryVitePlugin` with your Sentry auth token, organization, and project slug to your `vite.config.ts` file, and enable source map generation. Keep the plugins from the previous step:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename:vite.config.ts} {4, 13-20, 23-26}
 import { defineConfig } from "vite";
 import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryRemixVitePlugin } from "@sentry/remix/vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 export default defineConfig({
@@ -366,6 +582,8 @@ export default defineConfig({
     remix({
       // ... your Remix plugin options
     }),
+    sentryRemixVitePlugin(),
+    // ... other plugins
     sentryVitePlugin({
       // If you use .sentryclirc or environment variables,
       // you don't need to specify these options
