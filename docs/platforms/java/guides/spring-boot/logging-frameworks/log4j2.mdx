@@ -13,7 +13,9 @@ By default this integration captures logs as breadcrumbs and error events (great
 
 ## Installation
 
-To use Sentry's Log4j 2 integration in Spring Boot application, you must include a dependency to the `sentry-log4j2` module:
+Spring Boot uses Logback by default, so first [follow the guide on configuring Log4j 2 with Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-configure-log4j-for-logging) to make Log4j 2 the active logging backend.
+
+Then, to use Sentry's Log4j 2 integration in Spring Boot application, you must include a dependency to the `sentry-log4j2` module:
 
 ```xml {tabTitle:Maven}
 <dependency>
@@ -49,7 +51,7 @@ For Spring Boot 3 and 4, Sentry can register `SentryAppender` for you once the a
 sentry.logging.enabled=true
 ```
 
-Auto-configuration only runs when Log4j 2 Core is the active logging backend. If Log4j 2 API calls are routed through SLF4J to another backend, such as Logback, the appender isn't added.
+If Log4j 2 isn't the active logging backend, the appender isn't added.
 
 Minimum logging levels for `SentryAppender` can be configured in `application.properties` or `application.yml` file.
 
@@ -76,9 +78,7 @@ Use non-overlapping logger names. Log4j 2 loggers are additive by default, so at
 
 ### XML Configuration
 
-Spring Boot 2 doesn't support `SentryAppender` auto-configuration, and errors logged before the Spring context refreshes aren't captured by it. In both cases, configure the appender yourself and leave `sentry.logging.enabled` unset.
-
-[Follow the guide on configuring Log4j 2 with Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-configure-log4j-for-logging) and configure `SentryAppender` in the `log4j2.xml` file:
+Spring Boot 2 doesn't support `SentryAppender` auto-configuration, and errors logged before the Spring context refreshes aren't captured by it. In both cases, leave `sentry.logging.enabled` unset and configure `SentryAppender` in the `log4j2.xml` file:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
