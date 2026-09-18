@@ -2332,6 +2332,34 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/:path*',
   },
+  // Flue moved from Agent Tracing to its own guide when the SDK-based setup
+  // replaced the `flue add tooling sentry` blueprint.
+  // Map older names directly to the guide to avoid redirect chains. The
+  // Cloudflare page is listed first so its readers keep landing on it.
+  {
+    source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
   // Mastra lives under Agent Tracing alongside the other AI library pages.
   // Map older names directly to avoid redirect chains.
   {

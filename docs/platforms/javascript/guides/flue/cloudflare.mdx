@@ -1,0 +1,148 @@
+---
+title: Cloudflare Quick Start
+sidebar_order: 0.5
+description: Learn how to send Flue agent traces, model calls, tool executions, and errors to Sentry from Cloudflare Workers.
+---
+
+[Flue](https://flueframework.com/) is an open TypeScript framework for building AI agents, made by the Astro team. This guide sets up the Sentry SDK in a Flue app running on Cloudflare Workers so agent turns, model calls, tool executions, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="flue/sdk-setup-alert" />
+
+Running Flue on Node.js? Follow the [Flue Quick Start](../) instead.
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Flue application using `@flue/runtime` version `2.0.0` or later, targeting Cloudflare.
+- `@sentry/cloudflare` version `11.0.0-rc.0` or later.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+  defaults={["performance"]}
+/>
+
+Install the Sentry Cloudflare SDK:
+
+```bash {tabTitle:npm}
+npm install @sentry/cloudflare@^11.0.0-rc.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cloudflare@^11.0.0-rc.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cloudflare@^11.0.0-rc.0
+```
+
+## Configure
+
+Add the Sentry Vite plugin to your Vite config, after Flue's:
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { flue, flueWorkerConfig } from "@flue/vite";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    flue(),
+    cloudflare({ config: flueWorkerConfig() }),
+    sentryCloudflareVitePlugin(),
+  ],
+});
+```
+
+The plugin registers the Flue instrumentation for you at build time, so you don't write an `instrument()` call as you do on Node.js.
+
+Each Flue agent runs in its own Durable Object, which is a separate isolate from your Worker entry. `Sentry.init()` has to run inside it, so create a module that wraps the generated agent Durable Object:
+
+```typescript {filename:src/sentry.ts}
+import { extend } from "@flue/runtime/cloudflare";
+import * as Sentry from "@sentry/cloudflare";
+
+export const cloudflare = extend({
+  wrap: (Final) =>
+    Sentry.instrumentDurableObjectWithSentry(
+      (env: Env) => ({
+        dsn: "___PUBLIC_DSN___",
+        // ___PRODUCT_OPTION_START___ performance
+
+        // Set tracesSampleRate to 1.0 to capture 100%
+        // of spans for tracing.
+        // We recommend adjusting this value in production.
+        tracesSampleRate: 1.0,
+        // ___PRODUCT_OPTION_END___ performance
+      }),
+      Final
+    ),
+});
+```
+
+Re-export it as `cloudflare` from each agent module. This is how Flue applies the wrapper — defining it anywhere else has no effect:
+
+```typescript {filename:src/agents/support.ts}
+export { cloudflare } from "../sentry.ts";
+```
+
+<Alert level="warning">
+
+Without this re-export the agent still runs normally and nothing errors, but no `Sentry.init()` ever runs in that isolate, so nothing is captured at all.
+
+</Alert>
+
+Enable Node.js compatibility in your Wrangler config so the SDK can run on Workers:
+
+```json {filename:wrangler.jsonc}
+{
+  "compatibility_flags": ["nodejs_compat"]
+}
+```
+
+<Include name="flue/captured-summary" />
+
+### Privacy Controls
+
+The SDK will record generative AI inputs and outputs (the prompts your agent sends and the model responses it receives) by default. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
+
+```typescript {filename:src/sentry.ts}
+Sentry.instrumentDurableObjectWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    dataCollection: {
+      genAI: { inputs: false, outputs: false },
+    },
+  }),
+  Final
+);
+```
+
+See [`dataCollection` documentation](../configuration/options/#dataCollection) for details on privacy control options.
+
+<Include name="flue/verify" />
+
+</StepConnector>
+
+## Troubleshooting
+
+- **The agent runs but nothing reaches Sentry.** Confirm each agent module re-exports `cloudflare` from your `src/sentry.ts`. This is the most common cause, and it fails silently.
+- **`instrument.server.ts` has no effect.** That convention needs a worker entry named in Wrangler's `main`. Flue supplies its own virtual entry instead, so the file is never picked up. Use the Durable Object wrapper above.
+- **Token and cost values are doubled.** Remove the `createOpenTelemetryInstrumentation` call left over from the `flue add tooling sentry` blueprint.
+
+<Include name="flue/next-steps" />
+
+<Include name="flue/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/cloudflare`: `>=11.0.0-rc.0`
+- `@flue/runtime`: `>=2.0.0 <3.0.0`
