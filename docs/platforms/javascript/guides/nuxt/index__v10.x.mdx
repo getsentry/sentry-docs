@@ -42,14 +42,19 @@ The wizard creates a `SentryErrorButton` component when it fails to add an examp
 1. Add the `SentryErrorButton` component to a page and open it in your browser. For most Nuxt applications, this will be at localhost.
 2. Click the "Throw Sample Error" button, which triggers an error and starts a performance trace on the client side.
 
-To test the server side as well, refer to the "Verify" section in the [Manual setup guide](/platforms/javascript/guides/nuxt/manual-setup/).
+To test the server side as well, refer to the "Verify" section in the [Manual setup guide](/platforms/javascript/guides/nuxt/manual-setup__v10.x/).
 
 </Expandable>
 
 To test Sentry, you can run your Nuxt application in either production or development mode.
 We **recommend testing in production mode** as it most closely resembles your deployed application's environment.
 
-The SDK bundles `sentry.server.config.ts` into the Nitro server build and initializes Sentry when the server starts. You don't need the Node `--import` flag. To learn more, see <PlatformLink to="/install/">Server-Side Initialization</PlatformLink>.
+<Alert>
+  By default, the SDK will add the server config as `sentry.server.config.mjs`
+  to the build. To find the exact path to this file, enable `debug` mode in your
+  Sentry configuration within `nuxt.config.ts`. Sentry will then print the exact
+  path during the build process.
+</Alert>
 
 ### Run in Production Mode (Recommended)
 
@@ -57,14 +62,14 @@ The SDK bundles `sentry.server.config.ts` into the Nitro server build and initia
 <SplitSection>
 <SplitSectionText>
 
-Build your project with `nuxi build`, then start the server.
+After building with `nuxi build`, run your project and make sure to load Sentry on the server side by explicitly adding it via `--import` (read more about this flag in [Installation Methods](/platforms/javascript/guides/nuxt/install__v10.x/)).
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```bash
+```
 # Start your app after building your project with `nuxi build`
-node .output/server/index.mjs
+node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
 ```
 
 </SplitSectionCode>
@@ -77,16 +82,16 @@ node .output/server/index.mjs
 <SplitSection>
 <SplitSectionText>
 
-Sentry also monitors the server side during development. Start the dev server as usual.
+The server config file is generated in the `.nuxt` directory the first time you run `nuxt dev`. If you delete your `.nuxt` directory, you'll need to run `nuxt dev` once without the `NODE_OPTIONS` variable to regenerate it.
 
-Spans from some libraries, such as database clients, can be missing in development mode.
-Errors and request traces always work. To learn more, see <PlatformLink to="/install/#development-mode">Development Mode</PlatformLink>.
+If you only want to use Sentry on the client-side or only need basic error monitoring on the server side, you can omit the `--import` flag when running your application.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```bash
-nuxt dev
+```
+# Run the dev server with the --import flag after running `nuxt dev` once (without the flag)
+NODE_OPTIONS='--import ./.nuxt/dev/sentry.server.config.mjs' nuxt dev
 ```
 
 </SplitSectionCode>
@@ -127,7 +132,7 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- If you encountered issues with our installation wizard, try [setting up Sentry manually](/platforms/javascript/guides/nuxt/manual-setup/)
+- If you encountered issues with our installation wizard, try [setting up Sentry manually](/platforms/javascript/guides/nuxt/manual-setup__v10.x/)
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>

@@ -971,6 +971,26 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
+    // Previous Nuxt setup method (--import)
+    source: '/platforms/javascript/guides/nuxt/install/cli-import/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // Previous Nuxt setup method (top-level import)
+    source: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // Previous Nuxt setup method (dynamic import)
+    source: '/platforms/javascript/guides/nuxt/install/dynamic-import/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // The Nuxt SDK links to this path in its Cloudflare build warning
+    source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+  },
+  {
     source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
     destination: '/platforms/javascript/guides/react-router/manual-setup/',
   },
@@ -2312,14 +2332,11 @@ const userDocsRedirects = [
   // Cloudflare setup pages moved from Features to Installation Methods.
   {
     source: '/platforms/javascript/guides/cloudflare/features/vite-plugin.md',
-    destination:
-      '/platforms/javascript/guides/cloudflare/install/vite-plugin.md',
+    destination: '/platforms/javascript/guides/cloudflare/install/vite-plugin.md',
   },
   {
-    source:
-      '/platforms/javascript/guides/cloudflare/features/vite-plugin/:path*',
-    destination:
-      '/platforms/javascript/guides/cloudflare/install/vite-plugin/:path*',
+    source: '/platforms/javascript/guides/cloudflare/features/vite-plugin/:path*',
+    destination: '/platforms/javascript/guides/cloudflare/install/vite-plugin/:path*',
   },
   // Cloudflare AI pages moved from Features to Agent Tracing.
   {
