@@ -99,7 +99,9 @@ export function getPlatformHints(categorySupported: PlatformCategory[]) {
   const showBrowserOnly =
     hasCategorySupported && supportedBrowserOnly && hasServerCategory(currentCategories);
   const showServerLikeOnly =
-    hasCategorySupported && supportedServerLikeOnly && hasBrowserCategory(currentCategories);
+    hasCategorySupported &&
+    supportedServerLikeOnly &&
+    hasBrowserCategory(currentCategories);
 
   return {showBrowserOnly, showServerLikeOnly};
 }
