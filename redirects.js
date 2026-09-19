@@ -1108,6 +1108,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/superplane/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/bugzero/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1308,6 +1312,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/supernaut/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/superplane/',
     destination: '/integrations/third-party-integrations/',
   },
   {
