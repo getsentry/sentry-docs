@@ -1,0 +1,88 @@
+---
+title: OpenTelemetry
+description: "Connects Sentry to an OpenTelemetry setup that owns tracing."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+---
+
+<AvailableSince version="11.0.0" />
+
+_Import name: `Sentry.openTelemetryIntegration`_
+
+This integration is not enabled by default. Use it when OpenTelemetry owns tracing in your application and you want Sentry's errors, logs, metrics and check-ins to land on the same traces.
+
+Everything Sentry sends that carries trace information is attached to the OpenTelemetry span that's active when it happens, so it shows up on the same trace as the spans your OpenTelemetry SDK exports. Outgoing request propagation is left to your OpenTelemetry propagator.
+
+An active Sentry span still takes precedence, so this only changes what happens when Sentry has no span of its own.
+
+<Alert>
+
+This integration sends no spans. To get your OpenTelemetry spans into Sentry, point your own exporter at Sentry's OTLP endpoint with `getOtlpTracesEndpoint()`, as shown below.
+
+</Alert>
+
+## Install
+
+Install the OpenTelemetry packages you need alongside the Sentry SDK:
+
+```bash {tabTitle:npm}
+npm install @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-http
+```
+
+```bash {tabTitle:yarn}
+yarn add @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-http
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/sdk-trace-base @opentelemetry/exporter-trace-otlp-http
+```
+
+## Configure
+
+Leave Sentry tracing off so the two pipelines stay separate. `getOtlpTracesEndpoint()` turns your DSN into the URL and auth headers of Sentry's OTLP endpoint:
+
+```javascript
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import * as Sentry from "@sentry/node";
+
+const provider = new NodeTracerProvider({
+  spanProcessors: [
+    new BatchSpanProcessor(
+      new OTLPTraceExporter(Sentry.getOtlpTracesEndpoint("___PUBLIC_DSN___"))
+    ),
+  ],
+});
+
+provider.register();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Leave the OpenTelemetry setup to your own provider
+  enableOpenTelemetrySetup: false,
+  // No `tracesSampleRate`: OpenTelemetry owns spans, Sentry owns errors and logs
+  integrations: [Sentry.openTelemetryIntegration()],
+});
+```
+
+Sentry sends no spans with this setup, and no Sentry span reaches your OpenTelemetry pipeline.
+
+If you'd rather have Sentry own tracing and add your own instrumentation on top, see <PlatformLink to="/opentelemetry/custom-setup/">Using Your Existing OpenTelemetry Setup</PlatformLink> instead.
