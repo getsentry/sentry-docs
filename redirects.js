@@ -2509,6 +2509,15 @@ const userDocsRedirects = [
     source: '/platforms/python/integrations/pydantic-ai/:path*',
     destination: '/platforms/python/agent-tracing/pydantic-ai/:path*',
   },
+  // InboundFilters integration was renamed to EventFilters in SDK v11
+  {
+    source: '/platforms/javascript/configuration/integrations/inboundfilters/',
+    destination: '/platforms/javascript/configuration/integrations/eventfilters/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/inboundfilters/',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/eventfilters/',
+  },
   // AI library setup pages moved from configuration/integrations to agent-tracing
   {
     source: '/platforms/javascript/configuration/integrations/vercelai/',
