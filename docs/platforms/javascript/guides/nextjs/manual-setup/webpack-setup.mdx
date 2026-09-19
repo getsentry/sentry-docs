@@ -20,9 +20,10 @@ For a complete reference of all build configuration options, see the [Build Conf
 | ------------------------------- | ------------------------------- | ---------------------------------------------------- |
 | Server function instrumentation | Automatic via Next.js telemetry | Build-time code injection                            |
 | Middleware instrumentation      | Automatic via Next.js telemetry | Build-time code injection                            |
+| Dependency instrumentation      | Next.js 16+                     | Supported                                            |
 | Source map upload               | Post-compile during build       | During build via plugin (default)                    |
 | Route exclusion                 | Not supported                   | Supported via `webpack.excludeServerRoutes`          |
-| React component annotation      | Experimental (Next.js 16+)      | Supported via `webpack.reactComponentAnnotation`     |
+| React component annotation      | Next.js 16+                     | Supported                                            |
 | Logger tree-shaking             | Not supported                   | Supported via `webpack.treeshake.removeDebugLogging` |
 
 ## Auto-Instrumentation Options
@@ -44,7 +45,7 @@ These options are enabled by default with Webpack. Disable them if you prefer ma
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
   webpack: {
@@ -92,7 +93,7 @@ Specify routes as URL paths (not file system paths). Routes must have a leading 
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
   webpack: {
@@ -129,7 +130,7 @@ The Sentry Webpack Plugin runs during each webpack compilation and uploads sourc
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
   org: "___ORG_SLUG___",
@@ -160,7 +161,7 @@ Enable post-build upload for faster builds. All source maps are uploaded once af
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
   org: "___ORG_SLUG___",
@@ -182,38 +183,32 @@ export default withSentryConfig(nextConfig, {
 <SplitSection>
 <SplitSectionText>
 
-### Advanced Webpack Plugin Options
+### Control Which Files Are Uploaded
 
-Pass options directly to the underlying Sentry Webpack Plugin for advanced configuration.
-
-<Alert level="warning">
-  The `unstable_sentryWebpackPluginOptions` API may change in future releases.
-</Alert>
+If the defaults pick up too much or too little, narrow the upload with the `sourcemaps` options. These are top-level options and apply to both Webpack and Turbopack builds.
 
 <Alert level="info">
-  These options only apply when `useRunAfterProductionCompileHook` is `false`
-  (the default).
+  Earlier versions reached these settings through
+  `unstable_sentryWebpackPluginOptions`. That escape hatch was removed — every
+  option it exposed is now a first-class build option. See [Build
+  Configuration](/platforms/javascript/guides/nextjs/configuration/build/) for
+  the full list.
 </Alert>
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  webpack: {
-    // Advanced Webpack plugin options
-    unstable_sentryWebpackPluginOptions: {
-      sourcemaps: {
-        assets: ["./build/**/*.js", "./build/**/*.map"],
-        ignore: ["node_modules/**"],
-      },
-    },
+  sourcemaps: {
+    assets: [".next/**/*.js", ".next/**/*.map"],
+    ignore: ["**/node_modules/**"],
   },
 });
 ```
@@ -265,13 +260,15 @@ export async function submitForm(formData: FormData) {
 
 ## React Component Annotation
 
-With Webpack, you can enable React component name tracking. This annotates React components with `data-sentry-*` attributes that allow Sentry to identify which components users interacted with in [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) and [breadcrumbs](/platforms/javascript/guides/nextjs/enriching-events/breadcrumbs/).
+Component annotation adds `data-sentry-*` attributes to your React components at build time, so Sentry can tell you which component a user interacted with in [Session Replay](/platforms/javascript/guides/nextjs/session-replay/) and [breadcrumbs](/platforms/javascript/guides/nextjs/enriching-events/breadcrumbs/).
 
 <Alert level="info">
-  For Turbopack builds, component annotation is available as an experimental
-  feature requiring Next.js 16+. See
-  [`_experimental.turbopackReactComponentAnnotation`](/platforms/javascript/guides/nextjs/configuration/build/#_experimentalturbopackreactcomponentannotationenabled)
-  in the build options reference.
+  `reactComponentAnnotation` is a top-level option and drives both Webpack and
+  Turbopack builds. On Turbopack it requires Next.js 16 or higher — enable it on
+  an older version and the SDK warns at build time. The bundler-specific
+  `webpack.reactComponentAnnotation` and
+  `_experimental.turbopackReactComponentAnnotation` options still work but are
+  deprecated, and will be removed in the next major version.
 </Alert>
 
 <SplitLayout>
@@ -287,13 +284,11 @@ Enable `reactComponentAnnotation` to track component names in your application. 
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
-  webpack: {
-    reactComponentAnnotation: {
-      enabled: true,
-    },
+  reactComponentAnnotation: {
+    enabled: true,
   },
 });
 ```
@@ -316,14 +311,12 @@ If you have components you don't want annotated (for privacy or performance reas
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
-  webpack: {
-    reactComponentAnnotation: {
-      enabled: true,
-      ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
-    },
+  reactComponentAnnotation: {
+    enabled: true,
+    ignoredComponents: ["SensitiveForm", "InternalDebugPanel"],
   },
 });
 ```
@@ -360,7 +353,7 @@ tunnelRoute: true, // Auto-generated random route
 <SplitSectionCode>
 
 ```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 export default withSentryConfig(nextConfig, {
   // Use a fixed route (recommended)
@@ -377,20 +370,22 @@ export default withSentryConfig(nextConfig, {
 
 If you're upgrading to Turbopack:
 
-1. **Remove webpack-only options** - `excludeServerRoutes` and `unstable_sentryWebpackPluginOptions` have no effect with Turbopack
+1. **Drop webpack-only options** - anything under `webpack` has no effect with Turbopack, including `excludeServerRoutes` and `treeshake`
 2. **Understand source map changes** - Turbopack always uses post-build upload (no plugin-based upload option)
 3. **Test auto-instrumentation** - Turbopack uses Next.js telemetry instead of build-time injection; verify your monitoring still works
 
 ```typescript {filename:next.config.ts}
 // Before (Webpack)
 export default withSentryConfig(nextConfig, {
-  excludeServerRoutes: ["/api/health"],
+  webpack: {
+    excludeServerRoutes: ["/api/health"],
+  },
   tunnelRoute: "/sentry-tunnel",
 });
 
 // After (Turbopack)
 export default withSentryConfig(nextConfig, {
-  // excludeServerRoutes is not supported with Turbopack
+  // webpack.excludeServerRoutes is not supported with Turbopack
   tunnelRoute: "/sentry-tunnel",
 });
 ```
