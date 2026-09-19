@@ -31,10 +31,15 @@ notSupported:
 beta: true
 ---
 
-The Sentry SDK uses [OpenTelemetry](https://opentelemetry.io/) under the hood. This means that any OpenTelemetry instrumentation that emits spans will automatically be picked up by Sentry without any further configuration.
+Sentry and [OpenTelemetry](https://opentelemetry.io/) are separate pipelines, and you choose how they connect.
 
-To start capturing traces and spans, set up <PlatformLink to='/tracing'>Tracing and Performance Monitoring with your Sentry SDK</PlatformLink>. If you don't use tracing, Sentry still connects to OpenTelemetry under the hood to ensure that context isolation and trace propagation works correctly.
+The SDK emits its own spans and isolates scopes on its own, so tracing works without any OpenTelemetry setup. What it doesn't do by default is register an OpenTelemetry tracer provider, so spans created through `@opentelemetry/api` aren't captured. To start capturing traces and spans from the SDK itself, set up <PlatformLink to='/tracing'>Tracing and Performance Monitoring</PlatformLink>.
 
-By default, Sentry will automatically set up OpenTelemetry for you, but you can also use your own OpenTelemetry setup. Read the guides below to learn how to use a custom OpenTelemetry setup or how to get the most out of the Sentry and OpenTelemetry integration.
+There are two ways to connect the two:
+
+- **OpenTelemetry owns tracing.** Keep your own tracer provider and add <PlatformLink to="/configuration/integrations/opentelemetry/">`openTelemetryIntegration`</PlatformLink>, so Sentry's errors, logs, metrics and check-ins land on your OpenTelemetry traces. Export your spans to Sentry over OTLP.
+- **Sentry owns tracing.** Set `enableOpenTelemetrySetup: true` and the SDK registers its own tracer provider, so spans created through `@opentelemetry/api` become Sentry spans. This is the default on `@sentry/nextjs` and `@sentry/sveltekit`.
+
+Read the guides below for either setup.
 
 <PageGrid />

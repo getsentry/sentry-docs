@@ -29,60 +29,17 @@ notSupported:
 sidebar_order: 1
 ---
 
-Sentry supports OpenTelemetry APIs out of the box. Any spans started using OpenTelemetry APIs will be automatically captured by Sentry, while any spans started using the Sentry SDK will be automatically propagated to OpenTelemetry.
+These APIs work with either <PlatformLink to="/opentelemetry/custom-setup/">OpenTelemetry setup</PlatformLink>. What changes is where the spans go. With `enableOpenTelemetrySetup: true`, the SDK registers its own tracer provider, so spans started through OpenTelemetry APIs become Sentry spans and spans started with the Sentry SDK are propagated to OpenTelemetry. With a tracer provider of your own, the spans go to your pipeline and reach Sentry through your OTLP exporter.
 
 ## Adding Additional OpenTelemetry Instrumentation
 
-While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like the example below:
-
-```javascript {tabTitle: ESM} {12-13}
-import * as Sentry from "@sentry/node";
-import {
-  GenericPoolInstrumentation,
-} from "@opentelemetry/instrumentation-generic-pool";
-
-Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry instrumentation:
-  openTelemetryInstrumentations: [new GenericPoolInstrumentation()],
-});
-```
-```javascript {tabTitle: CJS} {12-13}
-const Sentry = require("@sentry/node");
-const {
-  GenericPoolInstrumentation,
-} = require("@opentelemetry/instrumentation-generic-pool");
-
-Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry instrumentation:
-  openTelemetryInstrumentations: [new GenericPoolInstrumentation()],
-});
-```
-
-<Alert>
-  It is possible to add instrumentations via `registerInstrumentations()` from
-  `@opentelemetry/instrumentation`. However, with ESM (`import`/`export` syntax)
-  you need to be careful to do so before importing any modules that should be
-  instrumented.
-
-As a rule of thumb, `registerInstrumentations()` should be called right after, and in the same context as registering <PlatformLink to="/opentelemetry/custom-setup/#esm-loaders">ESM Loaders</PlatformLink>.
-
-</Alert>
+Register instrumentation through OpenTelemetry's own `registerInstrumentations()` from `@opentelemetry/instrumentation`. With ESM, call it before importing any module that should be instrumented.
 
 ## Using an OpenTelemetry Tracer
 
 We recommend using `Sentry.startSpan()` and related APIs to create spans, but you can also create spans using native OpenTelemetry APIs.
 
-You can access the tracer Sentry uses via `client.tracer` and then create spans with OpenTelemetry APIs, as shown below:
+You can access the tracer via `client.tracer` and then create spans with OpenTelemetry APIs, as shown below. It reads the globally registered tracer provider, so it gives you Sentry's tracer or your own, depending on the setup:
 
 ```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/node";
@@ -93,6 +50,7 @@ tracer.startActiveSpan("span name", () => {
   // measure something
 });
 ```
+
 ```javascript {tabTitle: CJS}
 const Sentry = require("@sentry/node");
 
@@ -103,50 +61,20 @@ tracer.startActiveSpan("span name", () => {
 });
 ```
 
-You can also use any other tracer. All OpenTelemetry spans will be picked up by Sentry automatically.
+You can also use any other tracer. With `enableOpenTelemetrySetup: true`, every OpenTelemetry span is picked up by Sentry automatically.
 
 ## Modifying the default OpenTelemetry TracerProvider
 
-You can access the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation.
+This is the one part of this page that needs `enableOpenTelemetrySetup: true`. `client.traceProvider` holds the tracer provider the SDK registered, and it stays `undefined` when you register <PlatformLink to="/opentelemetry/custom-setup/#opentelemetry-owns-tracing">a provider of your own</PlatformLink>, where you already have a reference to it.
 
 ```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/node";
 
 const provider = Sentry.getClient()?.traceProvider;
 ```
+
 ```javascript {tabTitle: CJS}
 const Sentry = require("@sentry/node");
 
 const provider = Sentry.getClient()?.traceProvider;
-```
-
-## Adding Additional Span Processors
-
-You can add additional span processors to the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation.
-
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry SpanProcessors:
-  openTelemetrySpanProcessors: [new MySpanProcessor()],
-});
-```
-```javascript {tabTitle: CJS}
-const Sentry = require("@sentry/node");
-
-Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry SpanProcessors:
-  openTelemetrySpanProcessors: [new MySpanProcessor()],
-});
 ```
