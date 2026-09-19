@@ -387,13 +387,23 @@ private final OkHttpClient client = new OkHttpClient.Builder()
   .build();
 ```
 
-By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control the request and response headers, cookies, and URL query parameters attached to error events. For example, allow selected request headers and omit cookies:
 
 ```xml {filename:AndroidManifest.xml}
 <application>
-  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-headers.request.mode"
+      android:value="allow_list" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-headers.request.terms"
+      android:value="content-type,x-request-id" />
+  <meta-data
+      android:name="io.sentry.data-collection.cookies.mode"
+      android:value="off" />
 </application>
 ```
+
+Configuring any field activates the Data Collection defaults for omitted fields. Sensitive values still use the built-in filtering rules.
 
 Those events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
 
