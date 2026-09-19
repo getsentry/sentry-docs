@@ -15,7 +15,8 @@ Sentry makes it possible to render a JSON representation of the view hierarchy o
 This feature only applies to SDKs with a user interface, such as the ones for mobile and desktop applications. In some environments like native iOS, rendering the view hierarchy requires the UI thread and in the event of a crash, that might not be available. Another example where the view hierarchy might not be available is when the event happens before the screen starts to load. So inherently, this feature is a best effort solution.
 
 <Alert>
-App hang events will not have view hierarchy because the main thread is blocked and Sentry can't interact with UI elements in a background view.
+  App hang events will not have view hierarchy because the main thread is
+  blocked and Sentry can't interact with UI elements in a background view.
 </Alert>
 
 <Alert>
@@ -68,12 +69,91 @@ SentrySDK.start { options in
 }];
 ```
 
+## View Hierarchy JSON Format
+
+The SDK stores the hierarchy in a `view-hierarchy.json` attachment. The attachment uses the `application/json` content type and the `event.view_hierarchy` attachment type so Sentry can render it as an interactive hierarchy.
+
+The following example contains one window, its view controller's root view, and a child view:
+
+```json {filename:view-hierarchy.json}
+{
+  "rendering_system": "UIKIT",
+  "windows": [
+    {
+      "type": "UIWindow",
+      "identifier": "main-window",
+      "width": 390,
+      "height": 844,
+      "x": 0,
+      "y": 0,
+      "alpha": 1,
+      "visible": true,
+      "children": [
+        {
+          "type": "UIView",
+          "view_controller": "CheckoutViewController",
+          "width": 390,
+          "height": 844,
+          "x": 0,
+          "y": 0,
+          "alpha": 1,
+          "visible": true,
+          "children": [
+            {
+              "type": "UIButton",
+              "identifier": "submit-order",
+              "width": 200,
+              "height": 44,
+              "x": 95,
+              "y": 720,
+              "alpha": 1,
+              "visible": true,
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+The root object contains these fields:
+
+| Field              | Type   | Description                                                                                    |
+| ------------------ | ------ | ---------------------------------------------------------------------------------------------- |
+| `rendering_system` | string | Rendering system that produced the hierarchy. The Apple SDK uses `UIKIT`.                      |
+| `windows`          | array  | Top-level window nodes. Each window uses the same recursive node structure as its descendants. |
+
+Each window or child node contains these fields:
+
+| Field             | Type    | Required | Description                                                                                                                                 |
+| ----------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`            | string  | Yes      | Runtime class name of the view, such as `UIWindow`, `UIView`, or `UIButton`.                                                                |
+| `width`           | number  | Yes      | Width of the view's frame in points.                                                                                                        |
+| `height`          | number  | Yes      | Height of the view's frame in points.                                                                                                       |
+| `x`               | number  | Yes      | Horizontal origin of the view's frame in its containing coordinate space, in points.                                                        |
+| `y`               | number  | Yes      | Vertical origin of the view's frame in its containing coordinate space, in points.                                                          |
+| `alpha`           | number  | Yes      | Opacity of the view, from `0` for transparent to `1` for opaque.                                                                            |
+| `visible`         | boolean | Yes      | Whether the view's `isHidden` property is `false`. This does not account for the visibility or alpha of ancestor views.                     |
+| `children`        | array   | Yes      | Child views in UIKit subview order. An empty array indicates that the node has no child views.                                              |
+| `identifier`      | string  | No       | The view's `accessibilityIdentifier`. The SDK omits this field when the identifier is empty or `reportAccessibilityIdentifier` is disabled. |
+| `view_controller` | string  | No       | Runtime class name of the view controller when this node is the controller's root view.                                                     |
+
+To keep captures bounded, the Apple SDK records up to 90 levels of nested views. When a view at that limit has child views, the SDK replaces those child views with a truncation marker:
+
+```json
+{
+  "type": "SentryTruncatedViewHierarchy"
+}
+```
+
 ## Viewing View Hierarchy Attachments
 
 View hierarchies appear in the "Attachments" tab, where you can view all attachments, as well as associated events. Click the event ID to open the [Issue Details](/product/issues/issue-details) page of that specific event.
 
 <Include name="common-imgs/viewhierarchy-list-example" />
 
-On the **Issue Details** page, you can interact with the view hierarchy attachment in a section called "View Hierarchy". This section represents the state of your application at the time of an error event. There are three displays: a tree view, wireframe, and detailed view for a selected node. You can select nodes in either the tree or the wireframe to view the properties collected by the SDK. The SDK will report on the following keys for each node in the view: `alpha`, `visible`, `x`, `y`, `width`, `height`, `type`, and `identifier` if applicable, but there may be additional values specific to the SDK. This feature can be used as an exploratory tool to debug layout issues, visualize unnecessarily rendered content, or gain a better understanding of the relationship between views.
+On the **Issue Details** page, you can interact with the view hierarchy attachment in a section called "View Hierarchy". This section represents the state of your application at the time of an error event. There are three displays: a tree view, wireframe, and detailed view for a selected node. Select a node in the tree or wireframe to inspect its [JSON fields](#view-hierarchy-json-format). Use these displays to debug layout issues, find unnecessarily rendered content, or understand the relationship between views.
 
 <Include name="common-imgs/viewhierarchy-example" />
