@@ -1,4 +1,9 @@
-import {hasBrowserCategory, hasServerCategory} from 'sentry-docs/categories';
+import {
+  hasBrowserCategory,
+  hasServerCategory,
+  isBrowserOnly,
+  isServerOnly,
+} from 'sentry-docs/categories';
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
@@ -96,12 +101,14 @@ export function getPlatformHints(categorySupported: PlatformCategory[]) {
   const supportedServerLikeOnly =
     !hasBrowserCategory(categorySupported) && hasServerCategory(categorySupported);
 
+  // Only surface the runtime hint when it adds information. On a single-runtime
+  // platform the option's runtime is already implied (a browser-only platform
+  // needs no "client only" note, a server-only one no "server only" note), so
+  // we show it on dual-runtime platforms (meta-frameworks) instead.
   const showBrowserOnly =
-    hasCategorySupported && supportedBrowserOnly && hasServerCategory(currentCategories);
+    hasCategorySupported && supportedBrowserOnly && !isBrowserOnly(currentCategories);
   const showServerLikeOnly =
-    hasCategorySupported &&
-    supportedServerLikeOnly &&
-    hasBrowserCategory(currentCategories);
+    hasCategorySupported && supportedServerLikeOnly && !isServerOnly(currentCategories);
 
   return {showBrowserOnly, showServerLikeOnly};
 }
