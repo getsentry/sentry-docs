@@ -43,23 +43,27 @@ The Mistral AI integration captures model calls, token usage, and latency from t
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.mastra", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.firebase", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.deno"]}>
+<PlatformSection notSupported={["javascript.effect"]}>
 
 ## Automatic Instrumentation
 
+Enable tracing in your Sentry configuration, then follow the setup for your runtime below.
+
+<PlatformSection notSupported={["javascript.bun", "javascript.elysia", "javascript.cloudflare"]}>
+
 _Import name: `Sentry.mistralAIIntegration`_
 
-The integration is enabled by default when tracing is enabled. Initialize Sentry before importing the Mistral SDK, following your platform's <PlatformLink to="/">setup instructions</PlatformLink>.
+On Node.js, the integration is enabled by default when tracing is enabled. Initialize Sentry before importing the Mistral SDK, following your platform's <PlatformLink to="/">setup instructions</PlatformLink>.
 
 <PlatformSection supported={["javascript.hono"]}>
 
-On Node.js, follow the setup above. For build-time automatic instrumentation, follow the [Bun setup](/platforms/javascript/guides/bun/agent-tracing/mistral/#automatic-instrumentation) or [Cloudflare setup](/platforms/javascript/guides/cloudflare/agent-tracing/mistral/#automatic-instrumentation) for your runtime. The Deno entry point supports the automatic integration, but does not export the manual wrapper; follow the [Deno setup](/platforms/javascript/guides/deno/agent-tracing/mistral/).
+For Hono, automatic instrumentation depends on your runtime. Follow the [Node.js](/platforms/javascript/guides/node/agent-tracing/mistral/#automatic-instrumentation), [Bun](/platforms/javascript/guides/bun/agent-tracing/mistral/#automatic-instrumentation), [Cloudflare](/platforms/javascript/guides/cloudflare/agent-tracing/mistral/#automatic-instrumentation), or [Deno](/platforms/javascript/guides/deno/agent-tracing/mistral/#automatic-instrumentation) setup.
 
 </PlatformSection>
 
 <PlatformSection supported={["javascript.deno"]}>
 
-Preload Sentry's import hook when starting your Deno application so the Mistral SDK can be instrumented:
+On Deno, the integration is enabled by default with tracing. Preload Sentry's import hook so the Mistral SDK can be instrumented:
 
 ```bash
 deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preload=npm:@sentry/deno/import app.ts
@@ -67,18 +71,15 @@ deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preloa
 
 </PlatformSection>
 
-To customize what data is captured, configure the integration in your existing Sentry initialization:
+To turn off recording of prompts and responses, set `dataCollection.genAI` in your existing Sentry initialization:
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
-  integrations: [
-    Sentry.mistralAIIntegration({
-      recordInputs: false,
-      recordOutputs: false,
-    }),
-  ],
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
 });
 ```
 
@@ -86,9 +87,7 @@ Sentry.init({
 
 <PlatformSection supported={["javascript.bun", "javascript.elysia", "javascript.cloudflare"]}>
 
-## Automatic Instrumentation
-
-Mistral calls can be instrumented automatically when your build uses Sentry's instrumentation plugin. Set up the Sentry SDK and enable tracing before making requests.
+Use Sentry's build plugin to instrument bundled Mistral calls automatically.
 
 <PlatformSection supported={["javascript.bun", "javascript.elysia"]}>
 
@@ -113,7 +112,7 @@ For Elysia running with the Node.js adapter, follow the [Node.js automatic instr
 
 The Mistral SDK must be included in the bundle so the plugin can instrument it. The plugin only runs during a build; for unbundled applications started with `bun run`, use [Manual Instrumentation](#manual-instrumentation).
 
-Configure `Sentry.mistralAIIntegration({ recordInputs: false, recordOutputs: false })` in your existing `Sentry.init` call to customize content recording, or use `dataCollection.genAI`.
+Use `dataCollection.genAI` in your Sentry options to control recording of prompts and responses.
 
 </PlatformSection>
 
@@ -147,15 +146,15 @@ export default (env: Env) => ({
 
 If your Worker is already wrapped with `Sentry.withSentry`, configure these options there instead.
 
-Control automatic input and output recording through `dataCollection.genAI` in your Sentry options. You don't need to add `mistralAIIntegration()` yourself; it is not exported from `@sentry/cloudflare`.
-
 Without the plugin, or with `buildTimeInstrumentation: false`, use [Manual Instrumentation](#manual-instrumentation).
 
 </PlatformSection>
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.mastra", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.firebase", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.elysia", "javascript.cloudflare", "javascript.effect"]}>
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.deno"]}>
 
 ## Manual Instrumentation
 
@@ -166,6 +165,14 @@ If your application does not use automatic instrumentation, wrap your Mistral cl
 <PlatformSection supported={["javascript.hono"]}>
 
 Import Sentry from the entry point for your runtime: `@sentry/hono/node`, `@sentry/hono/bun`, or `@sentry/hono/cloudflare`.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.hono"]}>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+```
 
 </PlatformSection>
 
@@ -190,7 +197,7 @@ Use one instrumentation approach for each client. If automatic instrumentation i
 
 ## Configuration
 
-The following options control content recorded on Mistral spans. They apply to both the integration and the client wrapper.
+The following options control content recorded on Mistral spans. Set them on the integration or client wrapper to override the SDK-wide `dataCollection.genAI` settings.
 
 ### `recordInputs`
 
@@ -220,11 +227,7 @@ Tracing support is added to the following Mistral SDK calls:
 
 Streaming calls are recorded as a single span as you consume the stream. Tool calls returned by the model are recorded when `recordOutputs` is enabled; this integration does not instrument execution of your tool functions.
 
-## Verify
-
-Make a Mistral request, then open [Agent Tracing](/product/agents/) in Sentry. Check for a `gen_ai.chat`, `gen_ai.embeddings`, or `gen_ai.invoke_agent` span, depending on the operation, with model and token usage where returned by Mistral.
-
-If no spans appear, check that tracing is enabled and Sentry is initialized before the request. For manual instrumentation, make the request through the wrapped client. For streaming requests, consume the stream.
+To verify your setup, make a Mistral request and open [Agent Tracing](/product/agents/) in Sentry. Look for a `gen_ai.chat`, `gen_ai.embeddings`, or `gen_ai.invoke_agent` span with model and token usage where returned by Mistral. Consume streaming responses so their spans finish.
 
 ## Supported Versions
 
