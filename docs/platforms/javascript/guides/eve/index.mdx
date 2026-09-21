@@ -77,10 +77,11 @@ pnpm add @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0
 
 ## Configure
 
-Create `agent/instrumentation.ts` and initialize Sentry. Eve auto-discovers `agent/instrumentation.ts` and runs it at server startup, before it loads your agent and the AI SDK:
+Create `agent/instrumentation/sentry.ts` and initialize Sentry. Eve auto-discovers each file in the `agent/instrumentation/` directory and loads it at server startup, before it loads your agent and the AI SDK. Each file in that directory must default-export an instrumentation provider, so the file also exports one that flushes Sentry when Eve flushes its telemetry:
 
-```typescript {filename:agent/instrumentation.ts}
+```typescript {filename:agent/instrumentation/sentry.ts}
 import * as Sentry from "@sentry/node";
+import { defineInstrumentation } from "eve/instrumentation";
 // ___PRODUCT_OPTION_START___ profiling
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 // ___PRODUCT_OPTION_END___ profiling
@@ -111,11 +112,27 @@ Sentry.init({
   profileSessionSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ profiling
 });
+
+export default defineInstrumentation({
+  flush: async () => {
+    await Sentry.flush(2000);
+  },
+});
 ```
 
-With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. Prompts and model outputs are recorded on your agent spans by default, so the Agent Tracing transcript shows the full exchange without any extra configuration.
+<Alert level="warning" title="Eve 0.62.0 removed agent/instrumentation.ts">
+
+Eve versions before `0.62.0` load a single `agent/instrumentation.ts` file instead. Eve `0.62.0` and later fail the build when that file exists. If you upgrade Eve, move your `Sentry.init` call into `agent/instrumentation/sentry.ts` as shown above and delete `agent/instrumentation.ts`.
+
+Eve treats every file in `agent/instrumentation/` as a provider. Keep shared helper code in a different directory, for example `agent/lib/`.
+
+</Alert>
+
+With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. When you run `eve dev`, prompts and model outputs are recorded on your agent spans, so the Agent Tracing transcript shows the full exchange. Outside development, Eve turns this recording off for each model call. To record prompts and model outputs there too, see [Record Prompts and Outputs Outside Development](#record-prompts-and-outputs-outside-development).
 
 To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below. To review what's captured and turn recording of prompts and responses off, see [Privacy Controls](#privacy-controls).
+
+Let the Sentry SDK own the OpenTelemetry setup. Don't add Eve's `otel()` or `otelIntegration()` providers to `agent/instrumentation/` next to this file. If both the Sentry SDK and Eve try to register the global OpenTelemetry tracer provider, Eve refuses to start.
 
 ## Verify
 
@@ -125,21 +142,39 @@ If no data appears, confirm that:
 
 - The `dsn` belongs to the Sentry project you're viewing.
 - `tracesSampleRate` is greater than `0`.
-- Your app completed at least one agent turn after you added `agent/instrumentation.ts`.
+- Your app completed at least one agent turn after you added `agent/instrumentation/sentry.ts`.
+- `agent/instrumentation.ts` doesn't exist. Eve `0.62.0` and later fail the build when it finds that file.
 - Eve's earlier OTLP instrumentation isn't also initialized in the agent runtime. Running both integrations duplicates AI spans, token totals, and costs.
+- If the spans appear without prompts and model outputs, see [Record Prompts and Outputs Outside Development](#record-prompts-and-outputs-outside-development).
 
 </StepConnector>
 
 ## Privacy Controls
 
-Generative AI inputs and outputs — the prompts your agent sends and the model responses it receives — are recorded on your agent spans by default. Review the data your agent handles and tighten this before production. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
+Generative AI inputs and outputs — the prompts your agent sends and the model responses it receives — are recorded on your agent spans by default when you run `eve dev`. Review the data your agent handles and tighten this before production. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
 
-```typescript {filename:agent/instrumentation.ts}
+```typescript {filename:agent/instrumentation/sentry.ts}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
     genAI: { inputs: false, outputs: false },
   },
+});
+```
+
+### Record Prompts and Outputs Outside Development
+
+Outside development, for example under `eve start`, Eve passes `recordInputs: false` and `recordOutputs: false` to the AI SDK on each model call. These per-call values take priority over `dataCollection.genAI`, so your spans arrive without prompts and model outputs. To record them, set the options on the Vercel AI integration:
+
+```typescript {filename:agent/instrumentation/sentry.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
 });
 ```
 
@@ -201,4 +236,4 @@ export default defineAgent({
 ## Supported Versions
 
 - `@sentry/node`: `>=11.0.0-rc.0`
-- `eve`: tested with `0.52.3` and later
+- `eve`: tested with `0.63.0`. Eve versions before `0.62.0` use `agent/instrumentation.ts` in place of the `agent/instrumentation/` directory.
