@@ -60,6 +60,48 @@ const Example = () => {
 
 _Make sure your Sentry React Native SDK version is 6.4.0-beta.1 and up to use the masking components_
 
+## Mask and Unmask by View Class
+
+_Supported in React Native SDK v8.27.0 and later_
+
+When you can't wrap views with the `Mask` or `Unmask` components—for example, views rendered by a third-party library—you can mask or unmask them by their native view class name. Use `maskedViewClasses` to redact additional classes on top of the `maskAllText`/`maskAllImages`/`maskAllVectors` defaults, and `unmaskedViewClasses` to exempt classes from redaction. Both match views that are instances of the listed classes or their subclasses.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.mobileReplayIntegration({
+      maskAllText: true,
+      // Unmask text views so text is visible in the replay, even though
+      // `maskAllText` is enabled.
+      unmaskedViewClasses: [
+        "RCTTextView", // iOS (Legacy Architecture)
+        "RCTParagraphComponentView", // iOS (New Architecture)
+        "com.facebook.react.views.text.ReactTextView", // Android
+      ],
+      // Mask a specific native view class in addition to the defaults.
+      maskedViewClasses: [
+        "MKMapView", // iOS
+      ],
+    }),
+  ],
+});
+```
+
+The class names are the **native** view class names, not the React component names, and they differ between iOS and Android. Class names for the other platform are harmless no-ops, so you can list both in the same array. Because matching is class-based, a name that isn't loaded at runtime is ignored.
+
+<Alert level="warning">
+
+Each class you want to mask or unmask must be listed explicitly (matching includes subclasses). For subtree-wide control — masking or unmasking a view and all of its children — use the [`Mask` and `Unmask` components](#mask-and-unmask-components) instead.
+
+</Alert>
+
+`unmaskedViewClasses` takes precedence over the `maskAllText`/`maskAllImages`/`maskAllVectors` defaults, so a view whose class is unmasked is shown in the replay even when the corresponding `maskAll*` option is enabled. An explicit `Mask` component still always wins—see [Masking Priority](#masking-priority).
+
 ## General Masking Rules
 
 When components are wrapped by `Unmask`, **only direct children will be unmasked**. You'll need to explicitly wrap any indirect children that you want to appear in the replay.
