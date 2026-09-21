@@ -5,11 +5,13 @@ sidebar_order: 90
 description: "Learn how to manually instrument your agents to capture spans, token usage, and tool execution."
 ---
 
-If your AI library does not have automatic instrumentation, create spans manually. Spans need well-defined names and data attributes so agent data shows up correctly.
+If your AI library does not have automatic instrumentation, create spans manually. A complete trace lets you see how long the agent and each model or tool call took, where failures happened, and how the agent produced its final response.
 
 The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also create these spans via templates.
 
-For conversations and privacy (`set_conversation_id`, `set_user`, `send_default_pii`), see the <PlatformLink to="/agent-tracing/">Agent Tracing hub</PlatformLink>.
+This page describes the minimum span structure and attributes Sentry needs, then covers richer data such as messages, streaming metrics, and custom costs.
+
+For conversations and privacy (`set_conversation_id`, `set_user`, `send_default_pii`), see the <PlatformLink to="/agent-tracing/">Agent Tracing guide</PlatformLink>.
 
 ## Span Hierarchy
 
@@ -23,16 +25,24 @@ When instrumenting an agent loop, spans nest like this:
    └── ...
 ```
 
-`gen_ai.invoke_agent` is the container. `gen_ai.chat` and `gen_ai.execute_tool` spans are its children (siblings of each other). A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
+`gen_ai.invoke_agent` covers the complete agent run. Create one `gen_ai.chat` child for every model request and one `gen_ai.execute_tool` child for every tool execution. Model and tool spans are siblings: end the model span before running a requested tool so model latency does not include tool execution time.
+
+A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
 
 ## Common Attributes
 
-Set these **when the span starts** (before the model or tool call), so head-based sampling can see them:
+Set these attributes **when the span starts**, before the model or tool call, so head-based sampling can use them:
 
 - `gen_ai.operation.name` — required; classifies the span (`chat`, `invoke_agent`, `execute_tool`, …)
 - `gen_ai.provider.name` — e.g. `openai`, `anthropic`
 - `gen_ai.request.model` — requested model (pass the **raw** provider string)
 - `gen_ai.agent.name` / `gen_ai.tool.name` — when applicable
+
+Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {requested model}`, and `execute_tool {tool name}`. Record accurate start and end times. If an operation fails, set the span status to `ERROR` and set `error.type` to a low-cardinality error code or exception class.
+
+Run the agent span in the caller's active trace context. For calls between services, follow the <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink> guide so the agent run stays connected to the rest of the trace.
+
+To group turns into a [Conversation](/product/agents/conversations/), call `set_conversation_id()` with the application's existing chat or session ID. Reuse that ID across turns and traces. If there is no conversation ID, omit it instead of deriving one from a trace or request ID.
 
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
@@ -81,6 +91,8 @@ with sentry_sdk.start_span(
 ```
 
 Keep system prompts in `gen_ai.system_instructions`, not inside `gen_ai.input.messages`. [Conversation titles](/product/agents/conversations/#conversation-titles) are derived from the first user message in the input messages.
+
+`gen_ai.usage.input_tokens` is the total input token count, including cache-read and cache-write tokens. `gen_ai.usage.output_tokens` includes reasoning tokens. Cache and reasoning attributes are subsets of those totals, so don't add them to the totals again. Sentry uses the model identifiers and token totals to calculate [model costs](/product/agents/costs/).
 
 <Expandable title="AI Request span attributes">
   <Include name="tracing/ai-agents-module/ai-client-span" />
@@ -182,8 +194,12 @@ For a complete guide on naming agents across all supported frameworks, see [Nami
 import json
 import sentry_sdk
 
-messages = [{"role": "user", "parts": [{"type": "text", "content": "What's the weather in Paris?"}]}]
-tools = [{"name": "get_weather", "description": "Get weather for a city"}]
+input_messages = [
+    {
+        "role": "user",
+        "parts": [{"type": "text", "content": "What's the weather in Paris?"}],
+    }
+]
 
 with sentry_sdk.start_span(
     op="gen_ai.invoke_agent",
@@ -191,20 +207,18 @@ with sentry_sdk.start_span(
     attributes={
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.agent.name": "Weather Agent",
-        "gen_ai.provider.name": "openai",
-        "gen_ai.request.model": "o3-mini",
-        "gen_ai.system_instructions": "You are a weather assistant.",
-        "gen_ai.tool.definitions": json.dumps(tools),
-        "gen_ai.input.messages": json.dumps(messages),
+        "gen_ai.input.messages": json.dumps(input_messages),
     },
 ) as span:
-    final_output = my_agent.run()
+    # Model and tool spans created here become children of the agent span.
+    result = my_agent.run()
 
     span.set_data("gen_ai.output.messages", json.dumps([
-        {"role": "assistant", "parts": [{"type": "text", "content": str(final_output)}]}
+        {
+            "role": "assistant",
+            "parts": [{"type": "text", "content": str(result.output)}],
+        }
     ]))
-    span.set_data("gen_ai.usage.input_tokens", final_output.usage.input_tokens)
-    span.set_data("gen_ai.usage.output_tokens", final_output.usage.output_tokens)
 ```
 
 Child `gen_ai.chat` and `gen_ai.execute_tool` spans should also set `gen_ai.agent.name` so model and tool usage can be attributed per agent.
@@ -256,7 +270,7 @@ When the model streams tokens, keep the span open until the stream finishes (inc
 - `gen_ai.response.tokens_per_second` — output throughput, if you can measure it
 - `gen_ai.output.messages`, token usage, and `gen_ai.response.model` — same as a non-streaming call, once the stream completes
 
-How you hold the span open depends on your stack (generator, async iterator, callback). Instrument that path yourself so the span ends on completion or error.
+How you hold the span open depends on your stack (generator, async iterator, callback). End it when the stream completes or fails. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for span lifecycle patterns.
 
 <Include name="tracing/ai-agents-module/token-cost-gotchas" />
 
