@@ -4,6 +4,7 @@ description: "Adds instrumentation for the OpenAI SDK."
 sidebar_order: 21
 supported:
   - javascript.node
+  - javascript.eve
   - javascript.aws-lambda
   - javascript.azure-functions
   - javascript.connect
@@ -14,7 +15,6 @@ supported:
   - javascript.hono
   - javascript.koa
   - javascript.nestjs
-  - javascript.electron
   - javascript.nextjs
   - javascript.nuxt
   - javascript.solidstart
@@ -25,14 +25,6 @@ supported:
   - javascript.bun
   - javascript.tanstackstart-react
   - javascript.cloudflare
-  - javascript
-  - javascript.react
-  - javascript.angular
-  - javascript.vue
-  - javascript.svelte
-  - javascript.solid
-  - javascript.ember
-  - javascript.gatsby
 ---
 
 <PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react"]}>
@@ -41,13 +33,13 @@ supported:
   </Alert>
 </PlatformSection>
 
-<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
+<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
   ## Automatic Instrumentation
 
   _Import name: `Sentry.openAIIntegration`_
 
-  <PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+  <PlatformSection notSupported={["javascript.node", "javascript.eve", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
     <Alert>
       If you are using a different runtime (like Bun, Cloudflare Workers or a Browser) or experiencing missing spans, **[wrap the client](#instrument-the-client)** with `instrumentOpenAiClient` instead.
     </Alert>
@@ -61,7 +53,7 @@ supported:
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.eve", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
   ## Instrument the Client
 
@@ -104,7 +96,7 @@ supported:
   );
   ```
 
-  If you call OpenAI from a Durable Object over RPC, set `enableRpcTracePropagation: true` on **both** the Worker (caller) and the DO (receiver). Wrap the DO with <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink>. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
+  If you call OpenAI from a Durable Object over RPC, set `rpcTracePropagationBindings` on both sides. On the Worker, list the Durable Object's binding. On the Durable Object, set the option to an empty array. Wrap the Durable Object with <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink>. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
 
   For multi-turn Conversations and the User column, see <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink> (`setConversationId` / `setUser`).
 
@@ -164,7 +156,7 @@ Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the def
 
 **Usage**
 
-<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
+<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.electron", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.wasm"]}>
 
 Using the `openAIIntegration` integration for **automatic instrumentation**:
 
@@ -183,7 +175,7 @@ Sentry.init({
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.node", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.eve", "javascript.connect", "javascript.hapi", "javascript.koa"]}>
 
 Using the `instrumentOpenAiClient` wrapper:
 
@@ -212,7 +204,7 @@ Instrumented calls record model, token usage, latency, and (when enabled) inputs
 
 The OpenAI SDK does **not** run your tools — your application does, after the model returns `tool_calls`. Because of that, `instrumentOpenAiClient` / `openAIIntegration` do **not** create `gen_ai.execute_tool` spans for local tool handlers.
 
-<PlatformSection supported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.nextjs", "javascript.nuxt", "javascript.astro", "javascript.solidstart", "javascript.sveltekit", "javascript.remix", "javascript.cloudflare", "javascript.tanstackstart-react"]}>
+<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.bun", "javascript.nextjs", "javascript.nuxt", "javascript.astro", "javascript.solidstart", "javascript.sveltekit", "javascript.remix", "javascript.cloudflare", "javascript.tanstackstart-react"]}>
 
 To get the full agent tree (`gen_ai.invoke_agent` → `gen_ai.chat` + `gen_ai.execute_tool`), wrap your tool loop with <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>.
 

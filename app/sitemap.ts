@@ -1,4 +1,5 @@
 import type {MetadataRoute} from 'next';
+import {canonicalPath} from 'sentry-docs/canonical';
 import {DEVELOP_DOCS_INDEXABLE_ROOTS} from 'sentry-docs/developDocsConfig';
 import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
@@ -50,13 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 
 function docsToSitemap(paths: string[], baseUrl: string): MetadataRoute.Sitemap {
-  const appendSlash = (path: string) => {
-    if (path === '' || path.endsWith('/')) {
-      return path;
-    }
-    return path + '/';
-  };
-  const toFullUrl = (path: string) => `${appendSlash(baseUrl)}${appendSlash(path)}`;
+  const toFullUrl = (path: string) => `${baseUrl}${canonicalPath(path)}`;
   const toSitemapEntry = (path: string) => ({url: toFullUrl(path)});
   return ['', ...paths].map(toSitemapEntry);
 }

@@ -25,7 +25,6 @@ go get github.com/getsentry/sentry-go
 
 raven-go
 
-
 ```go
 import "github.com/getsentry/raven-go"
 
@@ -71,7 +70,6 @@ SetIncludePaths()
 
 sentry-go
 
-
 ```go
 sentry.Init(sentry.ClientOptions{
 	Dsn: "___PUBLIC_DSN___",
@@ -90,7 +88,6 @@ Available options: see [Configuration](/platforms/go/configuration/options/) sec
 #### Providing SSL Certificates
 
 By default, TLS uses the host's root CA set. If you don't have `ca-certificates` (which should be your go-to way of fixing the missing certificates issue) and want to use `gocertifi` instead, you can provide pre-loaded cert files as one of the options to `sentry.Init` call:
-
 
 ```go
 package main
@@ -362,11 +359,16 @@ sentry-go
 
 ```go
 // use `sentry.WithScope`, see "Context / Per-event Section"
+import "github.com/getsentry/sentry-go/attribute"
+
 path := "filename.ext"
 f, err := os.Open(path)
 if err != nil {
 	sentry.WithScope(func(scope *sentry.Scope) {
-		scope.SetExtras(map[string]interface{}{"path": path, "cwd": os.Getwd()})
+		scope.SetAttributes(
+			attribute.String("path", path),
+			attribute.String("cwd", os.Getwd()),
+		)
 		sentry.CaptureException(err)
 	})
 }

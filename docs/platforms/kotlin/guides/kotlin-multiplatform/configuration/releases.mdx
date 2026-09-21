@@ -1,6 +1,6 @@
 ---
 title: Releases & Health
-description: "Learn how to configure your SDK to tell Sentry about your releases."
+description: "Configure releases and session tracking to monitor release health in Kotlin Multiplatform apps."
 sidebar_order: 40
 ---
 
@@ -10,8 +10,6 @@ A release is a version of your code that is deployed to an <PlatformLink to="/co
 - Predict which commit caused an issue and who is likely responsible
 - Resolve issues by including the issue number in your commit message
 - Receive email notifications when your code gets deployed
-
-Additionally, releases are used for applying [source maps](/platforms/javascript/sourcemaps/) to minified JavaScript to view original, untransformed source code.
 
 <Include name="bind-release-version.mdx" />
 
@@ -26,3 +24,37 @@ Setting the release name tags each event with that release name. We recommend th
 If you don't tell Sentry about a new release, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
 
 After configuring your SDK, you can install a repository integration or manually supply Sentry with your own commit metadata. Read our documentation about [setting up releases](/product/releases/setup/) for further information about integrations, associating commits, and telling Sentry when deploying releases.
+
+## Release Health
+
+[Release Health](/product/releases/health/) uses session data to show crash-free sessions and users for each release. A session represents a user's interaction with your app and records whether that interaction ended in a crash.
+
+### Automatic Session Tracking
+
+Automatic session tracking is enabled by default for Android and supported Apple app lifecycles. The native SDK handles foreground and background transitions. By default, a background interval longer than 30 seconds ends the session; returning to the app starts a new one.
+
+Configure session tracking in your shared initializer:
+
+```kotlin {filename:commonMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+
+fun initializeSentry() {
+    Sentry.init { options ->
+        options.dsn = "___PUBLIC_DSN___"
+        options.enableAutoSessionTracking = true
+        options.sessionTrackingIntervalMillis = 60000
+    }
+}
+```
+
+This example changes the background timeout to 60 seconds. The default for `sessionTrackingIntervalMillis` is `30000` milliseconds. To disable automatic session tracking, set `enableAutoSessionTracking` to `false`.
+
+Sessions are associated with a release. Use the release configured in [Setting a Release](#setting-a-release) to compare crash-free sessions and users between app versions.
+
+### Platform Details
+
+Follow the native guides for lifecycle requirements and platform-specific behavior:
+
+- [Android session tracking](/platforms/android/configuration/releases/#sessions), including the AndroidX lifecycle dependencies used for automatic tracking.
+- [Apple session tracking](/platforms/apple/configuration/releases/#sessions).
+- [JVM session tracking](/platforms/java/configuration/releases/#sessions), which requires explicit session management through the native Java SDK. Setting the shared automatic-tracking option does not provide a JVM application lifecycle integration.

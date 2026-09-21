@@ -1,4 +1,4 @@
-Metrics are enabled by default. Once you initialize the SDK, you can send metrics using the `SentrySdk.Experimental.Metrics` APIs.
+Once you initialize the SDK, you can send metrics using the `SentrySdk.Metrics` APIs.
 
 The `SentryMetricEmitter` type exposes three method groups that you can use to capture different types of metric information: `Counter`, `Gauge`, and `Distribution`.
 
@@ -13,8 +13,8 @@ To emit a counter, do the following:
 
 ```csharp
 // Record five total player interactions
-SentrySdk.Experimental.Metrics.EmitCounter("player_interaction", 5,
-    new[] { new KeyValuePair<string, object>("scene", "MainMenu"), new KeyValuePair<string, object>("app_version", "1.0.0") });
+SentrySdk.Metrics.EmitCounter("player_interaction", 5,
+    new Dictionary<string, object> { ["scene"] = "MainMenu", ["app_version"] = "1.0.0" });
 ```
 
 ### Emit a Distribution
@@ -25,8 +25,8 @@ To emit a distribution, do the following:
 
 ```csharp
 // Add '15.0' to a distribution used for tracking the loading times per scene.
-SentrySdk.Experimental.Metrics.EmitDistribution("scene_load", 15.0, MeasurementUnit.Duration.Millisecond,
-    new[] { new KeyValuePair<string, object>("scene", "Level1") });
+SentrySdk.Metrics.EmitDistribution("scene_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["scene"] = "Level1" });
 ```
 
 ### Emit a Gauge
@@ -37,6 +37,27 @@ To emit a gauge, do the following:
 
 ```csharp
 // Add '15.0' to a gauge used for tracking the loading times for a scene.
-SentrySdk.Experimental.Metrics.EmitGauge("scene_load", 15.0, MeasurementUnit.Duration.Millisecond,
-    new[] { new KeyValuePair<string, object>("scene", "Level1") });
+SentrySdk.Metrics.EmitGauge("scene_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["scene"] = "Level1" });
 ```
+
+### Custom Attributes
+
+Attributes let you slice a metric by things like the active scene, level, or platform in Sentry, instead of emitting a separate metric per variant. Every `Emit` method accepts a collection of `KeyValuePair<string, object>` as attributes, so any `Dictionary<string, object>` or array works:
+
+```csharp
+var attributes = new Dictionary<string, object>
+{
+    ["scene"] = SceneManager.GetActiveScene().name,
+    ["level"] = 42,
+    ["is_premium"] = true,
+};
+
+SentrySdk.Metrics.EmitCounter("enemy_defeated", 1, attributes);
+SentrySdk.Metrics.EmitDistribution("scene_load", 15.0, MeasurementUnit.Duration.Millisecond, attributes);
+SentrySdk.Metrics.EmitGauge("active_players", 12, MeasurementUnit.None, attributes);
+```
+
+Supported attribute types are `string`, `char`, `bool`, integers up to 64-bit signed, and floating-point numbers up to 64-bit. Other types are converted to `string` via `ToString()`.
+
+To attach an attribute to every metric the SDK emits, set it once in the `SetBeforeSendMetric` callback described under [Options](#options) instead of repeating it at each call site.
