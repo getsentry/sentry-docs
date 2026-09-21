@@ -536,7 +536,9 @@ npx remix vite:build
 <SplitSection>
 <SplitSectionText>
 
-To upload source maps for clear error stack traces, install the Sentry Vite plugin:
+To upload source maps for clear error stack traces, pass your Sentry organization, project, and auth token to `sentryRemixVitePlugin` from the previous step. It injects debug IDs, uploads the source maps during your production build, and deletes them from your build output afterwards.
+
+The plugin also turns on hidden source maps for you, unless you set `build.sourcemap` yourself.
 
 <Alert title="Not using Vite?">
 
@@ -548,56 +550,26 @@ alternative setup options.
 </SplitSectionText>
 <SplitSectionCode>
 
-```bash {tabTitle:npm}
-npm install @sentry/vite-plugin --save-dev
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/vite-plugin --dev
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/vite-plugin --save-dev
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-Then add `sentryVitePlugin` with your Sentry auth token, organization, and project slug to your `vite.config.ts` file, and enable source map generation. Keep the plugins from the previous step:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:vite.config.ts} {4, 13-20, 23-26}
-import { defineConfig } from "vite";
+```javascript {filename:vite.config.ts} {10-16}
 import { vitePlugin as remix } from "@remix-run/dev";
 import { sentryRemixVitePlugin } from "@sentry/remix/vite";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
     remix({
       // ... your Remix plugin options
     }),
-    sentryRemixVitePlugin(),
-    // ... other plugins
-    sentryVitePlugin({
-      // If you use .sentryclirc or environment variables,
+    sentryRemixVitePlugin({
+      // If you use environment variables,
       // you don't need to specify these options
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       // store your auth token in an environment variable
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
+    // ... other plugins
   ],
-
-  build: {
-    sourcemap: "hidden",
-    // ... rest of your Vite build options
-  },
 });
 ```
 
