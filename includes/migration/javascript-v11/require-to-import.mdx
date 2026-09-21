@@ -1,0 +1,48 @@
+---
+id: require-to-import
+title: "Initializing via `--require` is no longer supported"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks:
+  [
+    astro,
+    aws-lambda,
+    azure-functions,
+    connect,
+    effect,
+    elysia,
+    express,
+    fastify,
+    firebase,
+    gcp-functions,
+    hapi,
+    hono,
+    koa,
+    mastra,
+    nestjs,
+    nextjs,
+    nitro,
+    node,
+    nuxt,
+    react-router,
+    remix,
+    solidstart,
+    sveltekit,
+    tanstackstart-react,
+  ]
+platformCategory: server
+order: 110
+---
+
+Node.js re-runs `--require` preloads on the internal module loader thread that the SDK spawns when it installs its instrumentation hooks, so `Sentry.init()` ran a second time on a thread that never executes your code. The SDK now skips initialization on that thread and warns when it was loaded through `--require`.
+
+Use [`--import`](https://nodejs.org/api/cli.html#--importmodule) instead. It works for both ESM and CommonJS apps.
+
+```bash
+# Before
+node --require ./instrument.js app.js
+
+# After
+node --import ./instrument.js app.js
+```

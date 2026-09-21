@@ -4,10 +4,9 @@ description: "Learn how to manually set up Sentry in your Google Cloud Functions
 sdk: sentry.javascript.google-cloud-serverless
 fallbackGuide: javascript.node
 categories:
-  - javascript
   - server
-  - server-node
   - serverless
+  - server-only
 ---
 
 <Alert>
@@ -99,7 +98,7 @@ exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
 ```
 
 ```javascript {tabTitle:Background functions}
-exports.helloBackground = Sentry.wrapBackgroundFunction(
+exports.helloBackground = Sentry.wrapEventFunction(
   (data, context, callback) => {
     throw new Error("Sentry Test Error - This is intentional!");
   }
@@ -142,17 +141,15 @@ exports.helloHttp = Sentry.wrapHttpFunction(async (req, res) => {
 ```
 
 ```javascript {tabTitle:Background functions}
-exports.helloBackground = Sentry.wrapBackgroundFunction(
-  async (data, context) => {
-    await Sentry.startSpan(
-      { op: "test", name: "My First Test Transaction" },
-      async () => {
-        // Simulate some work
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    );
-  }
-);
+exports.helloBackground = Sentry.wrapEventFunction(async (data, context) => {
+  await Sentry.startSpan(
+    { op: "test", name: "My First Test Transaction" },
+    async () => {
+      // Simulate some work
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  );
+});
 ```
 
 ```javascript {tabTitle:CloudEvent functions}
@@ -178,6 +175,8 @@ exports.helloEvent = Sentry.wrapCloudEventFunction(async (context) => {
 <Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
+
+<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 

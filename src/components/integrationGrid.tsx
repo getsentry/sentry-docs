@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
+import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {PlatformIcon} from './platformIcon';
@@ -48,9 +48,24 @@ export function IntegrationGrid({integrations}: Props) {
       : `/platform-redirect/?next=${encodeURIComponent(to)}`);
 
   const visibleIntegrations = currentPlatformOrGuide
-    ? integrations.filter(({supported, notSupported}) =>
-        isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)
-      )
+    ? integrations.filter(({to, href, supported, notSupported}) => {
+        if (
+          !isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)
+        ) {
+          return false;
+        }
+
+        const targetUrl = new URL(hrefFor(to, href), 'https://docs.sentry.io');
+        if (targetUrl.hostname !== 'docs.sentry.io') {
+          return true;
+        }
+
+        const targetNode = nodeForPath(
+          rootNode,
+          targetUrl.pathname.split('/').filter(Boolean)
+        );
+        return Boolean(targetNode && !targetNode.missing);
+      })
     : integrations;
 
   if (visibleIntegrations.length === 0) {

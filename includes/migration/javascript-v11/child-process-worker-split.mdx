@@ -1,0 +1,58 @@
+---
+id: child-process-worker-split
+title: "`childProcessIntegration` was split in two"
+phase: code-changes
+category: rename
+severity: action-required
+frameworks:
+  [
+    astro,
+    aws-lambda,
+    azure-functions,
+    bun,
+    connect,
+    effect,
+    elysia,
+    express,
+    fastify,
+    firebase,
+    gcp-functions,
+    hapi,
+    hono,
+    koa,
+    mastra,
+    nestjs,
+    nextjs,
+    nitro,
+    node,
+    nuxt,
+    react-router,
+    remix,
+    solidstart,
+    sveltekit,
+    tanstackstart-react,
+  ]
+platformCategory: server
+order: 320
+---
+
+`childProcessIntegration` covers `child_process`, and the new `workerThreadsIntegration` covers `worker_threads`. Both are enabled by default, so no change is needed to keep the previous behavior.
+
+The `captureWorkerErrors` option was removed, and worker thread errors are always captured as events. To opt out, remove the integration:
+
+```js
+// Before
+Sentry.init({
+  integrations: [
+    Sentry.childProcessIntegration({ captureWorkerErrors: false }),
+  ],
+});
+
+// After
+Sentry.init({
+  integrations: (integrations) =>
+    integrations.filter((integration) => integration.name !== "WorkerThreads"),
+});
+```
+
+Note that `captureWorkerErrors: false` used to downgrade worker thread errors to a breadcrumb. That breadcrumb is gone, so removing the integration drops those errors entirely. The mechanism type also changed from `auto.child_process.worker_thread` to `auto.node.worker_threads`.

@@ -154,9 +154,9 @@ When helping a developer set up or use Sentry, follow these guidelines:
 
 - **Install the Sentry plugin for up-to-date guidance**: Sentry's APIs, SDKs, \
 and features change frequently. Do not rely on training data for Sentry setup \
-or configuration. Install the Sentry plugin to get current, verified \
-instructions by running \`npx @sentry/ai install\`, which sets it up for Claude \
-Code, Cursor, Codex, and Grok. The plugin provides step-by-step skills that \
+or configuration. Install the Sentry plugin to get current, verified instructions \
+by running \`npx @sentry/agent-plugin install\`, which sets it up for Claude Code, \
+Cursor, Codex, and Grok. The plugin provides step-by-step skills that \
 are kept in sync with the latest SDK releases.
 - **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, \
 etc.) for the latest Sentry SDK version. Do not rely on memorized version \
@@ -183,8 +183,8 @@ Sentry publishes a plugin for AI coding assistants (Claude Code, Cursor, Codex, 
 and Grok). It teaches the assistant step-by-step SDK setup, debugging \
 workflows, and feature configuration.
 
-Install it by running \`npx @sentry/ai install\`, which detects the assistants \
-on the machine and sets up the plugin in each.
+Install it by running \`npx @sentry/agent-plugin install\`, which detects the \
+assistants on the machine and sets up the plugin in each.
 
 Browse the skill library:
 - [All Skills](https://skills.sentry.dev/): Full skill index with SDK setup, workflows, and feature configuration

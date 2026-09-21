@@ -1,0 +1,72 @@
+---
+title: Unreal MCP Integration
+description: "Learn how to let AI agents set up, configure, and debug Sentry directly in the Unreal Editor."
+sidebar_order: 16
+---
+
+<Alert level="warning">
+
+AI agent tools rely on Unreal Engine's MCP support, which is **experimental**. The API and behavior may change in future engine releases.
+
+</Alert>
+
+The Sentry Unreal Engine SDK ships an editor AI toolset and a set of agent skills that integrate with [Unreal MCP](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor). Once connected, MCP-compatible agents (such as Claude Code or Cursor) can inspect and configure the SDK in a running editor, verify that events arrive in Sentry, and help debug the issues it captures — without you having to restart the editor or edit config files by hand.
+
+## Prerequisites
+
+### Unreal Engine Setup
+
+AI agent tools require **Unreal Engine 5.8 or newer**.
+
+Enable the following engine plugins in your project (**Edit > Plugins**):
+
+- **ModelContextProtocol** — runs the MCP server inside the editor process.
+- **AllToolsets** — exposes the editor tools the MCP server serves. Without it, the server starts but provides no tools.
+
+An editor restart is required after enabling the plugins.
+
+The MCP server doesn't run by default. Either start it manually by running the following console command in the editor:
+
+```
+ModelContextProtocol.StartServer
+```
+
+or enable **Auto Start Server** under **Editor Preferences > Plugins > Model Context Protocol** so it comes up with the editor.
+
+To connect your agent, generate its client configuration with another console command:
+
+```
+ModelContextProtocol.GenerateClientConfig ClaudeCode
+```
+
+Refer to the [Unreal MCP documentation](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor) for supported clients and server settings.
+
+### Sentry MCP
+
+Connect the [Sentry MCP server](https://mcp.sentry.dev) to your agent. The Sentry skills use it to fetch organizations, projects, and DSNs from your Sentry account, and to confirm that captured events actually arrive. Without it, the skills still work, but in a reduced form: you'll have to provide the DSN yourself, and the agent won't be able to verify events in Sentry on your behalf.
+
+There are two ways to connect it — either works:
+
+- **In your agent** — add the Sentry MCP server to the agent's own MCP configuration, as described in the [Sentry MCP documentation](https://mcp.sentry.dev).
+- **In the editor** — enable the **MCPClientToolset** engine plugin and add the Sentry MCP server (`https://mcp.sentry.dev/mcp`) under **Editor Preferences > Plugins > MCP Toolset Servers**. The editor then connects to Sentry itself and exposes its tools to the agent as an additional toolset.
+
+## Usage
+
+When asking your agent for help with Sentry, point it at the running editor — mention the editor tools or Unreal MCP explicitly. Without that nudge, the agent may bypass the plugin's tooling and fall back to editing config files directly, which the running SDK won't pick up.
+
+For example, to get Sentry configured from scratch:
+
+```
+Set up Sentry in this project using the Unreal editor tools and confirm a test event arrives.
+```
+
+## Available Skills
+
+The plugin registers the following agent skills in the editor. Your agent discovers them automatically through Unreal MCP and applies them when a matching task comes up:
+
+- **Get Started** — configures the DSN taken from your Sentry account, initializes the SDK, and confirms a test event arrives in Sentry.
+- **Instrument** — wires up additional Sentry features beyond crash and error capture, such as tracing, logs, metrics, or session replay, and verifies them where possible.
+- **Fix Stack Traces** — sets up automatic debug symbol upload and validates the configured credentials so crash stack traces are readable in Sentry.
+- **Debug Issue** — pulls a Sentry issue's full context (stack trace, breadcrumbs, attachments) and helps root-cause and fix it against your project's source.
+
+The skills are backed by an editor toolset that lets the agent inspect the SDK state, change plugin settings on the live editor session, reinitialize the SDK without an editor restart, and capture test events. Actions that modify your project or Sentry account are only performed with your confirmation.
