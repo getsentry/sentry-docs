@@ -34,11 +34,12 @@ Set up Issue Autofix in your organization or on specific projects:
 
 ## How Issue Autofix Works
 
-Seer's Issue Autofix flow follows a three step process:
+Seer's Issue Autofix flow follows a four-step process:
 
 1. [Root Cause Analysis](#root-cause-analysis): Analyze the issue using Sentry's context and your codebases and determine the root cause
 2. [Solution Identification](#solution-identification): Identify a solution based on the analysis
 3. [Code Generation](#code-generation): Generate a code fix and (optionally) open a PR, or [hand off to a coding agent](#handoff-to-coding-agents)
+4. [PR Iteration](#pr-iteration): Refine a PR created by Seer using CI failures and your feedback
 
 You can always manually trigger the Autofix flow from the Issue Details page.
 
@@ -105,6 +106,17 @@ snippets and examples, and does not affect workflows involving your own coding a
 </Alert>
 
 ![Screenshot of Seer showing code it generated =800x](../img/coding-step.png)
+
+### PR Iteration
+
+After Seer opens a PR, it can update that same PR to address failing CI checks and your feedback. PR iteration is supported on GitHub.com only.
+
+- **Automatic CI iteration:** When CI checks fail, Seer investigates the failures and attempts to fix them by pushing follow-up changes to the PR. Automated attempts are limited to prevent an endless loop; you can provide feedback to continue iterating.
+- **Feedback in Sentry:** Open the Autofix panel on the Issue Details page, enter instructions in the feedback field, and select **Submit**. For example, ask Seer to add a regression test or handle an edge case.
+- **Feedback on GitHub:** Add a PR comment starting with `@sentry`, such as `@sentry Add a regression test for this fix`. Seer also acts on submitted PR reviews, including their summary and inline comments, without requiring an `@sentry` mention. You need write access to the repository to trigger iteration through GitHub comments or reviews.
+- **Stop iteration:** Comment `@sentry stop iterating` on the PR to stop further automatic and manual iteration for that Autofix run. This also requires write access to the repository.
+
+If Seer posts a comment requesting additional GitHub permissions, follow the link in the comment to review and accept the updated Sentry GitHub App permissions. Review the resulting changes before merging the PR.
 
 ### Handoff to Coding Agents
 
