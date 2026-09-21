@@ -92,6 +92,7 @@ import LoguruSVG from 'platformicons/svg/loguru.svg';
 import MastraSVG from 'platformicons/svg/mastra.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import McpSVG from 'platformicons/svg/mcp.svg';
+import MistralSVG from 'platformicons/svg/mistral.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
@@ -247,6 +248,7 @@ import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
 import MastraSVGLarge from 'platformicons/svg_80x80/mastra.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import McpSVGLarge from 'platformicons/svg_80x80/mcp.svg';
+import MistralSVGLarge from 'platformicons/svg_80x80/mistral.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
@@ -712,6 +714,10 @@ const formatToSVG = {
     sm: McpSVG,
     lg: McpSVGLarge,
   },
+  mistral: {
+    sm: MistralSVG,
+    lg: MistralSVGLarge,
+  },
   mongodb: {
     sm: MongodbSVG,
     lg: MongodbSVGLarge,
@@ -1077,6 +1083,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   mastra: 'mastra',
   mcp: 'mcp',
+  mistral: 'mistral',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',

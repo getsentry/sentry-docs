@@ -1,0 +1,232 @@
+---
+title: Mistral AI
+description: "Adds instrumentation for the Mistral AI SDK."
+sidebar_order: 29
+supported:
+  - javascript.node
+  - javascript.eve
+  - javascript.mastra
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.firebase
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.tanstackstart-react
+  - javascript.bun
+  - javascript.elysia
+  - javascript.cloudflare
+  - javascript.effect
+  - javascript.deno
+---
+
+The Mistral AI integration captures model calls, token usage, and latency from the [`@mistralai/mistralai`](https://www.npmjs.com/package/@mistralai/mistralai) SDK. Requires Sentry SDK version `11.0.0-rc.0` or later and <PlatformLink to="/tracing/">tracing enabled</PlatformLink>.
+
+<PlatformSection supported={["javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.effect"]}>
+
+<Alert>
+  Mistral AI instrumentation is available in the server SDK only. Use these APIs
+  in server-side code.
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.mastra", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.firebase", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.deno"]}>
+
+## Automatic Instrumentation
+
+_Import name: `Sentry.mistralAIIntegration`_
+
+The integration is enabled by default when tracing is enabled. Initialize Sentry before importing the Mistral SDK, following your platform's <PlatformLink to="/">setup instructions</PlatformLink>.
+
+<PlatformSection supported={["javascript.hono"]}>
+
+On Node.js, follow the setup above. For build-time automatic instrumentation, follow the [Bun setup](/platforms/javascript/guides/bun/agent-tracing/mistral/#automatic-instrumentation) or [Cloudflare setup](/platforms/javascript/guides/cloudflare/agent-tracing/mistral/#automatic-instrumentation) for your runtime. The Deno entry point supports the automatic integration, but does not export the manual wrapper; follow the [Deno setup](/platforms/javascript/guides/deno/agent-tracing/mistral/).
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+Preload Sentry's import hook when starting your Deno application so the Mistral SDK can be instrumented:
+
+```bash
+deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preload=npm:@sentry/deno/import app.ts
+```
+
+</PlatformSection>
+
+To customize what data is captured, configure the integration in your existing Sentry initialization:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.mistralAIIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia", "javascript.cloudflare"]}>
+
+## Automatic Instrumentation
+
+Mistral calls can be instrumented automatically when your build uses Sentry's instrumentation plugin. Set up the Sentry SDK and enable tracing before making requests.
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia"]}>
+
+For applications running on Bun, add `sentryBunPlugin()` to your build and run the resulting bundle:
+
+```typescript {filename:build.ts}
+import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+await Bun.build({
+  entrypoints: ["./src/index.ts"],
+  outdir: "./dist",
+  target: "bun",
+  plugins: [sentryBunPlugin()],
+});
+```
+
+<PlatformSection supported={["javascript.elysia"]}>
+
+For Elysia running with the Node.js adapter, follow the [Node.js automatic instrumentation setup](/platforms/javascript/guides/node/agent-tracing/mistral/#automatic-instrumentation).
+
+</PlatformSection>
+
+The Mistral SDK must be included in the bundle so the plugin can instrument it. The plugin only runs during a build; for unbundled applications started with `bun run`, use [Manual Instrumentation](#manual-instrumentation).
+
+Configure `Sentry.mistralAIIntegration({ recordInputs: false, recordOutputs: false })` in your existing `Sentry.init` call to customize content recording, or use `dataCollection.genAI`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Add `sentryCloudflareVitePlugin()` alongside Cloudflare's Vite plugin:
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+With SDK `11.0.0-rc.0` or later, `buildTimeInstrumentation` is enabled by default. The plugin instruments the bundled Mistral SDK and registers its Sentry integration in both `vite dev` and `vite build`. Keep the `nodejs_compat` flag enabled in your Wrangler configuration.
+
+For a Worker entry declared in Wrangler's `main`, create `instrument.server.ts` next to the entry file. The plugin uses its default export as the Sentry options:
+
+```typescript {filename:src/instrument.server.ts}
+export default (env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+});
+```
+
+If your Worker is already wrapped with `Sentry.withSentry`, configure these options there instead.
+
+Control automatic input and output recording through `dataCollection.genAI` in your Sentry options. You don't need to add `mistralAIIntegration()` yourself; it is not exported from `@sentry/cloudflare`.
+
+Without the plugin, or with `buildTimeInstrumentation: false`, use [Manual Instrumentation](#manual-instrumentation).
+
+</PlatformSection>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.mastra", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.firebase", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nextjs", "javascript.nuxt", "javascript.solidstart", "javascript.sveltekit", "javascript.react-router", "javascript.remix", "javascript.astro", "javascript.tanstackstart-react", "javascript.bun", "javascript.elysia", "javascript.cloudflare", "javascript.effect"]}>
+
+## Manual Instrumentation
+
+_Import name: `Sentry.instrumentMistralAiClient`_
+
+If your application does not use automatic instrumentation, wrap your Mistral client after setting up Sentry. Use the returned client for all Mistral calls.
+
+<PlatformSection supported={["javascript.hono"]}>
+
+Import Sentry from the entry point for your runtime: `@sentry/hono/node`, `@sentry/hono/bun`, or `@sentry/hono/cloudflare`.
+
+</PlatformSection>
+
+```javascript
+import { Mistral } from "@mistralai/mistralai";
+
+const mistral = new Mistral({ apiKey: "your-mistral-api-key" });
+const client = Sentry.instrumentMistralAiClient(mistral, {
+  recordInputs: false,
+  recordOutputs: false,
+});
+
+const response = await client.chat.complete({
+  model: "mistral-small-latest",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+Use one instrumentation approach for each client. If automatic instrumentation is already active, you don't need to wrap the client.
+
+</PlatformSection>
+
+## Configuration
+
+The following options control content recorded on Mistral spans. They apply to both the integration and the client wrapper.
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs such as prompts, messages, tool definitions, and embedding input. Defaults to the client's `dataCollection.genAI.inputs` setting, which defaults to `true`. An explicit value overrides that setting.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs such as generated text and tool calls. Defaults to the client's `dataCollection.genAI.outputs` setting, which defaults to `true`. An explicit value overrides that setting.
+
+Set either option to `false` to exclude that content while retaining timing and token usage. See <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> for SDK-wide privacy controls.
+
+## Supported Operations
+
+Tracing support is added to the following Mistral SDK calls:
+
+- `chat.complete()` - Generate a chat completion.
+- `chat.stream()` - Stream a chat completion.
+- `chat.parse()` - Generate a structured response.
+- `chat.parseStream()` - Stream a structured response.
+- `embeddings.create()` - Generate embeddings.
+- `agents.complete()` - Generate an agent completion.
+- `agents.stream()` - Stream an agent completion.
+
+Streaming calls are recorded as a single span as you consume the stream. Tool calls returned by the model are recorded when `recordOutputs` is enabled; this integration does not instrument execution of your tool functions.
+
+## Verify
+
+Make a Mistral request, then open [Agent Tracing](/product/agents/) in Sentry. Check for a `gen_ai.chat`, `gen_ai.embeddings`, or `gen_ai.invoke_agent` span, depending on the operation, with model and token usage where returned by Mistral.
+
+If no spans appear, check that tracing is enabled and Sentry is initialized before the request. For manual instrumentation, make the request through the wrapped client. For streaming requests, consume the stream.
+
+## Supported Versions
+
+- Sentry JavaScript SDK: `>=11.0.0-rc.0`
+- `@mistralai/mistralai`: `>=2.0.0 <3`
