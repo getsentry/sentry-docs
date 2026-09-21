@@ -1048,6 +1048,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',

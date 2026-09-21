@@ -1,4 +1,5 @@
 import {PaginationNavNode} from './paginationNavNode';
+import {PlatformCategory} from './platform';
 
 /**
  ** a YAML-formatted blob defined at the top of every markdown or mdx file
@@ -70,6 +71,13 @@ export interface FrontMatter {
   notSupported?: string[];
 
   /**
+   * Platform categories this page is not relevant to (e.g. `['server']`).
+   * Applied in addition to `notSupported`; a page is hidden when the current
+   * platform/guide matches either list.
+   */
+  notSupportedCategories?: PlatformCategory[];
+
+  /**
    * Set this to true to disable page-level table of contents rendering.
    */
   notoc?: boolean;
@@ -131,6 +139,13 @@ export interface FrontMatter {
    * Specific guides that this page is relevant to.
    */
   supported?: string[];
+
+  /**
+   * Platform categories this page is relevant to (e.g. `['server']`).
+   * Applied in addition to `supported`; when either allowlist is present, the
+   * page is shown only for platforms/guides matching one of them.
+   */
+  supportedCategories?: PlatformCategory[];
   /**
    * Available versions for this page
    * @example ['v7.119.0', 'next']

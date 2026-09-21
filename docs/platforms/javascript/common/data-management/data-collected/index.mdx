@@ -149,7 +149,7 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.connect", "javascript.cloudflare", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.wasm"]}>
+<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.connect", "javascript.cloudflare", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.wasm", "javascript.eve", "javascript.mastra"]}>
   <PlatformSection notSupported={["javascript.cordova"]}>
     ## Session Replay
 
@@ -232,12 +232,30 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
 </PlatformSection>
 
+## GraphQL Operations
+
+When you use a GraphQL integration, the Sentry SDK sends the operation name and the operation type to Sentry.
+
+When you use `dataCollection`, the SDK also sends the GraphQL document (the query or mutation source text) and the variables passed to the operation by default. This data can include PII. Use the `dataCollection.graphQL` option (available since version `10.66.0`) to control it:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    graphQL: {
+      document: false,
+      variables: false,
+    },
+  },
+});
+```
+
 <PlatformSection notSupported={["javascript.deno"]}>
   ## LLM Inputs And Responses
 
   When using AI integrations, metadata like model ID and used tokens is sent to Sentry.
 
-  The content of generative AI inputs (such as prompts and tool arguments) and outputs (such as completions) might carry personal data. Whether it's recorded depends on your configuration: it's not recorded by default with `sendDefaultPii`, but when you use `dataCollection`, the `genAI` category records both inputs and outputs unless you opt out. Metadata like model ID and token counts is always collected.
+  The content of generative AI inputs (system instructions, prompt messages, tool definitions, and tool call arguments) and outputs (such as completion text and tool call results) might carry personal data. Whether it's recorded depends on your configuration: it's not recorded by default with `sendDefaultPii`, but when you use `dataCollection`, the `genAI` category records both inputs and outputs unless you opt out. Metadata like model ID and token counts is always collected.
 
   Use the `dataCollection.genAI` option to control this. For example, opt out of recording AI message content while keeping the metadata:
 

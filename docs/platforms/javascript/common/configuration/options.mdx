@@ -122,6 +122,7 @@ If both options are set, `dataCollection` takes precedence.
 Sentry.init({
   dataCollection: {
     userInfo: false,
+    graphQL: { document: false, variables: false },
     genAI: { inputs: false, outputs: false },
     databaseQueryData: false,
     queues: false,
@@ -145,18 +146,19 @@ Controls which categories of data the SDK collects automatically. All fields are
 
 For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
 
-| Key                   | Type                         | Default    | Description                                                                                                                              |
-| --------------------- | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `userInfo`            | `boolean`                    | `true`     | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                                 |
-| `cookies`             | `CollectBehavior`            | `true`     | Collect cookies.                                                                                                                         |
-| `httpHeaders`         | `{ request?, response? }`    | both `true`| Collect HTTP request and response headers.                                                                                               |
-| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types  | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable.    |
-| `urlQueryParams`      | `CollectBehavior`            | `true`     | Collect URL query parameters.                                                                                                            |
-| `genAI`               | `{ inputs?, outputs? }`      | both `true`| Collect generative AI input/output content. Metadata is always collected.                                                                |
-| `databaseQueryData`   | `boolean`                    | `true`     | Collect the data inside database queries: bound query parameters, write payloads, and returned rows. The parameterized query text and structural metadata are always collected. |
-| `queues`              | `boolean`                    | `true`     | Collect the data passed to tasks within queues. For Kafka, this is the message key. Structural metadata, such as the messaging system, the topic, and the partition, is always collected. |
-| `stackFrameVariables` | `boolean`                    | `true`     | Capture local variable values in stack frames.                                                                                           |
-| `frameContextLines`   | `number`                     | `5`        | Source code lines captured around each stack frame.                                                                                      |
+| Key                   | Type                         | Default       | Description                                                                                                                              |
+| --------------------- | ---------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`            | `boolean`                    | `true`        | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation. For example, the SDK infers the IP address from an incoming HTTP request. Data you set with `Sentry.setUser()` is always sent. |
+| `cookies`             | `CollectBehavior`            | `true`        | Collect cookies. Cookie names are always included. The SDK replaces the values of sensitive cookies with `[Filtered]`. |
+| `httpHeaders`         | `CollectBehavior \| { request?, response? }` | both `true` | Collect HTTP request and response headers. Pass one `CollectBehavior` for both directions, or use `{ request, response }` to control each direction. Header names are always included. |
+| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types     | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable. |
+| `urlQueryParams`      | `CollectBehavior`            | `true`        | Collect URL query parameters. Parameter names are always included. The SDK replaces the values of sensitive parameters with `[Filtered]`. |
+| `graphQL`             | `{ document?, variables? }`  | both `true`   | `document`: Collect the GraphQL document (the query or mutation source text). <br /><br /> `variables`: Collect the variables that are passed to GraphQL operations. <br /><br /> The operation name and type are always collected. |
+| `genAI`               | `{ inputs?, outputs? }`      | both `true`   | `inputs`: Collect the content of generative AI inputs: system instructions, prompt messages, tool definitions, and tool call arguments. <br /><br /> `outputs`: Collect the content of generative AI outputs, such as completion text and tool call results. <br /><br /> Metadata, such as the model name and token counts, is always collected. Options set on an AI integration take precedence over these values. |
+| `databaseQueryData`   | `boolean`                    | `true`        | Collect the data associated with database queries: bound query parameters, data payloads for write operations, and returned result data. <br /><br /> The sanitized or parameterized query text (`db.query.text`) is **not** controlled by this option. Structural metadata, such as the database system, query summary, operation name, and table, is also **always** collected. |
+| `queues`              | `boolean`                    | `true`        | Collect the arguments passed to tasks within queues. For Kafka, this is the message key. Structural metadata, such as the messaging system, the destination name, and the operation, is always collected. |
+| `stackFrameVariables` | `boolean`                    | `true`        | Capture local variable values in stack frames. |
+| `frameContextLines`   | `number`                     | `5`           | Number of source code lines captured above and below each stack frame. |
 
 The `cookies`, `httpHeaders`, and `urlQueryParams` categories accept a `CollectBehavior` value:
 
@@ -167,6 +169,18 @@ type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
 // { deny: [] }  → collect all, extending the denylist with the given terms
 // { allow: [] } → only the listed keys send their real value
 ```
+
+The SDK matches denylist terms against key names. The match is partial and case-insensitive. For example, the term `auth` matches `Authorization` and `X-Auth-Token`. The built-in sensitive denylist always applies, also to keys in an `allow` list:
+
+`["auth", "token", "secret", "password", "passwd", "pwd", "key", "jwt", "bearer", "sso", "saml", "csrf", "xsrf", "credentials", "session", "sid", "identity"]`
+
+Some headers, cookies, and query parameters identify a user without being credentials, such as `x-forwarded-for` or `x-user-id`. To filter these values too, extend the denylist with these terms: `["forwarded", "-ip", "remote-", "via", "-user"]`.
+
+<PlatformCategorySection supported={["browser"]}>
+
+`dataCollection` does not affect <PlatformLink to="/session-replay/privacy/">Session Replay</PlatformLink>. Use the Replay privacy options to control what Replay captures.
+
+</PlatformCategorySection>
 
 </SdkOption>
 
