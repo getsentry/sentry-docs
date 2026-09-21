@@ -479,7 +479,7 @@ thread-safe APIs and only use Godot-specific APIs after you've checked that you'
 
 <SdkOption name="before_send" type="Callable">
 
-If assigned, this callback runs before an event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
+If assigned, this callback runs before an error event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
 
 ```gdscript {tabTitle:GDScript} {mdExpandTabs}
 func _before_send(event: SentryEvent) -> SentryEvent:
@@ -518,6 +518,14 @@ options.SetBeforeSend((sentryEvent, hint) =>
 ```
 
 In C#, `options.SetBeforeSend` covers managed events only. To filter native events from C# (such as engine, GDScript, and GDExtension errors), use [`Native.SetBeforeSend`](#Native.SetBeforeSend).
+
+</SdkOption>
+
+<SdkOption name="before_send_transaction" type="Callable">
+
+If assigned, this callback runs before a transaction is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same transaction event, with or without modifications, or `null` to skip reporting the transaction and its child spans.
+
+See <PlatformLink to="/configuration/filtering/#filtering-transaction-events">Filtering Transaction Events</PlatformLink> for examples, supported fields, and the Web lifecycle restriction. In C#, use [`Native.SetBeforeSendTransaction`](#Native.SetBeforeSendTransaction) for native transactions or `options.SetBeforeSendTransaction` for managed transactions.
 
 </SdkOption>
 
@@ -567,5 +575,13 @@ options.Native.SetBeforeSend(nativeEvent =>
     return nativeEvent;
 });
 ```
+
+</SdkOption>
+
+<SdkOption name="Native.SetBeforeSendTransaction" type="Func<SentryNativeEvent, SentryNativeEvent?>">
+
+Runs before a native transaction is sent. Return the transaction, with or without modifications, to send it, or `null` to drop it. This applies to transactions created by the native layer, including GDScript and GDExtension code. The `SentryNativeEvent` object is valid only during the callback.
+
+Managed transactions use `options.SetBeforeSendTransaction` instead. See <PlatformLink to="/configuration/filtering/#filtering-transaction-events">Filtering Transaction Events</PlatformLink> for examples and supported fields.
 
 </SdkOption>
