@@ -28,13 +28,21 @@ Use `before_send_transaction` to drop unwanted transactions or modify transactio
 
 A transaction groups a root `SentrySpan` and its child spans into the performance event sent when the root span ends. Returning `null` from the callback drops the entire transaction, including its child spans.
 
+<Alert title="Enable Tracing">
+
+These examples assume you've <PlatformLink to="/tracing/">enabled tracing</PlatformLink>. Registering a callback doesn't enable it.
+
+</Alert>
+
 ### Using `before_send_transaction`
 
 The callback receives a `SentryEvent` representing the transaction. Return the same object, with or without modifications, to send it, or return `null` to drop it. Modify the object in place and don't retain it after the callback returns.
 
 You can modify tags, contexts, `release`, and `environment`, or inspect the complete payload with `to_json()`. Error-specific fields such as `message`, `level`, threads, and exceptions aren't available for transaction events.
 
-Disable **Auto Init** and register the callback during <PlatformLink to="/configuration/options/#programmatic-configuration">programmatic initialization</PlatformLink>. The following example drops transactions from editor runs and adds a tag to the remaining transactions. In C#, use `options.Native.SetBeforeSendTransaction` for transactions created by the native layer, including GDScript and GDExtension code:
+Disable **Auto Init** and register the callback during <PlatformLink to="/configuration/options/#programmatic-configuration">programmatic initialization</PlatformLink>.
+
+The following example drops transactions from editor runs and adds a tag to the remaining transactions. In C#, use `options.Native.SetBeforeSendTransaction` for transactions created by the native layer, including GDScript and GDExtension code:
 
 ```GDScript {tabTitle:GDScript} {mdExpandTabs}
 func _initialize() -> void:
