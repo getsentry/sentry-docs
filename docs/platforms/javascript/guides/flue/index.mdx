@@ -26,7 +26,7 @@ Before you begin, you need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
 - A Flue application using `@flue/runtime` version `2.0.0` or later. Flue requires Node.js `22.19` or later.
-- `@sentry/node` version `11.0.0-rc.0` or later, or [`@sentry/cloudflare@^11.0.0-rc.0` when running on Cloudflare](./cloudflare). Browser runtimes are not supported.
+- `@sentry/node` version `11.0.0-rc.0` or later, or [`@sentry/cloudflare@^11.0.0-rc.1` when running on Cloudflare](./cloudflare). Browser runtimes are not supported.
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -75,27 +75,15 @@ Sentry.init({
 instrument(Sentry.createFlueInstrumentation());
 ```
 
-Import it as the first line of your app entry, before Flue loads your agents:
+Import it at the top of your app entry, so it runs before your agents take a turn:
 
 ```typescript {filename:src/app.ts}
 import "../sentry-init.ts";
 ```
 
-Call `instrument()` once, at module scope. Registering twice would install a second observer and duplicate every span.
+Call `instrument()` once, at module scope.
 
 <Include name="flue/captured-summary" />
-
-### Instrument HTTP and Database Calls
-
-To also trace the outgoing requests and database queries your tools make, preload the SDK when you start the server:
-
-```json {filename:package.json}
-{
-  "scripts": {
-    "start": "NODE_OPTIONS='--import=@sentry/node/import' node dist/server.mjs"
-  }
-}
-```
 
 ### Privacy Controls
 
@@ -121,7 +109,7 @@ See [`dataCollection` documentation](./configuration/options/#dataCollection) fo
 ## Troubleshooting
 
 - **Token and cost values are doubled.** Remove the `createOpenTelemetryInstrumentation` call left over from the `flue add tooling sentry` blueprint. Flue emits its own model spans through it, so both it and the SDK count the same turn.
-- **No AI spans at all.** Confirm `instrument(Sentry.createFlueInstrumentation())` runs before Flue loads your agents. Importing `sentry-init.ts` as the first line of `src/app.ts` is what guarantees that.
+- **No AI spans at all.** Confirm `instrument(Sentry.createFlueInstrumentation())` actually runs. Importing `sentry-init.ts` at the top of `src/app.ts` runs it during app startup, before any agent takes a turn.
 
 <Include name="flue/next-steps" />
 
@@ -130,5 +118,5 @@ See [`dataCollection` documentation](./configuration/options/#dataCollection) fo
 ## Supported Versions
 
 - `@sentry/node`: `>=11.0.0-rc.0`
-- `@sentry/cloudflare`: `>=11.0.0-rc.0`
+- `@sentry/cloudflare`: `>=11.0.0-rc.1`
 - `@flue/runtime`: `>=2.0.0 <3.0.0`
