@@ -70,3 +70,75 @@ Sentry.init({
   ],
 });
 ```
+
+## Manual Instrumentation
+
+_Import names: `Sentry.instrumentStateGraph`, `Sentry.instrumentCreateReactAgent`_
+
+If your application does not use automatic instrumentation, wrap your agent after setting up Sentry. Two helpers are available, depending on how you build your agent:
+
+- **`instrumentStateGraph`**: for graphs you build yourself with `StateGraph`. Call it on the graph **before** calling `.compile()`.
+- **`instrumentCreateReactAgent`**: for LangGraph's prebuilt `createReactAgent`. Wrap the factory, then use the wrapped version exactly like `createReactAgent`. This also captures the model and wraps tools, so you get `execute_tool` spans as well.
+
+Both accept the same `recordInputs` and `recordOutputs` options as the integration.
+
+Instrumenting a `StateGraph`:
+
+```javascript
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  StateGraph,
+  MessagesAnnotation,
+  START,
+  END,
+} from "@langchain/langgraph";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+
+// Create LLM call
+const llm = new ChatOpenAI({
+  modelName: "gpt-4o",
+  apiKey: "your-api-key",
+});
+
+async function callLLM(state) {
+  const response = await llm.invoke(state.messages);
+
+  return {
+    messages: [...state.messages, response],
+  };
+}
+
+// Create the agent
+const agent = new StateGraph(MessagesAnnotation)
+  .addNode("agent", callLLM)
+  .addEdge(START, "agent")
+  .addEdge("agent", END);
+
+// Instrument the graph before compiling
+Sentry.instrumentStateGraph(agent, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+const graph = agent.compile({ name: "my_agent" });
+
+// Invoke the agent
+const result = await graph.invoke({
+  messages: [
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("Hello!"),
+  ],
+});
+```
+
+Instrumenting a prebuilt `createReactAgent`:
+
+```javascript
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+// Instrument createReactAgent, then use the wrapped version in its place
+const instrumentedCreateReactAgent =
+  Sentry.instrumentCreateReactAgent(createReactAgent);
+
+const agent = instrumentedCreateReactAgent({ llm, tools });
+```
