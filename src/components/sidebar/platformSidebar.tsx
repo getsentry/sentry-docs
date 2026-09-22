@@ -34,6 +34,7 @@ const STANDALONE_AGENT_TRACING_GUIDES: {
 }[] = [
   {guide: 'mastra', slug: 'mastra', title: 'Mastra', sidebar_order: 26},
   {guide: 'eve', slug: 'eve', title: 'Eve', sidebar_order: 27},
+  {guide: 'flue', slug: 'flue', title: 'Flue', sidebar_order: 28},
 ];
 
 export function PlatformSidebar({
@@ -139,7 +140,7 @@ export function PlatformSidebar({
           };
         }).filter(alias => alias !== undefined);
 
-  // Surface the standalone Mastra and Eve guides from every JavaScript Agent
+  // Surface the standalone agent-framework guides from every JavaScript Agent
   // Tracing sidebar. Their links navigate to the dedicated guide instead of
   // creating an Agent Tracing page under the current guide.
   const standaloneGuideAgentTracingAliases =
