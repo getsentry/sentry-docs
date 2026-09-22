@@ -588,6 +588,17 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/integration/',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
+  },
+
   // Guides → Get Started restructure
   {
     source: '/guides/',
@@ -2421,6 +2432,123 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/:guide/agent-tracing/eve/:path*',
     destination: '/platforms/javascript/guides/eve/',
   },
+  // AI provider setup pages moved from agent-tracing to configuration/integrations
+  {
+    source: '/platforms/javascript/agent-tracing/openai.md',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/openai.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/openai/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/openai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/openai.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/openai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/openai/:path*',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/openai/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/anthropic.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/anthropic.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/anthropic/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/anthropic/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/anthropic.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anthropic.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/anthropic/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anthropic/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/google-genai.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/google-genai.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/google-genai/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/google-genai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/google-genai.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/google-genai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/google-genai/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langchain.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langchain.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langchain/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langchain/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langchain.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langchain.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langchain/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langchain/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langgraph.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langgraph.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langgraph/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langgraph/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langgraph.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langgraph.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langgraph/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langgraph/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/vercelai.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/vercelai.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/vercelai/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/vercelai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/vercelai.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/vercelai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/vercelai/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/vercelai/',
+  },
   // Browser and mobile Agent Tracing pages now point to the Node.js guides.
   {
     source: '/platforms/javascript/agent-tracing.md',
@@ -2522,55 +2650,14 @@ const userDocsRedirects = [
     source: '/platforms/python/integrations/pydantic-ai/:path*',
     destination: '/platforms/python/agent-tracing/pydantic-ai/:path*',
   },
-  // AI library setup pages moved from configuration/integrations to agent-tracing
+  // InboundFilters integration was renamed to EventFilters in SDK v11
   {
-    source: '/platforms/javascript/configuration/integrations/vercelai/',
-    destination: '/platforms/javascript/agent-tracing/vercelai/',
+    source: '/platforms/javascript/configuration/integrations/inboundfilters/',
+    destination: '/platforms/javascript/configuration/integrations/eventfilters/',
   },
   {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/vercelai/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/vercelai/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/openai/',
-    destination: '/platforms/javascript/agent-tracing/openai/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/openai/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/openai/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/anthropic/',
-    destination: '/platforms/javascript/agent-tracing/anthropic/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/anthropic/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/anthropic/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/google-genai/',
-    destination: '/platforms/javascript/agent-tracing/google-genai/',
-  },
-  {
-    source:
-      '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/google-genai/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/langchain/',
-    destination: '/platforms/javascript/agent-tracing/langchain/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/langchain/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/langchain/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/langgraph/',
-    destination: '/platforms/javascript/agent-tracing/langgraph/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/langgraph/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/langgraph/',
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/inboundfilters/',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/eventfilters/',
   },
   // agent-tracing-browser merged into agent-tracing
   {
