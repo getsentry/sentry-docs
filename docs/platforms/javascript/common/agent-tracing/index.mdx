@@ -182,6 +182,26 @@ Pick your AI stack. Some libraries auto-instrument; others need a short setup â€
   ]}
 />
 
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+## Compose Cloudflare Instrumentation
+
+A Cloudflare AI application can need three independent layers. Inspect the host, every model client it calls, and its conversation IDs instead of stopping after the first integration:
+
+1. **Instrument the host.** Use the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink>, `withSentry`, or <PlatformLink to="/agent-tracing/agents-sdk/">`instrumentAgentWithSentry`</PlatformLink>. Do not wrap the same Worker or Agent class twice.
+2. **Instrument each model client.** Workers AI (`env.AI`) is automatic when the Sentry host wrapper supplies the instrumented `env`. For bundled provider SDKs, use Vite build-time instrumentation or the provider's manual wrapper. Follow the matching integration page for Vercel AI, LangChain, LangGraph, or another library.
+3. **Group the conversation.** The Agents SDK can infer a conversation ID. For other chat applications, including Workers AI without the Agents SDK, set one before the model or tool calls. See [Tracking Conversations](#tracking-conversations).
+
+For example, an Agents SDK class that calls `env.AI.run()` needs the Agents SDK host setup and Workers AI model instrumentation. The host wrapper supplies the instrumented binding, so do not add another provider wrapper around the same `env.AI` call.
+
+<Alert>
+
+Flue is the exception to this composition. Its blueprint owns the host and model instrumentation. Do not add another Sentry provider integration to Flue-generated model calls, or token and cost totals will be counted twice.
+
+</Alert>
+
+</PlatformSection>
+
 ## Tracking Conversations
 
 [Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
