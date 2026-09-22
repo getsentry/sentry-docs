@@ -40,7 +40,9 @@ Trace
 
 ## Configuration
 
-<PlatformLink to="/tracing/#configure">Configure tracing</PlatformLink> in your app. The SDK uses `traceLifecycle: 'stream'` by default, with no additional integration required.
+<PlatformLink to="/tracing/#configure">Configure tracing</PlatformLink> in your
+app. The SDK uses `traceLifecycle: 'stream'` by default, with no additional
+integration required.
 
 To opt out of span streaming, set <PlatformLink to="/configuration/options/#traceLifecycle">`traceLifecycle: 'static'`</PlatformLink>. With this setting, wrap `beforeSendSpan` with `Sentry.withStaticSpan()` to receive and return `SpanJSON`. Transaction mode also supports <PlatformLink to="/configuration/filtering/#filtering-transaction-events">transaction filtering</PlatformLink> with `beforeSendTransaction` and `ignoreTransactions`.
 
@@ -60,161 +62,15 @@ Each flush sends only the spans accumulated since the last flush, grouped into e
 
 ## Manual Instrumentation (Optional)
 
-Create spans to measure operations that the SDK does not instrument automatically.
-
-### Start a Span
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Use `Sentry.startSpan()` to create a span that is automatically ended when the callback completes:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-const result = await Sentry.startSpan(
-  { name: "my-operation", attributes: { "my.attribute": "value" } },
-  async () => {
-    // Your code here
-    return await doWork();
-  }
-);
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-Child spans created inside the callback are automatically associated with the parent:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-await Sentry.startSpan({ name: "parent-operation" }, async () => {
-  await Sentry.startSpan({ name: "child-step-1" }, async () => {
-    await stepOne();
-  });
-
-  await Sentry.startSpan({ name: "child-step-2" }, async () => {
-    await stepTwo();
-  });
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-For more details on span creation APIs, such as `startSpan`, `startSpanManual`, or `startInactiveSpan`, see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink>.
+Use the same span creation APIs in stream mode as in transaction mode. To measure operations the SDK does not instrument automatically, see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink> for `startSpan`, `startSpanManual`, and `startInactiveSpan` examples.
 
 ## Add Attributes
 
-Attach structured metadata to spans using <PlatformLink to="/configuration/apis/#startSpan">`attributes`</PlatformLink>, which can be `string`, `number`, or `boolean`, as well as arrays of these types.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-You can set attributes when starting a span:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-Sentry.startSpan(
-  {
-    name: "process-order",
-    attributes: {
-      "sentry.op": "queue.process",
-      "order.id": "abc-123",
-      "order.item_count": 5,
-      "order.priority": true,
-    },
-  },
-  () => {
-    // Process the order
-  }
-);
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-Or add them to an already running span:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-Sentry.startSpan({ name: "handle-request" }, (span) => {
-  // Set a single attribute
-  span.setAttribute("http.response.status_code", 200);
-
-  // Set multiple attributes at once
-  span.setAttributes({
-    "http.route": "/api/users",
-    "user.id": "user-42",
-  });
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span Metrics</PlatformLink> documentation.
-
-</SplitLayout>
+To attach metadata to individual spans, see <PlatformLink to="/tracing/instrumentation/#adding-span-attributes">Adding Span Attributes</PlatformLink>.
 
 ### Shared Attributes
 
-Shared attributes attach the same metadata to spans, logs, and metrics. Scope tags apply to errors and are not included in streamed spans.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics).
-They accept `string`, `number`, and `boolean` values.
-
-To attach attributes to a broader or narrower context, set them on a specific scope instead. Use the global scope for app-wide attributes and the current scope for a single operation.
-
-See <PlatformLink to="/enriching-events/attributes/">Attributes</PlatformLink> for more information.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-// Applied to all spans, logs and metrics
-Sentry.setAttributes({
-  org_id: user.orgId,
-  user_tier: user.tier,
-});
-Sentry.setAttribute("service", "checkout");
-
-// Global scope - shared across entire app
-Sentry.getGlobalScope().setAttributes({
-  service: "checkout",
-  version: "2.1.0",
-});
-
-// Current scope - single operation
-Sentry.withScope((scope) => {
-  scope.setAttribute("request_id", req.id);
-  Sentry.logger.info("Processing order");
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+Use <PlatformLink to="/enriching-events/attributes/">shared attributes</PlatformLink> to attach the same metadata to spans, logs, and metrics. Scope tags apply to errors and are not included in streamed spans.
 
 ## Breadcrumbs
 
@@ -226,90 +82,15 @@ Modify span data before sending it or filter out spans you do not need.
 
 ### Filter Spans
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+Use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> to modify each finished span. In stream mode, the callback receives `StreamedSpanJSON` directly. Check `span.is_segment` to target only service spans.
 
-To modify or redact span data before it's sent, use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> directly. The callback runs for each finished span and receives `StreamedSpanJSON`.
-
-Check `span.is_segment` to target only service spans. <PlatformLink to="/configuration/apis/#spanToJSON">`Sentry.spanToJSON()`</PlatformLink> returns the same shape.
-
-<Alert>
-  `beforeSendSpan` can only modify span data. It cannot return `null` to drop
-  spans. Use [`ignoreSpans`](#drop-spans) instead.
-</Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  beforeSendSpan(span) {
-    if (span.attributes["sentry.op"] === "db.query") {
-      span.name = "[filtered]";
-    }
-    if (span.is_segment) {
-      span.attributes["service.version"] = "1.0.0";
-    }
-    return span;
-  },
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+The callback cannot return `null` to drop spans. See <PlatformLink to="/configuration/filtering/#filtering-spans">Filtering Spans</PlatformLink> for examples of modifying and dropping spans.
 
 ### Drop Spans
 
-Use the object form of `ignoreSpans` to match a service span's name and operation without dropping unrelated child spans with the same name:
+Use <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> to drop spans by name, operation, or attributes. In stream mode, rules are evaluated when a span starts, so later name and attribute updates do not affect matching.
 
-```javascript
-Sentry.init({
-  ignoreSpans: [{ name: "GET /health", op: "http.server" }],
-});
-```
-
-Use the operation of your service span, such as `http.server`, `pageload`, or `navigation`. `ignoreSpans` is evaluated at span start, so only names and attributes available at that point affect matching. Later updates do not affect whether a span is dropped.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To prevent specific spans from being created, use the <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> option:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  ignoreSpans: [
-    // Drop spans whose name contains "healthcheck"
-    "healthcheck",
-    // Drop spans whose name matches a pattern
-    /^GET \/api\/v1\/internal/,
-    // Drop spans matching name and attribute conditions
-    {
-      name: /^GET \//,
-      attributes: {
-        "http.route": "/api/status",
-      },
-    },
-  ],
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-If a matching span is a service span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the nearest ancestor.
-
-To inspect the initial names of automatically created spans, enable SDK debug logging during development with <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink>.
+Ignoring a service span also drops its child spans. Ignoring a child span reparents its children to the nearest ancestor. See <PlatformLink to="/configuration/filtering/#using-ignore-spans">Using `ignoreSpans`</PlatformLink> for matching rules and examples.
 
 ## Distributed Tracing (Optional)
 
