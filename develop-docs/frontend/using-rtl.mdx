@@ -340,6 +340,40 @@ render(<Example />);
 userEvent.type(screen.getByLabelText("Search by name"), "sentry");
 ```
 
+Render the component under test, don't wrap `render()` in a local helper.
+
+A `renderFoo()` helper hides the JSX from every test that calls it, so a reader has to go find the helper before an `it()` block makes sense. Each file also invents its own name and argument shape for the same idea. Put the fixed props, wrapper providers and glue in a component instead, and render that.
+
+```tsx
+import {render} from "sentry-test/reactTestingLibrary";
+
+// ❌
+function renderComponent(props: LoadingContainerProps = {}) {
+  return render(
+    <LoadingContainer {...props}>
+      <div>hello!</div>
+    </LoadingContainer>
+  );
+}
+renderComponent({isLoading: true});
+
+// ✅
+function ExampleLoadingContainer(props: LoadingContainerProps) {
+  return (
+    <LoadingContainer {...props}>
+      <div>hello!</div>
+    </LoadingContainer>
+  );
+}
+render(<ExampleLoadingContainer isLoading />);
+```
+
+This matters most for `rerender`, which takes an element. With a helper, the call site no longer controls what is rendered, and passing a different root component type to `rerender` remounts the tree and drops the state the test was checking. Declare the component at module scope so `rerender` keeps the same component type.
+
+Keep `render()` options such as `organization`, `initialRouterConfig` and `additionalWrapper` at the call site. If the helper adds nothing over the component's own props, drop it and call `render(<Foo ... />)` directly.
+
+A helper that only registers `MockApiClient` mocks, or one that takes the element to render as a parameter, is a different thing and is fine as it is.
+
 ## Testing hooks with providers
 
 Use `renderHookWithProviders()` to test hooks with the same built-in providers as `render()` (organization, theme, query client, and an in-memory router). It returns the regular `renderHook` result plus a `router` helper you can use to inspect location and navigate.
