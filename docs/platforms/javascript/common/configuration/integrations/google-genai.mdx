@@ -1,0 +1,77 @@
+---
+title: Google Gen AI
+description: "Adds instrumentation for the Google Gen AI SDK. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires SDK version `11.0.0` or higher. On earlier versions, see the [Agent Tracing](/platforms/javascript/agent-tracing/) setup for your SDK.
+
+</Alert>
+
+_Import name: `Sentry.googleGenAIIntegration`_
+
+This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `googleGenAIIntegration` adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.googleGenAIIntegration()],
+});
+```
+
+## Supported Operations
+
+By default, tracing support is added to the following Google Gen AI SDK calls:
+
+- `models.generateContent()` - Generate content with a given model
+- `models.generateContentStream()` - Stream content generation with a given model
+- `chats.create()` - Create chat sessions
+- `sendMessage()` - Send messages in chat sessions
+- `sendMessageStream()` - Stream messages in chat sessions
+
+Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+## Supported Versions
+
+- `@google/genai`: `>=0.10.0 <=2`
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to Google Gen AI SDK calls (such as prompts and messages).
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from Google Gen AI SDK calls (such as generated text and responses).
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.googleGenAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
