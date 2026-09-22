@@ -1,9 +1,12 @@
 ---
-title: Using OpenTelemetry APIs
-description: "Learn how to use OpenTelemetry APIs with Sentry."
+title: Capture Spans from OpenTelemetry APIs
+description: "Let Sentry capture and send spans created by OpenTelemetry APIs."
+sidebar_order: 0
 supported:
   - javascript.nextjs
   - javascript.node
+  - javascript.eve
+  - javascript.mastra
   - javascript.aws-lambda
   - javascript.azure-functions
   - javascript.bun
@@ -25,127 +28,31 @@ supported:
   - javascript.tanstackstart-react
 notSupported:
   - javascript
-sidebar_order: 1
 ---
 
-Sentry supports OpenTelemetry APIs out of the box. Any spans started using OpenTelemetry APIs will be automatically captured by Sentry, while any spans started using the Sentry SDK will be automatically propagated to OpenTelemetry.
+To capture spans that your code or a library creates through `@opentelemetry/api`, set `enableOpenTelemetrySetup: true`. Sentry registers an OpenTelemetry-compatible tracer provider, context manager, and propagator. Spans created through `@opentelemetry/api` become native Sentry spans. Sentry's tracing configuration controls sampling and export.
 
-## Adding Additional OpenTelemetry Instrumentation
-
-While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like the example below:
-
-```javascript {tabTitle: ESM} {12-13}
-import * as Sentry from "@sentry/node";
-import {
-  GenericPoolInstrumentation,
-} from "@opentelemetry/instrumentation-generic-pool";
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { trace } from "@opentelemetry/api";
 
 Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
+  dsn: "___PUBLIC_DSN___",
+  enableOpenTelemetrySetup: true,
   tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry instrumentation:
-  openTelemetryInstrumentations: [new GenericPoolInstrumentation()],
 });
-```
-```javascript {tabTitle: CJS} {12-13}
-const Sentry = require("@sentry/node");
-const {
-  GenericPoolInstrumentation,
-} = require("@opentelemetry/instrumentation-generic-pool");
 
-Sentry.init({
-  dsn: "___DSN___",
+const tracer = trace.getTracer("my-app");
 
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry instrumentation:
-  openTelemetryInstrumentations: [new GenericPoolInstrumentation()],
+tracer.startActiveSpan("process-order", (span) => {
+  try {
+    // Your synchronous work here.
+  } finally {
+    span.end();
+  }
 });
 ```
 
-<Alert>
-  It is possible to add instrumentations via `registerInstrumentations()` from
-  `@opentelemetry/instrumentation`. However, with ESM (`import`/`export` syntax)
-  you need to be careful to do so before importing any modules that should be
-  instrumented.
+Initialize Sentry before the application creates spans. This setup sends spans through Sentry's transport; it does not create an OTLP exporter. If your application already registers an OpenTelemetry provider, use <PlatformLink to="/opentelemetry/custom-setup/">your own OpenTelemetry pipeline</PlatformLink> instead. Sentry will not replace an existing provider.
 
-As a rule of thumb, `registerInstrumentations()` should be called right after, and in the same context as registering <PlatformLink to="/opentelemetry/custom-setup/#esm-loaders">ESM Loaders</PlatformLink>.
-
-</Alert>
-
-## Using an OpenTelemetry Tracer
-
-We recommend using `Sentry.startSpan()` and related APIs to create spans, but you can also create spans using native OpenTelemetry APIs.
-
-You can access the tracer Sentry uses via `client.tracer` and then create spans with OpenTelemetry APIs, as shown below:
-
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/node";
-
-const tracer = Sentry.getClient()?.tracer;
-// Now you can use native APIs on the tracer:
-tracer.startActiveSpan("span name", () => {
-  // measure something
-});
-```
-```javascript {tabTitle: CJS}
-const Sentry = require("@sentry/node");
-
-const tracer = Sentry.getClient()?.tracer;
-// Now you can use native APIs on the tracer:
-tracer.startActiveSpan("span name", () => {
-  // measure something
-});
-```
-
-You can also use any other tracer. All OpenTelemetry spans will be picked up by Sentry automatically.
-
-## Modifying the default OpenTelemetry TracerProvider
-
-You can access the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation.
-
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/node";
-
-const provider = Sentry.getClient()?.traceProvider;
-```
-```javascript {tabTitle: CJS}
-const Sentry = require("@sentry/node");
-
-const provider = Sentry.getClient()?.traceProvider;
-```
-
-## Adding Additional Span Processors
-
-You can add additional span processors to the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation.
-
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry SpanProcessors:
-  openTelemetrySpanProcessors: [new MySpanProcessor()],
-});
-```
-```javascript {tabTitle: CJS}
-const Sentry = require("@sentry/node");
-
-Sentry.init({
-  dsn: "___DSN___",
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-
-  // Add additional OpenTelemetry SpanProcessors:
-  openTelemetrySpanProcessors: [new MySpanProcessor()],
-});
-```
+Most server SDKs leave `enableOpenTelemetrySetup` off by default. The `@sentry/nextjs` and `@sentry/sveltekit` SDKs enable it by default to capture spans emitted by those frameworks.

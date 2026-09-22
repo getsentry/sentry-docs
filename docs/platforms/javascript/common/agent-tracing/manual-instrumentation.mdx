@@ -5,6 +5,7 @@ sidebar_order: 90
 description: "Learn how to manually instrument your agents to capture spans, token usage, and tool execution."
 supported:
   - javascript.node
+  - javascript.eve
   - javascript.aws-lambda
   - javascript.azure-functions
   - javascript.bun
@@ -12,7 +13,6 @@ supported:
   - javascript.connect
   - javascript.deno
   - javascript.effect
-  - javascript.electron
   - javascript.elysia
   - javascript.express
   - javascript.fastify
@@ -33,9 +33,11 @@ supported:
   - javascript.tanstackstart-react
 ---
 
-If your AI library does not have automatic instrumentation, create spans manually. Spans need well-defined names and data attributes so agent data shows up correctly.
+If your AI library does not have automatic instrumentation, create spans manually with well-defined names and data attributes. This gives Sentry a complete trace of how long the agent and each model or tool call took, where failures happened, and how the agent produced its final response.
 
-For conversations and privacy (`setConversationId`, `setUser`, `dataCollection`), see the <PlatformLink to="/agent-tracing/">Agent Tracing hub</PlatformLink>.
+This page describes the minimum span structure and attributes Sentry needs, then covers richer data such as messages, streaming metrics, and custom costs.
+
+For conversations and privacy (`setConversationId`, `setUser`, `dataCollection`), see the <PlatformLink to="/agent-tracing/">Agent Tracing guide</PlatformLink>.
 
 ## Span Hierarchy
 
@@ -49,16 +51,24 @@ When instrumenting an agent loop, spans nest like this:
    └── ...
 ```
 
-`gen_ai.invoke_agent` is the container. `gen_ai.chat` and `gen_ai.execute_tool` spans are its children (siblings of each other). A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
+`gen_ai.invoke_agent` covers the complete agent run. Create one `gen_ai.chat` child for every model request and one `gen_ai.execute_tool` child for every tool execution. Model and tool spans are siblings: end the model span before running a requested tool so model latency does not include tool execution time.
+
+A `gen_ai.chat` span can also appear without an agent parent for standalone LLM calls.
 
 ## Common Attributes
 
-Set these **when the span starts** (before the model or tool call), so head-based sampling can see them:
+Set these attributes **when the span starts**, before the model or tool call, so head-based sampling can use them:
 
 - `gen_ai.operation.name` — required; classifies the span (`chat`, `invoke_agent`, `execute_tool`, …)
 - `gen_ai.provider.name` — e.g. `openai`, `anthropic`
 - `gen_ai.request.model` — requested model (pass the **raw** provider string)
 - `gen_ai.agent.name` / `gen_ai.tool.name` — when applicable
+
+Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {requested model}`, and `execute_tool {tool name}`. Record accurate start and end times. If an operation fails, set the span status to `ERROR` and set `error.type` to a low-cardinality error code or exception class.
+
+Run the agent span in the caller's active trace context. For calls between services, follow the <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink> guide so the agent run stays connected to the rest of the trace.
+
+To group turns into a [Conversation](/product/agents/conversations/), call `setConversationId()` with the application's existing chat or session ID. Reuse that ID across turns and traces. If there is no conversation ID, omit it instead of deriving one from a trace or request ID.
 
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
@@ -118,6 +128,8 @@ await Sentry.startSpan(
 ```
 
 Keep system prompts in `gen_ai.system_instructions`, not inside `gen_ai.input.messages`. [Conversation titles](/product/agents/conversations/#conversation-titles) are derived from the first user message in the input messages.
+
+`gen_ai.usage.input_tokens` is the total input token count, including cache-read and cache-write tokens. `gen_ai.usage.output_tokens` includes reasoning tokens. Cache and reasoning attributes are subsets of those totals, so don't add them to the totals again. Sentry uses the model identifiers and token totals to calculate [model costs](/product/agents/costs/).
 
 <Expandable title="AI Request span attributes">
   <Include name="tracing/ai-agents-module/ai-client-span" />
@@ -220,13 +232,12 @@ span.setAttribute("gen_ai.input.messages", JSON.stringify(inputWithTool));
 This span represents the execution of an agent, capturing the full lifecycle from receiving a task to producing a final response.
 
 ```javascript
-const messages = [
+const inputMessages = [
   {
     role: "user",
     parts: [{ type: "text", content: "What's the weather in Paris?" }],
   },
 ];
-const tools = [{ name: "get_weather", description: "Get weather for a city" }];
 
 await Sentry.startSpan(
   {
@@ -235,15 +246,11 @@ await Sentry.startSpan(
     attributes: {
       "gen_ai.operation.name": "invoke_agent",
       "gen_ai.agent.name": "Weather Agent",
-      "gen_ai.provider.name": "openai",
-      "gen_ai.request.model": "o3-mini",
-      "gen_ai.system_instructions": "You are a weather assistant.",
-      "gen_ai.tool.definitions": JSON.stringify(tools),
-      "gen_ai.input.messages": JSON.stringify(messages),
+      "gen_ai.input.messages": JSON.stringify(inputMessages),
     },
   },
   async (span) => {
-    // myAgent is your agent runner; expect { output, usage: { inputTokens, outputTokens } }
+    // Model and tool spans created here become children of the agent span.
     const result = await myAgent.run();
 
     span.setAttribute(
@@ -255,14 +262,12 @@ await Sentry.startSpan(
         },
       ])
     );
-    span.setAttribute("gen_ai.usage.input_tokens", result.usage.inputTokens);
-    span.setAttribute("gen_ai.usage.output_tokens", result.usage.outputTokens);
     return result;
   }
 );
 ```
 
-Child `gen_ai.chat` spans should also set `gen_ai.agent.name` so model usage can be attributed per agent.
+Child `gen_ai.chat` and `gen_ai.execute_tool` spans should also set `gen_ai.agent.name` so model and tool usage can be attributed per agent.
 
 <Expandable title="Invoke Agent span attributes">
   <Include name="tracing/ai-agents-module/invoke-agent-span" />
@@ -279,6 +284,7 @@ await Sentry.startSpan(
     name: "execute_tool get_weather",
     attributes: {
       "gen_ai.operation.name": "execute_tool",
+      "gen_ai.agent.name": "Weather Agent",
       "gen_ai.tool.name": "get_weather",
       "gen_ai.tool.description": "Get weather for a city",
       "gen_ai.tool.call.arguments": JSON.stringify({ location: "Paris" }),
@@ -316,95 +322,8 @@ When the model streams tokens, keep the span open until the stream finishes (inc
 - `gen_ai.response.tokens_per_second` — output throughput, if you can measure it
 - `gen_ai.output.messages`, token usage, and `gen_ai.response.model` — same as a non-streaming call, once the stream completes
 
-Use `Sentry.startInactiveSpan` so the span outlives the initial call, and `Sentry.withActiveSpan` so child spans nest correctly. End the span when the stream completes or errors:
-
-```javascript
-async function callLLMStreaming(model, messages) {
-  const span = Sentry.startInactiveSpan({
-    name: `chat ${model}`,
-    op: "gen_ai.chat",
-    attributes: {
-      "gen_ai.operation.name": "chat",
-      "gen_ai.request.model": model,
-      "gen_ai.input.messages": JSON.stringify(messages),
-    },
-  });
-
-  try {
-    const stream = await Sentry.withActiveSpan(span, () =>
-      yourLLMClient.stream({ model, messages })
-    );
-
-    // Accumulate from chunk events — stream "end" has no payload
-    let text = "";
-    let usage = { inputTokens: 0, outputTokens: 0 };
-    let responseModel = model;
-
-    stream.on("data", (chunk) => {
-      // Map chunk fields to your provider's shape
-      if (chunk.text) {
-        text += chunk.text;
-      }
-      if (chunk.usage) {
-        usage = chunk.usage;
-      }
-      if (chunk.model) {
-        responseModel = chunk.model;
-      }
-    });
-
-    stream.on("end", () => {
-      span.setAttribute(
-        "gen_ai.output.messages",
-        JSON.stringify([
-          {
-            role: "assistant",
-            parts: [{ type: "text", content: text }],
-          },
-        ])
-      );
-      span.setAttribute("gen_ai.usage.input_tokens", usage.inputTokens);
-      span.setAttribute("gen_ai.usage.output_tokens", usage.outputTokens);
-      span.setAttribute("gen_ai.response.model", responseModel);
-      span.setAttribute("gen_ai.response.streaming", true);
-      span.end();
-    });
-
-    stream.on("error", (error) => {
-      span.setStatus({ code: 2, message: "internal_error" });
-      span.setAttribute(
-        "error.type",
-        error instanceof Error ? error.constructor.name : "Error"
-      );
-      span.end();
-    });
-    return stream;
-  } catch (error) {
-    span.setStatus({ code: 2, message: "internal_error" });
-    span.setAttribute(
-      "error.type",
-      error instanceof Error ? error.constructor.name : "Error"
-    );
-    span.end();
-    throw error;
-  }
-}
-```
+Use `Sentry.startInactiveSpan` if the span outlives the function that starts the stream, and `Sentry.withActiveSpan` when work within the stream needs the model span as its parent. End the span when the stream completes or fails. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for span lifecycle patterns.
 
 <Include name="tracing/ai-agents-module/token-cost-gotchas" />
 
-By default, Sentry derives [model cost](/product/agents/costs/) from the model name and token counts. Pass the raw provider model string unchanged so pricing can resolve.
-
-## Provide Custom Costs
-
-If your provider reports costs or you use custom pricing, set costs as numeric USD values on each AI span. Always set `gen_ai.cost.total_tokens`, even when you provide a breakdown:
-
-```javascript
-span.setAttributes({
-  "gen_ai.cost.input_tokens": result.cost.input,
-  "gen_ai.cost.output_tokens": result.cost.output,
-  "gen_ai.cost.total_tokens": result.cost.total,
-});
-```
-
-A numeric total tells Sentry to preserve your cost attributes instead of replacing them with estimates. See [Model Costs](/product/agents/costs/#send-custom-costs) for all supported breakdown attributes.
+By default, Sentry derives [model cost](/product/agents/costs/) from the model name and token counts. Pass the raw provider model string unchanged so pricing can resolve. If your provider reports costs or you use custom pricing, see [Send Custom Costs](/product/agents/costs/#send-custom-costs).

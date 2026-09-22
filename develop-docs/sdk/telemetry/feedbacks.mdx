@@ -2,12 +2,15 @@
 title: Feedback
 description: Collecting qualitative user input with optional attachments, replay links, and error associations.
 spec_id: sdk/telemetry/feedbacks
-spec_version: 1.4.0
+spec_version: 1.5.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.5.0
+    date: 2026-09-15
+    summary: Added draft client-side input validation requirements, clarified Unicode message length and server limits
   - version: 1.4.0
     date: 2026-09-08
     summary: Disallowed sending attachments in separate envelopes
@@ -67,6 +70,55 @@ SDKs **MUST** apply scope data to the feedback event, including tags, user, trac
 SDKs **MUST** apply [rate limiting](/sdk/foundations/transport/rate-limiting/) to feedbacks in the same way as it is applied to events.
 
 There is no sample rate for feedbacks — they are always sent. However, a feedback can be discarded at any pipeline stage (rate limiting, invalid message, etc.). SDKs **SHOULD** report dropped feedbacks through [client reports](/sdk/telemetry/client-reports/).
+
+</SpecSection>
+
+<SpecSection id="input-validation" status="draft" since="1.5.0">
+
+### Client-Side Input Validation
+
+Feedback can pass transport checks but still be discarded during ingestion. SDKs **MAY** validate user input locally so users can correct their feedback before submitting it.
+
+#### Payload Validation
+
+For SDKs that implement local payload validation, the following requirements apply to SDK-provided feedback forms and the manual capture API:
+
+- `message` **MUST** be a string containing at least one non-whitespace character. Missing, empty, and whitespace-only messages **MUST NOT** be sent.
+- `message` **MUST NOT** exceed **4,096 Unicode code points**. Sentry validates Python string length with `len(message)`, which counts Unicode code points. SDKs **MUST** match this count for the value that will be sent, including any whitespace it retains. For well-formed Unicode, counting Unicode scalars produces the same result. Counting UTF-8 bytes, UTF-16 code units, or user-perceived characters (grapheme clusters) does not.
+- If an `associated_event_id` is supplied, the SDK **MUST** validate that it is a UUID before sending it, unless the SDK's identifier type already guarantees this.
+- SDKs **MUST** validate the final feedback payload after event processors and `beforeSendFeedback` have run, before enqueueing it for transport. Feedback that fails validation **MUST** be discarded, using the SDK's existing failure reporting conventions and the [client report guidance](#sdk-pipeline).
+
+For example, precomposed `é` (`\u00E9`) and decomposed `é` (`e\u0301`) both represent the visible character **é**. The precomposed form counts as one code point, while the decomposed form counts as two: `e` followed by a combining acute accent. A character outside the Basic Multilingual Plane counts as one code point, even though UTF-16 represents it with two code units. Swift implementations can use `unicodeScalars.count`, Java can use `codePointCount`, and JavaScript can iterate over the string. Native string-length APIs and HTML `maxlength` alone do not consistently match this limit.
+
+#### Feedback Forms
+
+Forms **MAY** check the message before calling the capture API. The following requirements apply to forms that implement this validation.
+
+When validation fails, the form **MUST** prevent submission, preserve the user's input, and display an accessible error explaining how to correct it.
+
+Forms **MUST** allow users to type or paste beyond the message limit rather than block further input or truncate the text. This preserves the full message so users can choose what to shorten.
+
+Forms **MUST** enforce configured required name and email fields. Otherwise, name and email remain optional, and anonymous feedback **MUST** be accepted.
+
+Forms **SHOULD** update validation as the user edits the input. To avoid visual clutter before the message approaches the limit, forms **MUST** hide the length counter below 90% of the maximum length. At **3,687 code points** (`ceil(0.9 × 4096)`) and above, forms **MUST** display a live label in the format `X / 4096`, where `X` is the current code-point count used for validation.
+
+The label **MUST** be accessible to assistive technology, remain visible when the message exceeds the limit, and hide again if the count drops below 3,687. The same visibility rules **MUST** apply to typed, pasted, and prefilled input.
+
+Forms **MUST** handle the message limit as follows:
+
+- **At or below 4,096 code points:** Use neutral styling for the visible counter. Exactly 4,096 code points is valid, and submission **MUST** be allowed if all other fields are valid.
+- **Above 4,096 code points:** Preserve all input, use error styling for the counter, and show an accessible error such as "Shorten your message to 4096 characters or fewer." Submission **MUST** remain blocked. If the user attempts to submit, the form **SHOULD** focus the message field.
+- **After correction:** Clear the length error, restore the counter's neutral styling or hide it according to the 90% threshold, and allow submission if all other fields are valid.
+
+Forms **SHOULD** defer length-error updates until an active input-method composition finishes, without interrupting typing. Assistive technology **SHOULD** announce changes in the validation state rather than every counter update.
+
+#### Server Limits
+
+These limits distinguish the modern `feedback` item from the deprecated `user_report` item:
+
+- **Sentry:** [Feedback ingestion](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/feedback/usecases/ingest/create_feedback.py#L180-L214) rejects missing or whitespace-only messages, messages above the configured limit, and malformed associated event IDs. The [`feedback.message.max-size` option](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/options/defaults.py#L593-L598) defaults to 4,096 code points. This is a rejection limit, not automatic truncation.
+- **Relay:** The [feedback context](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-schema/src/protocol/contexts/mod.rs#L88-L90) has a shared `max_bytes = 8192` normalization budget. Its [schema](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-schema/src/protocol/contexts/user_report_v2.rs#L11-L20) does not declare separate message, name, email, or URL length limits. Relay's [trimming processor](https://github.com/getsentry/relay/blob/800a2424667f6d4caa385e15d77e628570dcac66/relay-event-normalization/src/trimming.rs) can trim or remove context data. This shared normalization budget is not an 8,192-character allowance for each field and does not replace Sentry's message validation. Feedback also remains subject to [envelope size limits](/sdk/foundations/envelopes/#size-limits).
+- **Legacy user reports:** The [128-character name and 75-character email limits](https://github.com/getsentry/sentry/blob/102b2390de99b983d6847bf8bc1864fee45559e3/src/sentry/models/userreport.py#L16-L20) belong to `user_report`. They are not per-field limits for `contexts.feedback` and **MUST NOT** be imposed on modern feedback solely to match the legacy endpoint.
 
 </SpecSection>
 
