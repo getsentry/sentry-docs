@@ -100,6 +100,14 @@ describe('middleware redirect set selection', () => {
   });
 });
 
+describe('non-production host indexing', () => {
+  it('adds a noindex header on localhost', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/java/'));
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
+  });
+});
+
 describe('production build-url redirect to canonical (Deployment Protection off)', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -196,6 +204,17 @@ describe('canonical Link header on .md responses', () => {
     const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
     expect(res.headers.get('Link')).toBe(
       '<https://docs.sentry.io/platforms/apple/cocoa/>; rel="canonical"'
+    );
+  });
+
+  it.each([
+    '/platforms/java/migration/7.x-to-8.0',
+    '/platforms/python/migration/1.x-to-2.x',
+  ])('does not add a trailing slash to a dotted document path: %s', async path => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest(`${path}.md`));
+    expect(res.headers.get('Link')).toBe(
+      `<https://docs.sentry.io${path}>; rel="canonical"`
     );
   });
 

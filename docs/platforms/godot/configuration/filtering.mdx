@@ -21,3 +21,50 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 <PlatformContent includePath="configuration/before-send/" />
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/issues/issue-details/breadcrumbs/).
+
+## Filtering User Feedback
+
+<AvailableSince version="2.2.0" />
+
+User feedback doesn't pass through <PlatformIdentifier name="before-send" />, so that callback can't filter or modify feedback submissions. Use <PlatformIdentifier name="before-send-feedback" /> instead.
+
+### Using <PlatformIdentifier name="before-send-feedback" />
+
+The <PlatformIdentifier name="before-send-feedback" /> callback receives a prepared `SentryEvent` after scope data and event enrichment have been applied. Return the same event object, with or without modifications, to send the feedback, or return `null` to drop it.
+
+You can only set this callback [programmatically](/platforms/godot/configuration/options/#programmatic-configuration). Disable **Auto Init**, then assign the callback when initializing the SDK:
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.before_send_feedback = _before_send_feedback
+)
+
+func _before_send_feedback(event: SentryEvent) -> SentryEvent:
+	if event.environment == "editor_dev_run":
+		return null
+	event.set_tag("feedback_source", "in_game_form")
+	return event
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+    options.SetBeforeSendFeedback(feedbackEvent =>
+    {
+        if (feedbackEvent.Environment == "editor_dev_run")
+        {
+            return null;
+        }
+        feedbackEvent.SetTag("feedback_source", "in_game_form");
+        return feedbackEvent;
+    });
+});
+```
+
+In C#, `SetBeforeSendFeedback` applies to feedback captured through the managed `SentrySdk.CaptureFeedback` API. Feedback captured through GDScript or the native Godot API uses `before_send_feedback` instead.
+
+<Alert level="warning" title="iOS and macOS">
+
+In GDScript, the `before_send_feedback` callback isn't supported on iOS or macOS yet. Feedback is still sent on these platforms, but the callback doesn't run. This limitation doesn't apply to the C# callback.
+
+</Alert>
