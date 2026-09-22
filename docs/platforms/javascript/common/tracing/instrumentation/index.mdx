@@ -205,23 +205,10 @@ if (span) {
 ### Adding attributes to all spans
 
 To add an attribute to all spans, use the `beforeSendSpan` callback.
-Note that the property names differ between transaction mode (the default) and <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>:
+In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>, the callback receives span attributes in `span.attributes`.
+If you opt into transaction mode with `traceLifecycle: 'static'`, wrap the callback with `Sentry.withStaticSpan()` and use `span.data` instead:
 
-```javascript {tabTitle:Transaction Mode (Default)}
-Sentry.init({
-  // dsn, ...
-  beforeSendSpan(span) {
-    span.data = {
-      ...span.data,
-      "environment.region": "us-west-2",
-    };
-
-    return span;
-  },
-});
-```
-
-```javascript {tabTitle:Stream Mode}
+```javascript {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 Sentry.init({
   // dsn, ...
   beforeSendSpan(span) {
@@ -232,6 +219,21 @@ Sentry.init({
 
     return span;
   },
+});
+```
+
+```javascript {tabTitle:Transaction Mode}
+Sentry.init({
+  // dsn, ...
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    span.data = {
+      ...span.data,
+      "environment.region": "us-west-2",
+    };
+
+    return span;
+  }),
 });
 ```
 

@@ -631,37 +631,15 @@ This is useful to prevent traces of unknown third-party services from being cont
 
 </SdkOption>
 
-<SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
+<SdkOption name="beforeSendSpan" type='(span: StreamedSpanJSON) => StreamedSpanJSON'>
 
-This function is called with a transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+Called for each finished span before it is sent to Sentry, including service spans and their child spans. Return the modified span to rename it or remove sensitive data. Check `span.is_segment` to apply changes only to service spans.
 
-Not available in stream mode. Instead, use [`ignoreSpans`](#ignoreSpans) to drop spans, or [`beforeSendSpan`](#beforeSendSpan) to modify spans.
+`beforeSendSpan` can only modify spans. It cannot drop them or return `null`. Use [`ignoreSpans`](#ignoreSpans) to drop spans.
 
-</SdkOption>
+The callback receives a serialized `StreamedSpanJSON` object, not a `Span` instance. <PlatformLink to="/configuration/apis/#spanToJSON">`Sentry.spanToJSON()`</PlatformLink> returns the same shape.
 
-<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON'>
-
-This function is called with a serialized span object and can return a modified span object. Use it, for example, to manually strip PII from spans or filter data from spans before they're sent to Sentry. It runs for all spans, including transactions and their child spans.
-
-Note that `beforeSendSpan` can only modify span data, meaning you cannot use it to drop spans. Use [`ignoreSpans`](#ignoreSpans) to drop spans, or [`beforeSendTransaction`](#beforeSendTransaction) to drop transactions.
-
-The `span` you receive as an argument is a serialized object, not a `Span` class instance.
-
-If you're using stream mode, wrap `beforeSendSpan` with `Sentry.withStreamedSpan()` — otherwise the SDK falls back to transaction mode.
-
-<Expandable level="warning" title="Span object property names in stream mode">
-
-In stream mode, the span object is `StreamedSpanJSON` instead of `SpanJSON` and has different property names:
-
-| Transaction Mode (`SpanJSON`)      | Stream Mode (`StreamedSpanJSON`)    |
-| ---------------------------------- | ----------------------------------- |
-| `span.description`                 | `span.name`                         |
-| `span.data` (processed attributes) | `span.attributes` (raw attributes)  |
-| `span.timestamp` (end time)        | `span.end_timestamp`                |
-| `span.status` (optional string)    | `span.status` (`'ok'` or `'error'`) |
-| `span.op`                          | `span.attributes['sentry.op']`      |
-
-</Expandable>
+With [`traceLifecycle: 'static'`](#traceLifecycle), wrap the callback with `Sentry.withStaticSpan()` to receive and return `SpanJSON`. The static callback runs for the transaction and its child spans. A callback that doesn't match the trace lifecycle is ignored.
 
 <Expandable title="Examples">
 
@@ -671,11 +649,17 @@ In stream mode, the span object is `StreamedSpanJSON` instead of `SpanJSON` and 
 
 </SdkOption>
 
-<SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
+<SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
 
-<Include name="platforms/configuration/options/ignore-transactions.mdx" />
+This callback has no effect in stream mode. Use [`beforeSendSpan`](#beforeSendSpan) to modify spans and check `span.is_segment` to target service spans. Use [`ignoreSpans`](#ignoreSpans) to drop spans.
 
-Not available in stream mode. Use [`ignoreSpans`](#ignoreSpans) instead.
+With [`traceLifecycle: 'static'`](#traceLifecycle), this callback receives a transaction event and an event hint after all event processors have run. Return the modified event to change its data, or `null` to drop the transaction and its child spans.
+
+<Expandable title="Example in transaction mode">
+
+<PlatformContent includePath="configuration/before-send-transaction" />
+
+</Expandable>
 
 </SdkOption>
 
@@ -683,18 +667,14 @@ Not available in stream mode. Use [`ignoreSpans`](#ignoreSpans) instead.
 
 A list of strings or regex patterns matching spans that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with `name`, `op`, and `attributes` properties to match on multiple conditions. At least one property must be provided.
 
-If a matching span is a transaction or service span, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
+If a matching span is a service span, its child spans are also dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
 By default, no spans are ignored.
 
 In <PlatformLink to="/tracing/streamed-spans" fallbackPlatform="javascript">stream mode</PlatformLink>, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
 
-<Alert level="warning" title="Migrating from transaction mode?">
+In transaction mode, `ignoreSpans` is evaluated when the transaction ends, using the span's final name and attributes.
 
-In transaction mode, `ignoreSpans` is evaluated at transaction end rather than at span start. Review your existing rules to make sure the attributes you're matching on are passed when the span is created.
-
-If you're auto-instrumenting and don't know what the initial name of a span is when it starts, enable SDK debug logging during development by setting <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink> when initializing the SDK.
-
-</Alert>
+To inspect the initial names of automatically created spans, enable SDK debug logging during development with <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink>.
 
 <Expandable title="Examples">
 
@@ -741,6 +721,20 @@ Sentry.init({
 </Expandable>
 </SdkOption>
 
+<SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
+
+This option has no effect in stream mode. Use [`ignoreSpans`](#ignoreSpans) to filter spans by name, operation, or attributes.
+
+With [`traceLifecycle: 'static'`](#traceLifecycle), this option filters transaction names against a list of strings and regular expressions. Strings match part of the name. Use a regular expression anchored with `^` and `$` for an exact match. A matching transaction and its child spans are dropped.
+
+<Expandable title="Example in transaction mode">
+
+<PlatformContent includePath="configuration/ignore-transactions" />
+
+</Expandable>
+
+</SdkOption>
+
 <SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0'>
 
 If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing Http requests made via `fetch` or `XMLHttpRequest`.
@@ -770,22 +764,24 @@ Self-hosted Sentry users should set this option to `false`, as standalone `gen_a
 
 </SdkOption>
 
-<SdkOption name="traceLifecycle" type="'static' | 'stream'" defaultValue="'static'" availableSince='10.53.1'>
+<SdkOption name="traceLifecycle" type="'static' | 'stream'" defaultValue="'stream'" defaultNote='since version 11.0.0' availableSince='10.53.1'>
 
 Controls how spans are sent to Sentry:
 
-- In transaction mode (`'static'`, the default), all spans are collected in memory and sent to Sentry as a single transaction once the root span ends.
-- In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink> (`'stream'`), spans are sent in batches as they finish.
+- In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink> (`'stream'`, the default), spans are sent in batches as they finish.
+- In transaction mode (`'static'`), spans are collected in memory and sent as a transaction once the root span ends. This mode is available for backwards compatibility.
 
-<PlatformCategorySection supported={["browser"]}>
-<Alert>
+To opt out of span streaming, set `traceLifecycle: 'static'`. If you use `beforeSendSpan`, wrap it with `Sentry.withStaticSpan()` to receive the `SpanJSON` format:
 
-You don't need to use this option if you're using a browser-based SDK (for example, React or Vue) or a framework SDK that handles client-side rendering (for example Next.js or Remix).
-Instead, <PlatformLink to="/tracing/streamed-spans" fallbackPlatform="javascript">enable stream mode</PlatformLink> by adding `spanStreamingIntegration` to your integrations when initializing the SDK.
-
-</Alert>
-
-</PlatformCategorySection>
+```javascript
+Sentry.init({
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    span.description = "[filtered]";
+    return span;
+  }),
+});
+```
 
 </SdkOption>
 
