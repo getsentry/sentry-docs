@@ -34,7 +34,7 @@ Keep your own provider, context manager, propagator, instrumentation, and export
 
 Set `enableOpenTelemetrySetup: false` and leave both `tracesSampleRate` and `tracesSampler` unset. This disables Sentry tracing and prevents duplicate spans for the same operations. Sentry's instrumentation still isolates requests and captures errors.
 
-Initialize your OpenTelemetry provider before calling `Sentry.init()`. If its configuration is in a separate file, import that file before initializing Sentry. Set `enableOpenTelemetrySetup: false` explicitly for Next.js and SvelteKit to override their defaults.
+Initialize your OpenTelemetry provider before calling `Sentry.init()`. If your OpenTelemetry configuration is in a separate file, import it before initializing Sentry.
 
 ## Send OpenTelemetry Spans to Sentry
 
@@ -79,26 +79,3 @@ If your traces go elsewhere, keep your existing OpenTelemetry exporter and omit 
 ## Configure Sampling
 
 Configure sampling on your OpenTelemetry provider. Sentry's `tracesSampleRate` and `tracesSampler` do not control spans exported over OTLP. Use an OpenTelemetry sampler or your own implementation of its `Sampler` interface.
-
-For example, add this sampler to your provider configuration to respect the parent's sampling decision and sample 10% of new traces:
-
-```javascript
-import {
-  ParentBasedSampler,
-  TraceIdRatioBasedSampler,
-} from "@opentelemetry/sdk-trace-base";
-
-const sampler = new ParentBasedSampler({
-  root: new TraceIdRatioBasedSampler(0.1),
-});
-```
-
-## Configure Instrumentation and Propagation
-
-Register the OpenTelemetry instrumentation you need to create spans for incoming requests, outgoing requests, database queries, and other operations. Sentry's instrumentation does not create OpenTelemetry spans in v11. Keep Sentry's default integrations enabled for request isolation, errors, and breadcrumbs.
-
-With `openTelemetryIntegration()` enabled and Sentry tracing off, your OpenTelemetry propagator handles outgoing trace propagation.
-
-## ESM Loaders
-
-The Sentry SDK does not register OpenTelemetry ESM loader hooks. If your OpenTelemetry instrumentation needs them, [register OpenTelemetry's ESM loader hooks](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md#instrumentation-hook-required-for-esm) before loading the modules you want to instrument.
