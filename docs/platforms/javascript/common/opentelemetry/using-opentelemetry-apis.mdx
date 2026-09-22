@@ -1,0 +1,58 @@
+---
+title: Capture Spans from OpenTelemetry APIs
+description: "For code or libraries that use OpenTelemetry APIs without their own provider. Set enableOpenTelemetrySetup to true and enable Sentry tracing to capture these spans and send them through Sentry."
+sidebar_order: 0
+supported:
+  - javascript.nextjs
+  - javascript.node
+  - javascript.eve
+  - javascript.mastra
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.bun
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nitro
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.remix
+  - javascript.react-router
+  - javascript.tanstackstart-react
+notSupported:
+  - javascript
+---
+
+To capture spans that your code or a library creates through `@opentelemetry/api`, set `enableOpenTelemetrySetup: true`. Sentry registers an OpenTelemetry-compatible tracer provider, context manager, and propagator. Spans created through `@opentelemetry/api` become native Sentry spans. Sentry's tracing configuration controls sampling and export.
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { trace } from "@opentelemetry/api";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableOpenTelemetrySetup: true,
+  tracesSampleRate: 1.0,
+});
+
+const tracer = trace.getTracer("my-app");
+
+tracer.startActiveSpan("process-order", (span) => {
+  try {
+    // Your synchronous work here.
+  } finally {
+    span.end();
+  }
+});
+```
+
+Initialize Sentry before the application creates spans. This setup sends spans through Sentry's transport; it does not create an OTLP exporter. If your application already registers an OpenTelemetry provider, use <PlatformLink to="/opentelemetry/custom-setup/">your own OpenTelemetry pipeline</PlatformLink> instead. Sentry will not replace an existing provider.
+
+Most server SDKs leave `enableOpenTelemetrySetup` off by default. The `@sentry/nextjs` and `@sentry/sveltekit` SDKs enable it by default to capture spans emitted by those frameworks.
