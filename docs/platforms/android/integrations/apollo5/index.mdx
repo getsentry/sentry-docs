@@ -1,0 +1,215 @@
+---
+title: Apollo 5
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.apollo-5
+description: "Learn more about the Sentry Apollo 5 integration for the Android SDK."
+categories:
+  - mobile
+---
+
+<Alert>
+
+To capture transactions, first <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
+
+</Alert>
+
+Sentry's Apollo 5 integration provides `SentryApollo5Interceptor` and `SentryApollo5HttpInterceptor`. Together, they create spans and breadcrumbs for outgoing HTTP requests made with an [Apollo Kotlin 5](https://www.apollographql.com/docs/kotlin/) GraphQL client. The integration can also report failed GraphQL requests as error events.
+
+## Install
+
+Install the Apollo 5 integration:
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-apollo-5:{{@inject packages.version('sentry.java.apollo-5', '8.58.0') }}'
+```
+
+For other dependency managers, see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-apollo-5).
+
+## Configure With Extension
+
+Use the `sentryTracing` extension to add both Sentry interceptors to `ApolloClient.Builder`:
+
+```java
+import com.apollographql.apollo.ApolloClient;
+import io.sentry.apollo5.SentryApolloBuilderExtensionsKt;
+
+ApolloClient apollo = SentryApolloBuilderExtensionsKt
+    .sentryTracing(new ApolloClient.Builder())
+    .serverUrl("https://your-api-host/graphql")
+    .build();
+```
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo5.sentryTracing
+
+val apollo = ApolloClient.Builder()
+    .serverUrl("https://your-api-host/graphql")
+    .sentryTracing()
+    .build()
+```
+
+The extension adds the Apollo interceptor before the cache and adds the HTTP interceptor to Apollo's default network transport. A response served from the normalized cache doesn't create an HTTP span.
+
+## Manual Configuration
+
+Because `HttpInterceptors` need to be added to the `NetworkTransport`, the Sentry interceptors need to be added manually if you're using a custom `NetworkTransport`. Apollo rejects builder-level HTTP interceptors in that case, so calling `sentryTracing()` fails:
+
+```java
+import com.apollographql.apollo.ApolloClient;
+import com.apollographql.apollo.interceptor.ApolloInterceptor;
+import com.apollographql.apollo.network.http.HttpNetworkTransport;
+import io.sentry.apollo5.SentryApollo5HttpInterceptor;
+import io.sentry.apollo5.SentryApollo5Interceptor;
+
+ApolloClient apollo = new ApolloClient.Builder()
+    .networkTransport(
+        new HttpNetworkTransport.Builder()
+            .serverUrl("https://your-api-host/graphql")
+            .addInterceptor(new SentryApollo5HttpInterceptor())
+            .build())
+    .addInterceptor(
+        new SentryApollo5Interceptor(),
+        ApolloInterceptor.InsertionPoint.BeforeCache)
+    .build();
+```
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.interceptor.ApolloInterceptor
+import com.apollographql.apollo.network.http.HttpNetworkTransport
+import io.sentry.apollo5.SentryApollo5HttpInterceptor
+import io.sentry.apollo5.SentryApollo5Interceptor
+
+val transport = HttpNetworkTransport.Builder()
+    .serverUrl("https://your-api-host/graphql")
+    .addInterceptor(SentryApollo5HttpInterceptor())
+    .build()
+
+val apollo = ApolloClient.Builder()
+    .networkTransport(transport)
+    .addInterceptor(
+        SentryApollo5Interceptor(),
+        ApolloInterceptor.InsertionPoint.BeforeCache,
+    )
+    .build()
+```
+
+The default Apollo HTTP request composer copies operation metadata through Apollo's execution context. If your transport uses a custom `HttpRequestComposer`, call `addExecutionContext(apolloRequest.executionContext)` when building the `HttpRequest`. Without this context, Sentry still creates an HTTP span, but it won't contain the GraphQL operation name, type, ID, or variables.
+
+## Modify or Drop Spans
+
+Use `SentryApollo5HttpInterceptor.BeforeSpanCallback` to modify or drop request spans. Return the span to keep it, or return `null` to drop it:
+
+```java
+import com.apollographql.apollo.ApolloClient;
+import io.sentry.SentryOptions;
+import io.sentry.apollo5.SentryApolloBuilderExtensionsKt;
+import java.util.Collections;
+
+ApolloClient apollo = SentryApolloBuilderExtensionsKt.sentryTracing(
+        new ApolloClient.Builder(),
+        true,
+        Collections.singletonList(SentryOptions.DEFAULT_PROPAGATION_TARGETS),
+        (span, request, response) -> {
+          if ("query LaunchDetails".equals(span.getDescription())) {
+            span.setTag("tag-name", "tag-value");
+          }
+          return span;
+        })
+    .serverUrl("https://your-api-host/graphql")
+    .build();
+```
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo5.sentryTracing
+
+val apollo = ApolloClient.Builder()
+    .serverUrl("https://your-api-host/graphql")
+    .sentryTracing { span, request, response ->
+        if (span.description == "query LaunchDetails") {
+            span.setTag("tag-name", "tag-value")
+        }
+        span
+    }
+    .build()
+```
+
+## Capture GraphQL Client Errors
+
+The integration reports a failed GraphQL response when its JSON body contains an [`errors`](https://spec.graphql.org/October2021/#sec-Errors) array. This also covers GraphQL errors returned with an HTTP `200` status. The event contains request and response context such as the URL, status code, and body data.
+
+Sentry groups these events by operation name, operation type, and status code. Failed request capture is enabled by default. Disable it with `captureFailedRequests`:
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo5.sentryTracing
+
+val apollo = ApolloClient.Builder()
+    .serverUrl("https://your-api-host/graphql")
+    .sentryTracing(captureFailedRequests = false)
+    .build()
+```
+
+By default, the integration captures failed responses from every target. Restrict capture with `failedRequestTargets`, using regular expressions or plain strings. A plain string matches when the request URL contains it:
+
+```kotlin
+import com.apollographql.apollo.ApolloClient
+import io.sentry.apollo5.sentryTracing
+
+val apollo = ApolloClient.Builder()
+    .serverUrl("https://your-api-host/graphql")
+    .sentryTracing(
+        captureFailedRequests = true,
+        failedRequestTargets = listOf("myapi.com"),
+    )
+    .build()
+```
+
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control headers, cookies, URL query parameters, request and response bodies, GraphQL documents, and GraphQL variables. For example, disable GraphQL variables and all HTTP body collection:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data
+      android:name="io.sentry.data-collection.graphql.variables"
+      android:value="false" />
+  <meta-data
+      android:name="io.sentry.data-collection.http-bodies"
+      android:value="" />
+</application>
+```
+
+Configuring any field activates the Data Collection defaults for omitted fields. GraphQL request and response bodies may contain sensitive data, so review both `graphql` and `httpBodies` before enabling them. You can also customize the event and scrub application-specific data yourself.
+
+### Customize or Drop the Error Event
+
+Use the request and response stored in the event hint to customize failed GraphQL events:
+
+```kotlin
+import com.apollographql.apollo.api.http.HttpRequest
+import com.apollographql.apollo.api.http.HttpResponse
+import io.sentry.Sentry
+import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.TypeCheckHint.APOLLO_REQUEST
+import io.sentry.TypeCheckHint.APOLLO_RESPONSE
+
+Sentry.init { options ->
+    options.beforeSend = BeforeSendCallback { event, hint ->
+        val request = hint.getAs(APOLLO_REQUEST, HttpRequest::class.java)
+        val response = hint.getAs(APOLLO_RESPONSE, HttpResponse::class.java)
+
+        // Customize the event, or return null to drop it.
+        event
+    }
+}
+```
+
+## Limitations
+
+- Failed GraphQL request detection checks the raw JSON response body for an `errors` field.
+- Failed request detection is skipped for streaming responses such as `multipart/mixed` and `text/event-stream`. The integration still records spans and breadcrumbs for these responses.
+- WebSocket subscriptions aren't instrumented.
+- Batching behavior depends on HTTP interceptor ordering.
+- Responses served from Apollo's normalized cache don't create HTTP spans.
