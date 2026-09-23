@@ -1,0 +1,103 @@
+---
+title: LangChain
+description: "Adds instrumentation for LangChain. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires SDK version `11.0.0` or higher. On earlier versions, see the [Agent Tracing](/platforms/javascript/agent-tracing/) setup for your SDK.
+
+</Alert>
+
+_Import name: `Sentry.langChainIntegration`_
+
+This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `langChainIntegration` adds instrumentation for [`langchain`](https://www.npmjs.com/package/langchain) to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.langChainIntegration()],
+});
+```
+
+## Supported Operations
+
+By default, tracing support is added to the following LangChain operations:
+
+- **Chat model invocations** - Captures spans for chat model calls
+- **LLM invocations** - Captures spans for LLM pipeline executions
+- **Chain executions** - Captures spans for chain invocations
+- **Tool executions** - Captures spans for tool calls
+
+The integration automatically instruments the `invoke()`, `stream()`, and `batch()` runnable methods, across the following LangChain provider packages:
+
+- `@langchain/anthropic`
+- `@langchain/openai`
+- `@langchain/google-genai`
+- `@langchain/mistralai`
+- `@langchain/google-vertexai`
+- `@langchain/groq`
+
+### Embeddings
+
+The integration captures `gen_ai.embeddings` spans for `embedQuery()` and `embedDocuments()` calls from these provider packages:
+
+- `@langchain/openai`
+- `@langchain/google-genai`
+- `@langchain/mistralai`
+- `@langchain/google-vertexai`
+
+## Supported Versions
+
+- `langchain`: `>=0.1.0 <2.0.0`
+
+Automatic embeddings instrumentation supports these package versions:
+
+| Package                    | Supported Versions |
+| -------------------------- | ------------------ |
+| `@langchain/openai`        | `>=0.1.0 <2.0.0`   |
+| `@langchain/google-genai`  | `>=0.1.0 <3.0.0`   |
+| `@langchain/mistralai`     | `>=0.1.0 <2.0.0`   |
+| `@langchain/google-common` | `>=0.1.0 <3.0.0`   |
+
+For `@langchain/google-vertexai`, the version requirement applies to its `@langchain/google-common` dependency, which implements the embedding methods.
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to LangChain operations (such as prompts and messages).
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from LangChain operations (such as generated text and responses).
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.langChainIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```

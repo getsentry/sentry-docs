@@ -8,7 +8,6 @@ supported:
   - javascript.mastra
   - javascript.aws-lambda
   - javascript.azure-functions
-  - javascript.connect
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
@@ -38,10 +37,11 @@ _Import name: `Sentry.httpIntegration`_
 
 This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
-The `httpIntegration` does two things:
+The `httpIntegration` does the following:
 
 1. It captures breadcrumbs for HTTP requests.
-2. It captures spans for outgoing HTTP requests.
+2. It captures spans for incoming and outgoing HTTP requests.
+3. It creates sessions for incoming requests to track [Release Health](/product/releases/health/).
 
 ```JavaScript
 Sentry.init({
@@ -59,11 +59,11 @@ If set to false, no breadcrumbs will be captured.
 
 ### `spans`
 
-_Type: `boolean`_ (Defaults to `false`)
+_Type: `boolean`_ (Defaults to `true` when tracing is enabled)
 
-If set to true, spans will be created for outgoing HTTP requests.
+If set to false, no spans will be created for HTTP requests, neither for incoming nor for outgoing ones.
 
-### `maxIncomingRequestBodySize`
+### `maxRequestBodySize`
 
 _Type: `'none' | 'small' | 'medium' | 'always'`_ (Defaults to `'medium'`)
 
@@ -78,7 +78,7 @@ Available options:
 
 Note that even with the `'always'` setting, bodies exceeding 1 MB will never be attached for performance and security reasons.
 
-### `ignoreIncomingRequestBody`
+### `ignoreRequestBody`
 
 _Type: `(url: string, request: RequestOptions) => boolean`_
 
@@ -94,13 +94,13 @@ The callback function receives two arguments:
 
 _Type: `boolean`_ (Defaults to `true`)
 
-Whether to inject trace propagation headers (`sentry-trace`, `baggage`, `traceparent`) into outgoing HTTP requests. When set to `false`, Sentry will not inject any trace propagation headers but will still create breadcrumbs (if `breadcrumbs` is enabled). This is useful when `skipOpenTelemetrySetup: true` is configured and your external OpenTelemetry setup already handles trace propagation, to avoid duplicate headers.
+Whether to inject trace propagation headers (`sentry-trace`, `baggage`, `traceparent`) into outgoing HTTP requests. When set to `false`, Sentry will not inject any trace propagation headers but will still create breadcrumbs (if `breadcrumbs` is enabled). With `openTelemetryIntegration()` enabled and Sentry tracing off, your OpenTelemetry propagator already handles outgoing trace propagation.
 
 ### `ignoreOutgoingRequests`
 
 _Type: `(url: string, request: RequestOptions) => boolean`_
 
-Allows you to define a method to filter out outgoing requests based on the URL. If the method returns `true`, no spans or breadcrumbs will be captured for the outgoing request.
+Allows you to define a method to filter out outgoing requests based on the URL. If the method returns `true`, the request is skipped entirely: no span or breadcrumb is captured, and no trace propagation headers are injected.
 
 The callback function receives two arguments:
 
@@ -130,9 +130,15 @@ _Type: `boolean`_
 
 If set to true, no spans will be generated for incoming requests.
 
-### `dropSpansForIncomingRequestStatusCodes`
+### `ignoreStatusCodes`
 
 _Type: `(number | [number, number])[]`_ (Defaults to `[[401, 404], [301, 303], [305, 399]]`)
+
+<Alert level="warning">
+
+This option is deprecated and will be removed in the next major version without a replacement. It only has an effect when `traceLifecycle` is set to `'static'`. With span streaming, child spans are sent as they end, before the response status code is known, so spans can't be dropped based on the status code. To keep requests out of Sentry, use [`ignoreIncomingRequests`](#ignoreincomingrequests), <PlatformLink to="/configuration/options/#tracesSampler">`tracesSampler`</PlatformLink>, or <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> instead.
+
+</Alert>
 
 Do not capture spans for incoming HTTP requests with the given status codes.
 By default, spans with some 3xx and 4xx status codes are ignored.
@@ -140,7 +146,7 @@ Expects an array that can contain individual status codes (numbers) or ranges (2
 
 For example, `[[300, 399], 404]` would ignore all 3xx status codes (300-399 inclusive) and 404 status codes.
 
-### `trackIncomingRequestsAsSessions`
+### `sessions`
 
 _Type: `boolean`_ (Defaults to `true`)
 
@@ -153,19 +159,42 @@ _Type: `number`_ (Defaults to `60000`)
 
 The delay in milliseconds before sessions are flushed as a session aggregate. This controls how frequently session data is sent to Sentry.
 
-### `instrumentation`
+### `onSpanCreated`
 
-You can also pass some hooks through to the [underlying OpenTelemetry Instrumentation](https://www.npmjs.com/package/@opentelemetry/instrumentation-http):
+_Type: `(span: Span, request: IncomingMessage, response: ServerResponse) => void`_
 
-```typescript
-httpIntegration({
-  instrumentation?: {
-    requestHook?: (span: Span, req: ClientRequest | HTTPModuleRequestIncomingMessage) => void;
-    responseHook?: (span: Span, response: HTTPModuleRequestIncomingMessage | ServerResponse) => void;
-    applyCustomAttributesOnSpan?: (
-      span: Span,
-      request: ClientRequest | HTTPModuleRequestIncomingMessage,
-      response: HTTPModuleRequestIncomingMessage | ServerResponse,
-    ) => void;
+A hook that's called after a span is created for an incoming request, before it's recorded. Use this to add custom attributes to incoming request spans.
+
+```javascript
+Sentry.httpIntegration({
+  onSpanCreated: (span, request, response) => {
+    span.setAttribute("custom", true);
+  },
 });
 ```
+
+### `outgoingRequestHook`
+
+_Type: `(span: Span, request: ClientRequest) => void`_
+
+A hook that's called after a span is created for an outgoing request. Use this to add custom attributes to outgoing request spans. Only called when spans are created for outgoing requests.
+
+```javascript
+Sentry.httpIntegration({
+  outgoingRequestHook: (span, request) => {
+    span.setAttribute("custom", true);
+  },
+});
+```
+
+### `outgoingResponseHook`
+
+_Type: `(span: Span, response: IncomingMessage) => void`_
+
+A hook that's called when an outgoing request receives a response. Only called when spans are created for outgoing requests.
+
+### `outgoingRequestApplyCustomAttributes`
+
+_Type: `(span: Span, request: ClientRequest, response: IncomingMessage) => void`_
+
+A hook that's called when both the outgoing request and its response are available. Only called when spans are created for outgoing requests.
