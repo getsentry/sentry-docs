@@ -684,10 +684,6 @@ const formatToSVG = {
     sm: GroqSVG,
     lg: GroqSVGLarge,
   },
-  mistral: {
-    sm: MistralSVG,
-    lg: MistralSVGLarge,
-  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -1020,7 +1016,6 @@ export const PLATFORM_TO_ICON = {
   go: 'go',
   'google-genai': 'gemini',
   groq: 'groq',
-  mistral: 'mistral',
   'together-ai': 'default',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
