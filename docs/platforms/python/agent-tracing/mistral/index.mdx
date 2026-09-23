@@ -1,0 +1,76 @@
+---
+title: Mistral
+description: "Learn about using Sentry for Mistral."
+sidebar_order: 29
+---
+
+This integration connects Sentry with the [Mistral Python SDK](https://github.com/mistralai/client-python).
+
+Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+Sentry AI Observability will automatically collect information about prompts, tokens, and models. Learn more about the [Agents Dashboard](/product/agents/dashboards/).
+
+<Include name="python-stream-mode-general-callout.mdx" />
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install sentry-sdk
+```
+
+```bash {tabTitle:uv}
+uv add sentry-sdk
+```
+
+## Configure
+
+If you have the `mistralai` package in your dependencies, the Mistral integration will be enabled automatically when you initialize the Sentry SDK.
+
+<PlatformContent includePath="getting-started-config" />
+
+## Verify
+
+Verify that the integration works by making a chat request to Mistral.
+
+```python
+import sentry_sdk
+from mistralai import Mistral
+
+sentry_sdk.init(...)  # same as above
+
+client = Mistral(api_key="(your Mistral API key)")
+
+def my_llm_stuff():
+    # or sentry_sdk.traces.start_span(name="The result of the AI inference", parent_span=None) in stream mode
+    with sentry_sdk.start_transaction(name="The result of the AI inference"):
+        response = client.chat.complete(
+            model="mistral-large-latest",
+            messages=[{"role": "user", "content": "say hello"}],
+        )
+        print(response.choices[0].message.content)
+```
+
+To try the async variant, use `client.chat.complete_async(...)` with `await`.
+
+After running this script, the resulting data should show up in the `AI Spans` tab on the `Explore > Traces > Trace` page on Sentry.io.
+
+If you manually created an <PlatformLink to="/agent-tracing/manual-instrumentation/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [Agents Dashboard](/product/agents/dashboards/).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Mistral integration will connect Sentry with the supported Mistral methods automatically.
+
+- The supported functions are currently `Chat.complete` and `Chat.complete_async` (sync and async). Streaming completions (`stream=True`) are not instrumented.
+
+- Sentry records request parameters like `model`, `max_tokens`, `temperature`, `top_p`, `frequency_penalty`, `presence_penalty`, and `reasoning_effort`, as well as token usage (prompt, completion, and total tokens).
+
+- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. For finer control over individual categories of data, see the [`data_collection`](/platforms/python/configuration/options/#data_collection) option.
+
+## Supported Versions
+
+- Python: 3.8+
+- Mistral AI (`mistralai`): 2.0.5+
