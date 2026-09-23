@@ -18,7 +18,7 @@ keywords:
 
 <Alert>
 
-This guide covers the Sentry SDK-based setup for JavaScript SDK version `11.0.0-rc.0` or later. If your app uses Eve's earlier OTLP instrumentation, remove it before following this guide. Both integrations produce AI spans and configure OpenTelemetry, so combining them duplicates spans, token totals, and costs.
+This guide covers the Sentry SDK-based setup for JavaScript SDK version `11.0.0-rc.1` or later. If your app uses Eve's earlier OTLP instrumentation, remove it before following this guide. Both integrations produce AI spans and configure OpenTelemetry, so combining them duplicates spans, token totals, and costs.
 
 </Alert>
 
@@ -27,8 +27,8 @@ This guide covers the Sentry SDK-based setup for JavaScript SDK version `11.0.0-
 Before you begin, you need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
-- An Eve application.
-- `@sentry/node` version `11.0.0-rc.0` or later. The SDK runs in Node.js only; it doesn't support browser or edge runtimes.
+- An Eve application using version `0.63.0` or later.
+- `@sentry/node` version `11.0.0-rc.1` or later. The SDK runs in Node.js only; it doesn't support browser or edge runtimes.
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -46,15 +46,15 @@ Then install the Sentry Node SDK:
 <OnboardingOption optionId="profiling" hideForThisOption>
 
 ```bash {tabTitle:npm}
-npm install @sentry/node@^11.0.0-rc.0
+npm install @sentry/node@^11.0.0-rc.1
 ```
 
 ```bash {tabTitle:yarn}
-yarn add @sentry/node@^11.0.0-rc.0
+yarn add @sentry/node@^11.0.0-rc.1
 ```
 
 ```bash {tabTitle:pnpm}
-pnpm add @sentry/node@^11.0.0-rc.0
+pnpm add @sentry/node@^11.0.0-rc.1
 ```
 
 </OnboardingOption>
@@ -62,60 +62,63 @@ pnpm add @sentry/node@^11.0.0-rc.0
 <OnboardingOption optionId="profiling">
 
 ```bash {tabTitle:npm}
-npm install @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0
+npm install @sentry/node@^11.0.0-rc.1 @sentry/profiling-node@^11.0.0-rc.1
 ```
 
 ```bash {tabTitle:yarn}
-yarn add @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0
+yarn add @sentry/node@^11.0.0-rc.1 @sentry/profiling-node@^11.0.0-rc.1
 ```
 
 ```bash {tabTitle:pnpm}
-pnpm add @sentry/node@^11.0.0-rc.0 @sentry/profiling-node@^11.0.0-rc.0
+pnpm add @sentry/node@^11.0.0-rc.1 @sentry/profiling-node@^11.0.0-rc.1
 ```
 
 </OnboardingOption>
 
 ## Configure
 
-Create `agent/instrumentation.ts` and initialize Sentry. Eve auto-discovers `agent/instrumentation.ts` and runs it at server startup, before it loads your agent and the AI SDK:
+Create `agent/instrumentation/sentry.ts` and export the Sentry instrumentation provider. Eve auto-discovers providers in `agent/instrumentation/` and runs them at server startup, before it loads your agent and the AI SDK:
 
-```typescript {filename:agent/instrumentation.ts}
+```typescript {filename:agent/instrumentation/sentry.ts}
 import * as Sentry from "@sentry/node";
 // ___PRODUCT_OPTION_START___ profiling
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 // ___PRODUCT_OPTION_END___ profiling
+import { defineInstrumentation } from "eve/instrumentation";
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ profiling
+export default defineInstrumentation(
+  Sentry.eveInstrumentation({
+    dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ profiling
 
-  integrations: [
-    // Add our Profiling integration
-    nodeProfilingIntegration(),
-  ],
-  // ___PRODUCT_OPTION_END___ profiling
-  // ___PRODUCT_OPTION_START___ performance
+    integrations: [
+      // Add our Profiling integration
+      nodeProfilingIntegration(),
+    ],
+    // ___PRODUCT_OPTION_END___ profiling
+    // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of spans for tracing.
-  // We recommend adjusting this value in production.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/node/configuration/options/#tracesSampleRate
-  tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ profiling
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of spans for tracing.
+    // We recommend adjusting this value in production.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/guides/node/configuration/options/#tracesSampleRate
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ profiling
 
-  // Set profileSessionSampleRate to 1.0 to profile every session.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
-  profileSessionSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ profiling
-});
+    // Set profileSessionSampleRate to 1.0 to profile every session.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+    profileSessionSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ profiling
+  })
+);
 ```
 
-With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. Prompts and model outputs are recorded on your agent spans by default, so the Agent Tracing transcript shows the full exchange without any extra configuration.
+With this setup, Sentry captures errors thrown by your agent and AI spans for every turn — model calls, tool executions, token usage, and latency — along with outgoing HTTP and `fetch` requests. It also groups every turn in an Eve session into one Sentry conversation. Prompts and model outputs are recorded on your agent spans by default, so the Agent Tracing transcript shows the full exchange without any extra configuration.
 
-To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below. To review what's captured and turn recording of prompts and responses off, see [Privacy Controls](#privacy-controls).
+To also instrument the rest of your Node app, see [Instrument Other Dependencies](#instrument-other-dependencies) below. To review what's captured and turn recording of prompts and responses off, see [Control the Data You Send to Sentry](#control-the-data-you-send-to-sentry-optional).
 
 ## Verify
 
@@ -125,45 +128,25 @@ If no data appears, confirm that:
 
 - The `dsn` belongs to the Sentry project you're viewing.
 - `tracesSampleRate` is greater than `0`.
-- Your app completed at least one agent turn after you added `agent/instrumentation.ts`.
+- Your app completed at least one agent turn after you added `agent/instrumentation/sentry.ts`.
 - Eve's earlier OTLP instrumentation isn't also initialized in the agent runtime. Running both integrations duplicates AI spans, token totals, and costs.
 
 </StepConnector>
 
-## Privacy Controls
+## Control the Data You Send to Sentry (Optional)
 
-Generative AI inputs and outputs — the prompts your agent sends and the model responses it receives — are recorded on your agent spans by default. Review the data your agent handles and tighten this before production. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
+<PlatformContent includePath="getting-started-data-collection" />
 
-```typescript {filename:agent/instrumentation.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  dataCollection: {
-    genAI: { inputs: false, outputs: false },
-  },
-});
-```
+## Customize Conversation Grouping
 
-## Link Conversations
+Each Eve turn is its own durable workflow, so a session's turns land in separate traces. `eveInstrumentation` uses the durable session id (`session.id`) as the Sentry conversation id by default, which groups all turns from the session into one [Conversation](/product/agents/conversations/).
 
-Each Eve turn is its own durable workflow, so a session's turns land in separate traces. To group them into a single [Conversation](/product/agents/conversations/) in the Agents dashboards, add the `eveConversationHook` in an `agent/hooks/sentry.ts` file:
+To derive the conversation id yourself — for example, to group a subagent's turns under a root or parent session — pass `getConversationId` in your instrumentation provider:
 
-```typescript {filename:agent/hooks/sentry.ts}
-import * as Sentry from "@sentry/node";
-import { defineHook } from "eve/hooks";
-
-export default defineHook(Sentry.eveConversationHook());
-```
-
-This tags every turn of a session with the durable session id (`ctx.session.id`) as the Sentry conversation id, so all of the session's AI spans share the same `gen_ai.conversation.id` and group into one conversation.
-
-To derive the conversation id yourself — for example, to group a subagent's turns under a root or parent session — pass `getConversationId`:
-
-```typescript {filename:agent/hooks/sentry.ts}
-import * as Sentry from "@sentry/node";
-import { defineHook } from "eve/hooks";
-
-export default defineHook(
-  Sentry.eveConversationHook({
+```typescript {filename:agent/instrumentation/sentry.ts}
+export default defineInstrumentation(
+  Sentry.eveInstrumentation({
+    dsn: "___PUBLIC_DSN___",
     getConversationId: (context) => context.session.id,
   })
 );
@@ -200,5 +183,5 @@ export default defineAgent({
 
 ## Supported Versions
 
-- `@sentry/node`: `>=11.0.0-rc.0`
-- `eve`: tested with `0.52.3` and later
+- `@sentry/node`: `>=11.0.0-rc.1`
+- `eve`: `>=0.63.0`
