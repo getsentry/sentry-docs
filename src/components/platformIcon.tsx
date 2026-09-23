@@ -724,6 +724,10 @@ const formatToSVG = {
     sm: McpSVG,
     lg: McpSVGLarge,
   },
+  mistral: {
+    sm: MistralSVG,
+    lg: MistralSVGLarge,
+  },
   mongodb: {
     sm: MongodbSVG,
     lg: MongodbSVGLarge,
@@ -1092,6 +1096,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   mastra: 'mastra',
   mcp: 'mcp',
+  mistral: 'mistral',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
@@ -1141,6 +1146,7 @@ export const PLATFORM_TO_ICON = {
   'python-pydantic-ai': 'pydantic',
   'python-openai-agents': 'openai',
   'python-mcp': 'mcp',
+  'python-mistral': 'mistral',
   'python-google-genai': 'gemini',
   'python-litellm': 'litellm',
   'python-langgraph': 'langgraph',
