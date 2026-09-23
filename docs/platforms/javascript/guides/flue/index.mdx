@@ -57,7 +57,7 @@ pnpm add @sentry/node@^11.0.0
 
 Create a file that calls `Sentry.init()` and registers the Flue instrumentation. Flue is instrumented by registering with it rather than by patching, so this `instrument()` call is what connects the two:
 
-```typescript {filename:instrument.ts}
+```typescript {filename:src/instrument.ts}
 import { instrument } from "@flue/runtime";
 import * as Sentry from "@sentry/node";
 
@@ -78,7 +78,7 @@ instrument(Sentry.createFlueInstrumentation());
 Import it at the top of your app entry, so it runs before your agents take a turn:
 
 ```typescript {filename:src/app.ts}
-import "../instrument.ts";
+import "./instrument.ts";
 ```
 
 Call `instrument()` once, at module scope.
@@ -89,7 +89,7 @@ Call `instrument()` once, at module scope.
 
 The SDK will record generative AI inputs and outputs (the prompts your agent sends and the model responses it receives) by default. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
 
-```typescript {filename:instrument.ts}
+```typescript {filename:src/instrument.ts}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
@@ -109,7 +109,7 @@ See [`dataCollection` documentation](./configuration/options/#dataCollection) fo
 ## Troubleshooting
 
 - **Token and cost values are doubled.** Remove the `createOpenTelemetryInstrumentation` call left over from the `flue add tooling sentry` blueprint. Flue emits its own model spans through it, so both it and the SDK count the same turn.
-- **No AI spans at all.** Confirm `instrument(Sentry.createFlueInstrumentation())` actually runs. Importing `instrument.ts` at the top of `src/app.ts` runs it during app startup, before any agent takes a turn.
+- **No AI spans at all.** Confirm `instrument(Sentry.createFlueInstrumentation())` actually runs. Importing `src/instrument.ts` at the top of `src/app.ts` runs it during app startup, before any agent takes a turn.
 
 <Include name="flue/next-steps" />
 
