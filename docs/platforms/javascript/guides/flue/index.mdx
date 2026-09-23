@@ -118,7 +118,22 @@ Import it at the top of your app entry, so it runs before your agents take a tur
 import "./instrument.ts";
 ```
 
-Call `instrument()` once, at module scope.
+Call `instrument()` once, at module scope. On Cloudflare the Vite plugin registers the instrumentation at build time instead; on Node there's no equivalent, so this call is what installs it.
+
+### Run With the Sentry Loader
+
+Libraries like database drivers, caches, and `dataloader` are instrumented by a module transform that has to be installed before your app loads them. A Flue build imports your dependencies before `src/instrument.ts` runs, so start the server with the Sentry loader to catch them:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--import=@sentry/node/import' vite dev",
+    "start": "NODE_OPTIONS='--import=@sentry/node/import' node dist/server.mjs"
+  }
+}
+```
+
+Agent, model, and tool spans arrive without this, as do outgoing HTTP requests. Everything instrumented through the module transform needs it.
 
 <Include name="flue/captured-summary" />
 
