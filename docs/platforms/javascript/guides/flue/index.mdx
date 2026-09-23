@@ -35,11 +35,13 @@ Before you begin, you need:
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance"]}
+  options={["error-monitoring", "performance", "profiling"]}
   defaults={["performance"]}
 />
 
 Install the Sentry Node SDK:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
 
 ```bash {tabTitle:npm}
 npm install @sentry/node@^11.0.0
@@ -53,6 +55,24 @@ yarn add @sentry/node@^11.0.0
 pnpm add @sentry/node@^11.0.0
 ```
 
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0
+```
+
+</OnboardingOption>
+
 ## Configure
 
 Create a file that calls `Sentry.init()` and registers the Flue instrumentation. Flue is instrumented by registering with it rather than by patching, so this `instrument()` call is what connects the two:
@@ -60,9 +80,19 @@ Create a file that calls `Sentry.init()` and registers the Flue instrumentation.
 ```typescript {filename:src/instrument.ts}
 import { instrument } from "@flue/runtime";
 import * as Sentry from "@sentry/node";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -70,6 +100,13 @@ Sentry.init({
   // We recommend adjusting this value in production.
   tracesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set profileSessionSampleRate to 1.0 to profile every session.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
 });
 
 instrument(Sentry.createFlueInstrumentation());
