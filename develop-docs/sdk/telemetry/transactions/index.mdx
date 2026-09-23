@@ -1,0 +1,2882 @@
+---
+title: Transactions
+description: Transaction-based tracing with span trees, sampling, span conventions, and dashboard module requirements.
+---
+
+This document covers how SDKs should add support for Performance Monitoring with [Distributed
+Tracing](https://docs.sentry.io/product/performance/distributed-tracing/).
+
+This should give an overview of the APIs that SDKs need to implement, without
+mandating internal implementation details.
+
+Reference implementations:
+
+- [JavaScript SDK](https://github.com/getsentry/sentry-javascript/tree/master/packages/core/src/tracing)
+- [Python SDK](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/tracing.py)
+
+<Alert>
+
+This document uses standard interval notation, where `[` and `]` indicates closed intervals, which include the endpoints of the interval, while `(` and `)` indicates open intervals, which exclude the endpoints of the interval. An interval `[x, y)` covers all values starting from `x` up to but excluding `y`.
+
+</Alert>
+
+## SDK Configuration
+
+This section describes the options SDKs should expose to configure tracing and performance monitoring.
+
+Tracing is enabled by setting either a `tracesSampleRate` or `tracesSampler`. If not set, these options default to `undefined` or `null`, making tracing opt-in.
+
+### `enableTracing`
+
+This option is **deprecated** and should be removed from all SDKs.
+
+### `tracesSampleRate`
+
+This should be a floating-point number in the range `[0, 1]` and represents the percentage chance that any given transaction will be sent to Sentry. So, barring [outside influence](#sampling), `0.0` is a guaranteed 0% chance (none will be sent) and `1.0` is a guaranteed 100% chance (all will be sent). This rate applies equally to all transactions; in other words, each transaction has an equal chance of being marked as `sampled = true`, based on the `tracesSampleRate`.
+
+See more about how sampling should be performed [below](#sampling).
+
+### `tracesSampler`
+
+This should be a callback function, triggered when a transaction is started. It should be given a `samplingContext` object and should return a sample rate in the range of `[0, 1]` _for the transaction in question_. This sample rate should behave the same way as the `tracesSampleRate` above. The only difference is that it only applies to the newly-created transaction and that different transactions can be sampled at different rates. Returning `0.0` should force the transaction to be dropped (set to `sampled = false`) and returning `1.0` should force the transaction to be sent (set to `sampled = true`).
+
+Historically, the `tracesSampler` callback could have also returned a boolean to force a sampling decision (with `false` equivalent to `0.0` and `true` equivalent to `1.0`). This behavior is now **deprecated** and should be removed from all SDKs.
+
+See more about how sampling should be performed [below](#sampling).
+
+### `tracePropagationTargets`
+
+See [Trace Propagation: tracePropagationTargets](/sdk/foundations/trace-propagation/#trace-propagation-targets).
+
+### `strictTraceContinuation`
+
+See [Trace Propagation: strictTraceContinuation](/sdk/foundations/trace-propagation/#strict-trace-continuation).
+
+### `traceOptionsRequests`
+
+This should be a boolean value. Default is `false`. When set to `true` transactions should be created for HTTP `OPTIONS` requests. When set to `false` NO transactions should be created for HTTP `OPTIONS` requests. This configuration is most valuable on backend server SDKs. If this configuration does not make sense for an SDK it can be omitted.
+
+### `maxSpans`
+
+Because transaction payloads have a maximum size enforced on the ingestion side, SDKs should limit the number of spans that are attached to a transaction. This is similar to how breadcrumbs and other arbitrarily sized lists are limited to prevent accidental misuse. If new spans are added once the maximum is reached, the SDK should drop the spans and ideally use the internal logging to help debugging.
+
+The `maxSpans` should be implemented as an internal, non-configurable, constant that defaults to 1000. It may become configurable if there is justification for that in a given platform.
+
+The `maxSpans` limit may also help avoiding transactions that never finish (in platforms that keep a transaction open for as long as spans are open), preventing OOM errors, and generally avoiding degraded application performance.
+
+### `propagateTraceparent`
+
+See [Trace Propagation: propagateTraceparent](/sdk/foundations/trace-propagation/#propagate-traceparent).
+
+### `traceIgnoreStatusCodes`
+
+This SHOULD be a collection of integers, denoting HTTP status codes.
+If suitable for the platform, the collection MAY also admit pairs of integers, denoting inclusive HTTP status code ranges.
+
+The option applies exclusively to incoming requests, and therefore MUST only be implemented in server SDKs.
+
+The SDK MUST honor this option by inspecting the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute on each transaction/root span before it's finished.
+If the value of this attribute matches one of the status codes in `traceIgnoreStatusCodes`, the SDK MUST set the transaction's [sampling decision](#sampling) to `not sampled`.
+
+Note that a prerequisite to implement this option is that every HTTP server integration MUST record the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute as defined in the OTEL spec.
+
+The SDK MUST emit a debug log denoting why the transaction was dropped.
+If the SDK implements client reports, it MUST record the dropped transaction with the `event_processor` discard reason.
+
+This option MUST default to an empty collection if it's introduced in a release with a minor SemVer bump.
+SDKs SHOULD set the default for this option to the following value (or equivalent if the implementation doesn't admit pairs of integers)
+```
+[[301, 303], [305, 399], [401, 404]]
+```
+at the earliest release with a major SemVer bump following its introduction.
+
+The rationale for this option and default is to not consume a user's span quota to trace requests that are useless for debugging purposes (and can often be triggered by scanning bots).
+
+Examples:
+`[403, 404]`: don't sample transactions corresponding to requests with status code 403 or 404
+`[[300, 399], [401, 404]]`: don't sample transactions corresponding to requests with status codes between 300 and 399 (inclusive) or between 401 and 404 (inclusive)
+
+### `enableDbQuerySource`
+
+This MUST be a boolean value that defaults to `true`.
+
+The option controls if attributes with code source information are set on database query spans when the query duration exceeds a given threshold.
+
+The following attributes, or a subset thereof, SHOULD be set on database query spans if the threshold is exceeded.
+Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset MAY be provided.
+
+The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
+
+- code.file.path
+- code.function.name
+- code.line.number
+
+### `dbQuerySourceThresholdMs`
+
+A threshold duration, which MUST be a floating point or integer value.
+The value specifies, in milliseconds, the duration of a database query before code source information is added.
+
+The default value is platform-dependent and SHOULD balance the overhead of adding the information with its utility for queries that exceed the threshold duration for users of the SDK.
+In Python and PHP Laravel, the default threshold is 100 milliseconds.
+
+### `enableHttpRequestSource`
+
+This MUST be a boolean value that defaults to `true`.
+
+The option controls if attributes with code source information are set on outgoing HTTP requests.
+When enabled, the attributes SHOULD be attached only when the time to receive the response from sending the request exceeds a given threshold.
+
+The following attributes, or a subset thereof, SHOULD be set if the threshold is exceeded.
+Values for some of the attributes below may be unavailable in some situations for the SDK, and in these cases a subset MAY be provided.
+
+The attributes are described in <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Sentry's Span Convention Documentation</Link>.
+
+- code.file.path
+- code.function.name
+- code.line.number
+
+### `httpRequestSourceThresholdMs`
+
+A threshold duration, which MUST be a floating point or integer value.
+The value specifies, in milliseconds, the time between sending an HTTP request and receiving its response, after which code source information is added.
+
+The default value is platform-dependent and SHOULD balance the overhead of adding the information with its utility for request-response cycles that exceed the threshold duration for users of the SDK.
+
+## `Event` Changes
+
+As of writing, transactions are implemented as an extension of the `Event`
+model.
+
+The distinctive feature of a `Transaction` is `type: "transaction"`.
+
+Apart from that, the `Event` gets new fields: `spans`, `contexts.TraceContext`.
+
+## New `Span` and `Transaction` Classes
+
+In memory, spans build up a conceptual tree of timed operations. We call the whole span tree a transaction. Sometimes we use the term "transaction" to refer to a span tree as a whole tree, sometimes to refer specifically to the root span of the tree.
+
+Over the wire, transactions are serialized to JSON as an augmented `Event`, and sent as envelopes. The different envelope types are for optimizing ingestion (so we can route "transaction events" differently than other events, mostly "error events").
+
+In the Sentry UI, you can use Errors and Trace Explorer to look at error and performance events, and the Issues section to dive into grouped errors. The [user-facing tracing documentation](https://docs.sentry.io/concepts/key-terms/tracing/distributed-tracing/) explains more of the concepts on the product level.
+
+The [Span](/sdk/foundations/transport/event-payloads/span/) class stores each individual span in a
+trace.
+
+The [Transaction](/sdk/foundations/transport/event-payloads/transaction/) class is like a span, with a
+few key differences:
+
+- Transactions have `name`, spans don't.
+- Transactions must specify the [source](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) of its `name` to indicate how the transaction name was generated.
+- Calling the `finish` method on spans record the span's end timestamp. For
+  transactions, the `finish` method additionally sends an event to Sentry.
+
+The `Transaction` class may inherit from `Span`, but that's an implementation
+detail. Semantically, transactions represent both the top-level span of a span
+tree as well as the unit of reporting to Sentry.
+
+- `Span` Interface
+
+  - When a `Span` is created, set the `startTimestamp` to the current time
+  - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail). When possible `SpanContext` should be immutable.
+  - `Span` should have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
+  - The `startChild` method should respect the `maxSpans` limit, and once the limit is reached the SDK should not create new child spans for the given transaction.
+  - `Span` should have a method called `toSentryTrace` which returns a string that could be sent as a header called `sentry-trace`.
+  - `Span` should have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace()}` right now. See `continueFromHeaders` as to why this exists and should be preferred when writing integrations.
+
+- `Transaction` Interface
+
+  - A `Transaction` internally holds a flat list of child Spans (not a tree structure)
+  - `Transaction` has additionally a `setName` method that sets the name of the transaction
+  - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
+  - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
+  - A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions should not be sent to Sentry.
+  - `TransactionContext` should have a static/ctor method called `fromSentryTrace` which prefills a `TransactionContext` with data received from a `sentry-trace` header value
+  - `TransactionContext` should have a static/ctor method called `continueFromHeaders(headerMap)` which is really just a thin wrapper around `fromSentryTrace(headerMap.get("sentry-trace"))` right now. This should be preferred by integration/framework-sdk authors over `fromSentryTrace` as it hides the exact header names used deeper in the core sdk, and leaves opportunity for using additional headers (from the W3C) in the future without changing all integrations.
+
+- `Span.finish()`
+
+  - Accepts an optional `endTimestamp` to allow users to set a custom `endTimestamp` on the finished span
+  - If an `endTimestamp` value is not provided, set `endTimestamp` to the current time (in payload `timestamp`)
+
+- `Transaction.finish()`
+  - `super.finish()` (call finish on Span)
+  - Send it to Sentry only if `sampled == true`
+  - Like spans, can be given an optional `endTimestamp` value that should be passed into the `span.finish()` call
+  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/foundations/envelopes/)
+  - The `Transport` should use the same internal queue for `Transactions` / `Events`
+  - The `Transport` should implement category-based rate limiting →
+  - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
+
+## Sampling
+
+Each transaction has a _sampling decision_, that is, a boolean which declares whether or not it should be sent to Sentry. This should be set exactly once during a transaction's lifetime, and should be stored in an internal `sampled` boolean.
+
+There are multiple ways a transaction can end up with a sampling decision:
+
+- Random sampling according to a static sample rate set in `tracesSampleRate`
+- Random sampling according to a dynamic sample rate returned by `tracesSampler`
+- Absolute decision (100% chance or 0% chance) returned by `tracesSampler`
+- If the transaction has a parent, inheriting its parent's sampling decision
+- Absolute decision passed to `startTransaction`
+
+If more than one option could apply, the following rules determine which takes precedence:
+
+1. If a sampling decision is passed to `startTransaction` (`startTransaction({name: "my transaction", sampled: true})`), that decision will be used, regardless of anything else
+2. If `tracesSampler` is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
+3. If `tracesSampler` is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
+4. If `tracesSampler` is not defined and there's no parent sampling decision, `tracesSampleRate` will be used.
+
+<Alert title="Note">
+<markdown>
+
+Transactions should be sampled only by `tracesSampleRate` or `tracesSampler`. The `sampleRate` configuration is used for error events and should not apply to transactions.
+
+</markdown>
+</Alert>
+
+### Sampling Context
+
+If defined, the `tracesSampler` callback should be passed a `samplingContext` object, which should include, at minimum:
+
+- The `transactionContext` with which the transaction was created
+- A float/double `parentSampleRate` which contains the sampling rate passed down from the parent
+- A boolean `parentSampled` which contains the sampling decision passed down from the parent, if any
+- Data from an optional `customSamplingContext` object passed to `startTransaction` when it is called manually
+
+Depending on the platform, other default data may be included. (For example, for server frameworks, it makes sense to include the `request` object corresponding to the request the transaction is measuring.)
+
+### Propagation
+
+See [Trace Propagation: Sampling Decision Propagation](/sdk/foundations/trace-propagation/#sampling-decision-propagation) and [Propagated Random Value](/sdk/foundations/trace-propagation/#propagated-random-value).
+
+### Backpressure
+
+If the SDK supports backpressure handling, the overall sampling rate needs to be divided by the `downsamplingFactor` from the backpressure monitor. See [the backpressure spec](#downsampling) for more details.
+
+## Header `sentry-trace`
+
+See [Trace Propagation: sentry-trace Header](/sdk/foundations/trace-propagation/#sentry-trace-header) for the full header format and sampling value specification.
+
+## Static API Changes
+
+The `Sentry.startTransaction` function should take two arguments - the `transactionContext` passed to the `Transaction` constructor and an optional `customSamplingContext` object containing data to be passed to `tracesSampler` (if defined).
+It creates a `Transaction` bound to the current hub and returns the instance.
+Users interact with the instance for creating child spans and, thus, have to
+keep track of it themselves.
+
+With `Sentry.span` users can attach spans to an already ongoing transaction.
+This property returns a `SpanProtocol` if a running transaction is bound to
+the scope; otherwise, it returns nil. Although we recommend users keep track
+of their own transactions, the SDKs should offer a way to expose auto-generated
+transactions. SDKs shall bind auto-generated transactions to the scope, making
+them accessible with `Sentry.span`.
+If the SDK has global mode enabled, which specifies whether to use global scope
+management mode and should be `true` for client applications and `false` for server
+applications, `Sentry.span` shall return the active transaction. If the
+user disables global mode, `Sentry.span` shall return the latest active (unfinished) span.
+
+## `Hub` Changes
+
+- Introduce a method called `traceHeaders`
+
+  - This function returns a header (string) `sentry-trace`
+  - The value should be the trace header string of the `Span` that is currently on the `Scope`
+
+- Introduce a method called `startTransaction`
+
+  - Takes the same two arguments as `Sentry.startTransaction`
+  - Creates a new `Transaction` instance
+  - Should implement sampling as described in more detail in the 'Sampling' section of this document
+
+- Modify the method called `captureEvent` or `captureTransaction`
+  - Don't set `lastEventId` for transactions
+
+{/*
+NOTE: we may omit this as a deprecated API replaced by `startTransaction` and
+`transaction.startChild`, or embrace it as a shortcut for creating a span that
+is the child of an existing transaction in the current scope or otherwise an
+orphan span (that will not be sent to Sentry on its own).
+
+- `Hub` → Introduce a method called `startSpan`
+    - Creates a new `Span` instance
+    - If there is already a `Span` on the current `Scope`, the created `Span`
+      should be its child
+*/}
+
+## `Scope` Changes
+
+The `Scope` holds a reference to the current `Span` or `Transaction`.
+
+{/*
+TODO: as of writing, the reference in the scope is only done for automatically
+instrumented transactions and spans. It is yet-to-be-specified whether this
+behavior applies to manual instrumentation as well.
+*/}
+
+- `Scope` Introduce `setSpan`
+  - This can be used internally to pass a `Span` / `Transaction` around so
+    that integrations can attach children to it
+  - Setting the `transaction` property on the `Scope` (legacy) should
+    overwrite the name of the `Transaction` stored in the `Scope`, if there is
+    one. With that we give users the option to change the transaction name
+    even if they don't have access to the instance of the `Transaction`
+    directly.
+
+## Interaction with `beforeSend` and Event Processors
+
+The `beforeSend` callback is a special Event Processor that we consider to be of
+most prominent use. Proper Event Processors are often considered internal.
+
+Transactions should **not** go through `beforeSend`. However, they are still
+processed by Event Processors. This is a compromise between some flexibility in
+dealing with the current implementation of transactions as events, and
+leaving room for different lifetime hooks for transactions and spans.
+
+Motivations:
+
+1. Future-proofing: if users rely on `beforeSend` for transactions, that would
+   complicate eventually implementing individual span ingestion without breaking
+   user code. As of writing, a transaction is sent as an event, but that is
+   considered an implementation detail.
+
+2. API compatibility: users have their existing implementation of `beforeSend`
+   that only ever had to deal with error events. We introduced transactions as a
+   new type of event. As users upgrade to a new SDK version and start using
+   tracing, their `beforeSend` would start seeing a new type that their code was
+   not meant to handle. Before transactions, they didn't have to care about
+   different event types at all. There are several possible consequences:
+   breaking user apps; silently and unintentionally dropping transactions;
+   transaction events modified in surprising ways.
+
+3. In terms of usability, `beforeSend` is not a perfect fit for dropping
+   transactions like it is for dropping errors. Errors are a point-in-time
+   event. When errors happen, users have full context in `beforeSend` and can
+   modify/drop the event before it goes to Sentry. With transactions the flow is
+   different. Transactions are created and then they are open for some time
+   while child spans are created and appended to it. Meanwhile outgoing HTTP
+   requests include the sampling decision of the current transaction with other
+   services. After spans and the transaction are finished, dropping the
+   transaction in a `beforeSend`-like hook would leave orphan transactions from
+   other services in a trace. Similarly, modifying the sampling decision to
+   "yes" at this late stage would also produce inconsistent traces.
+
+## Span Operations
+
+Span operations are a short code identifying the type of operation the span is measuring. Span operations are low cardinality attributes - they should be as general as possible while still being human readable and useful. They should avoid including high cardinality data like IDs and URLs.
+
+Operations are expected to follow [OpenTelemetry's semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md) as much as possible.
+
+It's important to keep categories consistent between SDKs and integrations as they are used by Sentry in various parts of the platform. For example, both `db.init` and `db.query` will be categorized as database operations (`db`). The default operations breakdown config can be seen [here](https://github.com/getsentry/sentry/blob/9f36200d665209c9328f5ccc21135d3de9b65318/src/sentry/projectoptions/defaults.py#L80).
+
+<Alert title="Note">
+  Span operations should be lower case and use snake_case
+</Alert>
+
+### List of Operations
+
+The following tables contain examples of operations used by the SDKs and Sentry product. The usage column in the table contains examples of using that operation category, but are not hard recommendations for operation usage. As long as categories stay consistent, SDK developers are free to choose actions and identifiers that best match the use case they are instrumenting.
+
+If a span operation is not provided, the value of `default` is set by Relay. The value `default` can also be set by SDKs, for example, to avoid breaking changes when no longer requiring `op` to be set on `TransactionContext`.
+
+#### General
+
+| Category | Usage | Description                                         |
+| -------- | ----- | --------------------------------------------------- |
+| mark     |       | A general point-in-time span (span with 0 duration) |
+| function |       | The time it took for a general function to execute  |
+
+#### Browser
+
+| Category   | Usage                     | Description                                                                                                                                                                              |
+| ---------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pageload   |                           | A full page load of a web application.                                                                                                                                                   |
+| navigation |                           | Client-side browser history change in a web application.                                                                                                                                 |
+| resource   |                           | Resource as per [Performance Resource Timing](https://w3c.github.io/resource-timing/#sec-performanceresourcetiming). Defaults to `resource.other` if resource cannot be identified.     |
+|            | resource.script           |                                                                                                                                                                                          |
+|            | resource.link             |                                                                                                                                                                                          |
+|            | resource.css              |                                                                                                                                                                                          |
+|            | resource.img              |                                                                                                                                                                                          |
+| browser    |                           | Usage of browser APIs or functionality                                                                                                                                                   |
+|            | browser.paint             |                                                                                                                                                                                          |
+| measure    |                           | Usage of [performance.measure() API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)                                                                               |
+| ui         |                           |                                                                                                                                                                                          |
+|            | ui.task                   | A task that is taken on the main UI thread. Typically used to indicate to users about things like the [Long Tasks API](https://developer.mozilla.org/en-US/docs/Web/API/Long_Tasks_API). |
+|            | ui.render                 | Time it takes to render a UI element                                                                                                                                                     |
+|            | ui.update                 | Time it takes to update a UI element                                                                                                                                                     |
+|            | ui.action                 | A user interaction                                                                                                                                                                       |
+|            | ui.action.click           |                                                                                                                                                                                          |
+| http       |                           |                                                                                                                                                                                          |
+|            | http.client               |                                                                                                                                                                                          |
+|            | http.graphql.query        |                                                                                                                                                                                          |
+|            | http.graphql.mutation     |                                                                                                                                                                                          |
+|            | http.graphql.subscription |                                                                                                                                                                                          |
+| serialize  |                           | Serialization of data                                                                                                                                                                    |
+
+##### JS Frameworks
+
+JS Frameworks should be prepended with the `ui` category for operations related to UI components.
+
+| Category    | Usage                           | Description                                                          |
+| ----------- | ------------------------------- | -------------------------------------------------------------------- |
+| ui.react    |                                 | Spans related to [React](https://reactjs.org/) components            |
+|             | ui.react.render                 |                                                                      |
+|             | ui.react.update                 |                                                                      |
+|             | ui.react.mount                  |                                                                      |
+| ui.vue      |                                 | Spans related to [Vue.js](https://vuejs.org/) components             |
+|             | ui.vue.activate                 |                                                                      |
+|             | ui.vue.create                   |                                                                      |
+|             | ui.vue.destroy                  |                                                                      |
+|             | ui.vue.mount                    |                                                                      |
+|             | ui.vue.update                   |                                                                      |
+| ui.svelte   |                                 | Spans related to [Svelte](https://svelte.dev/) components            |
+|             | ui.svelte.init                  |                                                                      |
+|             | ui.svelte.update                |                                                                      |
+| ui.angular  |                                 | Spans related to [Angular](https://angular.io/) components           |
+|             | ui.angular.init                 |                                                                      |
+|             | ui.angular.routing              |                                                                      |
+|             | ui.angular.[methodName]         | Created when a method wrapped with `TraceMethodDecorator` was called |
+| ui.ember    |                                 | Spans related to [EmberJS](https://emberjs.com/) components          |
+|             | ui.ember.route.before_model     |                                                                      |
+|             | ui.ember.route.model            |                                                                      |
+|             | ui.ember.route.after_model      |                                                                      |
+|             | ui.ember.route.setup_controller |                                                                      |
+| ui.livewire |                                 | Spans related to [Livewire](https://laravel-livewire.com/)           |
+|             |                                 | components                                                           |
+|             | ui.livewire.component           |                                                                      |
+
+#### Web Server
+
+Web server related spans should aim to follow OpenTelemetry's [HTTP](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md) and [RPC](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md) semantic conventions when possible.
+
+| Category        | Usage                                 | Description                                                        |
+| --------------- | ------------------------------------- | ------------------------------------------------------------------ |
+| http            |                                       | Spans related to http operations                                   |
+|                 | http.client                           |                                                                    |
+|                 | http.server                           |                                                                    |
+| websocket       |                                       |                                                                    |
+|                 | websocket.server                      |                                                                    |
+| rpc             |                                       | Spans related to remote procedure calls (RPC)                      |
+| grpc            |                                       | Usage of the [gRPC framework](https://grpc.io/)                    |
+| graphql         |                                       | a GraphQL operation                                                |
+|                 | graphql.execute                       |                                                                    |
+|                 | graphql.parse                         |                                                                    |
+|                 | graphql.resolve                       |                                                                    |
+|                 | graphql.request                       |                                                                    |
+|                 | graphql.query                         |                                                                    |
+|                 | graphql.mutation                      |                                                                    |
+|                 | graphql.subscription                  |                                                                    |
+|                 | graphql.validate                      |                                                                    |
+| subprocess      |                                       | Creating new processes                                             |
+|                 | subprocess.wait                       |                                                                    |
+|                 | subprocess.communicate                |                                                                    |
+| middleware      |                                       | Usage of webserver middlewares                                     |
+|                 | middleware.express                    |                                                                    |
+|                 | middleware.handle                     |                                                                    |
+|                 | middleware.starlette                  |                                                                    |
+|                 | middleware.django                     |                                                                    |
+| view            |                                       | Rendering of a view                                                |
+|                 | view.process_action.action_controller |                                                                    |
+|                 | view.render                           |                                                                    |
+| template        |                                       |                                                                    |
+|                 | template.init                         |                                                                    |
+|                 | template.parse                        |                                                                    |
+|                 | template.render                       |                                                                    |
+|                 | template.django.render                |                                                                    |
+|                 | template.render_template.action_view  |                                                                    |
+| event           |                                       |                                                                    |
+|                 | event.django                          | Spans related to Django signals                                    |
+| function        |                                       |                                                                    |
+| function.remix  |                                       | Spans related to [Remix](https://remix.run/) data fetchers         |
+|                 | function.remix.document_request       |                                                                    |
+|                 | function.remix.action                 |                                                                    |
+|                 | function.remix.loader                 |                                                                    |
+| function.nextjs |                                       | Spans related to [NextJS](https://nextjs.org/) data fetchers       |
+| serialize       |                                       | Serialization of data                                              |
+| console         |                                       | Accessing web servers through the command line (ex. Rails console) |
+|                 | console.command                       |                                                                    |
+| file            |                                       | Operations on the file system (internal or external)               |
+| object          |                                       | Operations on object storage (e.g. AWS S3, Cloudflare R2)          |
+|                 | object.copy                           |                                                                    |
+|                 | object.delete                         |                                                                    |
+|                 | object.get                            |                                                                    |
+|                 | object.head                           |                                                                    |
+|                 | object.list                           |                                                                    |
+|                 | object.put                            |                                                                    |
+|                 | object.restore                        |                                                                    |
+|                 | object.select_content                 |                                                                    |
+|                 | object.list_parts                     |                                                                    |
+|                 | object.upload_part                    |                                                                    |
+|                 | object.upload_part_copy               |                                                                    |
+|                 | object.multipart_upload.abort         |                                                                    |
+|                 | object.multipart_upload.complete      |                                                                    |
+|                 | object.multipart_upload.create        |                                                                    |
+| app             |                                       |                                                                    |
+|                 | app.bootstrap                         |                                                                    |
+|                 | app.php.autoload                      |                                                                    |
+
+#### Database
+
+Databased related spans are expected to follow OpenTelemetry's [Database](https://opentelemetry.io/docs/specs/semconv/database/) semantic conventions when possible.
+
+| Category | Usage                | Description                |
+| -------- | -------------------- | -------------------------- |
+| db       |                      | An operation on a database |
+|          | db.query             |                            |
+|          | db.sql.query         |                            |
+|          | db.sql.prisma        |                            |
+|          | db.redis             |                            |
+|          | db.sql.active_record |                            |
+|          | db.sql.execute       |                            |
+|          | db.sql.transaction   |                            |
+| cache    |                      |                            |
+|          | cache.get_item       |                            |
+|          | cache.clear          |                            |
+|          | cache.delete_item    |                            |
+|          | cache.save           |                            |
+
+#### Serverless (FAAS)
+
+Serverless related spans are expected to follow OpenTelemetry's [Function as a Service](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md) (FaaS) semantic conventions when possible.
+
+| Category       | Usage                    | Description                                 |
+| -------------- | ------------------------ | ------------------------------------------- |
+| http           |                          |                                             |
+|                | http.client              |                                             |
+|                | http.client.stream       |                                             |
+| grpc           |                          |                                             |
+|                | grpc.client              |                                             |
+| function.gcp   |                          | Invocations of a GCP function               |
+|                | function.gcp.event       |                                             |
+|                | function.gcp.cloud_event |                                             |
+|                | function.gcp.http        |                                             |
+| function.aws   |                          | Invocations of an AWS Lambda function       |
+| function.azure |                          | Invocations of an Azure serverless function |
+
+#### Mobile
+
+| Category   | Usage                     | Description                   |
+| ---------- | ------------------------- | ----------------------------- |
+| app        |                           | Data about the mobile app     |
+|            | app.start                 |                               |
+|            | app.start.warm            |                               |
+|            | app.start.cold            |                               |
+| ui         |                           | An operation on a mobile UI   |
+|            | ui.load                   |                               |
+|            | ui.load.initial_display   |                               |
+|            | ui.load.full_display      |                               |
+|            | ui.action                 |                               |
+|            | ui.action.click           |                               |
+|            | ui.action.swipe           |                               |
+|            | ui.action.scroll          |                               |
+| navigation |                           | Navigating to another screen  |
+| file       |                           | Operations on the file system |
+|            | file.read                 |                               |
+|            | file.write                |                               |
+|            | file.copy                 |                               |
+|            | file.delete               |                               |
+|            | file.open                 |                               |
+|            | file.rename               |                               |
+| serialize  |                           | Serialization of data         |
+| http       |                           |                               |
+|            | http.client               |                               |
+|            | http.graphql.query        |                               |
+|            | http.graphql.mutation     |                               |
+|            | http.graphql.subscription |                               |
+
+#### Desktop
+
+| Category  | Usage                     | Description                  |
+| --------- | ------------------------- | ---------------------------- |
+| app       |                           | Data about the desktop app   |
+|           | app.start                 |                              |
+|           | app.start.warm            |                              |
+|           | app.start.cold            |                              |
+| ui        |                           | An operation on a desktop UI |
+|           | ui.load                   |                              |
+|           | ui.action                 |                              |
+|           | ui.action.click           |                              |
+|           | ui.action.swipe           |                              |
+|           | ui.action.scroll          |                              |
+| serialize |                           | Serialization of data        |
+| http      |                           |                              |
+|           | http.client               |                              |
+|           | http.graphql.query        |                              |
+|           | http.graphql.mutation     |                              |
+|           | http.graphql.subscription |                              |
+
+#### Messages/Queues
+
+Messages/Queue spans are expected follow OpenTelemetry's [Messaging](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md) semantic conventions when possible.
+
+| Category | Usage                  | Description |
+| -------- | ---------------------- | ----------- |
+| topic    |                        |             |
+|          | topic.send             |             |
+|          | topic.receive          |             |
+|          | topic.process          |             |
+| queue    |                        |             |
+|          | queue.task             |             |
+|          | queue.task.celery      |             |
+|          | queue.task.rq          |             |
+|          | queue.task.delayed_job |             |
+|          | queue.task.active_job  |             |
+|          | queue.submit           |             |
+|          | queue.submit.celery    |             |
+|          | queue.resque           |             |
+|          | queue.sidekiq          |             |
+
+### Currently Used Categories
+
+| Category   | Description |
+| ---------- | ----------- |
+| ai         |             |
+| app        |             |
+| browser    |             |
+| console    |             |
+| db         |             |
+| file       |             |
+| function   |             |
+| graphql    |             |
+| graphql    |             |
+| grpc       |             |
+| http       |             |
+| log        |             |
+| mark       |             |
+| measure    |             |
+| middleware |             |
+| navigation |             |
+| object     |             |
+| pageload   |             |
+| queue      |             |
+| resource   |             |
+| rpc        |             |
+| serialize  |             |
+| socket     |             |
+| subprocess |             |
+| template   |             |
+| topic      |             |
+| ui         |             |
+| view       |             |
+| websocket  |             |
+
+## Span Data Conventions
+
+The Span Interface specifies a series of _timed_ application events that have a start and end time. Below describes the conventions for the Span interface for the `data` field on the span.
+
+The `data` field on the span is expected to follow [OpenTelemetry's semantic conventions for attributes](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md) as much as possible.
+
+Keys on the `data` field should be lower-case and use underscores instead of camel-case. There are some exceptions to this, but these exist because of backwards compatibility.
+
+Below describes the conventions for the Span interface for the `data` field on the span that are currently used by the product or are important to bring up.
+
+### General
+
+| Attribute        | Type   | Description                                                                                                                                                                                                    | Examples                                    |
+| ---------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `code.filepath`  | string | The source code file name that identifies the code unit as uniquely as possible (preferably an absolute file path).                                                                                            | `/app/myapplication/http/handler/server.py` |
+| `code.lineno`    | number | The line number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`                                                                              | `42`                                        |
+| `code.function`  | string | The method or function name, or equivalent (usually rightmost part of the code unit's name).                                                                                                                   | `server_request`                            |
+| `code.namespace` | string | The "namespace" within which `code.function` is defined. Usually the qualified class or module name, such that `code.namespace` + some separator + `code.function` form a unique identifier for the code unit. | `http.handler`                              |
+
+### HTTP
+
+| Attribute                              | Type   | Description                                           | Examples           |
+| -------------------------------------- | ------ | ----------------------------------------------------- | ------------------ |
+| `http.query`                           | string | The Query string present in the URL.                  | `?foo=bar&bar=baz` |
+| `http.fragment`                        | string | The Fragments present in the URI (Browser SDKs only). | `#details`         |
+| `http.request.method`                  | string | The HTTP method used.                                 | `GET`              |
+| `http.response.status_code`            | int    | The status HTTP response.                             | `404`              |
+| `http.response_content_length`         | number | The encoded body size of the response (in bytes).     | `123`              |
+| `http.decoded_response_content_length` | number | The decoded body size of the response (in bytes).     | `456`              |
+| `http.response_transfer_size`          | number | The transfer size of the response (in bytes).         | `789`              |
+| `server.address`                       | string | URL domain name.                                      | `example.com`      |
+| `server.port`                          | int    | URL server port number                                | `8080`             |
+
+### Mobile
+
+| Attribute             | Type         | Description                                                                                                                                                                                                | Examples              |
+| --------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `blocked_main_thread` | boolean      | Whether the main thread was blocked by the span.                                                                                                                                                           | `true`                |
+| `call_stack`          | StackFrame[] | The most relevant stack frames, that lead to the File I/O span. The stack frame should adhere to the [`StackFrame`](/sdk/foundations/transport/event-payloads/stacktrace/#frame-attributes) interface. |                       |
+| `url`                 | string       | The URL of the resource that was fetched.                                                                                                                                                                  | `https://example.com` |
+| `type`                | string       | More granular type of the operation happening.                                                                                                                                                             | `fetch`               |
+| `frames.total`    | int | The number of total frames rendered during the lifetime of the span.    |  `60`   |
+| `frames.slow`     | int | The number of slow frames rendered during the lifetime of the span.     |   `2`   |
+| `frames.frozen`   | int | The number of frozen frames rendered during the lifetime of the span.   |   `1`   |
+| `frames.delay`    | number | The sum of all delayed frame durations in seconds during the lifetime of the span. For more information see <Link to="#frames-delay">frames delay</Link>.   |   `1.3246`   |
+
+### Browser
+
+| Attribute                         | Type   | Description                                 | Examples              |
+| --------------------------------- | ------ | ------------------------------------------- | --------------------- |
+| `url`                             | string | The URL of the resource that was fetched.   | `https://example.com` |
+| `type`                            | string | The type of the resource that was fetched.  | `xhr`                 |
+| `resource.render_blocking_status` | string | The render blocking status of the resource. | `non-blocking`        |
+
+### UI
+
+| Attribute                         | Type   | Description                                 | Examples              |
+| --------------------------------- | ------ | ------------------------------------------- | --------------------- |
+| `ui.contributes_to_ttid`    | boolean |  Whether the span execution contributed to the TTID (time to initial display) metric.  |   `true`   |
+| `ui.contributes_to_ttfd`    | boolean |  Whether the span execution contributed to the TTFD (time to fully drawn) metric. |   `true`   |
+
+### Database
+
+| Attribute               | Type   | Description                                                                                                                                                                                                                                                                                                                | Examples      |
+| ----------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `db.system`             | string | An identifier for the database management system (DBMS) product being used. See [OpenTelemetry docs for a list of well-known identifiers](https://opentelemetry.io/docs/specs/semconv/database/).     | `postgresql`  |
+| `db.operation`          | string | The name of the operation being executed, e.g. the MongoDB command name such as findAndModify, or the SQL keyword. Based on [OpenTelemetry's database semantic conventions](https://opentelemetry.io/docs/specs/semconv/database/) | `SELECT`      |
+| `db.collection.name`    | string | The name of the collection (or table, etc) being queried.                                                                                                                                                                                                                                                                  | `users`       |
+| `db.name`               | string | This attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).                                                                                                                                    | `customers`   |
+| `server.address`        | string | Name of the database host.                                                                                                                                                                                                                                                                                                 | `example.com` |
+| `server.port`           | int    | Logical server port number host.                                                                                                                                                                                                                                                                                           | `8080`        |
+| `server.socket.address` | string | Physical server IP address or Unix socket address. host.                                                                                                                                                                                                                                                                   | `10.5.3.2`    |
+| `server.socket.port`    | int    | Physical server port. host.                                                                                                                                                                                                                                                                                                | `16456`       |
+
+### Web Server
+
+| Attribute              | Type    | Description                                                                                             | Examples                |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `cache.hit`            | boolean | If the cache was hit during this span.                                                                  | `true`                  |
+| `cache.key`            | array   | The cache key(s) involved in the operation.                                                             | `['posts']`             |
+| `cache.operation`      | string  | The specific cache operation that was performed.                                                        | `get`                   |
+| `cache.write`          | boolean | Whether the operation resulted in writing to the cache.                                                 | `false`                 |
+| `cache.item_size`      | int     | The size of the requested item in the cache, in bytes.                                                  | `58`                    |
+| `cache.success`        | boolean | Whether the cache operation succeeded.                                                                  | `true`                  |
+| `cache.ttl`            | int     | The time-to-live for the cache entry, in seconds.                                                       | `300`                   |
+| `network.peer.address` | string  | Hostname of the cache instance that handled the operation.                                              | `cache.internal.local`  |
+| `network.peer.port`    | int     | Port of the cache instance that handled the operation.                                                  | `6379`                  |
+
+### AI
+
+| Attribute                   | Type    | Description                                           | Examples                                 |
+|-----------------------------|---------|-------------------------------------------------------|------------------------------------------|
+| `ai.input_messages`         | string  | The input messages sent to the model                  | `[{"role": "user", "message": "hello"}]` |
+| `ai.completion_tоkens.used` | int     | The number of tokens used to respond to the message   | `10`                                     |
+| `ai.prompt_tоkens.used`     | int     | The number of tokens used to process just the prompt  | `20`                                     |
+| `ai.total_tоkens.used`      | int     | The total number of tokens used to process the prompt | `30`                                     |
+| `ai.model_id`               | list    | The vendor-specific ID of the model used              | `"gpt-4"`                                |
+| `ai.streaming`              | boolean | Whether the request was streamed back                 | `true`                                   |
+| `ai.responses`              | list    | The response messages sent back by the AI model       | `["hello", "world"]`                     |
+
+### Thread
+
+| Attribute         | Type    | Description                                                        | Examples |
+| ------------------| ------- | -------------------------------------------------------------------| -------- |
+| `thread.id`       | string  | Identifier of a thread from where the span originated.             | `123456` |
+| `thread.name`     | string  | Label identifying a thread from where the span originated.         | `main`   |
+
+### Flags
+
+| Attribute                           | Type    | Description                                     | Examples     |
+| ------------------------------------| ------- | ------------------------------------------------| ------------ |
+| `flag.evaluation.<flag-name>`       | string  | Identifier of a flag evaluated within the span. | `can_access` |
+
+#### Deprecated
+
+Names that SDKs are still sending so we cannot remove them yet, but should not be used in new code.
+
+| Attribute           | New name                            |
+| ------------------- | ----------------------------------- |
+| `method`            | `http.request.method`               |
+| `http.method`       | `http.request.method`               |
+| `Encoded Body Size` | `http.response_content_length`      |
+| `Decoded Body Size` | `http.decoded_response_body_length` |
+| `Transfer Size`     | `http.response_transfer_size `      |
+
+## Structuring Data
+
+For better data scrubbing on the server side, SDKs should save data in a structured way, when possible. Starting point of the discussion was [RFC-0038](https://github.com/getsentry/rfcs/blob/main/text/0038-scrubbing-sensitive-data.md)
+
+See also: [Data Scrubbing](/sdk/foundations/data-scrubbing/) for general sensitive data handling requirements.
+
+### Spans
+
+This helps Relay to know what kind of data it receives and this helps with scrubbing sensitive data.
+
+- `http` spans containing urls:
+
+  The description of spans with `op` set to `http` must follow the format `HTTP_METHOD scheme://host/path` (ex. `GET https://example.com/foo`).
+  If an authority is present in the URL (`https://username:password@example.com`), the authority must be replaced with a placeholder regardless of `sendDefaultPii`, leading to a new URL of `https://[Filtered]:[Filtered]@example.com`.
+  If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both are set into the data attribute of the span.
+
+  ```js
+  span.setAttributes({
+    "http.query": url.getQuery(),
+    "http.fragment": uri.getFragment(),
+  });
+  ```
+
+  ```python
+  span.set_data("http.query", query)
+  ```
+
+  Additionally all semantic conventions of OpenTelemetry for http spans should be set in the `span.data` if applicable:
+  https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/
+
+- `db` spans containing database queries: (sql, graphql, elasticsearch, mongodb, ...)
+
+  The description of spans with `op` set to `db` must not include any query parameters.
+  Instead, use placeholders like `SELECT FROM 'users' WHERE id = ?`
+
+Additionally all semantic conventions of OpenTelemetry for database spans should be set in the `span.data` if applicable:
+https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/
+
+## Trace Origin
+
+Trace origin indicates what created a trace, span or log. Not all traces, spans or logs contain enough information
+to tell whether the user or what precisely in the SDK created it. Origin solves this problem. Origin can be sent with
+the <Link to="/sdk/foundations/transport/event-payloads/contexts/#trace-context">trace context</Link>, <Link to="/sdk/foundations/transport/event-payloads/span/">spans</Link>, or <Link to="/sdk/telemetry/logs/">logs</Link>.
+
+For logs and standalone spans, the origin should be set as the `sentry.origin` attribute key.
+
+The SDKs should set this value automatically. It is not expected to be set manually by users. The value for origin should rarely change so that we can run proper analytics on them.
+
+The origin is of type `string` and consists of four parts: `<type>.<category>.<integration-name>.<integration-part>`.
+Only the first is mandatory. The parts build upon each other, meaning it is forbidden
+to skip one part. For example, you may send parts one and two but aren't allowed to send parts one and three without part two.
+
+`type`
+
+: _Required_. Can be either `manual` or `auto`. `manual` indicates that the user created the trace or span, `auto` indicates that the SDK or some integration created it.
+
+`category`
+
+: _Optional_. Is the category of the trace or span, and it must be a category of [span operations](#span-operations). For example, `http`, `db`, `ui`, `navigation`, `file`, `browser`, `rpc`, etc.
+
+`integration-name`
+
+: _Optional_. Is the name of the integration of the SDK that created the trace or span.
+
+`integration-part`
+
+: _Optional_. Is the part of the integration of the SDK that created the trace or span. This is only useful when one integration creates multiple traces or spans, and you'd like to differentiate. Therefore, most of the time, this will be omitted.
+
+All parts can only contain:
+
+- Alphanumeric characters: `a-z` , `A-Z` , and `0-9`.
+- Underscores: `_`
+
+#### Examples
+
+- `manual`
+- `auto`
+- `auto.file`
+- `auto.navigation`
+- `auto.app.start`
+- `auto.ui.swift_ui`
+- `auto.ui.view_controller`
+- `auto.ui.jetpack_compose`
+- `auto.ui.activity`
+- `auto.navigation.jetpack_compose`
+- `auto.http.okhttp`
+- `auto.http.http_client_5`
+- `auto.http.client.stream`
+- `auto.db.core_data`
+- `auto.db.graphql`
+
+Origins of type `manual` can also have categories and integration names. For example, for the <Link to="#time-to-initialfull-display">time to display feature</Link>, the user manually calls an API of the SDK,
+creating a span. In this case, the SDK can tell what created the span, but the user did it manually. On the other hand, the SDK also
+automatically creates a span. In this case we end up with the following origins:
+
+- `manual.ui.time_to_display`
+- `auto.ui.time_to_display`
+
+### See also:
+
+- <Link to="/sdk/foundations/transport/event-payloads/span/">Span Interface</Link>
+- <Link to="/sdk/foundations/transport/event-payloads/contexts/#trace-context">Trace Context</Link>
+- <Link to="/sdk/telemetry/logs/">Logs Interface</Link>
+- Related [RFC](https://github.com/getsentry/rfcs/pull/73/)
+
+## Span Links
+
+Span links associate one span with one or more other spans. The most important application of linking traces are frontend applications.
+It can also be useful in settings with producer/consumer patterns or batch operations.
+By using span links, we are able to display a user journey in our tracing views to make debugging of issues easier as developers get more context on what happened before a specific issue.
+
+A span link can store the context of (a.k.a. link to) any other span. When necessary, a special link type can be added (see [Link Types](#link-types)).
+
+Learn more about Span Links in [the RFC 141](https://github.com/getsentry/rfcs/blob/main/text/0141-linking-traces.md) or in the [OpenTelemetry docs](https://opentelemetry.io/docs/concepts/signals/traces/#span-links).
+
+### SDK Implementation Guideline
+
+- Links are added on a span level, as defined and specified by [OpenTelemetry](https://opentelemetry.io/docs/specs/otel/trace/api/#link).
+- In addition to linking to span IDs, a span link also holds meta information about the link, collected via attributes.
+- Span links MUST only link to other spans. We do not support linking a span to an error or other Sentry events.
+- For SDKs still having public APIs around transactions, their respective Transaction interface and `startTransaction` function(s) should support the same APIs.
+
+#### Type Definitions
+
+SDKs should follow the OpenTelemetry spec for the Link interface as defined by the platform.
+Non-OTel SDKs should orient themselves on OTel, resulting in the interface below, or a related version that applies to the terminology and philosophy of the respective SDK:
+
+```ts {tabTitle:Types}
+// see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/link.ts
+// or interface of respective platform
+interface Link {
+  // contains the SpanContext of the span to link to
+  context: SpanContext;
+  // key-value pair with primitive values
+  attributes?: Attributes;
+}
+
+// see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/span_context.ts
+// or interface of respective platform
+interface SpanContext {
+  traceId: string,
+  spanId: string,
+  traceFlags: number,
+}
+
+type Attributes = Record<string, AttributeValues>
+type AttributeValues = string | boolean | number | Array<string> | Array<boolean> | Array<number>
+```
+
+#### Required Span API
+
+Ideally, the link is added when starting a span. An optional `links` attribute is added to the `startSpan` options.
+SDKs that don't offer span-centric APIs but e.g. transaction APIs, should ensure that their respective `start...` APIs (e.g. `startTransaction`) also offer a possibility to add links.
+
+```ts {tabTitle:Span Options}
+function startSpan(options: StartSpanOptions);
+
+interface StartSpanOptions: {
+  //... other options (name, attributes, etc)
+  links?: Link[];
+}
+```
+
+Furthermore, the SDKs need to expose at least an `addLink` method on their respective Span interface. For completeness with OpenTelemetry, ideally they also expose `addLinks`:
+
+```ts {tabTitle:Span API}
+interface Span {
+  // return value can differ depending on platform
+  addLink(link: Link): this;
+  addLinks(links: Link[]): this;
+}
+```
+
+### Envelope Item Payload
+
+Span trees are serialized to transaction event envelopes in all Sentry SDKs. Therefore, the envelope item needs to accommodate span links
+in its payload. If the `links` entry is an empty array, it can be omitted from the envelope.
+
+The serialized `links` objects should always contain:
+
+- `span_id: string` - id of the span to link to
+- `trace_id: string` - trace id of the span to link to
+- `sampled: boolean` - required if sampling decision of the span to link to (corresponds to `traceFlags` in Otel span context converted to `boolean`) is available
+- `attributes:` - required if attributes were added to the link
+
+Optionally, the serialized link object can contain further fields from OTel like `traceState`, `isRemote` or `droppedAttributesCount` which will be just forwarded unless we find a use case for them.
+
+The OTel fields `spanId`, `traceId`, and `traceFlags` should be excluded from the links objects in the envelope to avoid duplicate data (e.g. `trace_id` vs. `traceId`).
+
+If the root span (previously known as transaction) has span links, the links are stored in the trace context.
+
+```ts {tabTitle:Example Trace Context}
+// event envelope item
+{
+  type: "transaction";
+  transaction: string;
+  contexts: {
+    trace: {
+      span_id: string;
+      parent_span_id: string;
+      trace_id: string;
+      // new field for links:
+      links?: Array<{
+        "span_id": string,
+        "trace_id": string,
+        sampled?: boolean, // traceFlags from Otel converted to boolean
+        attributes?: Record<string, AttributeValue>,
+        // + potentially more fields 1:1 from Otel. e.g. (traceState, droppedAttributesCount, isRemote)
+      }>
+      // ...
+    }
+  }
+  // ...
+}
+```
+
+Links that are stored in child spans are serialized in `spans[i].links`.
+
+```ts {tabTitle:Example Span Link Data}
+// event envelope item
+{
+  type: "transaction";
+  transaction: string;
+  spans: Array<{
+    span_id: string;
+    parent_span_id: string;
+    trace_id: string;
+    // new field for links:
+    links?: Array<{
+      "span_id": string,
+      "trace_id": string,
+      sampled?: boolean,
+      attributes?: Record<string, AttributeValue>,
+    }>
+    // ...
+  }>
+  // ...
+}
+```
+
+### Link Types
+
+Links don't require a special meaning or type but if necessary (e.g. for identifying special links in the product), set the `sentry.link.type` attribute on the link to define the link type.
+Any string can be used, but these types have predefined meanings:
+
+| `sentry.link.type` | Usage                                                          | UI Implications                                                                                   |
+|--------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| "previous_trace"   | Linking e.g. a navigation span to the previous page load span. | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
+| "next_trace"       | Linking e.g. a page load span to the next navigation span.     | Used to query linked traces. Shows a button to go to linked next trace in the trace explorer.     |
+
+#### `previous_trace`
+
+Frontend traces can be linked by adding span links between root spans. For example, a navigation span includes a link to the previous page load span.
+
+The span context inside the link object should be stored in a storage mechanism of choice (e.g. in-memory or `sessionStorage` in the browser).
+
+Therefore, on root span start:
+- Check if there is a previous span context stored. If yes, add the span link with the `'sentry.link.type': 'previous_trace'` attribute
+- Store the root span context as the previous root span in a storage mechanism of choice (e.g. in-memory or `sessionStorage` in the browser)
+
+SDKs are free to implement heuristics around how long a previous trace span context should be considered (max time) and store additional necessary data.
+
+![](./span-links-previous-trace-100.png)
+
+##### Negatively Sampled Traces
+
+In many cases, with lower sample rates, we will not be able to provide a full trace link chain, due to some or many traces being negatively sampled.
+
+- Sampled root spans should still include a link to the previous, negatively sampled root span (`traceFlags` on the spanContext() carry
+  the information that the previous trace root span was negatively sampled).
+
+This helps our product to hint that there would have been a previous trace, but it was negatively sampled.
+
+We will not link to the previous positively sampled trace if a negatively sampled trace is in-between (see Traces 2-4 in the diagram below).
+Furthermore, we will not show how many traces were negatively sampled in between two trace chains; only that there was at least one trace in between (see Trace 5-8).
+
+![](./span-links-previous-trace-negative-sample.png)
+
+### Usage Example
+
+Adding span links should be possible at span start time, as well as when holding a reference to the span.
+
+In the example below, by adding span links, we can link from the last navigation trace all the way back to the initial pageload trace.
+By passing the `'sentry.link.type': 'previous_trace'` attribute, we can identify the link as a previous trace link in Sentry and display the spans accordingly.
+
+```ts {tabTitle:TypeScript}
+// 1st trace starts
+const pageloadSpan = startInactiveSpan(...)
+
+// 2nd trace starts
+const navigation1Span = startInactiveSpan({
+  name: '/users',
+  links: [{
+    context: pageloadSpan.spanContext(),
+    attributes: {
+      'sentry.link.type': 'previous_trace'
+    }
+  }]
+});
+
+// 3rd trace starts
+const navigation2Span = startSpan({name: '/users/:id'}, (span) => {
+  span.addLink({
+    context: navigation1Span.spanContext(),
+    attributes: {
+      'sentry.link.type': 'previous_trace'
+    }
+  })
+})
+```
+
+### Ingest/Relay
+
+Relay forwards the span links in the format that is required for further processing and storage.
+Importantly, Relay doesn't require span links to be defined. They are completely optional.
+Relay handles passing span links in the root span as well as in any child span (see [envelope item payload](#envelope-item-payload)).
+
+The expected type and structure of the links array and its contents is [specified in Relay](https://github.com/getsentry/relay/blob/master/relay-event-schema/src/protocol/span.rs#L753).
+
+## Backpressure Management
+
+Backend SDKs that are typically used in server environments are expected to implement a component for backpressure management.
+
+This component will periodically introspect the SDK for measures of throughput and if too high, will dynamically downsample transactions by halving the sample rate temporarily.
+Once the system has recovered to a healthy state, the SDK will revert to the sample rate set by the user.
+
+![Backpressure](backpressure.png)
+
+### Configuration
+
+The SDK should expose a boolean config parameter called `enable_backpressure_handling` that controls whether this logic is active or not.
+
+### Design
+
+The backpressure component has two main responsibilities:
+
+* Periodically schedule a [**health check**](#health-check-monitor) in an asynchronous way and update the unhealthy status.
+* Use this unhealthy status to dynamically halve the effective sample rate for transactions before making the initial sampling decision.
+
+### Health Check Monitor
+
+#### Interval
+
+The health check is typically performed once every **10 seconds** by default. You can expose this interval as a config parameter if you wish on your SDK.
+
+#### Conditions
+
+The health check on most SDKs currently tests the following conditions:
+  * if the background worker queue is full
+  * any rate limits are currently active
+
+You can add more conditions of **high throughput** or **wasted work** if available and easily measurable on your platform.
+
+#### Implementation
+
+The monitor should act asynchronously.
+This can be a new thread if supported by the language or a `setTimeout` in languages without threads like NodeJs.
+
+See the [Python implementation](https://github.com/getsentry/sentry-python/blob/d9d87998029fb0ef2bfe933cea0b69bfee60ed51/sentry_sdk/monitor.py#L16-L123) as a reference.
+
+### Downsampling
+
+The monitor should update its internal health status and expose a `downsample_factor` which doubles every 10 seconds till the system is unhealthy.
+Typically we only double a maximum of 10 times because the number is already too small then.
+
+This creates an exponential backoff behavior and reduces load in the transaction pipeline.
+
+In your SDKs `set_initial_sampling_decision` which is called as part of the `start_transaction` API, you should use this `downsample_factor` right before making the random number based sampling decision.
+
+See the [Python implementation](https://github.com/getsentry/sentry-python/blob/d9d87998029fb0ef2bfe933cea0b69bfee60ed51/sentry_sdk/tracing.py#L888-L889) as a reference.
+
+#### Client Report
+
+If possible, in `transaction.finish`, also record a client report with reason `backpressure` instead of `sample_rate` when the transaction is dropped so that we can track these backpressure outcome statistics.
+
+See the [Python implementation](https://github.com/getsentry/sentry-python/blob/d9d87998029fb0ef2bfe933cea0b69bfee60ed51/sentry_sdk/tracing.py#L705-L711) as a reference.
+
+## UI Event Transactions
+
+We recommend implementing this feature for mobile and desktop SDKs.
+
+UI event transactions are enabled by setting the SDK config option `enableUserInteractionTracing`,
+which we recommend enabling per default. Remember that this feature will generate many
+transactions, which can significantly impact running out of quota. Therefore, it might be safer to
+disable this feature per default when adding it and enable it per default in an upcoming major SDK
+release.
+
+UI event transactions aim to capture transactions based on user interactions, such as clicks,
+scroll events, pinches, etc. The UI events the SDK can hook into might vary depending on the
+platform. UI event transactions are an expansion to transactions generated automatically by
+the SDK, which are referred to as auto-generated transactions in this document.
+
+Creating transactions for a single UI event without any spans would be fruitless. Instead, the
+SDK shall use a UI event as the entry point to a possibly meaningful transaction. It should
+wait to see if it can add any auto-generated spans to the transaction. If it can, it shall keep
+and send the transaction. If not, the SDK should discard the empty transaction. A combination of
+two concepts is needed to implement the wait-and-see logic: __idle transactions__ and
+__wait-for-children__. Check out the specification below to see how those two concepts work
+together with covering multiple edge cases. The following description is drastically simplified:
+
+* __Idle-transactions__: The SDK schedule an idle timeout for the transaction when starting it.
+When the transaction or any of its spans starts a new span, it resets the timeout. The SDK finishes
+the transaction when the timeout succeeds.
+* __Wait-for-children__: A transaction waits for all its child spans to finish before finishing itself.
+
+Before diving into the specification with all the edge cases, let's look at two simple examples:
+
+1. The user clicks a button that triggers some requests to the backend and stores data in the
+local database. The SDK can create a meaningful transaction in that case.
+2. The user clicks a button that solely validates some form data and triggers nothing that the
+SDK can automatically instrument. The SDK could only create a transaction without any spans, which would
+be valueless.
+
+### Specification
+
+Users can change the `idleTimeout` via the SDK config options. The default is 3.0 seconds.
+
+The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Scenario: Starting UI Event transactions
+    Given an instrumentable UI event
+    Then the SDK starts a UI event transaction
+    And schedules to finish the UIEventTransaction with
+     the idle timeout of the options
+
+Scenario: Wait for children when starting span
+    Given a UI event transaction
+    When the SDK starts a child span
+    Then the SDK cancels the idle timeout
+    And waits for the child to finish
+
+Scenario: Schedule idle timeout when the last span finishes
+    Given a UI event transaction
+    And the transaction has one or multiple running child spans
+    And the transaction is waiting for its children to finish
+    When the SDK finishes the last child span
+    Then the SDK schedules the idle timeout
+
+Scenario: Discard UI event transactions without child spans
+    Given a UI event transaction
+    And the transaction has no child spans
+    When the idle timeout times out
+    Then the SDK discards the transaction
+
+Scenario: Set time to last finished child span
+    Given a UI event transaction
+    And the transaction has one finished child span
+    And the transaction has one running child span
+    When the running child span finishes
+    Then the SDK schedules the idle timeout
+    And the SDK finishes the transaction after the idle timeout
+    And trims the end time of the transaction to the one of the last finished
+        child span
+
+Scenario: Don't overwrite existing status of UI event transactions
+    Given a UI event transaction
+    And the UI event transaction has a status
+    When the SDK finishes the UI event transaction
+    Then it keeps the status
+    And doesn't overwrite it
+
+# If your SDK binds auto-generated transactions to the scope see binding
+# to scope
+Scenario: Event on same UI element with child spans
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a new event
+    Or the user triggers a different UI element
+    Then the SDK finishes the ongoing transaction
+    And sets the status to OK
+    And waits for the children to finish
+    And cancels the idle timeout
+    And starts a new transaction
+
+Scenario: Event on same UI element without child spans
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a new event
+    Or the user triggers a different UI element
+    Then the SDK discards the transaction
+    And starts a new transaction
+```
+
+#### Binding to scope
+
+On platforms mainly interacting with the static API, such as mobile, it's typical to bind auto-generated
+transactions to the scope so that users can access them via the static API. We recommend binding UI event
+transactions to the scope on these platforms. The following extra rules apply as UI event transactions
+could interfere with other auto-generated transactions.
+
+The SDK adds auto-generated spans to the transaction bound to the scope. UI event transactions need
+auto-generated spans not to be empty. Therefore, the SDK shouldn't start a UI event transaction if there
+is already an ongoing screen load/navigation transaction or a transaction bound to the scope by the user.
+
+```Gherkin
+Scenario: Same UI element with different event
+    Given an ongoing UI event transaction
+    When the user triggers the same UI element with a different event
+    Or the user triggers a different UI element
+    Then the SDK finishes the ongoing transaction
+    And sets the status to OK
+    And waits for the children to finish
+    And cancels the idle timeout
+    And removes the ongoing transaction from the scope
+    And starts a new transaction
+    And puts the new transaction on the scope
+
+Scenario: UI event triggered but transaction ended
+    Given an auto-generated transaction from any UI event
+    And the transaction is already finished
+    When the user triggers the same UI event
+    Then the SDK starts a new UI event transaction
+
+Scenario: Manually created transaction bound to the scope
+    Given an ongoing manually created transaction by the user bound to the
+        scope
+    When the user triggers a UI event
+    Then the SDK doesn't start a UI event transaction
+```
+
+##### Screen load/navigation transactions
+
+This section deals specifically with auto-generated transactions for loading screens. If your SDK has
+other types of auto-generated transactions, please update the specification here.
+
+```Gherkin
+Scenario: Ongoing UI event transaction
+    Given an ongoing UI event transaction
+    When the SDK creates a new screen load transaction
+    Then the SDK finishes the ongoing UI event transaction
+    And removes it from the scope
+    And sets the status to canceled
+    And waits for its children to finish
+
+Scenario: Ongoing screen load/navigation transaction
+    Given an ongoing screen load/navigation transaction
+    When the user triggers a UI event
+    Then the SDK doesn't start a UI event transaction
+```
+
+#### Transaction name
+
+The user should be able to identify to which UI element the UI event transaction belongs on which screen
+by only looking at the transaction name. Choose whatever works best for your specific platform. Be
+attentive not to use any PII in the transaction name. One recommendation is
+`screen name + view identifier`. On Android, this would map to
+`LoginActivity.login_button`, and on Cocoa, to `YourApp.LoginViewController.loginButton`. If the UI element
+doesn't have a view identifier, it's acceptable that the SDK doesn't start a UI event transaction and logs
+a warning to inform the user. The Cocoa SDK uses the method the UI element calls as the view identifier.
+
+## SQL Transactions
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+The SDK SHOULD auto-instrument all database transactions for SQL databases like PostgreSQL and MySQL.
+Each BEGIN, COMMIT, and ROLLBACK, or equivalent statement in the database system MUST result in an individual span.
+Spans for other transaction-level statements, such as SAVEPOINT, are RECOMMENDED and, when implemented, MUST also correspond to an individual SQL statement.
+Transaction statements SHOULD produce spans whether they are issued through a database driver or through an ORM.
+
+### Span Data
+
+Refer to <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/db.html">Database Span Data Conventions</Link> for a full list of attributes that database spans should have.
+The SDK SHOULD set the
+
+- db.system.name
+- db.operation.name
+
+attributes for transaction statement spans.
+Equivalent deprecated attributes MAY be used for backward compatibility, but they SHOULD be marked for deprecation.
+
+The operation names for BEGIN, COMMIT and ROLLBACK statements MUST be "BEGIN", "COMMIT", and "ROLLBACK", respectively.
+For synonyms, like BEGIN TRANSACTION for BEGIN, the operation name MAY reflect the synonym. In this example, "BEGIN TRANSACTION" MAY be used.
+Some statements, like SAVEPOINT, ROLLBACK TO SAVEPOINT and RELEASE SAVEPOINT, take arguments.
+The operation name for statements that accept arguments MUST be the statement without the arguments. For the examples above, the operation names are "SAVEPOINT", "ROLLBACK TO SAVEPOINT", and "RELEASE SAVEPOINT", respectively.
+
+For other transaction-level statements like MySQL's START TRANSACTION, the SDK SHOULD represent the literal statement as closely as possible, omitting control-flow characters like semicolons.
+SQLite's transaction statements can include modifiers. For instance, BEGIN DEFERRED is a modified BEGIN statement. In this case, the operation name MAY be either "BEGIN" or "BEGIN DEFERRED".
+The same rule applies to analogous modified statements.
+
+## Time to Initial/Full Display
+
+We recommend implementing this feature for mobile and desktop SDKs.
+
+The current screen load transactions timings are unreliable in understanding the time spent in the screen creation.
+This is because they wait for any span created, including any file I/O or network request.
+Time to Initial Display and Time to Full Display are spans added to the screen load transactions,
+which can be used to show more accurate information on the time spent in the screen creation.
+Being spans, they don't impact user quota.
+
+The SDK starts them as soon as a new screen is created, as long as there is an active transaction for the screen load.
+Note: When the app is started, the SDK aligns the start timestamp of the Time to Initial Display and Time to Full Display to the app start timestamp.
+
+### Time to Initial Display
+
+Time to Initial Display is a span with the operation `ui.load.initial_display`, which finishes automatically
+when the screen draws its first frame. It's controlled automatically by the SDK and doesn't
+require any manual intervention from the user.
+
+The SDKs set the time to initial display as a transaction measurement, with `time_to_initial_display` as the key and the span duration as the value.
+Note: The measurement should be set only if the span finishes with the status `OK`. In case a screen is used just as a
+ router to start other screens, it could be finished before drawing a frame.
+
+### Time to Full Display
+
+Time to Full Display is a span with operation `ui.load.full_display` which is finished manually through
+the `Sentry.reportFullyDisplayed` static API. This feature has to be enabled by setting the SDK config
+option `enableTimeToFullDisplayTracing`. Remember that the screen load transactions wait for spans to finish,
+so the transaction will run until the user calls the API. So we recommend this feature to be disabled by default.
+It's also set as a measurement of the transaction, with `time_to_full_display` as key and the span duration as value.
+
+The following section explains the possible scenarios of the Time to Full Display.
+
+The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Scenario: Option disabled
+    Given an ongoing screen load/navigation transaction
+    Then the SDK doesn't start the Full Display span
+    When the user calls the manual API `reportFullyDisplayed`
+    Then the SDK ignores the call
+
+Scenario: Option enabled
+    Given the enableTimeToFullDisplay option is enabled
+    When the SDK creates a new screen load transaction
+    Then the Full Display span is started
+
+Scenario: App started
+    Given the enableTimeToFullDisplay option is enabled
+    When the app starts
+    Then the SDK sets the start timestamp of the Time to Initial Display and Time to Full Display span to the app start timestamp
+    And the SDK updates the `time_to_initial_display` and `time_to_full_display` measurements accordingly
+
+Scenario: Screen displayed
+    Given an ongoing Full Display span
+    And the SDK finished the  Initial Display span
+    When the user calls the API `reportFullyDisplayed`
+    Then the SDK finishes the span
+    And sets the status to ok
+
+Scenario: API not called
+    Given an ongoing Full Display span
+    When the user doesn't call the API `reportFullyDisplayed` in 30 seconds
+    Then the SDK finishes the span
+    And sets the status to deadline_exceeded
+    And sets the timestamp to the timestamp of the Initial Display span
+    And the SDK updates the `time_to_full_display` measurement accordingly
+
+Scenario: API called
+    Given an ongoing Full Display span
+    When the user calls the API `reportFullyDisplayed`
+    Then the SDK finishes the Full Display span
+    And set the status to ok
+
+Scenario: API called too early
+    Given an ongoing Initial Display span
+    And the user called the API `reportFullyDisplayed`
+    When the SDK finishes the Initial Display span
+    Then the SDK sets the status to ok
+    And the SDK adjusts the Full Display span end timestamp to the Initial Display span end timestamp
+    And the SDK updates the `time_to_full_display` measurement accordingly
+
+Scenario: Another screen load/navigation transaction occurs
+    Given an ongoing Full Display span
+    When a new screen load/navigation transaction is started
+    Then the SDK finishes the Full Display span
+    And the SDK sets the status to deadline_exceeded
+    And the SDK sets the end timestamp to the Initial Display span end timestamp
+    And the SDK updates the `time_to_full_display` measurement accordingly
+
+Scenario: No ongoing screen load transaction
+    Given there is no active screen load transaction
+    When the user calls the manual API `reportFullyDisplayed`
+    Then the SDK ignores the call
+
+```
+
+## Frames Delay
+
+Frames Delay is the user-perceived delayed duration of rendered frames. SDKs can attach this
+information to spans. We recommend implementing this feature for mobile and desktop SDKs.
+
+### Background
+
+This section explains why frames delay is a better metric than slow and frozen frames. If you
+already know why, you can skip this section.
+
+On Mobile, slow and frozen frames are well-established metrics for tracking the responsiveness of
+applications. A phone or tablet typically renders 60 frames per second (fps). At 60 fps, every frame
+has 16 or 16.67 ms to render:
+
+* __Slow Frames__: Using 60 fps, slow frames are frames that take more than 16.67 ms to render.
+* __Frozen Frames__: Frozen frames are frames that take longer than 700 ms to render.
+
+The major downside is that they lack essential information on how long they lasted, which is a
+significant problem when prioritizing which unresponsive application parts need improvement. The following
+scenarios highlight the problem when prioritizing by looking at slow and frozen frames.
+
+Scenario | Slow Frames | Frozen Frames
+-- | -- | --
+1 |  5 all 500ms | 0
+2 | 10 all 20ms | 0
+3 |  0 | 1 with 800ms
+
+When comparing the different scenarios, a user might want to fix scenario 3 first because it contains one frozen
+frame. When comparing scenarios 1 and 2, they would pick scenario 2 cause it has more slow frames. While scenario
+2 looks worse, the user experience is way worse for scenario 1 because the slow frames last longer.
+
+That's where a new metric called __frames delay__ comes to the rescue. Frames delay represents the delayed frame
+render duration of all frames. The frame delay for one frame is `actual frame duration - expected frame duration`.
+For example, with 60 fps the expected frame duration is 16.67 ms. When a frame takes 20 ms to render,  the frame
+delay is `20ms - 16.67ms = 3.33ms`.
+
+Let's calculate the frames delay for scenarios 1 - 3.
+
+Scenario | Calculation | Frames Delay
+-- | -- | --
+1 | (500ms - 16.67ms) * 5 | 2416.65ms
+2 | (20ms - 16.67 ms) * 10 | 33.3ms
+3 | 800ms - 16.67ms | 783.33ms
+
+Now, when prioritizing the user-perceived degraded responsiveness by frames delay, we get  1, 3, 2 instead of
+3, 2, 1 when looking at slow and frozen frames.
+
+### Specification
+
+Frames delay represents the delayed frame render duration of all frames. The frame delay for one frame is
+`actual frame duration - expected frame duration`. For example, with 60 fps the expected frame duration is 16.67 ms.
+When a frame takes 20 ms to render,  the frame delay is `20ms - 16.67ms = 3.33ms`. As the expected frame rate can
+change at any time, SDKs must check the expected frame rate for every frame. The frame delay for a span is the sum
+of frame delays for all slow and frozen frames during the start and end time of the span.
+
+SDKs should attach frames delay in seconds to spans via <Link to="#mobile-1">span data</Link>
+and __attach frames delay to all spans__, regardless of on which thread a span runs, and as well to concurrently running spans.
+For transactions SDKs should send frames delay via the root span with span data.
+While it makes sense to calculate frames delay in milliseconds, __SDKs must send frames delay in seconds__, as SDKs already
+use seconds for most timestamps. For the specification here, we use milliseconds cause they are easier to read.
+
+The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Scenario: Slow and frozen frames
+    Given a frame rate of 60 fps
+    And 2 frames with 300 ms
+    And 1 frame with 900 ms
+    And 10 frames with 16.76 ms
+    When calculating the frames delay
+    Then the frames delay is (300 - 16.67) * 2 + 900 - 16.67 = 1449.99 ms
+
+Scenario: Frame rate changes
+    Given 1 frame with 200 ms with 60 fps
+    And 2 frame with 500 ms with 120 fps
+    And 10 frames with 8.33 ms with 120 fps
+    When calculating the frames delay
+    Then the frames delay is 200 - 16.67 + (500 - 8.33) * 2 = 1166.67 ms
+
+Scenario: Ongoing delayed frame
+    """
+    [nf][ ------- ?? ------ ]   |  nf = normal frame,  ?? = No frame information
+    [---- span duration ----]
+    When there is an ongoing delayed frame, the logic doesn't know how long it
+    will last and, therefore, has no frame information.
+    """
+    Given a frame rate of 60 fps
+    And 1 frame with 16.67 ms
+    And 200 ms pass after without any frame being drawn
+    And no recorded delayed frame
+    When calculating the frames delay
+    Then the frames delay 200 ms - 16.67 ms = 183.33 ms
+
+Scenario: Delayed frame starts before span
+    """
+    [----  delayed frame ---- ]
+            [- span duration -]
+    """
+    Given a frame rate of 60 fps
+    And a recorded delayed frame with a duration of 300 ms
+    When calculating the frames delay for the span 100 ms to 300 ms
+    Then the frames delay is the full duration of the span of 200ms
+
+Scenario: Delayed frame starts shortly before span
+    """
+    [| e |  delayed frame ---- ]      e = the expected frame duration
+        [--- span duration --- ]
+    """
+    Given a frame rate of 60 fps
+    And a recorded delayed frame with a duration of 300 ms
+    And the delayed frame started at 0 ms shortly before the span
+    When calculating the frames delay for the span 10 ms to 300 ms
+    Then the frames delay is 300 ms - 16.67 ms = 283.33 ms, which is only the delayed part
+        of the delayed frame
+    And the expected frame duration part of the delayed frame is not added as a frame delay
+
+Scenario: Delayed frame starts and ends before the span
+    """
+    [| e |  delayed frame ------ ]      e = the expected frame duration
+        [--- span duration --- ]
+    """
+    Given a frame rate of 60 fps
+    And a recorded delayed frame with a duration of 310 ms
+    And the delayed frame started at 0 ms shortly before the span
+    When calculating the frames delay for the span duration of 10 ms to 300 ms
+    Then the frames delay is 300 ms - 6.67 ms = 293.33 ms, which is only the delayed part of
+        the delayed frame having an intersection with the span duration
+    And the expected frame duration part of the delayed frame is not added as a frame delay
+
+Scenario: One delayed frame starts shortly before the end of a span
+    """
+    [| e |  delayed frame ][| e |  delayed frame - ]  e = the expected frame duration
+    [---- span duration ---- ]
+    """
+    Given a frame rate of 60 fps
+    And a recorded delayed frame with a duration of 290 ms
+    And a recorded delayed frame with a duration of 200 ms
+    When calculating the frames delay for the span duration of 0 ms to 300 ms
+    Then the frames delay is 290 ms - 16.67 ms = 273.33 ms
+    And the expected frame duration part of the second delayed frame is not added as a frame delay
+
+Scenario: Two concurrent spans
+    """
+    [| e | --- delayed frame--- ]  e = the expected frame duration
+          [----- span 1 -----]
+              [---- span 2 ----]
+    """
+    Given a frame rate of 60 fps
+    And a recorded delayed frame with a duration of 300 ms
+    When calculating the frames delay
+    Then the frames delay for span 1 is it's full duration of 180 ms
+    Then the frames delay for span 2 is it's full duration of 160 ms
+```
+
+## OpenTelemetry Support
+
+<Alert level="warning">
+
+This page is under active development. Specifications are not final and subject to change.
+
+"Proof is in the progress" - Drake
+
+</Alert>
+
+This document details Sentry's work in integrating and supporting [OpenTelemetry](https://opentelemetry.io/), the open standard for metrics, traces and logs. In particular, it focuses on the integration between [Sentry's performance monitoring product](https://docs.sentry.io/product/dashboards/sentry-dashboards/) and [OpenTelemetry's tracing spec](https://opentelemetry.io/docs/concepts/signals/traces/).
+
+### Background
+
+When Sentry performance monitoring was initially introduced, OpenTelemetry was in early stages. This lead to us adopt a slightly different model from OpenTelemetry, notably we have this concept of transactions that OpenTelemetry does not have. We've described this, and some more historical background, in our <Link to="/sdk/research/performance/">performance monitoring research document</Link>.
+
+### Approach
+
+To transform OpenTelemetry SDK data to Sentry data, we rely on the [OpenTelemetry SpanProcessor](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor) and [OpenTelemetry Propagator API](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md).
+
+We want users to use Sentry for sampling functionality, so users should use OpenTelemetry's default sampler and sample through Sentry's `traces_sampler` and `traces_sample_rate` options.
+
+To be classified as fully supporting OpenTelemetry the OpenTelemetry instrumentation must support the following features:
+
+1. Linking of errors and transactions via `trace` context.
+2. Propagation of `sentry-trace` and `baggage` headers (this is done via the SentryPropagator)
+3. Span/Trace ID's must match between Sentry and OpenTelemetry.
+4. Spans that represent requests to Sentry must not be recorded in Sentry
+
+To enable OpenTelemetry support for your SDK, go through the following steps.
+
+#### Step 1: Implement the SentrySpanProcessor on your SDK
+
+Below we have written a custom SpanProcessor that will transform the OpenTelemetry spans to Sentry spans.
+
+This relies on a couple key assumptions.
+
+1. Hub/Scope propagation works properly in your platform. This means that the hub used in `onStart` is the same hub used in `onEnd` and it means that hubs fork properly in async contexts.
+2. The SDK is initialized before the OpenTelemetry SDK is initialized.
+3. There will only be a single transaction occurring at the same time. This is a limitation of the current SDK design.
+
+```ts
+import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { Span as OpenTelemetrySpan, trace } from '@opentelemetry/api';
+import { Span as SentrySpan } from '@sentry/tracing';
+
+const MAP = Map<SentrySpan['spanId'], SentrySpan> = new Map<SentrySpan['spanId'], SentrySpan>();
+
+class SentrySpanProcessor implements SpanProcessor {
+  constructor() {
+    Sentry.addGlobalEventProcessor(event => {
+      const otelSpan = trace.getActiveSpan();
+      if (!otelSpan) {
+        return event;
+      }
+
+      // If event has already set `trace` context, use that one.
+      event.contexts = {
+        trace: {
+          trace_id: otelSpan.spanContext().traceId,
+          span_id: otelSpan.spanContext().spanId,
+        },
+        ...event.contexts
+      };
+      return event;
+    });
+  }
+
+  onStart(otelSpan: OpenTelemetrySpan): void {
+    const hub = Sentry.getCurrentHub();
+    if (!hub) return;
+
+    const otelSpanId = otelSpan.spanContext().spanId;
+    const otelParentSpanId = otelSpan.parentSpanId;
+
+    // Otel supports having multiple non-nested spans at the same time
+    // so we cannot use hub.getSpan(), as we cannot rely on this being on the current span
+    const sentryParentSpan = otelParentSpanId && MAP.get(otelParentSpanId);
+
+    if (sentryParentSpan) {
+      const sentryChildSpan = sentryParentSpan.startChild({
+        description: otelSpan.name,
+        instrumenter: 'otel',
+        startTimestamp: convertOtelTimeToSeconds(otelSpan.startTime),
+        spanId: otelSpanId,
+      });
+
+      MAP.set(otelSpanId, sentryChildSpan);
+    } else {
+      const traceCtx = getTraceData(otelSpan);
+      const transaction = hub.startTransaction({
+        name: otelSpan.name,
+        ...traceCtx,
+        instrumenter: 'otel',
+        startTimestamp: convertOtelTimeToSeconds(otelSpan.startTime),
+        spanId: otelSpanId,
+      });
+
+      MAP.set(otelSpanId, transaction);
+    }
+  }
+
+  onEnd(otelSpan: OpenTelemetrySpan): void {
+    const otelSpanId = otelSpan.spanContext().spanId;
+    const sentrySpan = MAP.get(otelSpanId);
+
+     // Func definition is explained in Step 2
+    if isSentryRequest(otelSpanId) {
+      // This is a request to Sentry, so we don't want to finish the transaction/span (so it isn't sent to Sentry)
+      MAP.delete(otelSpanId);
+      return;
+    }
+
+    generateSentryErrorsFromOtelSpan(otelSpan);
+
+    if (sentrySpan instanceof Transaction) {
+      updateTransactionWithOtelData(sentrySpan, otelSpan);
+      finishTransactionWithContextFromOtelData(sentrySpan, otelSpan);
+    } else {
+      updateSpanWithOtelData(sentrySpan, otelSpan);
+      sentrySpan.finish(convertOtelTimeToSeconds(otelSpan.endTime));
+    }
+
+    MAP.delete(otelSpanId);
+  }
+}
+```
+
+Users are required to add this `SentrySpanProcessor` to their OpenTelemetry SDK initialization logic to make this work, like so. Individual SDK implementations might be a little different.
+
+```ts
+import {NodeSDK} from '@opentelemetry/sdk-node';
+import {Resource} from '@opentelemetry/resources';
+import * as Sentry from '@sentry/node';
+import {SentrySpanProcessor} from '@sentry/opentelemetry-node';
+
+Sentry.init({
+  /// ...
+});
+
+const sdk = new NodeSDK({
+  resource: new Resource({
+    'service.name': 'my-service',
+    'service.version': '1.0.0',
+  }),
+  spanProcessor: new SentrySpanProcessor(),
+});
+```
+
+#### Step 2: Implement the SentryPropagator on your SDK Add SentryPropagator
+
+`SentryPropagator` is used to inject/extract `sentry-trace` and `baggage` headers to make trace propagation and dynamic sampling work correctly.
+
+```ts
+import {Context, TextMapPropagator} from '@opentelemetry/api';
+import {SpanContext} from '@opentelemetry/api';
+
+export class SentryPropagator implements TextMapPropagator {
+  inject(context: Context, carrier: unknown, setter: TextMapSetter): void {
+    const spanContext = getSpanContext(context);
+    if (isSentryRequest(spanContext)) {
+      return;
+    }
+
+    const sentryTrace = generateSentryTrace(spanContext);
+    setSentryTraceHeader(carrier, sentryTrace, setter);
+
+    const baggage = generateBaggageFromContext(context);
+    setBaggageHeader(carrier, baggage, setter);
+  }
+
+  extract(context: Context, carrier: unknown, getter: TextMapGetter): Context {
+    const sentryTraceParent = extractSentryTraceFromCarrier(carrier, getter);
+    setSentryTraceInfoOnSpanContext(context, sentryTraceParent);
+
+    const dynamicSamplingContext = extractBaggageFromCarrier(carrier, getter);
+    setDynamicSamplingContextOnSpanContext(context, dynamicSamplingContext);
+
+    return context;
+  }
+}
+```
+
+#### Step 3: Define `isSentryRequest`
+
+We want to make sure that we don't create Sentry Spans for requests to Sentry.
+
+```ts
+import {Span as OtelSpan} from '@opentelemetry/sdk-trace-base';
+import {SemanticAttributes} from '@opentelemetry/semantic-conventions';
+import {getCurrentHub} from '@sentry/core';
+
+export function isSentryRequestSpan(otelSpan: OtelSpan): boolean {
+  const {attributes} = otelSpan;
+
+  const httpUrl = attributes[SemanticAttributes.HTTP_URL];
+
+  if (!httpUrl) {
+    return false;
+  }
+
+  return isSentryRequestUrl(httpUrl.toString());
+}
+
+function isSentryRequestUrl(url: string): boolean {
+  const dsn = getCurrentHub().getClient()?.getDsn();
+  return dsn ? url.includes(dsn.host) : false;
+}
+```
+
+Note: In some environments (e.g. JavaScript), you do not have access to attributes in the SpanProcessor `onStart` hook.
+In that case, we will always create transactions/spans, but never finish them in the case they are identified as Sentry requests in `onEnd`.
+
+#### Step 3: Define `getTraceData`
+
+```ts
+function getTraceData(otelSpan: OtelSpan): Partial<TransactionContext> {
+  const spanContext = otelSpan.spanContext();
+  const traceId = spanContext.traceId;
+  const spanId = spanContext.spanId;
+
+  const parentSpanId = otelSpan.parentSpanId;
+  return {spanId, traceId, parentSpanId};
+}
+```
+
+If the user is using the `SentryPropagator`, the `sentry-trace` information should be getting attached to incoming spans automatically. This should mean that we don't need to explicitly grab the header. The `SentryPropagator` should also be putting the Dynamic Sampling Context from the baggage header onto the OpenTelemetry Context, which then can be used in `getTraceData` to inject the DSC in during transaction creation.
+
+#### Step 4: Define `updateSpanWithOtelData`
+
+We want to update the Sentry Span & Transaction with the OpenTelemetry data. This includes the span's operation, description, and resource attributes.
+
+The Sentry span description should come from the OpenTelemetry Span name. The Sentry span operation should come from a combinations of the OpenTelemetry Span name, kind, and attributes.
+
+To make things simple, only set ops for `db` and `http` spans. Don't do any other extended logic, this will be done in Relay in the future.
+
+```ts
+function updateSpanWithOtelData(sentrySpan: SentrySpan, otelSpan: OtelSpan): void {
+  const {attributes, kind} = otelSpan;
+
+  sentrySpan.setStatus(mapOtelStatus(otelSpan));
+  sentrySpan.setData('otel.kind', kind.valueOf());
+
+  Object.keys(attributes).forEach(prop => {
+    const value = attributes[prop];
+    sentrySpan.setData(prop, value);
+  });
+
+  const {op, description} = parseSpanDescription(otelSpan);
+  sentrySpan.op = op;
+  sentrySpan.description = description;
+}
+
+function updateTransactionWithOtelData(
+  transaction: Transaction,
+  otelSpan: OtelSpan
+): void {
+  transaction.setStatus(mapOtelStatus(otelSpan));
+
+  const {op, description} = parseSpanDescription(otelSpan);
+  transaction.op = op;
+  transaction.name = description;
+}
+```
+
+A reference implementation to parse the OTEL span descriptions can be found [here](https://github.com/getsentry/sentry-javascript/blob/master/packages/opentelemetry/src/utils/parseSpanDescription.ts).
+
+#### Step 5: Add OpenTelemetry Context
+
+All SDKs are required to add event context with the key `otel` to events generated by the SpanProcessor. This is detailed in <Link to="#opentelemetry-context">our spec for the Context</Link>. The OpenTelemetryContext should be generated from information from the OpenTelemetry Span.
+
+We recommend doing this by adding a `transaction.setContext()` method to your SDK.
+
+```ts
+function finishTransactionWithContextFromOtelData(
+  transaction: Transaction,
+  otelSpan: OtelSpan
+): void {
+  transaction.setContext('otel', {
+    attributes: otelSpan.attributes,
+    resource: otelSpan.resource.attributes,
+  });
+
+  transaction.finish(convertOtelTimeToSeconds(otelSpan.endTime));
+}
+```
+
+Example:
+
+```json
+{
+  "contexts": {
+    "otel": {
+      "attributes": {
+        "http.method": "GET",
+        "http.url": "https://example.com",
+        "http.status_code": 200
+      },
+      "resource": {
+        "service.name": "my-service",
+        "service.version": "1.0.0",
+        "telemetry.sdk.name": "opentelemetry-node",
+        "telemetry.sdk.version": "4.0.0"
+      }
+      // ...
+    }
+  }
+}
+```
+
+#### Step 6: Add instrumenter option to Sentry SDK
+
+We want to avoid double instrumenting the same library. To do this, we want to add an option to the Sentry SDK that disables Sentry performance instrumentation (automatic and manual) when OpenTelemetry is enabled. For now users will have to manually add this option to their SDK initialization code, but in the future we can do this automatically (by detecting if OpenTelemetry exists).
+
+```ts
+Sentry.init({
+  // ...
+  instrumenter: 'otel',
+});
+```
+
+You have two options for this:
+
+1. Add an early return to `Sentry.startTransaction()` and `Sentry.trace()` (a helper method) if the `instrumenter` option is set to `otel`. This may require SDK changes, as `Sentry.trace()` is not part of the unified API.
+
+```ts
+class Hub implements HubInterface {
+  // ...
+  startTransaction(this: Hub, context: TransactionContext): Transaction | undefined {
+    // ...
+    if (this.instrumenter !== context.instrumenter) {
+      return;
+    }
+    // ...
+  }
+
+  // Note this is not part of the unified API.
+  // It is being proposed as part of:
+  // https://github.com/getsentry/rfcs/issues/28
+  // see: https://github.com/getsentry/develop/issues/720
+  trace<T>(this: Hub, context: SpanContext, callback: (span?: Span) => T): T {
+    // ...
+    if (this.instrumenter !== context.instrumenter) {
+      return callback();
+    }
+    // ...
+  }
+}
+```
+
+2. Add if conditionals around all callsites where you are using `Sentry.startTransaction` and `span.startChild` in the Sentry SDK code. This is a little more work, but it doesn't require any SDK changes to the unified API.
+
+```ts
+if (instrumenter === 'otel') {
+  span.startChild({
+    // ...
+  });
+}
+```
+
+You are also free to do both, or an alternative method, the only requirement is that we don't double instrument.
+
+#### Step 7: Define `generateSentryErrorsFromOtelSpan`
+
+In OpenTelemetry, spans can have [exception events](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/). These have a stacktrace, message, and type. We want to convert these to Sentry errors and attach them to the trace.
+
+```ts
+function generateSentryErrorsFromOtelSpan(otelSpan) {
+  otelSpan.events.forEach(event => {
+    // Only convert exception events to Sentry errors.
+    if (event.name !=== 'exception') {
+      return;
+    }
+
+    const attributes = event.attributes;
+
+    const message = attributes[SemanticAttributes.EXCEPTION_MESSAGE];
+    const syntheticError = new Error(message);
+    syntheticError.stack = attributes[SemanticAttributes.EXCEPTION_STACKTRACE];
+    syntheticError.name = attributes[SemanticAttributes.EXCEPTION_TYPE];
+
+    Sentry.captureException(syntheticError, {
+      contexts: {
+        otel: {
+          attributes: otelSpan.attributes,
+          resource: otelSpan.resource.attributes,
+        },
+        trace: {
+          trace_id: otelSpan.spanContext().traceId,
+          span_id: otelSpan.spanContext().spanId,
+          parent_span_id: otelSpan.parentSpanId,
+        },
+      },
+    });
+  });
+}
+```
+
+### Span Protocol
+
+Below describe the transformations between an OpenTelemetry span and a Sentry Span. Related: [the interface for a Sentry Span](/sdk/foundations/transport/event-payloads/span/), [the Relay spec for a Sentry Span](https://github.com/getsentry/relay/blob/master/relay-event-schema/src/protocol/span.rs) and the spec for an [OpenTelemetry span](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L80-L256).
+
+This is based on a mapping done as part of work on the [OpenTelemetry Sentry Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/sentryexporter).
+
+| OpenTelemetry Span                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Sentry Span                                                                                                                                | Notes                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [trace_id](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L81-L89)                                                                                                                                                                                                                                                                                                                                     | [trace_id](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L37)        |                                                                                                                                                                                                                                                                  |
+| [span_id](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L91-L99)                                                                                                                                                                                                                                                                                                                                      | [span_id](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L30)         |                                                                                                                                                                                                                                                                  |
+| [parent_span_id](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L106-L108)                                                                                                                                                                                                                                                                                                                             | [parent_span_id](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L33)  | If a span does not have a parent span ID, it is a root span. For a root span: <ul><li>If there is an active Sentry transaction, add it to the transaction</li><li>If there is no active Sentry transaction, construct a new transaction from that span</li></ul> |
+| [name](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121)                                                                                                                                                                                                                                                                                                                                       | [description](https://github.com/getsentry/relay/blob/7fb4ef6546cbe27c2b6e101dc46fd36cbe273d57/relay-general/src/protocol/span.rs#L22)     |                                                                                                                                                                                                                                                                  |
+| [name](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L110-L121), [attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186), [kind](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156) | [op](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L26)              |                                                                                                                                                                                                                                                                  |
+| [attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186), [kind](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L153-L156)                                                                                                                                                                 | [data](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L48)            |                                                                                                                                                                                                                                                                  |
+| [attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186), [status](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255)                                                                                                                                                               | [status](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L40)          | See [Span Status](#span-status) for more details                                                                                                                                                                                                               |
+| [start_time_unix_nano](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L158-L164)                                                                                                                                                                                                                                                                                                                       | [start_timestamp](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L14) |                                                                                                                                                                                                                                                                  |
+| [end_time_unix_nano](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L166-L172)                                                                                                                                                                                                                                                                                                                         | [timestamp](https://github.com/getsentry/relay/blob/d7c5698888a2148799697d5427b37bfbe3b895bc/relay-general/src/protocol/span.rs#L10)       |                                                                                                                                                                                                                                                                  |
+| [event](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L193-L214)                                                                                                                                                                                                                                                                                                                                      |                                                                                                                                            | See [Span Events](#span-events) for more details                                                                                                                                                                                                               |
+
+Currently there is no spec for how [Span.link in OpenTelemetry](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L220-L247) should appear in Sentry.
+
+#### Span Status
+
+In OpenTelemetry, [Span Status is an enum of 3 values](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#set-status), while [Sentry's Span Status is an enum of 17 values](https://github.com/getsentry/relay/blob/ed3a521f773ecd4bf9a2aefd7af80080d56d0841/relay-common/src/constants.rs#L200-L286) that map to the [GRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md). Each of the Sentry Span Status codes also map to HTTP codes. Sentry adopted it's Span Status spec from OpenTelemetry, [who used the GRPC status code spec](https://github.com/open-telemetry/opentelemetry-specification/blob/8fb6c14e4709e75a9aaa64b0dbbdf02a6067682a/specification/api-tracing.md#status), but later on changed to the current spec it uses today.
+
+To map from OpenTelemetry Span Status to, you need to rely on both OpenTelemetry [Span Status](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L253-L255) and [Span attributes](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186). This approach was adapted from a PR by GH user [@anguisa](https://github.com/anguisa) to the [OpenTelemetry Sentry Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/pull/13407).
+
+```ts
+// OpenTelemetry span status can be Unset, Ok, Error. HTTP and Grpc codes contained in tags can make it more detailed.
+
+import {Span as OtelSpan} from '@opentelemetry/sdk-trace-base';
+import {SemanticAttributes} from '@opentelemetry/semantic-conventions';
+import {SpanStatusType as SentryStatus} from '@sentry/tracing';
+
+// canonicalCodesHTTPMap maps some HTTP codes to Sentry's span statuses. See possible mapping in /sdk/foundations/transport/event-payloads/span/
+const canonicalCodesHTTPMap: Record<string, SentryStatus> = {
+  '400': 'failed_precondition',
+  '401': 'unauthenticated',
+  '403': 'permission_denied',
+  '404': 'not_found',
+  '409': 'aborted',
+  '429': 'resource_exhausted',
+  '499': 'cancelled',
+  '500': 'internal_error',
+  '501': 'unimplemented',
+  '503': 'unavailable',
+  '504': 'deadline_exceeded',
+} as const;
+
+// canonicalCodesGrpcMap maps some GRPC codes to Sentry's span statuses. See description in grpc documentation.
+const canonicalCodesGrpcMap: Record<string, SentryStatus> = {
+  '1': 'cancelled',
+  '2': 'unknown_error',
+  '3': 'invalid_argument',
+  '4': 'deadline_exceeded',
+  '5': 'not_found',
+  '6': 'already_exists',
+  '7': 'permission_denied',
+  '8': 'resource_exhausted',
+  '9': 'failed_precondition',
+  '10': 'aborted',
+  '11': 'out_of_range',
+  '12': 'unimplemented',
+  '13': 'internal_error',
+  '14': 'unavailable',
+  '15': 'data_loss',
+  '16': 'unauthenticated',
+} as const;
+
+export function mapOtelStatus(otelSpan: OtelSpan): SentryStatus {
+  const {status, attributes} = otelSpan;
+
+  const statusCode = status.code;
+
+  if (statusCode < 0 || statusCode > 2) {
+    return 'unknown_error';
+  }
+
+  if (statusCode === 0 || statusCode === 1) {
+    return 'ok';
+  }
+
+  const httpCode = attributes[SemanticAttributes.HTTP_STATUS_CODE];
+  const grpcCode = attributes[SemanticAttributes.RPC_GRPC_STATUS_CODE];
+
+  if (typeof httpCode === 'string') {
+    const sentryStatus = canonicalCodesHTTPMap[httpCode];
+    if (sentryStatus) {
+      return sentryStatus;
+    }
+  }
+
+  if (typeof grpcCode === 'string') {
+    const sentryStatus = canonicalCodesGrpcMap[grpcCode];
+    if (sentryStatus) {
+      return sentryStatus;
+    }
+  }
+
+  return 'unknown_error';
+}
+```
+
+#### Span Events
+
+OpenTelemetry, has the concept of [Span Events](https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L193-L214). As per the spec:
+
+> An event is a human-readable message on a span that represents “something happening” during it’s lifetime
+
+In Sentry, we have two options for how to treat span events. First, we can add them as breadcrumbs to the transaction the span belongs to. Second, we can create an artificial "point-in-time" span (a span with 0 duration), and add it to the span tree. TODO on what approach we take here.
+
+In the special case that the span event is an exception span, [where the `name` of the span event is `exception`](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/), we also have the possibility of generating a Sentry error from an exception. In this case, we can create this [exception based on the attributes of an event](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/exceptions/#attributes), which include the error message and stacktrace. This exception can also inherit all other attributes of the span event + span as tags on the event. This is addressed by Step 7, where you add `generateSentryErrorsFromOtelSpan` to the `SpanProcessor` pipeline.
+
+In the OpenTelemetry Sentry exporter, we've used this [strategy to generate Sentry errors](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/8eda2f80b6dbd5aea03ca699c3ad1454714156d0/exporter/sentryexporter/sentry_exporter.go#L169-L196).
+
+### Transaction Protocol
+
+There is no concept of a transaction within OpenTelemetry, so we rely on promoting spans to become transactions. The span `description` becomes the transaction `name`, and the span `op` becomes the transaction `op`. Therefore, OpenTelemetry spans must be mapped to Sentry spans before they can be promoted to become a transaction.
+
+**We should not set tags on transactions. Instead, we should populate the `attributes` field on the `otel` context, <Link to="#opentelemetry-context">see below</Link>**
+
+### OpenTelemetry Context
+
+Aside from information from Spans and Transactions, OpenTelemetry has meta-level information about the SDK, resource, and service that generated spans. To track this information, we generate a new OpenTelemetry Event Context.
+
+The existence of this context on an event (transaction or error) is how the Sentry backend will know that the incoming event is an OpenTelemetry event.
+
+It uses the following schema:
+
+```ts
+type Primitive = number | string | boolean | bigint;
+
+interface Attributes<T extends Primitive> {
+  [key: string]: T | Array<T> | Record<string, T>;
+}
+
+interface OpenTelemetryContext {
+  type?: 'otel';
+
+  // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/trace/v1/trace.proto#L174-L186
+  attributes?: Attributes;
+
+  // https://github.com/open-telemetry/opentelemetry-proto/blob/724e427879e3d2bae2edc0218fff06e37b9eb46e/opentelemetry/proto/resource/v1/resource.proto
+  // Resource information.
+  resource?: Attributes;
+}
+```
+
+### SDK Spec
+
+- SpanProcessor: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor
+- Propagator: https://opentelemetry.io/docs/reference/specification/context/api-propagators/
+
+## OTLP Integration
+
+This document outlines how to build a dedicated `OTLPIntegration` in SDKs that makes it easier for users using [OpenTelemetry](https://opentelemetry.io/) for instrumentation to send their spans and traces to Sentry's new [OTLP ingestion endpoint](https://docs.sentry.io/concepts/otlp/).
+
+### Background
+
+#### Existing OpenTelemetry Support
+
+Some of our SDKs (Node, Java) already shipped a complete Performance powered by OpenTelemetry (POTEL) system following the [OpenTelemetry Support spec](#opentelemetry-support).
+
+Some other SDKs (Python, Ruby, Elixir) implement a simpler system with **only** the `SpanProcessor` and `Propagator` components.
+
+While building the POTEL prototype for Python, we questioned if the complexity we were adding was justified and the architecture was scalable and decided to stop with POTEL for other backend SDKs.
+
+#### OTLP Ingestion Endpoint
+
+Concurrently to the above SDK work, we also shipped first-class support for ingesting OTLP Traces and Logs. This opened up the possibility of a much cleaner system that allows users to setup OpenTelemetry with Sentry seamlessly while preserving behavior - **Trace Connectedness** that makes Sentry valuable.
+
+### Integration Spec
+
+The new integration **SHOULD** be called `OTLPIntegration` with the following signature:
+
+```python
+OTLPIntegration(setup_otlp_traces_exporter=True, collector_url=None)
+```
+
+`setup_otlp_traces_exporter` **MUST** be a boolean that defaults to `True`.
+
+`collector_url` **MUST** be an optional string that defaults to `None`.
+
+It **MUST** set up the following:
+
+* An `external_propagation_context` that extracts the active `trace_id` and `span_id` from the OpenTelemetry SDK
+
+It **SHOULD** also set up or expose:
+
+* A `SpanExporter` that automatically configures the OTLP ingestion endpoint from the DSN or from the `collector_url` (controlled by `setup_otlp_traces_exporter`)
+
+The integration **MUST NOT** set up an automatic propagator. Cross-service trace propagation is handled by the [`propagateTraceparent`](/sdk/foundations/trace-propagation/#propagate-traceparent) setting or by user-configured OTel propagators. How to set up an OTel propagator is a documentation concern.
+
+The integration **SHOULD NOT** patch or intercept `Span.record_exception`.
+
+#### SpanExporter
+
+IF `setup_otlp_traces_exporter` is `True`, the integration MUST do the following:
+
+* Take the existing `TracerProvider` from OpenTelemetry if it exists, otherwise create a new one
+* Determine the OTLP Traces `endpoint` and `headers`:
+  * IF `collector_url` is provided, the integration MUST use that URL as the OTLP endpoint instead of constructing one from the DSN. The `X-Sentry-Auth` header MUST NOT be added in this case since authentication is handled by the collector.
+  * IF `collector_url` is `None`, the integration MUST construct the endpoint from the DSN:
+    * The `endpoint` has the format - `https://o0.ingest.sentry.io/api/{project_id}/integration/otlp/v1/traces/`
+    * It is RECOMMENDED to centralize API endpoint generation from the DSN if your SDK doesn't already have that
+    * Add the `X-Sentry-Auth` header to a `headers` dictionary
+* Instantiate a `OTLPSpanExporter` from OpenTelemetry with the `endpoint` and `headers`
+* Instantiate a `BatchSpanProcessor` with the above `OTLPSpanExporter`
+* Add the `BatchSpanProcessor` to the `TracerProvider`
+
+IF `setup_otlp_traces_exporter` is `False`, the integration MUST skip this entire step so users can configure their exporters OR collectors manually if they wish to do so.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L36-L55" />
+
+#### External Propagation Context
+
+This specification introduces a new `external_propagation_context` concept that is a global function that adds a new source of `trace_id` and `span_id` to be used in other Sentry event payloads.
+
+This is to ensure that all other Sentry events such as Errors, Check-Ins, Logs and Metrics have the correct `TraceContext` (for Errors and Check-Ins) or `trace_id, span_id` attributes (for Logs and Metrics) and can be linked correctly to the relevant Trace and Span originating from OpenTelemetry.
+
+##### Scope
+
+The `Scope` implementation MUST add two new methods:
+
+* `register_external_propagation_context(fn)` that takes a function and stores it as a global
+* `get_external_propagation_context` that when called calls the above stored global function and returns a `(trace_id, span_id)` tuple or `None`
+
+Further, the scope's `get_trace_context` method should use this `get_external_propagation_context` in preference to the local `propagation_context` on the scope to fill in the `trace_id` and `span_id` in the respective event payloads.
+
+It is RECOMMENDED to centralize this logic for fetching the active `trace_id` and `span_id` for Logs and Metrics if that is not already the case in your SDK.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/scope.py#L149-L165" />
+
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/scope.py#L587-L610" />
+
+##### Integration
+
+The Integration then MUST call `register_external_propagation_context` with a function that fetches the `(trace_id, span_id)` tuple from OpenTelemetry.
+
+See the reference Python implementation:
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L23-L33" />
+<GitHubCodePreview url="https://github.com/getsentry/sentry-python/blob/c68c3d6b5152b879bc107f76d9a9c78e95792235/sentry_sdk/integrations/otlp.py#L70" />
+
+### Comparison to POTEL
+
+Note the difference in components above to the components in the POTEL implementation:
+
+* A `SpanProcessor` for processing and packaging the Spans that OpenTelemetry emits
+* A `Propagator` that ensures Distributed Tracing works with other upstream and downstream services using Sentry SDKs
+* A `Sampler` that works with Sentry's `traces_sample_rate` and `traces_sampler`
+  * Note that this implies users **need** to use OpenTelemetry sampling themselves for now if they need. We might revisit the sampling DX with OTLP later.
+* Bidirectional syncing between Sentry's `Scope`s and OpenTelemetry's `Context` so that spans can be started in either API and interleaved freely while preserving the span tree
+
+## Dashboard Widgets
+
+The sections below contain SDK documentation for our various Dashboard Modules (formerly known as "Performance Widgets").
+
+### AI Agents Module
+
+The AI Agents module is agnostic to the library used. The SDK will instrument existing AI agents in certain frameworks or libraries (at the time of writing those are `openai-agents` in Python and `Vercel AI` in Javascript). You may need to manually annotate spans for other libraries.
+
+#### Spans Conventions
+
+For your AI agents data to show up in the Sentry [Agents Dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/), at least one of the AI spans needs to be created and have well-defined names and data attributes. If the required data (marked with MUST or required) is missing, the data will not show up in the Agents dashbboard.
+
+We try to follow [v1.36.0](https://github.com/open-telemetry/semantic-conventions/blob/v1.36.0/docs/gen-ai/README.md) of the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) for Generative AI as close as possible. Being 100% compatible is not yet possible, because OpenTelemetry has "Span Events" which Sentry does not support. The input from/output to an AI model is stored in span events in OpenTelemetry. Since this is not possible in Sentry, we add this data onto span attributes as a list.
+
+<Alert level="success" title="Hint">
+The [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) have all the detailed specifications for `"gen_ai.*"` span attributes.
+
+Sentry Conventions is the single source of truth.
+
+</Alert>
+
+#### Invoke Agent Span
+
+Describes AI agent invocation.
+Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
+
+- Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
+- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[6]**
+- Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+
+Additional attributes on the span:
+
+##### Request Data
+
+| Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
+| :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
+
+##### Response Data
+
+| Attribute                    | Type    | Requirement Level | Description                                                                                           | Example                                                                      |
+| :--------------------------- | :------ | :---------------- | :---------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| `gen_ai.output.messages`     | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
+
+- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
+- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
+
+#### AI Client Span
+
+This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
+
+- Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- Span `name` **SHOULD** be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+
+Additional attributes on the span:
+
+##### Request Data
+
+| Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
+| :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
+| `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
+| `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
+| `gen_ai.request.seed`              | string | optional          | Seed for reproducible outputs.                                                                                                       | `"12345"`                                                             |
+| `gen_ai.request.frequency_penalty` | float  | optional          | Model configuration parameter.                                                                                                       | `0.5`                                                                 |
+| `gen_ai.request.presence_penalty`  | float  | optional          | Model configuration parameter.                                                                                                       | `0.5`                                                                 |
+| `gen_ai.request.temperature`       | float  | optional          | Model configuration parameter.                                                                                                       | `0.1`                                                                 |
+| `gen_ai.request.top_p`             | float  | optional          | Model configuration parameter.                                                                                                       | `0.7`                                                                 |
+| `gen_ai.request.top_k`             | int    | optional          | Limits model to K most likely next tokens.                                                                                           | `40`                                                                  |
+| `gen_ai.request.reasoning.level`   | string | optional          | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.                               | `"medium"`                                                            |
+| `gen_ai.request.messages`          | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of dictionaries describing the messages (prompts) sent to the LLM. **[0]** | `'[{"role": "system", "content": "..."}, ...]'`                       |
+| `gen_ai.request.available_tools`   | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of dictionaries describing the available tools. **[0]**                  | `'[{"name": "random_number", "description": "..."}, ...]'`            |
+
+##### Response Data
+
+| Attribute                             | Type    | Requirement Level | Description                                                                                                         | Example                                                                      |
+| :------------------------------------ | :------ | :---------------- | :------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------- |
+| `gen_ai.output.messages`              | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                              | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
+| `gen_ai.response.finish_reasons`      | string  | optional          | The reason why the model stopped generating.                                                                        | `"stop"`                                                                     |
+| `gen_ai.response.id`                  | string  | optional          | Unique identifier for the completion.                                                                               | `"chatcmpl-abc123"`                                                          |
+| `gen_ai.response.streaming`           | boolean | optional          | Whether response was streamed asynchronously.                                                                       | `true`                                                                       |
+| `gen_ai.response.time_to_first_chunk` | double  | optional          | Seconds until first response chunk in streaming.                                                                    | `0.5`                                                                        |
+| `gen_ai.response.text`                | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the model's response. **[0]**      | `"The weather in Paris is rainy"`                                            |
+| `gen_ai.response.tool_calls`          | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]**               | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
+| `gen_ai.response.time_to_first_token` | double  | optional          | **Deprecated.** Use `gen_ai.response.time_to_first_chunk` instead. Seconds until first response chunk in streaming. | `0.5`                                                                        |
+
+##### Token Usage Data
+
+| Attribute                                  | Type | Requirement Level | Description                                                                                                                    | Example |
+| :----------------------------------------- | :--- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------- | :------ |
+| `gen_ai.usage.input_tokens`                | int  | optional          | The number of tokens used in the AI input (prompt), including cached tokens. **[2]**                                           | `60`    |
+| `gen_ai.usage.cache_read.input_tokens`     | int  | optional          | The number of cached tokens used in the AI input (prompt).                                                                     | `50`    |
+| `gen_ai.usage.cache_creation.input_tokens` | int  | optional          | Tokens written to cache when processing input.                                                                                 | `20`    |
+| `gen_ai.usage.output_tokens`               | int  | optional          | The number of tokens used in the AI output, including reasoning tokens. **[3]**                                                | `130`   |
+| `gen_ai.usage.reasoning.output_tokens`     | int  | optional          | The number of tokens used for reasoning.                                                                                       | `30`    |
+| `gen_ai.usage.total_tokens`                | int  | optional          | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.                                                       | `190`   |
+| `gen_ai.usage.input_tokens.cached`         | int  | optional          | **Deprecated.** Use `gen_ai.usage.cache_read.input_tokens` instead. The number of cached tokens used in the AI input (prompt). | `50`    |
+| `gen_ai.usage.input_tokens.cache_write`    | int  | optional          | **Deprecated.** Use `gen_ai.usage.cache_creation.input_tokens` instead. Tokens written to cache when processing input.         | `20`    |
+| `gen_ai.usage.output_tokens.reasoning`     | int  | optional          | **Deprecated.** Use `gen_ai.usage.reasoning.output_tokens` instead. The number of tokens used for reasoning.                   | `30`    |
+
+- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
+- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
+- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
+- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
+
+#### Execute Tool Span
+
+Describes a tool execution.
+
+- Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
+- Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
+- Attribute `gen_ai.tool.name` **SHOULD** be set to the name of the tool. (e.g. `"query_database"`)
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+
+Additional attributes on the span:
+
+##### Tool Data
+
+| Attribute                    | Type   | Requirement Level | Description                                                                                                    | Example                                    |
+| :--------------------------- | :----- | :---------------- | :------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
+| `gen_ai.tool.name`           | string | optional          | Name of the tool executed.                                                                                     | `"random_number"`                          |
+| `gen_ai.tool.description`    | string | optional          | Description of the tool executed.                                                                              | `"Tool returning a random number"`         |
+| `gen_ai.tool.type`           | string | optional          | The type of the tools.                                                                                         | `"function"`; `"extension"`; `"datastore"` |
+| `gen_ai.tool.call.arguments` | string | optional          | Arguments of the tool call (stringified).                                                                      | `'{"max":10}'`                             |
+| `gen_ai.tool.call.result`    | string | optional          | Result of the tool call (stringified).                                                                         | `"7"`                                      |
+| `gen_ai.tool.message`        | string | optional          | Response from a tool/function call passed to model.                                                            | `"The random number is 7"`                 |
+| `gen_ai.tool.input`          | string | optional          | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input that was given to the executed tool as string. | `'{"max":10}'`                             |
+| `gen_ai.tool.output`         | string | optional          | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                               | `"7"`                                      |
+
+**[2]:**
+
+Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
+
+**[3]:**
+
+Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
+
+**[4]**
+
+The input list should include the most recent messages up to and including the most recent previous model response. The previous model response is identified with an "assistant" or "model" role in common frameworks. If there is no previous model response in the input list, then all input items which are not system instructions should be included. System instructions must be added in `gen_ai.system_instructions`, and are not included in the `gen_ai.input.messages` list.
+
+**[5]**
+
+Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.
+
+**[6]**
+
+In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
+In these cases, the span name **SHOULD** be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+
+**[7]**
+
+Image URLs in the data URL format in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected. For example, data URLs like `data:image/png;base64` will be redacted, but HTTP URLs like `example.com/data?<a-base64-string>` will not be.
+
+See [here](https://github.com/getsentry/sentry-python/blob/5379537fcd2925374fa617e49bb618fc9979509b/sentry_sdk/integrations/pydantic_ai/consts.py#L6) for the regex used.
+
+### App Starts Module
+
+The App Starts module records metrics from spans in `ui.load` transactions using specific span operations.
+
+#### Transaction Conventions
+
+##### Transaction Measurements
+| Key | Unit | Description | Conditions |
+|:--|:--|:--|:--|
+| `app_start_cold` | milliseconds | The time it took to load the first frame during a cold app start | required for cold app starts |
+| `app_start_warm` | milliseconds | The time it took to load the first frame during a warm app start | required for warm app starts |
+
+#### Span Conventions
+
+##### Span Operations
+| Span OP | Description | Conditions |
+|:--|:--|:--|
+| `app.start.cold` | An operation during cold start | At least one span with the description "Cold Start" must be present in a transaction |
+| `app.start.warm` | An operation during warm start | At least one span with the description "Warm Start" must be present in a transaction |
+| `db.sql.query` | A database query | - |
+| `db.sql.transaction` | - | - |
+| `db` | An operation on the database | - |
+| `file.read` | Reading a file from the file system | - |
+| `file.write` | Writing to a file on the file system | - |
+| `http.client` | An outgoing network request | - |
+| `ui.load` | An operation on a mobile UI | - |
+
+##### Android-Specific Span Operations
+| Span OP | Description |
+|:--|:--|
+| `activity.load` | Calling `onCreate` for an activity |
+| `application.load` | Calling the application `onCreate` |
+| `contentprovider.load` | Calling `onCreate` for a content provider |
+| `db.sql.room` | A database query using the Room library | - |
+| `process.load` | Duration of time spent by the OS prior to the first content provider initialization |
+
+### Assets Module
+
+Browser SDKs should auto-instrument javascript, stylesheet and image assets with the ops `resource.script`, `resource.css` and `resource.img` respectively. The Asset module is technology agnostic, it only cares about span data properties.
+
+#### Span conventions
+
+##### Span Description
+
+The description of an asset span should be the full URL of the asset, e.g., `https://cdn.com/main.hash123.js?q=11274713`.
+
+##### Span Data
+
+The following data should be provided for each asset span
+
+| Data Key                               | Type     | Description                                                                       | Notes                                                                                         |
+| :------------------------------------- | :------- | :-------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| `http.response_content_length`         | `int`    | encoded size of the asset in `bytes` (what is sent over the network)              | required on all asset operations                                                              |
+| `http.decoded_response_content_length` | `int`    | the decoded size of the asset in `bytes`                                          | recommended; if not provided, would show up as 0 on the resource summary size chart            |
+| `http.response_transfer_size`          | `int`    | the size of the encoded asset plus the response headers in `bytes`                | recommended; if not provided, would show up as 0 on the resource summary size chart            |
+| `resource.render_blocking_status`      | `string` | whether the resource blocks UI rendering, values are 'non-blocking' or 'blocking' | recommended; if not provided, the asset can't be narrowed down by their render blocking status |
+
+#### Instrumentation Example
+
+The SDK should create a span per asset fetched by the browser.
+
+Consider a basic HTML file that fetches a single script:
+
+```html
+<head>
+  <script src="https://cdn.com/main.hash123.js"></script>
+</head>
+```
+
+Should result in the following span, assuming the request was successful:
+
+```json
+{
+  "description": "https://cdn.com/main.hash123.js",
+  "op": "resource.script",
+  "data": {
+    "http.decoded_response_content_length": 123,
+    "http.response_content_length": 123,
+    "http.response_transfer_size": 123,
+    "resource.render_blocking_status": "blocking",
+    "server.address": "cdn.com",
+    ... other span properties
+  }
+}
+```
+
+### Caches Module
+
+The SDK's caching integration is agnostic to the underlying engine used. In most cases, the SDK will instrument existing cache abstractions in certain frameworks or libraries.
+
+#### Span conventions
+
+##### Span Operations
+
+The span operation should reflect the specific cache method being called, using the format `cache.<methodName>` (e.g. `cache.get`, `cache.putIfAbsent`, `cache.removeAll`). The following are common examples:
+
+| Span OP | Description |
+|:--|:--|
+| `cache.get` | A single item or multiple items are retrieved from the cache |
+| `cache.put` | A single item or multiple items are written to the cache |
+| `cache.remove` | A single item or multiple items are removed from the cache |
+| `cache.flush` | The entire content of the cache is deleted |
+
+##### Span Description
+
+The description of cache spans should be set to the cache key(s), separated by commas, e.g. `posts`, or `article1, article2`.
+
+##### Span Data
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `cache.hit` | bool | cache hit or miss | required only on read-operations (`cache.get`)
+| `cache.key` | array | the key(s) involved in the operation | required only on operations that have a key
+| `cache.operation` | string | the specific cache operation performed (e.g. `get`, `putIfAbsent`, `removeAll`) | optional; useful when the SDK uses granular span operations beyond the four base ops
+| `cache.write` | bool | whether the operation resulted in a write to the cache | required only on write-operations (`cache.put`, `cache.remove`, `cache.flush`); reflects the actual outcome for conditional operations (e.g. `putIfAbsent`, `replace`); always `true` for unconditional writes
+
+The following data attributes are only to be set if exposed by the instrumented cache abstraction or retrievable with minimal overhead.
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `cache.item_size ` | int | the size of the item/items read/written/deleted in `bytes` | only on operations that have a key
+| `cache.success ` | bool | the operation has succeeded or failed |
+| `cache.ttl ` | int | the time to life in `seconds` | only on operations that have a key
+| `network.peer.address` | string | The hostname of the cache instance |
+| `network.peer.port` | int | the port used by the cache instance |
+
+#### Instrumentation
+
+Once an application performs a caching operation, the SDK creates a new span based on the operation, wrapping any spans of the underlying engine as direct children.
+
+**Example**
+
+```
+item = Cache::get('posts')
+```
+
+This should result in the following spans, assuming a cache hit with an underlying Redis instance being used.
+
+```
+<span op:"cache.get" description:"posts" cache.key:"posts" cache.hit=true>
+	<span op:db.redis description:"GET posts"></span>
+</span>
+```
+
+##### SDK Options
+
+If convenient, the SDK can optionally offer a `cache_prefixes` option, that wraps existing instrumentations into a cache span.
+This will likely only be useful if Redis is being used as a cache.
+
+```
+Sentry.init({
+  integrations: [
+    Sentry.redisIntegration({
+	    cachePrefixes: ['posts:', 'authors:'],
+    }),
+  ],
+})
+```
+
+In this example, all Redis queries involving keys that match `posts:*` and `authors:*` will be wrapped into `cache.*` span.
+
+### Queries Module
+
+The SDK should auto-instrument all database queries, and each query to the database should result in a span. This includes queries made manually, or via ORM. The Queries module supports SQL databases like PostgreSQL and MySQL, as well as MongoDB. It does not support other databases like Neo4j or ClickHouse. Regardless of that, the SDK should instrument database queries as fully and correctly as possible to ensure correct behavior and future compatibility.
+
+#### Span Attributes
+
+| Attribute | Description | Notes |
+|:--|:--|:--|
+| `op` | Prefixed with `"db"` (e.g., `"db"`, `"db.query"`, `"db.sql.query"`) [^1] | Required |
+| `description` | The full scrubbed query (e.g., `SELECT * FROM users where id = ?`) | Required, see  [Query Scrubbing](#query-scrubbing) for details |
+| `data` | A key-value mapping of span attributes. (e.g., `{"db.system": "postgresql", "db.name": "prod-2"}`) | Required for full experience. See [Span Data](#span-data-3) for details |
+
+##### Query Scrubbing
+
+The query description should be scrubbed of any user-supplied values.
+
+e.g., the query
+
+```sql
+SELECT * FROM users WHERE id = 17;
+```
+should be scrubbed to:
+
+```sql
+SELECT * FROM users WHERE id = ?;
+```
+
+The `?` parameter is a placeholder in the query. The SDK must scrub out all values and replace them with a placeholder. Supported placeholder values are `%s`, `?`, `:c0` (e.g., `:c0`, `:c1`) and `$1` (e.g., `$1`, `$2`).
+
+For MongoDB, the description should contain valid JSON. If replacing values with a placeholder, the string `"?"` should be used.
+
+```json
+{ "find": "documents", "filter": { "wordCount": { "$gte": "?" } } }
+```
+
+##### Span Data
+
+For full support, each database span should have a `data` attribute. `data` is itself a key-value lookup of attributes. Refer to [Database Span Data Conventions](#database-1) for a full list of attributes that database spans should have. We recommend that the SDK provide _all_ of those attributes for every span. However, the _minimal_ requirement is that the SDK provides the `db.system` attribute.
+
+###### MongoDB Data
+
+MongoDB support requires a few extra data attributes. In addition to a `db.system` value of `"mongodb"`, the `db.operation` and `db.collection.name` attributes are also required to contain the command and collection name respectively.
+
+#### SQL Instrumentation Example
+
+Consider a hypothetical Python ORM:
+
+```python
+from magicORM import ORM
+from .models import User, Product
+
+ORM.connect_postgres(host="127.0.0.1", port="7777", database="production")
+return User.find(17).find_related(Product)
+```
+
+Assume it makes this SQL query:
+
+```sql
+SELECT * FROM projects
+WHERE projects_user = 17;
+```
+
+This should result in the following span:
+
+```json
+{
+  "description": "SELECT * FROM projects WHERE projects_user = 17",
+  "op": "db",
+  "data": {
+    "db.system": "postgresql",
+    "db.operation": "SELECT",
+    "db.name": "production",
+    "server.address": "127.0.0.1",
+    "server.port": "7777"
+  }
+}
+```
+
+[^1]: Some operations are accepted by Sentry, but not indexed by the Queries module. This includes `db.sql.room`, `db.redis`, and some others. Do not attempt to trick the system by providing an incorrect span operation!
+
+### Queues Module
+
+The SDK's queue integration is agnostic to the underlying engine used. In most cases, the SDK will instrument existing queue abstractions in certain frameworks or libraries.
+
+#### Span conventions
+
+##### Span Operations
+
+| Span OP | Description |
+|:--|:--|
+| `queue.publish` | One or more messages are provided for publishing to an intermediary. If a single message is published, the context of the “Publish” span can be used as the creation context and no “Create” span needs to be created. |
+| `queue.create` | A message is created. “Create” spans always refer to a single message and are used to provide a unique creation context for messages in batch publishing scenarios. |
+| `queue.receive` | One or more messages are requested by a consumer. This operation refers to pull-based scenarios, where consumers explicitly call methods of messaging SDKs to receive messages. |
+| `queue.process` | One or more messages are delivered to or processed by a consumer. |
+| `queue.settle` | One or more messages are settled. |
+
+##### Span Data
+
+The following data attributes must be set on both the consumer and the producer spans.
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `messaging.message.id ` | string | the identifier of the message |
+| `messaging.destination.name` | string | the destination name where the message is being consumed from, e.g. the queue name or topic |
+| `messaging.system` | string | the name of the messaging system, e.g. `kafka`, `aws_sqs ` |
+
+The following data attributes are only to be set if exposed by the instrumented queuing abstraction or retrievable with minimal overhead. When possible, the attributes should be set on both the producer and consumer spans.
+
+| Data Key | Type | Description | Conditions
+|:--|:--|:--|:--|
+| `messaging.message.retry.count ` | int | the retries/attempts processing a message |
+| `messaging.message.envelope.size` | int | the size of the message body and metadata in bytes |
+| `messaging.message.body.size` | int | the size of the message | body in bytes |
+| `messaging.message.receive.latency ` | float | time delta in milliseconds between a message being published and when it was received by a consumer (not including processing time on the consumer) |
+
+#### Instrumentation
+
+Depending on if a synchronous or asynchronous messaging system is used, the consumer span could instead be its own transaction.
+
+```
+Queue::publish(job)
+
+// in some consumer
+
+Queue::pop()->process()
+```
+
+This should result in the following spans.
+
+```
+<span op:"queue.publish" description:"job-name" ...>
+
+<span op:"queue.process" description:"job-name" ...>
+```
+
+If applicable, any spans created by the underlying engine instrumentation should be direct children of each `queue` span.
+
+```
+<span op:"queue.publish" description:"job" ...>
+	<span op:"db.sql.query" description:"insert into jobs" ...></span>
+</span>
+```
+
+##### Distributed Tracing
+
+If applicable, we try to continue a trace from producer to consumer. To do so, we inject both the trace parent (`sentry-trace`) and `baggage` into the payload of the message, and pick it up on the consumer.
+
+### Requests Module
+
+The SDK should auto-instrument all outgoing HTTP requests, regardless of the library that issues the requests. Each outgoing request should result in a span. The Requests module is technology agnostic, it only cares about span data properties.
+
+#### Span Attributes
+
+| Attribute | Description | Notes |
+|:--|:--|:--|
+| `op` | Always `"http.client"` | Required |
+| `description` | A string including the HTTP request method, and the partial URL. e.g., `"GET https://example.com/data.json"` | Required [^1] |
+| `data` | A key-value mapping of span attributes. (e.g., `{"http.query": "filter=all", "server.address": "prod-2.example.com"}`) | Required for full experience. See [Span Data](#span-data-5) for details |
+
+##### Span Data
+
+None of the span data fields are hard requirements, but attaching as many of them as possible is a more future-proof approach. We recommend that the SDK adds every attribute listed in the [HTTP Span Data Conventions](#http). The minimal requirements are:
+
+- `server.address` must be set to allow correct domain grouping _for descriptions containing relative URLs_. e.g., the description `"GET /data.json"` is missing a domain. In this case, `server.address` must be set. If the span description contains the partial URL, `span.server` can be omitted
+- `http.response.status_code` must be set to enable response code breakdowns
+
+#### Instrumentation Example
+
+Consider a website called "App Ex", running on `app.example.com`. This JavaScript code that issues an HTTP request from the browser:
+
+```javascript
+fetch("/data.json")
+```
+
+Should result in the following span, assuming the request was successful:
+
+```json
+{
+  "description": "GET /data.json?user=1",
+  "op": "http.client",
+  "data": {
+    "http.query": "user=1",
+    "http.request_method": "GET",
+    "http.response.status_code": 200,
+    "http.fragment": "",
+    "server.address": "app.example.com",
+    "server.port": 8080,
+    ... other span properties
+  }
+}
+```
+
+[^1]: The HTTP method must be one of the [known HTTP request methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
+
+### Screen Loads Module
+
+The Screen Loads module records metrics from spans in `ui.load` transactions using specific span operations.
+
+#### Transaction Conventions
+
+##### Transaction Measurements
+| Key | Unit | Description | Conditions |
+|:--|:--|:--|:--|
+| `time_to_initial_display` | milliseconds | The time it took to load the first frame | required |
+| `time_to_full_display` | milliseconds | The time it took to fully load the screen | optional, requires manual instrumentation |
+
+#### Span Conventions
+
+##### Span Operations
+| Span OP | Description |
+|:--|:--|
+| `db.sql.query` | A database query |
+| `db.sql.room` | A database query using the Room library on Android |
+| `db.sql.transaction` | - |
+| `db` | An operation on the database |
+| `file.read` | Reading a file from the file system |
+| `file.write` | Writing to a file on the file system |
+| `http.client` | An outgoing network request |
+| `ui.load` | An operation on a mobile UI |
+| `ui.load.full_display` | When the screen has fully completed loading |
+| `ui.load.initial_display` | When the screen has rendered its first frame |
+
+### Web Vitals Module
+
+The SDK should auto-instrument:
+- [Page Loads](#pageloads-transaction-conventions) as Transactions
+- [Interactions](#interactions-span-conventions) that trigger an [INP](https://web.dev/articles/inp) as standalone Spans
+
+#### Pageloads Transaction Conventions
+
+##### Properties
+
+| Property | Description |
+|:--|:--|
+| `transaction`           | A low cardinality string of the pageload route. Can be a route template if applicable to the frontend platform. e.g., `"/settings/{project}/"` |
+| `contexts.trace.op`     | Always `pageload` |
+| `contexts.browser.name` | The client browser on which the page was loaded. Supported values include `Chrome`, `Firefox`, `Safari`, `Opera`, and `Edge`. |
+
+##### Measurements
+
+Web Vital metrics should be captured as measurements on the pageload transaction.
+```json
+{
+  "measurements": {
+    "lcp": { "value": 2049, "unit": "millisecond" },
+    "fcp": { "value": 2049, "unit": "millisecond" },
+    "cls": { "value": 0.21, "unit": "" },
+    "ttfb": { "value": 13, "unit": "millisecond" },
+  }
+}
+```
+
+| Measurement | Description |
+|:--|:--|
+| `measurements.lcp`      | The [Largest Contentful Paint](https://web.dev/articles/lcp) metric detected on the pageload. |
+| `measurements.fcp`      | The [First Contentful Paint](https://web.dev/articles/fcp) metric detected on the pageload. |
+| `measurements.cls`      | The [Cumulative Layout Shift](https://web.dev/articles/cls) metric detected on the pageload. |
+| `measurements.ttfb`     | The [Time To First Byte](https://web.dev/articles/ttfb) metric detected on the pageload. |
+
+#### Interactions Span Conventions
+
+##### Attributes
+
+| Attribute | Description |
+|:--|:--|
+| `transaction`      | A low cardinality string of the page route that the INP event occurred on. Can be a route template if applicable to the frontend platform. e.g., `"/settings/{project}/"` |
+| `description`      | If applicable, the selector string that identifies the element which the interaction occurred on. e.g. `"Sidebar > span.user > a"` |
+| `op`               | `ui.interaction.click`, `ui.interaction.press`, `ui.interaction.hover`, or `ui.interaction.drag` |
+
+##### Measurements
+
+The Interaction to Next Paint metric should be captured as a measurement on the interaction span.
+```json
+{
+  "measurements": {
+    "inp": { "value": 500, "unit": "millisecond" },
+  }
+}
+```
+
+| Measurement | Description |
+|:--|:--|
+| `measurements.inp` | The [Interaction to Next Paint](https://web.dev/articles/inp) metric detected on the interaction. |
