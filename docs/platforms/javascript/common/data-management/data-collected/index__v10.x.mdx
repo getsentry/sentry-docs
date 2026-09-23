@@ -12,9 +12,11 @@ The category types and amount of data collected vary, depending on the integrati
 
 <Expandable title="Options to control data collection">
 
-You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink>, which lets you opt in or out of each data category individually.
+You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> (available since version `10.57.0`), which lets you opt in or out of each data category individually.
 
-By default, the SDK collects all `dataCollection` categories and scrubs values whose keys match the built-in sensitive denylist. To collect less, opt out of a category or restrict it.
+When you set `dataCollection` (even to an empty object `{}`), the SDK collects all categories by default and scrubs values whose keys match the built-in sensitive denylist. To collect less, opt out of a category or restrict it.
+
+When you don't set `dataCollection`, the deprecated `sendDefaultPii` option determines what the SDK collects. With `sendDefaultPii: true`, all categories are collected. Without it, the SDK does not collect user identity fields, IP addresses, request and response bodies, generative AI content, or database query data, and it applies stricter filtering to headers, cookies, and query parameters.
 
 Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
@@ -24,8 +26,12 @@ Regardless of these options, you can always scrub any data before it's sent to S
 
 By default, the Sentry SDK sends HTTP request and response headers. The SDK always keeps the header names and replaces the values of sensitive headers (names that match terms such as `auth`, `token`, or `password`) with `[Filtered]`.
 
-Use the `dataCollection.httpHeaders` option to control this. Set `dataCollection: { httpHeaders: false }` to disable header collection, or use `{ allow: [...] }` or `{ deny: [...] }` to restrict which header values are sent.
-To control each direction separately, use the `{ request: ..., response: ... }` form, for example `{ request: true, response: false }`.
+Use the `dataCollection.httpHeaders` option to control this. Set `dataCollection: { httpHeaders: { request: false, response: false } }` to disable header collection, or use `{ allow: [...] }` or `{ deny: [...] }` on `request` and `response` to restrict which header values are sent. Since version `10.75.0`, you can also set one value that applies to both directions, for example `dataCollection: { httpHeaders: false }`.
+
+When you don't set `dataCollection`, header collection depends on the deprecated `sendDefaultPii` option:
+
+- With `sendDefaultPii: true`, the SDK sends headers with the standard filtering described above.
+- Without it, the SDK still sends headers, but it also replaces the values of IP-related headers (names that match `forwarded`, `-ip`, `remote-`, `via`, or `-user`) with `[Filtered]`. The browser `httpClient` integration is an exception: when `dataCollection` is not set, it captures headers and cookies of failed requests only if `sendDefaultPii` is `true`.
 
 ## Cookies
 
@@ -57,7 +63,10 @@ Even when this is disabled, IP addresses can still reach Sentry through collecte
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
-    httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    httpHeaders: {
+      request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
@@ -209,18 +218,9 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
     By default, the Sentry SDK sends the data passed to tasks within queues. For Kafka, this is the message key. Producers often use a user ID or a tenant ID as the message key, so this value can include PII.
 
-    Use the `dataCollection.queues` option to control this. Set it to `false` to stop sending the message key:
+    Version 10 has no `dataCollection` option for this category (the `dataCollection.queues` option is available from version 11). To remove this data, scrub it before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
-    ```JavaScript
-    Sentry.init({
-      dsn: "___PUBLIC_DSN___",
-      dataCollection: {
-        queues: false,
-      },
-    });
-    ```
-
-    Structural metadata, such as the messaging system, the topic, the partition, and the offset, is always sent. If you turn this option off, you keep the queue performance data.
+    Structural metadata, such as the messaging system, the topic, the partition, and the offset, is always sent.
 
   </PlatformSection>
 
