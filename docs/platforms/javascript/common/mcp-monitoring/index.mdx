@@ -41,7 +41,20 @@ Support for `@modelcontextprotocol/server` 2.x requires Sentry JavaScript SDK ve
 
 ### Configure Input and Output Recording
 
-MCP inputs and outputs may contain sensitive data. Use `recordInputs` and `recordOutputs` to control collection for a specific server:
+By default, the SDK sends the inputs and outputs of your MCP tool calls, prompt retrievals, and resource reads. This gives you rich debugging context. MCP payloads can carry sensitive data, such as tokens, file paths, or private user content. Review what your server handles before you deploy to production.
+
+The <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.genAI`</PlatformLink> option controls this recording globally for both MCP and AI instrumentation:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+});
+```
+
+Use `recordInputs` and `recordOutputs` to control recording for a specific server. These options override the `dataCollection.genAI` settings:
 
 ```javascript
 const server = Sentry.wrapMcpServerWithSentry(mcpServer, {
@@ -50,7 +63,7 @@ const server = Sentry.wrapMcpServerWithSentry(mcpServer, {
 });
 ```
 
-These options override the corresponding `dataCollection.genAI.inputs` and `dataCollection.genAI.outputs` settings and require Sentry JavaScript SDK version `10.33.0` or newer.
+The `recordInputs` and `recordOutputs` options require Sentry JavaScript SDK version `10.33.0` or newer. In version 10, the SDK records inputs and outputs only when you set the `dataCollection` option or enable them on the wrapper. Starting with version 11, it records them by default.
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
