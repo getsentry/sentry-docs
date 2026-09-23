@@ -41,7 +41,7 @@ If you set up the Sentry SDK and it's not sending any data to Sentry:
 <Expandable permalink title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
-Check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn everything you need
+Check out our <PlatformLink to="/migration/v10-to-v11/">migration guide</PlatformLink> to learn everything you need
 to know to get up and running again with the latest Sentry features.
 
 </Expandable>
@@ -692,7 +692,7 @@ shamefully-hoist=true
       };
 
       // The Sentry plugin should always be applied last
-      const { withSentryConfig } = require('@sentry/nextjs');
+      const { withSentryConfig } = require('@sentry/nextjs/config');
       module.exports = withSentryConfig(module.exports)
     ```
 
@@ -712,9 +712,9 @@ shamefully-hoist=true
   <Expandable permalink title="Spans from waitUntil() or other work after the response are missing">
     Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) lets work continue after the Worker returns a response. Whether those spans arrive depends on your trace lifecycle.
 
-    On the static lifecycle, which is the default, the SDK snapshots the request transaction when the response is returned, so anything finishing later is dropped. Streaming sends each sampled span as it finishes instead, which captures deferred work.
+    In transaction mode (`traceLifecycle: "static"`), the SDK snapshots the request transaction when the response is returned, so spans that finish later may be missing. Stream mode, the default since SDK version 11.0.0, sends sampled spans in batches as they finish, which captures deferred work.
 
-    Set `traceLifecycle: "stream"`, which needs `@sentry/cloudflare` version `10.49.0` or newer:
+    If you use transaction mode, remove `traceLifecycle: "static"` or set it to `"stream"`. On SDK version 10, explicitly set `traceLifecycle: "stream"`, which requires `@sentry/cloudflare` version `10.49.0` or newer:
 
     ```javascript {filename:index.js}
     export default Sentry.withSentry(
@@ -727,7 +727,7 @@ shamefully-hoist=true
     );
     ```
 
-    If you need to keep the static lifecycle, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` isn't available in stream mode.
+    If you need to keep transaction mode, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` isn't available in stream mode.
 
     ```javascript {filename:index.js}
     ctx.waitUntil(
@@ -777,6 +777,65 @@ shamefully-hoist=true
     ```
 
   </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.bun']}>
+  <Expandable permalink title="My database client isn't traced in a plugin build">
+    The plugin can only rewrite a package that passes through the bundler. Anything left external is resolved at runtime, never reaches the transform, and publishes no channel events, so it records no spans.
+
+    Build without `external`, which is the configuration to start from:
+
+    ```typescript {filename:build.ts}
+    import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+    await Bun.build({
+      entrypoints: ["./app.ts"],
+      outdir: "./dist",
+      target: "bun",
+      plugins: [sentryBunPlugin()],
+    });
+    ```
+
+    A blanket externalization strategy is the usual cause. Both `packages: "external"` and `"*"` in `external` push your instrumented packages back out of the bundle, and the plugin warns at build time:
+
+    ```typescript {filename:build.ts} {diff}
+     await Bun.build({
+       entrypoints: ["./app.ts"],
+       outdir: "./dist",
+       target: "bun",
+    -  packages: "external",
+       plugins: [sentryBunPlugin()],
+     });
+    ```
+
+    If you do need `external`, list only packages you don't need traced, and keep your database clients, AI SDKs and instrumented frameworks off the list.
+
+  </Expandable>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+<Expandable permalink title="The app stops at startup with `SyntaxError: Unexpected token ':'`">
+
+Your app imports a dependency that calls `require()` on a JSON file, and the `@sentry/deno/import` hook is active. Deno compiles the JSON as JavaScript instead, and the process stops before your code runs:
+
+```
+error: Uncaught SyntaxError: Unexpected token ':'
+```
+
+This is a Deno bug ([denoland/deno#36240](https://github.com/denoland/deno/issues/36240)): while any module hook is registered, Deno loads `.json` files with the wrong format. Express, Fastify, Hapi, Koa and mysql2 all read a JSON file this way.
+
+Remove the `@sentry/deno/import` line from your entry file to start your app again:
+
+```javascript {filename: main.ts}
+import * as Sentry from "npm:@sentry/deno";
+```
+
+Errors, `Deno.serve` and `node:http` spans, logs and metrics all keep working without the hook. You lose the integrations that depend on it, such as `mysql` 2.x and `pg`. Drivers that publish their own diagnostics channels, among them `mysql2` 3.20.0 and later and `ioredis` 5.11.0 and later, are instrumented either way.
+
+</Expandable>
+
 </PlatformSection>
 
 If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

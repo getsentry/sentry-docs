@@ -16,6 +16,8 @@ Make sure to select your framework in the dropdown in the top left corner of the
 </Alert>
 </PlatformSection>
 
+<Include name="javascript-v11-agent-migration" />
+
 Version 11 of the Sentry JavaScript SDK focuses on better OpenTelemetry interoperability, more flexible instrumentation, and better out-of-the-box defaults. The biggest changes are:
 
 - **OpenTelemetry interoperability:** The SDK no longer takes over your OpenTelemetry setup.
@@ -439,7 +441,7 @@ Update anything that filters, groups, or alerts on span ops: dashboards, dynamic
 
 | Area                                                              | Before                                                                                                                                                                                                                     | After         |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Request handlers (Express, Koa, Connect, Fastify, Elysia, NestJS) | `request_handler.<library>`, `handler.nestjs`                                                                                                                                                                              | `handler`     |
+| Request handlers (Express, Koa, Fastify, Elysia, NestJS) | `request_handler.<library>`, `handler.nestjs`                                                                                                                                                                              | `handler`     |
 | Hono `app.request()` in-process dispatch                          | `hono.request`                                                                                                                                                                                                             | `http.server` |
 | Web-server middleware                                             | `middleware.express`, `middleware.koa`, `middleware.hono`, `middleware.elysia`, `middleware.nestjs`, `middleware.nuxt`, `middleware.nitro`, `middleware.tanstackstart`, `hook.fastify`, `http.server.middleware` (Next.js) | `middleware`  |
 | Backend router layers                                             | `router.express`, `router.koa`, `router.hapi`                                                                                                                                                                              | `router`      |
@@ -597,7 +599,7 @@ The Anthropic integration no longer sets `gen_ai.prompt`. The legacy Completions
 - The TanStack Router integration reports path parameters as `url.path.parameter.<key>` instead of `url.path.params.<key>`.
 - The Cloudflare-specific `sentry.cloudflare_tracer` attribute is no longer set.
 - Import attribute constants from `@sentry/core` directly. The `semanticAttributes` re-export was removed.
-- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE` (`sentry.source`) was replaced by `SENTRY_SEGMENT_NAME_SOURCE` (`sentry.segment.name.source`), which is only set on the root span.
+- `sentry.source` (`SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`) was replaced by `sentry.segment.name.source`, which is only set on the root span.
 
 </Expandable>
 
@@ -866,6 +868,8 @@ Sentry.init({
 });
 ```
 
+See <PlatformLink to="/configuration/integrations/browsersession/">BrowserSession</PlatformLink> for lifecycle configuration and session health details.
+
 ### The `DOMException.code` Tag Was Removed
 
 Events created from a `DOMException` no longer carry a `DOMException.code` tag, because the `code` property is deprecated in favor of `DOMException.name`, which is already the exception type. Switch searches and alert rules that use the tag to `error.type`.
@@ -897,10 +901,10 @@ Several `browserTracingIntegration` options moved to dedicated integrations, or 
 
 | Removed option                        | Replacement                                     |
 | ------------------------------------- | ----------------------------------------------- |
-| `_experiments.enableInteractions`     | `interactionsIntegration()`                     |
-| `ignorePerformanceApiSpans`           | `userTimingIntegration({ ignore: [...] })`      |
-| `trackFetchStreamPerformance`         | `fetchStreamPerformanceIntegration()`           |
-| `_experiments.enableStandalone*Spans` | Removed, CLS and LCP are no longer configurable |
+| `_experiments.enableInteractions`     | <PlatformLink to="/configuration/integrations/interactions/">`interactionsIntegration()`</PlatformLink> |
+| `ignorePerformanceApiSpans`           | <PlatformLink to="/configuration/integrations/usertiming/">`userTimingIntegration({ ignore: [...] })`</PlatformLink> |
+| `trackFetchStreamPerformance`         | <PlatformLink to="/configuration/integrations/fetchstreamperformance/">`fetchStreamPerformanceIntegration()`</PlatformLink> |
+| `_experiments.enableStandalone*Spans` | Removed. The trace lifecycle determines how CLS and LCP are sent. |
 
 ```js
 // Before
@@ -925,12 +929,16 @@ Sentry.init({
 });
 ```
 
-`browserTracingIntegration` no longer captures `performance.mark()` and `performance.measure()` spans by default, and no longer accepts an `_experiments` object at all. The `idleTimeout`, `finalTimeout`, and `childSpanTimeout` options of interaction spans are configured on `interactionsIntegration` now, with the same defaults as before.
+`browserTracingIntegration` no longer captures `performance.mark()` and `performance.measure()` spans by default, and no longer accepts an `_experiments` object. Configure `idleTimeout`, `finalTimeout`, and `childSpanTimeout` for interaction spans on `interactionsIntegration`, with the same defaults as before. BrowserTracing's timeout options still control pageload and navigation spans.
 
-Web vitals also changed:
+BrowserTracing now automatically adds the <PlatformLink to="/configuration/integrations/webvitals/">WebVitals integration</PlatformLink>. Web Vitals changed as follows:
 
 - CLS and LCP are recorded as measurements on the pageload span, or as dedicated spans in stream mode.
-- INP is always sent as a web vital span, carrying its value in the `browser.web_vital.inp.value` attribute instead of as a span measurement. Update custom dashboards and alerts that read it as a measurement (built-in dashboards do not need adjustments).
+- When collected, INP is always sent as a Web Vital span, carrying its value in the `browser.web_vital.inp.value` attribute instead of as a span measurement. Update custom dashboards and alerts that read it as a measurement. Built-in dashboards do not need adjustments.
+- The `enableInp` option is deprecated. To disable INP, use `browserTracingIntegration({ webVitals: { ignore: ["inp"] } })`. The `ignore` array can also contain `"cls"` or `"lcp"` to skip those vitals.
+- To configure Web Vitals, pass `webVitals` options to BrowserTracing, or add `webVitalsIntegration()` explicitly. Explicit registration takes precedence over BrowserTracing's `webVitals` and `enableInp` options.
+- Soft-navigation vitals are enabled by default in stream mode on browsers that support the Soft Navigations API. Set `webVitals: { softNavigations: false }` to keep one set of vitals for the page lifetime.
+- BrowserTracing starts a navigation span after a back/forward-cache restore by default. Set `instrumentBfcacheRestore: false` to disable it. Web Vitals for restores are collected by default in stream mode when `instrumentBfcacheRestore` is enabled. Set `webVitals: { bfcacheNavigations: false }` to disable this collection.
 
 </PlatformCategorySection>
 
@@ -942,6 +950,7 @@ Web vitals also changed:
 - `denoHttpIntegration` and `denoServeIntegration` honor `ignoreStatusCodes`, using the same default list as `httpIntegration`: incoming requests whose response status falls in `[[401, 404], [301, 303], [305, 399]]` are dropped. Each integration owns the option for the requests it instruments. Pass an empty array to keep everything. The filter only applies in transaction mode, which is why the option is deprecated and will be removed in v12.
 - The incoming span hooks `onIncomingSpanCreated` and `onIncomingSpanEnd` were renamed to `onSpanCreated` and `onSpanEnd`. `denoHttpIntegration` also accepts `outgoingRequestHook`, `outgoingResponseHook`, and `outgoingRequestApplyCustomAttributes` now.
 - The default integrations were renamed to match the other SDKs: `DenoAmqplib`, `DenoKoa`, `DenoMongodb`, `DenoMongoose`, `DenoMysql`, and `DenoPostgres` became `Amqplib`, `Koa`, `Mongodb`, `Mongoose`, `Mysql`, and `Postgres`. The old `deno*Integration` exports are kept as deprecated aliases.
+- The `console` option of `breadcrumbsIntegration` was removed. Console breadcrumbs come from the default `consoleIntegration` now. To disable them, filter out the `Console` integration, and if you set `defaultIntegrations: false`, add `consoleIntegration()` to keep them.
 
 </PlatformSection>
 
@@ -1373,7 +1382,7 @@ import type { BrowserClientReplayOptions } from "@sentry/core/browser";
 
 ### Browser
 
-- The `console` option of `breadcrumbsIntegration` was removed. Use `consoleIntegration` to capture console breadcrumbs.
+- The `console` option of `breadcrumbsIntegration` was removed. Console breadcrumbs come from the default `consoleIntegration` now. To disable them, filter out the `Console` integration, and if you set `defaultIntegrations: false`, add `consoleIntegration()` to keep them.
 - AI integrations are no longer available in the browser SDK. They remain available in the server-side SDKs.
 
 </PlatformCategorySection>

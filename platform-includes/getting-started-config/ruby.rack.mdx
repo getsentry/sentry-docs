@@ -1,6 +1,13 @@
-### With Rackup
+#### With Rackup
 
-Add `use Sentry::Rack::CaptureExceptions` to your `config.ru` or other rackup file:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Import and initialize the SDK and add `use Sentry::Rack::CaptureExceptions` to your `config.ru` or other rackup file:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```ruby {filename:config.ru}
 require 'sentry-ruby'
@@ -8,23 +15,24 @@ require 'sentry-ruby'
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
 
-  # get breadcrumbs from logs
+  # Get breadcrumbs from logs
+  # Learn more at
+  # https://docs.sentry.io/platforms/ruby/configuration/options/#breadcrumbs_logger
   config.breadcrumbs_logger = [:sentry_logger, :http_logger]
-
-  # To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-  # https://docs.sentry.io/platforms/ruby/configuration/options/#data_collection
-  # config.data_collection.user_info = false
-  # config.data_collection.http_bodies = []
   # ___PRODUCT_OPTION_START___ performance
 
-  # enable tracing
-  # we recommend adjusting this value in production
+  # Set tracesSampleRate to 1.0 to capture 100%
+  # of transactions for tracing.
+  # We recommend adjusting this value in production
+  # Learn more at
+  # https://docs.sentry.io/platforms/ruby/configuration/options/#traces_sample_rate
   config.traces_sample_rate = 1.0
   # ___PRODUCT_OPTION_END___ performance
   # ___PRODUCT_OPTION_START___ profiling
 
-  # enable profiling
-  # this is relative to traces_sample_rate
+  # Enable profiling for a percentage of sessions relative to traces_sample_rate.
+  # Learn more at
+  # https://docs.sentry.io/platforms/ruby/configuration/options/#profiles_sample_rate
   config.profiles_sample_rate = 1.0
   # ___PRODUCT_OPTION_END___ profiling
 end
@@ -32,14 +40,20 @@ end
 use Sentry::Rack::CaptureExceptions
 ```
 
-### Without Rackup
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-<Alert level="warning">
+#### Without Rackup
 
-If you're not using Rackup to run your app, then Sentry initialization code **must**
-be placed before your code requires Sinatra:
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-</Alert>
+If you're not using Rackup to run your app, you have to place Sentry's initialization code **before** your code requires Sinatra:
+
+</SplitSectionText>
+<SplitSectionCode>
 
 ```ruby {filename:app.rb}
 require 'sentry-ruby'
@@ -47,23 +61,24 @@ require 'sentry-ruby'
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
 
-  # get breadcrumbs from logs
+  # Get breadcrumbs from logs
+  # Learn more at
+  # https://docs.sentry.io/platforms/ruby/configuration/options/#breadcrumbs_logger
   config.breadcrumbs_logger = [:sentry_logger, :http_logger]
-
-  # To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-  # https://docs.sentry.io/platforms/ruby/configuration/options/#data_collection
-  # config.data_collection.user_info = false
-  # config.data_collection.http_bodies = []
   # ___PRODUCT_OPTION_START___ performance
 
-  # enable tracing
-  # we recommend adjusting this value in production
+  # Set tracesSampleRate to 1.0 to capture 100%
+  # of transactions for tracing.
+  # We recommend adjusting this value in production
+  # Learn more at
+  # https://docs.sentry.io/platforms/ruby/configuration/options/#traces_sample_rate
   config.traces_sample_rate = 1.0
   # ___PRODUCT_OPTION_END___ performance
   # ___PRODUCT_OPTION_START___ profiling
 
-  # enable profiling
-  # this is relative to traces_sample_rate
+  # Enable profiling for a percentage of sessions relative to traces_sample_rate.
+  # Learn more at
+  # https://docs.sentry.io/platforms/ruby/configuration/options/#profiles_sample_rate
   config.profiles_sample_rate = 1.0
   # ___PRODUCT_OPTION_END___ profiling
 end
@@ -76,3 +91,7 @@ get "/" do
   raise "foo"
 end
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
