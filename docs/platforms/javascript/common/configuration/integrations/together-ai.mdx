@@ -1,0 +1,74 @@
+---
+title: Together AI
+description: "Adds instrumentation for the Together AI SDK. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires SDK version `11.0.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.togetherAIIntegration`_
+
+This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `togetherAIIntegration` adds instrumentation for the [`together-ai`](https://www.npmjs.com/package/together-ai) SDK to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs. Together AI speaks the OpenAI wire format, so it reuses the same span and streaming logic as the <PlatformLink to="/configuration/integrations/openai/">OpenAI integration</PlatformLink>.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.togetherAIIntegration()],
+});
+```
+
+## Supported Operations
+
+By default, tracing support is added to the following Together AI SDK calls:
+
+- `chat.completions.create()` - Chat completion requests
+- `embeddings.create()` - Embedding requests
+
+Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+## Supported Versions
+
+- `together-ai`: `>=0.6.0 <1`
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to Together AI SDK calls (such as prompts and messages).
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from Together AI SDK calls (such as generated text and responses).
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.togetherAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```

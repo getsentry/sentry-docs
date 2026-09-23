@@ -106,7 +106,7 @@ The session will be terminated if the application has spent in the background mo
 
 ### Replay Captures on Errors Only
 
-If you prefer not to record an entire session, you can elect to capture a replay only if an error occurs. In this case, the integration will buffer up to one minute worth of events prior to the error being thrown. It will continue to record the session, following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
+If you prefer not to record an entire session, you can elect to capture a replay only if an error occurs. In this case, the integration will buffer up to 30 seconds of events before the error. It will continue to record the session, following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
 
 ## Sampling
 
@@ -116,7 +116,7 @@ Sampling allows you to control how much of your website's traffic will result in
    replays that begin recording immediately and last the entirety of the user's session.
 2. `onErrorSampleRate` - The sample rate for
    replays that are recorded when an error happens. This type of replay will record
-   up to a minute of events prior to the error and continue recording until the session
+   up to 30 seconds of events before the error and continue recording until the session
    ends.
 
 Sampling begins as soon as a session starts. `sessionSampleRate` is evaluated first. If it's sampled, the replay recording will begin. Otherwise, `onErrorSampleRate` is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
@@ -150,6 +150,83 @@ SentryAndroid.init(context, options -> {
     return event.isCrashed();
   });
 });
+```
+
+## Manual Control
+
+Use manual control when replay recording depends on user consent, authentication, or a specific workflow. To disable automatic recording, [set both replay sample rates to `0.0`](/platforms/android/session-replay/configuration/#disable-automatic-replay-sampling).
+
+You can call the manual control APIs from any thread. Calls return before the requested operation completes because the SDK queues it.
+
+### Start Recording
+
+Choose the recording mode that fits your use case:
+
+- `start()` starts a full-session replay.
+- `startBuffering()` keeps a rolling buffer of up to 30 seconds. If `onErrorSampleRate` samples an error, the SDK sends the buffer automatically. Call `flush()` to send it without an error or sampling decision. After either action, recording continues in session mode.
+
+Explicit calls to `start()` and `startBuffering()` bypass the configured replay sample rates when starting recording. If a replay is already recording, both methods do nothing.
+
+```kotlin {tabTitle:Kotlin}
+// Start a full-session replay.
+Sentry.replay().start()
+
+// Or start a buffered replay instead.
+Sentry.replay().startBuffering()
+```
+
+```java {tabTitle:Java}
+// Start a full-session replay.
+Sentry.replay().start();
+
+// Or start a buffered replay instead.
+Sentry.replay().startBuffering();
+```
+
+### Pause Recording on Sensitive Screens
+
+Pause recording before showing sensitive content, such as a PIN entry screen, and resume it after the content is hidden. The SDK preserves a manual pause across app background and foreground transitions and when it automatically starts a new replay session in the same app process. Call `resume()` to continue recording. The pause state resets when the app process restarts. Calling `resume()` when replay is stopped does nothing; call `start()` or `startBuffering()` to create a new replay.
+
+```kotlin {tabTitle:Kotlin}
+Sentry.replay().pause()
+
+// Resume the same replay after leaving the sensitive screen.
+Sentry.replay().resume()
+```
+
+```java {tabTitle:Java}
+Sentry.replay().pause();
+
+// Resume the same replay after leaving the sensitive screen.
+Sentry.replay().resume();
+```
+
+The SDK can't determine whether foregrounding returns to the same sensitive screen or opens a different screen. For example:
+
+- If the app returns to the PIN entry screen, leave replay paused.
+- If a deep link opens a non-sensitive product screen, call `resume()` from that destination after the sensitive content is no longer visible.
+- If a notification or normal navigation opens another non-sensitive screen, call `resume()` from the new screen instead of from the sensitive screen's exit callback.
+
+### Stop or Flush Recording
+
+Call `stop()` to end the current replay. In session mode, the SDK sends any pending segment before stopping. In buffer mode, it discards the unsent buffer. A later call to `start()` or `startBuffering()` creates a new replay session.
+
+```kotlin {tabTitle:Kotlin}
+Sentry.replay().stop()
+```
+
+```java {tabTitle:Java}
+Sentry.replay().stop();
+```
+
+Call `flush()` to send the current replay data without stopping the recording. In session mode, it sends the pending segment and continues recording. In buffer mode, it sends the buffer and switches to session mode. Calling `flush()` while recording is stopped starts a new full-session replay.
+
+```kotlin {tabTitle:Kotlin}
+Sentry.replay().flush()
+```
+
+```java {tabTitle:Java}
+Sentry.replay().flush();
 ```
 
 ## Privacy

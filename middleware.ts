@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
+import {canonicalPath} from 'sentry-docs/canonical';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
@@ -21,7 +22,7 @@ const CANONICAL_HOST = new URL(BASE_URL).hostname;
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
 // get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
-const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
+const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev']);
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
@@ -309,7 +310,7 @@ function rewriteWithClassification(
 function mdToCanonicalPath(mdPathname: string): string {
   const withoutExt = mdPathname.replace(/\.md$/, '');
   if (withoutExt === '/index') return '/';
-  return withoutExt.endsWith('/') ? withoutExt : `${withoutExt}/`;
+  return canonicalPath(withoutExt);
 }
 
 /**
@@ -466,7 +467,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
-    to: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    to: '/platforms/javascript/guides/nuxt/install/',
   },
   {
     from: '/account/early-adopter-features/discord/',
@@ -1914,11 +1915,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/node/integrations/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/platforms/node/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/clients/node/integrations/koa/',
@@ -1995,6 +1996,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/mcp-module/',
+    to: '/platforms/javascript/guides/:guide/mcp-monitoring/',
   },
   {
     from: '/learn/cli/configuration/',

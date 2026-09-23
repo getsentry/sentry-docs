@@ -22,7 +22,6 @@ A tracing tool focuses on what happened (and when), logging events during a prog
 
 It's important to note that tracing is not [profiling](/product/profiling/). A profiler measures various aspects of an application's operation, resulting in a statistical summary. While both diagnose application problems, they differ in what they measure and how data is recorded.
 
-
 Learn more in our [tracing documentation](/concepts/key-terms/tracing/).
 
 ### The Tracing Data Model
@@ -31,20 +30,21 @@ Ultimately, any data structure is defined by the kind of data it contains, and r
 
 #### Traces
 
-Traces are defined as the collection of all transactions that share a `trace_id` value.
+Traces are defined as the collection of all transactions and spans that share a `trace_id` value.
 
 #### Transactions
 
 <Alert level="info">
 
-Transactions are a legacy data model concept. Sentry's newer span-based model represents all operations as spans; the root span of a trace replaces what was previously called a transaction. When working with Sentry's current tools, use [Trace Explorer](/product/trace-explorer/) and the [Spans](/product/dashboards/widget-builder/#spans) dataset.
+Transactions are a legacy concept replaced by service spans, which are entry-point spans that mark a service boundary within a trace.
+When working with Sentry's current tools, use [Trace Explorer](/product/trace-explorer/) and the [Spans](/product/dashboards/widget-builder/#spans) dataset.
 
 </Alert>
 
-Transactions share most properties (start and end time, tags, and so on) with their root spans. They also have a `transaction_name` property, used in the UI to identify the transaction. Common examples include endpoint paths for backend request transactions, task names for cron job transactions, and URLs for page-load transactions.
+Transactions and their parent spans share most properties. They also have a `transaction` property, which holds the transaction name used in the UI to identify the transaction. Common examples include endpoint paths for backend request transactions, task names for cron job transactions, and URLs for page-load transactions.
 
 Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set in `Sentry.init()` or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, or `Sentry.setExtra()`.)
-
+In the span-based model, scope-level tags and data are replaced by span attributes — refer to your SDK's migration guide for details.
 
 <Alert>
 
@@ -56,17 +56,15 @@ Transaction names can contain **sensitive data**. See [Scrubbing Sensitive Data]
 
 Span data includes:
 
-- `parent_span_id`: ties the span to its parent span
+- `parent_span`: ties the span to its parent span
 - `op`: short string identifying the type or category of operation the span is measuring
-- `start_timestamp`: when the span was opened
-- `end_timestamp`: when the span was closed
 - `description`: longer description of the span's operation
-- `status`: short code indicating operation's status
-- `tags`: key-value pairs holding additional data about the span
-- `data`: arbitrarily-structured additional data about the span
+- `status`: short code indicating the operation's status
+- and many others, including custom set attributes
 
-An example use of the `op` and `description` properties together is `op: db.query` and `description: SELECT * FROM users WHERE last_active < %s`. The `status` property indicates the success or failure of the span's operation, or a response code for HTTP requests. `Tags` and `data` attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
-To search span data see [Searchable Properties](/concepts/search/searchable-properties/spans/)
+An example use of the `op` and `description` properties together is `op: db.query` and `description: SELECT * FROM users WHERE last_active < %s`. The `status` property indicates the success or failure of the span's operation, or a response code for HTTP requests.
+
+To search span data, see [Searchable Properties](/concepts/search/searchable-properties/spans/).
 
 ### What Can Tracing Help With?
 
@@ -90,7 +88,7 @@ Each trace consists of one or more tree-like structures called [**transactions**
 
 ![Diagram illustrating how a trace is composed of multiple transactions, and each transaction is composed of multiple spans.](./img/diagram-transaction-trace.png)
 
-Top-level spans can be broken down into smaller spans, mirroring the way one function may call others. Every span may be the **parent span** to multiple **child spans**. One span in every transaction represents the transaction itself, with all other spans descending from that root span. Here's a zoomed-in view of one of the transactions from the diagram above:
+Top-level spans can be broken down into smaller spans, mirroring the way one function may call others. Every span may be the **parent span** to multiple **child spans**. One span in every transaction represents the transaction itself, with all other spans descending from that span. Here's a zoomed-in view of one of the transactions from the diagram above:
 
 ![Diagram illustrating the parent-child relationship between spans within a single transaction.](./img/diagram-transaction-spans.png)
 
@@ -120,33 +118,33 @@ The entire page-loading process is represented by a single **trace**. That trace
 Each transaction is broken down into **spans**:
 
 - _Browser Page-load Transaction_: 7 spans
-  - 1 root span for the entire page load
-  - 1 span each (3 total) for HTML, CSS, and JS requests
-  - 1 span for the rendering task, containing 2 child spans for each JSON request
+  - 1 span for the entire page load
+    - 1 span each (3 total) for HTML, CSS, and JS requests
+    - 1 span for the rendering task, containing 2 child spans for each JSON request
 
-Some spans in the browser transaction correspond to backend transactions. When a span in one service gives rise to a transaction in another, the original span is a parent span to both the transaction and its root span. In the diagram below, squiggly lines represent this parent-child relationship.
+Some spans in the browser transaction correspond to backend transactions. When a span in one service gives rise to a transaction in another, the original span is a parent span to both the transaction and its first span. In the diagram below, squiggly lines represent this parent-child relationship.
 
 ![Diagram illustrating the trace-transaction-span relationship applied to the example.](./img/diagram-transaction-example.png)
 
-In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service. In a fully-instrumented system, this pattern always holds true. The only parentless span is the root of the initial transaction; every other span has a parent. Parents and children live in the same service, except when the child span is the root of a child transaction, in which case the parent span lives in the calling service and the child transaction/child root span lives in the called service.
+In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service. In a fully-instrumented system, this pattern always holds true. The only parentless span is the root of the initial transaction; every other span has a parent. Parents and children live in the same service, except when the child span is the first span of a child transaction, in which case the parent span lives in the calling service and the child transaction/child span lives in the called service.
 
 A fully-instrumented system creates a trace which is a connected tree, with each transaction a subtree. The boundaries between subtrees/transactions are the boundaries between services. The diagram above shows one branch of our example's full trace tree.
 
 Now, back to our spans:
 
 - _Backend HTML/CSS/JS Request Transactions_: 1 span each
-  - 1 root span for the entire request (child of a browser span)
+  - 1 span for the entire request (child of a browser span)
 - _Backend Request with DB Call Transaction_: 2 spans
-  - 1 root span for the entire request (child of a browser span)
-  - 1 span for querying the database (parent of the database server transaction)
+  - 1 span for the entire request (child of a browser span)
+    - 1 span for querying the database (parent of the database server transaction)
 - _Backend Request with API Call Transaction_: 3 spans
-  - 1 root span for the entire request (child of a browser span)
-  - 1 span for the API request (not a parent span, as the API is external)
-  - 1 span for processing the API data
+  - 1 span for the entire request (child of a browser span)
+    - 1 span for the API request (not a parent span, as the API is external)
+    - 1 span for processing the API data
 - _Database Server Request Transaction_: 3 spans
-  - 1 root span for the entire request (child of the backend span above)
-  - 1 span for the authentication query
-  - 1 span for the data retrieval query
+  - 1 span for the entire request (child of the backend span above)
+    - 1 span for the authentication query
+    - 1 span for the data retrieval query
 
 After instrumenting all services, you might discover that the auth query in your database server is causing the slowdown. Tracing can't tell you _why_ it's happening, but now you know where to look!
 
@@ -156,44 +154,44 @@ After instrumenting all services, you might discover that the auth query in your
 
 For an e-commerce application, you might measure the time between a user clicking "Submit Order" and the order confirmation appearing. This process is one trace, with transactions (_T_) and spans (_S_) for:
 
-- Browser's full process (_T_ and root span _S_)
+- Browser's full process (_T_ and span _S_)
   - XHR request to backend\* (_S_)
   - Rendering confirmation screen (_S_)
-- Backend's processing of the request (_T_ and root span _S_)
+- Backend's processing of the request (_T_ and span _S_)
   - Function call to compute total (_S_)
   - DB call to store order\* (_S_)
   - API call to payment processor (_S_)
   - Queuing of email confirmation\* (_S_)
-- Database's work updating the customer's order history (_T_ and root span _S_)
+- Database's work updating the customer's order history (_T_ and span _S_)
   - Individual SQL queries (_S_)
-- Queued task of sending the email (_T_ and root span _S_)
+- Queued task of sending the email (_T_ and span _S_)
   - Function call to populate email template (_S_)
   - API call to email-sending service (_S_)
 
-\* Starred spans are parents of later transactions (and their root spans).
+\* Starred spans are parents of later transactions (and their first spans).
 
 #### Monitoring a Background Process
 
 For a backend periodically polling for data from an external service, processing it, caching it, and forwarding it to an internal service, each instance is a trace, with transactions (_T_) and spans (_S_) for:
 
-- Cron job completing the entire process (_T_ and root span _S_)
+- Cron job completing the entire process (_T_ and span _S_)
   - API call to external service (_S_)
   - Processing function (_S_)
   - Call to caching service\* (_S_)
   - API call to internal service\* (_S_)
-- Work done in your caching service (_T_ and root span _S_)
+- Work done in your caching service (_T_ and span _S_)
   - Checking cache for existing data (_S_)
   - Storing new data in cache (_S_)
-- Internal service's processing of the request (_T_ and root span _S_)
+- Internal service's processing of the request (_T_ and span _S_)
   - Handling the request (_S_)
 
-\* Starred spans are parents of later transactions (and their root spans).
+\* Starred spans are parents of later transactions (and their first spans).
 
 ### Important Information About Tracing, Spans & Transactions
 
 #### Trace Duration
 
-A trace begins when the earliest transaction starts, and ends when the last transaction ends. You can't "start" or "end" a trace, but you can initiate a transaction which will triggers a trace. Completing all transactions ends a trace.
+A trace begins when the earliest transaction starts, and ends when the last transaction ends. You can't "start" or "end" a trace, but you can initiate a transaction which will trigger a trace. Completing all transactions ends a trace.
 
 #### Async Transactions
 
@@ -201,7 +199,8 @@ Child transactions may outlive the transactions containing their parent spans. F
 
 #### Orphan Transactions
 
-In a fully instrumented system, each trace should contain only one transaction and one span (the transaction's root) without a parent. However, you may not have tracing enabled in every service, or an instrumented service may fail to report a transaction. This can result in gaps in your trace hierarchy, with non-originating, parentless transactions called **orphan transactions**.
+In a fully instrumented system, each trace should have exactly one root span, which is the first span in the trace and has no parent. All other transactions and spans in the trace are connected to this root through distributed trace propagation.
+However, you may not have tracing enabled in every service, or an instrumented service may fail to report a transaction. This can result in gaps in your trace hierarchy, with non-originating, parentless transactions called **orphan transactions**.
 
 #### Nested Spans
 
@@ -219,7 +218,7 @@ Collecting transactions from multiple machines may result in **clock skew**, whe
 
 <Alert level="info">
 
-In Sentry's current span-based SDKs, individual spans are sent directly to Sentry as they complete, without waiting for a parent transaction to close. The description below applies to the legacy transaction-based model.
+In Sentry's current span-based SDKs, individual spans are sent to Sentry in batches as they finish, without waiting for a parent transaction to close. The description below applies to the legacy transaction-based model.
 
 </Alert>
 

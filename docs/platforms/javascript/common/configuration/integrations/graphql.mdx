@@ -3,9 +3,10 @@ title: GraphQL
 description: "Adds instrumentation for GraphQL. (default)"
 supported:
   - javascript.node
+  - javascript.eve
+  - javascript.mastra
   - javascript.aws-lambda
   - javascript.azure-functions
-  - javascript.connect
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
@@ -67,10 +68,10 @@ When a resolver function is not defined on the schema for a field, GraphQL will 
 
 _Type: `boolean`_
 
-By default, this option is `true`.
+By default, this option is `true`. When enabled, it records GraphQL operations on the enclosing root span in the `sentry.graphql.operation` attribute. Its effect on the root span name depends on the tracing mode:
 
-With this setting enabled, the GraphQL instrumentation dynamically updates the name of the `http.server` root span by appending
-the operation names. Instead of generic span names like `POST /graphql`, span names will be more descriptive, such as `POST /graphql (query MyQuery)`.
-For requests containing multiple operations, the span names will aggregate operation names, for example `POST /graphql (query Query1, query Query2)`
+- In streaming mode, the root span name stays unchanged. Set the option to `false` to skip adding `sentry.graphql.operation` to the root span.
 
-Set the option to `false` to preserve the default `http.server` span name without this additional context.
+- In static mode, with `traceLifecycle: "static"`, enabling this option also appends operation names to the `http.server` root span name. For example, `POST /graphql` becomes `POST /graphql (query MyQuery)`. Requests containing multiple operations include each operation name, such as `POST /graphql (query Query1, query Query2)`. Set the option to `false` to skip the root span attribute and preserve the original root span name.
+
+In both modes, the GraphQL span records `graphql.operation.name` and `graphql.operation.type` when available, regardless of this option.

@@ -39,6 +39,11 @@ type Node = {
   context: {
     [key: string]: any;
     beta?: boolean;
+    /**
+     * Link target when it differs from the node's position in the tree. Used for
+     * pages that belong in more than one sidebar section.
+     */
+    href?: string;
     new?: boolean;
     early_access?: boolean;
     section_end_divider?: boolean;
@@ -144,7 +149,7 @@ export const renderChildren = (
 
       result.push(
         <CollapsibleSidebarLink
-          to={node.path}
+          to={node.context.href ?? node.path}
           key={node.path}
           title={node.context.sidebar_title || node.context.title!}
           collapsed={depth >= showDepth}
@@ -209,7 +214,7 @@ export const renderChildren = (
 
         result.push(
           <CollapsibleSidebarLink
-            to={node.path}
+            to={node.context.href ?? node.path}
             key={node.path}
             title={node.context.sidebar_title || node.context.title!}
             collapsed={depth >= showDepth}
@@ -237,7 +242,7 @@ export const renderChildren = (
 
       result.push(
         <CollapsibleSidebarLink
-          to={node.path}
+          to={node.context.href ?? node.path}
           key={node.path}
           title={node.context.sidebar_title || node.context.title!}
           collapsed={depth >= showDepth}
