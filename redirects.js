@@ -1040,6 +1040,16 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
   },
   {
+    source:
+      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa)/install/esm/',
+    destination: '/platforms/javascript/guides/:guide/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa)/install/commonjs/',
+    destination: '/platforms/javascript/guides/:guide/',
+  },
+  {
     source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
     destination: '/platforms/javascript/guides/react-router/manual-setup/',
   },

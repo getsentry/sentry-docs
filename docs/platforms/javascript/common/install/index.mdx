@@ -57,17 +57,17 @@ This runs `Sentry.init()` before any of your application's modules load, so ever
 node --import ./instrument.js app.js
 ```
 
-Note that `--require` is no longer supported for initialization. See <PlatformLink to="/install/esm">ESM (MJS)</PlatformLink> and <PlatformLink to="/install/commonjs">CommonJS (CJS)</PlatformLink>.
+Note that `--require` is no longer supported for initialization.
 
 ### Bundler Plugin and a Top-Level Import
 
-If you can't pass a flag to the Node.js binary, instrument your dependencies at build time with the Sentry bundler plugin and import `instrument.mjs` at the top of your entry file. See <PlatformLink to="/install/esm-without-import">ESM without CLI Flag</PlatformLink>.
+If you build your server with a bundler, instrument your dependencies at build time with the Sentry bundler plugin and import `instrument.mjs` at the top of your entry file. Because the plugin bakes the instrumentation into your bundle, a top-level import is enough and you don't need a flag on the Node.js binary. See <PlatformLink to="/install/bundler">With a Bundler</PlatformLink>.
 
-A top-level import on its own isn't equivalent to `--import`, because ESM evaluates every import in a file before it runs the first line of that file. That page explains what you lose and how to avoid it.
+If you can't use a bundler, a top-level import on its own isn't equivalent to `--import`, because ESM evaluates every import in a file before it runs the first line of that file. See <PlatformLink to="/install/esm-without-import">Deferred Entrypoint</PlatformLink> for an alternative way to run your application in this case.
 
-### Load the SDK With `--import` and Initialize Later
+### Prepare the instrumentation with `--import` and Initialize Later
 
-If you can't call `Sentry.init()` at startup, for example because you fetch your DSN from an external source, `--import` the SDK itself and call `Sentry.init()` at a later point:
+If you can't call `Sentry.init()` at startup, for example because you fetch your DSN from an external source, `--import` the instrumentation early and call `Sentry.init()` at a later point:
 
 ```bash
 node --import @sentry/node/import main.mjs
