@@ -67,7 +67,53 @@ export default Sentry.withSentry(
 </SplitSection>
 </SplitLayout>
 
-Durable Objects, Workflows, and Agents SDK classes each need their own wrapper. Use `instrumentDurableObjectWithSentry`, `instrumentWorkflowWithSentry`, and `instrumentAgentWithSentry`, passing the same options callback you gave `withSentry`. See <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>, <PlatformLink to="/features/workflows/">Workflows</PlatformLink>, and <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>.
+## Instrument Durable Objects, Workflows, and Agents
+
+Durable Objects, Workflows, and Agents SDK classes each need their own wrapper: `instrumentDurableObjectWithSentry`, `instrumentWorkflowWithSentry`, and `instrumentAgentWithSentry`. Each wrapper takes an options callback like `withSentry` does. Define the callback once to share it, and export each wrapped class under the name that your wrangler config uses:
+
+```typescript {filename:index.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { DurableObject, WorkflowEntrypoint } from "cloudflare:workers";
+// Only needed if you use the Agents SDK
+import { Agent } from "agents";
+
+const sentryOptions = (env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  // Bindings that carry the trace over RPC. An empty list lets a class
+  // receive traces over RPC without propagating them to other bindings.
+  rpcTracePropagationBindings: [],
+});
+
+class MyDurableObjectBase extends DurableObject<Env> {
+  // ...
+}
+
+class MyWorkflowBase extends WorkflowEntrypoint<Env> {
+  // ...
+}
+
+class MyAgentBase extends Agent<Env> {
+  // ...
+}
+
+export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
+  sentryOptions,
+  MyDurableObjectBase
+);
+
+export const MyWorkflow = Sentry.instrumentWorkflowWithSentry(
+  sentryOptions,
+  MyWorkflowBase
+);
+
+export const MyAgent = Sentry.instrumentAgentWithSentry(
+  sentryOptions,
+  MyAgentBase
+);
+```
+
+`instrumentAgentWithSentry` works with `Agent` from `agents`, `AIChatAgent` from `@cloudflare/ai-chat`, and `McpAgent` from `agents/mcp`, and requires SDK version 10.69.0 or higher. For what each wrapper captures, see <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>, <PlatformLink to="/features/workflows/">Workflows</PlatformLink>, and <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>. To connect traces across RPC calls, list your bindings as shown in <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
 
 ## Verify Your Setup
 

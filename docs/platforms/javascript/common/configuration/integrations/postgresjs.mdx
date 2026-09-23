@@ -10,17 +10,35 @@ supported:
 
 _Import name: `Sentry.instrumentPostgresJsSql`_
 
-The `instrumentPostgresJsSql` helper adds instrumentation for the [`postgres`](https://github.com/porsager/postgres) (postgres.js) library to capture spans by wrapping a postgres.js `sql` tagged-template instance. You need to manually wrap your `sql` instance with this helper:
+The `instrumentPostgresJsSql` helper adds instrumentation for the [`postgres`](https://github.com/porsager/postgres) (postgres.js) library to capture spans by wrapping a postgres.js `sql` tagged-template instance.
+
+<PlatformSection supported={["javascript.deno"]}>
+
+You need to manually wrap your `sql` instance with this helper:
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+<Alert>
+
+If you build your Worker with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, you don't need this helper. The plugin traces postgres.js automatically, as long as `postgres` is bundled and not marked as external.
+
+</Alert>
+
+</PlatformSection>
 
 ## Usage
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
+If you deploy with `wrangler` directly, wrap your `sql` instance with this helper. The handler must also be wrapped with `withSentry`, as shown in the <PlatformLink to="/install/wrangler/">Wrangler setup</PlatformLink>:
+
 ```javascript
 import postgres from "postgres";
 import * as Sentry from "@sentry/cloudflare";
 
-export default Sentry.withSentry((env) => ({ dsn: "__DSN__" }), {
+export default {
   async fetch(request, env, ctx) {
     const sql = Sentry.instrumentPostgresJsSql(postgres(env.DATABASE_URL));
 
@@ -28,7 +46,7 @@ export default Sentry.withSentry((env) => ({ dsn: "__DSN__" }), {
     const users = await sql`SELECT * FROM users WHERE id = ${userId}`;
     return Response.json(users);
   },
-});
+};
 ```
 
 </PlatformSection>

@@ -10,39 +10,24 @@ By default, traces are not propagated across [RPC calls](https://developers.clou
 
 That trailing argument is why propagation is opt-in per binding: only a Sentry-instrumented receiver strips it again. List the bindings whose receiver you know runs Sentry in `rpcTracePropagationBindings` (SDK version 10.72.0 or higher). Setting the option also turns on the receiver side, so a Worker that both calls and receives needs nothing else.
 
-<Alert>
-  If you build with the <PlatformLink to="/install/vite-plugin/">Sentry
-  Cloudflare Vite plugin</PlatformLink>, it derives the bindings that point at
-  classes in this Worker, so you only need to list bindings to other Workers.
-  See <PlatformLink to="/install/vite-plugin/#derived-rpc-trace-propagation">Derived
-  RPC Trace Propagation</PlatformLink>.
-</Alert>
+If you build with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, it derives the bindings that point at classes in this Worker, such as your own Durable Objects, and wraps those classes as receivers. Traces then connect across these RPC calls with no configuration. See <PlatformLink to="/install/vite-plugin/#derived-rpc-trace-propagation">Derived RPC Trace Propagation</PlatformLink>.
 
-**Worker Side (Caller):**
+Bindings to other Workers stay opt-in. List them in your `instrument.server.ts` file. The plugin adds the derived bindings to your list:
 
-```typescript
-import * as Sentry from "@sentry/cloudflare";
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
 
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    // Propagate to `env.MY_DURABLE_OBJECT` and every `env.SVC_*` binding
-    rpcTracePropagationBindings: ["MY_DURABLE_OBJECT", /^SVC_/],
-  }),
-  {
-    async fetch(request, env, ctx) {
-      const id = env.MY_DURABLE_OBJECT.idFromName("test");
-      const stub = env.MY_DURABLE_OBJECT.get(id);
-
-      // This RPC call will now propagate trace context
-      const result = await stub.sayHello("World");
-
-      return new Response(result);
-    },
-  }
-);
+export default defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  // Propagate to `env.AUTH_SERVICE` and every `env.SVC_*` binding
+  rpcTracePropagationBindings: ["AUTH_SERVICE", /^SVC_/],
+}));
 ```
+
+The Worker behind each listed binding must also run Sentry, so that it strips the trace argument again.
+
+If you deploy with `wrangler` directly, the plugin can't derive bindings. List every binding yourself, including bindings to your own Durable Objects, and set the option on the wrapped classes too, as shown in the <PlatformLink to="/install/wrangler/#instrument-durable-objects-workflows-and-agents">Wrangler setup</PlatformLink>.
 
 Strings match a binding name exactly, so `"DB"` does not also match `MY_DB`. Use a regular expression for pattern matching. For the full definition, see <PlatformLink to="/configuration/options/#rpcTracePropagationBindings">`rpcTracePropagationBindings`</PlatformLink>.
 
@@ -50,31 +35,7 @@ Strings match a binding name exactly, so `"DB"` does not also match `MY_DB`. Use
   A Worker that is not instrumented with Sentry never strips the trailing trace argument, so your method sees an extra parameter it was not called with. This is harmless for methods with fixed parameter lists, but changes behavior if your method uses rest parameters `(...args)` or reads `arguments.length`. Leave those bindings off the list.
 </Alert>
 
-**Durable Object Side (Receiver):**
-
-The receiver continues the trace it is sent, creates a span per RPC method, and strips the trailing argument, so your method signatures are unaffected. A Durable Object that only receives opts in with an empty list.
-
-```typescript
-import * as Sentry from "@sentry/cloudflare";
-
-class MyDurableObjectBase extends DurableObject<Env> {
-  sayHello(name: string): string {
-    return `Hello, ${name}!`;
-  }
-}
-
-export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
-  (env: Env) => ({
-    dsn: env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    // Receive traces over RPC, but propagate to nothing when calling out
-    rpcTracePropagationBindings: [],
-  }),
-  MyDurableObjectBase
-);
-```
-
-Listing bindings here does no harm, so you can reuse the caller's list and share one options object across the whole deployment. Every name on it already points at a Sentry receiver, and a binding the Durable Object never calls is simply never matched.
+The receiver continues the trace it is sent, creates a span per RPC method, and strips the trailing argument, so your method signatures are unaffected. Listing bindings on the receiver does no harm, so you can share one options object across the whole deployment.
 
 ### Custom Instrumentation
 

@@ -131,7 +131,7 @@ As of SDK version `11.0.0`, Sentry auto-instruments the most popular AI SDKs and
 
 A Cloudflare AI application can need three independent layers. Inspect the host, every model client it calls, and its conversation IDs instead of stopping after the first integration:
 
-1. **Instrument the host.** Use the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink>, `withSentry`, or <PlatformLink to="/agent-tracing/agents-sdk/">`instrumentAgentWithSentry`</PlatformLink>. Do not wrap the same Worker or Agent class twice.
+1. **Instrument the host.** Use the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink>, which wraps your Worker and your <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink> classes at build time. If you deploy with `wrangler` directly, wrap them yourself as shown in the <PlatformLink to="/install/wrangler/">Wrangler setup</PlatformLink>.
 2. **Instrument each model client.** Workers AI (`env.AI`) is automatic when the Sentry host wrapper supplies the instrumented `env`. For bundled provider SDKs, use Vite build-time instrumentation or the provider's manual wrapper. Follow the matching integration page for Vercel AI, LangChain, LangGraph, or another library.
 3. **Group the conversation.** The Agents SDK can infer a conversation ID. For other chat applications, including Workers AI without the Agents SDK, set one before the model or tool calls. See [Tracking Conversations](#tracking-conversations).
 
@@ -188,21 +188,16 @@ You can also set `recordInputs` / `recordOutputs` on a specific AI integration. 
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
-```javascript
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-    dataCollection: {
-      genAI: { inputs: false, outputs: false },
-    },
-  }),
-  {
-    async fetch(request, env, ctx) {
-      /* ... */
-    },
-  }
-);
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+}));
 ```
 
 On Cloudflare, control Vercel AI I/O with integration-level `record*` options or with `experimental_telemetry` per call. See each integration page.

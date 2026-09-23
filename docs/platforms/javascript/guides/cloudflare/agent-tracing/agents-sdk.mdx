@@ -6,37 +6,28 @@ description: "Instrument Cloudflare Agents SDK classes with Sentry and link chat
 
 <AvailableSince version="10.69.0" />
 
-When you build agents with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), wrap your agent classes with `instrumentAgentWithSentry`. Agents are Durable Objects under the hood, so the wrapper applies everything <PlatformLink to="/features/durableobject/">Durable Object instrumentation</PlatformLink> does (request transactions, alarms, WebSocket handlers, RPC trace propagation), plus agent-specific telemetry:
+When you build agents with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink> instruments your agent classes automatically. It reads the classes from your wrangler config and wraps each `Agent` from `agents`, `AIChatAgent` from `@cloudflare/ai-chat`, and `McpAgent` from `agents/mcp` at build time with the options from your `instrument.server.*` file. You don't have to change your code.
+
+If you deploy with `wrangler` directly, wrap each class yourself with `instrumentAgentWithSentry`, as shown in the <PlatformLink to="/install/wrangler/#instrument-durable-objects-workflows-and-agents">Wrangler setup</PlatformLink>.
+
+Agents are Durable Objects under the hood, so the agent instrumentation applies everything <PlatformLink to="/features/durableobject/">Durable Object instrumentation</PlatformLink> does (request transactions, alarms, WebSocket handlers, RPC trace propagation), plus agent-specific telemetry:
 
 - **Callable RPC spans**: a span for each `@callable()` method invoked over WebSocket, carrying the agent class and instance name as attributes.
 - **Automatic conversation IDs**: the SDK sets the conversation ID on every chat turn (`onChatMessage`) and every callable RPC call, so `gen_ai` spans group in <Link to="/product/agents/conversations/">Conversations</Link> without any `setConversationId` call.
 
 ```typescript
-import * as Sentry from "@sentry/cloudflare";
 import { Agent, callable } from "agents";
 
-class MyAgentBase extends Agent<Env> {
+// Each call to `greet` creates a span
+export class MyAgent extends Agent<Env> {
   @callable()
   async greet(name: string): Promise<string> {
     return `Hello, ${name}!`;
   }
 }
-
-// Export your named class as defined in your wrangler config
-export const MyAgent = Sentry.instrumentAgentWithSentry(
-  (env: Env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-    // Lets the agent continue a trace sent over RPC. See RPC Trace Propagation.
-    rpcTracePropagationBindings: [],
-  }),
-  MyAgentBase
-);
 ```
 
-The Worker that calls the agent names its binding in `rpcTracePropagationBindings`. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
-
-`instrumentAgentWithSentry` works with `Agent` from `agents`, `AIChatAgent` from `@cloudflare/ai-chat`, and `McpAgent` from `agents/mcp`. When you build with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, it detects and wraps Agent classes for you, so you only need this wrapper on a plain Wrangler build.
+To continue a trace that a Worker sends to the agent over RPC, see <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>. With the Vite plugin, bindings to agents in the same Worker are propagated automatically.
 
 ## Conversation IDs
 

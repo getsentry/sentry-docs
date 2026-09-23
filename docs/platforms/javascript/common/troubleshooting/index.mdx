@@ -695,7 +695,7 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
   </Expandable>
 
   <Expandable permalink title="My events have no release, or the wrong one">
-    The SDK resolves the release from the `release` option you pass, then the `SENTRY_RELEASE` environment variable, then the `CF_VERSION_METADATA.id` binding. The first one that is set wins. Reading the binding automatically needs `@sentry/cloudflare` version `10.35.0` or newer; on earlier versions, pass it as the `release` option yourself, as shown at the end of this entry.
+    The SDK resolves the release from the `release` option you pass, then the `SENTRY_RELEASE` environment variable, then the `CF_VERSION_METADATA.id` binding. The first one that is set wins. Reading the binding automatically needs `@sentry/cloudflare` version `10.35.0` or newer; on earlier versions, pass `release: env.CF_VERSION_METADATA?.id` to `withSentry` yourself.
 
     If your events carry no release, check that the binding is declared in your wrangler config:
 
@@ -718,14 +718,13 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
     To pin the release to the Cloudflare version ID no matter what else is set, pass it yourself:
 
-    ```javascript
-    Sentry.withSentry(
-      (env) => ({
-        dsn: "___PUBLIC_DSN___",
-        release: env.CF_VERSION_METADATA?.id,
-      })
-      // ...
-    );
+    ```typescript {filename:src/instrument.server.ts}
+    import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+    export default defineCloudflareOptions((env) => ({
+      dsn: "___PUBLIC_DSN___",
+      release: env.CF_VERSION_METADATA?.id,
+    }));
     ```
 
   </Expandable>
