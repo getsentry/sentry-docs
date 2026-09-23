@@ -2476,6 +2476,57 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/:guide/agent-tracing/flue/:path*',
     destination: '/platforms/javascript/guides/flue/',
   },
+  // The pre-rename names (ai-agent-monitoring, ai-agent-tracing) need their own
+  // rules: the generic rename redirects rewrite them onto agent-tracing/flue
+  // paths, which the rules above redirect again — a 2-hop chain.
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
   // Mastra lifted from the Agent Tracing integration page to a standalone guide.
   // Map older names directly to the guide to avoid redirect chains.
   {
