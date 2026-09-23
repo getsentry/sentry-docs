@@ -26,7 +26,25 @@ uv add sentry-sdk
 
 ## Configure
 
-<PlatformContent includePath="getting-started-config" />
+Add `LiteLLMIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.mistral import MistralIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        MistralIntegration(),
+    ],
+)
+```
 
 ## Verify
 
@@ -34,22 +52,27 @@ Verify that the integration works by making a chat request to Mistral.
 
 ```python
 import sentry_sdk
+from sentry_sdk.integrations.mistral import MistralIntegration
+
 from mistralai.client import Mistral
 
-sentry_sdk.init(...)  # same as above
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    integrations=[
+        MistralIntegration(),
+    ],
+)
 
-client = Mistral(api_key="(your Mistral API key)")
+client = Mistral(api_key="(your Mistral key)")
 
-def my_llm_stuff():
-    # or sentry_sdk.traces.start_span(name="The result of the AI inference", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="The result of the AI inference"):
-        response = client.chat.complete(
-            model="mistral-medium-latest",
-            messages=[
-                {"role": "user", "content": "What is the best French cheese?"}
-            ],
-        )
-        print(response.choices[0].message.content)
+response = client.chat.complete(
+    model="mistral-medium-latest",
+    messages=[
+        {"role": "user", "content": "What is the best French cheese?"}
+    ],
+)
 ```
 
 To try the async variant, use `client.chat.complete_async(...)` with `await`.
