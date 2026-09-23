@@ -1041,13 +1041,21 @@ const userDocsRedirects = [
   },
   {
     source:
-      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa)/install/esm/',
+      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/esm/',
     destination: '/platforms/javascript/guides/:guide/',
   },
   {
     source:
-      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa)/install/commonjs/',
+      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
+  },
+  {
+    source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',
+    destination: '/platforms/javascript/guides/nestjs/',
+  },
+  {
+    source: '/platforms/javascript/guides/nestjs/install/',
+    destination: '/platforms/javascript/guides/nestjs/',
   },
   {
     source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
