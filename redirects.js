@@ -982,6 +982,26 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
+    // Previous Nuxt setup method (--import)
+    source: '/platforms/javascript/guides/nuxt/install/cli-import/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // Previous Nuxt setup method (top-level import)
+    source: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // Previous Nuxt setup method (dynamic import)
+    source: '/platforms/javascript/guides/nuxt/install/dynamic-import/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // The Nuxt SDK links to this path in its Cloudflare build warning
+    source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+  },
+  {
     source: '/platforms/javascript/guides/connect/',
     destination: '/platforms/javascript/guides/node/',
   },
@@ -2373,8 +2393,7 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/cloudflare.md',
   },
   {
-    source:
-      '/platforms/javascript/guides/cloudflare/features/nodejs-compat/:path*',
+    source: '/platforms/javascript/guides/cloudflare/features/nodejs-compat/:path*',
     destination: '/platforms/javascript/guides/cloudflare/',
   },
   // honoIntegration was removed in v11 in favor of the @sentry/hono SDK.
@@ -2710,8 +2729,10 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/configuration/integrations/eventfilters/',
   },
   {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/inboundfilters/',
-    destination: '/platforms/javascript/guides/:guide/configuration/integrations/eventfilters/',
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/inboundfilters/',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/eventfilters/',
   },
   // agent-tracing-browser merged into agent-tracing
   {
