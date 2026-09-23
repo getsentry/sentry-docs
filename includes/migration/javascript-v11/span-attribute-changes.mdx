@@ -42,6 +42,10 @@ Legacy span attributes were replaced by their semantic-convention equivalents. U
 
 Transport values change from `ip_tcp` and `ip_udp` to `tcp` and `udp`. HTTP instrumentation reports the protocol as `network.protocol.name` and its version as `network.protocol.version`.
 
+HTTP header attribute names keep their hyphens instead of replacing them with underscores. For example, `http.request.header.user_agent` becomes `http.request.header.user-agent`. Header values are now string arrays, with one entry per value: `['gzip', 'deflate']` replaces `'gzip;deflate'`.
+
+Cookies are no longer split into attributes per cookie name. `http.request.header.cookie` and `http.request.header.set-cookie` now hold arrays of `name=value` entries in the order sent, such as `['session=[Filtered]', 'theme=dark']`. Sensitive values remain filtered, and Set-Cookie attributes such as `HttpOnly` are still omitted.
+
 On server-side HTTP spans, the `content-length` header is always reported as `http.request.body.size` and `http.response.body.size`, instead of switching to `http.request_body_size_uncompressed` when no encoding was present.
 
 </Expandable>
@@ -96,6 +100,9 @@ The Anthropic integration no longer sets `gen_ai.prompt`. The legacy Completions
 - On `ui.long_animation_frame` spans, `code.filepath` and `code.function` became `code.file.path` and `code.function.name`.
 - On `file` spans, `fs_error` became `error.type` and holds the syscall error code (`ENOENT`) instead of the full message.
 - The TanStack Router integration reports path parameters as `url.path.parameter.<key>` instead of `url.path.params.<key>`.
+- Vue Router's `navigation.route.id` became `router.navigation.route.id`, with the same matched route name.
+- AWS Lambda spans use `faas.invocation_id` instead of `faas.execution` for the request ID, and `cloud.resource_id` instead of `faas.id` for the invoked function ARN. Lambda `Invoke` spans from `awsIntegration` also use `faas.invocation_id`.
+- Koa router and middleware spans no longer set `koa.name`. Use `http.route` for the route and `code.function.name` for the middleware handler.
 - The Cloudflare-specific `sentry.cloudflare_tracer` attribute is no longer set.
 - Import attribute constants from `@sentry/core` directly. The `semanticAttributes` re-export was removed.
 - `sentry.source` (`SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`) was replaced by `sentry.segment.name.source`, which is only set on the root span.

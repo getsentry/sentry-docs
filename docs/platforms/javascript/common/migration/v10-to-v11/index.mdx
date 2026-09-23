@@ -391,8 +391,24 @@ Whatever the name no longer carries stays on an attribute, in both trace lifecyc
 | `db` (Mongoose)             | `mongoose.<Model>.<operation>` (`mongoose.BlogPost.findOne`)                        | The operation and collection (`findOne blogposts`), the database namespace, or `mongodb`                                                  |
 | `db` (Supabase)             | The query builder call and table (`select(...) from(users)`), or `auth <method>`    | The operation and table (`select users`), or the dotted auth method (`auth.signInWithPassword`)                                           |
 | `db.query` (Redis, ioredis) | The serialized command with redacted arguments (`set test-key [1 other arguments]`) | The operation and connection (`SET localhost:6379`), the operation and redis function for `FCALL`, or `redis`                             |
+| `browser.*` navigation timing                 | The document URL                                                                      | A static phase name, such as `DNS lookup`, `Request`, or `Load event`                                                                                  |
+| `function`                                    | Integration-specific, such as `serverAction/updateUser` or `LOADER routes/users.$id`  | `code.function.name`, such as `updateUser` or `loader`                                                                                                 |
+| `function` (Angular `TraceMethod`)            | `<getUser>` or `<unnamed>`                                                            | The decorator's `name`, or `Function execution`                                                                                                        |
+| `function` (SvelteKit)                        | The route or request path                                                             | The wrapped function's name, such as `load` or `GET`                                                                                                   |
+| `function` (Ember route hooks)                | The full route name                                                                   | The hook name, such as `beforeModel`, `model`, or `setupController`                                                                                    |
+| `function` (React Router route hooks)         | The route, raw URL path, or fetcher key                                               | The hook name, such as `loader`, `action`, `clientLoader`, or `fetcher`                                                                                |
+| `function` (NestJS `@OnEvent`)                | `event user.created`                                                                  | The event name, such as `user.created`                                                                                                                 |
+| `function` (TanStack Start server functions)  | `GET /_serverFn/abc123`                                                               | The function name, or `serverFn` until middleware resolves it                                                                                          |
+| `function.gcp`                                | The HTTP method and path, or trigger type                                             | The function name, or `Serverless function execution`                                                                                                  |
+| `function.aws`                                | The Lambda function name                                                              | Unchanged, with `Serverless function execution` as the fallback                                                                                        |
+| `ui.mount`, `ui.render`, `ui.update`, `ui.unmount` | `<UserList>`, `Vue <Root>`, `Application Render`, or `init`                           | The unwrapped component name, or `Component mount`, `Component render`, `Component update`, or `Component unmount`                                     |
+| `ui.task`                                     | `runloop`                                                                             | `UI task`                                                                                                                                              |
+| `ui.action.click`                             | The pageload or navigation span's name                                                | `router.navigation.route.id`, `url.template`, or `http.route`, in that order, or `Click`                                                               |
+| `ui.interaction.*`                            | The element's DOM path                                                                | The annotated component name, or `Click`, `Hover`, `Drag`, or `Key press`                                                                              |
+| `ui.webvital.lcp`                             | The LCP element's DOM path                                                            | The annotated component name, or `Largest contentful paint`                                                                                            |
+| `ui.webvital.cls`                             | The first layout-shift source's DOM path                                              | The annotated component name, or `Layout shift`                                                                                                        |
 
-A few consequences worth checking:
+In transaction mode, span names remain unchanged. A few consequences worth checking:
 
 - `useOperationNameForRootSpan` no longer renames the enclosing root span. The operations stay on that span's `sentry.graphql.operation` attribute.
 - `graphqlClientIntegration` no longer appends the operation to the outgoing request span name. It's on `graphql.operation.name` and `graphql.operation.type` instead.
@@ -403,6 +419,37 @@ A few consequences worth checking:
 - Supabase query spans drop the builder call from the name, and the modifiers stay on `db.query`. Auth spans are named after the method they call (`auth.admin.createUser`).
 - AWS SQS `SendMessage`, `SendMessageBatch`, and `ReceiveMessage`, and SNS `Publish`, are messaging spans now instead of `rpc` spans. Every other command on those clients stays `rpc`.
 - Child spans carry their service span's name in `sentry.segment.name`, so that changes with it.
+
+</Expandable>
+
+<Expandable title="Browser timing, function, and UI span details">
+
+Browser navigation timing spans use these names:
+
+| Span op                            | Name                     |
+| ---------------------------------- | ------------------------ |
+| `browser.cache`                    | `Cache lookup`           |
+| `browser.dns`                      | `DNS lookup`             |
+| `browser.connect`                  | `Connect`                |
+| `browser.tls_ssl`                  | `TLS handshake`          |
+| `browser.redirect`                 | `Redirect`               |
+| `browser.request`                  | `Request`                |
+| `browser.response`                 | `Response`               |
+| `browser.unload_event`             | `Unload event`           |
+| `browser.dom_content_loaded_event` | `DOMContentLoaded event` |
+| `browser.load_event`               | `Load event`             |
+
+The document URL stays on `url.full` in both trace lifecycles, subject to `dataCollection.urlQueryParams`. Update name-based filters to use that attribute.
+
+Framework function spans keep the previous name on `sentry.description`. For SvelteKit, this includes `wrapLoadWithSentry`, `wrapServerLoadWithSentry`, `wrapServerRouteWithSentry`, and spans from SvelteKit's own tracing. Match the route on `http.route`, or `url.template` for client-side universal loads, and the request path on `url.path`.
+
+GCP and Firebase function names come from `FUNCTION_TARGET` or `K_SERVICE`. The function name stays on `faas.name`, trigger details on `gcp.function.context.*`, and HTTP method and path on `http.request.method` and `url.path`. AWS Lambda spans fall back to `Serverless function execution` when neither the invocation context nor `AWS_LAMBDA_FUNCTION_NAME` provides a name. Their `sentry.segment.name.source` is now `component` in both trace lifecycles.
+
+Component spans keep their original names on `sentry.description`. Vue's `Application Render` becomes `Root`, and Ember's `init` becomes `Component mount`. Update filters matching `<UserList>` or `Vue <Root>` to use the new name or the description.
+
+Click idle spans copy `router.navigation.route.id`, `url.template`, `http.route`, `url.path`, and `url.full` from the route span. Event Timing and INP spans keep the DOM path on `browser.web_vital.inp.target` and the annotated component on `ui.component_name`, in both trace lifecycles. Match the target attribute if you previously filtered by DOM path.
+
+LCP and CLS DOM paths stay on `browser.web_vital.lcp.element` and `browser.web_vital.cls.source.1`. Long task and long animation frame names remain `Main UI thread blocked`.
 
 </Expandable>
 
@@ -461,7 +508,7 @@ Update anything that filters, groups, or alerts on span ops: dashboards, dynamic
 | Frontend routing                            | `ui.angular.routing`, `ui.sveltekit.routing`, `ui.ember.transition`                                                                  | `router`                                                 |
 | React, Vue, and Svelte component lifecycles | `ui.react.mount`/`render`/`update`, `ui.svelte.init`/`update`, Vue `render`/`update`/`mount`/`create`/`activate`/`unmount`/`destroy` | `ui.mount`, `ui.render`, `ui.update`, `ui.unmount`       |
 | Angular tracing decorators                  | `ui.angular.init`, `ui.angular.<method>`                                                                                             | `ui.mount`, `function`                                   |
-| Ember route hooks, runloop, and components  | `ui.ember.route.<hook>`, `ui.ember.runloop.<queue>`, `ui.ember.component.render`/`definition`/`init`                                 | `function`, `ui.task`, `ui.render`/`function`/`ui.mount` |
+| Ember route hooks, runloop, and components  | `ui.ember.route.<hook>`, `ui.ember.runloop.<queue>`, `ui.ember.component.render`/`definition`/`init`                                 | `function`, `ui.task`, `ui.render`/`ui.resolve`/`ui.mount` |
 | Browser paint entries                       | `paint`                                                                                                                              | `browser.paint`                                          |
 
 **Databases, cache, and messaging**
@@ -543,6 +590,10 @@ Legacy span attributes were replaced by their semantic-convention equivalents. U
 
 Transport values change from `ip_tcp` and `ip_udp` to `tcp` and `udp`. HTTP instrumentation reports the protocol as `network.protocol.name` and its version as `network.protocol.version`.
 
+HTTP header attribute names keep their hyphens instead of replacing them with underscores. For example, `http.request.header.user_agent` becomes `http.request.header.user-agent`. Header values are now string arrays, with one entry per value: `['gzip', 'deflate']` replaces `'gzip;deflate'`.
+
+Cookies are no longer split into attributes per cookie name. `http.request.header.cookie` and `http.request.header.set-cookie` now hold arrays of `name=value` entries in the order sent, such as `['session=[Filtered]', 'theme=dark']`. Sensitive values remain filtered, and Set-Cookie attributes such as `HttpOnly` are still omitted.
+
 On server-side HTTP spans, the `content-length` header is always reported as `http.request.body.size` and `http.response.body.size`, instead of switching to `http.request_body_size_uncompressed` when no encoding was present.
 
 </Expandable>
@@ -597,6 +648,9 @@ The Anthropic integration no longer sets `gen_ai.prompt`. The legacy Completions
 - On `ui.long_animation_frame` spans, `code.filepath` and `code.function` became `code.file.path` and `code.function.name`.
 - On `file` spans, `fs_error` became `error.type` and holds the syscall error code (`ENOENT`) instead of the full message.
 - The TanStack Router integration reports path parameters as `url.path.parameter.<key>` instead of `url.path.params.<key>`.
+- Vue Router's `navigation.route.id` became `router.navigation.route.id`, with the same matched route name.
+- AWS Lambda spans use `faas.invocation_id` instead of `faas.execution` for the request ID, and `cloud.resource_id` instead of `faas.id` for the invoked function ARN. Lambda `Invoke` spans from `awsIntegration` also use `faas.invocation_id`.
+- Koa router and middleware spans no longer set `koa.name`. Use `http.route` for the route and `code.function.name` for the middleware handler.
 - The Cloudflare-specific `sentry.cloudflare_tracer` attribute is no longer set.
 - Import attribute constants from `@sentry/core` directly. The `semanticAttributes` re-export was removed.
 - `sentry.source` (`SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`) was replaced by `sentry.segment.name.source`, which is only set on the root span.
@@ -691,6 +745,12 @@ If you used the v10 integration from `@sentry/node-core/light/otlp`: it moved to
 ## Instrumentation
 
 How the SDK hooks into your app changed, along with the way some frameworks are set up.
+
+### AI Integrations No Longer Trace Non-Inference Operations
+
+AI integrations now trace model invocations, tool calls, and agent invocations only. They no longer emit spans for Anthropic `messages.countTokens`, `models.retrieve`, or `models.get`, or LangGraph graph compilation with `gen_ai.create_agent`.
+
+Update dashboards and alerts that reference these spans. LangGraph's `gen_ai.invoke_agent` and `gen_ai.execute_tool` spans are unchanged.
 
 ### Channel-Based Instrumentation Is the Default
 
@@ -934,11 +994,12 @@ Sentry.init({
 BrowserTracing now automatically adds the <PlatformLink to="/configuration/integrations/webvitals/">WebVitals integration</PlatformLink>. Web Vitals changed as follows:
 
 - CLS and LCP are recorded as measurements on the pageload span, or as dedicated spans in stream mode.
+- LCP and CLS spans no longer set `browser.web_vital.lcp.report_event` or `browser.web_vital.cls.report_event`, including when soft-navigation reporting is disabled. Finalization timing is unchanged. Remove filters on these attributes from searches and dashboards.
 - When collected, INP is always sent as a Web Vital span, carrying its value in the `browser.web_vital.inp.value` attribute instead of as a span measurement. Update custom dashboards and alerts that read it as a measurement. Built-in dashboards do not need adjustments.
 - The `enableInp` option is deprecated. To disable INP, use `browserTracingIntegration({ webVitals: { ignore: ["inp"] } })`. The `ignore` array can also contain `"cls"` or `"lcp"` to skip those vitals.
 - To configure Web Vitals, pass `webVitals` options to BrowserTracing, or add `webVitalsIntegration()` explicitly. Explicit registration takes precedence over BrowserTracing's `webVitals` and `enableInp` options.
 - Soft-navigation vitals are enabled by default in stream mode on browsers that support the Soft Navigations API. Set `webVitals: { softNavigations: false }` to keep one set of vitals for the page lifetime.
-- BrowserTracing starts a navigation span after a back/forward-cache restore by default. Set `instrumentBfcacheRestore: false` to disable it. Web Vitals for restores are collected by default in stream mode when `instrumentBfcacheRestore` is enabled. Set `webVitals: { bfcacheNavigations: false }` to disable this collection.
+- BrowserTracing starts a navigation span after a back/forward-cache restore by default. Set `instrumentBfcacheRestore: false` to disable it. Web Vitals for restores are collected by default in stream mode when `instrumentBfcacheRestore` is enabled. Set `webVitals: { bfcacheNavigations: false }` to disable this collection. Restore vitals carry `browser.navigation.type: bfcache`. Filter by that attribute to analyze restores separately from page loads, since near-instant restores can lower combined aggregates.
 
 </PlatformCategorySection>
 
@@ -1055,6 +1116,10 @@ The top-level options of `withSentryConfig` that were deprecated in 10.30.0 were
 | `disableManifestInjection`              | `routeManifestInjection: false`         |
 | `_experimental.turbopackApplicationKey` | `applicationKey`                        |
 | `unstable_sentryWebpackPluginOptions`   | Set the plugin options as build options |
+
+### Tunnel Requests Run Through Middleware
+
+Webpack builds no longer bypass your middleware for `tunnelRoute` requests. If your middleware blocks unauthenticated requests globally, set `tunnelRoute` to a fixed string instead of `true` and exclude that path in your middleware `matcher` so Sentry events can reach the tunnel.
 
 ### Unified `reactComponentAnnotation` Option
 
@@ -1183,6 +1248,18 @@ The `assets` and `filesToDeleteAfterUpload` fields moved into `sourcemaps`.
 ### Vercel Deploys Use the Plain Environment Name
 
 Deploys that the bundler plugins create on Vercel use `VERCEL_TARGET_ENV` as their environment now, instead of `vercel-production` and `vercel-preview`. That matches the runtime default. If your events use a different environment, set `release.deploy.env` to the same value, or set `release.deploy` to `false` to opt out.
+
+### The webpack Plugin Entry Point Changed
+
+The Sentry webpack plugin requires webpack **5.1** or newer. The `@sentry/bundler-plugins/webpack5` entry point was removed. Update imports to `@sentry/bundler-plugins/webpack`:
+
+```js
+// Before
+import { sentryWebpackPlugin } from "@sentry/bundler-plugins/webpack5";
+
+// After
+import { sentryWebpackPlugin } from "@sentry/bundler-plugins/webpack";
+```
 
 ### The `unstable_` Bundler Plugin Options Were Removed
 
@@ -1331,6 +1408,8 @@ import { sentryRemixVitePlugin } from "@sentry/remix/vite";
 ```
 
 The plugin applies the build-time instrumentation transform now. If you added `sentryOrchestrionPlugin()` from `@sentry/server-utils/orchestrion/vite` yourself, remove it. Opt out with `sentryRemixVitePlugin({ buildTimeInstrumentation: false })`.
+
+The plugin also injects debug IDs and uploads source maps when you pass `org`, `project`, and `authToken`. Disable source-map processing with `sentryRemixVitePlugin({ sourcemaps: { disable: true } })`.
 
 `captureActionFormDataKeys` is an integration-level override now, so it opts in on its own and no longer needs `dataCollection.httpBodies` to include `'incomingRequest'`:
 
