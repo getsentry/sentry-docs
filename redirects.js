@@ -1107,6 +1107,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/kosuke/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/opsbrief/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1311,6 +1315,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/kawachai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/kosuke/',
     destination: '/integrations/third-party-integrations/',
   },
   {
