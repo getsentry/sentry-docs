@@ -2377,6 +2377,15 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/cloudflare/features/nodejs-compat/:path*',
     destination: '/platforms/javascript/guides/cloudflare/',
   },
+  // instrumentD1WithSentry was removed in v11; withSentry() instruments D1 bindings automatically.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/d1.md',
+    destination: '/platforms/javascript/guides/cloudflare/features/bindings.md',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/d1/:path*',
+    destination: '/platforms/javascript/guides/cloudflare/features/bindings/',
+  },
   // honoIntegration was removed in v11 in favor of the @sentry/hono SDK.
   {
     source:
