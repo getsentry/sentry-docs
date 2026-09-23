@@ -16,7 +16,7 @@ You can control most of the categories listed here with the <PlatformLink to="/c
 
 When you set `dataCollection` (even to an empty object `{}`), all categories are collected by default, with sensitive values filtered as described in the sections below.
 
-When you don't set `dataCollection`, the deprecated `sendDefaultPii` option determines what the SDK collects. With `sendDefaultPii: true`, all categories are collected. Without it, the SDK does not collect the user's IP address, generative AI content, or database query data, it turns off data taken from the body (such as tRPC input), and it applies stricter filtering to headers, cookies, and query parameters.
+When you don't set `dataCollection`, the deprecated `sendDefaultPii` option determines what the SDK collects. With `sendDefaultPii: true`, all categories are collected. Without it, the SDK does not collect the user's IP address, generative AI content, or database query data. It also turns off data taken from the body, such as tRPC input, and applies stricter filtering to headers, cookies, and query parameters.
 
 Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
@@ -32,8 +32,8 @@ Which headers are sent depends on the environment:
 - On the server, the headers of incoming requests are attached to error events and server spans. On Bun and Deno, the response headers of incoming requests are attached to server spans as well.
 - The headers of outgoing requests are not collected by default.
 
-Headers attached as span attributes and headers captured by the `httpClient` integration are filtered: the header names are kept, and the values of sensitive headers (names that match terms such as `auth`, `token`, or `password`) are replaced with `[Filtered]`.
-Request headers attached to error events on the server are sent with their original values in version 10 (version 11 filters them as well).
+The SDK filters headers attached as span attributes and headers captured by the `httpClient` integration: it keeps the header names and replaces the values of sensitive headers (names that match terms such as `auth`, `token`, or `password`) with `[Filtered]`.
+In version 10, request headers attached to error events on the server keep their original values; version 11 filters them as well.
 
 Use the `dataCollection.httpHeaders` option to control header collection. Set `dataCollection: { httpHeaders: { request: false, response: false } }` to disable it, or use `{ allow: [...] }` or `{ deny: [...] }` on `request` and `response` to restrict which header values are sent. Since version `10.75.0`, you can also set one value that applies to both directions, for example `dataCollection: { httpHeaders: false }`.
 
@@ -46,7 +46,7 @@ When you don't set `dataCollection`, header collection depends on the deprecated
 
 By default, cookie collection is enabled. On the server, the cookies of incoming requests are sent with error events and server spans. In the browser, the SDK doesn't send cookies unless you enable the `httpClient` integration, which captures the cookies of failed requests.
 
-Cookie values attached as span attributes or captured by `httpClient` are filtered: the values of sensitive cookies (like `token` or `key`) are replaced with `[Filtered]`. Cookies attached to error events on the server are sent with their original values in version 10 (version 11 filters them as well).
+The SDK filters cookie values attached as span attributes or captured by `httpClient`: it replaces the values of sensitive cookies (like `token` or `key`) with `[Filtered]`. In version 10, cookies attached to error events on the server keep their original values; version 11 filters them as well.
 
 To disable cookie collection, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
 
@@ -104,7 +104,7 @@ Sentry also has some additional [server-side data scrubbing](/security-legal-pii
 
 On the server side, the body of incoming requests is captured by default. In version 10, the `dataCollection.httpBodies` option doesn't control this; use the HTTP integration options described below to disable or limit it.
 
-The `dataCollection.httpBodies` option controls data taken from the body: tRPC input and Remix action form data (`"incomingRequest"`), and the results of Next.js server actions (`"outgoingResponse"`). All body types are included by default. Set `dataCollection: { httpBodies: [] }` to opt out:
+The `dataCollection.httpBodies` option controls data taken from the body: tRPC input and Remix action form data (`"incomingRequest"`), and the results of Next.js server actions (`"outgoingResponse"`). The option also accepts `"outgoingRequest"` and `"incomingResponse"`, but the SDK doesn't currently capture those body types. All types are included by default. Set `dataCollection: { httpBodies: [] }` to opt out:
 
 ```js
 Sentry.init({
@@ -133,7 +133,7 @@ The body size taken from the `content-length` header is always sent, even when t
 
 ## Server-Side Request Data
 
-On the server-side, the <PlatformLink to="/configuration/integrations/requestdata/">RequestData Integration</PlatformLink> captures incoming request data including cookies, headers, query strings, request body (`data`), URL, and user information. By default, all of these fields are captured. The IP address is included when `dataCollection.userInfo` is enabled.
+On the server-side, the <PlatformLink to="/configuration/integrations/requestdata/">RequestData Integration</PlatformLink> captures incoming request data including cookies, headers, query strings, request body (`data`), URL, and user information. The IP address is included when `dataCollection.userInfo` is enabled.
 
 </PlatformSection>
 
@@ -141,7 +141,7 @@ On the server-side, the <PlatformLink to="/configuration/integrations/requestdat
 
 By default, the SDK doesn't capture response bodies, with one exception: the results of Next.js server actions are collected when `dataCollection.httpBodies` includes `"outgoingResponse"`, which is the default. To disable this, set `dataCollection: { httpBodies: [] }` or provide a subset that excludes `"outgoingResponse"`.
 
-Response body sizes, based on the `content-length` header, may still be sent.
+The SDK may still send the response body size, taken from the `content-length` header.
 
 ## Source Context
 
