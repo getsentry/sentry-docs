@@ -63,7 +63,7 @@ deletion lifecycle.
 
 You can configure the allowed policies and maximum durations for each usecase
 in production. Objectstore rejects uploads outside those limits instead of
-silently changing them. Visit the Ops repository and search
+silently changing them. Visit the ops repository and search
 `k8s/services/objectstore/_values.yaml` for `usecases` to find the current
 configuration. Example:
 
@@ -168,9 +168,9 @@ to run and customize modes.
 
 ## Production Setup for Sentry Employees
 
-Before deploying a new workload, add its identifier and retention limits to
-the `usecases` map in the private
-[Objectstore service configuration](https://github.com/getsentry/ops/blob/master/k8s/services/objectstore/_values.yaml).
+Before deploying a new workload, visit the ops repository and add its
+identifier and retention limits to the `usecases` map in
+`k8s/services/objectstore/_values.yaml`.
 
 ### Sentry
 
@@ -184,21 +184,21 @@ this configuration automatically.
 The central Objectstore route already exists. Don't create another route for a
 new calling service. Instead:
 
-1. Provision a service-specific Objectstore signing key pair in the private
-   [managed secrets configuration](https://github.com/getsentry/ops/blob/master/terragrunt/regions/all/managed-secrets/objectstore/service.hcl).
+1. Provision a service-specific Objectstore signing key pair in
+   `terragrunt/regions/all/managed-secrets/objectstore/service.hcl` in the
+   ops repository.
    Grant access to the private key only to the calling service and access to
    the public key to Objectstore.
 2. Register the public key and its least-required permissions in the
-   [Objectstore service configuration](https://github.com/getsentry/ops/blob/master/k8s/services/objectstore/_values.yaml).
-3. Mount the private key into the calling service using the
-   [shared GCP secret integration](https://github.com/getsentry/ops/blob/master/k8s/services/_shared/secrets-gcp.yaml),
-   then configure the client with its key ID and mounted key path.
+   Objectstore service configuration at
+   `k8s/services/objectstore/_values.yaml`.
+3. Mount the private key into the calling service using the shared GCP secret
+   integration at `k8s/services/_shared/secrets-gcp.yaml`, then configure the
+   client with its key ID and mounted key path.
 4. Configure the client endpoint as `http://objectstore` and route the
    `objectstore` hostname through the service's Envoy sidecar. You can find
-   complete examples in
-   [Launchpad's values](https://github.com/getsentry/ops/blob/master/k8s/services/launchpad/_values.yaml)
-   and
-   [taskworker deployment](https://github.com/getsentry/ops/blob/master/k8s/services/launchpad/taskworker-deployment.yaml).
+   complete examples in `k8s/services/launchpad/_values.yaml` and
+   `k8s/services/launchpad/taskworker-deployment.yaml`.
 
 ## Use a Client
 
