@@ -40,6 +40,32 @@ const isSupported = (
 };
 
 /**
+ * Resolves the same `supported` / `notSupported` rules as `PlatformSection`
+ * for a platform or guide, walking its fallback chain.
+ */
+export function isPlatformSupported(
+  rootNode: DocNode,
+  platformOrGuide: Platform | PlatformGuide,
+  supported: string[] = [],
+  notSupported: string[] = []
+): boolean {
+  const platformsToSearch = getPlatformsWithFallback(rootNode, platformOrGuide);
+
+  let result: boolean | null = null;
+
+  for (const platformKey of platformsToSearch) {
+    result = isSupported(platformKey, supported, notSupported);
+    if (result !== null) {
+      break;
+    }
+  }
+  if (result === false) {
+    return false;
+  }
+  return result === true || supported.length === 0;
+}
+
+/**
  * Conditionally renders children based on the current platform or guide.
  *
  * @param supported - Array of platform/guide keys that should show this content
@@ -69,23 +95,7 @@ export function PlatformSection({
     return null;
   }
 
-  const platformsToSearch = getPlatformsWithFallback(rootNode, currentPlatformOrGuide);
-
-  let result: boolean | null = null;
-
-  for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
-    if (!platformKey) {
-      continue;
-    }
-    result = isSupported(platformKey, supported, notSupported);
-    if (result === false) {
-      return null;
-    }
-    if (result === true) {
-      break;
-    }
-  }
-  if (result === null && supported.length) {
+  if (!isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)) {
     return null;
   }
 

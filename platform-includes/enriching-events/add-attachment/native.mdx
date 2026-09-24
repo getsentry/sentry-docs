@@ -23,7 +23,7 @@ sentry_scope_t *scope = sentry_local_scope_new();
 sentry_scope_attach_file(scope, "/var/local.log");
 sentry_value_t event = sentry_value_new_event();
 /* ... */
-sentry_scope_capture_event(scope, event);
+sentry_scope_capture_event(scope, event, NULL);
 ```
 
 Alternately, use `bytes` to initialize an attachment. When doing so, you also need to specify a filename.
@@ -40,17 +40,17 @@ sentry_scope_t *scope = sentry_local_scope_new();
 sentry_scope_attach_bytes(scope, bytes, bytes_len, "local.bin");
 sentry_value_t event = sentry_value_new_event();
 /* ... */
-sentry_scope_capture_event(scope, event);
+sentry_scope_capture_event(scope, event, NULL);
 ```
 
 <Alert>When using the `crashpad` backend, it writes byte attachments to disk into a flat directory structure. If multiple buffers are attached with the same `filename`, it will internally ensure unique filenames for attachments by appending a unique suffix to the filename. Therefore, attachments may show up with altered names in Sentry.</Alert>
 
 ### Removing Scoped Attachments
 
-To remove attachments from the global scope, you can use the `sentry_attachment_t` handle returned by `sentry_attach_file`. After removing the attachment, the file will no longer be uploaded with any future events or crashes and the handle becomes invalid.
+To remove attachments from the global scope, you can use the `sentry_uuid_t` returned by `sentry_attach_file`. After removing the attachment, the file will no longer be uploaded with any future events or crashes and the UUID becomes invalid.
 
 ```c
-sentry_attachment_t *attachment = sentry_attach_file("/var/temp.log");
+sentry_uuid_t attachment_id = sentry_attach_file("/var/temp.log");
 /* ... */
-sentry_remove_attachment(attachment);
+sentry_remove_attachment(attachment_id);
 ```

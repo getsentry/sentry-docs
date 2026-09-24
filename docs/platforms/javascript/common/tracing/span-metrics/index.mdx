@@ -73,23 +73,10 @@ For detailed examples of how to implement span metrics in common scenarios, see 
 ## Adding Metrics to All Spans
 
 To consistently add metrics across all spans in your application, you can use the `beforeSendSpan` callback.
-Note that the property names differ between transaction mode (the default) and <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>:
+In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>, the callback receives span attributes in `span.attributes`.
+If you opt into transaction mode with `traceLifecycle: 'static'`, wrap the callback with `Sentry.withStaticSpan()` and use `span.data` instead:
 
-```javascript {tabTitle:Transaction Mode (Default)}
-Sentry.init({
-  beforeSendSpan(span) {
-    span.data = {
-      ...span.data,
-      "app.version": "1.2.3",
-      "environment.region": "us-west-2",
-    };
-
-    return span;
-  },
-});
-```
-
-```javascript {tabTitle:Stream Mode}
+```javascript {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 Sentry.init({
   beforeSendSpan(span) {
     span.attributes = {
@@ -100,6 +87,21 @@ Sentry.init({
 
     return span;
   },
+});
+```
+
+```javascript {tabTitle:Transaction Mode}
+Sentry.init({
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    span.data = {
+      ...span.data,
+      "app.version": "1.2.3",
+      "environment.region": "us-west-2",
+    };
+
+    return span;
+  }),
 });
 ```
 

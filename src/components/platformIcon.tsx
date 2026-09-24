@@ -68,6 +68,7 @@ import GodotSVG from 'platformicons/svg/godot.svg';
 import GoogleSVG from 'platformicons/svg/google.svg';
 import GrapheneSVG from 'platformicons/svg/graphene.svg';
 import GraphqlSVG from 'platformicons/svg/graphql.svg';
+import GroqSVG from 'platformicons/svg/groq.svg';
 import GrpcSVG from 'platformicons/svg/grpc.svg';
 import HapiSVG from 'platformicons/svg/hapi.svg';
 import HonoSVG from 'platformicons/svg/hono.svg';
@@ -89,8 +90,10 @@ import LitellmSVG from 'platformicons/svg/litellm.svg';
 import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
+import MastraSVG from 'platformicons/svg/mastra.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import McpSVG from 'platformicons/svg/mcp.svg';
+import MistralSVG from 'platformicons/svg/mistral.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
@@ -145,6 +148,7 @@ import TrytonSVG from 'platformicons/svg/tryton.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
 import UnrealSVG from 'platformicons/svg/unreal.svg';
+import VercelSVG from 'platformicons/svg/vercel.svg';
 import VisualbasicSVG from 'platformicons/svg/visual-basic.svg';
 import VueSVG from 'platformicons/svg/vue.svg';
 import WasmSVG from 'platformicons/svg/wasm.svg';
@@ -221,6 +225,7 @@ import GodotSVGLarge from 'platformicons/svg_80x80/godot.svg';
 import GoogleSVGLarge from 'platformicons/svg_80x80/google.svg';
 import GrapheneSVGLarge from 'platformicons/svg_80x80/graphene.svg';
 import GraphqlSVGLarge from 'platformicons/svg_80x80/graphql.svg';
+import GroqSVGLarge from 'platformicons/svg_80x80/groq.svg';
 import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import HapiSVGLarge from 'platformicons/svg_80x80/hapi.svg';
 import HonoSVGLarge from 'platformicons/svg_80x80/hono.svg';
@@ -242,8 +247,10 @@ import LitellmSVGLarge from 'platformicons/svg_80x80/litellm.svg';
 import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
+import MastraSVGLarge from 'platformicons/svg_80x80/mastra.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import McpSVGLarge from 'platformicons/svg_80x80/mcp.svg';
+import MistralSVGLarge from 'platformicons/svg_80x80/mistral.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
@@ -299,6 +306,7 @@ import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
 import UnrealSVGLarge from 'platformicons/svg_80x80/unreal.svg';
+import VercelSVGLarge from 'platformicons/svg_80x80/vercel.svg';
 import VisualbasicSVGLarge from 'platformicons/svg_80x80/visual-basic.svg';
 import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
@@ -310,7 +318,9 @@ import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 // copy is byte-identical to the upstream svg/expo.svg; once platformicons cuts
 // a release with it, bump the dependency and switch to
 // `platformicons/svg/expo.svg` (+ svg_80x80) like every other icon.
+import EveSVG from 'sentry-docs/icons/eve.svg';
 import ExpoSVG from 'sentry-docs/icons/expo.svg';
+import FlueSVG from 'sentry-docs/icons/flue.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -510,6 +520,10 @@ const formatToSVG = {
     sm: EmberSVG,
     lg: EmberSVGLarge,
   },
+  eve: {
+    sm: EveSVG,
+    lg: EveSVG,
+  },
   expo: {
     sm: ExpoSVG,
     lg: ExpoSVG,
@@ -537,6 +551,10 @@ const formatToSVG = {
   flask: {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
+  },
+  flue: {
+    sm: FlueSVG,
+    lg: FlueSVG,
   },
   flutter: {
     sm: FlutterSVG,
@@ -662,6 +680,10 @@ const formatToSVG = {
     sm: LanggraphSVG,
     lg: LanggraphSVGLarge,
   },
+  groq: {
+    sm: GroqSVG,
+    lg: GroqSVGLarge,
+  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -686,6 +708,10 @@ const formatToSVG = {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
   },
+  mastra: {
+    sm: MastraSVG,
+    lg: MastraSVGLarge,
+  },
   maui: {
     sm: MauiSVG,
     lg: MauiSVGLarge,
@@ -693,6 +719,10 @@ const formatToSVG = {
   mcp: {
     sm: McpSVG,
     lg: McpSVGLarge,
+  },
+  mistral: {
+    sm: MistralSVG,
+    lg: MistralSVGLarge,
   },
   mongodb: {
     sm: MongodbSVG,
@@ -915,6 +945,10 @@ const formatToSVG = {
     sm: VisualbasicSVG,
     lg: VisualbasicSVGLarge,
   },
+  vercel: {
+    sm: VercelSVG,
+    lg: VercelSVGLarge,
+  },
   vue: {
     sm: VueSVG,
     lg: VueSVGLarge,
@@ -972,13 +1006,17 @@ export const PLATFORM_TO_ICON = {
   dotnetfx: 'dotnetfx',
   electron: 'electron',
   elixir: 'elixir',
+  eve: 'eve',
   expo: 'expo',
+  flue: 'flue',
   flutter: 'flutter',
   font: 'font',
   fsharp: 'fsharp',
   git: 'git',
   go: 'go',
   'google-genai': 'gemini',
+  groq: 'groq',
+  'together-ai': 'default',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
   'go-fiber': 'fiber',
@@ -1024,9 +1062,11 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
+  'javascript-mastra': 'mastra',
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
@@ -1049,7 +1089,9 @@ export const PLATFORM_TO_ICON = {
   langgraph: 'langgraph',
   litellm: 'litellm',
   linux: 'linux',
+  mastra: 'mastra',
   mcp: 'mcp',
+  mistral: 'mistral',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
@@ -1099,6 +1141,7 @@ export const PLATFORM_TO_ICON = {
   'python-pydantic-ai': 'pydantic',
   'python-openai-agents': 'openai',
   'python-mcp': 'mcp',
+  'python-mistral': 'mistral',
   'python-google-genai': 'gemini',
   'python-litellm': 'litellm',
   'python-langgraph': 'langgraph',
@@ -1143,6 +1186,8 @@ export const PLATFORM_TO_ICON = {
   ue4: 'unreal',
   unreal: 'unreal',
   unrealengine: 'unreal',
+  vercel: 'vercel',
+  vercelai: 'vercel',
   visualbasic: 'visual-basic',
   windows: 'windows',
   xbox: 'xbox',

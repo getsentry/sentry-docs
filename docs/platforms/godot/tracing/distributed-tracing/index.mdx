@@ -1,0 +1,43 @@
+---
+title: Set Up Distributed Tracing
+description: "Learn how to connect operations in your Godot game with requests to your backend services."
+sidebar_order: 30
+---
+
+<AvailableSince version="2.2.0" />
+
+Distributed tracing connects work in your game with work in your backend. For example, a trace can show how much time a leaderboard request spends in the game, your API, and its database.
+
+## Connect Your Game and Backend
+
+The Godot SDK provides trace headers that you attach to outgoing requests manually. It doesn't instrument HTTP requests automatically.
+
+1. <PlatformLink to="/tracing/">Enable tracing</PlatformLink> in your game.
+2. Set up the [Sentry SDK](/platforms/) for your backend and enable its distributed tracing support.
+3. Follow <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">Custom Trace Propagation</PlatformLink> to attach headers from a span to your request.
+
+The receiving service uses these headers to continue the same trace:
+
+- `sentry-trace` identifies the trace, the sending span, and its sampling decision.
+- `baggage` carries additional trace metadata, such as the sample rate and organization ID.
+- `traceparent` provides the W3C trace context when you enable <PlatformLink to="/configuration/options/#propagate_traceparent">`propagate_traceparent`</PlatformLink>.
+
+Restrict headers to your own services with <PlatformLink to="/tracing/distributed-tracing/limiting-trace-propagation/">Limiting Trace Propagation</PlatformLink>. For Web exports, also configure your backend to <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">allow the headers through CORS</PlatformLink>.
+
+Make sure any proxies, gateways, or firewalls between your game and backend preserve the tracing headers.
+
+## Trace Duration
+
+The SDK starts a trace when it initializes. Spans and events share that trace until you start a new one. Ending a span finishes only that operation; it doesn't start a new trace.
+
+To separate unrelated work, such as game matches, <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/#start-a-new-trace">start a new trace</PlatformLink> before starting the next operation.
+
+## How Sampling Propagates
+
+The outgoing `sentry-trace` header carries the span's sampling decision so downstream services can honor it. With <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink> set to its default of `0.0`, the SDK still provides trace headers, but the span isn't sent and the headers mark the trace as unsampled.
+
+Use a sample rate of `1.0` in your game and backend while verifying the connection, then adjust it for production.
+
+## Next Steps
+
+<PageGrid />

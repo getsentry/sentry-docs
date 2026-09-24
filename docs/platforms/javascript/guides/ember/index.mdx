@@ -3,8 +3,8 @@ title: Ember
 description: "Learn how to set up Sentry in your Ember application and capture your first errors."
 sdk: sentry.javascript.ember
 categories:
-  - javascript
   - browser
+  - browser-only
 ---
 
 <PlatformContent includePath="getting-started-prerequisites" />
@@ -51,12 +51,12 @@ Choose the features you want to configure, and this guide will show you how:
 <SplitSection>
 <SplitSectionText>
 
-Configuration should happen as early as possible in your application's lifecycle. Add the following to your `app/app.js` file:
+Call `Sentry.init()` in `app/app.ts` before defining your `Application` class.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename:app.js}
+```typescript {filename:app/app.ts}
 import Application from "@ember/application";
 import Resolver from "ember-resolver";
 import loadInitializers from "ember-load-initializers";
@@ -66,13 +66,6 @@ import * as Sentry from "@sentry/ember";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
-  dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/ember/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
-  },
 
   // ___PRODUCT_OPTION_START___ session-replay
   integrations: [
@@ -110,11 +103,45 @@ export default class App extends Application {
   podModulePrefix = config.podModulePrefix;
   Resolver = Resolver;
 }
+
+loadInitializers(App, config.modulePrefix);
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+<OnboardingOption optionId="performance">
+
+### Enable Performance Instrumentation
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To capture page loads, navigation, classic component renders, and runloop timings, create an instance initializer that calls `instrumentAppInstancePerformance()`. The `tracesSampleRate` option in `Sentry.init()` controls how much tracing data Sentry captures.
+
+The SDK skips this instrumentation during FastBoot server rendering. To customize it, see <PlatformLink to="/configuration/ember-options/">Ember Options</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:app/instance-initializers/sentry-performance.ts}
+import type ApplicationInstance from "@ember/application/instance";
+import { instrumentAppInstancePerformance } from "@sentry/ember";
+
+export function initialize(appInstance: ApplicationInstance): void {
+  instrumentAppInstancePerformance(appInstance);
+}
+
+export default { initialize };
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
@@ -123,6 +150,10 @@ export default class App extends Application {
 ### Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
+
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
 
 ## Verify Your Setup
 
@@ -220,6 +251,8 @@ export default class ApplicationController extends Controller {
 
 </OnboardingOption>
 
+<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
+
 ### View Captured Data in Sentry
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
@@ -233,7 +266,7 @@ At this point, you should have integrated Sentry into your Ember application and
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
-- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/javascript/guides/ember/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/ember/configuration/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts

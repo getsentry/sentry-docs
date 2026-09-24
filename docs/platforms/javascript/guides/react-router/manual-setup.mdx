@@ -1,15 +1,8 @@
 ---
 title: "Manual Setup"
 sidebar_order: 1
-description: "Learn how to manually set up Sentry in your React Router app (v7+) and capture your first errors."
+description: "Learn how to manually set up Sentry in your React Router app (v7.15+) and capture your first errors."
 ---
-
-<Alert level="warning" title="Important">
-  This SDK is currently in **beta**. Beta features are still in progress and may
-  have bugs. Please reach out on
-  [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if
-  you have any feedback or concerns.
-</Alert>
 
 <PlatformContent includePath="sentry-init/manual-setup-callout" />
 
@@ -125,13 +118,6 @@ The `sentryOnError` handler integrates with React Router's [`onError` hook](http
 +Sentry.init({
 +  dsn: "___PUBLIC_DSN___",
 +
-+  dataCollection: {
-+    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-+    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
-+    // userInfo: false,
-+    // httpBodies: [],
-+  },
-+
 +  integrations: [
 +    // ___PRODUCT_OPTION_START___ performance
 +    // Registers and configures the Tracing integration,
@@ -197,7 +183,7 @@ Sentry's OpenTelemetry-based auto-instrumentation (loaded through `instrument.se
 - **Node 20:** Version \<20.19
 - **Node 22:** Version \<22.12
 
-This restriction **doesn't** affect tracing for loaders, actions, middleware, and request handlers. Those are instrumented through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (the `instrumentations` export shown below, React Router 7.15+), which works on all Node versions.
+This restriction **doesn't** affect tracing for loaders, actions, middleware, and request handlers. Those are instrumented through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (the `instrumentations` export shown below), which works on all Node versions.
 
 On unsupported Node versions, you'll only lose auto-instrumentation for lower-level operations such as outgoing HTTP requests and database queries.
 
@@ -221,12 +207,6 @@ import { nodeProfilingIntegration } from "@sentry/profiling-node";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
-  },
   // ___PRODUCT_OPTION_START___ profiling
 
   // Add our Profiling integration
@@ -257,7 +237,7 @@ Sentry.init({
 
 Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions, and export `instrumentations` to enable automatic tracing.
 
-Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (React Router 7.15+) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
+Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -282,7 +262,7 @@ Exporting `instrumentations` uses React Router's [instrumentation API](https://r
 +});
 
 +// Automatically instruments all server loaders, actions, middleware,
-+// and request handlers. Requires React Router 7.15+.
++// and request handlers.
 +export const instrumentations = [Sentry.createSentryServerInstrumentation()];
 
 // ... rest of your server entry
@@ -433,7 +413,7 @@ If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, im
 <SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
-+import './instrument.server';
++import '../instrument.server';
  import * as Sentry from '@sentry/react-router';
  import { createReadableStreamFromReadable } from '@react-router/node';
  import { renderToPipeableStream } from 'react-dom/server';
@@ -465,7 +445,7 @@ First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
-import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router';
+import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router/vite';
 import { defineConfig } from 'vite';
 
 const sentryConfig: SentryReactRouterBuildOptions = {
@@ -519,14 +499,14 @@ Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
 import type { Config } from "@react-router/dev/config";
-import { sentryOnBuildEnd } from "@sentry/react-router";
+import { sentryOnBuildEnd } from "@sentry/react-router/vite";
 
 export default {
   ssr: true,
   buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
     // ...
     // Call this at the end of the hook
-    +(await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
++    await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
   },
 } satisfies Config;
 ```
@@ -538,6 +518,10 @@ export default {
 ### Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
+
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
 
 ## Verify Your Setup
 
@@ -623,6 +607,8 @@ export default function ExamplePage() {
 
 </OnboardingOption>
 
+<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
+
 ### View Captured Data in Sentry
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
@@ -636,7 +622,7 @@ At this point, you should have integrated Sentry into your React Router Framewor
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
-- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
 - Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts

@@ -37,6 +37,12 @@ On Shopify Oxygen, never import anything directly from `@sentry/cloudflare`. Onl
 
 </Alert>
 
+<Alert level="warning" title="No request isolation">
+
+`wrapRequestHandler` doesn't isolate requests from each other. Scope data you set during a request, for example with `setTag` or `setUser`, can show up on events from other concurrent or later requests in the same isolate. Use `wrapRequestHandler` only on runtimes that can't enable `nodejs_compat`, such as Shopify Oxygen. For Remix on Cloudflare Workers, follow the [Remix on Cloudflare guide](/platforms/javascript/guides/cloudflare/frameworks/remix/) instead.
+
+</Alert>
+
 ```ts {filename:server.ts}
 import { wrapRequestHandler } from "@sentry/cloudflare/request";
 import { instrumentBuild } from "@sentry/remix/cloudflare";
@@ -139,6 +145,10 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
 });
 ```
+
+## Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
 
 ## Trace Propagation
 

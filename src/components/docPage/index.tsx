@@ -22,6 +22,7 @@ import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DevelopDocsHeader} from '../developDocsHeader';
 import {DocFeedback} from '../docFeedback';
+import {FeatureBadge} from '../featureBadge';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
@@ -112,7 +113,12 @@ export async function DocPage({
             </div>
             <div>
               <hgroup>
-                <h1>{frontMatter.title}</h1>
+                <h1>
+                  {frontMatter.title}
+                  {frontMatter.new && <FeatureBadge type="new" />}
+                  {frontMatter.beta && <FeatureBadge type="beta" />}
+                  {frontMatter.early_access && <FeatureBadge type="early_access" />}
+                </h1>
                 <h2>{frontMatter.description}</h2>
               </hgroup>
               {/* This exact id is important for Algolia indexing */}

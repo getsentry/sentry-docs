@@ -100,12 +100,6 @@ Sentry.init({
   // modify depending on your custom runtime config
   dsn: "___PUBLIC_DSN___",
 
-  dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/nuxt/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
-  },
   // ___PRODUCT_OPTION_START___ session-replay
 
   // Replay may only be enabled for the client-side
@@ -240,16 +234,16 @@ dotenv.config();
 <SplitSection>
 <SplitSectionText>
 
-**Sentry's server-side monitoring doesn't work in development mode**. To enable it, you first need to build your application and then load the Sentry server-side config using the `--import` flag when running your application.
+The SDK bundles `sentry.server.config.ts` into the Nitro server build and initializes Sentry when the server starts. This works in production and in development mode.
 
-Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</PlatformLink> docs for setup instructions.
+To learn more, see [Server-Side Installation](/platforms/javascript/guides/nuxt/install/).
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```
+```bash
 # Start your app after building your project with `nuxi build`
-node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+node .output/server/index.mjs
 ```
 
 </SplitSectionCode>
@@ -399,6 +393,10 @@ export default defineNuxtConfig({
 />
 </PlatformSection>
 
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
+
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
@@ -502,6 +500,8 @@ Then update the test page by including a new button that executes a function to 
 
 </OnboardingOption>
 
+<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
+
 <OnboardingOption optionId="performance" hideForThisOption>
   Once you have your test code in place, open the page in a browser and click
   the button to trigger an error.
@@ -509,11 +509,15 @@ Then update the test page by including a new button that executes a function to 
 
 <OnboardingOption optionId="performance">
 
-Once you have your test code in place, you need to build your project since Sentry's **server-side monitoring doesn't work in development** mode.
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Once you have your test code in place, build and run your project.
+
+</PlatformSection>
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 
-Then start your app and make sure to load Sentry on the server side by explicitly adding the Sentry server config in the build output via{" "} <PlatformLink to="/install/cli-import">`--import`</PlatformLink>.
+Once you have your test code in place, run your project in production mode (`nuxi build`, then `node .output/server/index.mjs`) or in development mode (`nuxt dev`).
 
 </PlatformSection>
 
@@ -544,7 +548,7 @@ At this point, you should have integrated Sentry into your Nuxt application and 
 Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
-- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/javascript/guides/nuxt/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/nuxt/configuration/)
 - Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
@@ -555,7 +559,7 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 
 - If you encountered issues with setting up Sentry manually, [try our installation wizard](/platforms/javascript/guides/nuxt/)
 - Find various support topics in <PlatformLink to="/troubleshooting">troubleshooting</PlatformLink>
-- Review alternative <PlatformLink to="/install">installation methods</PlatformLink>
+- Learn how the SDK <PlatformLink to="/install">initializes on the server side</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>
@@ -563,7 +567,7 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 </PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
-- Explore [practical guides](/guides/) on what to monitor, log, track, and investigate after setup
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/javascript/guides/nuxt/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/nuxt/configuration/)
 - Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
