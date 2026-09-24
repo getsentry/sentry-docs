@@ -136,11 +136,13 @@ SDKs **MUST** handle a failure as follows, not as if the callback had returned a
 
 Filters drop the item because a callback that failed part-way may have skipped a redaction. `before_send_span` keeps the span because it enriches spans; [`ignore_spans`](/sdk/telemetry/spans/filtering/) is what filters them.
 
+For a callback not listed here, SDKs **MUST** choose the outcome that sends less data. For example, if `before_capture_screenshot` fails, SDKs **MUST NOT** attach the screenshot.
+
 If `traces_sampler` fails, SDKs **MUST** use the parent's sampling decision. Without a parent, they **MUST** leave the decision to downstream SDKs, as with tracing disabled, and **MUST NOT** fall back to `traces_sample_rate`. If `profiles_sampler` fails, SDKs **MUST NOT** profile the transaction.
 
 SDKs **SHOULD** pass `before_send_span` a copy of the span, so they can emit the original if the callback fails. Otherwise, they **MUST** emit the span as it stands and skip the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
 
-A failure **MUST NOT** produce a billed event of any type. SDKs **MUST** record every item a failure drops with the [`callback_error`](/sdk/telemetry/client-reports/#discard-reasons) discard reason and the category in the table, so users can tell a failure apart from an explicit drop.
+A failure **MUST NOT** produce a billed event of any type. SDKs **MUST** record every item a failure drops with the [`callback_error`](/sdk/telemetry/client-reports/#discard-reasons) discard reason and the dropped item's category, so users can tell a failure apart from an explicit drop.
 
 </SpecSection>
 
