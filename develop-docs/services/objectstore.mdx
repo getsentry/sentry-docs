@@ -1,0 +1,254 @@
+---
+title: Objectstore
+description: Sentry's default platform for storing blobs, files, and other unstructured data.
+---
+
+## Objectstore Overview
+
+Objectstore is Sentry's preferred platform and the default choice for storing
+blobs, files, and other unstructured data. It provides an HTTP service backed
+by one or more storage systems, along with supported Python and Rust clients.
+This guide is for Sentry engineers adding Objectstore to a service or
+application.
+
+Use Objectstore for key-addressed data that doesn't need relational queries or
+content-based lookup. Each workload has a `usecase`, ordered scopes organize
+and isolate its objects, and a key identifies an object within that usecase and
+scope. The following sections explain how to make those choices and integrate
+with Objectstore.
+
+For more details, see:
+
+- [Objectstore repository](https://github.com/getsentry/objectstore) for the
+  implementation and standalone deployment instructions.
+- [Objectstore documentation](https://getsentry.github.io/objectstore/) for the
+  client API references.
+
+## Plan Your Use Case
+
+Plan how Objectstore should separate and manage your data before writing client
+code. These choices determine how objects are identified, retained, isolated,
+and accounted for.
+
+### 1. Choose a Usecase Identifier
+
+A usecase is the top-level namespace for a workload. Rate limits are isolated
+by usecase, and Objectstore reports separate Costs (COGS) breakdowns for each
+one.
+
+Choose a short, descriptive identifier using lowercase kebab-case, such as
+`attachments`. Treat the identifier as stable because changing it creates a
+different namespace.
+
+Keep objects with different semantics, access patterns, or operational limits
+in separate usecases, even when the same service owns them. When in doubt,
+create two or more usecases instead of combining different kinds of objects
+into one.
+
+### 2. Choose a Retention Policy
+
+Every usecase should define how long its objects remain in Objectstore:
+
+- **Time To Live (TTL):** Sets an expiration relative to when the object was
+  created. You can explicitly extend the expiration later.
+- **Time To Idle (TTI):** Similar to TTL but extends expiration automatically on
+  access. Objectstore renews the expiration in the background after a successful
+  read.
+- **Manual expiration:** Sets no expiration. Objectstore does not automatically
+  clean up the object, so a caller must explicitly delete it.
+
+**Prefer TTL by default for all data.** Manual expiration provides no automatic
+cleanup, so use it intentionally and only when the workload has a reliable
+deletion lifecycle.
+
+You can configure the allowed policies and maximum durations for each usecase
+in production. Objectstore rejects uploads outside those limits instead of
+silently changing them. Visit the Ops repository and search
+`k8s/services/objectstore/_values.yaml` for `usecases` to find the current
+configuration. Example:
+
+```yaml {filename:k8s/services/objectstore/_values.yaml}
+usecases:
+  attachments:
+    expiration:
+      manual:
+        allowed: false
+      tti:
+        allowed: false
+      max: "90d"
+```
+
+### 3. Design the Scope Hierarchy
+
+Scopes divide a usecase into tenant-specific namespaces. An object's full
+identity consists of its usecase, ordered scopes, and key, so the same key in a
+different scope identifies a different object.
+
+For normal Sentry integrations, scope objects first by organization and then by
+project. This hierarchy is also an authorization boundary: a token scoped to an
+organization can access its projects, while a token scoped to one project can't
+access other projects in the organization. Scope order matters, so use the same
+shape and order throughout a usecase.
+
+In Sentry, the `get_session` helper from `sentry.objectstore` automatically
+creates the organization and project scopes in the correct order. Use this
+helper instead of constructing the scopes manually.
+
+Put tenant identity in scopes instead of encoding it in the object key. Add
+narrower scope components only when they represent a stable subdivision of the
+data. Treat non-project and custom scope hierarchies as exceptions and define
+their shape deliberately before storing objects.
+
+Objectstore also uses scopes for finer-grained rate-limit and killswitch
+isolation.
+
+### 4. Choose an Object Key Strategy
+
+An object key identifies an object within its usecase and scopes. Keys behave
+like filenames or paths, but Objectstore treats them as opaque strings. The
+clients support a broad character set, including characters that require URL
+encoding, but prefer compact, URL-safe keys as a convention.
+
+Avoid sequential or increasing key prefixes, including timestamps. They make
+Objectstore's internal storage less efficient. When a caller-generated key
+needs an ordered component, place a high-entropy component before it.
+
+Choose how keys are created based on how the application tracks objects:
+
+- **Server-generated keys:** Prefer these when the application can store the
+  key returned by the upload. They avoid accidental collisions and work well
+  when objects are always looked up through another database.
+- **Caller-generated keys:** Use these for deterministic lookup, intentional
+  replacement, or idempotent uploads. If an upload succeeds but the response
+  is lost, retrying with the same key targets the same object instead of
+  creating another object whose key was never recorded.
+
+Writing to an existing caller-generated key replaces its payload and metadata;
+Objectstore does not return a collision error. Generate the key before the
+first upload and reuse it across retries, but make sure unrelated objects can't
+resolve to the same key.
+
+Don't put secrets or sensitive user data in keys. Keys can appear in URLs,
+traces, and error context.
+
+## Set Up Objectstore
+
+Setup depends on whether your code runs in Sentry or another service.
+
+### Use Objectstore in Sentry
+
+Objectstore is already configured as a Sentry dependency. You don't need to
+configure a local endpoint or authentication. Use the integration from
+`sentry.objectstore` instead of constructing a client directly.
+
+### Use Objectstore From Another Service
+
+Add Objectstore as a remote dependency in the service's devservices
+configuration, then include `objectstore` in every mode that needs it:
+
+```yaml {filename:devservices/config.yml}
+x-sentry-service-config:
+  dependencies:
+    objectstore:
+      description: Storage for files and blobs
+      remote:
+        repo_name: objectstore
+        branch: main
+        repo_link: https://github.com/getsentry/objectstore.git
+        mode: containerized
+  modes:
+    default: [objectstore]
+```
+
+The local dependency stores data on the filesystem and doesn't require
+authentication. Clients running on the host can reach it at
+`http://127.0.0.1:8888`. See the
+[devservices documentation](/development-infrastructure/devservices/) for how
+to run and customize modes.
+
+## Production Setup for Sentry Employees
+
+Before deploying a new workload, add its identifier and retention limits to
+the `usecases` map in the private
+[Objectstore service configuration](https://github.com/getsentry/ops/blob/master/k8s/services/objectstore/_values.yaml).
+
+### Sentry
+
+Code running in Sentry needs no additional production routing or authentication
+setup. The shared deployment already provides the Objectstore endpoint, Envoy
+routing, and signing key. After registering the usecase, `get_session` uses
+this configuration automatically.
+
+### Another Service
+
+The central Objectstore route already exists. Don't create another route for a
+new calling service. Instead:
+
+1. Provision a service-specific Objectstore signing key pair in the private
+   [managed secrets configuration](https://github.com/getsentry/ops/blob/master/terragrunt/regions/all/managed-secrets/objectstore/service.hcl).
+   Grant access to the private key only to the calling service and access to
+   the public key to Objectstore.
+2. Register the public key and its least-required permissions in the
+   [Objectstore service configuration](https://github.com/getsentry/ops/blob/master/k8s/services/objectstore/_values.yaml).
+3. Mount the private key into the calling service using the
+   [shared GCP secret integration](https://github.com/getsentry/ops/blob/master/k8s/services/_shared/secrets-gcp.yaml),
+   then configure the client with its key ID and mounted key path.
+4. Configure the client endpoint as `http://objectstore` and route the
+   `objectstore` hostname through the service's Envoy sidecar. You can find
+   complete examples in
+   [Launchpad's values](https://github.com/getsentry/ops/blob/master/k8s/services/launchpad/_values.yaml)
+   and
+   [taskworker deployment](https://github.com/getsentry/ops/blob/master/k8s/services/launchpad/taskworker-deployment.yaml).
+
+## Use a Client
+
+Objectstore provides official Python and Rust clients:
+
+- **Python:** Install the
+  [`objectstore-client` package from PyPI](https://pypi.org/project/objectstore-client/)
+  with `pip install objectstore-client`. See the
+  [Python client API](https://getsentry.github.io/objectstore/python/).
+- **Rust:** Install the
+  [`objectstore-client` crate from crates.io](https://crates.io/crates/objectstore-client)
+  with `cargo add objectstore-client`. See the
+  [Rust client API](https://getsentry.github.io/objectstore/rust/objectstore_client/).
+
+Both clients use the same core concepts:
+
+1. A **client** owns the endpoint, authentication, and connection management.
+   Create it once and reuse it.
+2. A **usecase** defines the stable workload identifier and defaults such as
+   retention and compression. Create one for each workload you planned above
+   and reuse it when creating sessions.
+3. A **session** binds a client to a usecase and scopes. Use the session to
+   upload, read, inspect, and delete objects.
+
+In Sentry, add the usecase identifier and its default retention policy to
+`UsecaseId`, then use `get_session` from `sentry.objectstore`. This uses the
+shared client configuration and automatically creates the organization and
+project scopes. In another service, instantiate these concepts directly with
+the official client.
+
+## Operational Considerations
+
+Keep these behaviors in mind when integrating Objectstore:
+
+- **Coordinate expiry:** An object should remain available for at least as long
+  as any database record that references it. Prefer a shared absolute deadline,
+  or add a buffer (e.g. 1h) when relative durations may be applied at different
+  times. Expiry extensions only move the deadline later.
+- **Choose compression deliberately:** The clients use Zstandard by default.
+  Disable it for already-compressed formats, and mark existing Zstandard
+  payloads as precompressed.
+- **Use resumable uploads when restarting is expensive:** They let an
+  interrupted upload continue from its last confirmed offset instead of
+  retransmitting the entire object. However, they add extra requests and upload
+  state management.
+- **Handle failures explicitly:** Configure an appropriate read timeout, treat
+  missing or expired objects as an expected result, and use bounded backoff for
+  rate limiting or temporary unavailability. Retry uploads only when the key or
+  upload protocol makes the operation idempotent.
+
+See the [Python client API](https://getsentry.github.io/objectstore/python/) and
+[Rust client API](https://getsentry.github.io/objectstore/rust/objectstore_client/)
+for the supported options.
