@@ -8,11 +8,11 @@ spec_depends_on:
   - id: sdk/foundations/client
     version: ">=3.0.0"
   - id: sdk/telemetry/client-reports
-    version: ">=1.2.0"
+    version: ">=1.24.0"
 spec_changelog:
   - version: 1.1.0
     date: 2026-08-31
-    summary: Added callback error isolation requirements, the per-callback failure matrix, and client report obligations for callback failures; widened scope to all user-provided callbacks
+    summary: Added callback error isolation requirements, the per-callback failure matrix, and the `callback_error` client report for dropped items; widened scope to all user-provided callbacks
   - version: 1.0.1
     date: 2026-08-03
     summary: Clarified before_send position relative to the session update; requires client spec 3.0.0
@@ -120,17 +120,17 @@ On failure, SDKs **MUST** emit an error-level [internal log](/sdk/foundations/cl
 
 SDKs **MUST** handle a failure as follows, not as if the callback had returned a value:
 
-| Callback | On failure | Client report |
+| Callback | On failure | Client report category |
 |---|---|---|
-| `before_send` | Drop the event | `before_send`, category `error` |
-| `before_send_transaction` | Drop the transaction | `before_send`, category `transaction` (plus [span outcomes](/sdk/telemetry/client-reports/#span-outcomes)) |
-| `before_send_log` | Drop the log | `before_send`, category `log_item` |
-| `before_send_metric` | Drop the metric | `before_send`, category `trace_metric` |
-| `before_send_feedback` | Drop the feedback | `before_send`, category `feedback` |
-| `before_send_check_in` | Drop the check-in | `before_send`, category `monitor` |
+| `before_send` | Drop the event | `error` |
+| `before_send_transaction` | Drop the transaction | `transaction` (plus [span outcomes](/sdk/telemetry/client-reports/#span-outcomes)) |
+| `before_send_log` | Drop the log | `log_item` |
+| `before_send_metric` | Drop the metric | `trace_metric` |
+| `before_send_feedback` | Drop the feedback | `feedback` |
+| `before_send_check_in` | Drop the check-in | `monitor` |
 | `before_breadcrumb` | Drop the breadcrumb | None |
 | `before_send_span` | Emit the span, discarding the return value | None |
-| Event processor | Drop the event | `event_processor`, category of the item |
+| Event processor | Drop the event | Category of the item |
 | `traces_sampler` | Use the parent's decision, otherwise defer | None |
 | `profiles_sampler` | Don't profile the transaction | None |
 
@@ -140,7 +140,7 @@ If `traces_sampler` fails, SDKs **MUST** use the parent's sampling decision. Wit
 
 SDKs **SHOULD** pass `before_send_span` a copy of the span, so they can emit the original if the callback fails. Otherwise, they **MUST** emit the span as it stands and skip the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
 
-A failure **MUST NOT** produce a billed event of any type. A dropped item **MUST** be reported exactly as it is on an explicit drop, and **MUST NOT** use a reason the callback could not otherwise produce; isolating a callback without reporting the loss is a conformance failure.
+A failure **MUST NOT** produce a billed event of any type. SDKs **MUST** record every item a failure drops with the [`callback_error`](/sdk/telemetry/client-reports/#discard-reasons) discard reason and the category in the table, so users can tell a failure apart from an explicit drop.
 
 </SpecSection>
 
