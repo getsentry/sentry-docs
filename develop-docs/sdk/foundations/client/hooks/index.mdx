@@ -116,35 +116,11 @@ A user callback failing due to a recoverable error **MUST NOT** break the host a
 
 SDKs **SHOULD NOT** recover from intentionally fatal exits, such as Python's `KeyboardInterrupt` and `SystemExit`, Java `Error` subclasses like `OutOfMemoryError`, Rust panics, or C aborts. Recovering from them hides the underlying failure. SDKs whose callback types can't raise recoverable errors, checked at compile time, don't need a runtime boundary.
 
-On failure, SDKs **MUST** emit an error-level [internal log](/sdk/foundations/client/configuration/#debug-mode) naming the callback, **MUST NOT** re-throw, and **MUST NOT** capture the error as an event or attach it to any telemetry. Like any internal log, it's only printed in debug mode; the `callback_error` client report is the signal in production. See [Never capture your own exceptions](/sdk/getting-started/principles/#never-capture-your-own-exceptions).
-
-SDKs **SHOULD** offer an opt-in strict mode, disabled by default. In strict mode, a callback failure **MUST** propagate as an unhandled error of the host application instead of being isolated. SDKs **MUST NOT** pass the event reporting that error through the callback that failed.
-
-SDKs **MUST** handle a failure as follows, not as if the callback had returned a value:
-
-| Callback | On failure | Client report category |
-|---|---|---|
-| `before_send` | Drop the event | `error` |
-| `before_send_transaction` | Drop the transaction | `transaction` (plus [span outcomes](/sdk/telemetry/client-reports/#span-outcomes)) |
-| `before_send_log` | Drop the log | `log_item` (plus [`log_byte`](/sdk/telemetry/client-reports/#log-byte-outcomes)) |
-| `before_send_metric` | Drop the metric | `trace_metric` (plus [`trace_metric_byte`](/sdk/telemetry/client-reports/#metric-byte-outcomes)) |
-| `before_send_feedback` | Drop the feedback | `feedback` |
-| `before_send_check_in` | Drop the check-in | `monitor` |
-| `before_breadcrumb` | Drop the breadcrumb | None |
-| `before_send_span` | Emit the original span | None |
-| User-registered event processor | Drop the event | Category of the item |
-| `traces_sampler` | Use the parent's decision, otherwise defer | None |
-| `profiles_sampler` | Don't profile the transaction | None |
-
-Filters drop the item because a callback that failed part-way may have skipped a redaction. `before_send_span` keeps the span because it enriches spans; [`ignore_spans`](/sdk/telemetry/spans/filtering/) is what filters them.
-
-For a callback not listed here, SDKs **MUST** choose the outcome that sends less data. For example, if `before_capture_screenshot` fails, SDKs **MUST NOT** attach the screenshot.
-
-If `traces_sampler` fails, SDKs **MUST** use the parent's sampling decision. Without a parent, they **MUST** leave the decision to downstream SDKs, as with tracing disabled, and **MUST NOT** fall back to `traces_sample_rate`. If `profiles_sampler` fails, SDKs **MUST NOT** profile the transaction.
-
-SDKs **SHOULD** pass `before_send_span` a copy of the span, so they can emit the original if the callback fails. Otherwise, they **MUST** emit the span as it stands and skip the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
-
-A failure **MUST NOT** produce a billed event of any type. SDKs **MUST** record every item a failure drops with the [`callback_error`](/sdk/telemetry/client-reports/#discard-reasons) discard reason and the dropped item's category, so users can tell a failure apart from an explicit drop.
+When a user-provided callback fails due to a recoverable error, SDKs:
+  - **MUST** emit an error-level [internal log](/sdk/foundations/client/configuration/#debug-mode) naming the callback.
+  - **MUST NOT** re-throw or capture the error as an event.
+  - **MUST** assume that the callback would have dropped/scrubbed as much data as possible.
+  - **SHOULD** record a client report with reason `callback_error` for all data dropped as a result of the callback error.
 
 </SpecSection>
 
