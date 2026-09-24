@@ -1,0 +1,144 @@
+---
+title: LangGraph
+description: "Adds instrumentation for the LangGraph SDK. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires SDK version `11.0.0` or higher. On earlier versions, see the [Agent Tracing](/platforms/javascript/agent-tracing/) setup for your SDK.
+
+</Alert>
+
+_Import name: `Sentry.langGraphIntegration`_
+
+This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `langGraphIntegration` adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.langGraphIntegration()],
+});
+```
+
+## Supported Operations
+
+By default, tracing support is added to the following LangGraph operations:
+
+- **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
+- **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
+
+## Supported Versions
+
+- `@langchain/langgraph`: `>=0.2.0 <2.0.0`
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to LangGraph operations (such as messages and state data passed to the graph).
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from LangGraph operations (such as generated responses, agent outputs, and final state).
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.langGraphIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+## Manual Instrumentation
+
+_Import names: `Sentry.instrumentStateGraph`, `Sentry.instrumentCreateReactAgent`_
+
+If your application does not use automatic instrumentation, wrap your agent after setting up Sentry. Two helpers are available, depending on how you build your agent:
+
+- **`instrumentStateGraph`**: for graphs you build yourself with `StateGraph`. Call it on the graph **before** calling `.compile()`.
+- **`instrumentCreateReactAgent`**: for LangGraph's prebuilt `createReactAgent`. Wrap the factory, then use the wrapped version exactly like `createReactAgent`. This also captures the model and wraps tools, so you get `execute_tool` spans as well.
+
+Both accept the same `recordInputs` and `recordOutputs` options as the integration.
+
+Instrumenting a `StateGraph`:
+
+```javascript
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  StateGraph,
+  MessagesAnnotation,
+  START,
+  END,
+} from "@langchain/langgraph";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+
+// Create LLM call
+const llm = new ChatOpenAI({
+  modelName: "gpt-4o",
+  apiKey: "your-api-key",
+});
+
+async function callLLM(state) {
+  const response = await llm.invoke(state.messages);
+
+  return {
+    messages: [...state.messages, response],
+  };
+}
+
+// Create the agent
+const agent = new StateGraph(MessagesAnnotation)
+  .addNode("agent", callLLM)
+  .addEdge(START, "agent")
+  .addEdge("agent", END);
+
+// Instrument the graph before compiling
+Sentry.instrumentStateGraph(agent, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+const graph = agent.compile({ name: "my_agent" });
+
+// Invoke the agent
+const result = await graph.invoke({
+  messages: [
+    new SystemMessage("You are a helpful assistant."),
+    new HumanMessage("Hello!"),
+  ],
+});
+```
+
+Instrumenting a prebuilt `createReactAgent`:
+
+```javascript
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+// Instrument createReactAgent, then use the wrapped version in its place
+const instrumentedCreateReactAgent =
+  Sentry.instrumentCreateReactAgent(createReactAgent);
+
+const agent = instrumentedCreateReactAgent({ llm, tools });
+```

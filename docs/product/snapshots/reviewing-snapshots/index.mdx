@@ -33,12 +33,14 @@ Sentry compares the snapshot images from upload 2 against the snapshots from upl
 
 You can set a diff threshold to ignore small pixel changes. The diff threshold is a float between `0.0` and `1.0`. Sentry reports an image as changed only when the share of changed pixels is greater than the threshold. For example, `diff_threshold: 0.01` ignores changes of 1% or less.
 
-You can Set diff thresholds in two ways:
+You can set diff thresholds in two ways:
 
 1. Globally, for the whole upload: `sentry-cli snapshots upload ./snapshots --app-id web-frontend --diff-threshold 0.01`
 2. Locally, for one snapshot: add `diff_threshold` to the snapshot's [JSON metadata](/product/snapshots/uploading-snapshots/#json-metadata) file
 
 If a global value and local value are set, the local value takes precedence.
+
+The diff threshold also applies to [auto-approval](#auto-approval).
 
 ## Status Checks
 
@@ -50,7 +52,7 @@ For setup instructions, see [Integrating Into CI](/product/snapshots/integrating
 
 ### Status Check Settings
 
-In your project settings, you can configure status check behavior to conditionally fail based on the number of modified, removed, added, or renamed snapshots.
+In your [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/snapshots/), you can configure status check behavior to conditionally fail based on the number of modified, removed, added, or renamed snapshots.
 
 ![Snapshot status check configuration options](../img/status_check_settings.png)
 
@@ -102,11 +104,24 @@ Clicking **Approve** in the Sentry UI
 
 ![Example of the Sentry UI approval button](../img/approval_button_ui.png)
 
-Approving in either place will resolve the failing check. If a new commit is pushed after approval, Sentry re-approves the check when the snapshot changes match the previously approved changes. If they differ, the check requires approval again.
+Approving in either place will resolve the failing check.
+
+### Auto-Approval
+
+After you approve an upload, Sentry auto-approves later uploads on the same pull request if the changes match. Your approval stays in place after a rebase or a new commit.
+
+Sentry compares the new upload to the last upload that a person approved. The changes match when:
+
+- The same snapshots are added, removed, renamed, and modified.
+- Each image differs from the approved image by no more than its [diff threshold](#diff-thresholds). With no diff threshold, the images must be identical.
+
+For example, with `diff_threshold: 0.05`, an approved image can change by up to 5% and stay approved.
+
+If the changes do not match, the upload requires approval again.
 
 ## Settings
 
-Configure snapshot behavior in **Project Settings > Mobile Builds > Snapshots**.
+Configure snapshot behavior in [**Project Settings > Mobile Builds > Snapshots**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/snapshots/).
 
 | Setting                   | Default | Description                                           |
 | ------------------------- | :-----: | ----------------------------------------------------- |

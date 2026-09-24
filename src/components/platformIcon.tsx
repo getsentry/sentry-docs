@@ -68,6 +68,7 @@ import GodotSVG from 'platformicons/svg/godot.svg';
 import GoogleSVG from 'platformicons/svg/google.svg';
 import GrapheneSVG from 'platformicons/svg/graphene.svg';
 import GraphqlSVG from 'platformicons/svg/graphql.svg';
+import GroqSVG from 'platformicons/svg/groq.svg';
 import GrpcSVG from 'platformicons/svg/grpc.svg';
 import HapiSVG from 'platformicons/svg/hapi.svg';
 import HonoSVG from 'platformicons/svg/hono.svg';
@@ -92,6 +93,7 @@ import LoguruSVG from 'platformicons/svg/loguru.svg';
 import MastraSVG from 'platformicons/svg/mastra.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import McpSVG from 'platformicons/svg/mcp.svg';
+import MistralSVG from 'platformicons/svg/mistral.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
@@ -223,6 +225,7 @@ import GodotSVGLarge from 'platformicons/svg_80x80/godot.svg';
 import GoogleSVGLarge from 'platformicons/svg_80x80/google.svg';
 import GrapheneSVGLarge from 'platformicons/svg_80x80/graphene.svg';
 import GraphqlSVGLarge from 'platformicons/svg_80x80/graphql.svg';
+import GroqSVGLarge from 'platformicons/svg_80x80/groq.svg';
 import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import HapiSVGLarge from 'platformicons/svg_80x80/hapi.svg';
 import HonoSVGLarge from 'platformicons/svg_80x80/hono.svg';
@@ -247,6 +250,7 @@ import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
 import MastraSVGLarge from 'platformicons/svg_80x80/mastra.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import McpSVGLarge from 'platformicons/svg_80x80/mcp.svg';
+import MistralSVGLarge from 'platformicons/svg_80x80/mistral.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
@@ -676,6 +680,10 @@ const formatToSVG = {
     sm: LanggraphSVG,
     lg: LanggraphSVGLarge,
   },
+  groq: {
+    sm: GroqSVG,
+    lg: GroqSVGLarge,
+  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -711,6 +719,10 @@ const formatToSVG = {
   mcp: {
     sm: McpSVG,
     lg: McpSVGLarge,
+  },
+  mistral: {
+    sm: MistralSVG,
+    lg: MistralSVGLarge,
   },
   mongodb: {
     sm: MongodbSVG,
@@ -1003,6 +1015,8 @@ export const PLATFORM_TO_ICON = {
   git: 'git',
   go: 'go',
   'google-genai': 'gemini',
+  groq: 'groq',
+  'together-ai': 'default',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
   'go-fiber': 'fiber',
@@ -1048,6 +1062,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
@@ -1076,6 +1091,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   mastra: 'mastra',
   mcp: 'mcp',
+  mistral: 'mistral',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
@@ -1125,6 +1141,7 @@ export const PLATFORM_TO_ICON = {
   'python-pydantic-ai': 'pydantic',
   'python-openai-agents': 'openai',
   'python-mcp': 'mcp',
+  'python-mistral': 'mistral',
   'python-google-genai': 'gemini',
   'python-litellm': 'litellm',
   'python-langgraph': 'langgraph',

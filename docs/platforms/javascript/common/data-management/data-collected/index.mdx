@@ -12,9 +12,9 @@ The category types and amount of data collected vary, depending on the integrati
 
 <Expandable title="Options to control data collection">
 
-You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink>, which lets you opt in or out of each data category individually. The <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii` option</PlatformLink> is still supported, but deprecated as of version `10.54.0`.
+You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink>, which lets you opt in or out of each data category individually.
 
-How much data the SDK collects by default depends on which option you use. Without `dataCollection` (and with `sendDefaultPii` unset or `false`), the SDK collects conservatively, and the defaults described on this page apply. As soon as you pass a `dataCollection` object, the categories you don't set explicitly fall back to their `dataCollection` defaults, which are more permissive. For example, cookies, query parameters (with sensitive values scrubbed), and AI message content is then collected unless you opt out. Setting `sendDefaultPii: true` is equivalent to enabling all `dataCollection` categories. If both are set, `sendDefaultPii` is ignored.
+By default, the SDK collects all `dataCollection` categories and scrubs values whose keys match the built-in sensitive denylist. To collect less, opt out of a category or restrict it.
 
 Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
@@ -28,15 +28,13 @@ Use the `dataCollection.httpHeaders` option to control this. For example, set `d
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies. When using `dataCollection`, however, cookies are collected with sensitive values (like `token` or `key`) scrubbed. Opt out by setting `dataCollection: { cookies: false }`.
-
-To collect cookies when not using `dataCollection`, set the deprecated `sendDefaultPii: true` in `Sentry.init()`. To disable cookie collection when using `dataCollection`, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
+By default, the Sentry SDK sends cookies and scrubs sensitive values (like `token` or `key`). To disable cookie collection, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
 
 ## Information About Logged-in User
 
-When using `dataCollection`, the SDK automatically populates user identity fields (`user.id`, `user.email`, `user.username`) from instrumentation. To disable this, set `dataCollection: { userInfo: false }`.
+By default, the SDK populates user identity fields (`user.id`, `user.email`, `user.username`) from instrumentation. To disable this, set `dataCollection: { userInfo: false }`.
 
-Without `dataCollection` (and with `sendDefaultPii` unset or `false`), user identity fields are not sent automatically. Some integrations (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) may still send data like the user ID, username, and email address when explicitly configured.
+With `userInfo: false`, user identity fields are not sent automatically. Some integrations (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) may still send data like the user ID, username, and email address when explicitly configured.
 
 <PlatformSection supported={["javascript.electron"]}>
   ### Local Device User
@@ -46,14 +44,13 @@ Without `dataCollection` (and with `sendDefaultPii` unset or `false`), user iden
 
 ## Users' IP Address and Location
 
-When using `dataCollection`, the SDK sends the user's IP address by default. To disable it, set <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: false }`</PlatformLink>.
+By default, the SDK sends the user's IP address. To disable it, set <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: false }`</PlatformLink>.
 
-Without `dataCollection` (and with `sendDefaultPii` unset or `false`), the user's IP address is not sent.
 In some integrations such as [`handleRequest`](/platforms/javascript/guides/astro/#customize-server-instrumentation) in Astro, the user's IP address can also be sent by enabling `trackClientIp`.
 
 If sending the IP address is enabled we will try to infer the IP address or use the IP address provided by `ip_address` in <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>. If you set `ip_address: null`, the IP address won't be inferred.
 
-Even when this is disabled, IP addresses can still reach Sentry through collected HTTP headers, cookies, or query parameters (for example, the `X-Forwarded-For` header). If you use `dataCollection`, add these terms to the partially-matched deny lists for those categories so their values are filtered:
+Even when this is disabled, IP addresses can still reach Sentry through collected HTTP headers, cookies, or query parameters (for example, the `X-Forwarded-For` header). Add these terms to the partially-matched deny lists for those categories so their values are filtered:
 
 ```JavaScript
 Sentry.init({
@@ -74,13 +71,13 @@ The full request URL of outgoing and incoming HTTP requests is **always sent to 
 
 By default, the full request query string of outgoing and incoming HTTP requests is sent to Sentry. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
 
-Use the `dataCollection.urlQueryParams` option to control this. Set it to `false` to disable collection entirely, or use `{ allow: [...] }` / `{ deny: [...] }` to filter which values are sent. When `dataCollection` is used, values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
+Use the `dataCollection.urlQueryParams` option to control this. Set it to `false` to disable collection entirely, or use `{ allow: [...] }` / `{ deny: [...] }` to filter which values are sent. Values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
 
 Sentry also has some additional [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from the query string.
 
 ## Request Body
 
-When using `dataCollection`, incoming and outgoing request bodies are collected by default. To disable body collection, set `dataCollection: { httpBodies: [] }`. You can also collect only specific body types by providing a subset: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, and `"outgoingResponse"`.
+By default, incoming and outgoing request bodies are collected. To disable body collection, set `dataCollection: { httpBodies: [] }`. You can also collect only specific body types by providing a subset: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, and `"outgoingResponse"`.
 
 ```js
 Sentry.init({
@@ -91,14 +88,18 @@ Sentry.init({
 });
 ```
 
-Without `dataCollection` (and with `sendDefaultPii` unset or `false`), Sentry only sends the body size inferred from the `content-length` header, not the body content itself.
+If you disable body collection, Sentry only sends the body size inferred from the `content-length` header, not the body content itself.
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.effect", "javascript.elysia", "javascript.ember", "javascript.firebase", "javascript.gatsby", "javascript.nitro", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.cloudflare", "javascript.deno"]}>
-  On the server-side, the incoming request body is captured by default. You can disable sending the incoming request body by configuring `ignoreIncomingRequestBody` in the <PlatformLink to="/configuration/integrations/http/">HTTP Integration</PlatformLink>.
+  On the server-side, the incoming request body is captured by default. You can disable sending the incoming request body by configuring `ignoreRequestBody` in the <PlatformLink to="/configuration/integrations/http/">HTTP Integration</PlatformLink>.
 </PlatformSection>
 
 <PlatformSection supported={["javascript.remix"]}>
-  When `dataCollection` is used, HTTP body collection is enabled by default, so Form Data can be sent with `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#server-side-configuration">server-side configuration</PlatformLink>. When not using `dataCollection`, this requires the deprecated `sendDefaultPii: true`.
+  Remix action form data is captured when `dataCollection.httpBodies` includes `"incomingRequest"`, which is the default. All form fields are captured, and values with a sensitive-looking field name (like `password` or `token`) are replaced with `[Filtered]`.
+
+  To capture only specific fields, set `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#configure-server-side-sentry">server-side configuration</PlatformLink>. This option works on its own and doesn't require `dataCollection.httpBodies` to include `"incomingRequest"`. To stop capturing form data, remove `captureActionFormDataKeys` and exclude `"incomingRequest"` from `dataCollection.httpBodies`.
+
+  Captured fields are sent as `remix.action_form_data.<field>` span attributes. Before version 11, the Node.js SDK sent them as `formData.<field>`, so update any dashboards, alerts, or saved searches that query the old attribute names.
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.effect", "javascript.electron", "javascript.elysia", "javascript.ember", "javascript.firebase", "javascript.gatsby", "javascript.nitro", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
@@ -111,9 +112,9 @@ On the server-side, the <PlatformLink to="/configuration/integrations/requestdat
 
 ## Response Body
 
-When using `dataCollection`, incoming and outgoing response bodies are collected by default. To disable response body collection, set `dataCollection: { httpBodies: [] }` (which disables all body types), or provide a subset that excludes the response types.
+By default, incoming and outgoing response bodies are collected. To disable response body collection, set `dataCollection: { httpBodies: [] }` (which disables all body types), or provide a subset that excludes the response types.
 
-Without `dataCollection` (and with `sendDefaultPii` unset or `false`), Sentry only sends the response body size based on the `content-length` header, not the content itself.
+If you disable response body collection, Sentry only sends the response body size based on the `content-length` header, not the content itself.
 
 ## Source Context
 
@@ -149,13 +150,13 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.connect", "javascript.cloudflare", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.wasm"]}>
+<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.cloudflare", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.wasm", "javascript.eve", "javascript.mastra"]}>
   <PlatformSection notSupported={["javascript.cordova"]}>
     ## Session Replay
 
     By default, our Session Replay SDK masks all text content, images, web views, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/privacy/">more details in the Session Replay documentation</PlatformLink>.
 
-    The `dataCollection` and `sendDefaultPii` options don't affect Session Replay. Because Replay is opt-in by default (it masks everything unless you allow it), while `dataCollection` is opt-out, the two use opposite privacy models. To avoid changing behavior on a privacy-sensitive feature, Replay's masking and network capture are controlled exclusively by the Replay integration's own <PlatformLink to="/session-replay/privacy/">privacy options</PlatformLink>, regardless of your `dataCollection` or `sendDefaultPii` settings.
+    The `dataCollection` option doesn't affect Session Replay. Because Replay is opt-in by default (it masks everything unless you allow it), while `dataCollection` is opt-out, the two use opposite privacy models. To avoid changing behavior on a privacy-sensitive feature, Replay's masking and network capture are controlled exclusively by the Replay integration's own <PlatformLink to="/session-replay/privacy/">privacy options</PlatformLink>, regardless of your `dataCollection` settings.
 
     Session Replay also captures basic information about all outgoing fetch and XHR requests in your application. This includes the URL, request and response body size, method, and status code. If <PlatformLink to="/session-replay/configuration/#network-details">`networkDetailAllowUrls`</PlatformLink> are defined, the request and response body will be sent to Sentry as well. This can include PII data if the request or response body contains PII information.
 
@@ -166,7 +167,7 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
   By default, the Sentry SDK sends JS console logs to Sentry as breadcrumbs which may contain PII data.
 
-  To disable sending console messages, set `console: false` in your `Sentry.breadcrumbsIntegration` config, see <PlatformLink to="/configuration/integrations/breadcrumbs/">the Breadcrumbs documentation</PlatformLink>.
+  To disable sending console messages, remove the `Console` integration from your `integrations` config, see <PlatformLink to="/configuration/integrations/console/">the Console documentation</PlatformLink>.
 
   <PlatformSection notSupported={["javascript.electron"]}>
     ## Referrer URL
@@ -225,19 +226,39 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
   <PlatformSection notSupported={["javascript.effect", "javascript.elysia", "javascript.firebase", "javascript.nitro"]}>
   ## tRPC Context
 
-  When using `dataCollection`, tRPC input is collected by default because `httpBodies` includes `"incomingRequest"` by default. To disable it, set `dataCollection: { httpBodies: [] }` or use a list that excludes `"incomingRequest"`.
+  By default, tRPC input is collected because `httpBodies` includes `"incomingRequest"` by default. To disable it, set `dataCollection: { httpBodies: [] }` or use a list that excludes `"incomingRequest"`.
 
-  Without `dataCollection` (and with `sendDefaultPii` unset or `false`), tRPC input is not collected. You can still opt in per-middleware by setting `attachRpcInput: true` in the <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink> options, regardless of the global `dataCollection` setting.
+  If you exclude `"incomingRequest"`, tRPC input is not collected. You can still opt in per-middleware by setting `attachRpcInput: true` in the <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink> options, regardless of the global `dataCollection` setting.
   </PlatformSection>
 
 </PlatformSection>
+
+## GraphQL Operations
+
+When you use a GraphQL integration, the Sentry SDK sends the operation name and the operation type to Sentry.
+
+By default, the SDK also sends the GraphQL document (the query or mutation source text) and the variables passed to the operation by default. This data can include PII. Use the `dataCollection.graphQL` option (available since version `10.66.0`) to control it:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    graphQL: {
+      document: false,
+      variables: false,
+    },
+  },
+});
+```
 
 <PlatformSection notSupported={["javascript.deno"]}>
   ## LLM Inputs And Responses
 
   When using AI integrations, metadata like model ID and used tokens is sent to Sentry.
 
-  The content of generative AI inputs (such as prompts and tool arguments) and outputs (such as completions) might carry personal data. Whether it's recorded depends on your configuration: it's not recorded by default with `sendDefaultPii`, but when you use `dataCollection`, the `genAI` category records both inputs and outputs unless you opt out. Metadata like model ID and token counts is always collected.
+  The content of generative AI inputs (system instructions, prompt messages, tool definitions, and tool call arguments) and outputs (such as completion text and tool call results) might carry personal data. By default, the SDK records both inputs and outputs. Metadata like model ID and token counts is always collected.
+
+  The same setting applies to MCP servers instrumented with `wrapMcpServerWithSentry`. By default, the SDK records the inputs and outputs of tool calls, prompt retrievals, and resource reads. Use the wrapper's `recordInputs` and `recordOutputs` options to control recording per server.
 
   Use the `dataCollection.genAI` option to control this. For example, opt out of recording AI message content while keeping the metadata:
 
@@ -264,5 +285,5 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
   At the time of a native crash, the stack of each thread is collected and sent to Sentry as part of the Minidump snapshot. This information is sent to Sentry by default, but dropped after processing the event in the backend.
 
-  These files are not stored by default, but you can [enable Minidump Storage](/platforms/native/guides/minidumps/enriching-events/attachments/#store-minidumps-as-attachments) in the Sentry organization or project settings.
+  These files are not stored by default, but you can [enable Minidump Storage](/platforms/native/guides/minidumps/enriching-events/attachments/#store-minidumps-as-attachments) in the Sentry [organization](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) or [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/).
 </PlatformSection>
