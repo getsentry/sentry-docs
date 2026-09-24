@@ -684,10 +684,6 @@ const formatToSVG = {
     sm: GroqSVG,
     lg: GroqSVGLarge,
   },
-  mistral: {
-    sm: MistralSVG,
-    lg: MistralSVGLarge,
-  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -723,6 +719,10 @@ const formatToSVG = {
   mcp: {
     sm: McpSVG,
     lg: McpSVGLarge,
+  },
+  mistral: {
+    sm: MistralSVG,
+    lg: MistralSVGLarge,
   },
   mongodb: {
     sm: MongodbSVG,
@@ -1016,7 +1016,6 @@ export const PLATFORM_TO_ICON = {
   go: 'go',
   'google-genai': 'gemini',
   groq: 'groq',
-  mistral: 'mistral',
   'together-ai': 'default',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
@@ -1092,6 +1091,7 @@ export const PLATFORM_TO_ICON = {
   linux: 'linux',
   mastra: 'mastra',
   mcp: 'mcp',
+  mistral: 'mistral',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
@@ -1141,6 +1141,7 @@ export const PLATFORM_TO_ICON = {
   'python-pydantic-ai': 'pydantic',
   'python-openai-agents': 'openai',
   'python-mcp': 'mcp',
+  'python-mistral': 'mistral',
   'python-google-genai': 'gemini',
   'python-litellm': 'litellm',
   'python-langgraph': 'langgraph',
