@@ -133,11 +133,11 @@ SDKs **MUST** handle a failure as follows, not as if the callback had returned a
 | `before_send_span` | Emit the span, discarding the return value | None |
 | Event processor | Drop the event | `event_processor`, category of the item |
 | `traces_sampler` | Use the parent's decision, otherwise defer | None |
-| `profiles_sampler` | Fall back as if unconfigured | `sample_rate` if sampled out |
+| `profiles_sampler` | Don't profile the transaction | None |
 
 Filters drop the item because a callback that failed part-way may have skipped a redaction. `before_send_span` keeps the span because it enriches spans; [`ignore_spans`](/sdk/telemetry/spans/filtering/) is what filters them.
 
-If `traces_sampler` fails, SDKs **MUST** use the parent's sampling decision. Without a parent, they **MUST** leave the decision to downstream SDKs, as with tracing disabled, and **MUST NOT** fall back to `traces_sample_rate`.
+If `traces_sampler` fails, SDKs **MUST** use the parent's sampling decision. Without a parent, they **MUST** leave the decision to downstream SDKs, as with tracing disabled, and **MUST NOT** fall back to `traces_sample_rate`. If `profiles_sampler` fails, SDKs **MUST NOT** profile the transaction.
 
 SDKs **SHOULD** pass `before_send_span` a copy of the span, so they can emit the original if the callback fails. Otherwise, they **MUST** emit the span as it stands and skip the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
 
