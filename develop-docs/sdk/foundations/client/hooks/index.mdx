@@ -114,7 +114,9 @@ Hook called with the breadcrumb (and on some platforms the hint) that allow the 
 
 ### Callback Error Isolation
 
-A failing user callback **MUST NOT** break the host application. Where the language can recover from an error raised in a called function (`try`/`catch`, `rescue`, `recover`, `catch_unwind`), SDKs **MUST** invoke every user-provided callback inside that boundary, covering every non-local exit the language permits. A rejected promise, future, or task **MUST** be handled like a synchronous raise.
+A failing user callback **MUST NOT** break the host application. SDKs **MUST** invoke every user-provided callback inside a boundary, such as `try`/`catch` or `rescue`, that recovers from the errors the language treats as recoverable. A rejected promise, future, or task **MUST** be handled like a synchronous raise.
+
+SDKs **SHOULD NOT** recover from intentionally fatal exits, such as Python's `KeyboardInterrupt` and `SystemExit`, Java `Error` subclasses like `OutOfMemoryError`, Rust panics, or C aborts. Recovering from them hides the underlying failure. Where the callback's type prevents recoverable errors from escaping at compile time, that type satisfies this requirement without a runtime boundary.
 
 On failure, SDKs **MUST** emit an error-level [internal log](/sdk/foundations/client/configuration/#debug-mode) naming the callback, **MUST NOT** re-throw, and **MUST NOT** capture the error as an event or attach it to the item. See [Never capture your own exceptions](/sdk/getting-started/principles/#never-capture-your-own-exceptions). SDKs **MAY** re-throw in a non-default test mode documented to surface SDK failures.
 
@@ -139,9 +141,6 @@ Filters drop because a callback that failed part-way may not have applied the re
 For the callbacks that keep the item, SDKs **SHOULD** pass a defensive copy so a partially mutated item can be restored. Where copying is impractical, SDKs **MUST** emit the item as it stands and **MUST NOT** apply any merge its own spec requires, such as the [`before_send_span` merge](/sdk/telemetry/spans/scrubbing-data/#scrubbing-data-with-beforesendspan).
 
 A failure **MUST NOT** produce a billed event of any type. A dropped item **MUST** be reported exactly as it is on an explicit drop, and **MUST NOT** use a reason the callback could not otherwise produce; isolating a callback without reporting the loss is a conformance failure. Sampler failure is not distinguishable from ordinary sampling; reporting it would need a new discard reason, and `internal_sdk_error` is not a substitute because [SDK bugs are out of scope for client reports](/sdk/telemetry/client-reports/#discard-reasons).
-
-This section does not apply to pure C and C++ built without exceptions, or to Rust built with `panic = "abort"`, which cannot isolate a failing callback.
-
 </SpecSection>
 
 ---
