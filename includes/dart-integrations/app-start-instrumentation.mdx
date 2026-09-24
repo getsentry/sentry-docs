@@ -1,6 +1,6 @@
 ---
 title: App Start Instrumentation
-description: 'Learn more about the Sentry App Start Instrumentation for the Flutter SDK.'
+description: "Learn more about the Sentry App Start Instrumentation for the Flutter SDK."
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.dart.flutter
@@ -24,13 +24,19 @@ App start instrumentation is available on **iOS** and **Android**.
 
 On Android and iOS, the SDK measures startup from native process initialization to the first rendered frame. In v10, it reports this as a standalone root named `App Start` with the `app.start` operation, independently of screen-navigation transactions.
 
-The root includes startup breakdown spans and mobile vitals, including the cold or warm start duration. In transaction mode, these are sent together when the transaction finishes. In stream mode, the SDK uses the streaming span APIs.
+The root includes startup breakdown spans and mobile vitals, including the cold or warm start duration. When timing observations are available, the breakdown includes native startup work, `Root Widget Attachment`, `Frame Build`, and `Frame Rasterization`. Frame-build spans cover observed builds that start before the first rasterization; they do not imply that each build produced a displayed frame.
+
+In transaction mode, these are sent together when the transaction finishes. In stream mode, the SDK uses the streaming span APIs.
 
 On web and desktop platforms, a separate integration measures initial display timing. It does not report the native Android/iOS app-start measurements described here.
 
 ## Prerequisites
 
 Initialize <PlatformLink to="/manual-setup/#configure">SentryFlutter</PlatformLink> as early as possible and <PlatformLink to="/tracing/">enable tracing</PlatformLink>. Native app-start instrumentation runs automatically on Android and iOS; no additional enable flag is needed.
+
+Root-widget attachment and frame-build spans require `SentryWidgetsFlutterBinding`, or a custom binding with `SentryWidgetsBindingMixin`. `SentryFlutter.init()` creates the Sentry binding if no binding exists.
+
+If you initialize the binding earlier, use `SentryWidgetsFlutterBinding.ensureInitialized()` instead of `WidgetsFlutterBinding.ensureInitialized()`. An existing binding without the mixin can still provide first-frame raster timing, but not attachment or build spans.
 
 App-start measurements assume a pure Flutter application. For add-to-app integrations, native process startup may not represent the Flutter UI startup you want to measure. See [Disable App Start Instrumentation](#disable-app-start-instrumentation) if those measurements aren't useful for your app.
 

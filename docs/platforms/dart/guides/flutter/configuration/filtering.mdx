@@ -1,7 +1,7 @@
 ---
 title: Filtering
 sidebar_order: 60
-description: 'Learn more about how to configure your Sentry Flutter SDK to filter events reported to Sentry.'
+description: "Learn more about how to configure your Sentry Flutter SDK to filter events reported to Sentry."
 ---
 
 When you add Sentry to your app, you get a lot of valuable information about errors and performance. And lots of information is good -- as long as it's the right information, at a reasonable volume.
@@ -9,6 +9,14 @@ When you add Sentry to your app, you get a lot of valuable information about err
 The Sentry SDKs have several configuration options to help you filter out events.
 
 We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/).
+
+## Callback Failures
+
+In v10, an exception in an event processor or a filtering callback drops the affected item instead of sending it unchanged. This applies to event processors, `beforeSend`, `beforeSendTransaction`, `beforeSendFeedback`, `beforeBreadcrumb`, `beforeSendLog`, and `beforeSendMetric`.
+
+`beforeSendSpan` behaves differently: the SDK logs the exception and does not drop the span.
+
+Handle expected failures inside these callbacks and return the intended item or `null` explicitly. A throwing `tracesSampler` uses the <PlatformLink to="/configuration/sampling/#precedence">sampling fallback</PlatformLink>; return `0.0` to reject a trace explicitly.
 
 ## Filtering Error Events
 

@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: 'Troubleshoot and resolve edge cases regarding known limitations and bundling.'
+description: "Troubleshoot and resolve edge cases regarding known limitations and bundling."
 sidebar_order: 9000
 ---
 
@@ -163,9 +163,22 @@ flutter build appbundle \
 
 ## Issues with native crashes on Linux and/or Windows
 
-By default the Sentry Flutter SDK will enable native crash reporting on Linux and Windows with `crashpad`.
-The only exception is Windows ARM64 which uses `breakpad`.
-If you encounter any issues, you can set the `SENTRY_NATIVE_BACKEND` environment variable to an empty string to disable native crash reporting.
+In v10, the Sentry Flutter SDK uses Breakpad for native crash reporting on Linux and Windows. Crash reports are uploaded when the application starts again. Restart the application after a test crash to verify delivery.
+
+Breakpad handles crashes in the application process, without Crashpad's out-of-process isolation. It also lacks Crashpad's Windows Error Reporting (WER) and fast-fail coverage.
+
+To use Crashpad, set `SENTRY_NATIVE_BACKEND=crashpad` in your local build environment and CI before building the application:
+
+```bash {tabTitle:Linux} {mdExpandTabs}
+SENTRY_NATIVE_BACKEND=crashpad flutter build linux
+```
+
+```powershell {tabTitle:Windows}
+$env:SENTRY_NATIVE_BACKEND = "crashpad"
+flutter build windows
+```
+
+This is a build-time setting. An unset or empty `SENTRY_NATIVE_BACKEND` keeps the default backend; it does not disable native crash reporting.
 
 ### Crashpad Compile Error
 
@@ -186,8 +199,7 @@ Sentry Flutter SDK v10 requires Swift Package Manager on iOS and macOS. CocoaPod
 
 ### `SentryFlutter.init` Throws a `sentry_init failed` Error
 
-On Linux, `SentryFlutter.init` automatically tries to use the crashpad backend.
-There are cases where the Flutter tooling overrides the permission of the crashpad binary, causing the initialization to fail.
+If you build your Linux app with `SENTRY_NATIVE_BACKEND=crashpad`, Flutter tooling can override the permissions of the Crashpad handler binary, causing initialization to fail. This workaround does not apply to the default Breakpad backend.
 
 To resolve this:
 
