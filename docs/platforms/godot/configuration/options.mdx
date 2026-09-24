@@ -171,13 +171,13 @@ This option currently only affects Web exports; other platforms always use the s
 
 Controls which downstream services can receive tracing headers.
 
-When you pass a URL to `SentrySpan.get_trace_headers(url)`, the SDK returns headers only if that URL matches one of the targets.
+`SentryHTTPRequest` adds tracing headers only when its initial request URL matches one of the targets. When you propagate trace context yourself, pass the destination URL to `SentrySpan.get_trace_headers(url)` to apply the same targets.
 
 - A `String` matches when it appears anywhere in the URL. The special string `".*"` matches every URL and is the only entry by default.
 - A `RegEx` searches the complete URL. Use an anchored expression to match a specific origin.
-- An empty array blocks headers for all URLs passed to `get_trace_headers(url)`.
+- An empty array blocks headers for the initial URL of every `SentryHTTPRequest` and every URL passed to `get_trace_headers(url)`.
 
-Omitting the URL when calling `get_trace_headers()` bypasses this option, including an empty target list. This option doesn't attach headers automatically.
+Omitting the URL when calling `get_trace_headers()` bypasses this option, including an empty target list. Other HTTP clients may require <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">custom trace propagation</PlatformLink>.
 
 In **Project Settings > Sentry > Options**, **Trace Propagation Targets** accepts strings only. Add `RegEx` entries in your initialization callback. See <PlatformLink to="/tracing/distributed-tracing/limiting-trace-propagation/">Limiting Trace Propagation</PlatformLink> for an example.
 
@@ -187,7 +187,7 @@ In **Project Settings > Sentry > Options**, **Trace Propagation Targets** accept
 
 Controls whether outgoing tracing headers include the W3C `traceparent` header alongside `sentry-trace` and `baggage`.
 
-Set this option to `true` when your backend uses OpenTelemetry or another W3C Trace Context-compatible library to continue traces. `SentrySpan.get_trace_headers()` then includes `traceparent` in the returned headers.
+Set this option to `true` when your backend uses OpenTelemetry or another W3C Trace Context-compatible library to continue traces. `SentryHTTPRequest` then adds `traceparent` to matching requests, and `SentrySpan.get_trace_headers()` includes it in the returned headers.
 
 [`trace_propagation_targets`](#trace_propagation_targets) controls where this header is allowed when you pass a URL. For Web exports, also <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">allow `traceparent` in your backend's CORS configuration</PlatformLink>.
 
