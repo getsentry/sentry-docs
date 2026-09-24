@@ -131,6 +131,21 @@ resolve to the same key.
 Don't put secrets or sensitive user data in keys. Keys can appear in URLs,
 traces, and error context.
 
+### 5. Pick the Authentication Model
+
+Objectstore requests require a scoped token. Determine whether Sentry or another
+trusted upstream service can mint and pass a token with the required usecase,
+scopes, and permissions.
+
+- **Passed-down token (preferred):** Use this when Objectstore access is part
+  of work initiated by the upstream service. The short-lived token limits
+  access to one usecase, its scopes, permissions, and lifetime. The receiving
+  service must obtain a fresh token after it expires.
+- **Direct authentication:** Use this when the service operates independently,
+  continues work beyond the upstream caller's lifecycle, or can't reliably
+  obtain fresh tokens. The service receives its own signing key so the client
+  can mint short-lived tokens as needed.
+
 ## Set Up Objectstore
 
 Setup depends on whether your code runs in Sentry or another service.
@@ -141,7 +156,7 @@ Objectstore is already configured as a Sentry dependency. You don't need to
 configure a local endpoint or authentication. Use the integration from
 `sentry.objectstore` instead of constructing a client directly.
 
-### Use Objectstore From Another Service
+### Use Objectstore from Another Service
 
 Add Objectstore as a remote dependency in the service's devservices
 configuration, then include `objectstore` in every mode that needs it:
@@ -182,7 +197,12 @@ this configuration automatically.
 ### Another Service
 
 The central Objectstore route already exists. Don't create another route for a
-new calling service. Instead:
+new calling service. Instead, configure the client endpoint as
+`http://objectstore` and route the `objectstore` hostname through the service's
+Envoy sidecar. You can find a complete example in
+`k8s/services/launchpad/_values.yaml`.
+
+If your service uses direct authentication, additionally provision credentials:
 
 1. Provision a service-specific Objectstore signing key pair in
    `terragrunt/regions/all/managed-secrets/objectstore/service.hcl` in the
@@ -195,10 +215,6 @@ new calling service. Instead:
 3. Mount the private key into the calling service using the shared GCP secret
    integration at `k8s/services/_shared/secrets-gcp.yaml`, then configure the
    client with its key ID and mounted key path.
-4. Configure the client endpoint as `http://objectstore` and route the
-   `objectstore` hostname through the service's Envoy sidecar. You can find
-   complete examples in `k8s/services/launchpad/_values.yaml` and
-   `k8s/services/launchpad/taskworker-deployment.yaml`.
 
 ## Use a Client
 
@@ -228,6 +244,12 @@ In Sentry, add the usecase identifier and its default retention policy to
 shared client configuration and automatically creates the organization and
 project scopes. In another service, instantiate these concepts directly with
 the official client.
+
+To delegate read access from Sentry to download services (passed-down tokens),
+use `get_internal_download_url` from `sentry.objectstore`. It creates a
+short-lived, signed URL. The token is valid for five minutes by default.
+Generate the URL close to when it will be used, allow enough time for queueing
+and retries, and treat the URL as a bearer secret.
 
 ## Operational Considerations
 
