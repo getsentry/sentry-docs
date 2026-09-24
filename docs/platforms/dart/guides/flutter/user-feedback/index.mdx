@@ -22,9 +22,9 @@ The user feedback API allows you to collect user feedback while utilizing your o
 
 <PlatformContent includePath="user-feedback/sdk-api-example/" />
 
-## SentryFeedbackWidget
+## SentryFeedbackForm
 
-Use the `SentryFeedbackWidget` to let users send feedback data to Sentry.
+Use the `SentryFeedbackForm` to let users send feedback data to Sentry. In Sentry Flutter SDK versions before `9.21.0`, this class is named `SentryFeedbackWidget`.
 
 The widget requests and collects the user's name, email address, and a description of what occurred. When an event identifier is provided, Sentry pairs the feedback with the original event, giving you additional insights into issues.
 
@@ -38,7 +38,7 @@ The image below provides an example of the widget, though yours may differ depen
 
 ### Integration
 
-One possible use for the `SentryFeedbackWidget` is to listen for specific Sentry events in the `beforeSend` callback and show the widget to users. Users also can take a screenshot from their app's UI if the `SentryWidget` is wrapped around the main app widget.
+One possible use for the `SentryFeedbackForm` is to listen for specific Sentry events in the `beforeSend` callback and show the widget to users. Users also can take a screenshot from their app's UI if the `SentryWidget` is wrapped around the main app widget.
 
 ```dart
 // The example uses the `NavigatorState` to present the widget. Adapt as needed to your navigation stack.
@@ -57,7 +57,7 @@ Future<void> main() async {
 
         final context = navigatorKey.currentContext;
         if (context != null && context.mounted) {
-          SentryFeedbackWidget.show(
+          SentryFeedbackForm.show(
             context,
             associatedEventId: event.eventId,
             screenshot: screenshot,
@@ -74,9 +74,13 @@ Future<void> main() async {
 }
 ```
 
+### Session Replay
+
+The `SentryFeedbackForm` works with <PlatformLink to="/session-replay/">Session Replay</PlatformLink> on iOS and Android in Sentry Flutter SDK `9.0.0` and later. (Recall that this class was named `SentryFeedbackWidget` before `9.21.0`.) With <PlatformLink to="/session-replay/#sampling">`onErrorSampleRate`</PlatformLink> set, the SDK buffers up to 30 seconds of the user's session and sends it when the form opens or when your app calls `Sentry.captureFeedback()`. This way, the replay shows what led the user to report the problem instead of only their interactions with the form.
+
 ### Customization
 
-You can customize the `SentryFeedbackWidget` to your needs by modifying the `SentryFeedbackOptions` class, which is provided by the `SentryFlutter.init` options.
+You can customize the `SentryFeedbackForm` to your needs by modifying the `SentryFeedbackOptions` class, which is provided by the `SentryFlutter.init` options.
 
 ```dart
 SentryFlutter.init((options) {
@@ -90,7 +94,7 @@ SentryFlutter.init((options) {
 });
 ```
 
-The following table lists all the options you can customize to change behavior of the `SentryFeedbackWidget`.
+The following table lists all the options you can customize to change behavior of the `SentryFeedbackForm`.
 
 | Option | Type | Default | Description |
 | - | - | - | - |

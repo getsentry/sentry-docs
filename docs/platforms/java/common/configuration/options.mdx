@@ -1,6 +1,6 @@
 ---
 title: Options
-description: "Learn more about how the SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
+description: "Learn more about how the Sentry Java SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
 sidebar_order: 1
 ---
 
@@ -108,6 +108,117 @@ This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
+This is a legacy flag. Use [`dataCollection`](#dataCollection) for granular control over automatically collected data.
+
+For backwards compatibility, `sendDefaultPii` keeps its existing behavior when no Data Collection field is configured. As soon as you configure any `dataCollection` field, Data Collection becomes the source of truth for its categories and `sendDefaultPii` no longer controls them.
+
+Unencoded Logback messages aren't a Data Collection category. To include original message templates and parameters when an encoder is configured, use the Logback appender's `includeUnencodedMessage` option. The legacy `sendDefaultPii` behavior remains supported for compatibility. OpenTelemetry-derived HTTP data also isn't controlled by Data Collection yet. Sensitive HTTP header attributes continue to use `sendDefaultPii`; URL and query string attributes are collected when present regardless of that flag.
+
+</SdkOption>
+
+<SdkOption name="dataCollection" type="DataCollection" availableSince="8.58.0">
+
+Controls which categories of data SDK integrations collect automatically. Data Collection applies only where an integration supports the category. It doesn't remove data you add explicitly through scopes, event processors, or callbacks such as `beforeSend`.
+
+<Alert>
+
+Call `options.getDataCollection().forceDataCollection()` or explicitly configure any field to enable Data Collection. All fields you don't configure use the defaults below, and the `sendDefaultPii` option is ignored.
+
+</Alert>
+
+| Field                    | Type                         | Default        | Behavior                                                                                                                                  |
+| ------------------------ | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`               | `boolean`                    | `true`         | Allows integrations to populate user identity and IP address information.                                                                 |
+| `cookies`\*              | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects cookies and filters sensitive values.                                                                                            |
+| `httpHeaders.request`\*  | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects request headers and filters sensitive values.                                                                                    |
+| `httpHeaders.response`\* | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects response headers and filters sensitive values.                                                                                   |
+| `httpBodies`             | `Set<HttpBodyType>`          | all body types | Collects supported incoming and outgoing request and response bodies. An empty set disables body content collection.                      |
+| `urlQueryParams`\*       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
+| `graphql.document`       | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
+| `graphql.variables`      | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
+| `filePaths`              | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
+
+The Spring and Spring Boot integrations collect incoming request body content only when `httpBodies` includes `INCOMING_REQUEST` and the body meets the configured <PlatformLink to="/configuration/options/#maxRequestBodySize">`maxRequestBodySize`</PlatformLink> limit.
+
+\* Fields marked with an asterisk take a single `KeyValueCollectionBehavior` value in code. Properties, environment variables, Spring Boot, and Android manifest metadata expose that value as separate `mode` and `terms` settings. `terms` contains additional matching terms for deny-list or allow-list behavior.
+
+The `cookies`, `httpHeaders.request`, `httpHeaders.response`, and `urlQueryParams` fields support three modes:
+
+- `OFF` (`KeyValueCollectionBehavior.off()`): Don't collect the category.
+- `DENY_LIST` (`KeyValueCollectionBehavior.denyList(...)`): Collect values except those matching the built-in sensitive list or additional configured terms. The no-argument constructor uses this mode without custom terms.
+- `ALLOW_LIST` (`KeyValueCollectionBehavior.allowList(...)`): Include plaintext values only for keys that match configured terms and don't match the built-in sensitive list. Sensitive values are always replaced with `"[Filtered]"`.
+
+Matching is partial and case-insensitive. The built-in terms are `auth`, `token`, `secret`, `password`, `passwd`, `pwd`, `key`, `jwt`, `bearer`, `sso`, `saml`, `csrf`, `xsrf`, `credentials`, `session`, `sid`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
+
+When migrating from `sendDefaultPii`, review your header configuration. The legacy header filtering omitted sensitive headers such as `X-Forwarded-For`, `X-Real-IP`, and `Remote-Addr` in supported integrations. After you configure any Data Collection field, `sendDefaultPii` no longer controls these headers. Data Collection's default deny list filters credential and secret values but doesn't automatically match those identifying headers. To continue filtering them, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a deny list. These terms also match keys such as `CF-Connecting-IP` and `X-User-Id`. Add them to `cookies`, `httpHeaders.request`, `httpHeaders.response`, or `urlQueryParams` as needed.
+
+Configure only the fields that differ from these defaults:
+
+```java
+import io.sentry.KeyValueCollectionBehavior;
+import io.sentry.Sentry;
+
+Sentry.init(
+    options -> {
+      options.getDataCollection().setUserInfo(false);
+      options.getDataCollection().setFilePaths(false);
+      options
+          .getDataCollection()
+          .setUrlQueryParams(KeyValueCollectionBehavior.off());
+      options
+          .getDataCollection()
+          .getHttpHeaders()
+          .setRequest(
+              KeyValueCollectionBehavior.denyList(
+                  "forwarded", "-ip", "remote-", "via", "-user"));
+    });
+```
+
+You can also configure Data Collection through external properties. Make sure <PlatformLink to="/configuration/#configuration-methods">`enableExternalConfiguration` is enabled</PlatformLink> for these properties to take effect.
+
+```properties {filename:sentry.properties}
+data-collection.user-info=false
+data-collection.http-bodies=incoming_request,outgoing_request
+data-collection.cookies.mode=deny_list
+data-collection.cookies.terms=session-id,tracking-id
+data-collection.http-headers.request.mode=deny_list
+data-collection.http-headers.request.terms=forwarded,-ip,remote-,via,-user
+data-collection.http-headers.response.mode=off
+data-collection.url-query-params.mode=off
+data-collection.graphql.document=false
+data-collection.graphql.variables=false
+data-collection.file-paths=false
+```
+
+Environment variables use the same names in uppercase with the `SENTRY_` prefix, for example, `SENTRY_DATA_COLLECTION_USER_INFO`, `SENTRY_DATA_COLLECTION_HTTP_BODIES`, and `SENTRY_DATA_COLLECTION_FILE_PATHS`.
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+Spring Boot uses the `sentry.` prefix and kebab-case enum values:
+
+```properties {filename:application.properties}
+sentry.data-collection.user-info=false
+sentry.data-collection.http-bodies=incoming-request,outgoing-request
+sentry.data-collection.http-headers.request.mode=deny-list
+sentry.data-collection.http-headers.request.terms=forwarded,-ip,remote-,via,-user
+sentry.data-collection.url-query-params.mode=off
+sentry.data-collection.file-paths=false
+```
+
+</PlatformSection>
+
+### Migrating From `sendDefaultPii`
+
+Data Collection preserves existing applications until you opt in:
+
+| Configuration             | Result                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| No Data Collection fields | Existing `sendDefaultPii` behavior is preserved.                                                                                             |
+| `forceDataCollection()`   | All Data Collection categories use the defaults above.                                                                                       |
+| Any Data Collection field | That field uses its configured value, omitted fields use the defaults above, and `sendDefaultPii` is ignored for Data Collection categories. |
+
+If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, call `options.getDataCollection().forceDataCollection()` to opt into the new filtered defaults. For unencoded Logback messages, use `includeUnencodedMessage` as described in the [Logback documentation](/platforms/java/guides/logback/). Keep `sendDefaultPii=true` only if you need the legacy OpenTelemetry header behavior.
+
 </SdkOption>
 
 <SdkOption name="serverName" type="string">
@@ -149,8 +260,7 @@ This parameter controls whether integrations should capture HTTP request bodies.
 - `medium`: Medium and small requests will be captured (typically 10KB).
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
-For request bodies to be captured, the <PlatformIdentifier name="sendDefaultPii" /> flag must also be enabled.
-Please consult the <PlatformLink to="/configuration/options/#sendDefaultPii">documentation for <PlatformIdentifier name="sendDefaultPii" /></PlatformLink> to evaluate whether you would want to enable it, making sure to manually remove the data you don't want to send using our features for <PlatformLink to="/data-management/sensitive-data">managing Sensitive Data</PlatformLink>.
+When Data Collection is configured, [`dataCollection.httpBodies`](#dataCollection) controls supported request and response bodies instead. `maxRequestBodySize` remains the size limit for integrations that use it.
 
 </SdkOption>
 
@@ -301,7 +411,7 @@ Set this boolean to `false` to disable tracing for `OPTIONS` requests. This opti
 
 <SdkOption name="enableCacheTracing" type="boolean" defaultValue="false">
 
-Whether cache operations (`get`, `put`, `remove`, `flush`) should be traced. When enabled, the SDK creates spans for cache operations performed through the <PlatformLink to="/integrations/jcache/">JCache integration</PlatformLink> or Spring Cache (e.g. `@Cacheable`, `@CachePut`, `@CacheEvict`).
+Whether cache operations (`get`, `put`, `remove`, `flush`) should be traced. When enabled, the SDK creates spans for cache operations performed through the <PlatformLink to="/integrations/jcache/" fallbackPlatform="java">JCache integration</PlatformLink> or Spring Cache (e.g. `@Cacheable`, `@CachePut`, `@CacheEvict`).
 
 </SdkOption>
 

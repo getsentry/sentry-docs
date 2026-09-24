@@ -159,8 +159,10 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = 'getsentry';
 const REPO_NAME = 'sentry-docs';
 
-// Number of PRs to fetch
-const PR_LIMIT = 50;
+// Number of recently closed PRs to fetch (the List PRs API returns them
+// sorted by most recently updated, so this grabs the latest batch and we
+// filter to only merged ones client-side).
+const PR_LIMIT = 100;
 
 // PRs to exclude (bot PRs, CI updates, etc.)
 const EXCLUDED_AUTHORS = ['github-actions[bot]', 'dependabot[bot]', 'getsentry-bot'];
@@ -181,11 +183,13 @@ async function fetchMergedPRs() {
     headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
   }
 
-  // Fetch recently merged PRs
-  const searchQuery = `repo:${REPO_OWNER}/${REPO_NAME} is:pr is:merged sort:updated-desc`;
-  const url = `https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&per_page=${PR_LIMIT}`;
+  // Use the List Pull Requests API instead of Search. It returns PRs sorted
+  // by most recently updated and lets us filter to state=closed + base=master.
+  // We then keep only the ones that were actually merged (merged_at != null).
+  // This avoids the Search API's sort limitations that caused stale entries.
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls?state=closed&base=master&sort=updated&direction=desc&per_page=${PR_LIMIT}`;
 
-  console.log('Fetching merged PRs...');
+  console.log('Fetching recently closed PRs...');
 
   const response = await fetch(url, {headers});
 
@@ -193,10 +197,12 @@ async function fetchMergedPRs() {
     throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
   }
 
-  const data = await response.json();
-  console.log(`Found ${data.items.length} merged PRs`);
+  const allPRs = await response.json();
+  const mergedPRs = allPRs.filter(pr => pr.merged_at !== null);
 
-  return data.items;
+  console.log(`Fetched ${allPRs.length} closed PRs, ${mergedPRs.length} were merged`);
+
+  return mergedPRs;
 }
 
 async function fetchPRDetails(prNumber) {
@@ -276,6 +282,15 @@ function categorizeFiles(files) {
       file.filename.startsWith('develop-docs/') && file.filename.match(/\.mdx?$/);
 
     if (!isDocsFile && !isDevelopDocsFile) {
+      continue;
+    }
+
+    // Skip versioned doc files (e.g. index__v7.x.mdx). Their canonical URL is
+    // <path>__v<version>/, not <path>/index__v7.x/, so the naive path-to-URL
+    // mapping below produces a 404 (caught by the lint-404 check). The current
+    // version of the page is almost always edited in the same PR and linked
+    // separately, so old-version pages add little to the changelog anyway.
+    if (file.filename.includes('__v')) {
       continue;
     }
 

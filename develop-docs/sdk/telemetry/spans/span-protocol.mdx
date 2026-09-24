@@ -121,6 +121,10 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
           "type": "string",
           "value": "auto"
         },
+        "sentry.is_localhost": {
+          "type": "boolean",
+          "value": true
+        },
         "server.address": {
           "type": "string",
           "value": "127.0.0.1"
@@ -190,6 +194,10 @@ The `items` array **MUST** contain at least one and at most 1000 span objects:
         "sentry.origin": {
           "type": "string",
           "value": "auto"
+        },
+        "sentry.is_localhost": {
+          "type": "boolean",
+          "value": true
         }
       }
     }
@@ -249,13 +257,14 @@ All attributes mentioned below MUST be attached to every span being emitted from
 | `sentry.sdk.version` | string | Required | Version of the Sentry SDK |
 | `sentry.origin` | string | Required | [Trace origin](/sdk/telemetry/traces/trace-origin/) |
 | `sentry.platform` | string | Required | Platform identifier |
+| `sentry.is_localhost` | boolean | Required | Whether the SDK determined the application is running on localhost. Used to enable the localhost inbound filter. The definition of "localhost" is platform-specific. |
 
 Spans missing **Strictly Required** attributes MAY be rejected by Relay.
 All other attributes in the table are required _if_ they are available to the SDK.
 For example, `sentry.release` MUST be sent, if and only if the SDK has a `release` value set (or auto-detected it).
 
-Attributes outside of the above list MUST only be attached to the span they conceptually belong on, and not propagated to children spans. 
-For instance, attributes mirroring transaction context data should only be set on the segment span. 
+Attributes outside of the above list MUST only be attached to the span they conceptually belong on, and not propagated to children spans.
+For instance, attributes mirroring transaction context data should only be set on the segment span.
 See also [the implementation guidelines](/sdk/telemetry/spans/implementation/#how-to-approach-span-first-in-sdks).
 
 Empty attributes MUST be omitted.
@@ -303,7 +312,7 @@ span_id: "438f40bd3b4a41ee"
 Span attachments are an experimental feature that is still under development.
 </Alert>
 
-To associate an attachment with a span, submit a [trace attachment](/sdk/telemetry/attachments/#trace-attachments) item with an additional `span_id` item header. The trace attachment _should_ be submitted in the same envelope as the span itself.
+To associate an attachment with a span, submit a [trace attachment](/sdk/telemetry/attachments/#trace-attachments) item with an additional `span_id` item header. The trace attachment **MUST** be submitted in the same envelope as the span itself.
 
 - `span_id` is the ID of the span that owns the attachment. If set, the attachment will be dropped with the span if the span is dropped by dynamic sampling, inbound filters or rate limits. That is, Relay treats `span_id` as the owner of the attachment.
 - The SDK _may_ set the `span_id` item header to an explicit `null` value. `span_id: null` is treated as “owned by spans”, but not owned by a specific span. That is, the attachment can be dropped if the span quota is exceeded, but it will not be dropped with a specific span because of e.g. inbound filters.

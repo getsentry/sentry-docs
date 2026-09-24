@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
+import {canonicalPath} from 'sentry-docs/canonical';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
@@ -16,10 +17,12 @@ const BASE_URL = isDeveloperDocs
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
 
+const CANONICAL_HOST = new URL(BASE_URL).hostname;
+
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
 // get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
-const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev', 'localhost']);
+const INDEXABLE_HOSTNAMES = new Set(['docs.sentry.io', 'develop.sentry.dev']);
 
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
@@ -35,6 +38,11 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  const buildUrlRedirect = redirectProductionBuildUrlToCanonical(request);
+  if (buildUrlRedirect) {
+    return buildUrlRedirect;
+  }
+
   // Classify once per request and record it as a counter. This metric — not
   // trace sampling — is the source of truth for agent/bot/user traffic: the
   // middleware root span is created by Next.js before any request data reaches
@@ -53,6 +61,26 @@ export function middleware(request: NextRequest) {
   annotateMiddlewareSpan(request, classification, response);
 
   return response;
+}
+
+/** Redirects page requests on noncanonical production hosts, leaving previews public. */
+function redirectProductionBuildUrlToCanonical(
+  request: NextRequest
+): NextResponse | null {
+  if (
+    process.env.VERCEL_ENV !== 'production' ||
+    (request.method !== 'GET' && request.method !== 'HEAD')
+  ) {
+    return null;
+  }
+  if (request.nextUrl.hostname === CANONICAL_HOST) {
+    return null;
+  }
+  const url = request.nextUrl.clone();
+  url.protocol = 'https:';
+  url.host = CANONICAL_HOST;
+  url.port = '';
+  return NextResponse.redirect(url, 308);
 }
 
 /**
@@ -282,7 +310,7 @@ function rewriteWithClassification(
 function mdToCanonicalPath(mdPathname: string): string {
   const withoutExt = mdPathname.replace(/\.md$/, '');
   if (withoutExt === '/index') return '/';
-  return withoutExt.endsWith('/') ? withoutExt : `${withoutExt}/`;
+  return canonicalPath(withoutExt);
 }
 
 /**
@@ -439,7 +467,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
-    to: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    to: '/platforms/javascript/guides/nuxt/install/',
   },
   {
     from: '/account/early-adopter-features/discord/',
@@ -1887,11 +1915,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/node/integrations/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/platforms/node/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/clients/node/integrations/koa/',
@@ -1968,6 +1996,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/mcp-module/',
+    to: '/platforms/javascript/guides/:guide/mcp-monitoring/',
   },
   {
     from: '/learn/cli/configuration/',
@@ -3547,6 +3579,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/agents/dashboard/',
     to: '/product/agents/dashboards/',
   },
+  // MCP moved from /product/agents/mcp/ to /product/mcp-servers/
+  {
+    from: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
+  },
+  {
+    from: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
+  },
+  {
+    from: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
+  },
   {
     from: '/ai/observability/agents/dashboard/',
     to: '/product/agents/dashboards/',
@@ -3561,15 +3606,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/insights/ai/mcp/',
-    to: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/product/insights/ai/mcp/getting-started/',
-    to: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/product/insights/ai/mcp/dashboard/',
-    to: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   // AI Monitoring / AI Observability → Product Agents
   {
@@ -3614,15 +3659,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ai/monitoring/mcp/',
-    to: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/monitoring/mcp/getting-started/',
-    to: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/monitoring/mcp/dashboard/',
-    to: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/ai/observability/',
@@ -3662,15 +3707,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/ai/observability/mcp/',
-    to: '/product/agents/mcp/',
+    to: '/product/mcp-servers/',
   },
   {
     from: '/ai/observability/mcp/getting-started/',
-    to: '/product/agents/mcp/getting-started/',
+    to: '/product/mcp-servers/getting-started/',
   },
   {
     from: '/ai/observability/mcp/dashboard/',
-    to: '/product/agents/mcp/dashboard/',
+    to: '/product/mcp-servers/dashboard/',
   },
   {
     from: '/product/sentry-mcp/',

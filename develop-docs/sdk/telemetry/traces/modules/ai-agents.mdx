@@ -6,7 +6,7 @@ The AI Agents module is agnostic to the library used. The SDK will instrument ex
 
 ## Spans Conventions
 
-For your AI agents data to show up in the Sentry [AI Agents dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/), at least one of the AI spans needs to be created and have well-defined names and data attributes. If the required data (marked with MUST or required) is missing, the data will not show up in the Agents dashbboard.
+For your AI agents data to show up in the Sentry [Agents Dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/), at least one of the AI spans needs to be created and have well-defined names and data attributes. If the required data (marked with MUST or required) is missing, the data will not show up in the Agents dashbboard.
 
 We try to follow [v1.36.0](https://github.com/open-telemetry/semantic-conventions/blob/v1.36.0/docs/gen-ai/README.md) of the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) for Generative AI as close as possible. Being 100% compatible is not yet possible, because OpenTelemetry has "Span Events" which Sentry does not support. The input from/output to an AI model is stored in span events in OpenTelemetry. Since this is not possible in Sentry, we add this data onto span attributes as a list.
 
@@ -22,11 +22,11 @@ Sentry Conventions is the single source of truth.
 Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
-- Span `op` SHOULD be `"gen_ai.invoke_agent"`.
-- Span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[6]**
-- Attribute `gen_ai.operation.name` MUST be `"invoke_agent"`.
-- Attribute `gen_ai.agent.name` SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
+- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[6]**
+- Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
@@ -44,20 +44,20 @@ Additional attributes on the span:
 | `gen_ai.output.messages`     | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
 
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For backwards compatibility, the legacy format `{role, content}` (e.g. `[{"role": "user", "content": "..."}]`) is also accepted.
+- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
 
 ## AI Client Span
 
 This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
 
-- Span `op` SHOULD be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
-- Span `name` SHOULD be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` MUST be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
-- Attribute `gen_ai.provider.name` MUST be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
-- Attribute `gen_ai.request.model` MUST be the requested model. (e.g. `"gpt-4o"`)
-- Attribute `gen_ai.response.model` MUST be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
-- If the request originates from an agent, the `gen_ai.agent.name` attribute SHOULD be set to the name of the agent. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- Span `name` **SHOULD** be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
@@ -107,7 +107,7 @@ Additional attributes on the span:
 | `gen_ai.usage.output_tokens.reasoning`     | int  | optional          | **Deprecated.** Use `gen_ai.usage.reasoning.output_tokens` instead. The number of tokens used for reasoning.                   | `30`    |
 
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For backwards compatibility, the legacy format `{role, content}` (e.g. `[{"role": "user", "content": "..."}]`) is also accepted.
+- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
 - **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
 - **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
 
@@ -115,12 +115,12 @@ Additional attributes on the span:
 
 Describes a tool execution.
 
-- Span `op` SHOULD be `"gen_ai.execute_tool"`.
-- Span `name` SHOULD be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
-- Attribute `gen_ai.operation.name` MUST be `"execute_tool"`.
-- Attribute `gen_ai.tool.name` SHOULD be set to the name of the tool. (e.g. `"query_database"`)
-- Attribute `gen_ai.agent.name` SHOULD be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute SHOULD be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
+- Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
+- Attribute `gen_ai.tool.name` **SHOULD** be set to the name of the tool. (e.g. `"query_database"`)
+- Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
@@ -139,11 +139,11 @@ Additional attributes on the span:
 
 **[2]:**
 
-Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
+Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
 
 **[3]:**
 
-Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
+Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
 
 **[4]**
 
@@ -156,7 +156,7 @@ Binary blobs in the input list should be replaced with the string `"[Blob substi
 **[6]**
 
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
-In these cases, the span name SHOULD be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+In these cases, the span name **SHOULD** be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
 
 **[7]**
 

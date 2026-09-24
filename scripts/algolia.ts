@@ -282,7 +282,7 @@ const PRODUCT_DOC_PREFIXES = [
   'product/',
   'concepts/',
   'cli/',
-  'guides/',
+  'get-started/',
   'integrations/',
 ];
 

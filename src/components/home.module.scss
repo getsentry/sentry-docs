@@ -18,25 +18,33 @@
     var(--gray-1);
 }
 
-.setupCard {
-  position: relative;
+.heroTitle {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.heroLogo {
+  flex-shrink: 0;
+  width: 96px;
+  height: auto;
+}
+
+:global(.dark) .heroLogo {
+  // The glyph is #1F1633; invert(1) alone yields a yellow-green. Flatten to
+  // black first so invert produces white.
+  filter: brightness(0) invert(1);
+}
+
+.setupCard {
   background: var(--white);
   border: 1px solid var(--gray-4);
   border-radius: 16px;
-  padding: 28px;
+  padding: 24px 28px;
   box-shadow: var(--shadow-6);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
-
-  &:hover {
-    transform: translateY(-3px);
-    border-color: var(--accent-purple);
-    box-shadow: 0 10px 30px color-mix(in srgb, var(--accent-purple), transparent 85%);
-  }
 }
 
 :global(.dark) .setupCard {
@@ -69,20 +77,125 @@
   flex: 1;
 }
 
-// Stretches over the whole card so clicking anywhere navigates, while staying a
-// real link for keyboard and middle-click.
-.cardLink {
-  color: inherit;
+.setupRowCopy {
+  min-width: 0;
+}
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
+.agentHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 16px;
+
+  .setupIcon {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+  }
+
+  .setupTitle {
+    grid-column: 2;
+    grid-row: 1;
+    margin-bottom: 0;
+  }
+
+  .commandPill {
+    grid-column: 3;
+    grid-row: 1;
+    margin-top: 0;
+    margin-left: 0;
+  }
+
+  .setupRowCopy {
+    grid-column: 1 / -1;
+  }
+
+  .setupDesc {
+    margin-bottom: 0;
+    flex: unset;
+
+    & + .setupDesc {
+      margin-top: 6px;
+    }
   }
 }
 
-// Both cards end in one pill row, so they match in height.
+@media (max-width: 767px) {
+  .agentHeader {
+    grid-template-columns: auto 1fr;
+
+    .commandPill {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .setupRowCopy {
+      grid-row: 3;
+    }
+  }
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gray-8);
+    opacity: 0.4;
+  }
+
+  span {
+    padding: 2px 36px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent-purple), transparent 94%);
+    color: color-mix(in srgb, var(--accent-purple), transparent 25%);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+}
+
+:global(.dark) .orDivider span {
+  color: color-mix(in srgb, var(--accent-purple-light), transparent 20%);
+}
+
+.manualHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+
+  .setupIcon {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .setupTitle {
+    margin-bottom: 4px;
+  }
+
+  .setupDesc {
+    margin-bottom: 0;
+    flex: unset;
+  }
+}
+
+.seeAllLink {
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Shared command/action pill.
 %pill {
   display: flex;
   align-items: center;
@@ -111,37 +224,11 @@
 .commandPill {
   @extend %pill;
 
-  // Above the stretched card link so the copy button stays clickable.
-  position: relative;
-  z-index: 1;
-
   cursor: pointer;
 }
 
-.pillLink {
-  @extend %pill;
-
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--accent-purple);
-
-  svg {
-    transition: transform 0.15s ease;
-  }
-}
-
-:global(.dark) .commandPill,
-:global(.dark) .pillLink {
+:global(.dark) .commandPill {
   background: var(--gray-3);
-}
-
-:global(.dark) .pillLink {
-  color: var(--accent-purple-light);
-}
-
-.setupCard:hover .pillLink svg {
-  transform: translateX(3px);
 }
 
 .agentIcons {
@@ -190,6 +277,21 @@
   &:hover {
     border-color: var(--accent-purple);
     transform: translateY(-2px);
+  }
+}
+
+.quickLinkTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--gray-12);
+  margin-bottom: 4px;
+
+  svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
   }
 }
 
