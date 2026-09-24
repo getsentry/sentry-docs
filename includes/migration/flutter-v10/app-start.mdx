@@ -16,3 +16,15 @@ Remove `options.enableStandaloneAppStartTracing` assignments. The standalone pat
 If startup work continues past the first frame, call `SentryFlutter.extendAppStart()` before the first frame renders and `await SentryFlutter.finishExtendedAppStart()` when that work finishes. An extension that reaches the 30-second app-start deadline is dropped, and the reported duration falls back to the first frame.
 
 Transaction mode (`SentryTraceLifecycle.static`) remains the default. Upgrading to v10 does not require switching to stream mode. If you choose to switch, follow the <PlatformLink to="/tracing/streamed-spans/migration-guide/">stream mode migration guide</PlatformLink> and use the two-parameter `beforeSendSpan` signature in [Telemetry Callbacks Receive a Hint](/platforms/dart/guides/flutter/migration/v9-to-v10/#telemetry-callbacks-receive-a-hint).
+
+The app-start breakdown also changes in alpha.7. Update queries, dashboards, and `beforeSendSpan` callbacks that match `app.start.plugin_registration`, `app.start.sentry_setup`, or `app.start.first_frame_render`. These operations are no longer emitted. The SDK records measured startup work using:
+
+| Operation                          | Measured Work                                 |
+| ---------------------------------- | --------------------------------------------- |
+| `app.start.root_widget_attachment` | Attachment of the root widget                 |
+| `app.start.frame_build`            | Flutter framework frame builds during startup |
+| `app.start.frame_raster`           | Rasterization of the first frame              |
+
+These spans are not one-to-one replacements for the previous broad intervals. Frame-build spans include `flutter.frame.warm_up` and `flutter.frame.deferred` attributes. A frame-build span does not by itself mean that the frame was submitted to the engine or displayed.
+
+**Unreleased after alpha.7:** The broad `app.start.pre_init` and `app.start.sentry_init` spans introduced in alpha.7 are no longer emitted. Startup frame builds that begin at or after the first frame's rasterization starts are also excluded. Review comparisons across prereleases because the breakdown has changed even when the standalone `app.start` root remains the same.

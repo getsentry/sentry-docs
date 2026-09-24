@@ -49,7 +49,7 @@ describe('migration guide collection selection', () => {
     const result = await MigrationGuide({migration: 'flutter-v10'});
     expect(result.props.storageKey).toBe('sentry-flutter-v10-migration:flutter');
     expect(result.key).toBe(result.props.storageKey);
-    expect(result.props.items).toHaveLength(14);
+    expect(result.props.items).toHaveLength(17);
     expect(
       result.props.items.some(item => item.id === 'apple-swift-package-manager')
     ).toBe(true);
