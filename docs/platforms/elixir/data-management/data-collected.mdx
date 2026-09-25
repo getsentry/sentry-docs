@@ -8,84 +8,114 @@ Sentry takes data privacy very seriously and has default settings in place that 
 
 The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry Elixir SDK collects:
 
-## HTTP Headers
+## Request Data Scrubbing
 
-When using the Plug or Phoenix integrations, HTTP headers from requests are included in error reports with built-in filtering for security:
+When using the Plug or Phoenix integrations, `Sentry.PlugContext` adds request data to error reports and scrubs it first. Starting with SDK version 14.0.0, scrubbed values are replaced with `"[Filtered]"`. Earlier versions use `"*********"`.
+
+A parameter is considered sensitive when its name contains one of the following terms, compared case-insensitively. For example, `auth` matches both `Authorization` and `user_auth_code`:
+
+`auth`, `token`, `secret`, `password`, `passwd`, `pwd`, `key`, `jwt`, `bearer`, `sso`, `saml`, `csrf`, `xsrf`, `credentials`, `session`, `sid`, `identity`
+
+Values that look like credit card numbers (13 to 16 digits, optionally separated by spaces or dashes) are also replaced with `"[Filtered]"`, regardless of their parameter name.
+
+The request-scrubbing options below are passed to `Sentry.PlugContext` in your endpoint or router, not set with `config :sentry`. If a custom scrubber raises, the SDK logs the failure at the `:error` level and uses its default scrubber for that field instead.
+
+## HTTP Headers
 
 **Default Behavior:**
 
-- Most request headers are included by default
-- Sensitive headers are automatically scrubbed, including:
-  - `authorization`
-  - `authentication`
-  - `cookie`
+- Request headers are included
+- The `authorization`, `authentication`, and `cookie` headers are removed
+- The `referer` header is kept, but sensitive query parameters in its URL are replaced with `"[Filtered]"`
 
 **Configuration:**
 
 ```elixir
-# Custom header filtering
-config :sentry,
-  header_scrubber: &MyApp.CustomHeaderScrubber.scrub/1
+plug Sentry.PlugContext, header_scrubber: &MyApp.SentryScrubber.scrub_headers/1
 ```
 
 ## Cookies
 
 **Default Behavior:**
-- **All cookies are scrubbed by default** for privacy protection
-- No cookie data is sent to Sentry unless explicitly configured
+
+- **All cookies are removed by default** for privacy protection
+- No cookie data is sent to Sentry unless you configure a custom cookie scrubber
 
 **Configuration:**
 
 ```elixir
-# Enable cookie collection with custom scrubbing
-config :sentry,
-  cookie_scrubber: &MyApp.CustomCookieScrubber.scrub/1
+plug Sentry.PlugContext, cookie_scrubber: &MyApp.SentryScrubber.scrub_cookies/1
 ```
 
 ## Users' IP Address
 
 **Default Behavior:**
+
 - Client IP addresses are collected from HTTP requests
-- Prioritizes `x-forwarded-for` header, falls back to `conn.remote_ip`
+- The SDK reads the `x-forwarded-for` header first and falls back to `conn.remote_ip`
 
 **Configuration:**
 
 ```elixir
-# Custom IP address extraction
-config :sentry,
-  remote_address_reader: {MyModule, :get_ip_address}
+plug Sentry.PlugContext, remote_address_reader: {MyApp.RemoteIp, :read}
 ```
 
 ## Request URL
 
 **Default Behavior:**
-- Full request URLs are always sent, including query strings
-- URLs may contain PII depending on your application's routing structure
+
+- The full request URL is sent, including the query string
+- Values of sensitive query parameters are replaced with `"[Filtered]"`, for example, `/search?token=abc123&page=2` is sent as `/search?token=[Filtered]&page=2`
+- All other query parameters are sent exactly as the client sent them
+- The URL path isn't scrubbed, so a secret in a path segment, such as `/reset/<token>`, is sent unless you add a custom URL scrubber
 
 **Configuration:**
 
 ```elixir
-# Custom URL scrubbing
-config :sentry,
-  url_scrubber: &MyApp.UrlScrubber.scrub/1
+# Use a custom URL scrubber
+plug Sentry.PlugContext, url_scrubber: &MyApp.SentryScrubber.scrub_url/1
+
+# Or turn off URL scrubbing entirely
+plug Sentry.PlugContext, url_scrubber: nil
 ```
 
-## Request Body
+## Request Parameters
 
 **Default Behavior:**
-- Request body parameters are included with automatic scrubbing
-- Sensitive parameters are filtered by default:
-  - `password`
-  - `passwd`
-  - `secret`
-  - Credit card numbers (detected via regex pattern)
+
+- Request parameters, including body, query, and path parameters, are included
+- Values of sensitive parameters are replaced with `"[Filtered]"`, including in nested maps and lists
 
 **Configuration:**
+
 ```elixir
-# Custom body parameter filtering
-config :sentry,
-  body_scrubber: &MyApp.BodyScrubber.scrub/1
+# Use a custom body scrubber
+plug Sentry.PlugContext, body_scrubber: &MyApp.SentryScrubber.scrub_params/1
+
+# Or don't send any request parameters
+plug Sentry.PlugContext, body_scrubber: nil
 ```
+
+## Adding Sensitive Parameter Names
+
+_Available since SDK version 14.0.0._
+
+To redact more parameters, add terms to the `:param_keys` list of the `:scrubber` option:
+
+```elixir
+config :sentry,
+  scrubber: [param_keys: ["internal_ref"]]
+```
+
+The terms extend the default list and can't remove terms from it. They're matched the same way as the default terms, as case-insensitive substrings, so `"internal_ref"` also redacts `"INTERNAL_REF_ID"`. The additional terms apply everywhere the SDK scrubs parameters:
+
+- Request parameters and the query string of the request URL
+- The query string of the `referer` header URL
+- `Sentry.LiveViewHook` breadcrumb data
+- Oban job arguments
+- Function arguments captured in stack traces
+
+They don't change which headers are removed.
 
 ## Source Context
 
@@ -109,6 +139,7 @@ config :sentry,
 **Default Behavior:**
 - Local variables are not included in stack traces
 - Stack traces contain function names, function variables, modules, file paths, and line numbers only
+- Values of sensitive keys in captured function arguments are replaced with `"[Filtered]"`
 
 **Note:** Unlike some other SDKs, the Elixir SDK does not currently support capturing local variables due to the nature of the Erlang VM.
 
@@ -166,6 +197,7 @@ When using the Oban integration for background jobs:
 - Job metadata and tags
 - Max attempts and current state
 
+Values of sensitive keys in job arguments are replaced with `"[Filtered]"`.
 
 ## More information
 
