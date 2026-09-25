@@ -18,7 +18,7 @@ A parameter is considered sensitive when its name contains one of the following 
 
 Values that look like credit card numbers (13 to 16 digits, optionally separated by spaces or dashes) are also replaced with `"[Filtered]"`, regardless of their parameter name.
 
-The request-scrubbing options below are passed to `Sentry.PlugContext` in your endpoint or router, not set with `config :sentry`. If a custom scrubber raises, the SDK logs the failure at the `:error` level and uses its default scrubber for that field instead.
+The `:header_scrubber`, `:cookie_scrubber`, `:remote_address_reader`, `:url_scrubber`, and `:body_scrubber` options below are passed to `Sentry.PlugContext` in your endpoint or router, not set with `config :sentry`. If one of these callbacks raises, the SDK logs the failure at the `:error` level and uses its default for that field instead. This means that data only your custom scrubber was removing is sent to Sentry for as long as the scrubber keeps failing.
 
 ## HTTP Headers
 
@@ -83,7 +83,7 @@ plug Sentry.PlugContext, url_scrubber: nil
 
 **Default Behavior:**
 
-- Request parameters, including body, query, and path parameters, are included
+- Request body and query parameters are included, and so are path parameters when `Sentry.PlugContext` runs after routing, such as in your router
 - Values of sensitive parameters are replaced with `"[Filtered]"`, including in nested maps and lists
 
 **Configuration:**
