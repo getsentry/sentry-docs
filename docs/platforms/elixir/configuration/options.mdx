@@ -84,7 +84,7 @@ If the function crashes, the event isn't sent, as if it had returned `false`.
 
 This function is called with an event and the result of sending that event. This is useful to log send results, instrument Sentry calls, and so on.
 
-The function runs after the event has been sent and its return value is ignored, so a crash doesn't change the send result.
+With the default buffered delivery, this function runs after the event is queued and doesn't wait for delivery to complete. Its return value is ignored, so a crash doesn't change the send result.
 
 </SdkOption>
 
@@ -179,7 +179,7 @@ config :sentry,
   traces_ignore_http_status_codes: [404, 500..599]
 ```
 
-The SDK drops the transaction only once the response status is known, after the request has been handled. By then, the trace has already been propagated as sampled, so services called while handling the request still report their spans. In Sentry, those spans appear without their root transaction.
+The SDK drops the transaction only once the response status is known, after the request has been handled. For sampled requests, the trace has already been propagated as sampled. Downstream services can still report spans, which appear in Sentry without their root transaction.
 
 This option is available since SDK version 14.0.0.
 
