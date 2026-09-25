@@ -14,6 +14,8 @@ export interface FrontMatter {
    * Document title - used in <title> as well as things like search titles.
    */
   title: string;
+  /** Override the generated SDK page H1 without changing navigation or metadata titles. */
+  h1_title?: string;
   /**
    * Set this to true to show a "beta" badge next to the title in the sidebar
    */
