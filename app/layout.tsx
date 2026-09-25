@@ -35,7 +35,17 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
+        <PlausibleProvider
+          taggedEvents
+          domain="docs.sentry.io,rollup.sentry.io"
+          // Third-party script load failures (bots, blockers) must not become
+          // unhandled promise rejections that flood the docs Sentry project.
+          scriptProps={{
+            onError: () => {
+              // no-op: analytics is best-effort
+            },
+          }}
+        />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
@@ -53,6 +63,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <Script
           strategy="lazyOnload"
           src="https://widget.kapa.ai/kapa-widget.bundle.js"
+          // next/script rejects the load promise with a raw DOM Event on failure.
+          // Without onError, bots/headless clients that cannot reach kapa.ai create
+          // unhandled rejections that show up as <unknown> in Sentry (DOCS-9E9).
+          onError={() => {
+            // no-op: the AI widget is optional and must not break the page
+          }}
           data-website-id="cac7cc70-969e-4bc1-a968-55534a839be4"
           data-button-hide // do not render kapa ai button
           data-modal-override-open-class="kapa-ai-class" // all elements with this class will open the kapa ai modal
