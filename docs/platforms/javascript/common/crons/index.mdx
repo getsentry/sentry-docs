@@ -12,12 +12,6 @@ Sentry Crons monitors scheduled, recurring jobs and alerts you when a job fails,
 
 <PlatformCategorySection supported={["server"]}>
 
-<PlatformCategorySection supported={["browser"]}>
-
-Cron monitoring runs on the server, not in browser code. Add the instrumentation below where your scheduled job executes.
-
-</PlatformCategorySection>
-
 ## Requirements
 
 <PlatformContent includePath="crons/requirements" />
@@ -32,10 +26,6 @@ Use one monitoring approach per job to avoid duplicate check-ins. Import `Sentry
 
 Use a runtime-specific import: `@sentry/hono/node`, `@sentry/hono/bun`, `@sentry/hono/deno`, or `@sentry/hono/cloudflare`. The root `@sentry/hono` entry point doesn't export the monitoring APIs. Initialize the runtime SDK for the scheduled job; Hono's request middleware alone doesn't initialize jobs that run outside an HTTP request.
 
-- **Node.js and Bun:** Use the cron library wrappers below.
-- **Deno:** Use the opt-in [DenoCron integration](/platforms/javascript/guides/deno/crons/#automatic-check-ins-with-denocron), subject to its Deno version requirements.
-- **Cloudflare Workers:** Scheduled-handler tracing doesn't send check-ins. Use `withMonitor` or `captureCheckIn`, as shown in the [Cloudflare guide](/platforms/javascript/guides/cloudflare/crons/#cloudflare-scheduled-handlers).
-
 </PlatformSection>
 
 <PlatformSection supported={["javascript.react-router"]}>
@@ -44,7 +34,7 @@ For Cloudflare Workers, use the initialized `@sentry/cloudflare` SDK for check-i
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.deno"]}>
+<PlatformSection supported={["javascript.deno", "javascript.hono"]}>
 
 ## Automatic Check-Ins With `Deno.cron`
 
@@ -59,7 +49,7 @@ The `DenoCron` integration does not work on Deno 2.9.0 and later. On these versi
 Requires SDK version `7.88.0` or higher and Deno `2.8.3` or earlier. Add the integration before registering your jobs:
 
 ```typescript
-import * as Sentry from "___SDK_PACKAGE___";
+import * as Sentry from "npm:@sentry/deno";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -111,7 +101,7 @@ Jobs scheduled with `@nestjs/schedule`'s `@Cron` decorator alone don't send chec
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.cloudflare"]}>
+<PlatformSection supported={["javascript.cloudflare", "javascript.hono"]}>
 
 ## Cloudflare Scheduled Handlers
 
