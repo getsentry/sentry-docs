@@ -68,17 +68,23 @@ The level the SDK logs at when it fails to send data to Sentry, such as an API f
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
+If a hook raises, throws, or exits, the SDK catches the failure and logs it at the `:error` level instead of letting it reach your code. Each option below describes what happens to the event in that case. See <PlatformLink to="/configuration/sdk-diagnostics/">SDK Diagnostics</PlatformLink> for how these messages are logged.
+
 <SdkOption name="before_send" type='function'>
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `nil` or `false` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before_send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+If the function crashes, the event isn't sent, as if it had returned `false`.
 
 </SdkOption>
 
 <SdkOption name="after_send_event" type='function'>
 
 This function is called with an event and the result of sending that event. This is useful to log send results, instrument Sentry calls, and so on.
+
+The function runs after the event has been sent and its return value is ignored, so a crash doesn't change the send result.
 
 </SdkOption>
 
@@ -151,26 +157,36 @@ config :sentry,
 
 If both `:traces_sampler` and `:traces_sample_rate` are configured, `:traces_sampler` takes precedence.
 
+If the function crashes, sampling falls back to `:traces_sample_rate`. If `:traces_sample_rate` isn't set either, the trace is dropped. If the function returns something other than a boolean or a float between `0.0` and `1.0`, the SDK logs a warning and drops the trace.
+
+</SdkOption>
+
+<SdkOption name="traces_ignore_http_status_codes" type='list' defaultValue='[404]'>
+
+HTTP response statuses to keep out of tracing. An incoming request answered with one of these statuses isn't reported as a transaction. Accepts status codes and ranges. Outgoing requests aren't affected.
+
+The default is `[404]`, so _404 Not Found_ requests aren't traced. Set it to `[]` to trace them again:
+
+```elixir
+config :sentry,
+  traces_ignore_http_status_codes: []
+```
+
+To ignore more statuses, list them as codes or ranges:
+
+```elixir
+config :sentry,
+  traces_ignore_http_status_codes: [404, 500..599]
+```
+
+The SDK drops the transaction only once the response status is known, after the request has been handled. By then, the trace has already been propagated as sampled, so services called while handling the request still report their spans. In Sentry, those spans appear without their root transaction.
+
+This option is available since SDK version 14.0.0.
+
 </SdkOption>
 
 ## Telemetry Processor Options
 
-The Telemetry Processor is a buffered, priority-based event delivery mechanism. It batches events and sends them to Sentry using a weighted scheduler that prioritizes critical events (like errors) over lower-priority ones (like logs). Logs are routed through the Telemetry Processor by default. You can opt in to route other event types through the processor as well. In a future major release, the Telemetry Processor will become the default delivery mechanism for all event types.
+The Telemetry Processor batches events and sends them to Sentry, prioritizing errors over lower-priority events such as logs. It buffers logs and metrics, as well as errors, check-ins, and transactions by default.
 
-<SdkOption name="telemetry_processor_categories" type='list' defaultValue='[:log]'>
-
-A list of event categories to route through the Telemetry Processor. By default, only `:log` events use the processor. You can opt in to route additional event types through it.
-
-Valid categories:
-
-- `:error` — error events (critical priority)
-- `:check_in` — cron check-in events (high priority)
-- `:transaction` — transaction events (medium priority)
-- `:log` — log events (low priority)
-
-```elixir
-config :sentry,
-  telemetry_processor_categories: [:error, :check_in, :transaction, :log]
-```
-
-</SdkOption>
+When your application shuts down gracefully, the SDK flushes buffered telemetry before it stops, waiting up to five seconds. To flush earlier or with a different timeout, call `Sentry.flush/1`.
