@@ -168,6 +168,42 @@ console.log("Executed Action for User:", 123, true);
 </SplitSectionCode>
 </SplitSection>
 
+<PlatformSection supported={["javascript.electron"]}>
+<SplitSection>
+<SplitSectionText>
+
+## Electron Automatic Logs
+
+Capture Electron lifecycle events, network requests, and process exits as logs without adding `Sentry.logger` calls:
+
+- <PlatformLink to="/configuration/integrations/net/">ElectronNet</PlatformLink> logs responses and errors from Electron's `net.request` API. These logs have `sentry.origin: auto.electron.net`.
+- <PlatformLink to="/configuration/integrations/electronbreadcrumbs/">ElectronBreadcrumbs</PlatformLink> logs selected events from `app`, `BrowserWindow`, `webContents`, `autoUpdater`, `screen`, and `powerMonitor`. These logs have `sentry.origin: auto.electron.events`.
+- <PlatformLink to="/configuration/integrations/childprocess/">ChildProcess</PlatformLink> logs Electron child process and renderer exits and crashes. These logs have `sentry.origin: auto.electron.child-process`.
+
+These integrations are included by default in the main process SDK. Starting with Electron SDK `7.18.0`, their log capture is opt-in: set `logs: true` on each integration you want to capture logs from. Earlier versions emitted these logs when SDK logging was enabled.
+
+Log capture follows each integration's breadcrumb settings. Keep breadcrumbs enabled for ElectronNet, select the events to capture for ElectronBreadcrumbs, and include the exit reasons to capture in ChildProcess's `breadcrumbs` option.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.electronNetIntegration({ logs: true }),
+    Sentry.electronBreadcrumbsIntegration({ logs: true }),
+    Sentry.childProcessIntegration({ logs: true }),
+  ],
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</PlatformSection>
+
 <SplitSection>
 <SplitSectionText>
 
