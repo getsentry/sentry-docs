@@ -3160,6 +3160,10 @@ const userDocsRedirects = [
     destination: '/concepts/key-terms/tracing/:path*',
   },
   {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
+  },
+  {
     source: '/organization/integrations/shortcut/',
     destination: '/integrations/issue-tracking/shortcut/',
   },
