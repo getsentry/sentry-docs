@@ -22,6 +22,88 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/issues/issue-details/breadcrumbs/).
 
+## Filtering Transaction Events
+
+Use `before_send_transaction` to drop unwanted transactions or modify transaction metadata before sending them to Sentry. Transactions don't pass through `before_send`.
+
+A transaction groups a root `SentrySpan` and its child spans into the performance event sent when the root span ends. Returning `null` from the callback drops the entire transaction, including its child spans.
+
+<Alert title="Enable Tracing">
+
+These examples assume you've <PlatformLink to="/tracing/">enabled tracing</PlatformLink>. Registering a callback doesn't enable it.
+
+</Alert>
+
+### Using `before_send_transaction`
+
+The callback receives a `SentryEvent` representing the transaction. Return the same object, with or without modifications, to send it, or return `null` to drop it. Modify the object in place and don't retain it after the callback returns.
+
+You can modify tags, contexts, `release`, and `environment`, or inspect the complete payload with `to_json()`. Error-specific fields such as `message`, `level`, threads, and exceptions aren't available for transaction events.
+
+Disable **Auto Init** and register the callback during <PlatformLink to="/configuration/options/#programmatic-configuration">programmatic initialization</PlatformLink>.
+
+The following example drops transactions from editor runs and adds a tag to the remaining transactions. In C#, use `options.Native.SetBeforeSendTransaction` for transactions created by the native layer, including GDScript and GDExtension code:
+
+```GDScript {tabTitle:GDScript} {mdExpandTabs}
+func _initialize() -> void:
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		options.before_send_transaction = _before_send_transaction
+	)
+
+func _before_send_transaction(transaction: SentryEvent) -> SentryEvent:
+	if transaction.environment == "editor_dev_run":
+		return null
+	transaction.set_tag("map_name", "frozen_keep")
+	return transaction
+```
+
+```csharp {tabTitle:C#}
+Sentry.Godot.SentrySdk.Init(options =>
+{
+    options.Native.SetBeforeSendTransaction(transaction =>
+    {
+        if (transaction.Environment == "editor_dev_run")
+        {
+            return null;
+        }
+        transaction.SetTag("map_name", "frozen_keep");
+        return transaction;
+    });
+});
+```
+
+The C# native callback receives a `SentryNativeEvent`, which supports `Release`, `Distribution`, `Environment`, and tags. Error-specific fields such as `Message`, `Level`, `Logger`, and exceptions aren't available. Modify the object in place and don't retain it after the callback returns.
+
+<Alert title="Thread Safety">
+
+The callback isn't guaranteed to run on the main thread. Avoid accessing the scene tree from it.
+
+</Alert>
+
+<Alert title="Web Exports">
+
+On Web, `before_send_transaction` only runs when <PlatformLink to="/configuration/options/#trace_lifecycle">`trace_lifecycle`</PlatformLink> is `SentryOptions.TRACE_LIFECYCLE_STATIC` (the default). It doesn't run for streamed spans.
+
+</Alert>
+
+### Filtering Managed Transactions in C#
+
+To filter transactions originating in managed (.NET) code, register `options.SetBeforeSendTransaction` in your initialization callback. It receives a `SentryTransaction`:
+
+```csharp
+options.SetBeforeSendTransaction((transaction, hint) =>
+{
+    if (transaction.Environment == "editor_dev_run")
+    {
+        return null;
+    }
+    transaction.SetTag("map_name", "frozen_keep");
+    return transaction;
+});
+```
+
+This callback doesn't process transactions from the native layer. If your game creates both native and managed transactions, configure both C# callbacks.
+
 ## Filtering User Feedback
 
 <AvailableSince version="2.2.0" />
