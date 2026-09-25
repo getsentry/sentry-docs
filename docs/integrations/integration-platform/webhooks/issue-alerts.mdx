@@ -14,6 +14,23 @@ The interactive demo below shows how to set up an internal integration that can 
 
 `'Sentry-Hook-Resource': 'event_alert'`
 
+## Issue Types
+
+The `event_alert.triggered` webhook fires for multiple issue types, not just traditional errors. The payload structure varies depending on what kind of issue triggered the alert. You can identify the issue type by checking for the `occurrence` field in `data.event` — it's absent for error events and present for all other issue types.
+
+| Issue Type      | `occurrence` field | `occurrence.type` | Key Fields                                                |
+| --------------- | ------------------ | ----------------- | --------------------------------------------------------- |
+| Error/Exception | absent             | —                 | `exception`, `stacktrace`, `request`, `user`              |
+| Cron Monitor    | present            | `4001`            | `contexts.monitor`, `monitor.*` tags                      |
+| Uptime Monitor  | present            | `7001`            | `evidenceDisplay` (failure reason, duration, status code) |
+| Metric Issue    | present            | `8001`            | `evidenceData.alert_id`                                   |
+
+<Alert>
+
+Metric issues here refer to issues created when a metric alert rule triggers an issue alert — this is distinct from the [`metric_alert` resource webhook](/integrations/integration-platform/webhooks/metric-alerts/), which has its own payload format.
+
+</Alert>
+
 ## Attributes
 
 ### action
@@ -46,6 +63,38 @@ The interactive demo below shows how to set up an internal integration that can 
 - type: string
 - description: the id of the issue
 
+The following fields are present for non-error issue types (cron monitors, uptime monitors, metric issues) and absent for traditional error events. See [Payload Examples](#payload-examples) for the full payload for each issue type.
+
+### data['event']['occurrence']
+
+- type: object (optional)
+- description: present for non-error issue types. Absent for traditional error events. Contains issue-type-specific details.
+
+### data['event']['occurrence']['type']
+
+- type: integer
+- description: identifies the issue type. Known values: `4001` (cron monitor), `7001` (uptime monitor), `8001` (metric issue).
+
+### data['event']['occurrence']['issueTitle']
+
+- type: string
+- description: the issue title for non-error issues
+
+### data['event']['occurrence']['subtitle']
+
+- type: string
+- description: a summary of what triggered the issue
+
+### data['event']['occurrence']['evidenceDisplay']
+
+- type: array
+- description: structured evidence about what triggered the issue. Each entry has `name` (string), `value` (string), and `important` (boolean) fields. Content varies by issue type.
+
+### data['event']['occurrence']['evidenceData']
+
+- type: object
+- description: context that varies by issue type (for example, `alert_id` for metric issues, `detectorId` for cron monitors).
+
 ### data['triggered_rule']
 
 - type: string
@@ -67,9 +116,11 @@ The following two fields are for [alert action UI components](/integrations/inte
 - type: object
 - description: the saved configurations for routing the alert within the external service
 
-## Payload
+## Payload Examples
 
-```json
+The payload structure varies by issue type. Select a tab below to see the payload for each type.
+
+```json {tabTitle: Error/Exception}
 {
   "action": "triggered",
   "actor": {
@@ -283,6 +334,239 @@ The following two fields are for [alert action UI components](/integrations/inte
         {
           "name": "channel",
           "value": "#general"
+        }
+      ]
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+```json {tabTitle: Cron Monitor}
+{
+  "action": "triggered",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "event": {
+      "event_id": "f7e3b2a1-9c4d-4e5f-8a6b-1c2d3e4f5a6b",
+      "platform": "other",
+      "message": "",
+      "datetime": "2024-01-15T10:30:00.000000Z",
+      "title": "Cron failure: My Cron Job",
+      "culprit": "",
+      "tags": [
+        ["monitor.id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+        ["monitor.slug", "my-cron-job"],
+        ["monitor.incident", "123"]
+      ],
+      "contexts": {
+        "monitor": {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "slug": "my-cron-job",
+          "name": "My Cron Job",
+          "config": {
+            "schedule": "0 * * * *",
+            "schedule_type": "crontab"
+          },
+          "status": "error"
+        },
+        "trace": {
+          "trace_id": "d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6",
+          "span_id": null
+        }
+      },
+      "environment": "production",
+      "sdk": null,
+      "url": "https://sentry.io/api/0/projects/test-org/backend/events/f7e3b2a1-9c4d-4e5f-8a6b-1c2d3e4f5a6b/",
+      "web_url": "https://sentry.io/organizations/test-org/issues/2234567890/events/f7e3b2a1-9c4d-4e5f-8a6b-1c2d3e4f5a6b/",
+      "issue_url": "https://sentry.io/api/0/issues/2234567890/",
+      "issue_id": "2234567890",
+      "occurrence": {
+        "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+        "projectId": 123,
+        "eventId": "f7e3b2a1-9c4d-4e5f-8a6b-1c2d3e4f5a6b",
+        "fingerprint": ["abc123def456"],
+        "issueTitle": "Cron failure: My Cron Job",
+        "subtitle": "Your monitor is failing: 1 error check-in detected.",
+        "resourceId": null,
+        "evidenceData": {
+          "detectorId": "det_abc123"
+        },
+        "evidenceDisplay": [
+          {
+            "name": "Failure reason",
+            "value": "An error check-in was detected",
+            "important": true
+          },
+          {
+            "name": "Environment",
+            "value": "production",
+            "important": false
+          },
+          {
+            "name": "Last successful check-in",
+            "value": "2024-01-15T10:20:00Z",
+            "important": false
+          }
+        ],
+        "type": 4001,
+        "detectionTime": 1705323000.0,
+        "level": "error"
+      }
+    },
+    "triggered_rule": "Cron Failure Alert",
+    "issue_alert": {
+      "title": "Cron Failure Alert",
+      "settings": [
+        {
+          "name": "channel",
+          "value": "#ops-alerts"
+        }
+      ]
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+```json {tabTitle: Uptime Monitor}
+{
+  "action": "triggered",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "event": {
+      "event_id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "platform": "other",
+      "message": "",
+      "datetime": "2024-01-15T10:30:00.000000Z",
+      "title": "Downtime detected for https://example.com",
+      "culprit": "",
+      "contexts": {
+        "trace": {
+          "trace_id": "e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7",
+          "span_id": null
+        }
+      },
+      "environment": "prod",
+      "sdk": null,
+      "url": "https://sentry.io/api/0/projects/test-org/backend/events/c3d4e5f6-a7b8-9012-cdef-345678901234/",
+      "web_url": "https://sentry.io/organizations/test-org/issues/3234567890/events/c3d4e5f6-a7b8-9012-cdef-345678901234/",
+      "issue_url": "https://sentry.io/api/0/issues/3234567890/",
+      "issue_id": "3234567890",
+      "occurrence": {
+        "id": "d4e5f6a7-b8c9-0123-defa-456789012345",
+        "projectId": 123,
+        "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+        "fingerprint": ["def456abc789"],
+        "issueTitle": "Downtime detected for https://example.com",
+        "subtitle": "Your monitored domain is down",
+        "resourceId": null,
+        "evidenceData": {
+          "responseCapureId": "cap_xyz789",
+          "assertionFailureData": "{\"status_code\": 503}",
+          "checkId": "chk_abc123"
+        },
+        "evidenceDisplay": [
+          {
+            "name": "Failure reason",
+            "value": "CONNECTION_FAILURE - Connection timeout",
+            "important": true
+          },
+          {
+            "name": "Duration",
+            "value": "5000ms",
+            "important": false
+          },
+          {
+            "name": "Method",
+            "value": "GET",
+            "important": false
+          },
+          {
+            "name": "Status Code",
+            "value": "503",
+            "important": false
+          }
+        ],
+        "type": 7001,
+        "detectionTime": 1705323000.0,
+        "level": "error",
+        "priority": 50
+      }
+    },
+    "triggered_rule": "Uptime Alert",
+    "issue_alert": {
+      "title": "Uptime Alert",
+      "settings": [
+        {
+          "name": "channel",
+          "value": "#ops-alerts"
+        }
+      ]
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+```json {tabTitle: Metric Issue}
+{
+  "action": "triggered",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "event": {
+      "event_id": "e5f6a7b8-c9d0-1234-efab-567890123456",
+      "platform": null,
+      "message": "",
+      "datetime": "2024-01-15T10:30:00.000000Z",
+      "sdk": null,
+      "url": "https://sentry.io/api/0/projects/test-org/backend/events/e5f6a7b8-c9d0-1234-efab-567890123456/",
+      "web_url": "https://sentry.io/organizations/test-org/issues/4234567890/events/e5f6a7b8-c9d0-1234-efab-567890123456/",
+      "issue_url": "https://sentry.io/api/0/issues/4234567890/",
+      "issue_id": "4234567890",
+      "occurrence": {
+        "id": "f6a7b8c9-d0e1-2345-fabc-678901234567",
+        "projectId": 123,
+        "eventId": "e5f6a7b8-c9d0-1234-efab-567890123456",
+        "fingerprint": ["ghi789jkl012"],
+        "issueTitle": "Query Anomaly",
+        "subtitle": "Critical: Number of events in the last 5m above threshold",
+        "resourceId": null,
+        "evidenceData": {
+          "alert_id": 42
+        },
+        "evidenceDisplay": [],
+        "type": 8001,
+        "detectionTime": 1705323000.0,
+        "level": "error",
+        "priority": 1
+      }
+    },
+    "triggered_rule": "High Event Volume Alert",
+    "issue_alert": {
+      "title": "High Event Volume Alert",
+      "settings": [
+        {
+          "name": "channel",
+          "value": "#eng-alerts"
         }
       ]
     }
