@@ -20,15 +20,15 @@ Use this page to write secret scanning rules, or to identify a credential you fo
 
 ## Formats
 
-| Credential | Format |
+| Format | Credential |
 | --- | --- |
-| Personal auth token | `sntryu_[a-f0-9]{64}` |
-| Organization auth token | `sntrys_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}` |
-| Reserved prefixes (user app, integration) | `sntrya_[a-f0-9]{64}`, `sntryi_[a-f0-9]{64}` |
-| Legacy tokens, [internal integration](/integrations/integration-platform/internal-integration/) tokens, OAuth client IDs and secrets, OAuth access and refresh tokens, device codes, [webhook](/integrations/integration-platform/webhooks/) signing secrets | `[a-f0-9]{64}` |
-| Legacy API key | `[a-f0-9]{32}` |
-| OAuth device user code | `[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}` |
-| [Relay](/product/relay/getting-started/) public or secret key | `[A-Za-z0-9_-]{43}` |
+| `sntryu_[a-f0-9]{64}` | Personal auth token |
+| `sntrys_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}` | Organization auth token |
+| `sntrya_[a-f0-9]{64}`, `sntryi_[a-f0-9]{64}` | Reserved prefixes (user app, integration) |
+| `[a-f0-9]{64}` | Legacy tokens, [internal integration](/integrations/integration-platform/internal-integration/) tokens, OAuth client IDs and secrets, OAuth access and refresh tokens, device codes, [webhook](/integrations/integration-platform/webhooks/) signing secrets |
+| `[a-f0-9]{32}` | Legacy API key |
+| `[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}` | OAuth device user code |
+| `[A-Za-z0-9_-]{43}` | [Relay](/product/relay/getting-started/) public or secret key |
 
 Organization tokens run about 180 to 250 characters, since the payload contains the org slug. A fixed-length pattern may miss valid tokens.
 
@@ -54,12 +54,9 @@ https?://[a-f0-9]{32}@[^/]+/\d+
 
 A prefixed token identifies itself. A bare hex string doesn't, so surrounding context can help determine whether it's a credential.
 
-Sentry's docs and tools use the names below. Other apps may rename variables, wrap values in their own config, or store tokens with none of these strings nearby, so treat this as a starting point.
+Sentry's docs and tools use these names next to a 64-character hex string: `SENTRY_AUTH_TOKEN`, `authToken`, `auth.token`, `Authorization: Bearer`, and `client_secret`. A Relay key may appear as `secret_key` or `public_key`, often in `credentials.json`.
 
-| Look for | Near |
-| --- | --- |
-| `[a-f0-9]{64}` | `SENTRY_AUTH_TOKEN`, `authToken`, `auth.token`, `Authorization: Bearer`, `client_secret` |
-| Relay key | `secret_key`, `public_key`, `credentials.json` |
+Other apps may rename variables, wrap values in their own config, or store tokens with none of these strings nearby, so treat this as a starting point.
 
 ## Matching Caveats
 
