@@ -31,6 +31,7 @@ import getAllFilesRecursively from './files';
 import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
 import remarkDefList from './mdx-deflist';
 import {DocMetrics} from './metrics';
+import {getGuideSupportKeys, isPlatformSupported} from './platformSupport';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
@@ -42,7 +43,7 @@ import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
-import {FrontMatter, Platform, PlatformCategory, PlatformConfig} from './types';
+import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, stripVersion, VERSION_INDICATOR} from './versioning';
 
@@ -148,43 +149,6 @@ async function writeCacheFile(file: string, data: string) {
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
-const isSupported = (
-  frontmatter: FrontMatter,
-  platformName: string,
-  guideName?: string,
-  categories: PlatformCategory[] = []
-): boolean => {
-  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-
-  const matchesCategory = (list?: PlatformCategory[]) =>
-    !!list?.some(category => categories.includes(category));
-
-  const hasAllowlist =
-    !!frontmatter.supported?.length || !!frontmatter.supportedCategories?.length;
-  if (hasAllowlist) {
-    // An exact guide match always wins.
-    if (frontmatter.supported?.includes(canonical)) {
-      return true;
-    }
-    // Otherwise a platform-level or category allowlist match keeps the page, but
-    // still lets the notSupported lists below filter it out.
-    if (
-      !frontmatter.supported?.includes(platformName) &&
-      !matchesCategory(frontmatter.supportedCategories)
-    ) {
-      return false;
-    }
-  }
-  if (
-    frontmatter.notSupported?.includes(canonical) ||
-    frontmatter.notSupported?.includes(platformName) ||
-    matchesCategory(frontmatter.notSupportedCategories)
-  ) {
-    return false;
-  }
-  return true;
-};
-
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
@@ -396,10 +360,9 @@ export async function getAllFilesFrontMatter(
       commonFiles.map(f =>
         limit(async () => {
           if (
-            !isSupported(
+            !isPlatformSupported(
+              [platformName],
               f.frontmatter,
-              platformName,
-              undefined,
               platformFrontmatter.categories
             )
           ) {
@@ -438,13 +401,23 @@ export async function getAllFilesFrontMatter(
       continue;
     }
 
+    const guideNames: string[] = [];
     for await (const guide of await opendir(guidesPath)) {
-      if (guide.isFile()) {
-        continue;
+      if (!guide.isFile()) {
+        guideNames.push(guide.name);
       }
-      const guideName = guide.name;
+    }
+    const guideConfigs = new Map(
+      await Promise.all(
+        guideNames.map(
+          async guideName =>
+            [guideName, await readGuideConfig(path.join(guidesPath, guideName))] as const
+        )
+      )
+    );
 
-      const guideFrontmatter = await readGuideConfig(path.join(guidesPath, guideName));
+    for (const guideName of guideNames) {
+      const guideFrontmatter = guideConfigs.get(guideName) || {};
 
       // Standalone framework guides opt out of platform common/ inheritance.
       if (!shouldInheritCommonContent(guideFrontmatter)) {
@@ -455,10 +428,9 @@ export async function getAllFilesFrontMatter(
         commonFiles.map(f =>
           limit(async () => {
             if (
-              !isSupported(
+              !isPlatformSupported(
+                getGuideSupportKeys(platformName, guideName, guideConfigs),
                 f.frontmatter,
-                platformName,
-                guideName,
                 guideFrontmatter.categories
               )
             ) {

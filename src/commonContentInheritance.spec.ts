@@ -31,6 +31,8 @@ beforeAll(async () => {
     'override',
     'browser-guide',
     'server-guide',
+    'node',
+    'express',
   ];
 
   await Promise.all([
@@ -54,6 +56,28 @@ beforeAll(async () => {
     writeFile(
       path.join(commonPath, 'only-browser.mdx'),
       frontmatter('Only browser', 'supportedCategories:\n  - browser\n')
+    ),
+    writeFile(
+      path.join(commonPath, 'node-only.mdx'),
+      frontmatter('Node only', 'supported:\n  - test.node\n')
+    ),
+    writeFile(
+      path.join(commonPath, 'not-on-node.mdx'),
+      frontmatter('Not on node', 'notSupported:\n  - test.node\n')
+    ),
+    writeFile(
+      path.join(commonPath, 'express-override.mdx'),
+      frontmatter(
+        'Express override',
+        'supported:\n  - test.express\nnotSupported:\n  - test.node\n'
+      )
+    ),
+    writeFile(
+      path.join(commonPath, 'node-page-excluded-from-server.mdx'),
+      frontmatter(
+        'Node page excluded from server',
+        'supported:\n  - test.node\nnotSupportedCategories:\n  - server\n'
+      )
     ),
     writeFile(
       path.join(guidesPath, 'index-opt-out', 'index.mdx'),
@@ -83,6 +107,11 @@ beforeAll(async () => {
     writeFile(
       path.join(guidesPath, 'server-guide', 'index.mdx'),
       frontmatter('Server guide', 'categories:\n  - server\n')
+    ),
+    writeFile(path.join(guidesPath, 'node', 'index.mdx'), frontmatter('Node')),
+    writeFile(
+      path.join(guidesPath, 'express', 'index.mdx'),
+      frontmatter('Express', 'fallbackGuide: test.node\ncategories:\n  - server\n')
     ),
     writeFile(
       path.join(guidesPath, 'override', 'index.mdx'),
@@ -138,6 +167,19 @@ describe.each([
     // supportedCategories: [browser] -> shown only on the browser guide
     expect(slugs.has('platforms/test/guides/browser-guide/only-browser')).toBe(true);
     expect(slugs.has('platforms/test/guides/server-guide/only-browser')).toBe(false);
+  });
+
+  test('inherits support rules through fallbackGuide with exact overrides', async () => {
+    const slugs = new Set(
+      (await collectFrontmatter(docsPath)).map(({slug}) => slug.replace(/\/index$/, ''))
+    );
+
+    expect(slugs.has('platforms/test/guides/express/node-only')).toBe(true);
+    expect(slugs.has('platforms/test/guides/express/not-on-node')).toBe(false);
+    expect(slugs.has('platforms/test/guides/express/express-override')).toBe(true);
+    expect(
+      slugs.has('platforms/test/guides/express/node-page-excluded-from-server')
+    ).toBe(false);
   });
 });
 
