@@ -19,6 +19,93 @@ Once in Sentry, these metrics can be viewed alongside relevant errors, and searc
 
 <PlatformContent includePath="metrics/usage" />
 
+## Automatic Metrics
+
+<AvailableSince version="14.0.0" />
+
+The SDK can report the health of the BEAM runtime without any manual instrumentation. This includes memory usage, run queue lengths, and how close your node is to its process, atom, and port limits. Use these metrics to spot memory growth, overloaded schedulers, or atom leaks before they take a node down.
+
+Runtime metrics are off by default.
+
+### Enable Runtime Metrics
+
+The SDK reads runtime measurements from [`telemetry_poller`](https://hexdocs.pm/telemetry_poller). This is an optional dependency, so add it to your `mix.exs` if your project doesn't already include it:
+
+```elixir {filename:mix.exs}
+defp deps do
+  [
+    {:sentry, "~> 14.0"},
+    {:telemetry_poller, "~> 1.3"}
+  ]
+end
+```
+
+Then turn on runtime metrics:
+
+```elixir {filename:config/config.exs}
+config :sentry,
+  metrics: [runtime: [enabled: true]]
+```
+
+If `telemetry_poller` isn't available, the SDK logs a warning at startup and doesn't report any runtime metrics.
+
+### Reported Metrics
+
+Every runtime metric is a gauge and has the `sentry.origin` attribute set to `auto.elixir.runtime_metrics`. Use this attribute to tell runtime metrics apart from the ones you send yourself, for example, when you filter metrics with [`before_send_metric`](#before_send_metric).
+
+| Metric | Unit | Description |
+| --- | --- | --- |
+| `elixir.runtime.mem.total` | `byte` | Total memory allocated by the runtime: the sum of `processes` and `system` |
+| `elixir.runtime.mem.processes` | `byte` | Memory allocated for Erlang processes |
+| `elixir.runtime.mem.processes_used` | `byte` | Memory used by Erlang processes |
+| `elixir.runtime.mem.system` | `byte` | Memory not directly related to Erlang processes, including atoms, binaries, code, and ETS tables |
+| `elixir.runtime.mem.atom` | `byte` | Memory allocated for atoms |
+| `elixir.runtime.mem.atom_used` | `byte` | Memory used by atoms |
+| `elixir.runtime.mem.binary` | `byte` | Memory allocated for binaries |
+| `elixir.runtime.mem.code` | `byte` | Memory allocated for loaded code |
+| `elixir.runtime.mem.ets` | `byte` | Memory allocated for ETS tables |
+| `elixir.runtime.run_queue.total` | none | Processes ready to run and waiting for a scheduler, across all run queues |
+| `elixir.runtime.run_queue.cpu` | none | Processes waiting in the normal and dirty CPU scheduler run queues |
+| `elixir.runtime.run_queue.io` | none | Processes waiting in the dirty I/O scheduler run queue |
+| `elixir.runtime.process.count` | none | Processes currently alive on the node |
+| `elixir.runtime.process.limit` | none | Maximum number of processes the node allows |
+| `elixir.runtime.process.utilization` | `ratio` | `process.count` divided by `process.limit`, between `0.0` and `1.0` |
+| `elixir.runtime.atom.count` | none | Atoms in the atom table |
+| `elixir.runtime.atom.limit` | none | Maximum number of atoms the node allows |
+| `elixir.runtime.atom.utilization` | `ratio` | `atom.count` divided by `atom.limit`, between `0.0` and `1.0` |
+| `elixir.runtime.port.count` | none | Ports currently open on the node |
+| `elixir.runtime.port.limit` | none | Maximum number of ports the node allows |
+| `elixir.runtime.port.utilization` | `ratio` | `port.count` divided by `port.limit`, between `0.0` and `1.0` |
+| `elixir.runtime.scheduler.utilization` | `ratio` | Share of time the normal schedulers were busy since the previous collection, between `0.0` and `1.0` |
+
+The `limit` and `utilization` metrics for processes, atoms, and ports need `telemetry_poller` 1.3.0 or later. With older versions, the SDK reports only the `count` metrics.
+
+### Collection Frequency
+
+The SDK collects runtime metrics at the period configured for `telemetry_poller`'s default poller, which is every 5 seconds. That's more often than most applications need to track runtime health, and every collection sends each metric in the table above from every node. To collect less often, set a longer period in milliseconds:
+
+```elixir {filename:config/config.exs}
+config :telemetry_poller, default: [period: 30_000]
+```
+
+The first values arrive one period after your application starts. Scheduler utilization is the change between two samples, so the SDK records a baseline when it starts and reports the first value at the next collection.
+
+### Runtime Version Attributes
+
+To group runtime metrics by Elixir and Erlang/OTP version, turn on `version_attributes`:
+
+```elixir {filename:config/config.exs}
+config :sentry,
+  metrics: [runtime: [enabled: true, version_attributes: true]]
+```
+
+The SDK then adds two attributes to every runtime metric:
+
+- `elixir_version`: The Elixir version, for example, `1.18.3`.
+- `otp_release`: The Erlang/OTP release, for example, `27`.
+
+This option is off by default. These versions only change when you upgrade, but adding them to every data point starts a new series for each metric on every rolling deploy.
+
 ## Options
 
 <PlatformContent includePath="metrics/options" />
