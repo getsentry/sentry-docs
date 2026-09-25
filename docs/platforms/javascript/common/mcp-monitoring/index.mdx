@@ -4,29 +4,8 @@ sidebar_title: MCP Monitoring
 sidebar_order: 8
 sidebar_section: features
 description: "Monitor MCP server tool executions, prompt retrievals, resource access, and errors."
-supported:
-  - javascript.node
-  - javascript.eve
-  - javascript.aws-lambda
-  - javascript.azure-functions
-  - javascript.connect
-  - javascript.express
-  - javascript.fastify
-  - javascript.gcp-functions
-  - javascript.hapi
-  - javascript.hono
-  - javascript.koa
-  - javascript.nestjs
-  - javascript.bun
-  - javascript.deno
-  - javascript.nextjs
-  - javascript.nuxt
-  - javascript.astro
-  - javascript.solidstart
-  - javascript.sveltekit
-  - javascript.remix
-  - javascript.cloudflare
-  - javascript.tanstackstart-react
+supportedCategories:
+  - server
 ---
 
 With Sentry's [MCP Monitoring](/product/mcp-servers/), you can track and debug MCP servers with full-stack context. You can monitor tool executions, prompt retrievals, resource access, and error rates alongside your other Sentry data, including logs, errors, and traces.
@@ -43,7 +22,20 @@ Support for `@modelcontextprotocol/server` 2.x requires Sentry JavaScript SDK ve
 
 ### Configure Input and Output Recording
 
-MCP inputs and outputs may contain sensitive data. Use `recordInputs` and `recordOutputs` to control collection for a specific server:
+By default, the SDK sends the inputs and outputs of your MCP tool calls, prompt retrievals, and resource reads. This gives you rich debugging context. MCP payloads can carry sensitive data, such as tokens, file paths, or private user content. Review what your server handles before you deploy to production.
+
+The <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.genAI`</PlatformLink> option controls this recording globally for both MCP and AI instrumentation:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+});
+```
+
+Use `recordInputs` and `recordOutputs` to control recording for a specific server. These options override the `dataCollection.genAI` settings:
 
 ```javascript
 const server = Sentry.wrapMcpServerWithSentry(mcpServer, {
@@ -52,36 +44,17 @@ const server = Sentry.wrapMcpServerWithSentry(mcpServer, {
 });
 ```
 
-These options override the corresponding `dataCollection.genAI.inputs` and `dataCollection.genAI.outputs` settings and require Sentry JavaScript SDK version `10.33.0` or newer.
+The `recordInputs` and `recordOutputs` options require Sentry JavaScript SDK version `10.33.0` or newer. In version 10, the SDK records inputs and outputs only when you set the `dataCollection` option or enable them on the wrapper. Starting with version 11, it records them by default.
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
 ## Preserve MCP Spans After the Response
 
-Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. With the static trace lifecycle, Sentry snapshots the request transaction when the response is returned, so MCP spans that finish later may be missing.
+Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. The SDK streams spans by default, sending each sampled span as it finishes, so this work is captured without extra configuration. You still need to wrap the MCP server as shown above.
 
-Set `traceLifecycle: "stream"` so the SDK can send each sampled span when it finishes. This changes how spans are delivered; you still need to wrap the MCP server as shown above. Span streaming on Cloudflare requires `@sentry/cloudflare` version `10.49.0` or newer.
+If you set `traceLifecycle: "static"`, the SDK snapshots the request transaction when the response is returned and MCP spans that finish later are dropped. Remove the option to get them back.
 
-```javascript {filename:index.js}
-import * as Sentry from "@sentry/cloudflare";
-
-const worker = {
-  async fetch(request, env, ctx) {
-    return handleMcpRequest(request, env, ctx);
-  },
-};
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    traceLifecycle: "stream",
-  }),
-  worker
-);
-```
-
-Stream mode sends span records instead of assembling one transaction event with embedded spans. `beforeSendTransaction` and `ignoreTransactions` don't apply to streamed spans. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for the `beforeSendSpan` and `ignoreSpans` configuration.
+Streaming sends span records instead of assembling one transaction event with embedded spans. `beforeSendTransaction` and `ignoreTransactions` don't apply to streamed spans. Use  <PlatformLink to="/configuration/options/#beforeSendSpan">beforeSendSpan</PlatformLink> and  <PlatformLink to="/configuration/options/#ignoreSpans">ignoreSpans</PlatformLink> instead.
 
 If you use `McpAgent`, wrap the `McpServer` returned by its `server` getter, and wrap the Agent class separately with `instrumentAgentWithSentry` to preserve request and RPC context. Agent instrumentation, MCP server wrapping, and span streaming solve different parts of the setup; none replaces the others. See <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>.
 
@@ -91,7 +64,7 @@ If you use `McpAgent`, wrap the `McpServer` returned by its `server` getter, and
 
 ## Hono on Cloudflare Workers
 
-If your Hono app runs on Cloudflare Workers, MCP work can finish after the Worker returns its response. Set `traceLifecycle: "stream"` in the Hono Sentry middleware so each sampled span is sent when it finishes:
+If your Hono app runs on Cloudflare Workers, MCP work can finish after the Worker returns its response. The Hono Sentry middleware uses span streaming by default, so each sampled span can be sent when it finishes:
 
 ```javascript {filename:index.js}
 import { sentry } from "@sentry/hono/cloudflare";
@@ -100,12 +73,11 @@ app.use(
   sentry(app, {
     dsn: "___PUBLIC_DSN___",
     tracesSampleRate: 1.0,
-    traceLifecycle: "stream",
   })
 );
 ```
 
-This changes how spans are delivered; it doesn't replace `wrapMcpServerWithSentry`. Stream mode requires `@sentry/hono` and `@sentry/cloudflare` version `10.49.0` or newer. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
+You still need `wrapMcpServerWithSentry` to instrument MCP operations. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
 
 </PlatformSection>
 

@@ -4,6 +4,8 @@ description: Every new Redis key sets a TTL or is registered as accepted durable
 sidebar_order: 65
 ---
 
+{/* Exercise the develop-docs 404 lint path in CI. */}
+
 <Alert>
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
   [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
@@ -17,6 +19,17 @@ Sentry uses Redis for caches, counters, buffers, and other short-lived state. Re
 Every new Redis key **MUST** have a TTL.
 
 If the data genuinely cannot expire, you **MUST** instead register the key with Infrastructure Engineering as accepted durable data: what the key holds, why it cannot expire, and how to rebuild it if the cluster loses it. Infrastructure Engineering maintains the list of accepted durable keys.
+
+## A TTL Makes a Key Evictable
+
+A TTL is an upper bound on how long a key lives, not a promise that it lives that long. When a cluster reaches its memory limit, Redis evicts keys according to the cluster's `maxmemory-policy`.
+
+Memorystore for Valkey defaults to `volatile-lru`, and a cluster that does not set `maxmemory-policy` runs that default. Under any `volatile-*` policy, only keys with a TTL can be evicted. A key with no TTL is never evicted, while a key with a TTL can be dropped under memory pressure long before its TTL runs out. Adding a TTL to a key moves it into the pool of keys the cluster is allowed to throw away.
+
+For caches and other data you can rebuild, that is fine, as long as the code that reads the key treats a missing key as a normal outcome. For data that must not disappear, it is backwards:
+
+- You must not add a TTL to durable data just to satisfy the rule above. Register the key as accepted durable data instead.
+- If the data must expire eventually but must not disappear before then (for example, it must be kept for exactly 30 days), a TTL alone does not guarantee that on a `volatile-*` cluster.
 
 ## A Sliding TTL Is Not a Bound
 

@@ -5,64 +5,17 @@ sidebar_order: 7
 description: "Monitor agents with token usage, latency, tool execution, and error tracking."
 sidebar_section: features
 new: true
-supported:
-  - javascript
-notSupported:
-  - javascript.eve
+supportedCategories:
+  - server
 ---
 
 With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates â€” and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
-<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.aws-lambda", "javascript.azure-functions", "javascript.bun", "javascript.cloudflare", "javascript.connect", "javascript.deno", "javascript.effect", "javascript.electron", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.firebase", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.astro", "javascript.nextjs", "javascript.nuxt", "javascript.react-router", "javascript.remix", "javascript.solidstart", "javascript.sveltekit", "javascript.tanstackstart-react"]}>
+## Supported Instrumentation
 
-## Getting Started
-
-Enable <PlatformLink to="/tracing/">tracing</PlatformLink> and pass `dataCollection` so generative AI content follows the SDK defaults (including prompts and responses when left unconfigured).
-
-`dataCollection: {}` also opts into other **permissive** defaults (bodies, cookies, user info, and more). Tighten via <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink>.
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
-```javascript
-import * as Sentry from "___SDK_PACKAGE___";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  dataCollection: {},
-});
-```
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-```javascript
-import * as Sentry from "@sentry/cloudflare";
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-    dataCollection: {},
-  }),
-  {
-    async fetch(request, env, ctx) {
-      // your worker
-    },
-  }
-);
-```
-
-Durable Objects / <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>: use <PlatformLink to="/features/durableobject/">`instrumentDurableObjectWithSentry`</PlatformLink> with the same options.
-
-</PlatformSection>
-
-## Instrumentation
-
-Pick your AI stack. Some libraries auto-instrument; others need a short setup â€” each page has the details.
+As of SDK version `11.0.0`, Sentry auto-instruments the most popular AI SDKs and frameworks out of the box â€” no manual setup is required. Just enable <PlatformLink to="/tracing/">tracing</PlatformLink>, then pick your AI stack below. Each integration page has the details.
 
 <IntegrationGrid
   integrations={[
@@ -71,15 +24,17 @@ Pick your AI stack. Some libraries auto-instrument; others need a short setup â€
       href: "/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/",
       title: "Workers AI",
       icon: "cloudflare",
+      supported: ["javascript.cloudflare"],
     },
     {
       to: "/agent-tracing/agents-sdk/",
       href: "/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/",
       title: "Agents SDK",
       icon: "cloudflare",
+      supported: ["javascript.cloudflare"],
     },
     {
-      to: "/agent-tracing/vercelai/",
+      to: "/configuration/integrations/vercelai/",
       title: "Vercel AI SDK",
       icon: "vercel",
       notSupported: [
@@ -90,44 +45,54 @@ Pick your AI stack. Some libraries auto-instrument; others need a short setup â€
       ],
     },
     {
-      to: "/agent-tracing/openai/",
+      to: "/configuration/integrations/openai/",
       title: "OpenAI",
       icon: "openai",
-      notSupported: ["javascript.deno"],
     },
     {
-      to: "/agent-tracing/anthropic/",
+      to: "/configuration/integrations/anthropic/",
       title: "Anthropic",
       icon: "anthropic",
-      notSupported: ["javascript.deno"],
     },
     {
-      to: "/agent-tracing/google-genai/",
+      to: "/configuration/integrations/google-genai/",
       title: "Google Gen AI SDK",
       icon: "google-genai",
-      notSupported: ["javascript.deno"],
     },
     {
-      to: "/agent-tracing/langchain/",
+      to: "/configuration/integrations/langchain/",
       title: "LangChain",
       icon: "langchain",
-      notSupported: ["javascript.deno"],
     },
     {
-      to: "/agent-tracing/langgraph/",
+      to: "/configuration/integrations/langgraph/",
       title: "LangGraph",
       icon: "langgraph",
-      notSupported: ["javascript.deno"],
+    },
+    {
+      to: "/configuration/integrations/mistral/",
+      title: "Mistral AI",
+      icon: "mistral",
+    },
+    {
+      to: "/configuration/integrations/groq/",
+      title: "Groq",
+      icon: "groq",
+    },
+    {
+      to: "/configuration/integrations/together-ai/",
+      title: "Together AI",
+      icon: "together-ai",
     },
     {
       to: "/agent-tracing/mastra/",
+      href: "/platforms/javascript/guides/mastra/",
       title: "Mastra",
       icon: "mastra",
       supported: [
         "javascript.astro",
         "javascript.aws-lambda",
         "javascript.azure-functions",
-        "javascript.connect",
         "javascript.express",
         "javascript.fastify",
         "javascript.gcp-functions",
@@ -146,18 +111,40 @@ Pick your AI stack. Some libraries auto-instrument; others need a short setup â€
     },
     {
       to: "/agent-tracing/eve/",
+      href: "/platforms/javascript/guides/eve/",
       title: "Eve",
       icon: "eve",
       supported: ["javascript.node"],
     },
     {
       to: "/agent-tracing/flue/",
+      href: "/platforms/javascript/guides/flue/",
       title: "Flue",
       icon: "flue",
       supported: ["javascript.node", "javascript.cloudflare"],
     },
   ]}
 />
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+## Compose Cloudflare Instrumentation
+
+A Cloudflare AI application can need three independent layers. Inspect the host, every model client it calls, and its conversation IDs instead of stopping after the first integration:
+
+1. **Instrument the host.** Use the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink>, `withSentry`, or <PlatformLink to="/agent-tracing/agents-sdk/">`instrumentAgentWithSentry`</PlatformLink>. Do not wrap the same Worker or Agent class twice.
+2. **Instrument each model client.** Workers AI (`env.AI`) is automatic when the Sentry host wrapper supplies the instrumented `env`. For bundled provider SDKs, use Vite build-time instrumentation or the provider's manual wrapper. Follow the matching integration page for Vercel AI, LangChain, LangGraph, or another library.
+3. **Group the conversation.** The Agents SDK can infer a conversation ID. For other chat applications, including Workers AI without the Agents SDK, set one before the model or tool calls. See [Tracking Conversations](#tracking-conversations).
+
+For example, an Agents SDK class that calls `env.AI.run()` needs the Agents SDK host setup and Workers AI model instrumentation. The host wrapper supplies the instrumented binding, so do not add another provider wrapper around the same `env.AI` call.
+
+<Alert>
+
+Flue is the exception to this composition. Its blueprint owns the host and model instrumentation. Do not add another Sentry provider integration to Flue-generated model calls, or token and cost totals will be counted twice.
+
+</Alert>
+
+</PlatformSection>
 
 ## Tracking Conversations
 
@@ -219,45 +206,13 @@ export default Sentry.withSentry(
 );
 ```
 
-On the default CF entrypoint, control Vercel AI I/O with `experimental_telemetry` per call (or integration-level `record*` via `nodejs_compat`). See each integration page.
+On Cloudflare, control Vercel AI I/O with integration-level `record*` options or with `experimental_telemetry` per call. See each integration page.
 
 </PlatformSection>
 
 ### Streaming Gen AI Spans
 
 From SDK `10.61.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
-
-Self-hosted Sentry users should set `streamGenAiSpans: false` if standalone `gen_ai` spans may not be ingested.
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  streamGenAiSpans: false,
-});
-```
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-```javascript
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-    streamGenAiSpans: false,
-  }),
-  {
-    async fetch(request, env, ctx) {
-      /* ... */
-    },
-  }
-);
-```
-
-</PlatformSection>
 
 ## Manual Instrumentation
 
@@ -270,30 +225,13 @@ export default Sentry.withSentry(
     "javascript.react-router",
   ]}
 >
-  You can also instrument agent spans yourself. See{" "}
-  <PlatformLink to="/agent-tracing/manual-instrumentation/">
-    manual instrumentation
-  </PlatformLink>
-  .
+  {/* prettier-ignore */}
+  <p>You can also instrument agent spans yourself. See <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>.</p>
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript.effect", "javascript.electron", "javascript.elysia", "javascript.firebase", "javascript.nitro", "javascript.react-router"]}>
 ## MCP Server Monitoring
 
 If you're building MCP (Model Context Protocol) servers, Sentry can also track tool executions, prompt retrievals, and resource access. See <PlatformLink to="/mcp-monitoring/">MCP Monitoring</PlatformLink> for setup instructions.
-
-</PlatformSection>
-
-</PlatformSection>
-
-<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.bun", "javascript.cloudflare", "javascript.connect", "javascript.deno", "javascript.effect", "javascript.electron", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.firebase", "javascript.gcp-functions", "javascript.hapi", "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.astro", "javascript.nextjs", "javascript.nuxt", "javascript.react-router", "javascript.remix", "javascript.solidstart", "javascript.sveltekit", "javascript.tanstackstart-react", "javascript.eve"]}>
-
-## Prerequisites
-
-Before setting up Agent Tracing, ensure you have <PlatformLink to="/tracing/">tracing enabled</PlatformLink> in your Sentry configuration.
-
-Starting with JavaScript SDK v11, browser SDKs no longer export AI integrations or instrumentation helpers. Use [manual span creation](#manual-span-creation) instead. Browser SDK v10 and earlier can still use integration helpers, and server SDK support is unchanged.
-
-<Include name="agent-tracing/manual-instrumentation" />
 
 </PlatformSection>

@@ -41,7 +41,7 @@ If you set up the Sentry SDK and it's not sending any data to Sentry:
 <Expandable permalink title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
-Check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn everything you need
+Check out our <PlatformLink to="/migration/v10-to-v11/">migration guide</PlatformLink> to learn everything you need
 to know to get up and running again with the latest Sentry features.
 
 </Expandable>
@@ -169,20 +169,6 @@ If your application started to misbehave because of performing additional OPTION
 To fix this, change the `tracePropagationTargets` option during SDK initialization. For more details, see <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#tracePropagationTarget">Automatic Instrumentation</PlatformLink> in our Tracing documentation.
 
 </Expandable>
-</PlatformCategorySection>
-
-<PlatformCategorySection notSupported={['browser']}>
-<PlatformSection notSupported={['javascript.aws-lambda', 'javascript.azure-functions', 'javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.effect', 'javascript.electron', 'javascript.elysia', 'javascript.firebase', 'javascript.gcp-functions', 'javascript.nestjs', 'javascript.nitro', 'javascript.tanstackstart-react']}>
-<Expandable permalink title="Error: 'import-in-the-middle' failed to wrap">
- When using ESM, by default all packages are wrapped under the hood by
- [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle).
- `import-in-the-middle` has compatibility issues with some packages and
- can throw errors in these situations.
-
-Check out the <PlatformLink to="/install/esm/#troubleshooting-instrumentation">ESM Troubleshooting Instrumentation</PlatformLink> section for more information.
-
-</Expandable>
-</PlatformSection>
 </PlatformCategorySection>
 
 <PlatformCategorySection supported={['browser']}>
@@ -517,42 +503,10 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
 </PlatformSection>
 
-<PlatformSection notSupported={['javascript.nuxt']}>
-  <Expandable permalink title="pnpm: Resolving 'import-in-the-middle' external package errors">
-
-When using pnpm, you might encounter errors related to packages that can't be external, particularly with packages like `import-in-the-middle` and `require-in-the-middle`. These errors typically occur due to pnpm's strict dependency management and hoisting behavior.
-
-While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
-
-```bash
-pnpm add import-in-the-middle require-in-the-middle
-```
-
-As a workaround, create or modify `.npmrc` in your project root. First, try to specifically hoist the dependencies in question:
-
-```ini {filename:.npmrc}
-public-hoist-pattern[]=*import-in-the-middle*
-public-hoist-pattern[]=*require-in-the-middle*
-```
-
-If that doesn't work, you can also tell pnpm to hoist all dependencies:
-
-```ini {filename:.npmrc}
-shamefully-hoist=true
-```
-
-<Alert level="warning">
-  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from
-  a dependency management perspective, it's sometimes necessary for
-  compatibility with certain packages that expect Node.js module resolution
-  behavior similar to npm or yarn.
-</Alert>
-
-  </Expandable>
-</PlatformSection>
-
 <PlatformSection supported={['javascript.nuxt']}>
   <Expandable permalink title="Failed to register 'import-in-the-middle' during build time">
+    This applies to SDK version 10 and earlier. Version 11 and above don't use `import-in-the-middle`.
+
     After adding `sentry.server.config.ts` and building the project, you might get an error like this:
     `Failed to register ESM hook import-in-the-middle/hook.mjs`. You can add an override (npm/pnpm) or a resolution (yarn)
     for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output. See the [underlying issue in the Nitro project](https://github.com/nitrojs/nitro/issues/2703).
@@ -584,6 +538,8 @@ shamefully-hoist=true
 
   <Expandable permalink title="pnpm dev: Cannot find package 'import-in-the-middle'">
 
+    This applies to SDK version 10 and earlier. Version 11 and above don't use `import-in-the-middle`.
+
     Sentry injects `import "import-in-the-middle/hook.mjs"` in your server entry. This import acts as a hint for node bundlers to really include this file.
     As pnpm implements a strict dependency isolation, this import might cause problems.
     Per default, `shamefully-hoist` is `false` ([pnpm docs here](https://pnpm.io/next/npmrc#shamefully-hoist)) and this prevents accessing non-declared dependencies.
@@ -596,13 +552,26 @@ shamefully-hoist=true
   </Expandable>
 
   <Expandable permalink title="Nuxt: Server-side Nitro is not sending events">
-    Nuxt builds the server-side Nitro application as ES Modules, which introduces limitations for server-side tracing during development.
-    Currently, trace collection is only supported when building and running the application. Development mode (`nuxt dev`) is currently not supported.
+    The SDK bundles `sentry.server.config.ts` into the Nitro server build and initializes Sentry when the server starts, in production and in development mode.
+    Read more about this in <PlatformLink to="/install">Server-Side Installation</PlatformLink>.
 
-    When running the build output, Sentry needs to be initialized before running the rest of the application. This is done automatically, but might not work for your use case.
-    Read more about this in <PlatformLink to="/install">installation methods</PlatformLink>.
+    If the server side doesn't send events, check the following:
+
+    - The `sentry.server.config.ts` file is in the root of your project, next to `nuxt.config.ts`.
+    - Enable `debug` in the `sentry` options of your `nuxt.config.ts`. The SDK then prints a message during the build when it bundles the server config.
+    - Remove the deprecated `autoInjectServerSentry` option, so that the SDK uses the bundled initialization.
+    - If you're using a Cloudflare Nitro preset, the SDK doesn't use `sentry.server.config.ts`. Use the [Cloudflare Nitro plugin](/platforms/javascript/guides/cloudflare/frameworks/nuxt/) instead.
+    - The SDK doesn't initialize while Nitro prerenders pages at build time, so builds don't send events.
 
     ---
+
+    **SDK version 10 and earlier**
+
+    Nuxt builds the server-side Nitro application as ES Modules, which introduces limitations for server-side tracing during development.
+    Trace collection is only supported when building and running the application. Development mode (`nuxt dev`) is not supported.
+
+    When running the build output, Sentry needs to be initialized before running the rest of the application.
+    Read more about this in the [installation methods for version 10](/platforms/javascript/guides/nuxt/install__v10.x/).
 
     We are currently investigating an issue where the server-side is not correctly initialized with a recent update of Nitro (the server-side toolkit in Nuxt).
 
@@ -675,7 +644,7 @@ shamefully-hoist=true
       };
 
       // The Sentry plugin should always be applied last
-      const { withSentryConfig } = require('@sentry/nextjs');
+      const { withSentryConfig } = require('@sentry/nextjs/config');
       module.exports = withSentryConfig(module.exports)
     ```
 
@@ -695,9 +664,9 @@ shamefully-hoist=true
   <Expandable permalink title="Spans from waitUntil() or other work after the response are missing">
     Cloudflare's [`waitUntil()`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil) lets work continue after the Worker returns a response. Whether those spans arrive depends on your trace lifecycle.
 
-    On the static lifecycle, which is the default, the SDK snapshots the request transaction when the response is returned, so anything finishing later is dropped. Streaming sends each sampled span as it finishes instead, which captures deferred work.
+    In transaction mode (`traceLifecycle: "static"`), the SDK snapshots the request transaction when the response is returned, so spans that finish later may be missing. Stream mode, the default since SDK version 11.0.0, sends sampled spans in batches as they finish, which captures deferred work.
 
-    Set `traceLifecycle: "stream"`, which needs `@sentry/cloudflare` version `10.49.0` or newer:
+    If you use transaction mode, remove `traceLifecycle: "static"` or set it to `"stream"`. On SDK version 10, explicitly set `traceLifecycle: "stream"`, which requires `@sentry/cloudflare` version `10.49.0` or newer:
 
     ```javascript {filename:index.js}
     export default Sentry.withSentry(
@@ -710,7 +679,7 @@ shamefully-hoist=true
     );
     ```
 
-    If you need to keep the static lifecycle, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` isn't available in stream mode.
+    If you need to keep transaction mode, wrap the background work in its own span with `forceTransaction: true`, which records it as a separate transaction. `forceTransaction` isn't available in stream mode.
 
     ```javascript {filename:index.js}
     ctx.waitUntil(
@@ -760,6 +729,65 @@ shamefully-hoist=true
     ```
 
   </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.bun']}>
+  <Expandable permalink title="My database client isn't traced in a plugin build">
+    The plugin can only rewrite a package that passes through the bundler. Anything left external is resolved at runtime, never reaches the transform, and publishes no channel events, so it records no spans.
+
+    Build without `external`, which is the configuration to start from:
+
+    ```typescript {filename:build.ts}
+    import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+    await Bun.build({
+      entrypoints: ["./app.ts"],
+      outdir: "./dist",
+      target: "bun",
+      plugins: [sentryBunPlugin()],
+    });
+    ```
+
+    A blanket externalization strategy is the usual cause. Both `packages: "external"` and `"*"` in `external` push your instrumented packages back out of the bundle, and the plugin warns at build time:
+
+    ```typescript {filename:build.ts} {diff}
+     await Bun.build({
+       entrypoints: ["./app.ts"],
+       outdir: "./dist",
+       target: "bun",
+    -  packages: "external",
+       plugins: [sentryBunPlugin()],
+     });
+    ```
+
+    If you do need `external`, list only packages you don't need traced, and keep your database clients, AI SDKs and instrumented frameworks off the list.
+
+  </Expandable>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+<Expandable permalink title="The app stops at startup with `SyntaxError: Unexpected token ':'`">
+
+Your app imports a dependency that calls `require()` on a JSON file, and the `@sentry/deno/import` hook is active. Deno compiles the JSON as JavaScript instead, and the process stops before your code runs:
+
+```
+error: Uncaught SyntaxError: Unexpected token ':'
+```
+
+This is a Deno bug ([denoland/deno#36240](https://github.com/denoland/deno/issues/36240)): while any module hook is registered, Deno loads `.json` files with the wrong format. Express, Fastify, Hapi, Koa and mysql2 all read a JSON file this way.
+
+Remove the `@sentry/deno/import` line from your entry file to start your app again:
+
+```javascript {filename: main.ts}
+import * as Sentry from "npm:@sentry/deno";
+```
+
+Errors, `Deno.serve` and `node:http` spans, logs and metrics all keep working without the hook. You lose the integrations that depend on it, such as `mysql` 2.x and `pg`. Drivers that publish their own diagnostics channels, among them `mysql2` 3.20.0 and later and `ioredis` 5.11.0 and later, are instrumented either way.
+
+</Expandable>
+
 </PlatformSection>
 
 If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

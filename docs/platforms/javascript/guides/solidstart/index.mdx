@@ -149,12 +149,32 @@ mount(() => <StartClient />, document.getElementById("app"));
 <SplitSection>
 <SplitSectionText>
 
-Create a file named `instrument.server.ts` in your `src` folder. In this file, initialize and import Sentry for your server:
+Initialize Sentry on the server. On SolidStart 2, do this in a Nitro startup plugin, which runs once when the server starts. On SolidStart 1, create an `instrument.server.ts` file in your `src` folder.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename:src/instrument.server.ts}
+```typescript {tabTitle:SolidStart 2} {filename:server/plugins/sentry.ts} {mdExpandTabs}
+import * as Sentry from "@sentry/solidstart";
+import { definePlugin } from "nitro";
+
+export default definePlugin(() => {
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
+  });
+});
+```
+
+```javascript {tabTitle:SolidStart 1} {filename:src/instrument.server.ts}
 import * as Sentry from "@sentry/solidstart";
 
 Sentry.init({
@@ -205,13 +225,29 @@ export default createMiddleware({
 <SplitSection>
 <SplitSectionText>
 
-Wrap your SolidStart config in `app.config.ts` with `withSentry` so that the instrumentation file gets included in your build output.
-Then, specify the middleware that you've just created:
+Add the Sentry plugin to your build config and register the middleware you just created. On SolidStart 2, add `sentrySolidStart` to `vite.config.ts`. On SolidStart 1, wrap your `app.config.ts` with `withSentry` so that the instrumentation file gets included in your build output.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename:app.config.ts} {5-15}
+```typescript {tabTitle:SolidStart 2} {filename:vite.config.ts} {mdExpandTabs}
+import { sentrySolidStart } from "@sentry/solidstart/vite";
+import { solidStart } from "@solidjs/start/config";
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    solidStart({
+      middleware: "./src/middleware.ts",
+    }),
+    sentrySolidStart(),
+    nitro(),
+  ],
+});
+```
+
+```javascript {tabTitle:SolidStart 1} {filename:app.config.ts} {5-15}
 import { withSentry } from "@sentry/solidstart";
 import { defineConfig } from "@solidjs/start/config";
 
@@ -274,24 +310,35 @@ export default function App() {
 <SplitSection>
 <SplitSectionText>
 
-Instrumentation needs to happen as early as possible to make sure Sentry works as intended. To do this, add an `--import` flag to the `NODE_OPTIONS` environment variable when you run your application and set it to import the instrumentation file created by the build output: `.output/server/instrument.server.mjs`.
+On SolidStart 2, the Vite plugin instruments your dependencies at build time, so the server needs no preload flag. Build with `vite build` and start the output directly.
+
+On SolidStart 1, instrumentation has to happen as early as possible, so add an `--import` flag pointing at the instrumentation file that the build output creates: `.output/server/instrument.server.mjs`.
 
 <Alert>
 
-Run your build command to generate the `instrument.server.mjs` file before running your app. Depending on your build preset, the location of the file can differ. To find out where the file is located, monitor the build log output for:
+On SolidStart 1, run your build command to generate the `instrument.server.mjs` file before running your app. Depending on your build preset, the location of the file can differ. To find out where the file is located, monitor the build log output for:
 
 `[Sentry SolidStart withSentry] Successfully created /my/project/path/.output/server/instrument.server.mjs.`
 
 </Alert>
 
-If you're not able to use the `--import` flag, check the alternative <PlatformLink to="/install">installation methods</PlatformLink>.
+If you're not able to use the `--import` flag on SolidStart 1, check the alternative <PlatformLink to="/install">installation methods</PlatformLink>.
 
 </SplitSectionText>
 <SplitSectionCode>
 
 For example, update your scripts in `package.json`:
 
-```json {filename:package.json}
+```json {tabTitle:SolidStart 2} {filename:package.json} {mdExpandTabs}
+{
+  "scripts": {
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
+  }
+}
+```
+
+```json {tabTitle:SolidStart 1} {filename:package.json}
 {
   "scripts": {
     "start:vinxi": "NODE_OPTIONS='--import ./.output/server/instrument.server.mjs ' vinxi start",
@@ -327,12 +374,32 @@ To automatically report exceptions from inside a component tree to Sentry, wrap 
 <SplitSection>
 <SplitSectionText>
 
-To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your SolidStart configuration:
+To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug to the Sentry plugin in your build config:
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```TypeScript {filename:app.config.ts}
+```typescript {tabTitle:SolidStart 2} {filename:vite.config.ts} {mdExpandTabs}
+import { sentrySolidStart } from "@sentry/solidstart/vite";
+import { solidStart } from "@solidjs/start/config";
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    solidStart(),
+    sentrySolidStart({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+    nitro(),
+  ],
+});
+```
+
+```TypeScript {tabTitle:SolidStart 1} {filename:app.config.ts}
 import { withSentry } from '@sentry/solidstart';
 import { defineConfig } from '@solidjs/start/config';
 
