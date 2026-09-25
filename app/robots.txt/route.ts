@@ -11,6 +11,7 @@ Sitemap: ${sitemap}
 
 User-agent: *
 Allow: /
+Disallow: /api/preview-share
 Content-Signal: ai-train=yes, search=yes, ai-input=yes
 `.trim(),
     {headers: {'content-type': 'text/plain'}}
