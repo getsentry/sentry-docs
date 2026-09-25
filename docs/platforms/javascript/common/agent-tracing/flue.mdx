@@ -14,7 +14,7 @@ supported:
 With a valid `SENTRY_DSN`, Flue can send three connected signals to Sentry:
 
 - **Traces**: When `SENTRY_TRACES_SAMPLE_RATE` is above `0`, Flue sends its `invoke_agent`, `chat`, and `execute_tool` span hierarchy with token usage, following the OpenTelemetry GenAI semantic conventions. Sentry shows these traces in [trace explorer](/product/trace-explorer/), and builds a wider view for debugging your [agents](/product/agents/).
-- **Logs**: With `enableLogs: true` in the generated Sentry SDK configuration, every `log.info`, `log.warn`, and `log.error` call from your tools and hooks appears as <PlatformLink to="/logs/">Sentry Logs</PlatformLink>. When tracing is enabled, Sentry correlates these logs with the trace.
+- **Logs**: Every `log.info`, `log.warn`, and `log.error` call from your tools and hooks appears as <PlatformLink to="/logs/">Sentry Logs</PlatformLink>. When tracing is enabled, Sentry correlates these logs with the trace.
 - **Issues**: The generated bridge captures terminal failures, such as a failed prompt, skill, task, or shell operation, as Sentry error issues. Recovered tool errors remain diagnostic context on the trace when tracing is enabled and don't create issues.
 
 <PlatformSection supported={["javascript.node", "javascript.eve"]}>
@@ -109,7 +109,6 @@ Sentry.init({
   enabled: Boolean(process.env.SENTRY_DSN),
   tracesSampleRate,
   traceLifecycle: "stream",
-  enableLogs: true,
   // Flue already emits one `chat` span per model call, so Sentry's
   // AI provider integrations are removed to avoid double counting.
   integrations: (defaults) =>
@@ -165,7 +164,6 @@ export const cloudflare = extend({
         release: env.SENTRY_RELEASE,
         tracesSampleRate: clampRate(env.SENTRY_TRACES_SAMPLE_RATE, 0),
         traceLifecycle: "stream",
-        enableLogs: true,
         integrations: (defaults) =>
           defaults.filter((i) => !SENTRY_AI_PROVIDER_INTEGRATIONS.has(i.name)),
       }),
