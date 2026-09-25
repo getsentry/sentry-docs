@@ -11,7 +11,7 @@ Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Pr
 
 The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside the`description` if available.
 
-This integration is enabled by default and supports Prisma versions 5, 6 & 7. In Prisma v5, you need to follow the instructions below to enable tracing.
+This integration is enabled by default and supports Prisma versions 5, 6, 7 & 8. In Prisma v5, you need to follow the instructions below to enable tracing.
 
 If you'd like to learn how to modify your default integrations, visit the docs on <PlatformLink to="/configuration/integrations/#modifying-default-integrations">Modifying Default Integrations</PlatformLink>.
 
@@ -25,6 +25,20 @@ Sentry.init({
   integrations: [Sentry.prismaIntegration()],
 });
 ```
+
+## Prisma Version 8
+
+_Available since: `11.1.0`_
+
+No configuration is required. Prisma 8 has no built-in tracing, so the SDK instruments it through diagnostics channels. If channel injection is disabled (`enableRuntimeChannelInjection: false` without build-time injection), no Prisma 8 spans are created.
+
+Each ORM call creates a `prisma:client:operation` span with the `pg` query spans nested underneath. `db.sql`, `db.raw`, and `groupBy` calls only create `pg` query spans.
+
+<Alert>
+
+On Node.js 20, CommonJS apps only get `pg` query spans.
+
+</Alert>
 
 ## Prisma Version 5
 
@@ -48,8 +62,8 @@ Sentry.init({
 
 ## Supported Versions
 
-- `prisma`: `5.x`, `6.x`, `7.x`
+- `prisma`: `5.x`, `6.x`, `7.x`, `8.x`
 
 ## Learn More
 
-For details on the span structure that Prisma's OpenTelemetry tracing produces (e.g., `prisma:client:operation`, `prisma:engine:db_query`), see the [Prisma trace output documentation](https://www.prisma.io/docs/orm/prisma-client/observability-and-logging/opentelemetry-tracing#trace-output).
+For details on the span structure that Prisma's OpenTelemetry tracing produces in Prisma versions 5 to 7 (e.g., `prisma:client:operation`, `prisma:engine:db_query`), see the [Prisma trace output documentation](https://www.prisma.io/docs/orm/prisma-client/observability-and-logging/opentelemetry-tracing#trace-output).
