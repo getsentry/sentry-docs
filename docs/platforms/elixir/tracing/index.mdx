@@ -22,7 +22,7 @@ Sentry's Elixir SDK uses OpenTelemetry for tracing. Add the required dependencie
 def deps do
   [
     # Sentry SDK
-    {:sentry, "~> 12.0"},
+    {:sentry, "~> 14.0"},
 
     # OpenTelemetry core packages
     {:opentelemetry, "~> 1.7"},
@@ -50,6 +50,8 @@ config :sentry,
   dsn: "___PUBLIC_DSN___",
   traces_sample_rate: 1.0  # Adjust for production
 ```
+
+Incoming requests answered with _404 Not Found_ aren't reported as transactions. To trace them, or to ignore other statuses, set <PlatformLink to="/configuration/options/#traces_ignore_http_status_codes">`traces_ignore_http_status_codes`</PlatformLink>.
 
 ## Configure OpenTelemetry
 
@@ -157,7 +159,6 @@ To set up both features together, enable logs and tracing in your Sentry configu
 config :sentry,
   dsn: "___PUBLIC_DSN___",
   traces_sample_rate: 1.0,
-  enable_logs: true,
   logs: [level: :info, metadata: :all]
 
 config :opentelemetry,
@@ -170,7 +171,7 @@ Then add `opentelemetry_logger_metadata` to your dependencies:
 ```elixir {filename:mix.exs}
 defp deps do
   [
-    {:sentry, "~> 12.0"},
+    {:sentry, "~> 14.0"},
     {:opentelemetry, "~> 1.7"},
     {:opentelemetry_api, "~> 1.5"},
     {:opentelemetry_exporter, "~> 1.10"},
