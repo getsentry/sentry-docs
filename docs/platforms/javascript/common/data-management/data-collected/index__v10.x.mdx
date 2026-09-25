@@ -12,9 +12,11 @@ The category types and amount of data collected vary, depending on the integrati
 
 <Expandable title="Options to control data collection">
 
-You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink>, which lets you opt in or out of each data category individually.
+You can control most of the categories listed here with the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> (available since version `10.57.0`). Each category can be turned off individually, and some accept `{ allow: [...] }` or `{ deny: [...] }` lists to restrict which values are sent.
 
-By default, the SDK collects all `dataCollection` categories and scrubs values whose keys match the built-in sensitive denylist. To collect less, opt out of a category or restrict it.
+When you set `dataCollection` (even to an empty object `{}`), all categories are collected by default, with sensitive values filtered as described in the sections below.
+
+When you don't set `dataCollection`, the deprecated `sendDefaultPii` option determines what the SDK collects. With `sendDefaultPii: true`, all categories are collected. Without it, the SDK does not collect the user's IP address, generative AI content, or database query data. It also turns off data taken from the body, such as tRPC input, and applies stricter filtering to headers, cookies, and query parameters.
 
 Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
@@ -22,20 +24,29 @@ Regardless of these options, you can always scrub any data before it's sent to S
 
 ## HTTP Headers
 
-By default, the SDK sends HTTP request and response headers. It always keeps the header names and replaces the values of sensitive headers (names that match terms such as `auth`, `token`, or `password`) with `[Filtered]`.
+By default, the SDK sends HTTP request and response headers.
 
 Which headers are sent depends on the environment:
 
-- In the browser, the SDK sends the request headers it gathers itself (`Referer` and `User-Agent`). The `httpClient` integration, which is not enabled by default, adds the request and response headers of failed requests.
-- On the server, the headers of incoming requests are attached to error events and server spans. On some runtimes (such as Bun and Deno), the response headers of incoming requests are attached to server spans as well.
+- In the browser, the SDK sends the `Referer` and `User-Agent` request headers (in version 10, these are sent regardless of the `httpHeaders` setting). The `httpClient` integration, which is not enabled by default, adds the request and response headers of failed requests.
+- On the server, the headers of incoming requests are attached to error events and server spans. On Bun and Deno, the response headers of incoming requests are attached to server spans as well.
 - The headers of outgoing requests are not collected by default.
 
-Use the `dataCollection.httpHeaders` option to control header collection. Set `dataCollection: { httpHeaders: false }` to disable it, or use `{ allow: [...] }` or `{ deny: [...] }` to restrict which header values are sent.
-To control each direction separately, use the `{ request: ..., response: ... }` form, for example `{ request: true, response: false }`.
+The SDK filters headers attached as span attributes and headers captured by the `httpClient` integration: it keeps the header names and replaces the values of sensitive headers (names that match terms such as `auth`, `token`, or `password`) with `[Filtered]`.
+In version 10, request headers attached to error events on the server keep their original values; version 11 filters them as well.
+
+Use the `dataCollection.httpHeaders` option to control header collection. Set `dataCollection: { httpHeaders: { request: false, response: false } }` to disable it, or use `{ allow: [...] }` or `{ deny: [...] }` on `request` and `response` to restrict which header values are sent. Since version `10.75.0`, you can also set one value that applies to both directions, for example `dataCollection: { httpHeaders: false }`.
+
+When you don't set `dataCollection`, header collection depends on the deprecated `sendDefaultPii` option:
+
+- With `sendDefaultPii: true`, the SDK sends headers with the filtering described above.
+- Without it, the SDK still sends headers, but it also filters IP-related headers (names that match `forwarded`, `-ip`, `remote-`, `via`, or `-user`). The browser `httpClient` integration is an exception: when `dataCollection` is not set, it captures headers and cookies of failed requests only if `sendDefaultPii` is `true`.
 
 ## Cookies
 
-By default, cookie collection is enabled. On the server, the cookies of incoming requests are sent with error events and server spans. In the browser, the SDK doesn't send cookies unless you enable the `httpClient` integration, which captures the cookies of failed requests. The SDK replaces the values of sensitive cookies (like `token` or `key`) with `[Filtered]`.
+By default, cookie collection is enabled. On the server, the cookies of incoming requests are sent with error events and server spans. In the browser, the SDK doesn't send cookies unless you enable the `httpClient` integration, which captures the cookies of failed requests.
+
+The SDK filters cookie values attached as span attributes or captured by `httpClient`: it replaces the values of sensitive cookies (like `token` or `key`) with `[Filtered]`. In version 10, cookies attached to error events on the server keep their original values; version 11 filters them as well.
 
 To disable cookie collection, set `dataCollection: { cookies: false }`. You can also restrict which cookie values are sent using `{ allow: [...] }` or `{ deny: [...] }`.
 
@@ -55,7 +66,7 @@ The `dataCollection.userInfo` option controls the identity data the SDK infers o
 
 By default, the SDK sends the user's IP address. To disable it, set <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: false }`</PlatformLink>.
 
-In some integrations such as [`handleRequest`](/platforms/javascript/guides/astro/#customize-server-instrumentation) in Astro, the `trackClientIp` option also controls this. It defaults to the `dataCollection.userInfo` setting.
+In some integrations such as [`handleRequest`](/platforms/javascript/guides/astro/#customize-server-instrumentation) in Astro, the user's IP address can also be sent by enabling `trackClientIp`.
 
 If sending the IP address is enabled we will try to infer the IP address or use the IP address provided by `ip_address` in <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>. If you set `ip_address: null`, the IP address won't be inferred.
 
@@ -65,7 +76,10 @@ Even when this is disabled, IP addresses can still reach Sentry through collecte
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
-    httpHeaders: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    httpHeaders: {
+      request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    },
     cookies: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
     urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
   },
@@ -88,9 +102,9 @@ Sentry also has some additional [server-side data scrubbing](/security-legal-pii
 
 ## Request Body
 
-By default, the SDK collects the bodies of incoming requests on the server side. This also covers data taken from the body, like tRPC input and Remix action form data.
+On the server side, the body of incoming requests is captured by default. In version 10, the `dataCollection.httpBodies` option doesn't control this; use the HTTP integration options described below to disable or limit it.
 
-Use the `dataCollection.httpBodies` option to control this. It takes a list of body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, and `"outgoingResponse"`. All types are included by default, but the SDK currently only captures `"incomingRequest"` bodies and, for Next.js server actions, `"outgoingResponse"` bodies. Set the option to `[]` to disable body collection:
+The `dataCollection.httpBodies` option controls data taken from the body: tRPC input and Remix action form data (`"incomingRequest"`), and the results of Next.js server actions (`"outgoingResponse"`). The option also accepts `"outgoingRequest"` and `"incomingResponse"`, but the SDK doesn't currently capture those body types. All types are included by default. Set `dataCollection: { httpBodies: [] }` to opt out:
 
 ```js
 Sentry.init({
@@ -101,18 +115,18 @@ Sentry.init({
 });
 ```
 
-The body size, taken from the `content-length` header, is always sent, even when body collection is disabled.
+The body size taken from the `content-length` header is always sent, even when the body itself is not captured.
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.effect", "javascript.elysia", "javascript.ember", "javascript.firebase", "javascript.gatsby", "javascript.nitro", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.cloudflare", "javascript.deno"]}>
-  On the server-side, the incoming request body is captured by default. You can disable sending the incoming request body by configuring `ignoreRequestBody` in the <PlatformLink to="/configuration/integrations/http/">HTTP Integration</PlatformLink>.
+  On the server-side, you can disable the incoming request body with `maxIncomingRequestBodySize: "none"`, or skip specific requests with `ignoreIncomingRequestBody`, in the <PlatformLink to="/configuration/integrations/http/">HTTP Integration</PlatformLink>.
 </PlatformSection>
 
 <PlatformSection supported={["javascript.remix"]}>
   Remix action form data is captured when `dataCollection.httpBodies` includes `"incomingRequest"`, which is the default. All form fields are captured, and values with a sensitive-looking field name (like `password` or `token`) are replaced with `[Filtered]`.
 
-  To capture only specific fields, set `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#configure-server-side-sentry">server-side configuration</PlatformLink>. This option works on its own and doesn't require `dataCollection.httpBodies` to include `"incomingRequest"`. To stop capturing form data, remove `captureActionFormDataKeys` and exclude `"incomingRequest"` from `dataCollection.httpBodies`.
+  To capture only specific fields, set `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#configure-server-side-sentry">server-side configuration</PlatformLink>. In version 10, this option only takes effect while `dataCollection.httpBodies` includes `"incomingRequest"` (from version 11, it works on its own). To stop capturing form data, exclude `"incomingRequest"` from `dataCollection.httpBodies`.
 
-  Captured fields are sent as `remix.action_form_data.<field>` span attributes.
+  Captured fields are sent as `remix.action_form_data.<field>` span attributes. Before version 11, the Node.js SDK sent them as `formData.<field>`, so update any dashboards, alerts, or saved searches that query the old attribute names.
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.effect", "javascript.electron", "javascript.elysia", "javascript.ember", "javascript.firebase", "javascript.gatsby", "javascript.nitro", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
@@ -163,7 +177,7 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.cloudflare", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.wasm", "javascript.eve", "javascript.flue", "javascript.mastra"]}>
+<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.cloudflare", "javascript.elysia", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro", "javascript.wasm", "javascript.eve", "javascript.mastra"]}>
   <PlatformSection notSupported={["javascript.cordova"]}>
     ## Session Replay
 
@@ -221,18 +235,9 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
     By default, the Sentry SDK sends the data passed to tasks within queues. For Kafka, this is the message key. Producers often use a user ID or a tenant ID as the message key, so this value can include PII.
 
-    Use the `dataCollection.queues` option to control this. Set it to `false` to stop sending the message key:
+    Version 10 has no `dataCollection` option for this category (the `dataCollection.queues` option is available from version 11). To remove this data, scrub it before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
-    ```JavaScript
-    Sentry.init({
-      dsn: "___PUBLIC_DSN___",
-      dataCollection: {
-        queues: false,
-      },
-    });
-    ```
-
-    Structural metadata, such as the messaging system, the topic, the partition, and the offset, is always sent. If you turn this option off, you keep the queue performance data.
+    Structural metadata, such as the messaging system, the topic, the partition, and the offset, is always sent.
 
   </PlatformSection>
 
@@ -250,7 +255,7 @@ By default, the Sentry SDK sends information about the device and runtime to Sen
 
 When you use a GraphQL integration, the Sentry SDK sends the operation name and the operation type to Sentry.
 
-By default, the SDK also sends the GraphQL document (the query or mutation source text). Literal values inside the document are redacted, and the values of GraphQL variables are not collected. Use the `dataCollection.graphQL` option to turn off the document:
+By default, the SDK also sends the GraphQL document (the query or mutation source text). Literal values inside the document are redacted, and the values of GraphQL variables are not collected. Use the `dataCollection.graphQL` option (available since version `10.66.0`) to turn off the document:
 
 ```JavaScript
 Sentry.init({
@@ -297,5 +302,5 @@ Sentry.init({
 
   At the time of a native crash, the stack of each thread is collected and sent to Sentry as part of the Minidump snapshot. This information is sent to Sentry by default, but dropped after processing the event in the backend.
 
-  These files are not stored by default, but you can [enable Minidump Storage](/platforms/native/guides/minidumps/enriching-events/attachments/#store-minidumps-as-attachments) in the Sentry [organization](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) or [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/).
+  These files are not stored by default, but you can [enable Minidump Storage](/platforms/native/guides/minidumps/enriching-events/attachments/#store-minidumps-as-attachments) in the Sentry organization or project settings.
 </PlatformSection>
