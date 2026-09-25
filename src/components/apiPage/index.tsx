@@ -11,7 +11,6 @@ import remarkCodeTitles from 'sentry-docs/remark-code-title';
 import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
-import {escapeComparisons} from './escapeComparisons';
 
 function Params({params}) {
   return (
@@ -90,7 +89,6 @@ function cssToObj(css) {
 }
 
 async function parseMarkdown(source: string): Promise<ReactElement> {
-  source = escapeComparisons(source);
   // Source uses string styles, but MDX requires object styles.
   source = source.replace(/style="([^"]+)"/g, (_, style) => {
     return `style={${JSON.stringify(cssToObj(style))}}`;
