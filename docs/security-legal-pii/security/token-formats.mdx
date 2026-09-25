@@ -1,0 +1,71 @@
+---
+title: "Token and Credential Formats"
+sidebar_order: 7
+keywords:
+  [
+    "secret scanning",
+    "credential format",
+    "token prefix",
+    "leaked token",
+    "SENTRY_AUTH_TOKEN",
+    "sntryu_",
+    "sntrys_",
+  ]
+description: >-
+  What Sentry credentials look like, the strings that appear near them, and the
+  patterns that cause false positives in secret scanning.
+---
+
+Use this page to write secret scanning rules, or to identify a credential you found in logs or CI config. For what each token type is for, see [Auth Tokens](/account/auth-tokens/).
+
+## Formats
+
+| Credential | Format |
+| --- | --- |
+| Personal auth token | `sntryu_[a-f0-9]{64}` |
+| Organization auth token | `sntrys_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}` |
+| Reserved prefixes (user app, integration) | `sntrya_[a-f0-9]{64}`, `sntryi_[a-f0-9]{64}` |
+| Legacy tokens, [internal integration](/integrations/integration-platform/internal-integration/) tokens, OAuth client IDs and secrets, OAuth access and refresh tokens, device codes, [webhook](/integrations/integration-platform/webhooks/) signing secrets | `[a-f0-9]{64}` |
+| Legacy API key | `[a-f0-9]{32}` |
+| OAuth device user code | `[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}` |
+| [Relay](/product/relay/getting-started/) public or secret key | `[A-Za-z0-9_-]{43}` |
+
+Organization tokens run about 180 to 250 characters, since the payload contains the org slug. A fixed-length pattern may miss valid tokens.
+
+Nothing issues the `sntrya_` or `sntryi_` prefixes today. They're reserved, so matching them now may cover tokens issued later.
+
+## Excluding DSNs
+
+DSNs aren't secrets, so leave them out of secret scanning rules. See [Data Source Name (DSN)](/concepts/key-terms/dsn-explainer/).
+
+Sentry SaaS:
+
+```plaintext
+https://[a-f0-9]{32}@o\d+\.ingest(\.[a-z]+)?\.sentry\.io/\d+
+```
+
+Self-hosted and Relay:
+
+```plaintext
+https?://[a-f0-9]{32}@[^/]+/\d+
+```
+
+## Finding Credentials
+
+A prefixed token identifies itself. A bare hex string doesn't, so surrounding context can help determine whether it's a credential.
+
+Sentry's docs and tools use the names below. Other apps may rename variables, wrap values in their own config, or store tokens with none of these strings nearby, so treat this as a starting point.
+
+| Look for | Near |
+| --- | --- |
+| `[a-f0-9]{64}` | `SENTRY_AUTH_TOKEN`, `authToken`, `auth.token`, `Authorization: Bearer`, `client_secret` |
+| Relay key | `secret_key`, `public_key`, `credentials.json` |
+
+## Matching Caveats
+
+These patterns may match strings that aren't Sentry credentials, and they may not tell two Sentry credentials apart:
+
+- Any SHA-256 digest is 64 hex characters, so checksums, content hashes, cache keys, and image digests all match the unprefixed token pattern.
+- The `Sentry-Hook-Signature` webhook header is an HMAC-SHA256 digest of the request body, not the secret that signed it.
+- A DSN public key is 32 hex characters, the same as a legacy API key. One inside a URL is likely a DSN.
+- A 43-character Base64 string is any 32 random bytes, so a Relay key may only be identifiable from nearby context.
