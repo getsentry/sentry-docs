@@ -1,11 +1,3 @@
-#### enable_metrics
-
-You can disable metrics collection globally by setting `enable_metrics` to `false`. When disabled, calls to `Sentry.Metrics` functions will be no-ops. Metrics are enabled by default.
-
-```elixir
-config :sentry, enable_metrics: false
-```
-
 #### before_send_metric
 
 To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `nil`, the metric is not emitted. Attributes can also be updated in the callback function.
@@ -37,6 +29,8 @@ config :sentry,
 
 The `before_send_metric` callback receives a `Sentry.Metric` struct, and should return a `Sentry.Metric` struct if you want it to be sent to Sentry, or `nil` if you want to discard it.
 
+If the callback raises, throws, or exits, the SDK logs the failure at the `:error` level and drops that metric. Other metrics in the same batch are still processed.
+
 The `Sentry.Metric` struct has the following fields:
 
 - `name`: (`String.t()`) The name of the metric.
@@ -47,3 +41,12 @@ The `Sentry.Metric` struct has the following fields:
 - `timestamp`: (`float()`) Timestamp in seconds indicating when the metric was recorded.
 - `trace_id`: (`String.t() | nil`) The trace ID of the trace this metric belongs to.
 - `span_id`: (`String.t() | nil`) The span ID of the span that was active when the metric was emitted.
+
+Metrics are always on, so `before_send_metric` is also how you stop sending them. Return `nil` for every metric to drop all of them, including [automatic runtime metrics](#automatic-metrics):
+
+```elixir
+config :sentry,
+  before_send_metric: fn _metric -> nil end
+```
+
+SDK versions before 14.0.0 had an `enable_metrics` option to turn metrics off. Version 14.0.0 removed it, and setting it no longer stops metrics from being sent, so remove it from your configuration.

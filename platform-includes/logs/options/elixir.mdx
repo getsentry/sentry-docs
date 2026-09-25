@@ -1,27 +1,42 @@
 ### before_send_log
 
-To filter or modify logs before they are sent to Sentry, use the `before_send_log` callback. Return `false` to skip a log, or return the log event to send it.
+To filter or modify logs before they are sent to Sentry, use the `before_send_log` callback. It receives a `Sentry.LogEvent` struct. Return `nil` or `false` to skip a log, or return the log event to send it.
 
 <PlatformContent includePath="configuration/before-send-log" />
 
+If the callback raises or crashes, the SDK logs the failure at the `:error` level and doesn't send that log. Other logs in the same batch are still sent.
+
 ### Logs Configuration
 
-Logs behavior is configured under the `:logs` key in your Sentry configuration. These options control the auto-attached `Sentry.LoggerHandler`:
+Logs behavior is configured under the `:logs` key in your Sentry configuration. Setting `:logs` attaches `Sentry.LoggerHandler` automatically, and these options control it.
 
-- **`:level`** - The minimum log level to send to Sentry's Logs Protocol. Default: `:info`. Supported values: `:debug`, `:info`, `:notice`, `:warning`, `:error`, `:critical`, `:alert`, `:emergency`.
+The following options configure logs:
+
+- **`:level`** - The minimum log level to send to Sentry as logs. Setting it turns on logs. Default: `nil`, which sends no logs. Supported values: `:debug`, `:info`, `:notice`, `:warning`, `:error`, `:critical`, `:alert`, `:emergency`.
 
 - **`:excluded_domains`** - A list of logger domains to exclude from logs sent to Sentry. Default: `[]`.
 
 - **`:metadata`** - Logger metadata keys to include as attributes in log events. Set to `:all` to include all metadata, or a list of specific keys like `[:request_id, :user_id]`. Default: `[]`.
 
+The following options configure how the same handler reports errors. They're independent of the logs options above:
+
+- **`:capture_log_messages`** - Set to `true` to also report `Logger` messages at or above `:capture_level` to Sentry as errors. Crashes are reported whether or not this is set. Default: `false`.
+
+- **`:capture_level`** - The minimum log level for messages and crashes reported as errors. Default: `:error`.
+
+- **`:capture_metadata`** - Logger metadata keys to include in reported errors. Set to `:all` to include all metadata. Default: `[]`.
+
+- **`:capture_excluded_domains`** - A list of logger domains to exclude from reported errors. Default: `[:cowboy]`, which avoids reporting errors that `Sentry.PlugCapture` already captures.
+
 ```elixir
 config :sentry,
   dsn: "___PUBLIC_DSN___",
-  enable_logs: true,
   logs: [
     level: :info,
     excluded_domains: [:ecto],
-    metadata: [:request_id, :user_id] # or :all
+    metadata: [:request_id, :user_id], # or :all
+    capture_log_messages: true,
+    capture_level: :error
   ]
 ```
 
@@ -29,7 +44,7 @@ config :sentry,
 
 These options are set in your Sentry configuration (`config :sentry`):
 
-- **`:enable_logs`** - Set to `true` to enable the logs feature. When enabled, the SDK automatically attaches a `Sentry.LoggerHandler` and routes log events through the SDK's Telemetry Processor. Default is `false`.
+- **`:logs`** - The logs configuration described above. Default: `nil`, which doesn't attach the handler.
 
 - **`:before_send_log`** - A callback function to filter or modify log events before they are sent.
 
@@ -38,6 +53,6 @@ Log events are buffered by the Telemetry Processor with a capacity of 1000 entri
 ```elixir
 config :sentry,
   dsn: "___PUBLIC_DSN___",
-  enable_logs: true,
+  logs: [level: :info],
   before_send_log: {MyApp.Sentry, :before_send_log}
 ```
