@@ -9,6 +9,7 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {getSdkPageHeading} from 'sentry-docs/sdkPageHeading';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -71,6 +72,7 @@ export async function DocPage({
   const unversionedPath = getUnversionedPath(path, false);
 
   const leafNode = nodeForPath(rootNode, unversionedPath);
+  const heading = getSdkPageHeading(rootNode, path, frontMatter);
 
   return (
     <div className={`tw-app${hasToc ? ' has-toc' : ''}`}>
@@ -114,7 +116,7 @@ export async function DocPage({
             <div>
               <hgroup>
                 <h1>
-                  {frontMatter.title}
+                  {heading}
                   {frontMatter.new && <FeatureBadge type="new" />}
                   {frontMatter.beta && <FeatureBadge type="beta" />}
                   {frontMatter.early_access && <FeatureBadge type="early_access" />}
