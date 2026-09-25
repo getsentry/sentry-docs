@@ -39,9 +39,16 @@ function makeTree() {
   add('platforms/javascript/guides/nextjs', 'Next.js');
   add('platforms/javascript/guides/effect', 'Effect');
   add('platforms/javascript/guides/aws-lambda', 'AWS Lambda');
+  add('platforms/javascript/guides/custom-integration', '');
+  nodes.get('platforms/javascript/guides/custom-integration')!.missing = true;
+  add('platforms/javascript/guides/custom-integration/configuration', 'Configuration');
+  add('platforms/javascript/guides/custom-integration__v7.x', 'Old Guide');
   add('platforms/dotnet', '.NET');
   add('platforms/dotnet/guides', 'Guides');
   add('platforms/dotnet/guides/aws-lambda', 'AWS Lambda');
+  add('platforms/dotnet/guides/custom-integration', '');
+  nodes.get('platforms/dotnet/guides/custom-integration')!.missing = true;
+  add('platforms/dotnet/guides/custom-integration/configuration', 'Configuration');
   add('platforms/php', 'PHP');
   add('platforms/php__v7.x', 'Old PHP');
   add('platforms/php/configuration', 'Configuration');
@@ -102,6 +109,18 @@ describe('getSdkPageHeading', () => {
     expect(
       heading('platforms/javascript/guides/react/user-feedback/configuration__v7.x')
     ).toBe('User Feedback Configuration for React (SDK v7.x)');
+  });
+
+  test('falls back to guide slugs when a guide root has no index page', () => {
+    expect(heading('platforms/javascript/guides/custom-integration/configuration')).toBe(
+      'Configuration for Custom Integration (JavaScript)'
+    );
+    expect(heading('platforms/dotnet/guides/custom-integration/configuration')).toBe(
+      'Configuration for Custom Integration (.NET)'
+    );
+    expect(heading('platforms/javascript/guides/custom-integration__v7.x')).toBe(
+      'Sentry for Custom Integration (JavaScript) (SDK v7.x)'
+    );
   });
 
   test('supports an H1 override without changing titles outside SDK docs', () => {

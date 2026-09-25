@@ -19,6 +19,14 @@ function contextPath(path: string): string | undefined {
     : parts.slice(0, 2).join('/');
 }
 
+function contextName(node: DocNode): string {
+  return (
+    node.frontmatter.title?.trim() ||
+    node.frontmatter.sidebar_title?.trim() ||
+    node.slug.replace(/[-_]/g, ' ').replace(/\b\w/g, character => character.toUpperCase())
+  );
+}
+
 function headingIndex(root: DocNode): HeadingIndex {
   const cached = headingIndexes.get(root);
   if (cached) {
@@ -31,13 +39,14 @@ function headingIndex(root: DocNode): HeadingIndex {
   };
   function visit(node: DocNode) {
     const context = contextPath(node.path);
-    if (context && !node.missing && !node.path.includes('__v')) {
+    if (context && !node.path.includes('__v')) {
       const title = node.frontmatter.title;
       if (node.path === context && node.path.split('/')[2] === 'guides') {
-        const families = index.guideFamilies.get(title) ?? new Set<string>();
+        const guideName = contextName(node);
+        const families = index.guideFamilies.get(guideName) ?? new Set<string>();
         families.add(node.path.split('/')[1]);
-        index.guideFamilies.set(title, families);
-      } else if (title && node.path !== context) {
+        index.guideFamilies.set(guideName, families);
+      } else if (!node.missing && title && node.path !== context) {
         const key = `${context}\0${title}`;
         const paths = index.topicPaths.get(key) ?? new Set<string>();
         paths.add(node.path);
@@ -85,9 +94,9 @@ export function getSdkPageHeading(
 
   const guide = context.split('/')[2] === 'guides';
   const index = headingIndex(root);
-  const contextTitle = contextNode.frontmatter.title;
+  const contextTitle = contextName(contextNode);
   const platformTitle =
-    platformNode.frontmatter.platformTitle ?? platformNode.frontmatter.title;
+    platformNode.frontmatter.platformTitle?.trim() || contextName(platformNode);
   const baseNode = nodeForPath(root, stripVersion(pathname));
   const baseFrontMatter = getVersion(pathname)
     ? (baseNode?.frontmatter ?? frontMatter)
