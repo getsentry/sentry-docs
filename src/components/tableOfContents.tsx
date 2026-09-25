@@ -85,7 +85,15 @@ export function TableOfContents({ignoreIds = []}: Props) {
     }
     hasScrolledToHash.current = true;
     requestAnimationFrame(() => {
-      const id = decodeURIComponent(hash.slice(1));
+      let id: string;
+      try {
+        id = decodeURIComponent(hash.slice(1));
+      } catch {
+        // hash contains invalid percent-encoding (e.g. an unsubstituted template
+        // variable like %SENTRY_ENVIRONMENT). Fall back to the raw value so we
+        // still attempt to scroll rather than throwing a URIError.
+        id = hash.slice(1);
+      }
       document.getElementById(id)?.scrollIntoView();
     });
   }, [treeItems]);
