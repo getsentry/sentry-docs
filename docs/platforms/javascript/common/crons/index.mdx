@@ -1,242 +1,176 @@
 ---
 title: Set Up Crons
 sidebar_title: Crons
-description: "Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job in your application using the Sentry JavaScript SDK."
+description: "Monitor scheduled JavaScript jobs with automatic cron instrumentation or manual check-ins, depending on your server runtime and framework."
 sidebar_order: 9
 sidebar_section: features
 supportedCategories:
   - server
 ---
 
-Once implemented, it'll allow you to get alerts and metrics to help you solve errors, detect timeouts, and prevent disruptions to your service.
+Sentry Crons monitors scheduled, recurring jobs and alerts you when a job fails, takes too long, or doesn't run when expected.
 
-<PlatformSection supported={['javascript.nextjs', 'javascript.sveltekit', 'javascript.remix', 'javascript.astro', 'javascript.bun', 'javascript.deno', 'javascript.cloudflare', 'javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.express', "javascript.fastify", 'javascript.gcp-functions', 'javascript.hapi', 'javascript.hono', 'javascript.koa', 'javascript.nestjs', 'javascript.tanstackstart-react']}>
+<PlatformCategorySection supported={["server"]}>
+
+<PlatformCategorySection supported={["browser"]}>
+
+Cron monitoring runs on the server, not in browser code. Add the instrumentation below where your scheduled job executes.
+
+</PlatformCategorySection>
 
 ## Requirements
 
 <PlatformContent includePath="crons/requirements" />
 
-<PlatformContent includePath="crons/setup" />
+You can also [create or update a monitor in code](#upserting-cron-monitors) instead of creating it in Sentry first.
+
+Use automatic instrumentation when it supports your scheduler. Otherwise, wrap each job execution with [`Sentry.withMonitor`](#job-monitoring), or send [`Sentry.captureCheckIn`](#check-ins) calls yourself. These APIs work independently of the scheduler and are the fallback for jobs without automatic instrumentation.
+
+Use one monitoring approach per job to avoid duplicate check-ins. Import `Sentry` from the SDK you initialized for the job's runtime.
+
+<PlatformSection supported={["javascript.hono"]}>
+
+Use a runtime-specific import: `@sentry/hono/node`, `@sentry/hono/bun`, `@sentry/hono/deno`, or `@sentry/hono/cloudflare`. The root `@sentry/hono` entry point doesn't export the monitoring APIs. Initialize the runtime SDK for the scheduled job; Hono's request middleware alone doesn't initialize jobs that run outside an HTTP request.
+
+- **Node.js and Bun:** Use the cron library wrappers below.
+- **Deno:** Use the opt-in [DenoCron integration](/platforms/javascript/guides/deno/crons/#automatic-check-ins-with-denocron), subject to its Deno version requirements.
+- **Cloudflare Workers:** Scheduled-handler tracing doesn't send check-ins. Use `withMonitor` or `captureCheckIn`, as shown in the [Cloudflare guide](/platforms/javascript/guides/cloudflare/crons/#cloudflare-scheduled-handlers).
 
 </PlatformSection>
 
-<PlatformSection notSupported={['javascript.nextjs', 'javascript.sveltekit', 'javascript.remix', 'javascript.astro', 'javascript.bun', 'javascript.deno', 'javascript.cloudflare', 'javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.express', 'javascript.fastify', 'javascript.gcp-functions', 'javascript.hapi', 'javascript.hono', 'javascript.koa', 'javascript.nestjs', 'javascript.tanstackstart-react']}>
+<PlatformSection supported={["javascript.react-router"]}>
 
-## Requirements
+For Cloudflare Workers, use the initialized `@sentry/cloudflare` SDK for check-ins. The `@sentry/react-router/cloudflare` entry point doesn't export `withMonitor` or `captureCheckIn`.
 
-To begin monitoring your recurring, scheduled job:
+</PlatformSection>
 
-1. [Create a new monitor](https://sentry.io/issues/alerts/new/crons/) in Sentry.
-2. Configure check-ins or a heartbeat for your job.
+<PlatformSection supported={["javascript.deno"]}>
 
-Optionally, you can skip the first step and [create or update (upsert) a monitor through a check-in](#creating-or-updating-a-monitor-through-a-check-in-optional). See more below.
+## Automatic Check-Ins With `Deno.cron`
 
-## Check-Ins (Recommended)
-
-Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running:
-curl "${SENTRY_CRONS}?status=in_progress"
-
-# Execute your scheduled task here...
-
-# 🟢 Notify Sentry your job has completed successfully:
-curl "${SENTRY_CRONS}?status=ok"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=in_progress HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-If your job execution fails:
-
-```bash {tabTitle: cURL}
-# 🔴 Notify Sentry your job has failed:
-curl "${SENTRY_CRONS}?status=error"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-<Alert>
-
-If you expect your scheduled jobs to overlap, read about [Overlapping Jobs](#overlapping-jobs-optional) below.
-
-</Alert>
-
-### Specifying monitor environments (Optional)
-
-When sending check-ins to your monitor you may specify the `environment` of the
-check-in. This allows you to monitor a single schedule across multiple
-environments.
-
-If you don't specify an environment with your check-ins the default is `production`.
-
-<Alert>
-
-Monitor environments are still early in development. Currently, after a check-in
-occurs for a specific environment, you must continue sending check-ins on
-schedule or delete the monitor environment; otherwise, it will be marked as missed.
-
-</Alert>
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running in the dev environment:
-curl "${SENTRY_CRONS}?environment=dev&status=in_progress"
-
-# Execute your scheduled task here...
-
-# 🟢 Notify Sentry your dev environment job has completed successfully:
-curl "${SENTRY_CRONS}?environment=dev&status=ok"
-```
-
-### Creating or Updating a Monitor Through a Check-In (Optional)
-
-Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running:
-curl -X POST "${SENTRY_CRONS}" \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"monitor_config": {"schedule": {"type": "crontab", "value": "0 * * * *"}}, "status": "in_progress"}'
-```
-
-```http {tabTitle: HTTP}
-POST /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/ HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-Content-Type: application/json
-
-{
-    "monitor_config": {
-        "schedule": {"type": "crontab", "value": "0 * * * *"},
-        "checkin_margin": 1,
-        "max_runtime": 20,
-        "timezone": "America/Los_Angeles"
-    },
-    "status": "in_progress"
-}
-```
-
-Monitor `monitor_config` parameters:
-
-`schedule_type`:
-
-The schedule representation for your monitor, either `crontab` or `interval`.
-
-`schedule`:
-
-The job's schedule :
-
-This is an object specifying a `schedule_type` of either `crontab` or `interval`. The structure will vary depending on the type:
-
-```json
-{"type": "crontab", "value": "0 * * * *"}
-{"type": "interval", "value": 2, "unit": "hour"}
-```
-
-`checkin_margin`:
-
-The amount of time (in minutes) Sentry should wait for your check-in before it's considered missed ("grace period"). Optional.
-
-<Alert>
-
-We recommend that your check-in margin be less than or equal to your interval.
-
-</Alert>
-
-`max_runtime`:
-
-The amount of time (in minutes) your job is allowed to run before it's considered failed. Optional.
-
-`failure_issue_threshold`:
-
-The number of consecutive failed check-ins it takes before an issue is created. Optional.
-
-`recovery_threshold`:
-
-The number of consecutive OK check-ins it takes before an issue is resolved. Optional.
-
-`timezone`
-
-The `tz` where your job is running. This is usually your server's timezone, (such as `America/Los_Angeles`). See [list of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Optional.
+The opt-in `denoCronIntegration` wraps `Deno.cron` callbacks with `withMonitor`, using the job name as the monitor slug and the cron schedule to create or update the monitor. It isn't enabled by default.
 
 <Alert level="warning">
 
-It's important to provide a timezone for non-repeating crontab schedules, such as `0 17 * * *` (every day at 5pm).
+The `DenoCron` integration does not work on Deno 2.9.0 and later. On these versions `Deno.cron` is a read-only property, so `Sentry.init` stops with `TypeError: Cannot set property cron of #<Object> which has only a getter` and your app does not start. Use `Sentry.withMonitor` or `Sentry.captureCheckIn` instead.
 
 </Alert>
 
-### Overlapping Jobs (Optional)
+Requires SDK version `7.88.0` or higher and Deno `2.8.3` or earlier. Add the integration before registering your jobs:
 
-A job execution that begins before the previous job execution has been completed is called an overlapping job. This happens if you have a job with a runtime duration longer than your job's interval schedule.
+```typescript
+import * as Sentry from "___SDK_PACKAGE___";
 
-A simple example is if you have a job that runs every minute (1), but takes five (5) minutes to complete each execution.
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.denoCronIntegration()],
+});
 
-If this happens, you have to provide a stable check-in ID for your execution with each request to prevent unintended consequences.
-
-Usage example:
-
-```bash {tabTitle: cURL}
-CHECK_IN_ID="$(uuidgen)"
-
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running with a check-in ID:
-curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=in_progress"
-
-# Execute your scheduled task here...
-
-# 🟢 Notify Sentry your job has completed successfully with a check-in ID:
-curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=ok"
-```
-
-## Heartbeat
-
-Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟢 Notify Sentry your job has completed successfully:
-curl "${SENTRY_CRONS}?status=ok"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-If your job execution fails:
-
-```bash {tabTitle: cURL}
-# 🔴 Notify Sentry your job has failed:
-curl "${SENTRY_CRONS}?status=error"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
+Deno.cron("my-cron-job", "* * * * *", async () => {
+  // Execute your scheduled task here.
+});
 ```
 
 </PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+## Automatic Check-Ins (Vercel Only)
+
+For [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs) running in the Node.js runtime, enable `_experimental.vercelCronsMonitoring` in `withSentryConfig`. The SDK reads the `crons` entries in `vercel.json` at build time and emits check-ins from matching cron request spans at runtime. This works with both the App Router and Pages Router, and both Turbopack and Webpack.
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs/config";
+
+const nextConfig = {};
+
+export default withSentryConfig(nextConfig, {
+  _experimental: {
+    vercelCronsMonitoring: true,
+  },
+});
+```
+
+<Alert>
+
+This option is experimental. The older `webpack.automaticVercelMonitors` option only works with Webpack and the Pages Router. If both options are enabled, the SDK uses the experimental span-based approach.
+
+</Alert>
+
+See <PlatformLink to="/manual-setup/pages-router/#vercel-cron-jobs-optional">Vercel Cron Jobs setup</PlatformLink> for details. For Edge runtime jobs or other schedulers without automatic monitoring, use `withMonitor` or `captureCheckIn` in the job handler.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nestjs"]}>
+
+## Automatic Check-Ins With NestJS
+
+Jobs scheduled with `@nestjs/schedule`'s `@Cron` decorator alone don't send check-ins to Sentry. Add `@SentryCron` to monitor each invocation:
+
+<Include name="nestjs-sentry-cron-decorator.mdx" />
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+## Cloudflare Scheduled Handlers
+
+The Cloudflare SDK instruments `scheduled` handlers for tracing and error capture, but doesn't automatically send cron check-ins or create monitors. A scheduled-handler span isn't a cron check-in.
+
+Inside a worker instrumented with `Sentry.withSentry`, wrap the scheduled task with `withMonitor`:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(() => ({ dsn: "___PUBLIC_DSN___" }), {
+  async scheduled(controller, env, ctx) {
+    await Sentry.withMonitor(
+      "my-cron-job",
+      async () => {
+        // Execute your scheduled task here.
+      },
+      {
+        schedule: { type: "crontab", value: controller.cron },
+        timezone: "UTC",
+      }
+    );
+  },
+});
+```
+
+Use a distinct monitor slug for each schedule. For jobs whose start and completion are tracked separately, use `captureCheckIn` instead.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.deno", "javascript.cloudflare"]}>
+
+## Automatic Crons Instrumentation
+
+The `Sentry.cron` wrappers instrument the `cron`, `node-cron`, and `node-schedule` libraries on Node.js and Bun. They aren't available in browser, Deno, Cloudflare Workers, or Edge SDK entry points. For frameworks that support multiple runtimes, use these wrappers only in the Node.js or Bun server runtime.
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia"]}>
+
+The Bun SDK re-exports these wrappers from `@sentry/node`. There is no native `Bun.cron` instrumentation. For other schedulers, use `withMonitor` or `captureCheckIn`.
+
+</PlatformSection>
+
+<Include name="javascript-crons-automatic-crons-instrumentation.mdx" />
+
+</PlatformSection>
+
+## Job Monitoring
+
+<Include name="javascript-crons-job-monitoring.mdx" />
+
+## Check-Ins
+
+<Include name="javascript-crons-checkins.mdx" />
+
+## Upserting Cron Monitors
+
+<Include name="javascript-crons-upsert.mdx" />
+
+</PlatformCategorySection>
 
 ## Alerts
 
