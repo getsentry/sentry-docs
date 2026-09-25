@@ -118,9 +118,11 @@ SDKs **SHOULD NOT** recover from intentionally fatal exits, such as Python's `Ke
 
 When a user-provided callback fails due to a recoverable error, SDKs:
   - **MUST** emit an error-level [internal log](/sdk/foundations/client/configuration/#debug-mode) naming the callback.
-  - **MUST NOT** re-throw or capture the error as an event.
+  - **MUST NOT** re-throw or capture the error as an event, unless strict mode is enabled.
   - **SHOULD** drop the data passed to the callback. For callbacks that do not support dropping data (e.g. `before_send_span`), SDKs **SHOULD** instead send the data to Sentry unchanged.
   - **SHOULD** record a client report with reason `callback_error` for all data dropped as a result of the callback error.
+
+SDKs **MAY** offer an opt-in strict mode, disabled by default. In strict mode, a callback failure **MUST** propagate as an unhandled error of the host application instead of being isolated. SDKs **MUST NOT** pass the event reporting that error through the callback that failed.
 
 </SpecSection>
 
