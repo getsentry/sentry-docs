@@ -4,7 +4,9 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Ignore errors injected by Brave/Firefox iOS browser scripts (third-party browser noise)
-  ignoreErrors: [/__firefox__/, /DarkReader/],
+  // Also ignore NetworkErrors from insights.algolia.io — these are blocked by Firefox's
+  // Enhanced Tracking Protection and ad-blockers when Algolia click analytics are fired.
+  ignoreErrors: [/__firefox__/, /DarkReader/, /NetworkError.*insights\.algolia\.io/],
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 0.3,
