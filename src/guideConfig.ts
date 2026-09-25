@@ -4,9 +4,11 @@ import path from 'node:path';
 import matter from 'gray-matter';
 import yaml from 'js-yaml';
 
-import type {FrontMatter, PlatformConfig} from './types';
+import type {FrontMatter, PlatformConfig, PlatformGuide} from './types';
 
-type GuideConfig = Partial<FrontMatter> & PlatformConfig;
+type GuideConfig = Partial<FrontMatter> &
+  PlatformConfig &
+  Pick<PlatformGuide, 'fallbackGuide'>;
 
 async function readIndexFrontmatter(guidePath: string): Promise<GuideConfig> {
   try {

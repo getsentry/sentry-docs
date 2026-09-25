@@ -8,7 +8,8 @@ import {limitFunction} from 'p-limit';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
-import {FrontMatter, PlatformCategory, PlatformConfig} from './types';
+import {getGuideSupportKeys, isPlatformSupported} from './platformSupport';
+import {FrontMatter, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {VERSION_INDICATOR} from './versioning';
 
@@ -21,43 +22,6 @@ const root = process.cwd();
 const FILE_CONCURRENCY_LIMIT = 200;
 
 const formatSlug = (slug: string): string => slug.replace(/\.(mdx|md)$/, '');
-
-const isSupported = (
-  frontmatter: FrontMatter,
-  platformName: string,
-  guideName?: string,
-  categories: PlatformCategory[] = []
-): boolean => {
-  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-
-  const matchesCategory = (list?: PlatformCategory[]) =>
-    !!list?.some(category => categories.includes(category));
-
-  const hasAllowlist =
-    !!frontmatter.supported?.length || !!frontmatter.supportedCategories?.length;
-  if (hasAllowlist) {
-    // An exact guide match always wins.
-    if (frontmatter.supported?.includes(canonical)) {
-      return true;
-    }
-    // Otherwise a platform-level or category allowlist match keeps the page, but
-    // still lets the notSupported lists below filter it out.
-    if (
-      !frontmatter.supported?.includes(platformName) &&
-      !matchesCategory(frontmatter.supportedCategories)
-    ) {
-      return false;
-    }
-  }
-  if (
-    frontmatter.notSupported?.includes(canonical) ||
-    frontmatter.notSupported?.includes(platformName) ||
-    matchesCategory(frontmatter.notSupportedCategories)
-  ) {
-    return false;
-  }
-  return true;
-};
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
@@ -205,10 +169,9 @@ export async function getDocsFrontMatterFromDirectory(
         limitFunction(
           commonFile => {
             if (
-              !isSupported(
+              !isPlatformSupported(
+                [platformName],
                 commonFile.frontmatter,
-                platformName,
-                undefined,
                 platformFrontmatter.categories
               )
             ) {
@@ -291,10 +254,9 @@ export async function getDocsFrontMatterFromDirectory(
           limitFunction(
             commonFile => {
               if (
-                !isSupported(
+                !isPlatformSupported(
+                  getGuideSupportKeys(platformName, guideName, guideConfigs),
                   commonFile.frontmatter,
-                  platformName,
-                  guideName,
                   guideFrontmatter.categories
                 )
               ) {
