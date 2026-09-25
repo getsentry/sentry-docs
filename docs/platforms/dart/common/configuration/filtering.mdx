@@ -10,6 +10,14 @@ The Sentry SDKs have several configuration options to help you filter out events
 
 We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/).
 
+## Callback Failures
+
+In v10, an exception in an event processor or a filtering callback drops the affected item instead of sending it unchanged. This applies to event processors, `beforeSend`, `beforeSendTransaction`, `beforeSendFeedback`, `beforeBreadcrumb`, `beforeSendLog`, and `beforeSendMetric`.
+
+`beforeSendSpan` behaves differently: the SDK logs the exception and does not drop the span.
+
+Handle expected failures inside these callbacks and return the intended item or `null` explicitly. A throwing `tracesSampler` uses the <PlatformLink to="/configuration/sampling/#precedence">sampling fallback</PlatformLink>; return `0.0` to reject a trace explicitly.
+
 ## Filtering Error Events
 
 Configure your SDK to filter error events by using the <PlatformIdentifier name="before-send" /> callback method and configuring, enabling, or disabling integrations.
@@ -115,7 +123,7 @@ Use the <PlatformIdentifier name="before-send-span" /> configuration option to m
 If you want to drop spans, use [<PlatformIdentifier name="ignore-spans" />](#using-ignore-spans).
 
 ```dart
-options.beforeSendSpan = (span) {
+options.beforeSendSpan = (span, hint) {
   span.removeAttribute('http.request.body');
 };
 ```

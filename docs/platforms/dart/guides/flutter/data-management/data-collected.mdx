@@ -1,6 +1,6 @@
 ---
 title: Data Collected
-description: "See what data is collected by the Sentry Flutter SDK."
+description: 'See what data is collected by the Sentry Flutter SDK.'
 sidebar_order: 1
 ---
 
@@ -42,7 +42,7 @@ The request body of incoming HTTP requests can be sent to Sentry. Whether it's s
 
 - **The type of the request body:**
   - JSON and form bodies are sent
-- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#maxRequestBodySize">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
+- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#maxRequestBodySize">maxRequestBodySize</PlatformLink> option that's set to `MaxRequestBodySize.never` by default. This means by default no request body is sent to Sentry.
 
 ## Source Context
 
@@ -67,19 +67,21 @@ If you want to send the device name, set <PlatformLink to="/configuration/option
 By default, the SDK collects basic runtime information like the Dart version and platform.
 
 When <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>, additional runtime details are collected:
+
 - Executable path e.g `flutter`
 - Resolved executable locations e.g `/system/bin/app_process64`
 - Script path e.g `file:///main.dart`
 
 ## SQL Queries
 
-While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password=? WHERE id=?;`) is sent instead.
+Database integrations can send SQL statements to Sentry. Use parameterized queries, such as `UPDATE app_user SET password=? WHERE id=?;`, to keep values out of the statement. Values embedded directly in SQL strings can appear in the captured query; the SDK doesn't automatically replace them with placeholders.
 
 ## User Interaction Data
 
 By default, the SDK collects basic UI interaction data while protecting sensitive information by excluding text content. This means button clicks and UI interactions are tracked, but without any text or labels that could contain personal or sensitive data.
 
 When <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>, the SDK will additionally collect text content from UI elements including:
+
 - Text content from buttons (for example, "Submit" or "Cancel" button labels)
 - Semantic labels that help describe UI elements for accessibility
 - Tooltip messages that appear when hovering over UI elements
@@ -89,4 +91,6 @@ This additional text content can be useful for debugging and understanding user 
 
 ## Session Replay
 
-By default, our Session Replay SDK masks all text content, images, webviews, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/#redact-session-replay-via-masking/">more details in the Session Replay documentation</PlatformLink>.
+By default, Session Replay masks text, user input, and non-asset images. Asset images are visible unless you enable `maskAssetImages`. Third-party widgets, including webviews, may need manual masking.
+
+In v10, widgets marked as sensitive with Flutter's `SensitiveContent` widget are also masked by default. Review your app's replay output and configure <PlatformLink to="/session-replay/privacy/">Replay privacy settings</PlatformLink> for your content.

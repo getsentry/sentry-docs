@@ -1,6 +1,6 @@
 ---
 title: Options
-description: "Learn more about how the Sentry Dart SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
+description: 'Learn more about how the Sentry Dart SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized.'
 sidebar_order: 1
 ---
 
@@ -8,7 +8,7 @@ sidebar_order: 1
 
 ## Core Options
 
-<TableOfContents ignoreIds={["core-options"]} />
+<TableOfContents ignoreIds={['core-options']} />
 
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
@@ -64,7 +64,7 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 <SdkOption name="sampleRate" type="float" defaultValue="1.0">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly. In v10, sampling happens after event processors and `beforeSend`, so these callbacks also run for events that are later sampled out.
 
 </SdkOption>
 
@@ -74,11 +74,11 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </SdkOption>
 
-<SdkOption name="attachStacktrace" type="bool" defaultValue="false">
+<SdkOption name="attachStacktrace" type="bool" defaultValue="true">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
-This option is turned off by default.
+This option is enabled by default.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
@@ -206,12 +206,12 @@ Only available in <PlatformLink to="/tracing/streamed-spans">stream mode</Platfo
 
 </Alert>
 
-This function is called with a span event object `SentrySpanV2` and can return a modified span object. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
+In SDK v10, this function receives a `SentrySpanV2` and a `Hint`. Modify the span in place; the callback returns `void` or `Future<void>`. On SDK v9, it takes only the span parameter. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
 
 <Expandable title="Examples">
 
 ```dart
-options.beforeSendSpan = (span) {
+options.beforeSendSpan = (span, hint) {
   span.removeAttribute('http.request.body');
 };
 ```

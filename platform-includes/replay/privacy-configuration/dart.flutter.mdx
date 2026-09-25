@@ -7,14 +7,14 @@ This approach allows the SDK to automatically mask widgets that are part of the 
 
 The following options can be configured in the `options.privacy` field of your Sentry Flutter SDK, in `SentryFlutter.init((options) { ... })`:
 
-| Key                      | Type     | Default | Description                                                                                                                                                                                                                                                       |
-| ------------------------ | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| maskAllText | `bool` | `true`     | Mask all text content. Draws a rectangle of text bounds with text color on top. Currently `Text`, `EditableText` and `RichText` widgets are masked.                                                                                                      |
-| maskAllImages | `bool` | `true`     | Mask content of all images. Draws a rectangle of image bounds with image's dominant color on top. Currently `Image` widgets are masked.                                                                                                      |
-| maskAssetImages | `bool` | `true`     | Mask asset images coming from the root asset bundle.                                                                                                      |
-| mask&lt;T extends Widget&gt;() | `void` | /     | Mask given widget type `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
-| unmask&lt;T extends Widget&gt;() | `void` | /     | Unmask given widget type `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
-| maskCallback&lt;T extends Widget&gt;() | `void` | /     | Provide a custom callback to decide whether to mask the widget of class `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
+| Key                                    | Type   | Default | Description                                                                                                                                                                                                                              |
+| -------------------------------------- | ------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| maskAllText                            | `bool` | `true`  | Mask all text content. Draws a rectangle of text bounds with text color on top. Currently `Text`, `EditableText` and `RichText` widgets are masked.                                                                                      |
+| maskAllImages                          | `bool` | `true`  | Mask content of all images. Draws a rectangle of image bounds with image's dominant color on top. Currently `Image` widgets are masked.                                                                                                  |
+| maskAssetImages                        | `bool` | `false` | Mask asset images coming from the root asset bundle.                                                                                                                                                                                     |
+| mask&lt;T extends Widget&gt;()         | `void` | /       | Mask given widget type `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called.                                                  |
+| unmask&lt;T extends Widget&gt;()       | `void` | /       | Unmask given widget type `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called.                                                |
+| maskCallback&lt;T extends Widget&gt;() | `void` | /       | Provide a custom callback to decide whether to mask the widget of class `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
 
 For example, you can explicitly mask or unmask widgets by type,
 or you can even have a callback to decide whether a specific widget instance should be masked:
@@ -35,12 +35,18 @@ If you find that data isn't being masked with the default settings, please let u
 
 </Alert>
 
-To disable masking for <PlatformLink to="/enriching-events/screenshots/">`Screenshots`</PlatformLink> and <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink> (not to be used on applications with sensitive data):
+To disable the default text and image masking rules for screenshots and Session Replay, use the following options. This does not disable `SensitiveContent` masking, `SentryMask`, or custom rules. Only use these settings when the content is safe to capture:
 
 ```dart
 options.privacy.maskAllText = false;
 options.privacy.maskAllImages = false;
 ```
+
+## SensitiveContent Widgets
+
+In v10, the default rules mask Flutter `SensitiveContent` widgets marked `ContentSensitivity.sensitive` or `ContentSensitivity.autoSensitive`. Unrecognized sensitivity values are also masked. `ContentSensitivity.notSensitive` continues through other masking rules; it does not unmask the content by itself.
+
+These rules apply to both screenshots and Session Replay. Custom rules and `SentryUnmask` take precedence over the default rules, so verify your configuration if you override masking.
 
 ## Third Party Widgets
 

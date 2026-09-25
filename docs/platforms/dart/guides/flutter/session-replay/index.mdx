@@ -15,7 +15,7 @@ Flutter Session Replay is available on **iOS** and **Android**.
 
 [Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
-By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/session-replay/).
+By default, the SDK masks text, user input, and non-asset images. Images bundled as assets are not masked unless you set `options.privacy.maskAssetImages = true`. Review <PlatformLink to="/session-replay/privacy/">privacy settings</PlatformLink> for `SensitiveContent` and custom widgets.
 
 ## Pre-requisites
 
@@ -24,12 +24,12 @@ You can update your `pubspec.yaml` to the matching version:
 
 ```yaml
 dependencies:
-  sentry_flutter: ^9.0.0
+  sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter') }}
 ```
 
 ## Setup
 
-To set up replay, enable it by setting a non-zero sample rate and wrapping your root widget with `SentryWidget`:
+To record replays automatically, set a non-zero sample rate and wrap your root widget with `SentryWidget`. For on-demand recording in v10, see [Manual Control](#manual-control).
 
 ```dart
 await SentryFlutter.init(
@@ -45,6 +45,7 @@ await SentryFlutter.init(
   ),
 );
 ```
+
 For more details on the available properties, see the [SentryReplayOptions](https://pub.dev/documentation/sentry_flutter/latest/sentry_flutter/SentryReplayOptions-class.html), which is part of [SentryFlutterOptions](https://pub.dev/documentation/sentry_flutter/latest/sentry_flutter/SentryFlutterOptions-class.html).
 
 ## Verify
@@ -73,9 +74,81 @@ Sampling allows you to control how much of your app's traffic will result in a S
 
 Sampling starts as soon as a session begins. The `sessionSampleRate` is then evaluated. If the session is sampled, replay recording will start immediately. If not, `onErrorSampleRate` will be evaluated. If the session is sampled at this point, the replay will be buffered and will only be uploaded to Sentry if an error occurs, your app calls `Sentry.captureFeedback()`, or the built-in feedback form opens.
 
+## Manual Control
+
+In SDK v10, use `SentryFlutter.replay` to control recording for opt-in flows or specific parts of your app. These methods support Android and iOS; they do nothing on other platforms or before `SentryFlutter.init()`.
+
+### Start Recording on Demand
+
+To record only when your app explicitly requests it, set both sample rates to zero during initialization. Keep the `SentryWidget` wrapper from [Setup](#setup): manual recording still needs it to capture your Flutter UI.
+
+```dart
+await SentryFlutter.init(
+  (options) {
+    options.dsn = '___DSN___';
+    options.replay.sessionSampleRate = 0.0;
+    options.replay.onErrorSampleRate = 0.0;
+  },
+  appRunner: () => runApp(SentryWidget(child: MyApp())),
+);
+```
+
+After initialization, start recording when the user opts in or enters the workflow you want to capture:
+
+```dart
+await SentryFlutter.replay.start();
+```
+
+Explicit starts bypass automatic session sampling. Setting the sample rates to zero does not disable the manual API. Calling `start()` while a replay is already active does nothing.
+
+### Buffer Until a Trigger
+
+To capture the lead-up to a specific action without uploading an entire session, start a rolling buffer of up to 30 seconds:
+
+```dart
+await SentryFlutter.replay.startBuffering();
+```
+
+Call `flush()` when your app decides to send the buffer:
+
+```dart
+await SentryFlutter.replay.flush();
+```
+
+Flushing sends the buffer and continues recording in session mode. An error can also trigger this transition when selected by `onErrorSampleRate`. With `onErrorSampleRate` set to `0.0`, errors do not send the buffer automatically; call `flush()` explicitly.
+
+### Pause Around Sensitive Content
+
+Call `pause()` before showing sensitive content and `resume()` after hiding it. The paused interval excludes Replay screenshots and touches, and resuming continues the same replay.
+
+```dart
+await SentryFlutter.replay.pause();
+try {
+  await showSensitiveScreen();
+} finally {
+  await SentryFlutter.replay.resume();
+}
+```
+
+Here, `showSensitiveScreen()` represents your app's navigation flow and should complete after the sensitive screen closes. Continue to configure <PlatformLink to="/session-replay/privacy/">masking rules</PlatformLink> for recorded content. Pausing Replay does not disable other SDK features, such as error reporting.
+
+### End or Send a Replay
+
+Call `stop()` to end the current replay. Starting again creates a new replay with a new replay ID:
+
+```dart
+await SentryFlutter.replay.stop();
+// Start a separate replay when your app needs to record again.
+await SentryFlutter.replay.start();
+```
+
+Use `flush()` to send pending data while continuing to record. In session mode, it sends pending data; in buffer mode, it sends the buffer and switches to session mode. If no replay is active, `flush()` starts a new session, so it is not a shutdown operation.
+
+All manual control methods return `Future<void>`. Await calls in order, especially when stopping and starting another replay. Native recording and uploading continue asynchronously; completion of the future is not confirmation that Sentry has received the replay. Manual replays remain subject to server-side rate limits.
+
 ## PII & Privacy Considerations
 
-Personally identifiable information (PII), and privacy are important considerations when enabling Session Replay. The Sentry Flutter SDK aggressively masks all `Text`, `EditableText`, `RichText` and `Image` widgets by default.
+Personally identifiable information (PII), and privacy are important considerations when enabling Session Replay. The Sentry Flutter SDK masks text, user input, and non-asset images by default. Asset images require `options.privacy.maskAssetImages = true`.
 
 While we have default privacy considerations in place, there are additional settings you might need to configure to fully mask your app's content.
 We cannot detect the usage of third party widgets such as [FlutterMap](https://pub.dev/packages/flutter_map) so you need to manually configure the privacy configuration to mask the content of these widgets.
