@@ -1,11 +1,3 @@
-#### enable_metrics
-
-You can disable metrics collection globally by setting `enable_metrics` to `false`. When disabled, calls to `Sentry.Metrics` functions will be no-ops. Metrics are enabled by default.
-
-```elixir
-config :sentry, enable_metrics: false
-```
-
 #### before_send_metric
 
 To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `nil`, the metric is not emitted. Attributes can also be updated in the callback function.
@@ -27,6 +19,15 @@ config :sentry,
     end
   end
 ```
+
+Metrics are always on, so `before_send_metric` is also how you stop sending them. Return `nil` for every metric to drop all of them, including [automatic runtime metrics](#automatic-metrics):
+
+```elixir
+config :sentry,
+  before_send_metric: fn _metric -> nil end
+```
+
+SDK versions before 14.0.0 had an `enable_metrics` option to turn metrics off. Version 14.0.0 removed it, and setting it no longer stops metrics from being sent, so remove it from your configuration.
 
 You can also pass a `{module, function}` tuple:
 
