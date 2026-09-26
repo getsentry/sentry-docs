@@ -18,7 +18,7 @@ Supported in Sentry's Android SDK version `4.3.0` and above.
 
 The Activity's instrumentation, once enabled, captures transactions for each launch of an Activity. The SDK sets the Transaction name to the name of the Activity, for example, `MainActivity`, and Transaction operation to `ui.load`.
 
-The transaction starts before each Activity's `onCreate` method is called.
+The transaction starts before each Activity's `onCreate` method is called. For the first Activity in an app launch, the SDK may use an earlier app-start timestamp.
 
 _The Activity's instrumentation is enabled by default, but you may disable it by setting:_
 
@@ -135,13 +135,13 @@ The SDK differentiates between a cold and a warm start, but doesn't track hot st
 
 Sentry's App Start instrumentation aims to be as comprehensive and representative of the user experience as possible, and adheres to guidelines by the platform vendors. For this reason, App Starts reported by Sentry might be longer than what you see in other tools.
 
-For example, Sentry measures the duration from process start, including the time it takes for all Content Providers to complete, until the first frame is rendered to the user.
+For example, when the SDK uses process-start timing, the duration includes time spent initializing Content Providers and ends with the first rendered frame.
 
 </Alert>
 
 The SDK sets the Span operation to `app.start.cold` for _Cold start_ and `app.start.warm` for _Warm start_.
 
-The SDK uses the process fork time as the beginning of the app start (API 24+), with a fallback to the `SentryPerformanceProvider` (ContentProvider) creation time on older API levels. The measurement ends when the first frame is drawn.
+On Android 7.0 (API 24) and later, the SDK can use process start as the beginning of an app start when Performance V2 is enabled. If that timestamp is unavailable or Performance V2 is disabled, it falls back to the SDK initialization time, usually recorded by `SentryPerformanceProvider`. The measurement ends when the first frame is drawn.
 
 <Alert>
 
@@ -586,6 +586,12 @@ By adding a span for each launch of an activity, time to initial display (TTID) 
 The span starts when each Activity is launched, which is defined as an application launch for the first Activity, and the `onPause` method of the previous Activity for each subsequent Activity launched.
 
 The span finishes after the Activity draws its first frame.
+
+For the first Activity in a cold start, the TTID span starts at the app-start timestamp rather than just before `Activity.onCreate()`. On Android 7.0 and later, with Performance V2 enabled, the SDK can use process start for this timestamp.
+
+When it does, TTID includes `Application.attachBaseContext()` and `Application.onCreate()`. If the SDK falls back to its initialization timestamp, work before SDK initialization may not be included.
+
+On Android 12 and later, Sentry does not separately instrument the system splash screen. TTID still finishes after the Activity draws its first frame, so any delay that postpones that frame contributes to TTID.
 
 Time to initial display is dependent on having an active transaction bound to the scope. Ideally, it should be used along with [Activity Instrumentation](/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation), which starts a transaction and binds it to the scope automatically.
 
