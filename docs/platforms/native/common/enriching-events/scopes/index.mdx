@@ -55,7 +55,7 @@ sentry_value_t event = sentry_value_new_message_event(
     SENTRY_LEVEL_ERROR, "asset-loader", "Failed to decode texture");
 
 // Takes ownership of the scope and frees it.
-sentry_scope_capture_event(scope, event);
+sentry_scope_capture_event(scope, event, NULL);
 ```
 
 `sentry_scope_new` creates a scope you own. Configure it once and reuse it for as many captures as you need when the
@@ -67,8 +67,8 @@ sentry_scope_set_tag(scope, "worker", "asset-loader");
 sentry_scope_set_user(scope, user);
 
 // Applied, but not freed.
-sentry_scope_capture_event(scope, first_event);
-sentry_scope_capture_event(scope, second_event);
+sentry_scope_capture_event(scope, first_event, NULL);
+sentry_scope_capture_event(scope, second_event, NULL);
 
 sentry_scope_free(scope);
 ```
@@ -81,7 +81,7 @@ Scope data isn't just for errors. Feedback, logs, and metrics each can take a sc
 `sentry_scope_capture_*` function, so the context you build for one capture can enrich any of them:
 
 ```c
-sentry_scope_capture_event(scope, event);
+sentry_scope_capture_event(scope, event, NULL);
 sentry_scope_capture_feedback(scope, feedback, hint);
 sentry_scope_capture_log(scope, SENTRY_LEVEL_INFO, "Cache miss", attributes);
 sentry_scope_capture_metric(
@@ -108,7 +108,7 @@ sentry_scope_clear(scope); // Ready for the next request.
 sentry_scope_t *request_scope = sentry_scope_clone(base_scope);
 sentry_scope_set_tag(request_scope, "request.id", request_id);
 
-sentry_scope_capture_event(request_scope, event);
+sentry_scope_capture_event(request_scope, event, NULL);
 sentry_scope_free(request_scope);
 ```
 

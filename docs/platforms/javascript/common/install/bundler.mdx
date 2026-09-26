@@ -1,0 +1,95 @@
+---
+title: With a Bundler
+sidebar_order: 1
+description: "Learn how to run your app with Sentry using a bundler plugin, without the --import flag."
+supportedCategories:
+  - server-only
+notSupported:
+  - javascript.bun
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.elysia
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.gcp-functions
+  - javascript.firebase
+  - javascript.eve
+  - javascript.mastra
+  - javascript.nitro
+  - javascript.nestjs
+---
+
+<Alert>
+  Are you unsure if you should use this installation method? Review our
+  [installation methods](../).
+</Alert>
+
+If you build your server with a bundler, you can instrument your dependencies at build time with the Sentry bundler plugin instead of loading Sentry with the [`--import`](https://nodejs.org/api/cli.html#--importmodule) flag. Because the instrumentation is baked into your bundle, a plain top-level import of your instrument file is enough, and you can start your app with a regular `node` command, without the `--import` flag.
+
+Use this method if you can't pass a command line flag to the Node.js binary, for example when your start command is fixed by your platform or process manager.
+
+## 1. Create Your Instrument File
+
+Create a file named `instrument.(js|mjs)` in the root directory of your project that initializes Sentry:
+
+<PlatformContent includePath="getting-started-config" />
+
+## 2. Add the Sentry Bundler Plugin
+
+Add the Sentry plugin for your bundler to your build configuration. The plugin instruments your dependencies at build time, so the SDK no longer depends on `Sentry.init()` running before your other imports.
+
+```javascript {tabTitle:Vite} {filename: vite.config.mjs}
+import { sentryVitePlugin } from "@sentry/node/vite";
+
+export default {
+  plugins: [sentryVitePlugin()],
+};
+```
+
+```javascript {tabTitle:Rollup} {filename: rollup.config.mjs}
+import { sentryRollupPlugin } from "@sentry/node/rollup";
+
+export default {
+  plugins: [sentryRollupPlugin()],
+};
+```
+
+```javascript {tabTitle:webpack} {filename: webpack.config.mjs}
+import { sentryWebpackPlugin } from "@sentry/node/webpack";
+
+export default {
+  plugins: [sentryWebpackPlugin()],
+};
+```
+
+```javascript {tabTitle:esbuild} {filename: build.mjs}
+import { sentryEsbuildPlugin } from "@sentry/node/esbuild";
+
+await esbuild.build({
+  plugins: [sentryEsbuildPlugin()],
+});
+```
+
+## 3. Import Your Instrument File First
+
+Import `instrument.(js|mjs)` at the very top of your application's entry point, before any other imports:
+
+```javascript {filename: app.mjs}
+// Import this first!
+import "./instrument.mjs";
+
+// Now import other modules
+import express from "express";
+
+// Your application code goes here
+```
+
+## 4. Run Your App
+
+Start your application as usual. No `--import` flag is required, because the instrumentation is already part of your bundle:
+
+```bash
+node app.mjs
+```
+
+If you can't use a bundler, review our other [installation methods](../) for alternatives that don't rely on the `--import` flag.

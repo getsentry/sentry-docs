@@ -1,3 +1,107 @@
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
 ```ruby
-Sentry.capture_message("test message")
+
+begin
+  1 / 0
+rescue ZeroDivisionError => exception
+  Sentry.capture_exception(exception)
+end
+
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<OnboardingOption optionId="performance">
+
+### Tracing
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test your tracing configuration, create a custom transaction and span:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+
+Sentry.start_transaction(op: "task", name: "Transaction Name") do |transaction|
+  Sentry.get_current_scope.set_span(transaction)
+
+  Sentry.with_child_span(description: "Custom Span Name") do |span|
+    # your instrumented code here
+  end
+end
+
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<PlatformSection supported={["ruby","ruby.rails"]}>
+### Logs
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To verify that Sentry catches your logs, add some log statements to your application using the `Sentry.logger` APIs.
+
+Use Sentry's <PlatformLink to="/integrations/logging">Ruby stdlib Logger</PlatformLink> integration to capture logs from all loggers that use Ruby Logger automatically.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+
+Sentry.logger.info("This is an info log message")
+Sentry.logger.warning("This is a warning message")
+Sentry.logger.error("This is an error message")
+
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+
+
+</PlatformSection>
+
+### Metrics <FeatureBadge type="new" size="small" />
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Send test metrics from your app to verify that metrics are arriving in Sentry using the `Sentry.metrics` APIs.
+
+You can also send Yabeda metrics to Sentry automatically using our <PlatformLink to="/integrations/yabeda">Yabeda integration</PlatformLink>.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+
+Sentry.metrics.count("checkout.failed", 1)
+Sentry.metrics.gauge("queue.depth", 42)
+Sentry.metrics.distribution("cart.amount_usd", 187.5)
+
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
