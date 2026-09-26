@@ -1,0 +1,174 @@
+---
+title: Flue
+description: Learn how to send Flue agent traces, model calls, tool executions, and errors to Sentry with the Sentry SDK.
+sdk: sentry.javascript.node
+fallbackGuide: javascript.node
+icon: flue
+categories:
+  - server
+  - server-only
+keywords:
+  - flue
+  - ai
+  - agents
+  - agent tracing
+---
+
+[Flue](https://flueframework.com/) is an open TypeScript framework for building AI agents, made by the Astro team. This guide sets up the Sentry SDK in a Flue app so agent turns, model calls, tool executions, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="flue/sdk-setup-alert" />
+
+Deploying Flue agents to Cloudflare Workers? Follow the [Cloudflare Quick Start](./cloudflare/) instead.
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Flue application using `@flue/runtime` version `2.0.0` or later. Flue requires Node.js `22.19` or later.
+- `@sentry/node` or `@sentry/cloudflare` version `11.0.0` or later. Browser runtimes are not supported.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+  defaults={["performance"]}
+/>
+
+Install the Sentry Node SDK:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.0.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.0.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.0.0
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0
+```
+
+</OnboardingOption>
+
+## Configure
+
+Create a file that calls `Sentry.init()` and registers the Flue instrumentation. Flue is instrumented by registering with it rather than by patching, so this `instrument()` call is what connects the two:
+
+```typescript {filename:src/instrument.ts}
+import { instrument } from "@flue/runtime";
+import * as Sentry from "@sentry/node";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set profileSessionSampleRate to 1.0 to profile every session.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+
+instrument(Sentry.createFlueInstrumentation());
+```
+
+Import it at the top of your app entry, so it runs before your agents take a turn:
+
+```typescript {filename:src/app.ts}
+import "./instrument.ts";
+```
+
+Call `instrument()` once, at module scope. On Cloudflare the Vite plugin registers the instrumentation at build time instead; on Node there's no equivalent, so this call is what installs it.
+
+### Run With the Sentry Loader
+
+Libraries like database drivers, caches, and `dataloader` are instrumented by a module transform that has to be installed before your app loads them. A Flue build imports your dependencies before `src/instrument.ts` runs, so start the server with the Sentry loader to catch them:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "dev": "NODE_OPTIONS='--import=@sentry/node/import' vite dev",
+    "start": "NODE_OPTIONS='--import=@sentry/node/import' node dist/server.mjs"
+  }
+}
+```
+
+Agent, model, and tool spans arrive without this, as do outgoing HTTP requests. Everything instrumented through the module transform needs it.
+
+<Include name="flue/captured-summary" />
+
+### Privacy Controls
+
+The SDK will record generative AI inputs and outputs (the prompts your agent sends and the model responses it receives) by default. To turn recording off, set `genAI.inputs` and `genAI.outputs` to `false` in `dataCollection`:
+
+```typescript {filename:src/instrument.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+});
+```
+
+See [`dataCollection` documentation](./configuration/options/#dataCollection) for details on privacy control options.
+
+<Include name="flue/link-conversations" />
+
+<Include name="flue/verify" />
+
+</StepConnector>
+
+## Troubleshooting
+
+- **Token and cost values are doubled.** Remove the `createOpenTelemetryInstrumentation` call left over from the `flue add tooling sentry` blueprint. Flue emits its own model spans through it, so both it and the SDK count the same turn.
+- **No AI spans at all.** Confirm `instrument(Sentry.createFlueInstrumentation())` actually runs. Importing `src/instrument.ts` at the top of `src/app.ts` runs it during app startup, before any agent takes a turn.
+
+<Include name="flue/next-steps" />
+
+<Include name="flue/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/node`: `>=11.0.0`
+- `@sentry/cloudflare`: `>=11.0.0`
+- `@flue/runtime`: `>=2.0.0 <3.0.0`
