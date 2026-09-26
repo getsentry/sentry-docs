@@ -1,0 +1,50 @@
+---
+title: Cloudflare Bindings
+sidebar_title: Bindings
+description: "Learn which Cloudflare bindings Sentry instruments automatically and what each binding captures."
+---
+
+The Sentry Cloudflare SDK instruments the bindings on your `env` object automatically. You don't have to wrap a binding or call a function. When your code reads a binding from `env`, the SDK detects its type and returns an instrumented version.
+
+## Supported Bindings
+
+| Binding                                                                                               | What Sentry captures                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [D1](https://developers.cloudflare.com/d1/)                                                           | Database queries                                                                                                                      |
+| [R2](https://developers.cloudflare.com/r2/)                                                           | Bucket operations, such as reads and uploads                                                                                          |
+| [Queues](https://developers.cloudflare.com/queues/)                                                   | Messages that you send to a queue                                                                                                     |
+| [Workers AI](https://developers.cloudflare.com/workers-ai/)                                           | Model calls, see <PlatformLink to="/agent-tracing/workers-ai/">Workers AI</PlatformLink>                                              |
+| [Durable Objects](https://developers.cloudflare.com/durable-objects/)                                 | Traces that continue in the Durable Object, see <PlatformLink to="/features/durableobject/">Cloudflare Durable Objects</PlatformLink> |
+| [Service bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/) | Traces that continue in the other Worker, if it also uses Sentry                                                                      |
+
+For RPC calls to Durable Objects and service bindings, add the binding to <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">`rpcTracePropagationBindings`</PlatformLink>.
+
+## Which `env` Is Instrumented
+
+The SDK instruments the `env` object that Cloudflare gives to the handlers and classes that Sentry wraps, such as your Worker, Durable Objects, and Workflows.
+
+<Alert level="warning">
+
+The global `env` that you import from `cloudflare:workers` is not instrumented. Bindings that you read from it don't create spans. Use the `env` argument of your handler or class instead:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import { env as globalEnv } from "cloudflare:workers";
+
+export default Sentry.withSentry(
+  (env) => ({ dsn: "___PUBLIC_DSN___", tracesSampleRate: 1.0 }),
+  {
+    async fetch(request, env) {
+      // Creates a span: `env` is the handler argument
+      await env.DB.prepare("SELECT * FROM users").all();
+
+      // Does not create a span: `globalEnv` is the global env
+      await globalEnv.DB.prepare("SELECT * FROM users").all();
+
+      return new Response("OK");
+    },
+  }
+);
+```
+
+</Alert>
