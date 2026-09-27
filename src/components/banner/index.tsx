@@ -101,6 +101,9 @@ const fastHash = (input: string) => {
 };
 
 const readOrResetLocalStorage = () => {
+  if (!localStorage) {
+    return null;
+  }
   const stored = localStorage.getItem(LOCALSTORAGE_NAMESPACE);
   if (!stored) {
     return null;
@@ -183,6 +186,9 @@ export function Banner() {
         className={styles['promo-banner-dismiss']}
         role="button"
         onClick={() => {
+          if (!localStorage) {
+            return;
+          }
           const manifest = readOrResetLocalStorage() || [];
           const payload = JSON.stringify([...manifest, banner.hash]);
           localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
