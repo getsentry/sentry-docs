@@ -186,12 +186,11 @@ export function Banner() {
         className={styles['promo-banner-dismiss']}
         role="button"
         onClick={() => {
-          if (!localStorage) {
-            return;
+          if (localStorage) {
+            const manifest = readOrResetLocalStorage() || [];
+            const payload = JSON.stringify([...manifest, banner.hash]);
+            localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
           }
-          const manifest = readOrResetLocalStorage() || [];
-          const payload = JSON.stringify([...manifest, banner.hash]);
-          localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
           setBanner(null);
         }}
       >

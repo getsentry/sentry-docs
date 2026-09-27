@@ -28,6 +28,16 @@ function readOrResetLocalStorage(): string[] | null {
   }
 }
 
+// Mirror of the dismiss handler's localStorage block from banner/index.tsx
+function dismissBanner(hash: string): void {
+  if (localStorage) {
+    const manifest = readOrResetLocalStorage() || [];
+    const payload = JSON.stringify([...manifest, hash]);
+    localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
+  }
+  // setBanner(null) always runs — simulated here by returning normally
+}
+
 describe('Banner localStorage guard', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -54,5 +64,17 @@ describe('Banner localStorage guard', () => {
     localStorage.setItem(LOCALSTORAGE_NAMESPACE, 'not-valid-json{{{');
     expect(readOrResetLocalStorage()).toBeNull();
     expect(localStorage.getItem(LOCALSTORAGE_NAMESPACE)).toBeNull();
+  });
+
+  it('dismiss does not throw when localStorage is null and completes without error', () => {
+    vi.stubGlobal('localStorage', null);
+    // setBanner(null) equivalent runs after this — function must not throw
+    expect(() => dismissBanner('some-hash')).not.toThrow();
+  });
+
+  it('dismiss writes hash to localStorage when available', () => {
+    dismissBanner('abc123');
+    const stored = localStorage.getItem(LOCALSTORAGE_NAMESPACE);
+    expect(JSON.parse(stored!)).toContain('abc123');
   });
 });
