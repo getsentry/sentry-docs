@@ -12,7 +12,7 @@ spec_depends_on:
 spec_changelog:
   - version: 3.0.0
     date: 2026-09-28
-    summary: Removed the global logs enablement option and kill-switch requirement; retained explicit opt-in for integrations
+    summary: Removed the global logs enablement option; retained explicit opt-in for integrations
   - version: 2.3.0
     date: 2026-09-22
     summary: Added sentry.is_localhost default attribute for localhost inbound filtering
@@ -289,7 +289,7 @@ SDKs **MUST** track client outcomes for this data category to report how often l
 
 ### SDK Integrations
 
-SDKs **SHOULD** provide integrations that capture logs from platform logging libraries (e.g., JavaScript's `console`, Python's `logging`, Java's `Log4j`). These integrations **MUST** follow the [opt-in requirements for auto-emitted logs](#auto-emitted-logs).
+SDKs **SHOULD** provide integrations that capture logs from platform logging libraries (e.g., JavaScript's `console`, Python's `logging`, Java's `Log4j`).
 
 SDKs **MAY** provide options to gate integration-specific functionality (e.g., controlling log appenders added via external config).
 
@@ -299,9 +299,7 @@ SDKs **MAY** provide options to gate integration-specific functionality (e.g., c
 
 ### Auto-Emitted Logs
 
-Calling the [public API](#logger-module) is itself an opt-in to logging and **MUST NOT** require an additional enablement option.
-
-However, logs that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+Logs that are **automatically emitted by integrations or libraries** without an explicit user call require opt-in because they can generate unexpected volume and cost.
 
 **Integrations that auto-emit logs** - An SDK integration that automatically captures logs (e.g., forwarding `console.log` calls, capturing framework-level diagnostic output) **MUST** be opt-in. The integration **MUST NOT** emit any logs unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
 
@@ -498,13 +496,13 @@ The `otel_log` envelope item payload is a JSON object implementing the [OpenTele
 
 ### Initialization Options
 
-SDKs **SHOULD NOT** provide a universal kill-switch for logs.
-
 SDKs **MUST** expose the following configuration option:
 
 | Option | Type | Default | Since | Description |
 |--------|------|---------|-------|-------------|
 | `beforeSendLog` / `before_send_log` | Function | — | 1.0.0 | **OPTIONAL** callback receiving a log object. Returns a modified log or `null` to drop it. |
+
+SDKs **SHOULD NOT** provide an API whose sole purpose is to disable all logs. General-purpose filtering APIs such as `beforeSendLog` / `before_send_log` **MAY** drop all logs.
 
 </SpecSection>
 
