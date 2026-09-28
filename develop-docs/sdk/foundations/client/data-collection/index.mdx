@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.13.0
+spec_version: 0.14.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.14.0
+    date: 2026-09-10
+    summary: Explain migration from `sendDefaultPii` for SDKs that can't cleanly map previous behavior to data collection.
   - version: 0.13.0
     date: 2026-09-08
     summary: Add `filePaths`, defaulting to `true`, to control automatic collection of file and directory paths.
@@ -724,6 +727,7 @@ init({
 
 ### Migration from `sendDefaultPii`
 
+If the SDK can cleanly map what `sendDefaultPii` did to data collection options, it **MAY** backfill data collection options from the configured `sendDefaultPii` value:
 - **`sendDefaultPii: true`** (legacy) → omit `dataCollection` entirely; the new defaults already populate `user.*` and collect HTTP bodies. Add overrides only to restrict collection.
 - **`sendDefaultPii: false`** (legacy) → opt out of the categories the new defaults collect.
 
@@ -752,6 +756,14 @@ init({
   },
 });
 ```
+
+If the SDK can not cleanly map `sendDefaultPii` behavior to data collection options, it **MUST NOT** backfill data collection options from the configured `sendDefaultPii` value. Instead the SDK **MUST** ignore the value of `sendDefaultPii` if any data collection options is set explicitly and instead use the default data collection options where no explicit value has been set.
+This prevents breaking changes in PII filtering and allows customers to migrate to data collection at their own pace. Customers may keep using `sendDefaultPii` without changes to SDK behavior as long as they don't opt into data collection.
+
+Examples of not cleanly mapping:
+- mixed behavior between integrations (e.g. one integration sent cookies even with `sendDefaultPii` = `false` while another did not)
+- hard coded filter terms that don't match the ones defined in data collection spec (e.g. sensitive http header names)
+- sensitive values were omitted and are now attached as `[Filtered]`
 
 ---
 
