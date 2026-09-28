@@ -143,6 +143,39 @@ describe('findIssuesInContent', () => {
     expect(fixed).toBe(content);
   });
 
+  it('honors an inline ignore marker on the same line', () => {
+    const content = 'See [x](/foo) {/* trailing-slash-ignore */}';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('honors an ignore marker on the preceding line', () => {
+    const content = ['{/* trailing-slash-ignore */}', 'See [x](/foo).'].join('\n');
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('only exempts the marked line and the one after it', () => {
+    const content = [
+      '{/* trailing-slash-ignore */}',
+      '[a](/one)',
+      '[b](/two)',
+      '[c](/three)',
+    ].join('\n');
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(2);
+    expect(issues.map(i => i.linkPath)).toEqual(['/two', '/three']);
+    // The exempted link is preserved exactly.
+    expect(fixed.split('\n')[1]).toBe('[a](/one)');
+  });
+
+  it('honors the marker in an HTML comment too', () => {
+    const content = ['<!-- trailing-slash-ignore -->', '[a](/one)'].join('\n');
+    expect(lint(content).issues).toHaveLength(0);
+  });
+
   it('leaves external links untouched', () => {
     const content = '[Docs](https://example.com/page) and [Rel](./sibling)';
     const {issues, fixed} = lint(content);

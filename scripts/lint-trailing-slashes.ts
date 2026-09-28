@@ -62,6 +62,17 @@ const VERSIONED_PAGE = /__v[0-9][0-9A-Za-z._-]*$/;
 
 const FENCE = /^\s*(```|~~~)/;
 
+/**
+ * Escape hatch for the rare link that must stay bare. Put the marker in a
+ * comment on the link's line or the line above it:
+ *
+ *   {/* trailing-slash-ignore *\/}
+ *   See [the thing](/foo).
+ *
+ * Both the linter and `--fix` honor it, so CI stays quiet too.
+ */
+const IGNORE_MARKER = /trailing-slash-ignore/;
+
 /** Returns true when the path should keep whatever form it already has. */
 export function isExempt(linkPath: string): boolean {
   return (
@@ -157,6 +168,11 @@ export function findIssuesInContent(
       return line;
     }
     if (inFence) {
+      return line;
+    }
+    // The marker exempts its own line and the one after it, so it can sit
+    // either inline or on the line above the link.
+    if (IGNORE_MARKER.test(line) || (index > 0 && IGNORE_MARKER.test(lines[index - 1]))) {
       return line;
     }
     const result = processLine(line, index + 1, filePath);
