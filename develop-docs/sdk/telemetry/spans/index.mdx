@@ -649,35 +649,36 @@ See the [Ingest Settings](/sdk/foundations/envelopes/envelope-items/#ingest-sett
 
 ### Common Attribute Keys
 
-All attributes below **MUST** be attached to every span emitted from the SDK, depending on the platform and availability of the information.
+**Strictly Required** and **Required** attributes **MUST** be attached to every span emitted from the SDK. **Conditional** attributes **MUST** be attached to every span when their condition is met.
 
 | Attribute Key | Type | Required | Description |
 |---------------|------|----------|-------------|
 | `sentry.segment.name` | string | Strictly Required | Segment name (e.g. `"GET /users"`) |
 | `sentry.segment.id` | string | Strictly Required | Segment span ID |
 | `sentry.trace_lifecycle` | string | Required | The trace lifecycle mode. **MUST** be set to `"stream"`. |
-| `sentry.op` | string | Required, see note | The [span op](/sdk/telemetry/traces/span-operations/) (e.g. `"http.client"`, `"db.query"`). **MUST** be set on spans from auto instrumentation, **MAY** be set by manually started spans. |
-| `sentry.release` | string | Required | Application release version |
-| `sentry.environment` | string | Required | Environment name (e.g. `"production"`, `"staging"`) |
-| `sentry.segment.name.source` | string | Required on segment spans | Source of the segment name. **MUST** exclusively be set on segment spans. See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__segment__name__source.json) for all supported sources and [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) for more information. |
-| `sentry.profiler_id` | string | Required | ID of the running continuous profiler |
-| `sentry.replay_id` | string | Required | ID of the running replay |
-| `os.name` | string | Required | Operating system name |
-| `browser.name` | string | Required | Browser name |
-| `user.id` | string | Required | User ID |
-| `user.email` | string | Required | User email |
-| `user.ip_address` | string | Required | User IP address |
-| `user.name` | string | Required | User username |
-| `thread.id` | string | Required | Thread ID |
-| `thread.name` | string | Required | Thread name |
 | `sentry.sdk.name` | string | Required | Sentry SDK name |
 | `sentry.sdk.version` | string | Required | Sentry SDK version |
 | `sentry.origin` | string | Required | [Trace origin](/sdk/telemetry/traces/trace-origin/) |
 | `sentry.platform` | string | Required | Platform identifier |
-| `sentry.is_localhost` | boolean | Required | Whether the SDK determined the application is running on localhost. Used to enable the localhost inbound filter. The definition of "localhost" is platform-specific. |
+| `sentry.op` | string | Conditional | The [span op](/sdk/telemetry/traces/span-operations/) (e.g. `"http.client"`, `"db.query"`). **MUST** be set on spans from auto instrumentation, **MAY** be set by manually started spans. |
+| `sentry.segment.name.source` | string | Conditional | Source of the segment name. **MUST** be set on segment spans, and **MUST NOT** be set on any other span. See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/sentry/sentry__segment__name__source.json) for all supported sources and [Transaction Annotations](/sdk/foundations/transport/event-payloads/transaction/#transaction-annotations) for more information. |
+| `sentry.release` | string | Conditional | Application release version. Set if the SDK has a `release` value set or auto-detected. |
+| `sentry.environment` | string | Conditional | Environment name (e.g. `"production"`, `"staging"`). Set if the SDK has an `environment` value set or uses a default. |
+| `sentry.is_localhost` | boolean | Conditional | Whether the SDK determined the application is running on localhost. Used to enable the localhost inbound filter. The definition of "localhost" is platform-specific. Set by browser and backend SDKs. |
+| `sentry.profiler_id` | string | Conditional | ID of the running continuous profiler. Set while a continuous profiling session is running. **MUST NOT** be set otherwise. |
+| `sentry.replay_id` | string | Conditional | ID of the active replay. Set while a replay is active. **MUST NOT** be set otherwise. |
+| `os.name` | string | Conditional | Operating system name. Set if available on the platform. |
+| `browser.name` | string | Conditional | Browser name. Set by browser SDKs if available. |
+| `user.id` | string | Conditional | User ID. Set if user data is available (see below). |
+| `user.email` | string | Conditional | User email. Set if user data is available (see below). |
+| `user.ip_address` | string | Conditional | User IP address. Set if user data is available (see below). |
+| `user.name` | string | Conditional | User username. Set if user data is available (see below). |
+| `thread.id` | integer | Conditional | Thread ID. Set on platforms that expose thread information. |
+| `thread.name` | string | Conditional | Thread name. Set on platforms that expose thread information. |
 
 Spans missing **Strictly Required** attributes **MAY** be rejected by Relay.
-All other attributes in the table are required _if_ they are available to the SDK. For example, `sentry.release` **MUST** be sent if and only if the SDK has a `release` value set (or auto-detected it).
+
+User attributes (`user.*`) **MUST** respect the [`userInfo`](/sdk/foundations/client/data-collection/#datacollection-options) option. User data populated automatically by the SDK **MUST NOT** be attached if `userInfo` is disabled. User data set explicitly by the user (e.g. via `setUser`) **MUST** be attached regardless of `userInfo`.
 
 Empty attributes **MUST** be omitted.
 
