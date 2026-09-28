@@ -32,12 +32,17 @@ const CONTENT_DIRS = ['docs', 'develop-docs', 'includes', 'platform-includes'];
  */
 const URL_ATTRIBUTES = ['href', 'to', 'url'];
 
-/** Markdown: [text](/path), [text](/path#anchor), [text](/path "title") */
-const MARKDOWN_LINK = /(\]\()(\/[^)\s#]*)(#[^)\s]*)?((?:\s+"[^"]*")?\))/g;
+/**
+ * Markdown: [text](/path), [text](/path?query), [text](/path#anchor),
+ * [text](/path "title"). The query and fragment are captured separately so the
+ * slash lands on the path, which is where Next.js expects it:
+ * `/platform-redirect?next=/x/` 308s, `/platform-redirect/?next=/x/` is a 200.
+ */
+const MARKDOWN_LINK = /(\]\()(\/[^)\s#?]*)(\?[^)\s#]*)?(#[^)\s]*)?((?:\s+"[^"]*")?\))/g;
 
-/** JSX: href="/path", to='/path', url="/path#anchor" */
+/** JSX: href="/path", to='/path', url="/path?query#anchor" */
 const JSX_LINK = new RegExp(
-  `((?:${URL_ATTRIBUTES.join('|')})=)(["'])(\\/[^"'#\\s]*)(#[^"']*)?\\2`,
+  `((?:${URL_ATTRIBUTES.join('|')})=)(["'])(\\/[^"'#?\\s]*)(\\?[^"'#]*)?(#[^"']*)?\\2`,
   'g'
 );
 
@@ -98,7 +103,8 @@ function processLine(
     while ((match = regex.exec(masked)) !== null) {
       const isJsx = regex === JSX_LINK;
       const linkPath = isJsx ? match[3] : match[2];
-      const fragment = (isJsx ? match[4] : match[3]) ?? '';
+      const query = (isJsx ? match[4] : match[3]) ?? '';
+      const fragment = (isJsx ? match[5] : match[4]) ?? '';
 
       if (isExempt(linkPath)) {
         continue;
@@ -106,8 +112,8 @@ function processLine(
 
       const suggested = `${linkPath}/`;
       const replacement = isJsx
-        ? `${match[1]}${match[2]}${suggested}${fragment}${match[2]}`
-        : `${match[1]}${suggested}${fragment}${match[4]}`;
+        ? `${match[1]}${match[2]}${suggested}${query}${fragment}${match[2]}`
+        : `${match[1]}${suggested}${query}${fragment}${match[5]}`;
 
       edits.push({
         start: match.index,
@@ -118,8 +124,8 @@ function processLine(
         filePath,
         line: lineNumber,
         column: match.index + 1,
-        linkPath: linkPath + fragment,
-        suggested: suggested + fragment,
+        linkPath: linkPath + query + fragment,
+        suggested: suggested + query + fragment,
       });
     }
   }
@@ -250,8 +256,18 @@ if (require.main === module) {
 
   console.log('\nRun `pnpm lint:trailing-slash:fix` to fix these automatically.');
 
+  // The JSON is round-tripped through GITHUB_OUTPUT, so it has to stay small
+  // enough to survive that. The full list is already printed above; the
+  // workflow only needs enough to build a comment.
+  const JSON_ISSUE_LIMIT = 250;
   console.log('\n---JSON_OUTPUT---');
-  console.log(JSON.stringify({trailingSlashIssues: issues}, null, 2));
+  console.log(
+    JSON.stringify({
+      totalIssues: issues.length,
+      truncated: issues.length > JSON_ISSUE_LIMIT,
+      trailingSlashIssues: issues.slice(0, JSON_ISSUE_LIMIT),
+    })
+  );
   console.log('---JSON_OUTPUT---\n');
 
   process.exit(1);

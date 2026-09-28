@@ -30,18 +30,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
         with:
           node-version-file: 'package.json'
 
+      - name: Get changed content files
+        id: changed
+        run: |
+          FILES=$(git diff --name-only --diff-filter=AMR \
+            origin/${{ github.base_ref }}...HEAD \
+            -- 'docs/**/*.md' 'docs/**/*.mdx' \
+               'develop-docs/**/*.md' 'develop-docs/**/*.mdx' \
+               'includes/**/*.md' 'includes/**/*.mdx' \
+               'platform-includes/**/*.md' 'platform-includes/**/*.mdx' || true)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          COUNT=$(echo "$FILES" | grep -c . || true)
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "Changed content files: $COUNT"
+
+      # Only the files this PR touches are linted, so a PR is never blamed for
+      # pre-existing misses elsewhere in the repo.
       - name: Run trailing slash lint
         id: lint
+        if: steps.changed.outputs.count != '0'
         continue-on-error: true
         run: |
           set +e
-          OUTPUT=$(npx tsx scripts/lint-trailing-slashes.ts 2>&1)
+          OUTPUT=$(echo "${{ steps.changed.outputs.files }}" | xargs npx tsx scripts/lint-trailing-slashes.ts 2>&1)
           EXIT_CODE=$?
           set -e
 
@@ -80,53 +101,39 @@ jobs:
             }
 
             const issues = lintResult.trailingSlashIssues || [];
+            const total = lintResult.totalIssues ?? issues.length;
             if (issues.length === 0) {
               return;
             }
 
-            // Only report links in files this PR actually touches, so a PR is
-            // never blamed for pre-existing misses elsewhere in the repo.
-            const changed = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-            });
-            const changedFiles = new Set(changed.map(f => f.filename));
-            const relevant = issues.filter(i => changedFiles.has(i.filePath));
+            const byFile = {};
+            for (const issue of issues) {
+              if (!byFile[issue.filePath]) byFile[issue.filePath] = [];
+              byFile[issue.filePath].push(issue);
+            }
 
             let comment = '## ⚠️ Internal Links Missing Trailing Slashes\n\n';
             comment += '`next.config.ts` sets `trailingSlash: true`, so these links are served a **308 redirect** before the page loads.\n\n';
+            comment += `### Found ${total} link(s) in files changed by this PR\n\n`;
+            comment += 'Run `pnpm lint:trailing-slash:fix` to fix these automatically.\n\n';
+            comment += '| File | Line | Current Link | Should Be |\n';
+            comment += '|------|------|--------------|-----------|\n';
 
-            if (relevant.length === 0) {
-              comment += `No issues in the files this PR changes. (${issues.length} pre-existing elsewhere in the repo.)\n`;
-            } else {
-              const byFile = {};
-              for (const issue of relevant) {
-                if (!byFile[issue.filePath]) byFile[issue.filePath] = [];
-                byFile[issue.filePath].push(issue);
-              }
-
-              comment += `### Found ${relevant.length} link(s) in files changed by this PR\n\n`;
-              comment += 'Run `pnpm lint:trailing-slash:fix` to fix these automatically.\n\n';
-              comment += '| File | Line | Current Link | Should Be |\n';
-              comment += '|------|------|--------------|-----------|\n';
-
-              // Cap the table so a large PR cannot exceed GitHub's comment size limit.
-              const MAX_ROWS = 100;
-              let rows = 0;
-              for (const [file, fileIssues] of Object.entries(byFile)) {
-                for (const issue of fileIssues) {
-                  if (rows >= MAX_ROWS) break;
-                  comment += `| \`${file}\` | ${issue.line} | \`${issue.linkPath}\` | \`${issue.suggested}\` |\n`;
-                  rows++;
-                }
+            // Cap the table so a large PR cannot exceed GitHub's comment size limit.
+            const MAX_ROWS = 100;
+            let rows = 0;
+            for (const [file, fileIssues] of Object.entries(byFile)) {
+              for (const issue of fileIssues) {
                 if (rows >= MAX_ROWS) break;
+                comment += `| \`${file}\` | ${issue.line} | \`${issue.linkPath}\` | \`${issue.suggested}\` |\n`;
+                rows++;
               }
-              if (relevant.length > MAX_ROWS) {
-                comment += `\n_…and ${relevant.length - MAX_ROWS} more. Run the fixer to see them all._\n`;
-              }
-              comment += '\n';
+              if (rows >= MAX_ROWS) break;
             }
+            if (total > rows) {
+              comment += `\n_…and ${total - rows} more. Run the fixer to see them all._\n`;
+            }
+            comment += '\n';
 
             comment += '---\n';
             comment += '*Each redirect hop loses ~15% of SEO link equity and adds latency for users.*\n';

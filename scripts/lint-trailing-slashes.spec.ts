@@ -116,6 +116,33 @@ describe('findIssuesInContent', () => {
     expect(fixed).toBe(content);
   });
 
+  it('leaves a path that already ends in a slash alone when a query follows', () => {
+    // Regression: the slash belongs on the path, not the query. Appending one
+    // to the end of the whole string corrupts the query value.
+    const content = '[x](/platform-redirect/?next=%2Ftracing%2F)';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('inserts the slash before the query string', () => {
+    const {issues, fixed} = lint('[x](/platform-redirect?next=/tracing/)');
+    expect(issues[0].suggested).toBe('/platform-redirect/?next=/tracing/');
+    expect(fixed).toBe('[x](/platform-redirect/?next=/tracing/)');
+  });
+
+  it('handles a query and a fragment together', () => {
+    const {fixed} = lint('[x](/a/b?c=1#d)');
+    expect(fixed).toBe('[x](/a/b/?c=1#d)');
+  });
+
+  it('handles query strings in attributes', () => {
+    const content = '<Link href="/platform-redirect/?next=%2Fx%2F" />';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
   it('leaves external links untouched', () => {
     const content = '[Docs](https://example.com/page) and [Rel](./sibling)';
     const {issues, fixed} = lint(content);
