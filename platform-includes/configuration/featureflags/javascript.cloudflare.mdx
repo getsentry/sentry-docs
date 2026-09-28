@@ -1,16 +1,29 @@
-```typescript
-import * as Sentry from '@sentry/cloudflare';
+```typescript {tabTitle:instrument.server.ts} {mdExpandTabs} {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
 
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [Sentry.featureFlagsIntegration()]
-});
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.featureFlagsIntegration()],
+}));
+```
 
-const flagsIntegration = Sentry.getClient()?.getIntegrationByName<Sentry.FeatureFlagsIntegration>('FeatureFlags');
-if (flagsIntegration) {
-  flagsIntegration.addFeatureFlag('test-flag', false);
-} else {
-  // Something went wrong, check your DSN and/or integrations
-}
-Sentry.captureException(new Error('Something went wrong!'));
+```typescript {tabTitle:index.ts} {filename:src/index.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default {
+  async fetch(request, env, ctx) {
+    const flagsIntegration =
+      Sentry.getClient()?.getIntegrationByName<Sentry.FeatureFlagsIntegration>(
+        "FeatureFlags"
+      );
+    if (flagsIntegration) {
+      flagsIntegration.addFeatureFlag("test-flag", false);
+    } else {
+      // Something went wrong, check your DSN and/or integrations
+    }
+    Sentry.captureException(new Error("Something went wrong!"));
+
+    return new Response("OK");
+  },
+} satisfies ExportedHandler<Env>;
 ```

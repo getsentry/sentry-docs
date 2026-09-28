@@ -9,27 +9,19 @@ description: "Learn how Sentry instruments Cloudflare Workers AI to capture gen_
 
 Sentry automatically instruments the [Cloudflare Workers AI binding](https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/) (`env.AI`). Calls to `env.AI.run(...)` create `gen_ai` spans that follow Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions, capturing the model, request parameters, and token usage.
 
-No extra setup is required beyond initializing the SDK with `withSentry`. As long as your handler receives the instrumented `env`, the `AI` binding is wrapped for you:
+No extra setup is required beyond the <PlatformLink to="/">quick start</PlatformLink>. The `AI` binding on the `env` that your handler receives is instrumented for you:
 
 ```typescript
-import * as Sentry from "@sentry/cloudflare";
+export default {
+  async fetch(request, env) {
+    // env.AI is automatically instrumented
+    const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages: [{ role: "user", content: "What is the capital of France?" }],
+    });
 
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-  }),
-  {
-    async fetch(request, env) {
-      // env.AI is automatically instrumented
-      const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-        messages: [{ role: "user", content: "What is the capital of France?" }],
-      });
-
-      return new Response(JSON.stringify(result));
-    },
-  }
-);
+    return new Response(JSON.stringify(result));
+  },
+} satisfies ExportedHandler<Env>;
 ```
 
 That is enough for spans. The SDK records prompt and response content by default. To turn that off, set `genAI: { inputs: false, outputs: false }` in the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink>.

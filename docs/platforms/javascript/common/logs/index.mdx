@@ -26,11 +26,27 @@ Logs are enabled by default. Just initialize the SDK and use `Sentry.logger` to 
 </SplitSectionText>
 <SplitSectionCode>
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+}));
+```
+
+</PlatformSection>
 
 </SplitSectionCode>
 </SplitSection>
@@ -149,6 +165,8 @@ For [Consola](https://github.com/unjs/consola) users, use `Sentry.createConsolaR
 </SplitSectionText>
 <SplitSectionCode>
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -162,6 +180,31 @@ console.log("Executed Action for User:", 123, true);
 // -> message.parameter.0: 123
 // -> message.parameter.1: true
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```typescript {filename:src/instrument.server.ts}
+import {
+  consoleLoggingIntegration,
+  defineCloudflareOptions,
+} from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+  ],
+}));
+
+// In your Worker, arguments become searchable attributes:
+// console.log("Executed Action for User:", 123, true);
+// -> message.parameter.0: 123
+// -> message.parameter.1: true
+```
+
+</PlatformSection>
 
 </SplitSectionCode>
 </SplitSection>
@@ -177,6 +220,8 @@ The log object includes: `level`, `message`, `timestamp`, and `attributes`.
 
 </SplitSectionText>
 <SplitSectionCode>
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ```javascript
 Sentry.init({
@@ -196,6 +241,33 @@ Sentry.init({
   },
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  beforeSendLog: (log) => {
+    // Drop debug logs in production
+    if (log.level === "debug") {
+      return null;
+    }
+
+    // Remove sensitive attributes
+    if (log.attributes?.password) {
+      delete log.attributes.password;
+    }
+
+    return log;
+  },
+}));
+```
+
+</PlatformSection>
 
 </SplitSectionCode>
 </SplitSection>
