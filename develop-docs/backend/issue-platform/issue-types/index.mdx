@@ -1,0 +1,65 @@
+---
+title: Issue Types
+sidebar_order: 10
+---
+
+An issue type is a way to group related issues together. Examples include `metric_issue`, `performance_n_plus_one_api_calls`, etc.
+
+## Register an Issue Type
+
+To register a new issue type you need to subclass <Link to="https://github.com/getsentry/sentry/blob/ef76b0765f6c057af12b1cd0dc2de6b42a938c02/src/sentry/issues/grouptype.py#L98-L108">`GroupType`</Link>
+
+When registering the class, set the following required attributes on the class:
+
+- `type_id`: A unique integer to identify your issue type.
+- `slug`: A unique slug to identify your issue type. Used to search by issue type in the issue stream
+- `description`: A human-readable description of your issue type.
+- `category`: The overall category that your issue type belongs to. You can <Link to="#register-a-category">register a category</Link> if the existing ones don't make sense for your issue type.
+
+You may also set these optional attributes:
+
+- `released`: Whether this issue type has been released to all customers. See <Link to="#releasing-your-issue-type">Releasing your issue type</Link>
+- `noise_config`: A `NoiseConfig` that allows you to set policy on how many times a fingerprint must occur in a period of time before an issue is created. NoiseConfig has two attributes:
+  - `ignore_limit`: How many occurrences need to occur before we create a new issue
+  - `expiry_time`: The period of time the occurrences must occur in before we reset the count
+- `enable_auto_resolve`: Whether this issue type can be resolved automatically after a number of days with no events. The auto_resolve window is configurable in each project's settings. By default this attribute is set to true.
+- `enable_escalation_detection`: Whether this issue type can escalate using the <Link to="https://docs.sentry.io/product/issues/states-triage/escalating-issues/">Escalating Issues Algorithm</Link>. By default this attribute is set to true.
+
+Here's an example issue type:
+
+```python
+@dataclass(frozen=True)
+class ProfileFileIOGroupType(GroupType):
+    type_id = 2001
+    slug = "profile_file_io_main_thread"
+    description = "File I/O on Main Thread"
+    category = GroupCategory.PROFILE.value
+```
+
+and here's one with `noise_config` configured
+
+```python
+@dataclass(frozen=True)
+class ProfileFileIOGroupType(GroupType):
+    type_id = 2001
+    slug = "profile_file_io_main_thread"
+    description = "File I/O on Main Thread"
+    category = GroupCategory.PROFILE.value
+    noise_config = NoiseConfig(5, timedelta(days=2))
+```
+
+### Register a Category
+
+You might also want to register a new category related to your issue type as well. This allows you to group related issue types together. To do so, add your category to <Link to="https://github.com/getsentry/sentry/blob/97f4174c28041357aa190f27012dc33c1c7bafc7/src/sentry/issues/grouptype.py#L17-L22">this enum</Link>
+
+## Releasing your issue type
+
+The issue platform provides functionality to help release your new issue type in a controlled way. There are 3 feature flags that are used to release an issue type:
+
+- Ingest - This controls whether we'll accept or drop issues of this type in our consumer
+- Post processing - This controls whether we'll pass the issue along to post processing. If disabled, then issues will be created but no notifications will be sent. This can be helpful for testing out what issues look like before release. _Note:_ Any issues created this way will not send new issue notifications after the flag is enabled, since they already exist. In the future, if there is demand we might provide a way to remove all test versions of a new issue type.
+- UI - This controls whether the issue type will appear in the issue list and elsewhere in the ui.
+
+These flags are all controlled via flagpole and set via options automator. To get the base values for all of these for easy pasting into flagpole, run `sentry createissueflag --slug=<your_group_slug> --owner=<your_team_name>`. The results of this can be directly pasted into flagpole.yml.
+
+Once your issue type is fully released, and you want it to go out to self-hosted and single tenant you can set `released = True` on your GroupType. This allows it to be released everywhere, and removes the feature flags and options. Generally we recommend doing this after your issue type has been in GA for long enough to verify that it's working as intended.
