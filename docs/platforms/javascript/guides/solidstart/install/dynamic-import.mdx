@@ -4,12 +4,19 @@ sidebar_order: 3
 description: "Learn about how the SolidStart SDK leverages dynamic input() in the build output."
 ---
 
+<Alert>
+
+This installation method applies to SolidStart 1. On SolidStart 2, the Sentry Vite plugin instruments your dependencies at build time, so no preload is needed. See the <PlatformLink to="/">SolidStart guide</PlatformLink>.
+
+</Alert>
+
 ## Understanding the `import()` expression
 
 <Alert level='warning'>
   This setting is experimental as it is not guaranteed to work with every setup and the underlying functionality could change.
 
-  We recommend reading the guide for installing the SDK with the <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or <PlatformLink to="/install/limited-server-tracing">limited server tracing</PlatformLink>
+We recommend reading the guide for installing the SDK with the <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or <PlatformLink to="/install/limited-server-tracing">limited server tracing</PlatformLink>
+
 </Alert>
 
 The `import()` expression, or dynamic import, enables flexible, conditional module loading in ESM.
@@ -31,15 +38,17 @@ You can also check out the guide for installing the SDK with the <PlatformLink t
 Enable the dynamic `import()` by setting `autoInjectServerSentry`:
 
 ```typescript {filename:app.config.ts} {8}
-import { defineConfig } from '@solidjs/start/config';
-import { withSentry } from '@sentry/solidstart';
+import { defineConfig } from "@solidjs/start/config";
+import { withSentry } from "@sentry/solidstart";
 
-export default defineConfig(withSentry(
+export default defineConfig(
+  withSentry(
     {},
     {
-      autoInjectServerSentry: 'experimental_dynamic-import'
-    })
- );
+      autoInjectServerSentry: "experimental_dynamic-import",
+    }
+  )
+);
 ```
 
 After setting this, the Sentry SolidStart SDK will add build-time configuration so that your app will be wrapped with `import()`,
@@ -50,10 +59,12 @@ The SolidStart server entry file will look something like this:
 ```javascript {filename:.output/server/index.mjs}
 // Note: The file may have some imports and code, related to debug IDs
 Sentry.init({
-  dsn: "..."
+  dsn: "...",
 });
 
-import('./chunks/nitro/nitro.mjs').then(function (n) { return n.r; });
+import("./chunks/nitro/nitro.mjs").then(function (n) {
+  return n.r;
+});
 ```
 
 ## Re-exporting serverless handler functions
@@ -64,17 +75,18 @@ By default, Sentry re-exports functions named `handler`, `server`, and `default`
 If your serverless function has a custom name, you can override it with `experimental_entrypointWrappedFunctions`:
 
 ```javascript {filename: app.config.ts} {11}
+import { defineConfig } from "@solidjs/start/config";
+import { withSentry } from "@sentry/solidstart";
 
-import { defineConfig } from '@solidjs/start/config';
-import { withSentry } from '@sentry/solidstart';
-
-export default defineConfig(withSentry(
+export default defineConfig(
+  withSentry(
     {},
     {
-      autoInjectServerSentry: 'experimental_dynamic-import',
+      autoInjectServerSentry: "experimental_dynamic-import",
       // Customize detected function names
       // Default value: ['default', 'handler', 'server']
-      experimental_entrypointWrappedFunctions: ['customFunctionName']
-    })
- );
+      experimental_entrypointWrappedFunctions: ["customFunctionName"],
+    }
+  )
+);
 ```

@@ -1,8 +1,8 @@
 ```c
 #include <sentry.h>
 
-sentry_value_t strip_sensitive_data(sentry_value_t event, void *hint, void *user_data) {
-    (void)hint; // unlike in other SDKs, `hint` currently contains no data.
+sentry_value_t strip_sensitive_data(sentry_value_t event, sentry_hint_t *hint, void *user_data) {
+    (void)hint;
     // to get more crash context into a callback, use the `on_crash` hook instead.
 
     if (strcmp(sentry_value_as_string(sentry_value_get_by_key(event, "level")), "info") == 0) {
@@ -43,9 +43,12 @@ static sentry_value_t
 on_crash_callback(
     const sentry_ucontext_t *uctx, // provides the user-space context of the crash
     sentry_value_t event,          // used the same way as in `before_send`; mostly empty for minidump-generating backends (crashpad, breakpad)
+    sentry_hint_t *hint,           // provides the attachments included with the crash
     void *user_data                // user-data that you can provide at configuration time
 )
 {
+    (void)hint;
+
     // Enrich an event before the crash is sent to sentry's backend infrastructure
     sentry_value_t tags = sentry_value_get_by_key(event, "tags");
     if (!sentry_value_is_null(tags)) {

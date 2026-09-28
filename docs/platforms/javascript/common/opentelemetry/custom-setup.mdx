@@ -1,15 +1,16 @@
 ---
-title: Using Your Existing OpenTelemetry Setup
-description: "Learn how to use your existing custom OpenTelemetry setup with Sentry."
+title: Use Your Own OpenTelemetry Pipeline
+description: "Connect your existing OpenTelemetry pipeline to Sentry while keeping control of tracing."
+sidebar_order: 1
 supported:
   - javascript.nextjs
   - javascript.node
   - javascript.eve
+  - javascript.flue
   - javascript.mastra
   - javascript.aws-lambda
   - javascript.azure-functions
   - javascript.bun
-  - javascript.connect
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
@@ -27,167 +28,54 @@ supported:
   - javascript.tanstackstart-react
 notSupported:
   - javascript
-sidebar_order: 0
 ---
 
-<Alert>
+Keep your own provider, context manager, propagator, instrumentation, and exporters when OpenTelemetry manages tracing. Add <PlatformLink to="/configuration/integrations/opentelemetry/">`Sentry.openTelemetryIntegration()`</PlatformLink> to associate Sentry errors, logs, metrics, and cron check-ins with the active OpenTelemetry span.
 
-Use this guide when you already have a completely custom OpenTelemetry setup or when you intend to add a custom OpenTelemetry setup next to the Sentry SDK.
+Set `enableOpenTelemetrySetup: false` and leave both `tracesSampleRate` and `tracesSampler` unset. This disables Sentry tracing and prevents duplicate spans for the same operations. Sentry's instrumentation still isolates requests and captures errors.
 
-Setting `skipOpenTelemetrySetup: true` disables the Sentry SDK's automatic OpenTelemetry configuration, **requiring** you to perform the setup manually. For example, to ensure errors are correctly associated with their scope, you must add the `SentryContextManager` to your OpenTelemetry setup. You can find details on the required manual setup further down on this page.
+Initialize your OpenTelemetry provider before calling `Sentry.init()`.
 
-If you are looking to simply add individual OpenTelemetry instrumentation to your Sentry setup, you should read <PlatformLink to="/opentelemetry/using-opentelemetry-apis/#adding-additional-opentelemetry-instrumentation">Adding Additional OpenTelemetry Instrumentation</PlatformLink> instead.
+## Send OpenTelemetry Spans to Sentry
 
-</Alert>
+Add an OTLP exporter to your existing provider. Install `@opentelemetry/exporter-trace-otlp-http` if you do not already use it. `Sentry.getOtlpTracesEndpoint()` supplies the endpoint URL and authentication headers for your DSN.
 
-<PlatformSection supported={["javascript.node", "javascript.eve", "javascript.mastra", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.hono", "javascript.koa"]}>
-<Alert>
+This example uses `NodeTracerProvider`. Add the same span processor to `spanProcessors` if you use `NodeSDK` instead. Keep your existing sampler, propagator, context manager, and instrumentation; do not register a second provider.
 
-If you don't need the full `@sentry/node` SDK and want a simpler way to bridge your existing OpenTelemetry setup with Sentry, consider using <PlatformLink to="/install/lightweight/#using-with-opentelemetry-otlp">lightweight mode with the OTLP integration</PlatformLink> instead. It requires significantly less manual wiring.
+```javascript {filename: instrument.mjs}
+import * as Sentry from "___SDK_PACKAGE___";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
-</Alert>
-</PlatformSection>
+const dsn = "___PUBLIC_DSN___";
+const endpoint = Sentry.getOtlpTracesEndpoint(dsn);
 
-<PlatformContent includePath="performance/opentelemetry-setup" />
+if (!endpoint) {
+  throw new Error("Could not parse the Sentry DSN");
+}
 
-## Using Sentry for Error Monitoring Only
-
-If you have a custom OpenTelemetry setup and only want to use Sentry for error monitoring, you can skip adding the `SentrySpanProcessor`. You'll still need to add the `SentryContextManager`, `SentryPropagator`, and `SentrySampler` to your setup even if you don't want to send any tracing data to Sentry. Read on to learn why this is needed.
-
-In order for the Sentry SDK to work as expected, and for it to be in sync with OpenTelemetry, we need a few components to be in place.
-
-**Components needed for Sentry to work correctly:**
-
-- **SentryContextManager**: Ensures that the OpenTelemetry context is in sync with Sentry, for example to correctly isolate data between simultaneous requests.
-- **SentrySampler**: Ensures that the Sentry `tracesSampleRate` is respected. Even if you don't use Sentry for tracing, you'll still need this in order for trace propagation to work as expected. Read [Using a Custom Sampler](./#using-a-custom-sampler) if you want to use a custom sampler.
-- **SentryPropagator**: Ensures that trace propagation works correctly.
-- [Required Instrumentation](./#required-instrumentation): Ensures that trace propagation works correctly.
-
-**Additional components needed to also use Sentry for tracing:**
-
-- **SentrySpanProcessor**: Ensures that spans are correctly sent to Sentry.
-
-<Alert>
-  Trace propagation is needed for Sentry to automatically connect services
-  together. (For example, if you want to connect the frontend and backend, or
-  different backend services.) This makes it possible to see related errors
-  across services.{" "}
-  <PlatformLink to="/tracing/trace-propagation">
-    Learn more about Trace Propagation.
-  </PlatformLink>
-</Alert>
-
-The following code snippet shows how to set up Sentry for error monitoring only:
-
-<PlatformContent includePath="performance/opentelemetry-setup/error-monitoring-only" />
-
-## Required Instrumentation
-
-By default, Sentry will register OpenTelemetry instrumentation to automatically capture spans for traces spanning incoming and outgoing HTTP requests, DB queries, and more.
-
-If tracing is not enabled (no `tracesSampleRate` is defined in the SDK configuration), only a minimal amount of OpenTelemetry instrumentation will be registered. This includes the following:
-
-{/* prettier-ignore-start */}
-
-- A Sentry-specific HTTP instrumentation that handles request isolation and trace propagation. This can work in parallel with [@opentelemetry/instrumentation-http](https://www.npmjs.com/package/@opentelemetry/instrumentation-http), if you register it.
-- [nativeNodeFetchIntegration](/platforms/javascript/guides/node/configuration/integrations/nodefetch/) registers [opentelemetry-instrumentation-fetch-node](https://www.npmjs.com/package/opentelemetry-instrumentation-fetch-node) which is needed for trace propagation.
-
-{/* prettier-ignore-end */}
-
-<PlatformSection
-  notSupported={["javascript.aws-lambda", "javascript.gcp-functions"]}
->
-  <Alert>
-    If tracing is not enabled, performance instrumentations will not be
-    registered but they will still be included in the bundle. If you want to
-    reduce the bundle size or used dependencies, you can also{" "}
-    <PlatformLink to="/configuration/tree-shaking/#setting-up-sentry-without-performance-integrations">
-      Set up Sentry without Performance Integrations
-    </PlatformLink>
-  </Alert>
-</PlatformSection>
-
-These are needed to make sure that trace propagation works correctly.
-
-If you want to add your own http/node-fetch instrumentation, you have to follow the following steps:
-
-### Custom HTTP Instrumentation
-
-<AvailableSince version="8.35.0" />
-
-You can add your own `@opentelemetry/instrumentation-http` instance in your OpenTelemetry setup. However, in this case, you need to disable span creation in Sentry's `httpIntegration`. You can also set `tracePropagation: false` to prevent Sentry from injecting trace headers, letting your OpenTelemetry setup handle propagation instead:
-
-<PlatformSection notSupported={["javascript.bun"]}>
-  ```javascript
-  const sentryClient = Sentry.init({
-  dsn: "___DSN___",
-  skipOpenTelemetrySetup: true,
-  integrations: [Sentry.httpIntegration({ spans: false, tracePropagation: false })],
-});
-  ```
-</PlatformSection>
-
-<PlatformSection supported={["javascript.bun"]}>
-```javascript
-  const sentryClient = Sentry.init({
-  dsn: "___DSN___",
-  skipOpenTelemetrySetup: true,
-  integrations: (integrations) =>
-  // Also filter out the BunServer integration to avoid emitting duplicated spans from Sentry AND your custom OTel instrumentation
-  integrations.filter((i) => i.name !== "BunServer")
-});
-```
-</PlatformSection>
-
-It's important that `httpIntegration` is still registered this way to ensure that the Sentry SDK can correctly isolate requests, for example when capturing errors.
-
-### Custom Node Fetch Instrumentation
-
-If tracing is disabled, the Node Fetch instrumentation will not emit any spans. In this scenario, it will only inject sentry-specific trace propagation headers. You are free to add your own Node Fetch instrumentation on top of this which may emit spans as you like.
-
-If your OpenTelemetry setup already handles trace propagation for fetch requests, you can set `tracePropagation: false` to prevent Sentry from injecting duplicate trace headers:
-
-```javascript
-const sentryClient = Sentry.init({
-  dsn: "___DSN___",
-  skipOpenTelemetrySetup: true,
-  integrations: [
-    Sentry.nativeNodeFetchIntegration({ tracePropagation: false }),
+const provider = new NodeTracerProvider({
+  spanProcessors: [
+    new BatchSpanProcessor(new OTLPTraceExporter(endpoint)),
+    // Keep any other span processors you already use.
   ],
 });
+
+provider.register();
+
+Sentry.init({
+  dsn,
+  enableOpenTelemetrySetup: false,
+  // Leave tracesSampleRate and tracesSampler unset. OpenTelemetry owns tracing.
+  integrations: [Sentry.openTelemetryIntegration()],
+});
 ```
 
-## Using a Custom Sampler
+## Use Sentry for Error Monitoring Only
 
-While you can use your own sampler, we recommend that you use the `SentrySampler`. This will ensure that the correct subset of traces will be sent to Sentry, based on your `tracesSampleRate`. It will also ensure that all other Sentry features like trace propagation work as expected. If you do need to use your own sampler, make sure to wrap your `SamplingResult` with our `wrapSamplingDecision` method like in the example below:
+If your traces go elsewhere, keep your existing OpenTelemetry exporter and omit the Sentry OTLP exporter from the example above. The `Sentry.init()` configuration stays the same. `openTelemetryIntegration()` links Sentry errors to the active OpenTelemetry trace without sending spans to Sentry.
 
-<PlatformContent includePath="performance/opentelemetry-setup/with-custom-sampler" />
+## Configure Sampling
 
-<Alert title="Why is it recommended to register loader hooks yourself?">
-
-It is recommended registering your own ESM loader hooks when you have a complete custom OpenTelemetry setup, first and foremost because it makes the most sense architecturally.
-You likely went through the effort to set up OpenTelemetry by itself and now you want to add Sentry to your application without messing with your OpenTelemetry setup.
-
-Additionally, there are a few pitfalls that can very simply be avoided by registering your own hooks:
-
-- Registering loader hooks multiple times might result in duplicated spans being created. [More details.](https://github.com/getsentry/sentry-javascript/issues/14065#issuecomment-2435546961)
-- OpenTelemetry instrumentation in ESM is very sensitive as to _when_ it is added relative to _when_ the loader hooks are registered.
-  The control over this should stay with the owner of the OpenTelemetry setup and not the Sentry SDK.
-
-</Alert>
-
-<PlatformSection
-  notSupported={[
-    "javascript.nextjs",
-    "javascript.aws-lambda",
-    "javascript.nuxt",
-    "javascript.solidstart",
-    "javascript.tanstackstart-react",
-  ]}
->
-  <PlatformCategorySection supported={["server", "serverless"]}>
-    <Link to="/platforms/javascript/guides/node/install/">
-      Learn more about ESM installation methods.
-    </Link>
-  </PlatformCategorySection>
-</PlatformSection>
+Configure sampling on your OpenTelemetry provider. Sentry's `tracesSampleRate` and `tracesSampler` do not control spans exported over OTLP. Use an OpenTelemetry sampler or your own implementation of its `Sampler` interface.

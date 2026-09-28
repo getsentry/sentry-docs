@@ -259,13 +259,20 @@ private val client = OkHttpClient.Builder()
   .build()
 ```
 
-By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control the request and response headers, cookies, and URL query parameters attached to error events. For example, allow selected request headers and omit cookies:
 
 ```kotlin
+import io.sentry.KeyValueCollectionBehavior
+import io.sentry.Sentry
+
 Sentry.init { options ->
-  options.isSendDefaultPii = true
+  options.dataCollection.httpHeaders.request =
+    KeyValueCollectionBehavior.allowList("content-type", "x-request-id")
+  options.dataCollection.cookies = KeyValueCollectionBehavior.off()
 }
 ```
+
+Configuring either field activates the Data Collection defaults for omitted fields. Sensitive values still use the built-in filtering rules.
 
 HTTP client errors sent to Sentry are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
 
