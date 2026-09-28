@@ -164,6 +164,7 @@ A Noop span implements the full [Span Interface](#span-interface) but records no
 - Getter methods (`getName`, `getAttributes`) **SHOULD** return empty/default values.
 - A Noop span **MUST NOT** be sent to Sentry.
 - If a Noop span is active, its dummy properties **MUST NOT** populate outgoing trace headers. Headers **MUST** be populated from the propagation context instead. Custom APIs like `getTraceparent` and `getBaggage` **MUST** also use the propagation context.
+- A Noop span **MUST NOT** become the parent of another span. Spans that would otherwise be its children **MUST** use the Noop span's nearest non-Noop ancestor as their parent. If there is no such ancestor (the Noop span is a segment), those spans **MUST** also be Noop spans, inheriting its sampling or filtering decision.
 
 #### Default Property Values
 
@@ -239,15 +240,13 @@ The `integrations` option **MAY** perform in similar fashion as the `ignoreSpans
 ```js
 Sentry.init({
   integrations: [
-    fsIntegration: {
-      ignoreSpans: [
-        'fs.read',
-      ],
+    Sentry.fsIntegration({
+      ignoreSpans: ['fs.read'],
       readSpans: true,
       writeSpans: false,
-    }
-  ]
-})
+    }),
+  ],
+});
 ```
 
 #### Other Approaches
@@ -275,15 +274,13 @@ If both options mentioned above are not feasible to be implemented in certain SD
 The `beforeSendSpan` callback **MUST NOT** allow removal of spans from the span tree. It receives a deep copy of a span:
 
 ```
-[
-  {
-    'name': 'GET /',
-    'attributes': [
-      'http.request.method': 'GET',
-      'http.response.status_code': 200,
-    ]
-  },
-]
+{
+  'name': 'GET /',
+  'attributes': {
+    'http.request.method': 'GET',
+    'http.response.status_code': 200,
+  }
+}
 ```
 
 Users **MAY** mutate any exposed properties to perform sanitization on sensitive data or PII. The return value **MUST** be merged with the original span prior to emission.
