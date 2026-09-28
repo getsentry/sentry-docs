@@ -467,7 +467,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
-    to: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    to: '/platforms/javascript/guides/nuxt/install/',
   },
   {
     from: '/account/early-adopter-features/discord/',
@@ -1915,11 +1915,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/node/integrations/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/platforms/node/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/clients/node/integrations/koa/',

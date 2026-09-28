@@ -23,19 +23,6 @@ const AGENT_TRACING_ALIAS_PATH_OVERRIDES: Record<string, Record<string, string>>
 const UNALIASED_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
 const CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS = ['agents-sdk', 'workers-ai'];
 
-// Standalone JavaScript guides that own their Agent Tracing setup. They're
-// surfaced in every JavaScript Agent Tracing sidebar as link-only entries that
-// navigate to the dedicated guide instead of a page under the current guide.
-const STANDALONE_AGENT_TRACING_GUIDES: {
-  guide: string;
-  sidebar_order: number;
-  slug: string;
-  title: string;
-}[] = [
-  {guide: 'mastra', slug: 'mastra', title: 'Mastra', sidebar_order: 26},
-  {guide: 'eve', slug: 'eve', title: 'Eve', sidebar_order: 27},
-];
-
 export function PlatformSidebar({
   rootNode,
   platformName,
@@ -139,31 +126,10 @@ export function PlatformSidebar({
           };
         }).filter(alias => alias !== undefined);
 
-  // Surface the standalone Mastra and Eve guides from every JavaScript Agent
-  // Tracing sidebar. Their links navigate to the dedicated guide instead of
-  // creating an Agent Tracing page under the current guide.
-  const standaloneGuideAgentTracingAliases =
-    platformName !== 'javascript' || !agentTracingNode
-      ? []
-      : STANDALONE_AGENT_TRACING_GUIDES.filter(
-          guideData => guideData.guide !== guideName
-        ).map(guideData => ({
-          context: {
-            platform: {platformName},
-            title: guideData.title,
-            sidebar_order: guideData.sidebar_order,
-            href: `/platforms/javascript/guides/${guideData.guide}/`,
-          },
-          path: `/${pathRoot}/agent-tracing/${guideData.slug}/`,
-        }));
-
   const tree = toTree(
-    [
-      ...nodes,
-      ...agentTracingAliases,
-      ...cloudflareAgentTracingAliases,
-      ...standaloneGuideAgentTracingAliases,
-    ].filter(n => !!n.context)
+    [...nodes, ...agentTracingAliases, ...cloudflareAgentTracingAliases].filter(
+      n => !!n.context
+    )
   );
 
   // Use "Getting Started" for Next.js, default title for other platforms

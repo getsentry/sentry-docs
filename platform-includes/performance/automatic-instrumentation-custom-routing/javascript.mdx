@@ -19,7 +19,7 @@ const client = Sentry.init({
 let pageLoadSpan = Sentry.startBrowserTracingPageLoadSpan(client, {
   name: window.location.pathname,
   attributes: {
-    [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "url",
+    "sentry.segment.name.source": "url",
   },
 });
 
@@ -29,14 +29,14 @@ myRouter.on("routeChange", (route) => {
   // After that, each route change should trigger a navigation span (which will automatically finish the previous one)
   if (pageLoadSpan) {
     pageLoadSpan.updateName(route.name);
-    pageLoadSpan.setAttribute(Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE, "route");
+    pageLoadSpan.setAttribute("sentry.segment.name.source", "route");
     pageLoadSpan = undefined;
   } else {
     Sentry.startBrowserTracingNavigationSpan(client, {
       op: "navigation",
       name: route.name, // or what the name of the span should be
       attributes: {
-        [Sentry.SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "route",
+        "sentry.segment.name.source": "route",
       },
     });
   }
