@@ -177,7 +177,79 @@ describe('findIssuesInContent', () => {
   });
 
   it('leaves external links untouched', () => {
-    const content = '[Docs](https://example.com/page) and [Rel](./sibling)';
+    const content = [
+      '[Docs](https://example.com/page)',
+      '[Insecure](http://example.com/page)',
+      '[Mail](mailto:someone@example.com)',
+      '[Proto](//cdn.example.com/lib)',
+      '[Anchor](#section)',
+    ].join('\n');
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  // Relative links resolve in the browser against the current page, so a
+  // missing slash is still a 308 -- they matter as much as absolute ones.
+  it('fixes parent-relative links', () => {
+    const {issues, fixed} = lint('[use tags](../tags) instead.');
+    expect(issues[0]).toMatchObject({linkPath: '../tags', suggested: '../tags/'});
+    expect(fixed).toBe('[use tags](../tags/) instead.');
+  });
+
+  it('fixes deeper parent-relative links with anchors', () => {
+    const {fixed} = lint('[x](../integrations/event-loop-block#setup)');
+    expect(fixed).toBe('[x](../integrations/event-loop-block/#setup)');
+  });
+
+  it('fixes same-directory relative links', () => {
+    const {fixed} = lint('[x](./sibling)');
+    expect(fixed).toBe('[x](./sibling/)');
+  });
+
+  it('fixes bare relative links', () => {
+    const {fixed} = lint('[x](troubleshooting)');
+    expect(fixed).toBe('[x](troubleshooting/)');
+  });
+
+  it('fixes relative links in attributes', () => {
+    const {fixed} = lint('<PlatformLink to="../tags">Tags</PlatformLink>');
+    expect(fixed).toBe('<PlatformLink to="../tags/">Tags</PlatformLink>');
+  });
+
+  it('leaves relative links that already end in a slash alone', () => {
+    const content = '[a](../tags/) [b](./sibling/) [c](bare/)';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('leaves relative asset and versioned paths alone', () => {
+    const content = '[img](../img/x.png) [ver](../manual-setup__v10.7.0)';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('leaves angle-bracket autolinks containing parentheses alone', () => {
+    // Regression: a bare-relative match used to swallow `<https://...main(`
+    // and appending a slash corrupted the URL.
+    const content =
+      '[`main()`](<https://developer.apple.com/documentation/swiftui/app/main(_:)>)';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('leaves angle-bracket destinations alone generally', () => {
+    const content = '[glob](<https://en.wikipedia.org/wiki/Glob_(programming)>)';
+    const {issues, fixed} = lint(content);
+    expect(issues).toHaveLength(0);
+    expect(fixed).toBe(content);
+  });
+
+  it('leaves an empty link target alone', () => {
+    const content = '[x]()';
     const {issues, fixed} = lint(content);
     expect(issues).toHaveLength(0);
     expect(fixed).toBe(content);

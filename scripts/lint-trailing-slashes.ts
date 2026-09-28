@@ -33,16 +33,41 @@ const CONTENT_DIRS = ['docs', 'develop-docs', 'includes', 'platform-includes'];
 const URL_ATTRIBUTES = ['href', 'to', 'url'];
 
 /**
- * Markdown: [text](/path), [text](/path?query), [text](/path#anchor),
- * [text](/path "title"). The query and fragment are captured separately so the
- * slash lands on the path, which is where Next.js expects it:
- * `/platform-redirect?next=/x/` 308s, `/platform-redirect/?next=/x/` is a 200.
+ * An internal link target: root-relative (`/a/b`), document-relative
+ * (`../a/b`, `./a/b`) or bare (`a/b`). Relative links matter as much as
+ * absolute ones -- the browser resolves `../tags` against the current page and
+ * requests it verbatim, so a missing slash is still a 308.
+ *
+ * A leading scheme, protocol-relative `//host`, anchor-only `#x`, `mailto:`
+ * and JSX expressions `{...}` are all excluded by requiring the first
+ * character to be `/`, `.` or a word character, and by rejecting anything
+ * containing `:` before the first `/`.
  */
-const MARKDOWN_LINK = /(\]\()(\/[^)\s#?]*)(\?[^)\s#]*)?(#[^)\s]*)?((?:\s+"[^"]*")?\))/g;
+const INTERNAL_TARGET = String.raw`(?:\/|\.{1,2}\/|(?![a-zA-Z][\w+.-]*:|[#/{<]))`;
 
-/** JSX: href="/path", to='/path', url="/path?query#anchor" */
+/**
+ * Characters a real site path never contains. Excluding `(`, `<` and `>` keeps
+ * the bare-relative branch from swallowing an angle-bracket autolink whose URL
+ * contains parentheses, e.g. ``[`main()`](<https://.../app/main(_:)>)`` --
+ * matching that and appending a slash would corrupt the URL.
+ */
+const PATH_CHARS = String.raw`[^)\s#?<>(]`;
+
+/**
+ * Markdown: [text](/path), [text](../path), [text](/path?query),
+ * [text](/path#anchor), [text](/path "title"). The query and fragment are
+ * captured separately so the slash lands on the path, which is where Next.js
+ * expects it: `/platform-redirect?next=/x/` 308s,
+ * `/platform-redirect/?next=/x/` is a 200.
+ */
+const MARKDOWN_LINK = new RegExp(
+  String.raw`(\]\()(${INTERNAL_TARGET}${PATH_CHARS}*)(\?[^)\s#]*)?(#[^)\s]*)?((?:\s+"[^"]*")?\))`,
+  'g'
+);
+
+/** JSX: href="/path", to='../path', url="/path?query#anchor" */
 const JSX_LINK = new RegExp(
-  `((?:${URL_ATTRIBUTES.join('|')})=)(["'])(\\/[^"'#?\\s]*)(\\?[^"'#]*)?(#[^"']*)?\\2`,
+  String.raw`((?:${URL_ATTRIBUTES.join('|')})=)(["'])(${INTERNAL_TARGET}[^"'#?\s<>]*)(\?[^"'#]*)?(#[^"']*)?\2`,
   'g'
 );
 
@@ -78,6 +103,8 @@ export function isExempt(linkPath: string): boolean {
   return (
     linkPath === '' ||
     linkPath.endsWith('/') ||
+    // Protocol-relative (`//cdn.example.com/x`) is external, not a site path.
+    linkPath.startsWith('//') ||
     FILE_EXTENSION.test(linkPath) ||
     VERSIONED_PAGE.test(linkPath) ||
     NON_PAGE_PREFIXES.some(prefix => linkPath.startsWith(prefix))
