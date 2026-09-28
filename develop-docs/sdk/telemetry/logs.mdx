@@ -2,7 +2,7 @@
 title: Logs
 description: Structured logging protocol with severity levels, trace context, and batched envelope delivery.
 spec_id: sdk/telemetry/logs
-spec_version: 2.3.0
+spec_version: 3.0.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 3.0.0
+    date: 2026-09-28
+    summary: Removed the global logs enablement option; retained explicit opt-in for integrations
   - version: 2.3.0
     date: 2026-09-22
     summary: Added sentry.is_localhost default attribute for localhost inbound filtering
@@ -135,20 +138,19 @@ Logs are buffered before sending. SDKs collect logs into a buffer and flush them
 
 ## Behavior
 
-<SpecSection id="log-processing-pipeline" status="stable" since="1.3.0">
+<SpecSection id="log-processing-pipeline" status="stable" since="3.0.0">
 
 ### Log Processing Pipeline
 
 Log processing **MUST** follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
-2. Check if logging is enabled via `enableLogs`/`enable_logs` — if not, skip remaining steps.
-3. Pass the log to Hub/Scope via a generic method (e.g., `captureLog`).
-4. Pass the log to the Client via a generic method (e.g., `captureLog`).
-5. Process captured log (attach attributes per [Default Attributes](#default-attributes)).
-6. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
-7. Add log to buffer/batch processor per [Buffering](#buffering).
-8. At flush time, send array of logs to Sentry via `log` envelope, applying rate limiting per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
+2. Pass the log to Hub/Scope via a generic method (e.g., `captureLog`).
+3. Pass the log to the Client via a generic method (e.g., `captureLog`).
+4. Process captured log (attach attributes per [Default Attributes](#default-attributes)).
+5. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
+6. Add log to buffer/batch processor per [Buffering](#buffering).
+7. At flush time, send array of logs to Sentry via `log` envelope, applying rate limiting per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
 
 <Alert title="Note" level="warning">
 
@@ -283,23 +285,21 @@ SDKs **MUST** track client outcomes for this data category to report how often l
 
 </SpecSection>
 
-<SpecSection id="sdk-integrations" status="stable" since="1.0.0">
+<SpecSection id="sdk-integrations" status="stable" since="3.0.0">
 
 ### SDK Integrations
 
-SDKs **SHOULD** provide integrations that capture logs from platform logging libraries (e.g., JavaScript's `console`, Python's `logging`, Java's `Log4j`) when `enableLogs`/`enable_logs` is set to `true`.
+SDKs **SHOULD** provide integrations that capture logs from platform logging libraries (e.g., JavaScript's `console`, Python's `logging`, Java's `Log4j`).
 
-SDKs **MAY** introduce additional options beyond `enableLogs`/`enable_logs` to gate integration-specific functionality (e.g., controlling log appenders added via external config).
+SDKs **MAY** provide options to gate integration-specific functionality (e.g., controlling log appenders added via external config).
 
 </SpecSection>
 
-<SpecSection id="auto-emitted-logs" status="candidate" since="2.0.0">
+<SpecSection id="auto-emitted-logs" status="candidate" since="3.0.0">
 
 ### Auto-Emitted Logs
 
-Logs emitted via the [public API](#logger-module) are opt-out. The `enableLogs`/`enable_logs` option **MUST** act as a general kill switch for all logs sent to Sentry. When set to `false`, no logs **MUST** be sent, regardless of whether they originate from the public API, auto-emitting integrations, or third-party bindings.
-
-However, logs that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+Logs that are **automatically emitted by integrations or libraries** without an explicit user call require opt-in because they can generate unexpected volume and cost.
 
 **Integrations that auto-emit logs** - An SDK integration that automatically captures logs (e.g., forwarding `console.log` calls, capturing framework-level diagnostic output) **MUST** be opt-in. The integration **MUST NOT** emit any logs unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
 
@@ -492,18 +492,17 @@ The `otel_log` envelope item payload is a JSON object implementing the [OpenTele
 
 ## Public API
 
-<SpecSection id="initialization-options" status="stable" since="1.0.0">
+<SpecSection id="initialization-options" status="stable" since="3.0.0">
 
 ### Initialization Options
 
-SDKs **MUST** expose the following configuration options:
+SDKs **MUST** expose the following configuration option:
 
 | Option | Type | Default | Since | Description |
 |--------|------|---------|-------|-------------|
-| `enableLogs` / `enable_logs` | Boolean | `true` | 1.0.0 | Controls whether log envelopes are generated and sent. If `false`, the SDK **MUST NOT** send logs. |
 | `beforeSendLog` / `before_send_log` | Function | — | 1.0.0 | **OPTIONAL** callback receiving a log object. Returns a modified log or `null` to drop it. |
 
-The default for `enableLogs`/`enable_logs` was changed from `false` to `true` in version 2.0.0. The previous default required users to explicitly opt in before they could use the logging primitives. By defaulting to `true`, adding a `Sentry.logger.*` statement is itself the opt-in. Users can start logging without additional configuration. This aligns the behavior with [`enableMetrics`/`enable_metrics`](/sdk/telemetry/metrics/#initialization-options), which also defaults to `true`.
+SDKs **SHOULD NOT** provide an API whose sole purpose is to disable all logs.
 
 </SpecSection>
 
