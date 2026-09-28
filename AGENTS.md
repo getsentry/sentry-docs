@@ -45,13 +45,21 @@ Run `pnpm test` for vitest. Tests live alongside source files or in `__tests__` 
 
 ## CLI Commands
 
-| Command              | Description      |
-| -------------------- | ---------------- |
-| `make develop`       | Initial setup    |
-| `make test`          | Run tests        |
-| `pnpm lint:ts`       | TypeScript check |
-| `pnpm lint:eslint`   | ESLint check     |
-| `pnpm lint:prettier` | Prettier check   |
+| Command                        | Description                       |
+| ------------------------------ | --------------------------------- |
+| `make develop`                 | Initial setup                     |
+| `make test`                    | Run tests                         |
+| `pnpm lint:ts`                 | TypeScript check                  |
+| `pnpm lint:eslint`             | ESLint check                      |
+| `pnpm lint:prettier`           | Prettier check                    |
+| `pnpm lint:trailing-slash`     | Find internal links missing a `/` |
+| `pnpm lint:trailing-slash:fix` | Add the missing trailing slashes  |
+
+## Internal links
+
+`next.config.ts` sets `trailingSlash: true`, so an internal link written without a trailing slash is served a 308 redirect before the page loads. Write internal links in their canonical form (`/product/issues/`, not `/product/issues`). A pre-commit hook fixes staged files automatically, and `pnpm lint:trailing-slash:fix` fixes the whole repo.
+
+Two exceptions the tooling already handles: versioned pages (`__v10.7.0`) invert the rule and must _not_ get a trailing slash, and attributes that carry filesystem paths or config values rather than URLs (`includePath`, `path`, `endpoint`) are left alone.
 
 ## Repo UX / Generated files
 
@@ -99,7 +107,7 @@ When writing requirements in `develop-docs/`:
 
 ## Sentry Product Skills (sentry-for-ai)
 
-Skills for *using Sentry* (SDK setup, debugging, alerts) live in a separate repo: https://github.com/getsentry/sentry-for-ai. The skills in *this* repo (`.claude/skills/`, `.agents/skills/`) are for *contributing to the docs*. See `SKILL.md` at the repo root for a routing guide.
+Skills for _using Sentry_ (SDK setup, debugging, alerts) live in a separate repo: https://github.com/getsentry/sentry-for-ai. The skills in _this_ repo (`.claude/skills/`, `.agents/skills/`) are for _contributing to the docs_. See `SKILL.md` at the repo root for a routing guide.
 
 ## Plan Mode
 
