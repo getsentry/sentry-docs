@@ -523,6 +523,55 @@ Guidelines for specific attributes:
 
 - `http.request.body.data`: Attach on a best-effort basis, as long as it can be done without side effects like exhausting the body before the user/app can read it. Decide per SDK/integration whether this is feasible.
 
+#### HTTP Headers
+
+HTTP headers **MUST** be emitted following the [`http.request.header.<key>`](https://getsentry.github.io/sentry-conventions/attributes/http/#http-request-header-key) and [`http.response.header.<key>`](https://getsentry.github.io/sentry-conventions/attributes/http/#http-response-header-key) conventions:
+
+- `<key>` **MUST** be the lowercased, but otherwise unchanged, header name.
+- The value **MUST** be a string array, even if the header has a single value. Multiple values for the same header **MUST** be emitted as separate array elements.
+- Request and response headers **MUST** be collected according to the [`httpHeaders`](/sdk/foundations/client/data-collection/#http-header-collection) option. If collection is disabled for a direction, those headers **MUST** be omitted. Values of headers matching the [sensitive denylist](/sdk/foundations/client/data-collection/#sensitive-denylist) **MUST** be replaced with `"[Filtered]"` while the key is kept. The sensitive denylist applies in every collection mode, including when collection is fully enabled.
+
+#### Cookies
+
+`Cookie` and `Set-Cookie` headers **MUST** be collected according to the [`cookies`](/sdk/foundations/client/data-collection/#cookies-and-url-query-params) option instead of `httpHeaders`. They are emitted as `http.request.header.cookie` and `http.<request|response>.header.set-cookie`. If cookie collection is disabled, these attributes **MUST** be omitted, even if header collection is enabled.
+
+The header value **MUST** be parsed into individual cookies:
+
+- A `Cookie` header **MUST** be split on `;`. For a `Set-Cookie` header, only the part before the first `;` **MUST** be used, so cookie attributes like `HttpOnly` or `Path` are dropped. Each `Set-Cookie` header value holds one cookie.
+- Name and value **MUST** be split on the first `=` only (`jwt=eyJhbGc=` has the value `eyJhbGc=`). Both **MUST** be trimmed.
+- Empty segments and segments consisting only of `=` **MUST** be skipped.
+- A segment without `=` is a nameless cookie whose whole segment is the value.
+
+Each cookie **MUST** be emitted as its own `name=value` array element, in header order:
+
+- Values **MUST NOT** be decoded or unquoted.
+- If the cookie name matches the sensitive denylist, the value **MUST** be replaced: `name=[Filtered]`. SDKs **SHOULD** also match cookie names against additional cookie-specific terms for session and auth cookies whose names don't match the denylist, such as `.sid`, `sessid`, `remember`, `oidc`, `pkce`, `nonce`, `__secure-`, `__host-`, `mfa`, and `2fa`.
+- A nameless cookie **MUST** be emitted as `[Filtered]`, since no name-based denylist can match it.
+- If the header yields no cookies, the value **MUST** be `["[Filtered]"]`, since the header may still hold a token.
+
+If the framework already provides parsed cookies, SDKs **SHOULD** use those pairs instead of serializing and re-parsing them. A decoded value can contain `;` and would otherwise split into a second, differently named cookie that escapes the denylist.
+
+```json
+{
+  "http.request.header.accept": {
+    "type": "array",
+    "value": ["application/json"]
+  },
+  "http.request.header.authorization": {
+    "type": "array",
+    "value": ["[Filtered]"]
+  },
+  "http.request.header.cookie": {
+    "type": "array",
+    "value": ["user_session=[Filtered]", "connect.sid=[Filtered]", "theme=dark-mode"]
+  },
+  "http.response.header.set-cookie": {
+    "type": "array",
+    "value": ["theme=light-mode"]
+  }
+}
+```
+
 </SpecSection>
 
 ---
