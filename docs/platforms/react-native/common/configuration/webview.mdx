@@ -1,21 +1,58 @@
 ---
 title: WebView
-description: "Learn how to set up the Sentry React Native and Browser SDKs with React Native WebView."
+description: "Learn how to connect traces and monitor errors and performance across the Sentry React Native and Browser SDKs with React Native WebView."
 ---
 
-To monitor errors and performance in web views of React Native applications, you need to set up Sentry SDKs in both the mobile application and the web projects running in the web views.
+To monitor errors and performance in web views of React Native applications, you set up Sentry SDKs in both the mobile application and the web projects running in the web views. You can also connect their traces, so a single distributed trace spans your React Native app and the web content it embeds.
 
 ## Application Monitoring
 
-The Sentry React Native SDK doesn't interact with the mobile application's web views. To monitor errors and performance in the React Native part of the application follow the [Sentry React Native SDK setup instructions](/platforms/react-native/).
+To monitor errors and performance in the React Native part of the application, follow the [Sentry React Native SDK setup instructions](/platforms/react-native/). The React Native SDK doesn't capture errors that happen inside a web view — those are captured by the JavaScript SDK running in the web project (see [WebView Monitoring](#webview-monitoring)).
 
 ## WebView Monitoring
 
-To monitor errors and performance in web views choose the appropriate Sentry JavaScript SDK depending on the framework used in the web project.
+To monitor errors and performance in web views, choose the appropriate Sentry JavaScript SDK depending on the framework used in the web project.
 
 - [Sentry React Native SDK](/platforms/react-native) (if the web project uses React Native Web or Expo)
 - [Sentry React SDK](/platforms/javascript/guides/react/) (if the web project uses React)
 - [Other Sentry JavaScript SDKs](/platforms/javascript)
+
+## Connect Traces
+
+<Alert>
+
+`sentryWebViewProps` is available from React Native SDK version `8.29.0`.
+
+</Alert>
+
+Use `sentryWebViewProps` to inject the React Native app's trace into a web view. The Browser SDK running in the web page picks it up on pageload and continues the same trace, so the web page's pageload transaction and errors share the trace of your React Native app. The result is a single connected trace across the native and web parts of the user journey.
+
+Spread the props it returns onto your [`react-native-webview`](https://github.com/react-native-webview/react-native-webview) `<WebView>`:
+
+```jsx
+import { sentryWebViewProps } from "@sentry/react-native";
+import { WebView } from "react-native-webview";
+
+<WebView
+  source={{ uri: "https://example.com" }}
+  {...sentryWebViewProps({ allowedHosts: ["example.com"] })}
+/>;
+```
+
+For the connection to take effect:
+
+- The web page must run a Sentry [Browser SDK](/platforms/javascript) with tracing enabled (the `browserTracingIntegration`). It continues the trace from the injected `sentry-trace` and `baggage` `<meta>` tags automatically — no additional configuration is needed on the web page.
+- `allowedHosts` gates which pages receive the trace context. A page is matched when its hostname equals an entry or is a subdomain of it (for example, `"example.com"` matches both `example.com` and `app.example.com`). Matching is case-insensitive. Only listed hosts are instrumented, so the trace context — which can carry release and environment data in `baggage` — never reaches third-party pages loaded in the web view.
+
+<Alert level="info">
+
+If you provide your own `onMessage` handler, spread `sentryWebViewProps` **first** and set `onMessage` after it. The helper returns a no-op `onMessage`, which is required for injected JavaScript to run on Android.
+
+</Alert>
+
+The trace is connected on the web page's initial load. Client-side navigations within a single-page app in the web view start their own traces, as they do in a regular browser.
+
+The React Native app and the web project can report to different Sentry projects — as long as they're in the same organization, the trace view stitches the transactions together by trace ID.
 
 ## Notes
 
