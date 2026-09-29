@@ -1,9 +1,5 @@
 name: Report deployment to Cursor Rollouts
 
-# Vercel ships production from its Git integration and posts a GitHub
-# deployment status when each production deploy finishes. This workflow
-# forwards that outcome to Cursor Rollouts. It never affects the deploy.
-
 on:
   deployment_status:
 
@@ -26,7 +22,6 @@ jobs:
       DEPLOY_VERSION: ${{ github.event.deployment.sha }}
       VERCEL_ENVIRONMENT: ${{ github.event.deployment.environment }}
       VERCEL_STATE: ${{ github.event.deployment_status.state }}
-      GITHUB_DEPLOYMENT_ID: ${{ github.event.deployment.id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,7 +45,7 @@ jobs:
           {
             echo "service=$service"
             echo "outcome=$outcome"
-            echo "actor=vercel:${GITHUB_DEPLOYMENT_ID}:${service}:production"
+            echo "actor=vercel:${{ github.event.deployment.id }}:${service}:production"
           } >> "$GITHUB_OUTPUT"
 
       - name: Bootstrap catalog
