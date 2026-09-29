@@ -70,7 +70,7 @@ existing() {
   local filter
   filter="environment = \"environments/${CHANGE_MONITOR_ENV}\" AND deploy_version = \"${DEPLOY_VERSION}\" AND service = \"services/${CHANGE_MONITOR_SERVICE}\""
   call ListDeployments "$(jq -nc --arg uri "$DEPLOY_SOURCE_URI" --arg f "$filter" \
-    '{deploySourceUri: $uri, filter: $f, pageSize: 100, readMask: "events"}')" |
+    '{deploySourceUri: $uri, filter: $f, pageSize: 100, readMask: "name,events"}')" |
     jq -c --arg actor "$DEPLOY_ACTOR" \
       '[.deployments[]? | select(any(.events[]?; .actor == $actor))][0] // empty'
 }
