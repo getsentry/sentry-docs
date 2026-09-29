@@ -2,12 +2,25 @@ import {DocNode, nodeForPath} from './docTree';
 import {FrontMatter} from './types';
 import {getVersion, stripVersion} from './versioning';
 
-type HeadingIndex = {
-  guideFamilies: Map<string, Set<string>>;
-  topicPaths: Map<string, Set<string>>;
-};
+// These guide names are shared across SDK families; always qualify them, even if
+// another SDK's guide is removed or temporarily not published.
+const CROSS_PLATFORM_GUIDES = new Set([
+  'AWS Lambda',
+  'Azure Functions',
+  'Google Cloud Functions',
+]);
 
-const headingIndexes = new WeakMap<DocNode, HeadingIndex>();
+// These topic names need their parent section to convey what the page covers.
+// Keep the rule stable regardless of how many other pages share the same title.
+const SECTION_CONTEXT_TITLES = new Set([
+  'Configuration',
+  'OpenTelemetry Support',
+  'Ionic',
+  'Wrangler',
+  'Breadcrumbs',
+  'Source Maps',
+  'Integrations',
+]);
 
 function contextPath(path: string): string | undefined {
   const parts = path.split('/');
@@ -25,39 +38,6 @@ function contextName(node: DocNode): string {
     node.frontmatter.sidebar_title?.trim() ||
     node.slug.replace(/[-_]/g, ' ').replace(/\b\w/g, character => character.toUpperCase())
   );
-}
-
-function headingIndex(root: DocNode): HeadingIndex {
-  const cached = headingIndexes.get(root);
-  if (cached) {
-    return cached;
-  }
-
-  const index: HeadingIndex = {
-    guideFamilies: new Map(),
-    topicPaths: new Map(),
-  };
-  function visit(node: DocNode) {
-    const context = contextPath(node.path);
-    if (context && !node.path.includes('__v')) {
-      const title = node.frontmatter.title;
-      if (node.path === context && node.path.split('/')[2] === 'guides') {
-        const guideName = contextName(node);
-        const families = index.guideFamilies.get(guideName) ?? new Set<string>();
-        families.add(node.path.split('/')[1]);
-        index.guideFamilies.set(guideName, families);
-      } else if (!node.missing && title && node.path !== context) {
-        const key = `${context}\0${title}`;
-        const paths = index.topicPaths.get(key) ?? new Set<string>();
-        paths.add(node.path);
-        index.topicPaths.set(key, paths);
-      }
-    }
-    node.children.forEach(visit);
-  }
-  visit(root);
-  headingIndexes.set(root, index);
-  return index;
 }
 
 function sectionTitle(node: DocNode | undefined, context: string): string | undefined {
@@ -93,7 +73,6 @@ export function getSdkPageHeading(
   }
 
   const guide = context.split('/')[2] === 'guides';
-  const index = headingIndex(root);
   const contextTitle = contextName(contextNode);
   const platformTitle =
     platformNode.frontmatter.platformTitle?.trim() || contextName(platformNode);
@@ -102,9 +81,7 @@ export function getSdkPageHeading(
   const baseFrontMatter =
     version && baseNode && !baseNode.missing ? baseNode.frontmatter : frontMatter;
   const family =
-    guide && (index.guideFamilies.get(contextTitle)?.size ?? 0) > 1
-      ? ` (${platformTitle})`
-      : '';
+    guide && CROSS_PLATFORM_GUIDES.has(contextTitle) ? ` (${platformTitle})` : '';
   const overrideTitle = frontMatter.h1_title ?? baseFrontMatter.h1_title;
 
   let heading: string;
@@ -115,9 +92,9 @@ export function getSdkPageHeading(
   } else {
     const node = baseNode && !baseNode.missing ? baseNode : nodeForPath(root, pathname);
     let topic = baseFrontMatter.title;
-    if ((index.topicPaths.get(`${context}\0${topic}`)?.size ?? 0) > 1) {
+    if (SECTION_CONTEXT_TITLES.has(topic)) {
       const section = sectionTitle(node, context);
-      if (section) {
+      if (section && !(topic === 'Breadcrumbs' && section === 'Enriching Events')) {
         topic = section.endsWith(topic) ? section : `${section} ${topic}`;
       }
     }

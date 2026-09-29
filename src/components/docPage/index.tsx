@@ -116,7 +116,11 @@ export async function DocPage({
             <div>
               <hgroup>
                 <h1>
-                  {heading}
+                  {path[0] === 'platforms' && path.length >= 2 ? (
+                    <span data-md-heading="">{heading}</span>
+                  ) : (
+                    heading
+                  )}
                   {frontMatter.new && <FeatureBadge type="new" />}
                   {frontMatter.beta && <FeatureBadge type="beta" />}
                   {frontMatter.early_access && <FeatureBadge type="early_access" />}

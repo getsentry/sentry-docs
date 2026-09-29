@@ -136,14 +136,45 @@ describe('getSdkPageHeading', () => {
 
   test('falls back to guide slugs when a guide root has no index page', () => {
     expect(heading('platforms/javascript/guides/custom-integration/configuration')).toBe(
-      'Configuration for Custom Integration (JavaScript)'
+      'Configuration for Custom Integration'
     );
     expect(heading('platforms/dotnet/guides/custom-integration/configuration')).toBe(
-      'Configuration for Custom Integration (.NET)'
+      'Configuration for Custom Integration'
     );
     expect(heading('platforms/javascript/guides/custom-integration__v7.x')).toBe(
-      'Sentry for Custom Integration (JavaScript) (SDK v7.x)'
+      'Sentry for Custom Integration (SDK v7.x)'
     );
+  });
+
+  test('does not change headings when other pages or guides are removed', () => {
+    const {root: reducedRoot, nodes: reducedNodes} = makeTree();
+    const feedback = reducedNodes.get(
+      'platforms/javascript/guides/react/user-feedback/configuration'
+    )!;
+    feedback.parent!.children = feedback.parent!.children.filter(
+      child => child !== feedback
+    );
+    const dotnetLambda = reducedNodes.get('platforms/dotnet/guides/aws-lambda')!;
+    dotnetLambda.parent!.children = dotnetLambda.parent!.children.filter(
+      child => child !== dotnetLambda
+    );
+
+    const replay = 'platforms/javascript/guides/react/session-replay/configuration';
+    expect(
+      getSdkPageHeading(
+        reducedRoot,
+        replay.split('/'),
+        reducedNodes.get(replay)!.frontmatter
+      )
+    ).toBe(heading(replay));
+    const lambda = 'platforms/javascript/guides/aws-lambda';
+    expect(
+      getSdkPageHeading(
+        reducedRoot,
+        lambda.split('/'),
+        reducedNodes.get(lambda)!.frontmatter
+      )
+    ).toBe(heading(lambda));
   });
 
   test('supports an H1 override without changing titles outside SDK docs', () => {
