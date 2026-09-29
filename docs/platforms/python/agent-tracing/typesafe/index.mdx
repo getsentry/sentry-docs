@@ -10,14 +10,14 @@ Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry 
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
+Install Sentry Python SDK version `2.71.0` or later:
 
 ```bash {tabTitle:pip}
-pip install sentry-sdk
+pip install --upgrade "sentry-sdk>=2.71.0"
 ```
 
 ```bash {tabTitle:uv}
-uv add sentry-sdk
+uv add "sentry-sdk>=2.71.0"
 ```
 
 ## Configure
@@ -30,17 +30,17 @@ from sentry_sdk.integrations.typesafe import TypeSafeIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
     integrations=[
         TypeSafeIntegration(),
     ],
 )
 ```
+
+<Include name="agent-tracing/python-data-collection" />
 
 ## Verify
 
@@ -55,7 +55,9 @@ from typesafe_sdk import Choice, TypeSafeClient
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
     integrations=[
         TypeSafeIntegration(),
     ],
