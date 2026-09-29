@@ -8,6 +8,8 @@ categories:
   - server-only
 ---
 
+<FrameworkSelector runtime="cloudflare">
+
 <AgentSetupCallout skill="sentry-cloudflare-sdk" platformName="Cloudflare" />
 
 This guide covers Cloudflare Workers. If you're deploying a Cloudflare Pages application, see <PlatformLink to="/features/pages/">Cloudflare Pages</PlatformLink> instead, which is set up with middleware rather than a wrapper.
@@ -160,69 +162,7 @@ If you don't add an `instrument.server.*` file, the SDK reads its configuration 
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
-
-First, let's make sure Sentry is correctly capturing errors and creating issues in your project.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Add the following code snippet to your main worker file to create a `/debug-sentry` route that triggers an error when called:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:index.js}
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/debug-sentry") {
-      throw new Error("My first Sentry error!");
-    }
-
-    // Your existing routes and logic here...
-    return new Response("...");
-  },
-};
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-### Tracing
-To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes to run your code.
-
-```javascript {filename:index.js}
-import * as Sentry from "@sentry/cloudflare";
-
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/debug-sentry") {
-      await Sentry.startSpan(
-        {
-          op: "test",
-          name: "My First Test Span",
-        },
-        async () => {
-          await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for 100ms
-          throw new Error("My first Sentry error!");
-        }
-      );
-    }
-
-    // Your existing routes and logic here...
-    return new Response("...");
-  },
-};
-```
-
-</OnboardingOption>
+<PlatformContent includePath="getting-started-verify-issues-tracing" switchable />
 
 <OnboardingOption optionId="logs">
 
@@ -267,3 +207,5 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 </Expandable>
 
 </StepConnector>
+
+</FrameworkSelector>

@@ -12,8 +12,10 @@ import {compareItems, MigrationItem, PhaseId} from './constants';
 
 const ITEMS_DIR = 'includes/migration/javascript-v11';
 
-// Share the MDX component map across item bodies and platform pages.
-const components = mdxComponents();
+// Share the MDX component map across item bodies and platform pages. Built on first
+// use rather than at import time: `mdxComponents` imports this module, so calling it
+// while that import cycle is still resolving can read components that aren't loaded yet.
+let components: ReturnType<typeof mdxComponents> | undefined;
 
 // `getMDXComponent` compiles its source with `new Function`, so the same item
 // body is compiled once instead of once per page it appears on. Keyed by source,
@@ -26,6 +28,7 @@ function ItemBody({mdxSource}: {mdxSource: string}) {
     MDXLayout = getMDXComponent(mdxSource);
     componentBySource.set(mdxSource, MDXLayout);
   }
+  components ??= mdxComponents();
   return <MDXLayout components={components} />;
 }
 
