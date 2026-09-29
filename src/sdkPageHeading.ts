@@ -40,6 +40,16 @@ function contextName(node: DocNode): string {
   );
 }
 
+function includesName(title: string, name: string): boolean {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Match a full framework name, not substrings such as "React" in "ReactNative"
+  // or "Java" in the dotted package name "java.util.logging".
+  return new RegExp(
+    `(?:^|[^\\p{L}\\p{N}.])${escapedName}(?=$|[^\\p{L}\\p{N}.])`,
+    'iu'
+  ).test(title);
+}
+
 function sectionTitle(node: DocNode | undefined, context: string): string | undefined {
   for (
     let parent = node?.parent;
@@ -98,7 +108,9 @@ export function getSdkPageHeading(
         topic = section.endsWith(topic) ? section : `${section} ${topic}`;
       }
     }
-    heading = `${topic} for ${contextTitle}${family}`;
+    const contextSuffix = includesName(topic, contextTitle) ? '' : ` for ${contextTitle}`;
+    const familySuffix = includesName(topic, platformTitle) ? '' : family;
+    heading = `${topic}${contextSuffix}${familySuffix}`;
   }
 
   return version ? `${heading} (SDK v${version})` : heading;
