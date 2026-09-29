@@ -9,13 +9,15 @@ The `instrumentAnthropicAiClient` helper adds instrumentation for the [`@anthrop
 
 ## Usage
 
+Complete the <PlatformLink to="/">Sentry React Native setup</PlatformLink> and enable <PlatformLink to="/tracing/">tracing</PlatformLink> with `tracesSampleRate: 1.0` in your existing `Sentry.init()` call. Then instrument your AI client or framework as shown below.
+
+Proxy LLM calls through your backend whenever possible. Provider API keys embedded in a mobile app can be extracted from its bundle.
+
 ```javascript
 import * as Sentry from "@sentry/react-native";
 import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic({
-  // Warning: API keys included in your app bundle will be visible to anyone who
-  // inspects the bundle. Proxy LLM calls through your own backend whenever possible.
   apiKey: "your-api-key",
 });
 
@@ -32,9 +34,9 @@ const response = await client.messages.create({
 });
 ```
 
-Make sure <PlatformLink to="/tracing/">tracing is enabled</PlatformLink> for the spans produced by this integration to be captured.
-
 ## Configuration
+
+Use `recordInputs` and `recordOutputs` to control AI content without enabling other PII collection. Set both to `false` to omit content while retaining model, token, and timing metadata. The React Native SDK does not support `dataCollection`. See [Agent Data Privacy](/product/agents/privacy/) for scrubbing options.
 
 ### Options
 

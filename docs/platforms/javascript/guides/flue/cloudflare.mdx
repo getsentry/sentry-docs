@@ -22,13 +22,6 @@ Before you begin, you need:
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance"]}
-  defaults={["performance"]}
-/>
-
 Install the Sentry Cloudflare SDK:
 
 ```bash {tabTitle:npm}
@@ -75,18 +68,14 @@ export const cloudflare = extend({
     Sentry.instrumentDurableObjectWithSentry(
       (env: Env) => ({
         dsn: "___PUBLIC_DSN___",
-        // ___PRODUCT_OPTION_START___ performance
-
-        // Set tracesSampleRate to 1.0 to capture 100%
-        // of spans for tracing.
-        // We recommend adjusting this value in production.
         tracesSampleRate: 1.0,
-        // ___PRODUCT_OPTION_END___ performance
       }),
       Final
     ),
 });
 ```
+
+Keep agent runs at 100%. Agents are nondeterministic, so sampling out runs can hide failures that are difficult to reproduce. See [sampling strategies](/product/agents/sampling/) to retain agent runs while sampling unrelated traffic.
 
 Re-export it as `cloudflare` from each agent module. This is how Flue applies the wrapper — defining it anywhere else has no effect:
 
@@ -118,6 +107,7 @@ The SDK will record generative AI inputs and outputs (the prompts your agent sen
 Sentry.instrumentDurableObjectWithSentry(
   (env: Env) => ({
     dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
     dataCollection: {
       genAI: { inputs: false, outputs: false },
     },

@@ -33,16 +33,7 @@ Before you begin, you need:
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-  defaults={["performance"]}
-/>
-
 Install the Sentry Node SDK and Mastra's observability package:
-
-<OnboardingOption optionId="profiling" hideForThisOption>
 
 ```bash {tabTitle:npm}
 npm install @sentry/node@^11.0.0 @mastra/observability@latest
@@ -56,24 +47,6 @@ yarn add @sentry/node@^11.0.0 @mastra/observability@latest
 pnpm add @sentry/node@^11.0.0 @mastra/observability@latest
 ```
 
-</OnboardingOption>
-
-<OnboardingOption optionId="profiling">
-
-```bash {tabTitle:npm}
-npm install @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0 @mastra/observability@latest
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0 @mastra/observability@latest
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/node@^11.0.0 @sentry/profiling-node@^11.0.0 @mastra/observability@latest
-```
-
-</OnboardingOption>
-
 If Mastra can't load `@mastra/observability`, the integration warns and creates no spans.
 
 ## Configure
@@ -84,37 +57,14 @@ Place the file in your Mastra `public/` directory. `mastra build` and `mastra de
 
 ```javascript {filename:src/mastra/public/instrument.mjs}
 import * as Sentry from "@sentry/node";
-// ___PRODUCT_OPTION_START___ profiling
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
-// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ profiling
-
-  integrations: [
-    // Add our Profiling integration
-    nodeProfilingIntegration(),
-  ],
-  // ___PRODUCT_OPTION_END___ profiling
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of spans for tracing.
-  // We recommend adjusting this value in production.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/node/configuration/options/#tracesSampleRate
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ profiling
-
-  // Set profileSessionSampleRate to 1.0 to profile every session.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
-  profileSessionSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ profiling
 });
 ```
+
+Keep agent runs at 100%. Agents are nondeterministic, so sampling out runs can hide failures that are difficult to reproduce. See [sampling strategies](/product/agents/sampling/) to retain agent runs while sampling unrelated traffic.
 
 Preload the instrument file when you start Mastra by passing it through `--custom-args`:
 

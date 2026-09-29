@@ -27,32 +27,22 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 ## Configure
 
-Laravel AI tracing is enabled by default when `laravel/ai` is installed and tracing is active.
+After completing the <PlatformLink to="/">Sentry Laravel setup</PlatformLink>, set your DSN and enable tracing. Laravel AI instrumentation is enabled by default when `laravel/ai` is installed.
 
 ```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 SENTRY_TRACES_SAMPLE_RATE=1.0
 ```
 
-You can opt out of all AI spans, or individual AI span types, in `config/sentry.php`:
+Model, token, and timing metadata are collected without prompt content. To also record LLM and tool inputs and outputs, add:
 
-```php {filename:config/sentry.php}
-'tracing' => [
-    // Master switch for all AI spans (requires laravel/ai)
-    'gen_ai' => env('SENTRY_TRACE_GEN_AI_ENABLED', true),
-
-    // Individual span types
-    'gen_ai_invoke_agent' => env('SENTRY_TRACE_GEN_AI_INVOKE_AGENT_ENABLED', true),
-    'gen_ai_chat' => env('SENTRY_TRACE_GEN_AI_CHAT_ENABLED', true),
-    'gen_ai_execute_tool' => env('SENTRY_TRACE_GEN_AI_EXECUTE_TOOL_ENABLED', true),
-    'gen_ai_embeddings' => env('SENTRY_TRACE_GEN_AI_EMBEDDINGS_ENABLED', true),
-],
+```shell {filename:.env}
+SENTRY_SEND_DEFAULT_PII=true
 ```
 
-<Alert>
+This setting also enables other PII collection. Review <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> before enabling it. Laravel AI uses `send_default_pii`, not the Python or JavaScript data collection options.
 
-Sentry considers LLM and tool inputs/outputs as PII and doesn't include them by default. To capture this data for debugging, set `SENTRY_SEND_DEFAULT_PII=true`. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for details.
-
-</Alert>
+To disable individual AI span types, see the <PlatformLink to="/configuration/laravel-options/#more-configuration">tracing options</PlatformLink>.
 
 ## Automatic Instrumentation
 

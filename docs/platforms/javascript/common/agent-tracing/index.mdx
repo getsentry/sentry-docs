@@ -13,9 +13,65 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" />
 
+## Getting Started
+
+Use Sentry JavaScript SDK version `11.0.0` or later. Complete the <PlatformLink to="/">SDK setup for your framework</PlatformLink> before making AI calls.
+
+<PlatformSection supported={["javascript.node"]}>
+
+Create an initialization file and load it before your application dependencies:
+
+```javascript {filename:instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+```
+
+Start your application with the initialization file preloaded:
+
+```shell
+node --import ./instrument.mjs app.mjs
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.node", "javascript.cloudflare", "javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
+Set these options in your existing server-side Sentry configuration:
+
+```javascript
+dsn: "___PUBLIC_DSN___",
+tracesSampleRate: 1.0,
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+Use the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink>, <PlatformLink to="/agent-tracing/workers-ai/">`withSentry`</PlatformLink>, or <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK wrapper</PlatformLink>. Set `tracesSampleRate: 1.0` in that configuration. See [Compose Cloudflare Instrumentation](#compose-cloudflare-instrumentation) for model-client setup.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
+Follow the <PlatformLink to="/">framework setup</PlatformLink> to register its instrumentation and enable tracing. A separate `Sentry.init()` call is not a substitute for that setup.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+Run Vercel AI calls in the Node.js runtime. Its integration does not instrument Next.js Edge.
+
+</PlatformSection>
+
+The SDK records AI inputs and outputs by default. Use [Privacy Controls](#privacy-controls) to omit content, or review all <PlatformLink to="/configuration/options/#dataCollection">data collection options</PlatformLink>.
+
 ## Supported Instrumentation
 
-As of SDK version `11.0.0`, Sentry auto-instruments the most popular AI SDKs and frameworks out of the box — no manual setup is required. Just enable <PlatformLink to="/tracing/">tracing</PlatformLink>, then pick your AI stack below. Each integration page has the details.
+Pick your AI stack for its installation and verification steps. Runtime-specific setup still applies: Eve needs its instrumentation provider, Flue needs registration, and bundled clients may need build-time instrumentation or manual wrappers.
 
 <IntegrationGrid
   integrations={[
@@ -146,6 +202,10 @@ Flue is the exception to this composition. Its blueprint owns the host and model
 
 </PlatformSection>
 
+## Verify
+
+Run your agent and open [Explore > Agents](https://sentry.io/orgredirect/organizations/:orgslug/explore/agents/) in Sentry. Check that its model calls, token usage, and any tool executions appear. For streaming calls, consume the stream so the integration can finish the spans and record the response.
+
 ## Tracking Conversations
 
 [Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
@@ -161,7 +221,7 @@ Sentry.setConversationId("conv_abc123");
 The [Conversations](/product/agents/conversations/) view includes a **User** column. To populate it, call `setUser` once per request or session, before any AI calls:
 
 ```javascript
-Sentry.setUser({ id: "user_123", email: "jane@example.com", username: "jane" });
+Sentry.setUser({ id: "user_123" });
 ```
 
 Any of `id`, `email`, or `username` is sufficient — the Conversations view displays whichever fields are present. See the <PlatformLink to="/configuration/apis/#setUser">setUser API reference</PlatformLink> for the full list of supported fields.
@@ -170,45 +230,17 @@ Any of `id`, `email`, or `username` is sufficient — the Conversations view dis
 
 ### Privacy Controls
 
-The SDK records generative AI inputs and outputs by default. To turn them off:
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
+To omit automatically collected AI inputs and outputs while keeping model, token, and timing metadata, add this option to your existing Sentry configuration:
 
 ```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  dataCollection: {
-    genAI: { inputs: false, outputs: false },
-  },
-});
+dataCollection: {
+  genAI: { inputs: false, outputs: false },
+},
 ```
 
-You can also set `recordInputs` / `recordOutputs` on a specific AI integration. See each integration page for the API that applies on your platform.
+Set either value independently to collect only inputs or outputs. Explicit integration `recordInputs` and `recordOutputs` options take precedence over these defaults. Vercel AI also supports per-call recording options; see the integration page for your runtime.
 
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-```javascript
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-    dataCollection: {
-      genAI: { inputs: false, outputs: false },
-    },
-  }),
-  {
-    async fetch(request, env, ctx) {
-      /* ... */
-    },
-  }
-);
-```
-
-On Cloudflare, control Vercel AI I/O with integration-level `record*` options or with `experimental_telemetry` per call. See each integration page.
-
-</PlatformSection>
+These controls apply to integration-collected content, not values you attach manually to spans. See the <PlatformLink to="/configuration/options/#dataCollection">configuration reference</PlatformLink> for other categories and [Agent Data Privacy](/product/agents/privacy/) for scrubbing AI content.
 
 ### Streaming Gen AI Spans
 

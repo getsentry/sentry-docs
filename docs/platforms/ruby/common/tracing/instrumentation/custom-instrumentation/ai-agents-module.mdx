@@ -6,13 +6,24 @@ description: "Learn how to manually instrument your code to use Sentry's Agents 
 
 With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates. Agent Tracing data will be fully connected to your other Sentry data like logs, errors, and traces.
 
-As a prerequisite to setting up Agent Tracing with Ruby, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, you can use the custom instrumentation described below to capture agent spans.
+Complete the <PlatformLink to="/">Sentry Ruby setup</PlatformLink> and enable <PlatformLink to="/tracing/">tracing</PlatformLink> in your existing initialization:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
+  config.traces_sample_rate = 1.0
+end
+```
+
+Ruby requires manual agent instrumentation. Use the spans below to record model and tool calls.
 
 ## Manual Instrumentation
 
 For your agents data to show up in the [Agents Dashboards](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/?filter=onlyPrebuilt&query=agents&sort=mostPopular), at least one of the AI spans needs to be created and have well-defined names and data attributes. See details below.
 
-Make sure that there's a transaction running when you create the spans. If you're using a web framework like Rails those transactions will be created for you automatically.
+Make sure that there's a transaction running when you create the spans. If you're using a web framework like Rails those transactions will be created for you automatically. For scripts and other entry points, <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">start a transaction</PlatformLink> before creating child spans.
+
+Only attach messages and tool arguments that you intend to send. Ruby's data collection options do not filter the values you set manually with `set_data`. Omit or sanitize sensitive content first; see [Agent Data Privacy](/product/agents/privacy/).
 
 ## Span Hierarchy
 

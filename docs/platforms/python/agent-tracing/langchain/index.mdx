@@ -12,54 +12,23 @@ Once you've installed this SDK, you can use Sentry Agents Tracing, a Sentry dash
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
+Install Sentry Python SDK version `2.70.0` or later:
 
 ```bash {tabTitle:pip}
-pip install sentry-sdk
+pip install --upgrade "sentry-sdk>=2.70.0"
 ```
 
 ```bash {tabTitle:uv}
-uv add sentry-sdk
+uv add "sentry-sdk>=2.70.0"
 ```
 
 ## Configure
 
-If you have the `langchain` package in your dependencies, the LangChain integration will be enabled automatically when you initialize the Sentry SDK.
+If `langchain` is installed, the integration is enabled automatically when you initialize the Sentry SDK. Initialize Sentry before making AI calls.
 
-```python {tabTitle:OpenAI}
-import sentry_sdk
-from sentry_sdk.integrations.langchain import LangchainIntegration
-from sentry_sdk.integrations.openai import OpenAIIntegration
+<Include name="agent-tracing/python-configuration" />
 
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    environment="local",
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-    debug=True,
-    integrations=[
-        LangchainIntegration(),
-    ]
-)
-```
-
-```python {tabTitle:Anthropic}
-import sentry_sdk
-from sentry_sdk.integrations.langchain import LangchainIntegration
-from sentry_sdk.integrations.anthropic import AnthropicIntegration
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    environment="local",
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-    debug=True,
-    integrations=[
-        LangchainIntegration(),
-    ]
-)
-
-```
+<Include name="agent-tracing/python-data-collection" />
 
 ## Verify
 
@@ -162,36 +131,15 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - All exceptions are reported.
 
-- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
-
 ## Options
 
-By adding `LangchainIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LangchainIntegration` to change its behavior:
-
-```python
-import sentry_sdk
-from sentry_sdk.integrations.langchain import LangchainIntegration
-
-sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-    integrations=[
-        LangchainIntegration(
-            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
-        ),
-    ],
-)
-```
+Use <PlatformLink to="/agent-tracing/#privacy-controls">`data_collection`</PlatformLink> to control AI inputs and outputs.
 
 You can pass the following keyword arguments to `LangchainIntegration()`:
 
 - `include_prompts`
 
-  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
-
-  The default is `True`.
+  Legacy option, used only when `data_collection` is not set. Defaults to `True`, but content is recorded only when `send_default_pii=True`. When `data_collection` is set, its `gen_ai.inputs` and `gen_ai.outputs` values take precedence.
 
 ## Supported Versions
 
