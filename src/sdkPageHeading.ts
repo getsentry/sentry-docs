@@ -98,21 +98,22 @@ export function getSdkPageHeading(
   const platformTitle =
     platformNode.frontmatter.platformTitle?.trim() || contextName(platformNode);
   const baseNode = nodeForPath(root, stripVersion(pathname));
-  const baseFrontMatter = getVersion(pathname)
-    ? (baseNode?.frontmatter ?? frontMatter)
-    : frontMatter;
+  const version = getVersion(pathname);
+  const baseFrontMatter =
+    version && baseNode && !baseNode.missing ? baseNode.frontmatter : frontMatter;
   const family =
     guide && (index.guideFamilies.get(contextTitle)?.size ?? 0) > 1
       ? ` (${platformTitle})`
       : '';
+  const overrideTitle = frontMatter.h1_title ?? baseFrontMatter.h1_title;
 
   let heading: string;
-  if (baseFrontMatter.h1_title) {
-    heading = baseFrontMatter.h1_title;
+  if (overrideTitle) {
+    heading = overrideTitle;
   } else if (stripVersion(pathname) === context) {
     heading = `Sentry for ${contextTitle}${family}`;
   } else {
-    const node = baseNode ?? nodeForPath(root, pathname);
+    const node = baseNode && !baseNode.missing ? baseNode : nodeForPath(root, pathname);
     let topic = baseFrontMatter.title;
     if ((index.topicPaths.get(`${context}\0${topic}`)?.size ?? 0) > 1) {
       const section = sectionTitle(node, context);
@@ -123,6 +124,5 @@ export function getSdkPageHeading(
     heading = `${topic} for ${contextTitle}${family}`;
   }
 
-  const version = getVersion(pathname);
   return version ? `${heading} (SDK v${version})` : heading;
 }

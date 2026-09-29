@@ -65,9 +65,20 @@ function makeTree() {
     'platforms/javascript/guides/react/user-feedback/configuration__v7.x',
     'Old Configuration'
   );
+  add(
+    'platforms/javascript/guides/react/user-feedback/configuration__v8.x',
+    'Old Configuration',
+    {
+      h1_title: 'Legacy User Feedback Configuration for React',
+    }
+  );
   add('platforms/javascript/guides/react/configuration', 'Extended Configuration', {
     h1_title: 'React SDK Configuration',
   });
+  add('platforms/javascript/guides/react/configuration__v7.x', 'Old Configuration', {
+    h1_title: 'Legacy React Configuration',
+  });
+  add('platforms/javascript/guides/react/configuration__v8.x', 'Old Configuration');
   add('product', 'Product');
   add('product/configuration', 'Configuration');
 
@@ -109,6 +120,18 @@ describe('getSdkPageHeading', () => {
     expect(
       heading('platforms/javascript/guides/react/user-feedback/configuration__v7.x')
     ).toBe('User Feedback Configuration for React (SDK v7.x)');
+  });
+
+  test('prefers a version-specific H1 override while retaining the base override as a fallback', () => {
+    expect(
+      heading('platforms/javascript/guides/react/user-feedback/configuration__v8.x')
+    ).toBe('Legacy User Feedback Configuration for React (SDK v8.x)');
+    expect(heading('platforms/javascript/guides/react/configuration__v7.x')).toBe(
+      'Legacy React Configuration (SDK v7.x)'
+    );
+    expect(heading('platforms/javascript/guides/react/configuration__v8.x')).toBe(
+      'React SDK Configuration (SDK v8.x)'
+    );
   });
 
   test('falls back to guide slugs when a guide root has no index page', () => {
