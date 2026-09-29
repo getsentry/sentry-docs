@@ -295,6 +295,38 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/processing/batch-processor/',
   },
   {
+    source: '/sdk/telemetry/spans/filtering/',
+    destination: '/sdk/telemetry/spans/#spec-filtering',
+  },
+  {
+    source: '/sdk/telemetry/spans/implementation/',
+    destination: '/sdk/telemetry/spans/#implementation-guidelines',
+  },
+  {
+    source: '/sdk/telemetry/spans/sampling/',
+    destination: '/sdk/telemetry/spans/#spec-sampling',
+  },
+  {
+    source: '/sdk/telemetry/spans/scrubbing-data/',
+    destination: '/sdk/telemetry/spans/#spec-data-scrubbing',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-api/',
+    destination: '/sdk/telemetry/spans/#public-api',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-buffer/',
+    destination: '/sdk/telemetry/spans/#spec-span-buffer',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-protocol/',
+    destination: '/sdk/telemetry/spans/#wire-format',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-trace-propagation/',
+    destination: '/sdk/telemetry/spans/#spec-trace-propagation',
+  },
+  {
     source: '/sdk/telemetry/telemetry-buffer/',
     destination: '/sdk/foundations/processing/telemetry-processor/',
   },
