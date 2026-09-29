@@ -276,29 +276,52 @@ describe('findIssuesInContent', () => {
 });
 
 describe('CLI exit codes', () => {
+  // Runs against a fixture tree rather than the repo's own content: the whole
+  // point of this tooling is to leave no violations behind, so asserting on a
+  // real file would fail as soon as that file is cleaned up.
+  const SCRIPT = path.join(__dirname, 'lint-trailing-slashes.ts');
+  const TSX = path.join(__dirname, '..', 'node_modules', '.bin', 'tsx');
+  let tmpRoot: string;
+
   const run = (args: string[]) =>
-    spawnSync('npx', ['tsx', path.join(__dirname, 'lint-trailing-slashes.ts'), ...args], {
-      cwd: path.join(__dirname, '..'),
-      encoding: 'utf-8',
-    });
+    spawnSync(TSX, [SCRIPT, ...args], {cwd: tmpRoot, encoding: 'utf-8'});
+
+  beforeEach(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'trailing-slash-cli-'));
+    fs.mkdirSync(path.join(tmpRoot, 'docs'), {recursive: true});
+    fs.mkdirSync(path.join(tmpRoot, 'src'), {recursive: true});
+    fs.writeFileSync(path.join(tmpRoot, 'docs', 'dirty.mdx'), '[x](/product/issues)');
+    fs.writeFileSync(path.join(tmpRoot, 'docs', 'clean.mdx'), '[x](/product/issues/)');
+    fs.writeFileSync(path.join(tmpRoot, 'src', 'thing.ts'), 'export const x = "/a";');
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpRoot, {recursive: true, force: true});
+  });
 
   it('exits 1 when a given file has violations', () => {
-    const r = run(['docs/api/index.mdx']);
+    const r = run(['docs/dirty.mdx']);
     expect(r.status).toBe(1);
     expect(r.stdout).toContain('missing a trailing slash');
+  });
+
+  it('exits 0 when the given files are clean', () => {
+    const r = run(['docs/clean.mdx']);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain('All internal links use trailing slashes');
   });
 
   // Guards the shell-quoting failure mode: if a caller's file list arrives as
   // one unsplit blob, every path is bogus and scanning nothing would otherwise
   // look like a pass.
   it('exits 2 when given paths but none match, rather than reporting success', () => {
-    const r = run(['docs/api/index.mdx\ndocs/cli/crons.mdx']);
+    const r = run(['docs/dirty.mdx\ndocs/clean.mdx']);
     expect(r.status).toBe(2);
     expect(r.stderr).toContain('Refusing to report success');
   });
 
   it('exits 2 for paths outside the content directories', () => {
-    const r = run(['src/index.ts']);
+    const r = run(['src/thing.ts']);
     expect(r.status).toBe(2);
   });
 }, 60_000);
