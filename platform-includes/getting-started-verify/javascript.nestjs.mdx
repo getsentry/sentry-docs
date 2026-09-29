@@ -27,25 +27,29 @@ First, let's verify that Sentry captures errors and creates issues in your Sentr
 <SplitSection>
 <SplitSectionText>
 
-To test your tracing configuration, update the previous code snippet by starting a performance trace to measure the time it takes for the execution of your code.
+To test your tracing configuration, update the previous code snippet to start a span around the error. The span is recorded as part of the request's trace.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript
-@Get("/debug-sentry")
+```javascript {filename:app.controller.ts}
+import { Controller, Get } from "@nestjs/common";
+import * as Sentry from "@sentry/nestjs";
+
+@Controller()
+export class AppController {
+  @Get("/debug-sentry")
   getError() {
-    Sentry.startSpan(
-	  {
-	    op: "test",
-	    name: "My First Test Transaction",
-	  },
-	  () => {
-	    setTimeout(() => {
-	      throw new Error("My first Sentry error!");
-	    }, 99);
-	  },
-	);
+    return Sentry.startSpan(
+      {
+        op: "test",
+        name: "My First Test Span",
+      },
+      () => {
+        throw new Error("My first Sentry error!");
+      }
+    );
+  }
 }
 ```
 

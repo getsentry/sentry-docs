@@ -17,14 +17,21 @@ type Props = {
   platformName?: string;
   /** Skill package name, e.g. "sentry-nextjs-sdk". Omit for generic/all skills. */
   skill?: string;
+  /** Custom instructions for tasks other than SDK setup. */
+  instructions?: {
+    title: string;
+    prompt: string;
+    description: string;
+  };
 };
 
-export function AgentSetupCallout({skill, platformName}: Props) {
+export function AgentSetupCallout({skill, platformName, instructions}: Props) {
   const [copied, setCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const {emit} = usePlausibleEvent();
 
-  const prompt = buildPrompt(platformName);
+  const prompt = instructions?.prompt ?? buildPrompt(platformName);
+  const title = instructions?.title ?? 'Agent-Assisted Setup';
 
   const copyPrompt = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -32,7 +39,10 @@ export function AgentSetupCallout({skill, platformName}: Props) {
       event.preventDefault();
 
       emit('Copy AI Prompt', {
-        props: {page: window.location.pathname, title: 'Agent Setup Callout'},
+        props: {
+          page: window.location.pathname,
+          title: instructions?.title ?? 'Agent Setup Callout',
+        },
       });
 
       try {
@@ -50,18 +60,20 @@ export function AgentSetupCallout({skill, platformName}: Props) {
         setCopied(false);
       }
     },
-    [prompt, emit, skill]
+    [prompt, emit, skill, instructions?.title]
   );
 
-  const description = platformName
-    ? `Your agent will set up Sentry in your ${platformName} app automatically.`
-    : 'Your agent will set up Sentry automatically.';
+  const description =
+    instructions?.description ??
+    (platformName
+      ? `Your agent will set up Sentry in your ${platformName} app automatically.`
+      : 'Your agent will set up Sentry automatically.');
 
   return (
     <div className={styles.wrapper} data-mdast="ignore">
       <div className={styles.mainRow}>
         <div className={styles.left}>
-          <span className={styles.title}>Agent-Assisted Setup</span>
+          <span className={styles.title}>{title}</span>
         </div>
         <div className={styles.promptArea}>
           <code className={styles.promptText}>{prompt}</code>
@@ -76,36 +88,40 @@ export function AgentSetupCallout({skill, platformName}: Props) {
         <span className={styles.description}>
           {description} Works with Cursor, Claude Code, Codex, and more.
         </span>
-        <Link href="/ai/agent-plugin/" className={styles.viewDocs}>
-          View docs ↗
-        </Link>
+        {!instructions && (
+          <Link href="/ai/agent-plugin/" className={styles.viewDocs}>
+            View docs ↗
+          </Link>
+        )}
       </div>
 
-      <details
-        className={styles.expandSection}
-        open={isExpanded}
-        onToggle={e => setIsExpanded(e.currentTarget.open)}
-      >
-        <summary className={styles.expandSummary}>
-          {isExpanded ? (
-            <ChevronDownIcon className={styles.expandIcon} />
-          ) : (
-            <ChevronRightIcon className={styles.expandIcon} />
-          )}
-          <span>Install the full plugin</span>
-        </summary>
-        <div className={styles.expandBody}>
-          <p>
-            Install the Sentry plugin to give your assistant every skill. See the{' '}
-            <Link href="/ai/agent-plugin/">installation docs</Link> for more details.
-          </p>
-          <CodeBlock language="bash">
-            <pre className="language-bash">
-              <code>npx @sentry/agent-plugin install</code>
-            </pre>
-          </CodeBlock>
-        </div>
-      </details>
+      {!instructions && (
+        <details
+          className={styles.expandSection}
+          open={isExpanded}
+          onToggle={e => setIsExpanded(e.currentTarget.open)}
+        >
+          <summary className={styles.expandSummary}>
+            {isExpanded ? (
+              <ChevronDownIcon className={styles.expandIcon} />
+            ) : (
+              <ChevronRightIcon className={styles.expandIcon} />
+            )}
+            <span>Install the full plugin</span>
+          </summary>
+          <div className={styles.expandBody}>
+            <p>
+              Install the Sentry plugin to give your assistant every skill. See the{' '}
+              <Link href="/ai/agent-plugin/">installation docs</Link> for more details.
+            </p>
+            <CodeBlock language="bash">
+              <pre className="language-bash">
+                <code>npx @sentry/agent-plugin install</code>
+              </pre>
+            </CodeBlock>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

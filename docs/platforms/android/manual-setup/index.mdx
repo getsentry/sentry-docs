@@ -52,14 +52,14 @@ If you're using multiple Sentry dependencies, you can add a [bill of materials](
 
 Configuration is done via the application `AndroidManifest.xml`. Here's an example config which should get you started:
 
-
 ```xml {filename:AndroidManifest.xml}
 <application>
   <!-- Required: set your sentry.io project identifier (DSN) -->
   <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
 
-  <!-- Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info -->
-  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+  <!-- Use Data Collection defaults but don't collect automatic user information. -->
+  <!-- https://docs.sentry.io/platforms/android/data-management/data-collected/ -->
+  <meta-data android:name="io.sentry.data-collection.user-info" android:value="false" />
 
   <!-- enable automatic traces for user interactions (clicks, swipes, scrolls) -->
   <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
@@ -129,11 +129,11 @@ The SDK can catch errors and crashes only after you've initialized it. For that 
 Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
 
 ```kotlin
-import io.sentry.ScreenshotStrategyType;
-import io.sentry.SentryLevel;
-import io.sentry.ProfileLifecycle;
-import io.sentry.android.core.SentryAndroid;
-import android.app.Application;
+import io.sentry.ScreenshotStrategyType
+import io.sentry.SentryLevel
+import io.sentry.ProfileLifecycle
+import io.sentry.android.core.SentryAndroid
+import android.app.Application
 import io.sentry.SentryOptions
 
 class MyApplication : Application() {
@@ -143,8 +143,10 @@ class MyApplication : Application() {
     SentryAndroid.init(this) { options ->
       // Required: set your sentry.io project identifier (DSN)
       options.dsn = "___PUBLIC_DSN___"
-      // Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info
-      options.isSendDefaultPii = true
+      // Use Data Collection defaults but don't collect automatic user information.
+      // https://docs.sentry.io/platforms/android/data-management/data-collected/
+      options.dataCollection.forceDataCollection()
+      options.dataCollection.userInfo = false
       // enable automatic traces for user interactions (clicks, swipes, scrolls)
       options.isEnableUserInteractionTracing = true
       // enable screenshot for crashes
@@ -166,10 +168,10 @@ class MyApplication : Application() {
       // options.sessionReplay.screenshotStrategy = ScreenshotStrategyType.CANVAS
 
       // enable logs to be sent to Sentry. Use Sentry.logger() to capture logs or check the available integrations that capture logs automatically: https://docs.sentry.io/platforms/android/logs/#integrations
-      options.logs.isEnabled = true;
+      options.logs.isEnabled = true
 
       // enable tombstone support for richer Native crashes context. See more at https://docs.sentry.io/platforms/android/configuration/tombstones/
-      options.isTombstoneEnabled = true;
+      options.isTombstoneEnabled = true
 
       // Add a callback that will be used before the event is sent to Sentry.
       // With this callback, you can modify the event or, when returning null, also discard the event.
@@ -200,8 +202,10 @@ public class MyApplication extends Application {
     SentryAndroid.init(this, options -> {
       // Required: set your sentry.io project identifier (DSN)
       options.setDsn("___PUBLIC_DSN___");
-      // Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info
-      options.setSendDefaultPii(true);
+      // Use Data Collection defaults but don't collect automatic user information.
+      // https://docs.sentry.io/platforms/android/data-management/data-collected/
+      options.getDataCollection().forceDataCollection();
+      options.getDataCollection().setUserInfo(false);
       // enable automatic traces for user interactions (clicks, swipes, scrolls)
       options.setEnableUserInteractionTracing(true);
       // enable screenshot for crashes
