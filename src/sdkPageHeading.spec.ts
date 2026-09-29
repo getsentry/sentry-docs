@@ -37,6 +37,24 @@ function makeTree() {
   add('platforms/javascript/guides', 'Guides');
   add('platforms/javascript/guides/react', 'React');
   add('platforms/javascript/guides/nextjs', 'Next.js');
+  add('platforms/javascript/guides/cloudflare', 'Cloudflare');
+  add('platforms/javascript/guides/cloudflare/frameworks', 'Frameworks on Cloudflare');
+  add('platforms/javascript/guides/cloudflare/frameworks/astro', 'Astro on Cloudflare');
+  add('platforms/javascript/guides/cloudflare/frameworks/hono', 'Hono on Cloudflare');
+  add('platforms/javascript/guides/cloudflare/frameworks/nuxt', 'Nuxt on Cloudflare');
+  add(
+    'platforms/javascript/guides/cloudflare/frameworks/nuxt__v7.x',
+    'Old Nuxt on Cloudflare'
+  );
+  add(
+    'platforms/javascript/guides/cloudflare/frameworks/nextjs',
+    'Next.js on Cloudflare'
+  );
+  add(
+    'platforms/javascript/guides/cloudflare/frameworks/cloudflareflare',
+    'Cloudflareflare'
+  );
+  add('platforms/javascript/guides/cloudflare/frameworks/configuration', 'Configuration');
   add('platforms/javascript/guides/effect', 'Effect');
   add('platforms/javascript/guides/aws-lambda', 'AWS Lambda');
   add('platforms/javascript/guides/custom-integration', '');
@@ -46,9 +64,19 @@ function makeTree() {
   add('platforms/dotnet', '.NET');
   add('platforms/dotnet/guides', 'Guides');
   add('platforms/dotnet/guides/aws-lambda', 'AWS Lambda');
+  add('platforms/dotnet/guides/aws-lambda/aspnet', 'AWS Lambda for .NET');
   add('platforms/dotnet/guides/custom-integration', '');
   nodes.get('platforms/dotnet/guides/custom-integration')!.missing = true;
   add('platforms/dotnet/guides/custom-integration/configuration', 'Configuration');
+  add('platforms/java', 'Java');
+  add('platforms/java/legacy', 'Legacy SDK');
+  add('platforms/java/legacy/logging', 'java.util.logging');
+  add('platforms/java/guides', 'Guides');
+  add('platforms/java/guides/jul', 'java.util.logging');
+  add('platforms/java/guides/jul/legacy', 'Legacy SDK');
+  add('platforms/java/guides/jul/legacy/logging', 'java.util.logging');
+  add('platforms/go', 'Go');
+  add('platforms/go/logs', 'Set Up Logs in Go');
   add('platforms/php', 'PHP');
   add('platforms/php__v7.x', 'Old PHP');
   add('platforms/php/configuration', 'Configuration');
@@ -115,11 +143,42 @@ describe('getSdkPageHeading', () => {
     ).toBe('User Feedback Configuration for Effect');
   });
 
+  test('does not repeat context already present as a complete framework name', () => {
+    expect(heading('platforms/javascript/guides/cloudflare/frameworks')).toBe(
+      'Frameworks on Cloudflare'
+    );
+    for (const framework of ['astro', 'hono']) {
+      const path = `platforms/javascript/guides/cloudflare/frameworks/${framework}`;
+      expect(heading(path)).toBe(nodes.get(path)!.frontmatter.title);
+    }
+    expect(heading('platforms/javascript/guides/cloudflare/frameworks/nuxt')).toBe(
+      'Nuxt on Cloudflare'
+    );
+    expect(heading('platforms/javascript/guides/cloudflare/frameworks/nextjs')).toBe(
+      'Next.js on Cloudflare'
+    );
+    expect(
+      heading('platforms/javascript/guides/cloudflare/frameworks/configuration')
+    ).toBe('Frameworks on Cloudflare Configuration');
+    expect(
+      heading('platforms/javascript/guides/cloudflare/frameworks/cloudflareflare')
+    ).toBe('Cloudflareflare for Cloudflare');
+    expect(heading('platforms/dotnet/guides/aws-lambda/aspnet')).toBe(
+      'AWS Lambda for .NET'
+    );
+    expect(heading('platforms/java/legacy/logging')).toBe('java.util.logging for Java');
+    expect(heading('platforms/java/guides/jul/legacy/logging')).toBe('java.util.logging');
+    expect(heading('platforms/go/logs')).toBe('Set Up Logs in Go');
+  });
+
   test('uses the current page heading on versioned pages and labels the SDK version', () => {
     expect(heading('platforms/php__v7.x')).toBe('Sentry for PHP (SDK v7.x)');
     expect(
       heading('platforms/javascript/guides/react/user-feedback/configuration__v7.x')
     ).toBe('User Feedback Configuration for React (SDK v7.x)');
+    expect(heading('platforms/javascript/guides/cloudflare/frameworks/nuxt__v7.x')).toBe(
+      'Nuxt on Cloudflare (SDK v7.x)'
+    );
   });
 
   test('prefers a version-specific H1 override while retaining the base override as a fallback', () => {
