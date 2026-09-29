@@ -1,3 +1,5 @@
+import {canonicalPath} from './canonical';
+
 export type InternalLinkClickProps = {
   destinationPath: string;
   destinationSection: string;
@@ -6,19 +8,14 @@ export type InternalLinkClickProps = {
 };
 
 /**
- * Normalize a docs pathname so equivalent URLs are reported consistently,
- * e.g. `/product/logs` and `/product/logs/` both become `/product/logs/`.
+ * Normalize a docs pathname so equivalent URLs are reported consistently and
+ * match the paths Next.js serves (and Plausible records as pageviews), e.g.
+ * `/product/logs` and `/product/logs/` both become `/product/logs/`, while
+ * file-like paths such as `/platforms/java/migration/7.x-to-8.0/` lose their
+ * trailing slash.
  */
 export function normalizeDocsPath(pathname: string): string {
-  if (pathname.endsWith('/')) {
-    return pathname;
-  }
-  const lastSegment = pathname.split('/').pop() ?? '';
-  // Leave file-like paths (e.g. `/llms.txt`, `/foo.md`) untouched.
-  if (lastSegment.includes('.')) {
-    return pathname;
-  }
-  return `${pathname}/`;
+  return canonicalPath(pathname);
 }
 
 /**

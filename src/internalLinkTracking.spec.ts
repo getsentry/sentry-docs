@@ -14,8 +14,14 @@ describe('normalizeDocsPath', () => {
     expect(normalizeDocsPath('/product/logs/')).toBe('/product/logs/');
   });
 
-  test('leaves file-like paths untouched', () => {
+  test('matches Next.js trailing-slash handling for file-like paths', () => {
     expect(normalizeDocsPath('/llms.txt')).toBe('/llms.txt');
+    expect(normalizeDocsPath('/platforms/java/migration/7.x-to-8.0/')).toBe(
+      '/platforms/java/migration/7.x-to-8.0'
+    );
+    expect(normalizeDocsPath('/platforms/java/migration/7.x-to-8.0')).toBe(
+      '/platforms/java/migration/7.x-to-8.0'
+    );
   });
 });
 
@@ -61,6 +67,15 @@ describe('getInternalLinkClickProps', () => {
     expect(getInternalLinkClickProps('#spans', CONCEPT_PAGE)).toBeNull();
     expect(
       getInternalLinkClickProps('/concepts/key-terms/tracing#spans', CONCEPT_PAGE)
+    ).toBeNull();
+  });
+
+  test('treats trailing-slash variants of file-like pages as the same page', () => {
+    expect(
+      getInternalLinkClickProps(
+        '/platforms/python/migration/1.x-to-2.x/#changes',
+        'https://docs.sentry.io/platforms/python/migration/1.x-to-2.x'
+      )
     ).toBeNull();
   });
 
