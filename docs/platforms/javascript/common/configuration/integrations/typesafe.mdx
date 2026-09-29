@@ -1,0 +1,172 @@
+---
+title: TypeSafe
+description: "Adds instrumentation for TypeSafe Jev evaluations. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.cloudflare
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires Sentry SDK version `11.1.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.typesafeIntegration`_
+
+The `typesafeIntegration` traces calls to TypeSafe's Jev model through [`@typesafe-ai/sdk`](https://www.npmjs.com/package/@typesafe-ai/sdk). Each `TypeSafeClient.systemOne()` call creates a `gen_ai.evaluate` span so you can inspect evaluation latency, model, token usage, and answers alongside the rest of your <PlatformLink to="/agent-tracing/">agent trace</PlatformLink>.
+
+If you call Jev through Vercel AI SDK's `experimental_evaluate()`, use the [Vercel AI integration](/platforms/javascript/guides/node/configuration/integrations/vercelai/#trace-jev-evaluations) instead. You don't need to add the TypeSafe integration for that path.
+
+## Setup
+
+This integration is enabled by default when <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled. Initialize Sentry before importing `@typesafe-ai/sdk`, following your framework's Sentry setup instructions.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+});
+```
+
+<PlatformSection supported={["javascript.node"]}>
+
+For a Node.js ESM application, put this configuration in `instrument.mjs`, add `import * as Sentry from "@sentry/node";` at the top, and preload it when starting your application:
+
+```bash
+node --import ./instrument.mjs app.mjs
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+Run TypeSafe calls in the Node.js runtime. This automatic instrumentation isn't available in the Edge runtime.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+On Deno, preload Sentry's import hook so the TypeSafe SDK can be instrumented:
+
+```bash
+deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preload=npm:@sentry/deno/import app.ts
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia"]}>
+
+On Bun, automatic instrumentation requires a build with `sentryBunPlugin()` and `@typesafe-ai/sdk` included in the bundle:
+
+```typescript {filename:build.ts}
+import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+await Bun.build({
+  entrypoints: ["./src/index.ts"],
+  outdir: "./dist",
+  target: "bun",
+  plugins: [sentryBunPlugin()],
+});
+```
+
+For unbundled applications started with `bun run`, use [Manual Instrumentation](#manual-instrumentation).
+
+</PlatformSection>
+
+Then call Jev as usual. Set `TYPESAFE_API_KEY` in your environment before running this example:
+
+```javascript {filename:app.mjs}
+import { TypeSafeClient, choice } from "@typesafe-ai/sdk";
+
+const client = new TypeSafeClient({
+  apiKey: process.env.TYPESAFE_API_KEY,
+});
+
+const result = await client.systemOne({
+  state: "I was charged twice. Please refund the extra charge.",
+  questions: {
+    department: choice("Which team should handle this?", {
+      billing: "Charges and refunds",
+      technical: "Bugs and outages",
+    }),
+  },
+});
+
+console.log(result.answers.department);
+```
+
+## Captured Data
+
+Each `systemOne()` span records:
+
+- The requested model (or the client's default model) and the response model, when available.
+- Input, output, and total token usage, when returned by TypeSafe.
+- The evaluation `state` and `questions` as input messages, when input recording is enabled.
+- The returned `answers`, including probabilities and confidence values when present, as output messages, when output recording is enabled.
+
+## Supported Versions
+
+- `@typesafe-ai/sdk`: `>=0.5.0 <1`
+
+## Options
+
+Evaluation state and answers can contain sensitive data. Input and output recording are enabled by default. To disable them for TypeSafe, configure the integration explicitly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.typesafeIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records evaluation `state` and `questions`. Defaults to `dataCollection.genAI.inputs`, which is `true` by default.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records evaluation `answers`. Defaults to `dataCollection.genAI.outputs`, which is `true` by default.
+
+<PlatformSection notSupported={["javascript.deno", "javascript.solidstart"]}>
+
+## Manual Instrumentation
+
+If your runtime or build doesn't support automatic instrumentation, wrap the client with `Sentry.instrumentTypeSafeClient()`. Use the returned client for your `systemOne()` calls.
+
+Don't instrument the same client both automatically and manually, or you'll get duplicate spans. If the automatic integration is present, remove it when initializing Sentry:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: (integrations) =>
+    integrations.filter((integration) => integration.name !== "TypeSafe"),
+});
+```
+
+Wrap the client after initializing Sentry. The wrapper accepts the same `recordInputs` and `recordOutputs` options as the integration:
+
+```javascript
+import { TypeSafeClient } from "@typesafe-ai/sdk";
+
+const client = Sentry.instrumentTypeSafeClient(
+  new TypeSafeClient({ apiKey: process.env.TYPESAFE_API_KEY }),
+  { recordInputs: false, recordOutputs: false }
+);
+```
+
+</PlatformSection>
