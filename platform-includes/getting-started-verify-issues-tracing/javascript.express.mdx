@@ -10,12 +10,8 @@ First, let's make sure Sentry is correctly capturing errors and creating issues 
 <SplitSectionCode>
 
 ```javascript
-server.route({
-  method: "GET",
-  path: "/debug-sentry",
-  handler: (request, h) => {
-    throw new Error("My first Sentry error!");
-  },
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
 });
 ```
 
@@ -37,21 +33,17 @@ To test your tracing configuration, update the previous code snippet by starting
 <SplitSectionCode>
 
 ```javascript
-server.route({
-  method: "GET",
-  path: "/debug-sentry",
-  handler: async (request, h) => {
-    await Sentry.startSpan(
-      {
-        op: "test",
-        name: "My First Test Transaction",
-      },
-      async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        throw new Error("My first Sentry error!");
-      }
-    );
-  },
+app.get("/debug-sentry", async (req, res) => {
+  await Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Transaction",
+    },
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      throw new Error("My first Sentry error!");
+    }
+  );
 });
 ```
 
@@ -60,11 +52,3 @@ server.route({
 </SplitLayout>
 
 </OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />

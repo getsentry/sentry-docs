@@ -1017,17 +1017,17 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/express/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/express/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/fastify/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/fastify/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hapi/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/hapi/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hono/install/lightweight/',
@@ -1037,7 +1037,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/koa/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source:
@@ -1048,6 +1048,20 @@ const userDocsRedirects = [
     source:
       '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
+  },
+  {
+    // Express, Fastify, Hapi and Koa are single landing pages; their subpages moved to Node.js
+    source: '/platforms/javascript/guides/fastify/features/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/fastify/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)__v:version/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)/:path+',
+    destination: '/platforms/javascript/guides/node/:path+/',
   },
   {
     source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',

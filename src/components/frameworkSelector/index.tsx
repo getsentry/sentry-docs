@@ -28,9 +28,9 @@ import styles from '../versionSelector/style.module.scss';
 import {
   Framework,
   FRAMEWORK_QUERY_PARAM,
-  NODE_FRAMEWORKS,
   PlatformContentPayload,
   platformContentUrl,
+  RUNTIMES,
 } from './frameworks';
 
 const DEFAULT_VALUE = 'none';
@@ -38,6 +38,8 @@ const DEFAULT_VALUE = 'none';
 type FrameworkContextValue = {
   framework: Framework | null;
   platform: string;
+  /** The runtime guide the page belongs to, e.g. `node`. */
+  runtime: string;
 };
 
 const FrameworkContext = createContext<FrameworkContextValue | null>(null);
@@ -59,17 +61,20 @@ function writeFrameworkToUrl(framework: Framework | null) {
 
 /**
  * Renders a framework dropdown and lets `<PlatformContent switchable />` blocks among its
- * children swap to the selected framework guide's snippets, loaded on demand.
+ * children swap to the selected framework's snippets for `runtime`, loaded on demand.
  * The selection is kept in the `?framework=` query param.
  */
 export function FrameworkSelector({
   children,
+  runtime,
   platform = 'javascript',
 }: {
   children: ReactNode;
+  runtime: string;
   platform?: string;
 }) {
-  const frameworks = NODE_FRAMEWORKS;
+  const runtimeConfig = RUNTIMES[runtime];
+  const frameworks = useMemo(() => runtimeConfig?.frameworks ?? [], [runtimeConfig]);
   const [framework, setFramework] = useState<Framework | null>(null);
 
   // The page is statically rendered, so the query param can only be read after mount.
@@ -83,7 +88,10 @@ export function FrameworkSelector({
     writeFrameworkToUrl(selected);
   };
 
-  const contextValue = useMemo(() => ({framework, platform}), [framework, platform]);
+  const contextValue = useMemo(
+    () => ({framework, platform, runtime}),
+    [framework, platform, runtime]
+  );
 
   return (
     <FrameworkContext.Provider value={contextValue}>
@@ -112,7 +120,9 @@ export function FrameworkSelector({
               className={styles.popover}
             >
               <RadixSelect.Item value={DEFAULT_VALUE} className={styles.item}>
-                <RadixSelect.ItemText>None (plain Node.js)</RadixSelect.ItemText>
+                <RadixSelect.ItemText>
+                  None (plain {runtimeConfig?.title ?? runtime})
+                </RadixSelect.ItemText>
               </RadixSelect.Item>
               {frameworks.map(f => (
                 <RadixSelect.Item key={f.key} value={f.key} className={styles.item}>
@@ -147,14 +157,17 @@ function fetchPayload(url: string): Promise<PlatformContentPayload> {
 }
 
 /**
- * Client-side stand-ins for the server-only MDX components, scoped to the selected guide.
+ * Client-side stand-ins for the server-only MDX components, scoped to the selected
+ * framework on the page's runtime.
  */
 function clientMdxComponents(
   payload: PlatformContentPayload,
   platform: string,
-  guide: string
+  runtime: string,
+  framework: string
 ) {
-  const guideKey = `${platform}.${guide}`;
+  // Checked in order, like the server's fallback chain
+  const platformKeys = [`${platform}.${framework}`, `${platform}.${runtime}`];
 
   function MDX({code}: {code: string | null | undefined}) {
     const Component = useMemo(() => (code ? getMDXComponent(code) : null), [code]);
@@ -174,7 +187,9 @@ function clientMdxComponents(
       return children;
     }
     return (
-      <SmartLink href={`/platforms/${platform}/guides/${guide}/${to.replace(/^\//, '')}`}>
+      <SmartLink
+        href={`/platforms/${platform}/guides/${runtime}/${to.replace(/^\//, '')}`}
+      >
         {children}
       </SmartLink>
     );
@@ -191,13 +206,18 @@ function clientMdxComponents(
     notSupported?: string[];
     supported?: string[];
   }) {
-    if (noGuides || notSupported.includes(guideKey)) {
+    if (noGuides) {
       return null;
     }
-    if (supported.length && !supported.includes(guideKey)) {
-      return null;
+    for (const key of platformKeys) {
+      if (supported.includes(key)) {
+        return <div>{children}</div>;
+      }
+      if (notSupported.includes(key)) {
+        return null;
+      }
     }
-    return <div>{children}</div>;
+    return supported.length ? null : <div>{children}</div>;
   }
 
   const components = {
@@ -229,13 +249,15 @@ function RemoteFrameworkContent({
   framework,
   includePath,
   platform,
+  runtime,
 }: {
   fallback: ReactNode;
   framework: Framework;
   includePath: string;
   platform: string;
+  runtime: string;
 }) {
-  const url = platformContentUrl(platform, framework.key, includePath);
+  const url = platformContentUrl(platform, runtime, framework.key, includePath);
   const [payload, setPayload] = useState<PlatformContentPayload | null>(null);
   const [error, setError] = useState(false);
   const codeContext = useContext(CodeContext);
@@ -254,8 +276,9 @@ function RemoteFrameworkContent({
   }, [url]);
 
   const mdx = useMemo(
-    () => (payload ? clientMdxComponents(payload, platform, framework.key) : null),
-    [payload, platform, framework.key]
+    () =>
+      payload ? clientMdxComponents(payload, platform, runtime, framework.key) : null,
+    [payload, platform, runtime, framework.key]
   );
 
   // Apply the current feature selection (tracing, profiling, ...) to the new content
@@ -303,6 +326,7 @@ export function FrameworkContent({
       framework={context.framework}
       includePath={includePath}
       platform={context.platform}
+      runtime={context.runtime}
     />
   );
 }
