@@ -1,3 +1,4 @@
+import {spawnSync} from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -273,6 +274,34 @@ describe('findIssuesInContent', () => {
     expect(issues[0].line).toBe(3);
   });
 });
+
+describe('CLI exit codes', () => {
+  const run = (args: string[]) =>
+    spawnSync('npx', ['tsx', path.join(__dirname, 'lint-trailing-slashes.ts'), ...args], {
+      cwd: path.join(__dirname, '..'),
+      encoding: 'utf-8',
+    });
+
+  it('exits 1 when a given file has violations', () => {
+    const r = run(['docs/api/index.mdx']);
+    expect(r.status).toBe(1);
+    expect(r.stdout).toContain('missing a trailing slash');
+  });
+
+  // Guards the shell-quoting failure mode: if a caller's file list arrives as
+  // one unsplit blob, every path is bogus and scanning nothing would otherwise
+  // look like a pass.
+  it('exits 2 when given paths but none match, rather than reporting success', () => {
+    const r = run(['docs/api/index.mdx\ndocs/cli/crons.mdx']);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('Refusing to report success');
+  });
+
+  it('exits 2 for paths outside the content directories', () => {
+    const r = run(['src/index.ts']);
+    expect(r.status).toBe(2);
+  });
+}, 60_000);
 
 describe('lintTrailingSlashes with explicit files', () => {
   // pre-commit passes staged filenames as arguments, so the file list has to

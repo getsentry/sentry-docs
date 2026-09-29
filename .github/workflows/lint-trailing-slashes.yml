@@ -60,9 +60,19 @@ jobs:
         id: lint
         if: steps.changed.outputs.count != '0'
         continue-on-error: true
+        env:
+          # Passed through the environment rather than interpolated into the
+          # script, so a filename can never be read as shell syntax.
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
         run: |
           set +e
-          OUTPUT=$(echo "${{ steps.changed.outputs.files }}" | xargs npx tsx scripts/lint-trailing-slashes.ts 2>&1)
+          # The file list is deliberately unquoted so it word-splits into
+          # arguments. Do not pipe it through xargs: GNU xargs reports 123
+          # rather than the command's own status when that status is 1-125,
+          # and the steps below key off an exit code of 1, so the comment and
+          # the failure would both be silently skipped.
+          # shellcheck disable=SC2086
+          OUTPUT=$(npx tsx scripts/lint-trailing-slashes.ts $CHANGED_FILES 2>&1)
           EXIT_CODE=$?
           set -e
 
@@ -171,6 +181,15 @@ jobs:
         if: steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true'
         run: |
           echo "::warning::Internal links missing trailing slashes. See PR comment for details."
+          exit 1
+
+      # Any other non-zero status means the linter could not do its job -- it
+      # exits 2 when it is handed paths but matches none of them. Without this
+      # the job would go green having linted nothing.
+      - name: Report failure if the linter could not run
+        if: steps.lint.outputs.exit_code != '0' && steps.lint.outputs.exit_code != '1'
+        run: |
+          echo "::error::Trailing slash linter exited with ${{ steps.lint.outputs.exit_code }}. See the log above."
           exit 1
 
       - name: Success

@@ -267,6 +267,21 @@ if (require.main === module) {
       : 'Linting internal links for missing trailing slashes...\n'
   );
 
+  // Being handed file arguments and matching none of them means the caller's
+  // list never arrived intact -- an unsplit shell variable, say. Scanning
+  // nothing and reporting success would be a silent green, so say so loudly.
+  if (files.length > 0 && selectFiles(files).length === 0) {
+    console.error(
+      `Received ${files.length} path argument(s) but none is an existing ` +
+        `.md/.mdx file under ${CONTENT_DIRS.join(', ')}. Refusing to report ` +
+        `success without having linted anything. Paths received:`
+    );
+    for (const f of files.slice(0, 5)) {
+      console.error(`  ${JSON.stringify(f)}`);
+    }
+    process.exit(2);
+  }
+
   const {issues, fixedFiles} = lintTrailingSlashes(fix, files);
 
   if (issues.length === 0) {
