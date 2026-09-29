@@ -24,15 +24,45 @@ However, it is still helpful to understand a few key concepts of how it works in
 
 ### Detector Data Model
 
-- rows in db associated with a project and type
+Each detector is a row in the <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/models/detector.py#L95">`Detector`</Link> table. The important fields are:
+
+- `project`: The project the detector runs for.
+- `type`: The slug of the <Link to="/backend/issue-platform/issue-types/">issue type</Link> the detector creates issues for.
+- `config`: Settings specific to your detector type, validated against a JSON schema you provide.
+- `workflow_condition_group`: The trigger conditions (Data Conditions) the detector evaluates
+
+Detectors get their data through a <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/models/data_source.py#L28">`DataSource`</Link>, a generic pointer to the product object that produces data, such as a query subscription or an uptime subscription. <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/models/data_source_detector.py#L8">`DataSourceDetector`</Link> rows connect data sources to detectors. One data source can feed many detectors.
 
 ### Data Conditions and Data Condition Groups
 
-- an abstraction over boolean logic. can store stuff like >5 = medium and > 10 = high etc. Give examples
+A <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/models/data_condition.py#L121">`DataCondition`</Link> compares a value against a stored `comparison`. If it matches, it returns its `condition_result`. A <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/models/data_condition_group.py#L22">`DataConditionGroup`</Link> combines conditions using a logic type: `ANY`, `ANY_SHORT_CIRCUIT`, `ALL`, or `NONE`.
+
+For detectors, every `condition_result` is a <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/types.py#L62">`DetectorPriorityLevel`</Link>: `OK`, `LOW`, `MEDIUM`, or `HIGH`. The detector uses the highest priority among the conditions that match.
+
+For example, a detector watching a count could use an `ANY` group with these conditions:
+
+| `type` | `comparison` | `condition_result` |
+| ------ | ------------ | ------------------ |
+| `gt`   | `10`         | `HIGH`             |
+| `gt`   | `5`          | `MEDIUM`           |
+| `lte`  | `5`          | `OK`               |
+
+A value of `7` matches one condition and returns `MEDIUM`. A value of `12` matches the `MEDIUM` and `HIGH` conditions, but since `HIGH` is a higher priority, it returns `HIGH`.
 
 ### When Detectors Are Evaluated
 
-The places that produce data packets call process_detectors or process_data_packet, which query the detectors that are associated with them and then they run them
+Detectors don't poll for data. Instead, your product code wraps its data in a <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/models/data_source.py#L22">`DataPacket`</Link> and passes it to the workflow engine:
+
+```python
+process_data_packet(
+    DataPacket(source_id=str(source.id), packet=payload),
+    DATA_SOURCE_EXAMPLE,
+)
+```
+
+The <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/processors/data_packet.py#L8">`process_data_packet`</Link> function looks up the enabled detectors connected to the packet's data source and evaluates each one. Any occurrences or status changes they return are sent to the issue platform. To learn more about this process, refer to <Link to="/backend/issue-platform/producing-occurrences/">Producing Occurrences</Link>.
+
+If your product already knows which detectors to run, call <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/processors/detector.py#L339">`process_detectors`</Link> with the packet and those detectors instead.
 
 ### Additional Documentation
 
@@ -42,28 +72,118 @@ Interested in learning more about how the workflow engine works? <Link to="https
 
 ### Pick A Base Class
 
-go over the 2 generic types: data packet t and evaluation t
+Detector handlers are generic over two types:
 
-- base: strongly reocmmend don't do this unless you have a specific reason. Metnion error hanDler
-- normal: normal
-- stateful: you need state
+- `DataPacketType`: The payload your product puts in the `DataPacket`.
+- `DataPacketEvaluationType`: The value your handler extracts from the payload and evaluates against the detector's conditions.
+
+For example, <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/uptime/grouptype.py#L105">`UptimeDetectorHandler`</Link> is a `StatefulDetectorHandler[UptimePacketValue, CheckStatus]`. It receives uptime check results and evaluates whether each check succeeded or failed.
+
+There are three base classes to choose from:
+
+- [`BaseDetectorHandler`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/base.py#L102): The abstract interface. Don't inherit from this unless you have a specific reason. The only direct subclass is <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/grouping/grouptype.py#L29">`ErrorDetectorHandler`</Link>, a placeholder that links error issues to a detector and is never evaluated.
+- [`DetectorHandler`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/base.py#L156): The default for new detectors. It evaluates each packet on its own and creates an occurrence whenever the conditions return a priority above `OK`.
+- [`StatefulDetectorHandler`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/stateful.py#L312): Use this if you need state between packets, such as deduplication, thresholds (for example, "fail 3 times before creating an issue"), or resolving issues when the data recovers. Uptime and metric detectors use this.
 
 ## Implement Abstract Methods
 
-- depending on base or stateful
+`DetectorHandler` has two abstract methods:
 
-for base you use the two abstract funcs
+- `extract_value`: Returns the value to evaluate from the packet. To track independent substreams, like one per endpoint, return a dict of group key to value instead. Each group key gets its own issue, so keep the number of keys bounded.
+- `create_occurrence`: Returns a <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/base.py#L54">`DetectorOccurrence`</Link> and event data describing the issue. It's called when the conditions return a priority above `OK`. Under this hood, this will be converted to an <Link to="/backend/issue-platform/producing-occurrences/">Issue Occurrence</Link>.
 
-stateful has a third
+`StatefulDetectorHandler` adds a third:
+
+- `extract_dedupe_value`: Returns a positive integer that increases with packet order, like a sequence number or timestamp. Packets with a value no higher than the last one seen are skipped.
+
+Here's an example stateful handler:
+
+```python
+@dataclass(frozen=True)
+class ExamplePacket:
+    value: float
+    sequence: int
+
+class ExampleDetectorHandler(StatefulDetectorHandler[ExamplePacket, float]):
+    def extract_value(self, data_packet: DataPacket[ExamplePacket]) -> float:
+        return data_packet.packet.value
+
+    def extract_dedupe_value(self, data_packet: DataPacket[ExamplePacket]) -> int:
+        return data_packet.packet.sequence
+
+    def create_occurrence(
+        self,
+        evaluation: DataConditionGroupEvaluation,
+        data_packet: DataPacket[ExamplePacket],
+        priority: DetectorPriorityLevel,
+    ) -> tuple[DetectorOccurrence, EventData]:
+        occurrence = DetectorOccurrence(
+            issue_title=f"{self.detector.name} triggered",
+            subtitle="The monitored value crossed its threshold",
+            evidence_data={"value": data_packet.packet.value},
+            evidence_display=[],
+            type=ExampleGroupType,
+            level="error",
+            culprit="",
+            priority=priority,
+        )
+
+        return occurrence, {}
+```
 
 ## Register Your Detector
 
-- add to the registry
+Every detector type is tied to an issue type. First, <Link to="/backend/issue-platform/issue-types/#register-an-issue-type">register a `GroupType`</Link> for the issues your detector creates, if one does not exist already. Then register a <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/types.py#L288">`DetectorSettings`</Link> subclass under the group type's slug:
+
+```python
+@detector_settings_registry.register(ExampleGroupType.slug)
+class ExampleDetectorSettings(DetectorSettings):
+    handler = ExampleDetectorHandler
+    validator = ExampleDetectorValidator
+    config_schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {"threshold": {"type": "integer", "minimum": 1}},
+        "required": ["threshold"],
+        "additionalProperties": False,
+    }
+```
+
+- `handler`: Your handler class.
+- `validator`: A subclass of <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/endpoints/validators/base/detector.py#L66">`BaseDetectorTypeValidator`</Link>. The detector API uses it to create and update detectors of your type.
+- `config_schema`: The JSON schema for `Detector.config`.
+- `filter` (optional): A `Q` filter that controls which detectors of this type are visible to users.
+
+Registration happens at import time. Put both classes in your product's root `grouptype.py`, or import them from it, so Sentry registers them on startup.
+
+If your product uses a new kind of data source, also implement a <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/types.py#L176">`DataSourceTypeHandler`</Link> and register it with `data_source_type_registry`.
 
 ## Provision Your Detector Rows
 
-- options are either add to the ui so user can create manually or to do a data migration to provision them
+When making a detector, you have to provision rows in a few tables:
+
+- `Detector`
+- `DataCondition`
+- `DataConditionGroup`
+- `DataSource`
+- `DataSourceDetector`
+
+Decide from the two following ways to provision these rows:
+
+- **From the UI**: Add a creation form for your detector type in the frontend. See the existing forms in <Link to="https://github.com/getsentry/sentry/tree/7d380ec/static/app/views/detectors/components/forms">`static/app/views/detectors/components/forms/`</Link>. The UI calls the detector API, and your validator creates the detector, its conditions, its data source, and the `DataSourceDetector` row in one transaction.
+- **With a data migration**: Use this when detectors should exist without any user input. See <Link to="/backend/application-domains/database-migrations/">Database Migrations</Link>, and <Link to="https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/migrations/0117_backfill_all_project_detectors.py">`0117_backfill_all_project_detectors`</Link> for an example. The migration has to create the related rows itself, and it only covers projects that exist when it runs.
 
 ## Customization
 
-- talk about overriding the evaluate methods and link to classes on commit 7d380ec on github to show the examples of this
+The default `evaluate` methods implemented in the detector base classes cover most use cases. For small changes, override a hook instead:
+
+- [`get_issue_fingerprint`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/base.py#L318) (`DetectorHandler`): Replaces the default `detector:<detector_id>` fingerprint.
+- [`build_issue_fingerprint`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/stateful.py#L352) (`StatefulDetectorHandler`): Adds components to the fingerprint.
+- [`thresholds`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/workflow_engine/handlers/detector/stateful.py#L336) (`StatefulDetectorHandler`): Sets how many matching evaluations are needed before the detector changes priority. The default is one.
+
+Be careful with fingerprint changes. They can split or merge existing issues.
+
+If your detector needs a different flow, override `evaluate`. You then own the whole flow: extracting values, evaluating conditions, and building results. For examples, see:
+
+- [`PreprodSizeAnalysisDetectorHandler`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/preprod/size_analysis/grouptype.py#L194): Overrides `DetectorHandler.evaluate`.
+- [`ProcessingErrorDetectorHandler`](https://github.com/getsentry/sentry/blob/7d380ec/src/sentry/processing_errors/grouptype.py#L75): Overrides `StatefulDetectorHandler.evaluate` to skip dedupe and thresholds.
