@@ -62,7 +62,7 @@ SDKs **MUST NOT** expose names like "segment span" to users and **SHOULD NOT** e
 
 ### Trace Lifecycle Option
 
-SDKs **MUST** expose a top-level `traceLifecycle` (or `trace_lifecycle`) init option controlling whether traces are sent as transactions or as spans (v2).
+SDKs that support both transaction-based tracing and span streaming **MUST** expose a top-level `traceLifecycle` (or `trace_lifecycle`) init option controlling whether traces are sent as transactions or as spans (v2).
 
 - Allowed values **MUST** be `'static'` and `'stream'`.
 - The SDK **MUST** default to `'static'` (transaction-based). Span-first **MUST** be an opt-in feature.
@@ -76,12 +76,12 @@ SDKs **MUST** expose a top-level `traceLifecycle` (or `trace_lifecycle`) init op
 
 SDKs **MUST** expose at least one API to start a span. SDKs **MAY** expose additional APIs or variants of `startSpan`, depending on the platform, language conventions, and requirements (e.g. decorators, annotations, or closure- or callback-based APIs).
 
-- Spans **MUST** be started as active by default. Any span started while the initial span is active **MUST** become a child of the active span.
+- Spans **MUST** be started as active by default. Any span started while another span is active **MUST** become a child of the active span.
 - If `active: false`, the span **MUST** be started as inactive — spans started while it is running **MUST NOT** become its children, but siblings.
 - If a `Span` is passed via `parentSpan`, it **MUST** take precedence over the currently active span.
-- If `null` is passed via `parentSpan`, the new span **MUST** be started as a root/segment span.
+- If `null` is passed via `parentSpan`, the new span **MUST** be started as a segment span.
 - SDKs **MUST NOT** end spans automatically from the default `startSpan` API. SDKs **MAY** provide additional APIs that auto-end spans (e.g. callback-based, context managers). Additional APIs **MAY** also adjust the span status based on errors thrown.
-- `startSpan` **MUST** always return a span instance, even if the trace is negatively sampled.
+- `startSpan` **MUST** always return a span instance, even if the trace is negatively sampled. See [Noop spans](#noop-spans) for details.
 
 The span-first API **MUST NOT** expose old transaction properties or concepts (e.g. `op`, `description`, `tags`).
 
@@ -164,7 +164,7 @@ A Noop span implements the full [Span Interface](#span-interface) but records no
 - Getter methods (`getName`, `getAttributes`) **SHOULD** return empty/default values.
 - A Noop span **MUST NOT** be sent to Sentry.
 - If a Noop span is active, its dummy properties **MUST NOT** populate outgoing trace headers. Headers **MUST** be populated from the propagation context instead. Custom APIs like `getTraceparent` and `getBaggage` **MUST** also use the propagation context.
-- A Noop span **MUST NOT** become the parent of another span. Spans that would otherwise be its children **MUST** use the Noop span's nearest non-Noop ancestor as their parent. If there is no such ancestor (the Noop span is a segment), those spans **MUST** also be Noop spans, inheriting its sampling or filtering decision.
+- A Noop span **MUST NOT** become the parent of another non-Noop span. Spans that would otherwise be its children **MUST** use the Noop span's nearest non-Noop ancestor as their parent. If there is no such ancestor (the Noop span is a segment), those spans **MUST** also be Noop spans, inheriting its sampling or filtering decision.
 
 #### Default Property Values
 
@@ -172,10 +172,11 @@ For platforms with non-nullable span properties:
 
 | Property | Default Value |
 |----------|---------------|
-| `traceId` | `00000000000000000000000000000000` (32 zero hex chars) |
-| `spanId` | `0000000000000000` (16 zero hex chars) |
+| `traceId` | `00000000000000000000000000000000` or random uuid (32 zero hex chars) |
+| `spanId` | `0000000000000000` or random uuid (16 zero hex chars) |
 | `name` | Empty string `""` |
 | `attributes` | Empty map `{}` |
+| `links` | Empty array `[]` |
 | `status` | `ok` |
 
 For nullable platforms, **MUST** return `null` instead.
@@ -190,7 +191,7 @@ Sampling **MUST** only apply to segment spans. The APIs **MUST** be optimized fo
 
 #### `tracesSampleRate`
 
-The SDK **MUST** default `tracesSampleRate` to `0.0`. When starting a segment span, the rate is compared against a random number in `[0.0, 1.0)`.
+The SDK **MUST** default `tracesSampleRate` to `null`. When users set `tracesSampleRate` to a value in `[0.0, 1.0]` and starting a segment span, the `tracesSampleRate` is compared against a random number in `[0.0, 1.0)`.
 
 #### `tracesSampler`
 
@@ -216,7 +217,7 @@ Furthermore, `ignoreSpans` **SHOULD** accept objects with patterns matching the 
 type IgnoreSpanNamePattern = string | RegExp | GlobPattern;
 
 type AttributeValueTypes = string | boolean | number | Array<string> | Array<boolean> | Array<number>;
-type EnhancedAttributeValueTypes = AttributeValueTypes | RegExp | GlobPattern;
+type EnhancedAttributeValueTypes = AttributeValueTypes | RegExp | GlobPattern | Array<RegExp | GlobPattern>;
 
 type IgnoreSpanFilter = {
   name: IgnoreSpanNamePattern;
@@ -256,8 +257,8 @@ If both options mentioned above are not feasible to be implemented in certain SD
 #### Implementation Requirements
 
 1. `ignoreSpans` patterns **MUST** be evaluated **before** the span is started.
-2. Patterns **MUST** apply to all spans, including root/segment spans.
-   - If a pattern matches the root span, the span and all its children **MUST** be ignored.
+2. Patterns **MUST** apply to all spans, including segment spans.
+   - If a pattern matches a segment span, the span and all its children **MUST** be ignored.
    - If a pattern matches a child span, the child **MUST** be ignored but its children **MUST** be attempted to be reparented to the ignored span's parent.
 3. If a span is ignored, the SDK **MUST** record a client report with the `ignored` discard reason and `span` category.
    - For each ignored child span, emit one outcome per span.
@@ -297,7 +298,7 @@ The SDK **MUST** expose a method to extract traceparent and baggage from incomin
 
 The function signature **MAY** require explicitly passing `sentry-trace` and `baggage`, or **MAY** accept a dictionary of headers or environment variables.
 
-#### Continue an Outgoing Trace
+#### Propagate an Outgoing Trace
 
 The SDK **MUST** expose methods to fetch the required information (traceparent, baggage) for downstream services to continue the trace.
 
@@ -320,7 +321,7 @@ Processing order:
 3. Apply [common span attributes](#common-attribute-keys) from client and merged scope data to every span.
 4. Apply scope attributes to every span.
 5. Apply `contexts` and `request` data from merged scopes to the **segment span only**.
-6. Apply span processing hooks (event processor replacements).
+6. Apply span processing hooks (event processor [replacements](#replacing-event-processors).
 7. Apply `beforeSendSpan`.
 8. Enqueue the span into the span buffer.
 
@@ -436,8 +437,8 @@ These requirements intentionally specify less than the [Telemetry Processor](/sd
    - Flush a trace bucket when its segment span is finished.
    - Flush a trace bucket when it reaches the 1000 spans limit.
    - Flush when a trace bucket reaches 5MB (SDKs **MAY** adjust, but **MUST NOT** exceed 10MB).
-   - Flush when `SentrySDK.flush()` is called.
-   - Flush and stop on `SentrySDK.close()`. The buffer **MUST** stop accepting new spans to prevent unbounded memory use.
+   - Flush when `Sentry.flush()` is called.
+   - Flush and stop on `Sentry.close()`. The buffer **MUST** stop accepting new spans to prevent unbounded memory use.
 
 #### Buckets per Trace ID
 
@@ -469,8 +470,8 @@ SDKs **SHOULD** materialize and freeze the DSC as late as possible:
 Links connect spans to other spans or traces, enabling cross-trace relationships.
 
 - Links **MUST** only link to other spans (not errors or other event types).
-- SDKs **MUST** expose `addLink` and `addLinks` on the Span interface.
-- SDKs **SHOULD** allow specifying `links` in `startSpan` options.
+- SDKs supporting span links **MUST** expose `addLink` and `addLinks` on the Span interface.
+- SDKs supporting span links **SHOULD** allow specifying `links` in `startSpan` options.
 - If the `links` array is empty, it **MAY** be omitted from the envelope.
 
 #### Link Types
@@ -481,8 +482,6 @@ The `sentry.link.type` attribute on a link defines predefined semantics:
 |---------------------|-------|
 | `previous_trace` | Linking a navigation span to the previous pageload span |
 | `next_trace` | Linking a pageload span to the next navigation span |
-| `child_of` | Linking a span to its causal parent in another trace |
-| `follows_from` | Linking a span to a preceding span it follows from |
 
 #### `previous_trace` Behavior
 
@@ -715,11 +714,6 @@ Each attribute value is an object with `type`, `value`, and optional `unit`:
 | `sampled` | boolean | No | Whether the linked trace was sampled |
 | `attributes` | object | No | Metadata about the link relationship |
 
-#### Link Attribute Keys
-
-| Attribute Key | Type | Description |
-|---------------|------|-------------|
-| `sentry.link.type` | string | Type of link relationship (e.g. `"previous_trace"`, `"child_of"`, `"follows_from"`) |
 
 ### Data Types and Formats
 
@@ -831,7 +825,7 @@ SDK implementers **SHOULD** disallow direct mutation of span properties without 
 
 SDKs **MAY** expose additional utility APIs:
 
-- `Scope::getSpan()` — returns the currently active span.
+- `Scope::getSpan()`/`get_current_span()`/`Sentry.getActiveSpan()` — returns the currently active span.
 - `Scope::_INTERNAL_getSegmentSpan()` — returns the segment span (**MUST NOT** be documented for users).
 
 ---
@@ -864,7 +858,7 @@ Implement span-first incrementally. A rough suggestion for iterations:
 
 ### Release
 
-The initial PoC implementation of span-first **SHOULD** be released in a minor version of the SDK.
+Span streaming **SHOULD** (can) be released in a minor version of the SDK, given the behaviour is additive and does not interfere with transaction-based tracing.
 
 - The feature is entirely opt-in via `traceLifecycle: 'stream'` and therefore doesn't introduce breaking changes for existing users.
 - The default tracing behavior (transaction-based) **MUST** remain unchanged until span-first becomes the default in a future major release.
