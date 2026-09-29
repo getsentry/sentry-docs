@@ -17,30 +17,20 @@ Requires Sentry SDK version `11.1.0` or higher.
 
 _Import name: `Sentry.typesafeIntegration`_
 
-The `typesafeIntegration` traces calls to TypeSafe's Jev model through [`@typesafe-ai/sdk`](https://www.npmjs.com/package/@typesafe-ai/sdk). Each `TypeSafeClient.systemOne()` call creates a `gen_ai.evaluate` span so you can inspect evaluation latency, model, token usage, and answers alongside the rest of your <PlatformLink to="/agent-tracing/">agent trace</PlatformLink>.
+This integration is enabled by default when <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled. To customize it, see [Modifying Default Integrations](./../#modifying-default-integrations).
+
+The `typesafeIntegration` adds instrumentation for [`@typesafe-ai/sdk`](https://www.npmjs.com/package/@typesafe-ai/sdk) to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai.evaluate` spans, recording model, token usage, latency, and (when enabled) evaluation inputs and answers.
 
 If you call Jev through Vercel AI SDK's `experimental_evaluate()`, see the [Vercel AI integration](/platforms/javascript/guides/node/configuration/integrations/vercelai/#trace-jev-evaluations) instead.
-
-## Setup
-
-This integration is enabled by default when <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled. Initialize Sentry before importing `@typesafe-ai/sdk`, following your framework's Sentry setup instructions.
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
   tracesSampleRate: 1.0,
+  integrations: [Sentry.typesafeIntegration()],
 });
 ```
-
-<PlatformSection supported={["javascript.node"]}>
-
-For a Node.js ESM application, put this configuration in `instrument.mjs`, add `import * as Sentry from "@sentry/node";` at the top, and preload it when starting your application:
-
-```bash
-node --import ./instrument.mjs app.mjs
-```
-
-</PlatformSection>
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
@@ -77,36 +67,9 @@ For unbundled applications started with `bun run`, use [Manual Instrumentation](
 
 </PlatformSection>
 
-Then call Jev as usual. Set `TYPESAFE_API_KEY` in your environment before running this example:
+## Supported Operations
 
-```javascript {filename:app.mjs}
-import { TypeSafeClient, choice } from "@typesafe-ai/sdk";
-
-const client = new TypeSafeClient({
-  apiKey: process.env.TYPESAFE_API_KEY,
-});
-
-const result = await client.systemOne({
-  state: "I was charged twice. Please refund the extra charge.",
-  questions: {
-    department: choice("Which team should handle this?", {
-      billing: "Charges and refunds",
-      technical: "Bugs and outages",
-    }),
-  },
-});
-
-console.log(result.answers.department);
-```
-
-## Captured Data
-
-Each `systemOne()` span records:
-
-- The requested model (or the client's default model) and the response model, when available.
-- Input, output, and total token usage, when returned by TypeSafe.
-- The evaluation `state` and `questions` as input messages, when input recording is enabled.
-- The returned `answers`, including probabilities and confidence values when present, as output messages, when output recording is enabled.
+Tracing support is added to `TypeSafeClient.systemOne()` calls to evaluate state against a set of questions using Jev. Each call creates a `gen_ai.evaluate` span. Recorded answers include probabilities and confidence values when returned by TypeSafe.
 
 ## Supported Versions
 
@@ -145,28 +108,44 @@ Records evaluation `answers`. Defaults to `dataCollection.genAI.outputs`, which 
 
 ## Manual Instrumentation
 
-If your runtime or build doesn't support automatic instrumentation, wrap the client with `Sentry.instrumentTypeSafeClient()`. Use the returned client for your `systemOne()` calls.
+_Import name: `Sentry.instrumentTypeSafeClient`_
 
-Don't instrument the same client both automatically and manually, or you'll get duplicate spans. If the automatic integration is present, remove it when initializing Sentry:
+If your application does not use automatic instrumentation, wrap your TypeSafe client after setting up Sentry. Use the returned client for your `systemOne()` calls.
+
+<PlatformSection supported={["javascript.hono"]}>
+
+Import Sentry from the entry point for your runtime: `@sentry/hono/node`, `@sentry/hono/bun`, or `@sentry/hono/cloudflare`.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.hono"]}>
 
 ```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0,
-  integrations: (integrations) =>
-    integrations.filter((integration) => integration.name !== "TypeSafe"),
+import * as Sentry from "___SDK_PACKAGE___";
+```
+
+</PlatformSection>
+
+```javascript
+import { TypeSafeClient, choice } from "@typesafe-ai/sdk";
+
+const typesafe = new TypeSafeClient({ apiKey: "your-typesafe-api-key" });
+const client = Sentry.instrumentTypeSafeClient(typesafe, {
+  recordInputs: false,
+  recordOutputs: false,
+});
+
+const result = await client.systemOne({
+  state: "I was charged twice. Please refund the extra charge.",
+  questions: {
+    department: choice("Which team should handle this?", {
+      billing: "Charges and refunds",
+      technical: "Bugs and outages",
+    }),
+  },
 });
 ```
 
-Wrap the client after initializing Sentry. The wrapper accepts the same `recordInputs` and `recordOutputs` options as the integration:
-
-```javascript
-import { TypeSafeClient } from "@typesafe-ai/sdk";
-
-const client = Sentry.instrumentTypeSafeClient(
-  new TypeSafeClient({ apiKey: process.env.TYPESAFE_API_KEY }),
-  { recordInputs: false, recordOutputs: false }
-);
-```
+Use one instrumentation approach for each client. If automatic instrumentation is already active, you don't need to wrap the client.
 
 </PlatformSection>
