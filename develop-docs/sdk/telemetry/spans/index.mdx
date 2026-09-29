@@ -65,8 +65,9 @@ SDKs **MUST NOT** expose names like "segment span" to users and **SHOULD NOT** e
 SDKs that support both transaction-based tracing and span streaming **MUST** expose a top-level `traceLifecycle` (or `trace_lifecycle`) init option controlling whether traces are sent as transactions or as spans (v2).
 
 - Allowed values **MUST** be `'static'` and `'stream'`.
-- The SDK **MUST** default to `'static'` (transaction-based). Span-first **MUST** be an opt-in feature.
+- When span-first is introduced in a minor version, the SDK **MUST** default to `'static'` (transaction-based) and span-first **MUST** be an opt-in feature.
 - Span-first behavior **MUST** only apply when `traceLifecycle` is set to `'stream'`.
+- This option can be removed once support for transactions is removed from the SDK.
 
 </SpecSection>
 
@@ -81,7 +82,7 @@ SDKs **MUST** expose at least one API to start a span. SDKs **MAY** expose addit
 - If a `Span` is passed via `parentSpan`, it **MUST** take precedence over the currently active span.
 - If `null` is passed via `parentSpan`, the new span **MUST** be started as a segment span.
 - SDKs **MUST NOT** end spans automatically from the default `startSpan` API. SDKs **MAY** provide additional APIs that auto-end spans (e.g. callback-based, context managers). Additional APIs **MAY** also adjust the span status based on errors thrown.
-- `startSpan` **MUST** always return a span instance, even if the trace is negatively sampled. See [Noop spans](#noop-spans) for details.
+- `startSpan` **MUST** always return a span instance, even if the trace is negatively sampled. See [Noop Span](#noop-span) for details.
 
 The span-first API **MUST NOT** expose old transaction properties or concepts (e.g. `op`, `description`, `tags`).
 
@@ -118,6 +119,14 @@ span = start_span(name, attributes, parent_span, active)
 span.end()
 ```
 
+| Option | Required | Description |
+|--------|----------|-------------|
+| `name` | Yes | Span name. **MUST** be set by users. |
+| `attributes` | No | Initial attributes. See [Attributes at Span Start](#attributes-at-span-start). |
+| `parentSpan` | No | Parent span. See [three-state behavior](#parentspan-three-state-behavior). |
+| `active` | No | Whether the span should be active (default: `true`). |
+| `links` | No | Initial span links. |
+
 #### `parentSpan` Three-State Behavior
 
 The `parentSpan` parameter has three states: `undefined`, `null`, and a span instance.
@@ -129,6 +138,12 @@ For languages without an `undefined` state, SDKs **SHOULD** model this using pla
 - Other idiomatic platform mechanisms (e.g. enum types)
 
 If `parentSpan` references a span that has already ended, the SDK **SHOULD** still create the new span and send it as a child of `parentSpan`. Handling and presentation of these relationships is deferred to downstream processing and the UI.
+
+#### Attributes at Span Start
+
+Instrumentations **MUST** pass attributes whose values are already available at span start via the `attributes` option, rather than setting them afterward with `setAttribute` or `setAttributes`. This ensures these attributes are available when evaluating [`ignoreSpans`](#ignorespans) and, where applicable, [`tracesSampler`](#tracessampler).
+
+Attributes whose values only become available later **MAY** be set after span start.
 
 </SpecSection>
 
@@ -179,7 +194,7 @@ For platforms with non-nullable span properties:
 | `links` | Empty array `[]` |
 | `status` | `ok` |
 
-For nullable platforms, **MUST** return `null` instead.
+SDKs **SHOULD** use these default values even on platforms that support nullable types, so callers don't need null checks. In particular, `name`, `attributes`, `links`, and `status` **SHOULD NOT** be nullable.
 
 </SpecSection>
 
@@ -187,7 +202,7 @@ For nullable platforms, **MUST** return `null` instead.
 
 ### Sampling
 
-Sampling **MUST** only apply to segment spans. The APIs **MUST** be optimized for trace completeness and conclusive sampling decisions.
+Sampling **MUST** only apply to segment spans. The APIs **MUST** be optimized for trace completeness and conclusive sampling decisions. SDKs **MUST** follow the [sampling decision hierarchy](/sdk/telemetry/traces/#sampling).
 
 #### `tracesSampleRate`
 
@@ -321,7 +336,7 @@ Processing order:
 3. Apply [common span attributes](#common-attribute-keys) from client and merged scope data to every span.
 4. Apply scope attributes to every span.
 5. Apply `contexts` and `request` data from merged scopes to the **segment span only**.
-6. Apply span processing hooks (event processor [replacements](#replacing-event-processors).
+6. Apply span processing hooks (event processor [replacements](#replacing-event-processors)).
 7. Apply `beforeSendSpan`.
 8. Enqueue the span into the span buffer.
 
@@ -335,8 +350,6 @@ The `captureSpan` pipeline **MUST NOT**:
 `ignoreSpans` is applied prior to span start, so `captureSpan` does not handle filtering. This means certain cases cannot be handled by the pipeline:
 - Filtering spans based on data that is unknown prior to child span start.
 - Filtering entire segments based on data that is unknown prior to segment start (e.g. `http.server` segments ending in a 404 response).
-
-This decision might be revisited, which could require changes to the single-span processing pipeline.
 
 #### Replacing Event Processors
 
@@ -474,22 +487,7 @@ Links connect spans to other spans or traces, enabling cross-trace relationships
 - SDKs supporting span links **SHOULD** allow specifying `links` in `startSpan` options.
 - If the `links` array is empty, it **MAY** be omitted from the envelope.
 
-#### Link Types
-
-The `sentry.link.type` attribute on a link defines predefined semantics:
-
-| `sentry.link.type` | Usage |
-|---------------------|-------|
-| `previous_trace` | Linking a navigation span to the previous pageload span |
-| `next_trace` | Linking a pageload span to the next navigation span |
-
-#### `previous_trace` Behavior
-
-On root span start:
-- Check if there is a previous span context stored. If yes, add a link with `sentry.link.type: 'previous_trace'`.
-- Store the new root span context for the next trace.
-
-Sampled root spans **SHOULD** still link to a previous negatively sampled root span. SDKs **MUST NOT** skip negatively sampled traces to link to an earlier positively sampled one.
+See [Span Links](/sdk/telemetry/traces/span-links/#link-types) for predefined link types such as `previous_trace`.
 
 </SpecSection>
 
@@ -795,13 +793,7 @@ SDK implementers **SHOULD** disallow direct mutation of span properties without 
 
 ### `startSpan` Options
 
-| Option | Required | Description |
-|--------|----------|-------------|
-| `name` | Yes | Span name. **MUST** be set by users. |
-| `attributes` | No | Initial attributes. |
-| `parentSpan` | No | Parent span. See [three-state behavior](#parentspan-three-state-behavior). |
-| `active` | No | Whether the span should be active (default: `true`). |
-| `links` | No | Initial span links. |
+See [Starting Spans](#starting-spans) for the `startSpan` signature, options, and behavior.
 
 ### Trace Propagation APIs
 
@@ -845,7 +837,7 @@ Implement span-first incrementally. A rough suggestion for iterations:
 4. If applicable, add the new [span starting APIs](#starting-spans).
    - Start with the simplest possible `startSpan` API that leaves much control to users. Follow up with optional, more convenient APIs later.
    - The new API **MUST** only be used in conjunction with `traceLifecycle: 'stream'` and therefore only emit spans (no transactions).
-   - Some SDKs already have `startSpan` or similar APIs. The migration path is still TBD.
+   - Some SDKs already have `startSpan` or similar APIs. Each SDK **MAY** decide whether to reuse its existing API or add a new one, depending on what is practical for the language and platform.
 5. Implement the [`captureSpan` pipeline](#single-span-processing-pipeline).
    - Either reuse existing heuristics (e.g. flush when the segment span ends) or build a simple span buffer (e.g. similar to the existing buffers for logs or metrics).
    - The more complex [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) buffer and scheduler can be implemented at a later stage.
@@ -854,16 +846,16 @@ Implement span-first incrementally. A rough suggestion for iterations:
    - Most additional data **MUST** only be added to the segment span. See [Common Attribute Keys](#common-attribute-keys) for attributes that **MUST** be added to every span.
    - Mental model: all data the SDK _automatically_ adds to a transaction **MUST** also be added to the segment span.
 7. Implement the [span buffer](#span-buffer) for proper, weighted span flushing.
-8. (Optional) Depending on necessity, drop support for sending traces as transactions in the next major release. From that point on, the SDK sends spans (v2) only by default and is no longer compatible with current self-hosted Sentry installations.
+8. In the next major release, drop support for sending traces as transactions. From that point on, the SDK only sends spans (v2).
 
 ### Release
 
 Span streaming **SHOULD** (can) be released in a minor version of the SDK, given the behaviour is additive and does not interfere with transaction-based tracing.
 
 - The feature is entirely opt-in via `traceLifecycle: 'stream'` and therefore doesn't introduce breaking changes for existing users.
-- The default tracing behavior (transaction-based) **MUST** remain unchanged until span-first becomes the default in a future major release.
 - Release notes and user-facing documentation **SHOULD** clearly describe:
   - The availability of span-first behind the opt-in flag
+  - Highlight the benefits of span-first, like higher span size limits, less memory pressure
   - Any known limitations
 
 ---
