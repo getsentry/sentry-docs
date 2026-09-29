@@ -183,13 +183,22 @@ jobs:
           echo "::warning::Internal links missing trailing slashes. See PR comment for details."
           exit 1
 
-      # Any other non-zero status means the linter could not do its job -- it
-      # exits 2 when it is handed paths but matches none of them. Without this
-      # the job would go green having linted nothing.
+      # Catch-all for every outcome that is neither "clean" nor "issues found",
+      # so the job can never go green having failed to lint. That includes
+      # exit 2 (handed paths but matched none), and exit 1 *without* JSON,
+      # which is what an uncaught exception in the script looks like -- a
+      # crash and a clean run are otherwise indistinguishable here.
+      #
+      # Guarded on the lint step having actually run: when there are no changed
+      # content files the step is skipped and its outputs are empty, which must
+      # not be read as a failure.
       - name: Report failure if the linter could not run
-        if: steps.lint.outputs.exit_code != '0' && steps.lint.outputs.exit_code != '1'
+        if: >-
+          steps.changed.outputs.count != '0' &&
+          steps.lint.outputs.exit_code != '0' &&
+          !(steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true')
         run: |
-          echo "::error::Trailing slash linter exited with ${{ steps.lint.outputs.exit_code }}. See the log above."
+          echo "::error::Trailing slash linter did not complete (exit code '${{ steps.lint.outputs.exit_code }}', results parsed: '${{ steps.lint.outputs.has_results }}'). See the log above."
           exit 1
 
       - name: Success
