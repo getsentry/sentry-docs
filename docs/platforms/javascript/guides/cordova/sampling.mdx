@@ -55,15 +55,76 @@ By default, none of these options are set, meaning no transactions will be sent 
 
 ### Setting a Sampling Function
 
-<PlatformContent includePath="performance/sampling-function-intro" />
+To use the sampling function, set the <PlatformIdentifier name="traces-sampler" /> option in your `Sentry.init()` to a function that will accept a <PlatformIdentifier name="sampling-context" /> object and return a sample rate between 0 and 1. For example:
+
+```javascript
+Sentry.init({
+  // ...
+
+  tracesSampler: (samplingContext) => {
+    const name = samplingContext.transactionContext.name;
+
+    // Do not sample health checks ever
+    if (name.includes("healthcheck")) {
+      return 0;
+    }
+
+    // These are important - take a big sample
+    if (name.includes("auth")) {
+      return 1;
+    }
+
+    // These are less important or happen much more frequently - only take 1%
+    if (name.includes("comment")) {
+      return 0.01;
+    }
+
+    // Otherwise, inherit the sampling decision of the parent, if there is one
+    if (samplingContext.parentSampled !== undefined) {
+      return samplingContext.parentSampled;
+    }
+
+    // Default sample rate
+    return 0.5;
+  },
+});
+```
+
+For convenience, the function can also return a boolean. Returning `true` is equivalent to returning `1`, and will guarantee the transaction will be sent to Sentry. Returning `false` is equivalent to returning `0` and will guarantee the transaction will **not** be sent to Sentry.
 
 ## Sampling Context Data
 
-When a span is started, the `tracesSampler` function will automatically receive the span `name` and the initial span `attributes` to use in its sampling decision. Additionally, it will also receive a `parentSampled` boolean indicating whether the parent span was sampled. This data can be used to make a more informed decision about whether to sample the span.
+When a transaction is started, the `tracesSampler` function will automatically receive a `transactionContext` object with the initial `name` and `op` of the transaction to use in its sampling decision. Additionally, it will also receive a `parentSampled` boolean indicating whether the parent transaction was sampled. This data can be used to make a more informed decision about whether to sample the transaction.
 
-<PlatformContent includePath="performance/custom-sampling-context" />
+```javascript
+Sentry.startSpan(
+  {
+    name: "Search from navbar",
+    op: "search",
+  },
+  () => {
+    // ...
+  }
+);
 
-Please note that the `name` passed to `tracesSampler` may not be the exact same name that is eventually sent to Sentry. The name may be updated during the lifetime of the span, but the `name` passed to `tracesSampler` will always be the initial name. For example, the `name` for `http.server` spans will usually not be parametrized yet when passed to `tracesSampler`, so instead of `GET /users/:id` you may see a name of `GET /users/123`.
+// Will result in `tracesSampler` receiving:
+function tracesSampler(samplingContext) {
+  /*
+  samplingContext = {
+    transactionContext: {
+      name: "Search from navbar",
+      op: "search",
+    },
+    parentSampled: undefined,
+  }
+  */
+
+  // Do not sample this specific transaction
+  return samplingContext.transactionContext.name !== "Search from navbar";
+}
+```
+
+Please note that the `name` passed to `tracesSampler` may not be the exact same name that is eventually sent to Sentry. The name may be updated during the lifetime of the transaction, but the `name` passed to `tracesSampler` will always be the initial name.
 
 </PlatformSection>
 
