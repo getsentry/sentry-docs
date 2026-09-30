@@ -1,12 +1,11 @@
 ---
 title: Streamed Spans
-description: 'Learn how to use stream mode to send spans to Sentry as they finish, removing the 1,000-span limit and making trace data visible sooner.'
+description: "Learn how to use stream mode to send spans to Sentry as they finish, removing the 1,000-span limit and making trace data visible sooner."
 sidebar_order: 10
 new: true
 ---
 
-By default, the Sentry SDK collects all spans in memory and sends them to Sentry as a single transaction once the root span ends. This is called transaction mode.
-Stream mode changes this by sending spans to Sentry in batches as they finish, instead of waiting for the whole transaction to complete.
+In v10, stream mode is the default. The Sentry SDK sends spans in batches as they finish. Transaction mode (`SentryTraceLifecycle.static`) instead collects spans in memory and sends them together once the root span ends.
 
 <Expandable title="Why use stream mode?">
 
@@ -40,12 +39,13 @@ Trace
 
 You need:
 
-- <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in your app
+- <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in
+  your app
 - Sentry SDK `>=9.23.0`
 
 ## Migrate from Transaction Mode
 
-For most apps, switching to stream mode requires no code changes beyond the initial opt-in. Automatic instrumentation switches to the streaming span APIs for you.
+Stream mode is the default in v10. Automatic instrumentation uses the streaming span APIs without additional configuration.
 
 If you use custom instrumentation or transaction-specific configuration, follow these steps:
 
@@ -71,7 +71,7 @@ Follow ___CURRENT_URL___ to enable and migrate to span streaming in the Sentry S
 <SplitSection>
 <SplitSectionText>
 
-Opt in by setting `traceLifecycle` to `SentryTraceLifecycle.stream` when initializing the SDK. This is the only required config change:
+Stream mode is the default in v10. Configure `tracesSampleRate` or `tracesSampler` to enable tracing. You can also set `traceLifecycle` explicitly, as shown below. SDK versions before v10 require this opt-in:
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -82,20 +82,21 @@ Opt in by setting `traceLifecycle` to `SentryTraceLifecycle.stream` when initial
 </SplitSection>
 </SplitLayout>
 
-To revert to transaction mode, remove the option or set `traceLifecycle` to `SentryTraceLifecycle.static` (the default).
+To use transaction mode, explicitly set `traceLifecycle` to `SentryTraceLifecycle.static`. Removing the option uses stream mode in v10.
 
 Use only the APIs for the tracing mode you choose. Calls to APIs from the other mode are ignored:
 
 - In `stream` mode, transaction APIs (`Sentry.startTransaction`, `ISentrySpan.startChild`) are ignored.
 - In `static` mode, the new span APIs (`Sentry.startSpan`, `Sentry.startSpanSync`, and `Sentry.startInactiveSpan`) are ignored.
 
-<PlatformSection notSupported={['dart.flutter']}>
-  Auto-instrumentations switch to the correct API automatically based on this setting.
+<PlatformSection notSupported={["dart.flutter"]}>
+  Auto-instrumentations switch to the correct API automatically based on this
+  setting.
 </PlatformSection>
-<PlatformSection supported={['dart.flutter']}>
-  Auto-instrumentations switch to the correct API automatically based on this setting.
-  This includes Flutter's frames tracking, app start, TTID/TTFD, navigation, user
-  interaction, HTTP, database, and GraphQL instrumentations.
+<PlatformSection supported={["dart.flutter"]}>
+  Auto-instrumentations switch to the correct API automatically based on this
+  setting. This includes Flutter's frames tracking, app start, TTID/TTFD,
+  navigation, user interaction, HTTP, database, and GraphQL instrumentations.
 </PlatformSection>
 
 <Expandable title="How does span flushing work?">
