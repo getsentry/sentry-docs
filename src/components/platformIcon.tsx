@@ -145,6 +145,7 @@ import TokioSVG from 'platformicons/svg/tokio.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
 import TracingSVG from 'platformicons/svg/tracing.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
+import TypeSafeSVG from 'platformicons/svg/typesafe-ai.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
 import UnrealSVG from 'platformicons/svg/unreal.svg';
@@ -303,6 +304,7 @@ import TokioSVGLarge from 'platformicons/svg_80x80/tokio.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
 import TracingSVGLarge from 'platformicons/svg_80x80/tracing.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
+import TypeSafeSVGLarge from 'platformicons/svg_80x80/typesafe-ai.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
 import UnrealSVGLarge from 'platformicons/svg_80x80/unreal.svg';
@@ -929,6 +931,10 @@ const formatToSVG = {
     sm: TrytonSVG,
     lg: TrytonSVGLarge,
   },
+  'typesafe-ai': {
+    sm: TypeSafeSVG,
+    lg: TypeSafeSVGLarge,
+  },
   unity: {
     sm: UnitySVG,
     lg: UnitySVGLarge,
@@ -1181,6 +1187,7 @@ export const PLATFORM_TO_ICON = {
   sql: 'sql',
   sqlserver: 'sqlserver',
   swift: 'swift',
+  'typesafe-ai': 'typesafe-ai',
   unity: 'unity',
   // This will be deprecated in favor of 'unrealengine'
   ue4: 'unreal',
