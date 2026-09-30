@@ -1806,10 +1806,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cordova/',
   },
   {
-    from: '/platforms/javascript/guides/cordova/user-feedback/configuration__v7.x',
-    to: '/platforms/javascript/guides/cordova/',
-  },
-  {
     from: '/clients/cordova/ionic/',
     to: '/platforms/javascript/guides/cordova/ionic/',
   },
