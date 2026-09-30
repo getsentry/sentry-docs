@@ -1,0 +1,151 @@
+---
+title: TypeSafe
+description: "Adds instrumentation for TypeSafe Jev evaluations. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.cloudflare
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires Sentry SDK version `11.1.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.typesafeIntegration`_
+
+This integration is enabled by default when <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled. To customize it, see [Modifying Default Integrations](./../#modifying-default-integrations).
+
+The `typesafeIntegration` adds instrumentation for [`@typesafe-ai/sdk`](https://www.npmjs.com/package/@typesafe-ai/sdk) to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai.evaluate` spans, recording model, token usage, latency, and (when enabled) evaluation inputs and answers.
+
+If you call Jev through Vercel AI SDK's `experimental_evaluate()`, see the [Vercel AI integration](/platforms/javascript/guides/node/configuration/integrations/vercelai/#trace-jev-evaluations) instead.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.typesafeIntegration()],
+});
+```
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+Run TypeSafe calls in the Node.js runtime. This automatic instrumentation isn't available in the Edge runtime.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+On Deno, preload Sentry's import hook so the TypeSafe SDK can be instrumented:
+
+```bash
+deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preload=npm:@sentry/deno/import app.ts
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia"]}>
+
+On Bun, automatic instrumentation requires a build with `sentryBunPlugin()` and `@typesafe-ai/sdk` included in the bundle:
+
+```typescript {filename:build.ts}
+import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+await Bun.build({
+  entrypoints: ["./src/index.ts"],
+  outdir: "./dist",
+  target: "bun",
+  plugins: [sentryBunPlugin()],
+});
+```
+
+For unbundled applications started with `bun run`, use [Manual Instrumentation](#manual-instrumentation).
+
+</PlatformSection>
+
+## Supported Operations
+
+Tracing support is added to `TypeSafeClient.systemOne()` calls to evaluate state against a set of questions using Jev. Each call creates a `gen_ai.evaluate` span. Recorded answers include probabilities and confidence values when returned by TypeSafe.
+
+## Supported Versions
+
+- `@typesafe-ai/sdk`: `>=0.5.0 <1`
+
+## Options
+
+Evaluation state and answers can contain sensitive data. Input and output recording are enabled by default. To disable them for TypeSafe, configure the integration explicitly:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.typesafeIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records evaluation `state` and `questions`. Defaults to `dataCollection.genAI.inputs`, which is `true` by default.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records evaluation `answers`. Defaults to `dataCollection.genAI.outputs`, which is `true` by default.
+
+<PlatformSection notSupported={["javascript.deno", "javascript.solidstart"]}>
+
+## Manual Instrumentation
+
+_Import name: `Sentry.instrumentTypeSafeClient`_
+
+If your application does not use automatic instrumentation, wrap your TypeSafe client after setting up Sentry. Use the returned client for your `systemOne()` calls.
+
+<PlatformSection supported={["javascript.hono"]}>
+
+Import Sentry from the entry point for your runtime: `@sentry/hono/node`, `@sentry/hono/bun`, or `@sentry/hono/cloudflare`.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.hono"]}>
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+```
+
+</PlatformSection>
+
+```javascript
+import { TypeSafeClient, choice } from "@typesafe-ai/sdk";
+
+const typesafe = new TypeSafeClient({ apiKey: "your-typesafe-api-key" });
+const client = Sentry.instrumentTypeSafeClient(typesafe, {
+  recordInputs: false,
+  recordOutputs: false,
+});
+
+const result = await client.systemOne({
+  state: "I was charged twice. Please refund the extra charge.",
+  questions: {
+    department: choice("Which team should handle this?", {
+      billing: "Charges and refunds",
+      technical: "Bugs and outages",
+    }),
+  },
+});
+```
+
+Use one instrumentation approach for each client. If automatic instrumentation is already active, you don't need to wrap the client.
+
+</PlatformSection>
