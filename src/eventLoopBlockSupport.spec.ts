@@ -25,6 +25,7 @@ async function supportKeys(guide: string) {
 describe('event loop block detection page support', () => {
   test.each([
     'azure-functions',
+    'effect',
     'electron',
     'nextjs',
     'nuxt',
@@ -61,7 +62,7 @@ describe('event loop block detection page support', () => {
     expect(isPlatformSupported(keys, eventLoopBlock, categories)).toBe(true);
   });
 
-  test.each(['react', 'vue', 'bun', 'deno', 'cloudflare'])(
+  test.each(['react', 'vue', 'bun', 'elysia', 'deno', 'cloudflare'])(
     'does not broaden coverage to %s',
     async guide => {
       const {keys, categories} = await supportKeys(guide);
