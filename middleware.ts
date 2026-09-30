@@ -1818,6 +1818,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cordova/sourcemaps/',
   },
   {
+    from: '/platforms/javascript/guides/cordova/tracing/instrumentation/requests-module/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/',
+  },
+  {
     from: '/platforms/javascript/guides/cordova/tracing/span-metrics/',
     to: '/platforms/javascript/guides/cordova/tracing/',
   },
