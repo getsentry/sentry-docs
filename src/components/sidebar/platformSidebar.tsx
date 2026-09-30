@@ -96,9 +96,7 @@ export function PlatformSidebar({
           path: `/${pathRoot}/${aliasPathOverrides?.[child.slug] ?? integrationsPath}/${child.slug}/`,
         }));
 
-  const tree = toTree(
-    [...nodes, ...agentTracingAliases].filter(n => !!n.context)
-  );
+  const tree = toTree([...nodes, ...agentTracingAliases].filter(n => !!n.context));
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';
