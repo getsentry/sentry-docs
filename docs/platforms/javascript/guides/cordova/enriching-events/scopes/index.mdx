@@ -25,45 +25,11 @@ Scopes are basically a stack of data that is attached to events. When an event i
 
 A scope is generally valid inside of a callback or an execution context. This means that multiple parts of your application may have different scopes active at the same time. For instance, a web server might handle multiple requests at the same time, and each request may have different scope data to apply to its events.
 
-## Different Kinds of Scopes
+## The Current Scope
 
-The Sentry SDK has three different kinds of scopes:
+Top-level methods like `Sentry.setTag()` set data on the current scope, which is applied to all events captured afterwards.
 
-- [Global scope](#global-scope)
-- [Isolation scope](#isolation-scope)
-- [Current scope](#current-scope)
-
-### Global Scope
-
-The global scope is applied to _all_ events, no matter where they originate. You can use it to store data that should apply to all events, such as environmental information.
-
-You can access the global scope via `Sentry.getGlobalScope()`.
-
-Note that the global scope can only be used to write data, not to capture events. Events can only be captured on the current scope (e.g. `getCurrentScope().captureException()` and similar APIs).
-
-### Isolation Scope
-
-The isolation scope is used to isolate events from each other. For example, each request in a web server might get its own isolation scope, so that events from one request don't interfere with events from another request. In most cases, you'll want to put data that should be applied to your events on the isolation scope - which is also why all `Sentry.setXXX` methods, like `Sentry.setTag()`, will write data onto the currently active isolation scope. A classic example for data that belongs on the isolation scope is a user - each request may have a different user, so you want to make sure that the user is set on the isolation scope.
-
-You can access the isolation scope via `Sentry.getIsolationScope()`, but usually you'll just use the `Sentry.setXXX` methods to set data on the currently active isolation scope:
-
-```javascript
-Sentry.setTag("my-tag", "my value");
-// Is identical to:
-Sentry.getIsolationScope().setTag("my-tag", "my value");
-```
-
-<PlatformCategorySection supported={["browser"]}>
-  In the browser, the isolation scope is never forked, because it is impossible
-  to keep track of where an isolation scope would belong to. Because of this, in
-  the browser the isolation scope is effectively global.
-</PlatformCategorySection>
-
-Note that the isolation scope can only be used to write data, not to capture events. Events can only be captured on the current scope (e.g. `getCurrentScope().captureException()` and similar APIs).
-
-### Current Scope
-
-The current scope is the local scope that is currently active. Unlike the rarely-forked isolation scope, the current scope may be forked more frequently and under the hood. It can be used to store data that should only be applied to specific events. In most cases, you should not access this scope directly, but use `Sentry.withScope` to create a new scope that is only active for a specific part of your code:
+To apply data only to some events, use `withScope` to fork the current scope. Data set inside of the callback only applies to events captured inside of it:
 
 ```javascript
 Sentry.withScope((scope) => {
@@ -77,36 +43,11 @@ Sentry.withScope((scope) => {
 Sentry.captureException(new Error("my other error"));
 ```
 
-You can access the current scope via `Sentry.getCurrentScope()`, but in most cases you should not use this API, but instead use `withScope` to generate and access a local scope. There are no guarantees about the consistency of `getCurrentScope` across different parts of your application, as scope forking may happen under the hood at various points.
-
-## How Scope Data is Applied to Events
-
-Before an event (like an error or transaction) is sent to Sentry, the currently active scopes are applied to it.
-
-The global scope is applied first, followed by the isolation scope, and finally the current scope. This means that any data set on the current scope will take precedence over data set on the isolation and global scopes:
-
-```javascript
-Sentry.getGlobalScope().setExtras({
-  shared: "global",
-  global: "data",
-});
-Sentry.getIsolationScope().setExtras({
-  shared: "isolation",
-  isolation: "data",
-});
-Sentry.getCurrentScope().setExtras({
-  shared: "current",
-  current: "data",
-});
-
-Sentry.captureException(new Error("my error"));
-// --> Will have the following extra:
-// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
-```
+You can access the current scope via `Sentry.getCurrentScope()`.
 
 ## Configuring the Scope
 
-In most cases, you should use top-level methods like `Sentry.setTag()` directly, which will set the data on the isolation scope, ensuring it is applied to all events related to the current request/process.
+In most cases, you should use top-level methods like `Sentry.setTag()` directly, which will set the data on the current scope, ensuring it is applied to all events captured afterwards.
 
 If you want to apply data to a more narrow scope, you can use `withScope` to create a new scope that is only active for a specific part of your code. `withScope` receives the scope as a callback argument, which you can use to set data on the scope.
 
@@ -127,11 +68,7 @@ Sentry.setUser({
 To learn what useful information can be associated with scopes see
 [context](../context/), [tags](../tags), [users](../identify-user) and [breadcrumbs](../breadcrumbs/).
 
-We recommend you avoid using `getCurrentScope()` and setting data on it, as the current scope can have an unreliable lifetime. Instead:
-
-* If you want to apply data to the current request/process (in Node) or the current page view (in browser), use the top-level methods, e.g. `Sentry.setTag()`.
-* If you want to apply data to all events, no matter where they are captured, use methods on the global scope, e.g. `getGlobalScope().setTag()`
-* If you want to apply data to a more narrow scope, use `withScope` to create a new scope that is only active for a specific part of your code.
+To apply data to all events, use the top-level methods, e.g. `Sentry.setTag()`. To apply data to a more narrow scope, use `withScope` to create a new scope that is only active for a specific part of your code.
 
 ## Using `withScope`
 
@@ -142,13 +79,3 @@ In the following example we use <PlatformIdentifier name="with-scope" /> to atta
 The scope inside the `withScope()` callback is only valid inside of the callback. Once the callback ends, the scope will be removed and no longer applied. The inner scope is only applied to events that are captured inside of the callback. `withScope()` will clone (or fork) the current scope, so that the current scope is not modified. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
-
-<PlatformCategorySection supported={['server']}>
-## Using `withIsolationScope`
-
-`withIsolationScope` works fundamentally the same as `withScope`, but it will fork the isolation scope instead of the current scope. Generally, the isolation scope is meant to be forked less frequently than the current scope, and in most cases the SDK will handle this automatically for you.
-
-But in cases where you e.g. want to isolate a non-request process (e.g. a background job), you can use `withIsolationScope` to create a new isolation scope that is only active for the duration of the callback:
-
-<PlatformContent includePath="enriching-events/scopes/with-isolation-scope" />
-</PlatformCategorySection>
