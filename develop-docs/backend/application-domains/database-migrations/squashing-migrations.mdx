@@ -1,0 +1,77 @@
+---
+title: Squashing Migrations
+sidebar_order: 10
+description: How to squash Sentry's Django migrations and roll out the self-hosted upgrade path it requires.
+---
+
+Over time an app can accumulate hundreds of migrations. This slows down test setup (each test run has to replay the whole history to build the schema) and clutters the migrations directory. Squashing collapses an app's migration history into a single file that produces the same schema, without changing behavior for anyone who has already applied the individual migrations.
+
+This is an occasional maintenance task, not something you do as part of normal feature work. It touches every app's migrations, and it requires a coordinated self-hosted release, so plan for it rather than running it as a quick fix.
+
+## Before you start
+
+Delete any per-migration tests under `tests/sentry/migrations` (and `tests/getsentry/migrations` in getsentry) before squashing. These tests target specific migration files that are about to disappear, so they'll fail once the migration they exercise is folded into a squashed file. Do this as its own PR that lands before the squash PR.
+
+Keep (or create) one dummy test — `tests/sentry/migrations/test_noop.py` — since the migration test suite fails if it has zero tests:
+
+```python
+import pytest
+
+
+@pytest.mark.migrations
+def test_noop() -> None:
+    pass  # there must be at least one migrations tests or the suite fails
+```
+
+It's also worth capturing a schema snapshot before you squash, so you can confirm the squash didn't change anything:
+
+```bash
+make reset-db  # clean state at the latest migration
+docker exec -i postgres-postgres-1 pg_dump -U postgres -d sentry --schema-only -x -O > before_schema.sql
+```
+
+## Run the squash tool
+
+```bash
+python tools/migrations/squash.py
+```
+
+This reads `migrations_lockfile.txt` and, for every app that isn't already squashed, generates one new migration (`0001_squashed_<latest_migration>.py`) that replaces its entire history. It sets `is_post_deployment = True` on the new file, populates its `replaces` list with the names of every migration it's replacing, and rewrites `migrations_lockfile.txt` to point at the new squashed migrations.
+
+After running it, restore the old, now-superseded migration files (for example with `git checkout -- <path>` for anything the tool deleted) so they land in the same commit alongside the new squashed files. Deleting them right away would mean self-hosted installs that haven't yet applied those individual migrations would have no way to apply them — the [hard-stop check](#update-the-self-hosted-hard-stop) below is what actually makes it safe to remove them later. Django doesn't care that the replaced files still exist on disk; `replaces` only refers to them by name.
+
+## Verify the schema didn't change
+
+Reset the database again and dump the schema, this time from the squashed migrations:
+
+```bash
+make reset-db
+docker exec -i postgres-postgres-1 pg_dump -U postgres -d sentry --schema-only -x -O > after_schema.sql
+```
+
+```bash
+diff -u before_schema.sql after_schema.sql
+```
+
+The two should be equivalent. Some fields may appear in a different order — this comes from Postgres's internal system catalogs and isn't something the squash controls — so inspect any diff manually rather than assuming it's a real regression.
+
+## Update the self-hosted hard stop
+
+Squashing means Django will no longer have the individual migration files to fall back on, so self-hosted installs that are too far behind need to be blocked from skipping straight past the squash. This is enforced by the `migration_heads` tuple inside `_check_history()` in `src/sentry/runner/commands/upgrade.py`:
+
+```python
+migration_heads = (
+    "1118_add_group_derived_data",  # pre-squash
+    "0001_squashed_1118_add_group_derived_data",  # post-squash
+)
+```
+
+Update this tuple by hand to the last pre-squash migration name and the new squashed migration name for the app you squashed. `sentry upgrade` aborts with a "you've skipped a hard stop" error unless at least one of these two names shows up as already applied in the install's `django_migrations` table — so an install that applied the old migrations individually, and a fresh install that only ever sees the squashed file, both pass.
+
+Ship this as a normal self-hosted release, and add it to the [Hard Stops list](/self-hosted/releases/#hard-stops) so people upgrading from further behind know they need to pass through it.
+
+## Wait for a release, then clean up
+
+Once the release with the updated `migration_heads` has shipped, give it at least one more monthly self-hosted release cycle so installs have had a chance to upgrade through the hard stop. After that, the old individual migration files you kept around are no longer needed by anyone, and can be deleted in a follow-up PR.
+
+At that point you can also, per [Django's own guidance on squashing](https://docs.djangoproject.com/en/stable/topics/migrations/#migration-squashing), remove the `replaces` attribute from the squashed migration and let it become a regular numbered migration. Sentry hasn't needed to do this yet, but it avoids indefinitely nesting `replaces` lists across future squashes of the same app.
