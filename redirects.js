@@ -110,7 +110,8 @@ const developerDocsRedirects = [
     destination: 'https://open.sentry.io/triage/',
   },
   {
-    source: '/api/:path*',
+    // Keep the link checker's JSON endpoint out of the legacy docs redirect.
+    source: '/api/:path((?!source-map/?$).+?)?',
     destination: '/backend/api/:path*',
   },
   // Context propagation consolidation (must be before the /sdk/performance/ wildcard)
