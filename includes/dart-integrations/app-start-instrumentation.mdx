@@ -46,12 +46,13 @@ Launch your app with tracing enabled. In your Sentry project, find a sampled `Ap
 
 ## Standalone App Start Tracing
 
-Standalone app start tracing is the default in v10. The old `enableStandaloneAppStartTracing` option has been removed. Transaction mode remains the default trace lifecycle; switching to stream mode is optional.
+Standalone app start tracing is the default in v10. The old `enableStandaloneAppStartTracing` option has been removed. Stream mode is the default trace lifecycle in v10. To retain transaction mode, explicitly set `options.traceLifecycle = SentryTraceLifecycle.static`.
 
 App start has its own sampling decision. To sample it independently, inspect the operation in `tracesSampler`: transaction mode exposes it on the transaction context, while stream mode carries it in the span's `sentry.op` attribute.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+```dart {tabTitle:Transaction Mode} {mdExpandTabs}
 await SentryFlutter.init((options) {
+  options.traceLifecycle = SentryTraceLifecycle.static;
   options.tracesSampler = (samplingContext) {
     if (samplingContext.transactionContext.operation == 'app.start') {
       return 1.0;
@@ -61,7 +62,7 @@ await SentryFlutter.init((options) {
 });
 ```
 
-```dart {tabTitle:Stream Mode}
+```dart {tabTitle:Stream Mode (Default)}
 await SentryFlutter.init((options) {
   options.traceLifecycle = SentryTraceLifecycle.stream;
   options.tracesSampler = (samplingContext) {
@@ -129,7 +130,7 @@ This adds an `Extended App Start` span with the `app.start.extended` operation, 
 
 To see which part of your startup work took the time, retrieve the extension span and attach children to it. Use the getter that matches your trace lifecycle: `getExtendedAppStartSpan()` in transaction mode, `getExtendedAppStartSpanV2()` in stream mode. The other one returns `null`.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+```dart {tabTitle:Transaction Mode} {mdExpandTabs}
 SentryFlutter.extendAppStart();
 
 ISentrySpan? child;
@@ -145,7 +146,7 @@ try {
 }
 ```
 
-```dart {tabTitle:Stream Mode}
+```dart {tabTitle:Stream Mode (Default)}
 SentryFlutter.extendAppStart();
 
 try {
