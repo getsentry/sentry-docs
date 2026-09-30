@@ -15,7 +15,7 @@ If operating within the Sentry codebase, you can call <Link to="https://github.c
   - `status_change`: <Link to="https://github.com/getsentry/sentry/blob/7fd40bc33607e727ea2fac0183bd04f4ad298ba3/src/sentry/issues/status_change_message.py#L15">StatusChange</Link>
 - `event_data`: Dict[str, Any]
 
-If operating from an external service then pass a json payload that matches the <Link to="#issue-occurrence-schema">Issue Occurrence Schema</Link> to the `ingest-occurrences` topic on the <Link to="https://github.com/getsentry/getsentry/blob/97039335a29517a7e48149148cdd7a30a60971e7/getsentry/conf/settings/prod.py#L567-L571">issue occurrences Kafka cluster</Link>
+If operating from an external service, pass a json payload that matches the <Link to="#issue-occurrence-schema">Issue Occurrence Schema</Link> to the `ingest-occurrences` topic on the <Link to="https://github.com/getsentry/getsentry/blob/97039335a29517a7e48149148cdd7a30a60971e7/getsentry/conf/settings/prod.py#L567-L571">issue occurrences Kafka cluster</Link>.
 
 ### Payload Type
 
@@ -34,28 +34,26 @@ Required:
 
 - `id`: str. A user generated uuid in string format representing a unique id for this occurrence.
   Generally it's a good idea to generate this separately to your event id.
-- `project_id`: int. Id of the project this occurred in
+- `project_id`: int. Id of the project this occurred in.
 - `fingerprint`: Sequence[str]. Unique identifier for the root cause of this problem.
-  Used for aggregating occurrences together into groups. We only make use of the first
-  fingerprint for the moment - if you have a use case for additional fingerprints let the
-  issue platform team know.
+  Used for aggregating occurrences together into groups.
 - `issue_title`: str. A short description of the problem. This will be used as the title
   of the issue and also used in notifications.
-- `subtitle`: str: Extra detail about the issue, displayed below the `issue_title`
-- `culprit`: str: Where the problem occurred. This could be an api path, a function path, etc.
+- `subtitle`: str. Extra detail about the issue, displayed below the `issue_title`.
+- `culprit`: str. Where the problem occurred. This could be an api path, a function path, etc.
   ![issue properties](img/issueProperties.png)
 - `evidence_data`: Mapping[str, Any]. An arbitrary map of data. The issue platform doesn't
   make use of this data directly, it just make it available for use on the frontend and in
   notifications. This can be used to customize the issue details ui, notifications and so on.
 - `evidence_display`: Sequence[<Link to="#issue-evidence-schema">IssueEvidence</Link>]. A sequence of `IssueEvidence` entries. These are used to display generic information about your issue in the issue details ui and in various notifications. Even if you are customizing the ui and email, it's recommended to include this so that we can display information correctly on all our other integrations. Typically, these will be displayed in a table when space allows. For space limited integrations we'll display one row that is labelled `important` if available.
-- `type`: int: The type of issue you are creating. Maps to `type_id` in your registered `GroupType`.
+- `type`: int. The type of issue you are creating. Maps to `type_id` in your registered `GroupType`.
 - `detection_time`: float. A timestamp representing when the issue was detected.
-- `level`: str. Info\Warning\Error
+- `level`: str. Info\Warning\Error.
 
 One of:
 
 - `event_id`: str. The event id of an existing event, typically this would be an error or transaction id.
-- `event`: <Link to="#event-schema">Event</Link>
+- `event`: <Link to="#event-schema">Event</Link>.
 
 Optional:
 
@@ -69,7 +67,7 @@ Optional:
 Required:
 
 - `name`: str.
-- `value`: str
+- `value`: str.
 - `important`: bool. Whether this entry contains important data to display to the user.
   One entry should be marked as important, and it will be displayed in space constrained
   integrations.
@@ -87,7 +85,7 @@ There's a minimum set of fields which should be included:
 - `platform`
 - `project_id`
 - `received`
-- `tags` - Should be an empty dict if no tags
+- `tags`: Should be an empty dict if no tags.
 - `timestamp`
 
 Caveats
@@ -100,7 +98,7 @@ If `payload_type` is set to `STATUS_CHANGE`, providing a `StatusChangeMessage` w
 
 The `StatusChangeMessage` schema is as follows:
 
-- `fingerprint`: unique identifier for the occurrence
+- `fingerprint`: str. Unique identifier for the occurrence.
 - `project_id`: int.
 - `new_status`: int. Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/models/group.py#L148">GroupStatus</Link> enum. We currently support the following:
   - `UNRESOLVED`
