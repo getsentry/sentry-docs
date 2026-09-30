@@ -1,6 +1,6 @@
 ---
 title: HTTP Integration
-description: 'Learn more about the Sentry HTTP integration for the Dart SDK.'
+description: "Learn more about the Sentry HTTP integration for the Dart SDK."
 sidebar_order: 2
 platforms:
   - dart
@@ -186,7 +186,25 @@ Capturing transactions requires that you first <PlatformLink to="/tracing/">set 
 
 The `SentryHttpClient` starts a span off the active span for each HTTP request. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan()`.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry/sentry.dart';
+
+// Start a root span — a span is attached for each HTTP request
+await Sentry.startSpan('webrequest', (span) async {
+  var client = SentryHttpClient();
+  try {
+    var uriResponse = await client.post('https://example.com/whatsit/create',
+      body: {'name': 'doodle', 'color': 'blue'});
+    print(await client.get(uriResponse.bodyFields['uri']));
+  } finally {
+    client.close();
+  }
+}, parentSpan: null);
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry/sentry.dart';
 
 final transaction = Sentry.startTransaction(
@@ -205,22 +223,6 @@ try {
 }
 
 await transaction.finish(status: SpanStatus.ok());
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:sentry/sentry.dart';
-
-// Start a root span — a span is attached for each HTTP request
-await Sentry.startSpan('webrequest', (span) async {
-  var client = SentryHttpClient();
-  try {
-    var uriResponse = await client.post('https://example.com/whatsit/create',
-      body: {'name': 'doodle', 'color': 'blue'});
-    print(await client.get(uriResponse.bodyFields['uri']));
-  } finally {
-    client.close();
-  }
-}, parentSpan: null);
 ```
 
 ## HTTP Error and Span Data

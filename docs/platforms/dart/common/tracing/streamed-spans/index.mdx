@@ -49,7 +49,7 @@ Stream mode is the default in v10. Automatic instrumentation uses the streaming 
 
 If you use custom instrumentation or transaction-specific configuration, follow these steps:
 
-1. [Enable stream mode](#enable-stream-mode).
+1. [Configure tracing](#configuration).
 2. Replace `Sentry.startTransaction` and `ISentrySpan.startChild` with the [streaming span APIs](#start-a-span).
 3. Replace span data and tags with [attributes](#add-attributes).
 4. Replace `beforeSendTransaction` and `ignoreTransactions` with [`beforeSendSpan`](#filter-spans) and [`ignoreSpans`](#drop-spans).
@@ -62,16 +62,19 @@ See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Gu
 Copy the following prompt and paste it into your AI agent:
 
 ```txt
-Follow ___CURRENT_URL___ to enable and migrate to span streaming in the Sentry SDK.
+Follow ___CURRENT_URL___ to migrate custom instrumentation and filtering to span streaming in the Sentry SDK.
 ```
 
-## Enable Stream Mode
+## Configuration
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-Stream mode is the default in v10. Configure `tracesSampleRate` or `tracesSampler` to enable tracing. You can also set `traceLifecycle` explicitly, as shown below. SDK versions before v10 require this opt-in:
+<PlatformLink to="/tracing/#configure">Configure tracing</PlatformLink> with
+`tracesSampleRate` or `tracesSampler`. The SDK uses
+`SentryTraceLifecycle.stream` by default in v10; no additional lifecycle setting
+is required.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -82,7 +85,7 @@ Stream mode is the default in v10. Configure `tracesSampleRate` or `tracesSample
 </SplitSection>
 </SplitLayout>
 
-To use transaction mode, explicitly set `traceLifecycle` to `SentryTraceLifecycle.static`. Removing the option uses stream mode in v10.
+To opt out of span streaming, set `options.traceLifecycle = SentryTraceLifecycle.static`. Transaction mode supports `beforeSendTransaction` and `ignoreTransactions`; these options have no effect in stream mode.
 
 Use only the APIs for the tracing mode you choose. Calls to APIs from the other mode are ignored:
 

@@ -1,6 +1,6 @@
 ---
 title: Hive Database Instrumentation
-description: 'Learn more about the Sentry Hive Database Instrumentation for the Flutter SDK.'
+description: "Learn more about the Sentry Hive Database Instrumentation for the Flutter SDK."
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.dart.hive
@@ -57,7 +57,28 @@ SentryHive.init(appDir.path);
 
 ### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry_hive/sentry_hive.dart';
+
+Future<void> hiveTest() async {
+  await Sentry.startSpan('hiveTest', (span) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    SentryHive.init(appDir.path);
+
+    final catsBox = await SentryHive.openBox<Map>('cats');
+    await catsBox.put('fluffy', {'name': 'Fluffy', 'age': 4});
+    await catsBox.put('loki', {'name': 'Loki', 'age': 2});
+    await catsBox.clear();
+    await catsBox.close();
+
+    SentryHive.close();
+  }, parentSpan: null);
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry_hive/sentry_hive.dart';
 
 Future<void> hiveTest() async {
@@ -79,25 +100,6 @@ Future<void> hiveTest() async {
   SentryHive.close();
 
   await tr.finish(status: const SpanStatus.ok());
-}
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:sentry_hive/sentry_hive.dart';
-
-Future<void> hiveTest() async {
-  await Sentry.startSpan('hiveTest', (span) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    SentryHive.init(appDir.path);
-
-    final catsBox = await SentryHive.openBox<Map>('cats');
-    await catsBox.put('fluffy', {'name': 'Fluffy', 'age': 4});
-    await catsBox.put('loki', {'name': 'Loki', 'age': 2});
-    await catsBox.clear();
-    await catsBox.close();
-
-    SentryHive.close();
-  }, parentSpan: null);
 }
 ```
 

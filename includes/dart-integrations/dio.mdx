@@ -1,6 +1,6 @@
 ---
 title: Dio Integration
-description: 'Learn more about the Sentry Dio integration for the Dart SDK.'
+description: "Learn more about the Sentry Dio integration for the Dart SDK."
 platforms:
   - dart
   - flutter
@@ -156,7 +156,27 @@ dio.addSentry();
 
 #### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry_dio/sentry_dio.dart';
+
+Future<void> makeWebRequestWithDio() async {
+  final dio = Dio();
+  dio.addSentry();
+
+  // Start a root span — the Dio integration attaches a span for the request
+  await Sentry.startSpan('dio-web-request', (span) async {
+    try {
+      final response = await dio.get<String>(exampleUrl);
+    } catch (exception, stackTrace) {
+      await Sentry.captureException(exception, stackTrace: stackTrace);
+    }
+  }, parentSpan: null);
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry_dio/sentry_dio.dart';
 
 Future<void> makeWebRequestWithDio() async {
@@ -185,24 +205,6 @@ Future<void> makeWebRequestWithDio() async {
       await span.finish();
       await transaction.finish();
     }
-}
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:sentry_dio/sentry_dio.dart';
-
-Future<void> makeWebRequestWithDio() async {
-  final dio = Dio();
-  dio.addSentry();
-
-  // Start a root span — the Dio integration attaches a span for the request
-  await Sentry.startSpan('dio-web-request', (span) async {
-    try {
-      final response = await dio.get<String>(exampleUrl);
-    } catch (exception, stackTrace) {
-      await Sentry.captureException(exception, stackTrace: stackTrace);
-    }
-  }, parentSpan: null);
 }
 ```
 

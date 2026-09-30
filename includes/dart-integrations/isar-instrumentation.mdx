@@ -1,6 +1,6 @@
 ---
 title: Isar Database Instrumentation
-description: 'Learn more about the Sentry Isar Database Instrumentation for the Flutter SDK.'
+description: "Learn more about the Sentry Isar Database Instrumentation for the Flutter SDK."
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.dart.flutter
@@ -63,7 +63,42 @@ final isar = await SentryIsar.open(
 
 ### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_isar/sentry_isar.dart';
+
+import 'user.dart'; // Import your Isar model instead
+
+Future<void> runApp() async {
+  await Sentry.startSpan('isarTest', (span) async {
+    final dir = await getApplicationDocumentsDirectory();
+
+    final isar = await SentryIsar.open(
+      [UserSchema],
+      directory: dir.path,
+    );
+
+    final newUser = User()
+      ..name = 'Joe Dirt'
+      ..age = 36;
+
+    await isar.writeTxn(() async {
+      await isar.users.put(newUser); // insert & update
+    });
+
+    final existingUser = await isar.users.get(newUser.id); // get
+
+    await isar.writeTxn(() async {
+      await isar.users.delete(existingUser!.id); // delete
+    });
+  }, parentSpan: null);
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sentry_isar/sentry_isar.dart';
@@ -95,39 +130,6 @@ Future<void> runApp() async {
   });
 
   await tr.finish(status: const SpanStatus.ok());
-}
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:path_provider/path_provider.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:sentry_isar/sentry_isar.dart';
-
-import 'user.dart'; // Import your Isar model instead
-
-Future<void> runApp() async {
-  await Sentry.startSpan('isarTest', (span) async {
-    final dir = await getApplicationDocumentsDirectory();
-
-    final isar = await SentryIsar.open(
-      [UserSchema],
-      directory: dir.path,
-    );
-
-    final newUser = User()
-      ..name = 'Joe Dirt'
-      ..age = 36;
-
-    await isar.writeTxn(() async {
-      await isar.users.put(newUser); // insert & update
-    });
-
-    final existingUser = await isar.users.get(newUser.id); // get
-
-    await isar.writeTxn(() async {
-      await isar.users.delete(existingUser!.id); // delete
-    });
-  }, parentSpan: null);
 }
 ```
 

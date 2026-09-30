@@ -1,6 +1,6 @@
 ---
 title: sqflite Database Instrumentation
-description: 'Learn more about the Sentry sqflite Database Instrumentation for the Flutter SDK.'
+description: "Learn more about the Sentry sqflite Database Instrumentation for the Flutter SDK."
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.dart.sqflite
@@ -96,7 +96,42 @@ final sentryDatabase = SentryDatabase(database);
 
 ### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+Future<void> sqfliteTest() async {
+  await Sentry.startSpan('sqfliteTest', (span) async {
+    // You can also use the other configuration methods
+    final db = await openDatabaseWithSentry(inMemoryDatabasePath);
+
+    await db.execute('''CREATE TABLE Product (id INTEGER PRIMARY KEY,title TEXT)''');
+    final dbTitles = <String>[];
+    for (int i = 1; i <= 20; i++) {
+      final title = 'Product $i';
+      dbTitles.add(title);
+      await db.insert('Product', <String, Object?>{'title': title});
+    }
+
+    await db.query('Product');
+
+    await db.transaction((txn) async {
+      await txn
+      .insert('Product', <String, Object?>{'title': 'Product Another one'});
+      await txn.delete('Product',
+      where: 'title = ?', whereArgs: ['Product Another one']);
+    });
+
+    await db.delete('Product', where: 'title = ?', whereArgs: ['Product 1']);
+
+    await db.close();
+  }, parentSpan: null);
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry_sqflite/sentry_sqflite.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -132,39 +167,6 @@ Future<void> sqfliteTest() async {
   await db.close();
 
   await tr.finish(status: const SpanStatus.ok());
-}
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:sentry_sqflite/sentry_sqflite.dart';
-import 'package:sqflite/sqflite.dart';
-
-Future<void> sqfliteTest() async {
-  await Sentry.startSpan('sqfliteTest', (span) async {
-    // You can also use the other configuration methods
-    final db = await openDatabaseWithSentry(inMemoryDatabasePath);
-
-    await db.execute('''CREATE TABLE Product (id INTEGER PRIMARY KEY,title TEXT)''');
-    final dbTitles = <String>[];
-    for (int i = 1; i <= 20; i++) {
-      final title = 'Product $i';
-      dbTitles.add(title);
-      await db.insert('Product', <String, Object?>{'title': title});
-    }
-
-    await db.query('Product');
-
-    await db.transaction((txn) async {
-      await txn
-      .insert('Product', <String, Object?>{'title': 'Product Another one'});
-      await txn.delete('Product',
-      where: 'title = ?', whereArgs: ['Product Another one']);
-    });
-
-    await db.delete('Product', where: 'title = ?', whereArgs: ['Product 1']);
-
-    await db.close();
-  }, parentSpan: null);
 }
 ```
 

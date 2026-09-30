@@ -2,22 +2,7 @@ To instrument certain regions of your code, you can create a transaction (or a s
 
 The following example creates a transaction/service span that contains an expensive operation (for example, `processOrderBatch`), and sends the result to Sentry:
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
-import 'package:sentry/sentry.dart';
-
-final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
-
-try {
-  processOrderBatch();
-} catch (exception) {
-  transaction.throwable = exception;
-  transaction.status = SpanStatus.internalError();
-} finally {
-  await transaction.finish();
-}
-```
-
-```dart {tabTitle:Stream Mode}
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 
 // Pass parentSpan: null to force a new service span.
@@ -30,4 +15,19 @@ await Sentry.startSpan(
   },
   parentSpan: null,
 );
+```
+
+```dart {tabTitle:Transaction Mode}
+import 'package:sentry/sentry.dart';
+
+final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
+
+try {
+  processOrderBatch();
+} catch (exception) {
+  transaction.throwable = exception;
+  transaction.status = SpanStatus.internalError();
+} finally {
+  await transaction.finish();
+}
 ```
