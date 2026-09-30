@@ -32,33 +32,46 @@ The <Link to="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2
 
 Required:
 
-- `id`: str. A user generated uuid in string format representing a unique id for this occurrence.
-  Generally it's a good idea to generate this separately to your event id.
-- `project_id`: int. Id of the project this occurred in.
-- `fingerprint`: Sequence[str]. Unique identifier for the root cause of this problem.
-  Used for aggregating occurrences together into groups.
-- `issue_title`: str. A short description of the problem. This will be used as the title
-  of the issue and also used in notifications.
-- `subtitle`: str. Extra detail about the issue, displayed below the `issue_title`.
-- `culprit`: str. Where the problem occurred. This could be an api path, a function path, etc.
-  ![issue properties](img/issueProperties.png)
-- `evidence_data`: Mapping[str, Any]. An arbitrary map of data. The issue platform doesn't
-  make use of this data directly, it just make it available for use on the frontend and in
-  notifications. This can be used to customize the issue details ui, notifications and so on.
-- `evidence_display`: Sequence[<Link to="#issue-evidence-schema">IssueEvidence</Link>]. A sequence of `IssueEvidence` entries. These are used to display generic information about your issue in the issue details ui and in various notifications. Even if you are customizing the ui and email, it's recommended to include this so that we can display information correctly on all our other integrations. Typically, these will be displayed in a table when space allows. For space limited integrations we'll display one row that is labelled `important` if available.
-- `type`: int. The type of issue you are creating. Maps to `type_id` in your registered `GroupType`.
-- `detection_time`: float. A timestamp representing when the issue was detected.
-- `level`: str. Info\Warning\Error.
+- `id`: str
+  - A user generated uuid in string format representing a unique id for this occurrence.
+    Generally it's a good idea to generate this separately to your event id.
+- `project_id`: int
+  - Id of the project this occurred in.
+- `fingerprint`: Sequence[str]
+  - Unique identifier for the root cause of this problem.
+    Used for aggregating occurrences together into groups.
+- `issue_title`: str
+  - A short description of the problem. This will be used as the title
+    of the issue and also used in notifications.
+- `subtitle`: str
+  - Extra detail about the issue, displayed below the `issue_title`.
+- `culprit`: str
+  - Where the problem occurred. This could be an api path, a function path, etc.
+    ![issue properties](img/issueProperties.png)
+- `evidence_data`: Mapping[str, Any]
+  - An arbitrary map of data. The issue platform doesn't
+    make use of this data directly, it just make it available for use on the frontend and in
+    notifications. This can be used to customize the issue details UI, notifications and so on.
+- `evidence_display`: Sequence[<Link to="#issue-evidence-schema">IssueEvidence</Link>]
+  - A sequence of `IssueEvidence` entries. These are used to display generic information about your issue in the issue details UI and in various notifications. Even if you are customizing the UI and email, it's recommended to include this so that we can display information correctly on all our other integrations. Typically, these will be displayed in a table when space allows. For space limited integrations we'll display one row that is labelled `important` if available.
+- `type`: int
+  - The type of issue you are creating. Maps to `type_id` in your registered `GroupType`.
+- `detection_time`: float
+  - A timestamp representing when the issue was detected.
+- `level`: str
+  - `Info`, `Warning`, or `Error`.
 
 One of:
 
-- `event_id`: str. The event id of an existing event, typically this would be an error or transaction id.
-- `event`: <Link to="#event-schema">Event</Link>.
+- `event_id`: str
+  - The event id of an existing event, typically this would be an error or transaction id.
+- `event`: <Link to="#event-schema">Event</Link>
 
 Optional:
 
-- `resource_id`: str | None. An identifier used to link to an external system to load data.
-  For example, this could be an id that we use to build a link to a specific product page.
+- `resource_id`: str | None
+  - An identifier used to link to an external system to load data.
+    For example, this could be an id that we use to build a link to a specific product page.
 
 ### Issue Evidence Schema
 
@@ -66,11 +79,12 @@ Optional:
 
 Required:
 
-- `name`: str.
-- `value`: str.
-- `important`: bool. Whether this entry contains important data to display to the user.
-  One entry should be marked as important, and it will be displayed in space constrained
-  integrations.
+- `name`: str
+- `value`: str
+- `important`: bool
+  - Whether this entry contains important data to display to the user.
+    One entry should be marked as important, and it will be displayed in space constrained
+    integrations.
 
 ### Event Schema
 
@@ -80,13 +94,19 @@ The event schema should match the <Link to="/sdk/foundations/envelopes/event-pay
 
 There's a minimum set of fields which should be included:
 
-- `environment`
-- `event_id`
-- `platform`
-- `project_id`
-- `received`
-- `tags`: Should be an empty dict if no tags.
-- `timestamp`
+- `event_id`: str
+  - A UUID in string format that uniquely identifies the event.
+    It must match the `event_id` of the occurrence if one is provided.
+- `level`: str
+  - The severity level of the event.
+- `platform`: str
+  - The platform the event came from, such as `python` or `javascript`.
+- `project_id`: int
+  - Id of the project the event belongs to. It must match the `project_id` of the occurrence.
+- `tags`: object
+  - Should be an empty dict if no tags.
+- `timestamp`: str
+  - An ISO 8601 date-time string for when the event occurred.
 
 Caveats
 
@@ -98,12 +118,16 @@ If `payload_type` is set to `STATUS_CHANGE`, providing a `StatusChangeMessage` w
 
 The `StatusChangeMessage` schema is as follows:
 
-- `fingerprint`: str. Unique identifier for the occurrence.
-- `project_id`: int.
-- `new_status`: int. Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/models/group.py#L148">GroupStatus</Link> enum. We currently support the following:
-  - `UNRESOLVED`
-  - `RESOLVED`
-  - `IGNORED`
-- `new_substatus`: int | None. Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/types/group.py#L4">GroupSubStatus</Link> enum. We do not support the `NEW` substatus.
+- `fingerprint`: str
+  - Unique identifier for the occurrence.
+- `project_id`: int
+  - Id of the project this occurred in.
+- `new_status`: int
+  - Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/models/group.py#L148">GroupStatus</Link> enum. We currently support the following:
+    - `UNRESOLVED`
+    - `RESOLVED`
+    - `IGNORED`
+- `new_substatus`: int | None
+  - Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/types/group.py#L4">GroupSubStatus</Link> enum. We do not support the `NEW` substatus.
 
 When providing the `new_status` and `new_substatus`, refer to the supported issue states and transitions <Link url="https://docs.sentry.io/product/issues/states-triage/">here</Link>.
