@@ -1,0 +1,207 @@
+name: Lint Trailing Slashes
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'docs/**/*.mdx'
+      - 'docs/**/*.md'
+      - 'develop-docs/**/*.mdx'
+      - 'develop-docs/**/*.md'
+      - 'includes/**/*.mdx'
+      - 'includes/**/*.md'
+      - 'platform-includes/**/*.mdx'
+      - 'platform-includes/**/*.md'
+      - 'scripts/lint-trailing-slashes.ts'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint-trailing-slashes:
+    name: Check for missing trailing slashes
+    runs-on: ubuntu-latest
+    continue-on-error: true # Fail the check but don't block merge
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        with:
+          node-version-file: 'package.json'
+
+      - name: Get changed content files
+        id: changed
+        run: |
+          FILES=$(git diff --name-only --diff-filter=AMR \
+            origin/${{ github.base_ref }}...HEAD \
+            -- 'docs/**/*.md' 'docs/**/*.mdx' \
+               'develop-docs/**/*.md' 'develop-docs/**/*.mdx' \
+               'includes/**/*.md' 'includes/**/*.mdx' \
+               'platform-includes/**/*.md' 'platform-includes/**/*.mdx' || true)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          COUNT=$(echo "$FILES" | grep -c . || true)
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "Changed content files: $COUNT"
+
+      # Only the files this PR touches are linted, so a PR is never blamed for
+      # pre-existing misses elsewhere in the repo.
+      - name: Run trailing slash lint
+        id: lint
+        if: steps.changed.outputs.count != '0'
+        continue-on-error: true
+        env:
+          # Passed through the environment rather than interpolated into the
+          # script, so a filename can never be read as shell syntax.
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          set +e
+          # The file list is deliberately unquoted so it word-splits into
+          # arguments. Do not pipe it through xargs: GNU xargs reports 123
+          # rather than the command's own status when that status is 1-125,
+          # and the steps below key off an exit code of 1, so the comment and
+          # the failure would both be silently skipped.
+          # shellcheck disable=SC2086
+          OUTPUT=$(npx tsx scripts/lint-trailing-slashes.ts $CHANGED_FILES 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          echo "$OUTPUT"
+
+          # Extract JSON output if present
+          HAS_JSON=false
+          if echo "$OUTPUT" | grep -Fq -- "---JSON_OUTPUT---"; then
+            JSON_OUTPUT=$(echo "$OUTPUT" | sed -n '/---JSON_OUTPUT---/,/---JSON_OUTPUT---/p' | sed '1d;$d')
+            echo "lint_result<<EOF" >> $GITHUB_OUTPUT
+            echo "$JSON_OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            HAS_JSON=true
+          fi
+
+          echo "has_results=$HAS_JSON" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Post comment if missing trailing slashes found
+        if: steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINT_RESULT: ${{ toJSON(steps.lint.outputs.lint_result) }}
+        with:
+          script: |
+            let lintResult;
+            try {
+              // First parse unwraps the toJSON() encoding, second parse converts the JSON string to an object
+              const jsonString = JSON.parse(process.env.LINT_RESULT);
+              lintResult = JSON.parse(jsonString);
+            } catch (e) {
+              console.error('Failed to parse lint result:', e);
+              core.setFailed('Failed to parse trailing slash lint output');
+              return;
+            }
+
+            const issues = lintResult.trailingSlashIssues || [];
+            const total = lintResult.totalIssues ?? issues.length;
+            if (issues.length === 0) {
+              return;
+            }
+
+            const byFile = {};
+            for (const issue of issues) {
+              if (!byFile[issue.filePath]) byFile[issue.filePath] = [];
+              byFile[issue.filePath].push(issue);
+            }
+
+            let comment = '## ⚠️ Internal Links Missing Trailing Slashes\n\n';
+            comment += '`next.config.ts` sets `trailingSlash: true`, so these links are served a **308 redirect** before the page loads.\n\n';
+            comment += `### Found ${total} link(s) in files changed by this PR\n\n`;
+            comment += 'Run `pnpm lint:trailing-slash:fix` to fix these automatically.\n\n';
+            comment += '| File | Line | Current Link | Should Be |\n';
+            comment += '|------|------|--------------|-----------|\n';
+
+            // Cap the table so a large PR cannot exceed GitHub's comment size limit.
+            const MAX_ROWS = 100;
+            let rows = 0;
+            for (const [file, fileIssues] of Object.entries(byFile)) {
+              for (const issue of fileIssues) {
+                if (rows >= MAX_ROWS) break;
+                comment += `| \`${file}\` | ${issue.line} | \`${issue.linkPath}\` | \`${issue.suggested}\` |\n`;
+                rows++;
+              }
+              if (rows >= MAX_ROWS) break;
+            }
+            if (total > rows) {
+              comment += `\n_…and ${total - rows} more. Run the fixer to see them all._\n`;
+            }
+            comment += '\n';
+
+            comment += '---\n';
+            comment += '*Each redirect hop loses ~15% of SEO link equity and adds latency for users.*\n';
+
+            // Check for existing comments from this action (paginate to handle PRs with 30+ comments)
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Internal Links Missing Trailing Slashes')
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment,
+              });
+            }
+
+      - name: Report failure if missing trailing slashes found
+        if: steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true'
+        run: |
+          echo "::warning::Internal links missing trailing slashes. See PR comment for details."
+          exit 1
+
+      # Catch-all for every outcome that is neither "clean" nor "issues found",
+      # so the job can never go green having failed to lint. That includes
+      # exit 2 (handed paths but matched none), and exit 1 *without* JSON,
+      # which is what an uncaught exception in the script looks like -- a
+      # crash and a clean run are otherwise indistinguishable here.
+      #
+      # Guarded on the lint step having actually run: when there are no changed
+      # content files the step is skipped and its outputs are empty, which must
+      # not be read as a failure.
+      - name: Report failure if the linter could not run
+        if: >-
+          steps.changed.outputs.count != '0' &&
+          steps.lint.outputs.exit_code != '0' &&
+          !(steps.lint.outputs.exit_code == '1' && steps.lint.outputs.has_results == 'true')
+        run: |
+          echo "::error::Trailing slash linter did not complete (exit code '${{ steps.lint.outputs.exit_code }}', results parsed: '${{ steps.lint.outputs.has_results }}'). See the log above."
+          exit 1
+
+      - name: Success
+        if: steps.lint.outputs.exit_code == '0'
+        run: |
+          echo "All internal links use trailing slashes."
