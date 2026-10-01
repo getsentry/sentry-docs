@@ -1758,6 +1758,34 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cordova/',
   },
   {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/captureconsole/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/console/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/extraerrordata/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/httpclient/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/modulemetadata/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/reportingobserver/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/rewriteframes/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
     from: '/platforms/javascript/guides/cordova/configuration/integrations/featureflags/',
     to: '/platforms/javascript/guides/cordova/configuration/integrations/',
   },
@@ -1788,6 +1816,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/cordova/sourcemaps/uploading/hosting-publicly/',
     to: '/platforms/javascript/guides/cordova/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/instrumentation/requests-module/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/',
   },
   {
     from: '/platforms/javascript/guides/cordova/tracing/span-metrics/',

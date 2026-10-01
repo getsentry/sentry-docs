@@ -36,7 +36,34 @@ For more granular control, you provide a `tracesSampler` function. This approach
 - Make sampling decisions based on transaction data
 - Control the inheritance of sampling decisions in distributed traces
 
-<PlatformContent includePath="/tracing/traces-sampler" />
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.browserTracingIntegration()],
+  tracesSampler: (samplingContext) => {
+    // Access transaction details from the sampling context
+    const { transactionContext, parentSampled } = samplingContext;
+
+    // Skip health checks entirely
+    if (transactionContext.name.includes("healthcheck")) {
+      return 0;
+    }
+
+    // Capture all auth-related transactions
+    if (transactionContext.name.includes("auth")) {
+      return 1;
+    }
+
+    // Sample only 1% of comment-related transactions
+    if (transactionContext.name.includes("comment")) {
+      return 0.01;
+    }
+
+    // For everything else, inherit the parent sampling decision or use 0.5
+    return parentSampled !== undefined ? parentSampled : 0.5;
+  },
+});
+```
 
 ### The Sampling Context Object
 
@@ -44,20 +71,14 @@ When the `tracesSampler` function is called, it receives a `samplingContext` obj
 
 ```typescript
 interface SamplingContext {
-  // Name of the span/transaction
-  name: string;
+  // Context of the transaction, including its initial `name` and `op`
+  transactionContext: TransactionContext;
 
-  // Initial attributes of the span/transaction
-  attributes: SpanAttributes | undefined;
-
-  // Whether the parent span was sampled (undefined if no incoming trace)
+  // Whether the parent transaction was sampled (undefined if there's no parent)
   parentSampled: boolean | undefined;
 
-  // Sample rate from incoming trace (undefined if no incoming trace)
-  parentSampleRate: number | undefined;
-
-  // Utility function to inherit parent decision or fallback
-  inheritOrSampleWith: (fallbackRate: number) => number;
+  // The current `window.location`
+  location: Location | undefined;
 }
 ```
 
@@ -67,20 +88,20 @@ interface SamplingContext {
 
 ```javascript
 tracesSampler: (samplingContext) => {
-  const { name, attributes, inheritOrSampleWith } = samplingContext;
+  const { transactionContext, parentSampled } = samplingContext;
 
   // Sample all checkout transactions
-  if (name.includes("/checkout") || attributes?.flow === "checkout") {
+  if (transactionContext.name.includes("/checkout")) {
     return 1.0;
   }
 
   // Sample 50% of login transactions
-  if (name.includes("/login") || attributes?.flow === "login") {
+  if (transactionContext.name.includes("/login")) {
     return 0.5;
   }
 
-  // Sample 10% of everything else
-  return inheritOrSampleWith(0.1);
+  // Sample 10% of everything else, unless there's a parent sampling decision
+  return parentSampled !== undefined ? parentSampled : 0.1;
 };
 ```
 
@@ -88,8 +109,6 @@ tracesSampler: (samplingContext) => {
 
 ```javascript
 tracesSampler: (samplingContext) => {
-  const { inheritOrSampleWith } = samplingContext;
-
   // Sample all transactions in development
   if (process.env.NODE_ENV === "development") {
     return 1.0;
@@ -101,33 +120,7 @@ tracesSampler: (samplingContext) => {
   }
 
   // Sample 20% in staging
-  return inheritOrSampleWith(0.2);
-};
-```
-
-3. Controlling Sampling Based on User or Transaction Properties
-
-```javascript
-tracesSampler: (samplingContext) => {
-  const { attributes, inheritOrSampleWith } = samplingContext;
-
-  // Always sample for premium users
-  if (attributes?.userTier === "premium") {
-    return 1.0;
-  }
-
-  // Sample more transactions for users experiencing errors
-  if (attributes?.hasRecentErrors === true) {
-    return 0.8;
-  }
-
-  // Sample less for high-volume, low-value paths
-  if (attributes?.path?.includes("/api/metrics")) {
-    return 0.01;
-  }
-
-  // Default sampling rate
-  return inheritOrSampleWith(0.2);
+  return 0.2;
 };
 ```
 

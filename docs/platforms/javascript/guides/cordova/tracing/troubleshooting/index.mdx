@@ -9,20 +9,18 @@ If you need help managing transactions or spans, start with this page. If you ne
 
 ## Group Transactions
 
-The SDK groups spans by service span. Integrations usually name these spans automatically. To change a service span's name before it is sent, use `beforeSendSpan` and check `is_segment`:
+Integrations usually name transactions automatically. To change a transaction's name before it's sent, use `beforeSendTransaction`:
 
 ```javascript
 Sentry.init({
-  beforeSendSpan(span) {
-    if (span.is_segment && span.attributes["http.route"] === "/users/:id") {
-      span.name = "GET /users/:id";
+  beforeSendTransaction(event) {
+    if (event.transaction.startsWith("/users/")) {
+      event.transaction = "/users/:id";
     }
-    return span;
+    return event;
   },
 });
 ```
-
-Event processors do not apply to streamed spans. In transaction mode, use `beforeSendTransaction` to change `event.transaction`.
 
 ## Control Data Truncation
 
@@ -37,20 +35,3 @@ For example, a 200+ character tag like this:
 `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
 
 <PlatformContent includePath="performance/control-data-truncation" />
-
-<PlatformSection notSupported={["javascript.cordova"]}>
-## Traces Miss Spans, High Memory Usage, or Data Loss After Crashes
-
-With `traceLifecycle: 'static'`, the SDK holds spans in memory until the root span ends. This can cause high memory usage, hit the 1,000-span limit, or lose spans if the process crashes. Use the default `traceLifecycle: 'stream'` to send spans in batches as they finish. In stream mode, pass `beforeSendSpan` directly without a `withStaticSpan` wrapper.
-
-See <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">Streamed Spans</PlatformLink> for more information.
-
-## `ignoreSpans` Rules Do Not Match Spans
-
-The SDK evaluates `ignoreSpans` when a span starts. Names and attributes added or updated later do not affect matching. Make sure your rules match values available when the span is created.
-
-If you're auto-instrumenting and don't know what the initial name of a span is when it starts, enable SDK debug logging during development by setting <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink> when initializing the SDK.
-
-Use the object form of `ignoreSpans` to match both name and operation when you need to distinguish service spans from child spans with the same name.
-
-</PlatformSection>

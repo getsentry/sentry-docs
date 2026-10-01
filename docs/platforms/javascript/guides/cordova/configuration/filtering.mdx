@@ -48,122 +48,18 @@ You can also use `denyUrls` if you want to block errors created on specific URLs
 - See <PlatformLink to="/configuration/options/#allowUrls">allowUrls</PlatformLink> details
 - See <PlatformLink to="/configuration/options/#denyUrls">denyUrls</PlatformLink> details
 
-### Using `thirdPartyErrorFilterIntegration`
-
-_Available in browser-based SDKs from version 8.10.0_
-
-The `thirdPartyErrorFilterIntegration` allows you to filter out errors originating from third parties, such as browser extensions, code-injecting browsers, or widgets from third-party services that also use Sentry.
-This integration can be very helpful in reducing noise that's not related to your own application code.
-
-<Alert>
-
-**Prerequisite**: To use the `thirdPartyErrorFilterIntegration`, ensure you are using a bundler and one of [Sentry's bundler plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins). For **Next.js**, set the [`applicationKey`](/platforms/javascript/guides/nextjs/configuration/build/#applicationKey) build option, which works for both Webpack and Turbopack builds.
-
-</Alert>
-
-This integration works by "marking" your JavaScript files with an "application key" during the build process.
-At runtime, if an error occurs, this integration checks application keys for each stack frame in the stack trace.
-This allows you to filter out errors with "unmarked" stack frames, which would indicate third-party code.
-
-To set up this integration and to mark your JavaScript files with an application key, first pass an `applicationKey` option to your Sentry bundler plugin.
-This can be an arbitrary string that identifies your application code:
-
-<PlatformContent includePath="configuration/filter-application-key" />
-
-Next, add the `thirdPartyErrorFilterIntegration` to your Sentry initialization:
-
-```javascript {3-14}
-Sentry.init({
-  integrations: [
-    Sentry.thirdPartyErrorFilterIntegration({
-      // Specify the application keys that you specified in the Sentry bundler plugin
-      filterKeys: ["your-custom-application-key"],
-
-      // Defines how to handle errors that contain third party stack frames.
-      // Possible values are:
-      // - 'drop-error-if-contains-third-party-frames'
-      // - 'drop-error-if-exclusively-contains-third-party-frames'
-      // - 'apply-tag-if-contains-third-party-frames'
-      // - 'apply-tag-if-exclusively-contains-third-party-frames'
-      behaviour: "drop-error-if-contains-third-party-frames",
-    }),
-  ],
-});
-```
-
-The `filterKeys` option takes an array of strings that should be equal to the `applicationKey` value set in the bundler plugin options.
-Unless your website hosts files from more than one of your build-processes, this array should only contain one item.
-
-The `behaviour` option defines what should happen with errors that contain stack frames from third-party code.
-There are four modes you can choose from:
-
-- `"drop-error-if-contains-third-party-frames"`: Drop error events that contain at least one third-party stack frame.
-- `"drop-error-if-exclusively-contains-third-party-frames"`: Drop error events that exclusively contain third-party stack frames.
-- `"apply-tag-if-contains-third-party-frames"`: Keep all error events, but apply a `third_party_code: true` tag in case the error contains at least one third-party stack frame.
-- `"apply-tag-if-exclusively-contains-third-party-frames"`: Keep all error events, but apply a `third_party_code: true` tag in case the error contains exclusively third-party stack frames.
-
-If you choose a mode to only apply tags, the tags can then be used in Sentry to filter your issue stream with the `third_party_code` tag in the issue search bar.
-
-<Alert>
-
-The `thirdPartyErrorFilterIntegration` will not work with the [Sentry Loader Script or CDN Bundles](/platforms/javascript/install/loader/).
-This is the case because the Sentry Loader Script and CDN Bundles are detected as "third party" by the integration. This makes it apply the chosen behavior to almost all events, since the Sentry SDK wraps many browser-native APIs.
-
-</Alert>
-
-## Filtering Spans
-
-Use `beforeSendSpan` to change span data and `ignoreSpans` to drop spans. To make sampling decisions when spans start, use <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">`tracesSampler`</PlatformLink>.
-
-### Using <PlatformIdentifier name="before-send-span" />
-
-Use the <PlatformIdentifier name="before-send-span" /> configuration option to modify each finished span before it is sent. This function is called for all spans, including service spans and their child spans.
-
-Check `span.is_segment` to modify only service spans. In transaction mode, wrap the callback with `Sentry.withStaticSpan()` to modify the transaction and its child spans using the `SpanJSON` format.
-
-To drop a service span and its child spans, use [`ignoreSpans`](#using-ignore-spans). `beforeSendSpan` cannot return `null` to drop spans.
-
-<PlatformContent includePath="configuration/before-send-span" />
-
-See <PlatformLink to="/configuration/options/#beforeSendSpan">beforeSendSpan</PlatformLink> for details.
-
-### Using <PlatformIdentifier name="ignore-spans" />
-
-You can use the <PlatformIdentifier name="ignore-spans" /> option to filter out spans that match a certain pattern by providing a list of strings or regular expressions. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead.
-
-You can also provide an object with `name`, `op`, and `attributes` properties to match on multiple conditions. At least one property must be provided.
-
-In stream mode, rules run when the span starts, so later name and attribute changes do not affect matching. In transaction mode, rules use the final name and attributes when the transaction ends. Ignoring a service span drops its child spans; ignoring a child span reparents its children to the nearest ancestor.
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  ignoreSpans: [
-    { name: "partial/match", op: "http.server" },
-    { name: /^Exact Span Name$/, op: "http.server" },
-    {
-      name: /^GET \//,
-      attributes: {
-        "http.route": "/api/status",
-      },
-    },
-  ],
-});
-```
-
-Use the operation of your service span, such as `http.server`, `pageload`, or `navigation`, to avoid matching unrelated child spans with the same name.
-
-See <PlatformLink to="/configuration/options/#ignoreSpans">ignoreSpans</PlatformLink> for details.
-
 ## Filtering Transaction Events
-
-These options apply when <PlatformLink to="/configuration/options/#traceLifecycle">`traceLifecycle: 'static'`</PlatformLink> is set. In the default stream mode, use [Filtering Spans](#filtering-spans).
 
 ### Using <PlatformIdentifier name="ignore-transactions" />
 
 Use `ignoreTransactions` to drop transactions whose names match a string or regular expression. Strings match part of the name. Use an anchored regular expression for an exact match. Matching transactions and their child spans are dropped.
 
-<PlatformContent includePath="configuration/ignore-transactions" />
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  ignoreTransactions: ["partial/match", /^Exact Transaction Name$/],
+});
+```
 
 See <PlatformLink to="/configuration/options/#ignoreTransactions">`ignoreTransactions`</PlatformLink> for details.
 
@@ -171,7 +67,18 @@ See <PlatformLink to="/configuration/options/#ignoreTransactions">`ignoreTransac
 
 Use `beforeSendTransaction` to modify or drop a completed transaction before it is sent. Return the transaction event to send it, or `null` to drop it and its child spans.
 
-<PlatformContent includePath="configuration/before-send-transaction" />
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  beforeSendTransaction(event) {
+    // Don't send transactions for unimportant routes
+    if (event.transaction === "/unimportant/route") {
+      return null;
+    }
+    return event;
+  },
+});
+```
 
 See <PlatformLink to="/configuration/options/#beforeSendTransaction">`beforeSendTransaction`</PlatformLink> for details and [Using Hints](#using-hints) for the `hint` argument.
 
