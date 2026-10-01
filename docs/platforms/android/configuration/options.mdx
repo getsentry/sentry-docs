@@ -98,9 +98,12 @@ AndroidManifest.xml key: `io.sentry.additional-context`.
 
 <SdkOption name="sendDefaultPii" type="bool" defaultValue="false">
 
-If this flag is enabled, certain personally identifiable information (PII) is added by active integrations.
+<Alert level="warning">
+  `sendDefaultPii` is deprecated and will be removed in the next major version
+  (v9). Use [`dataCollection`](#dataCollection) instead.
+</Alert>
 
-This is a legacy flag. Use [`dataCollection`](#dataCollection) for granular control over automatically collected data.
+If this flag is enabled, certain personally identifiable information (PII) is added by active integrations.
 
 For backwards compatibility, `sendDefaultPii` keeps its existing behavior when no Data Collection field is configured. As soon as you configure any `dataCollection` field, Data Collection becomes the source of truth for its categories and `sendDefaultPii` no longer controls them.
 
@@ -463,7 +466,7 @@ UI Profiling requires SDK versions `8.7.0` or higher. Lower versions can use the
 
 <SdkOption name="enableLegacyProfiling" type="bool" defaultValue="true" availableSince="8.51.0">
 
-On devices running Android 15 (API level 35) or higher, UI Profiling always uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, this option controls whether the SDK falls back to the <PlatformLink to="/profiling/legacy">legacy `tracer` backend</PlatformLink>. When `true` (the default), the legacy profiler runs on devices below API level 35. Set it to `false` to disable profiling on those devices entirely.
+On devices running Android 15 (API level 35) or higher, UI Profiling always uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, this option controls whether the SDK falls back to the <PlatformLink to="/profiling/legacy/">legacy `tracer` backend</PlatformLink>. When `true` (the default), the legacy profiler runs on devices below API level 35. Set it to `false` to disable profiling on those devices entirely.
 
 Setting this option to `false` also disables <PlatformLink to="/configuration/options/#transaction-based-profiling-options">transaction-based profiling</PlatformLink> (`profilesSampleRate`/`profilesSampler`) on all devices, since transaction-based profiling always relies on the legacy profiler and is not supported by the ProfilingManager (Perfetto) backend.
 
@@ -488,7 +491,7 @@ Whether the UI profiling lifecycle is controlled manually or based on the trace 
 
 <SdkOption name="startProfilerOnAppStart" type="bool" defaultValue="false" availableSince="8.7.0">
 
-A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profileSessionSampleRate" /> must be defined. App start profiling is only supported by the <PlatformLink to="/profiling/legacy">legacy profiler</PlatformLink>, which runs on devices below Android 15 (API level 35). It has no effect with the ProfilingManager (Perfetto) backend used on API level 35 and higher.
+A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profileSessionSampleRate" /> must be defined. App start profiling is only supported by the <PlatformLink to="/profiling/legacy/">legacy profiler</PlatformLink>, which runs on devices below Android 15 (API level 35). It has no effect with the ProfilingManager (Perfetto) backend used on API level 35 and higher.
 
 - If profileLifecycle is set to `manual`: profiling is started automatically on startup and stopProfiler must be called manually whenever the app startup is deemed to be completed
 - If profileLifecycle is set to `trace`: profiling is started automatically on startup, and will automatically be stopped when the root span that is associated with app startup ends
@@ -528,6 +531,30 @@ A number between `0` and `1`, controlling the percentage chance a profile will b
 <SdkOption name="enableAnrFingerprinting" type="bool" defaultValue="true" availableSince="8.35.0">
 
 When enabled, the SDK assigns a static fingerprint to ANR events whose stack traces contain only system frames. This groups noisy system-frame-only ANRs into a single issue, reducing noise. Foreground and background system-frame-only ANRs are grouped separately.
+
+</SdkOption>
+
+## Memory Limiter Options
+
+<SdkOption name="memoryLimiterEnabled" type="bool" defaultValue="false" availableSince="8.57.0">
+
+Enables experimental detection of Android Memory Limiter process deaths through retained [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) records.
+
+When enabled, the SDK checks for Memory Limiter terminations on the next app start and reports the latest match as a fatal event. If release health is enabled, the previous session is also marked as abnormal.
+
+This feature is available only on supported devices running on Android 17 (API level 37) and higher. See <PlatformLink to="/configuration/memory-limiter/">Memory Limiter</PlatformLink> for setup details and limitations.
+
+AndroidManifest.xml key: `io.sentry.memory-limiter.enable`.
+
+</SdkOption>
+
+<SdkOption name="reportHistoricalMemoryLimiterExits" type="bool" defaultValue="false" availableSince="8.57.0">
+
+Reports older retained Memory Limiter process deaths in addition to the latest one.
+
+Historical Memory Limiter terminations are not enriched with persisted context from the previous process. This option only takes effect when <PlatformIdentifier name="memoryLimiterEnabled" /> is enabled.
+
+AndroidManifest.xml key: `io.sentry.memory-limiter.report-historical`.
 
 </SdkOption>
 

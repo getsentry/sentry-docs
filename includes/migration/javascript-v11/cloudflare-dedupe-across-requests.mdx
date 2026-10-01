@@ -1,0 +1,25 @@
+---
+id: cloudflare-dedupe-across-requests
+title: "Dedupe compares errors across requests"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: [cloudflare]
+platformCategory: serverless
+order: 130
+---
+
+In v10, the SDK created a new client for every request, so the <PlatformLink to="/configuration/integrations/dedupe/">Dedupe</PlatformLink> integration never compared errors from different requests. The SDK now reuses one client for all requests and Durable Object calls in an isolate, so Dedupe works like in the other SDKs: it drops an error that has the same type, message, stack trace, and fingerprint as the error captured directly before it in that isolate, even when a different request threw it. An error that many requests throw in a row can have a lower event count in Sentry than before.
+
+To send every occurrence, remove the integration:
+
+```js {diff}
+  export default Sentry.withSentry(
+    (env) => ({
+      dsn: env.SENTRY_DSN,
++     integrations: (integrations) =>
++       integrations.filter((integration) => integration.name !== "Dedupe"),
+    }),
+    handler,
+  );
+```

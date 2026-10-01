@@ -67,6 +67,7 @@ export async function MigrationGuide({
         category: data.category as string,
         severity: data.severity,
         frameworks: data.frameworks as string[] | 'all',
+        excludeFrameworks: (data.excludeFrameworks ?? []) as string[],
         platformCategory: data.platformCategory as PlatformCategory | 'all',
         order: data.order as number,
         mdxSource: doc.mdxSource,
@@ -74,6 +75,9 @@ export async function MigrationGuide({
     })
     .filter(item => {
       if (item.frameworks !== 'all' && !item.frameworks.includes(framework ?? '')) {
+        return false;
+      }
+      if (framework && item.excludeFrameworks.includes(framework)) {
         return false;
       }
       // A guide with no declared categories (or a platform-level page) should
@@ -86,7 +90,12 @@ export async function MigrationGuide({
     .sort(compareItems);
 
   const items: MigrationItem[] = rendered.map(
-    ({mdxSource: _mdxSource, frameworks: _frameworks, ...item}) => item
+    ({
+      mdxSource: _mdxSource,
+      frameworks: _frameworks,
+      excludeFrameworks: _excludeFrameworks,
+      ...item
+    }) => item
   );
 
   const storageKey = `${storagePrefix}:${framework ?? platform}`;

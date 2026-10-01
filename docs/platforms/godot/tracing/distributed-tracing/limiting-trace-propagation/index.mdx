@@ -4,7 +4,7 @@ description: "Learn how to restrict outgoing trace headers to trusted backend se
 sidebar_order: 100
 ---
 
-By default, the SDK returns tracing headers for any destination URL. To restrict propagation to specific services, configure <PlatformLink to="/configuration/options/#trace_propagation_targets">`trace_propagation_targets`</PlatformLink>:
+By default, `SentryHTTPRequest` adds tracing headers and `SentrySpan.get_trace_headers(url)` returns them for any destination URL. To restrict propagation to specific services, configure <PlatformLink to="/configuration/options/#trace_propagation_targets">`trace_propagation_targets`</PlatformLink>:
 
 ```GDScript {filename:ProjectMainLoop.gd}
 class_name ProjectMainLoop
@@ -20,6 +20,6 @@ func _initialize() -> void:
 
 This matches URLs such as `https://api.example.com/scores`. See <PlatformLink to="/configuration/options/#programmatic-configuration">Programmatic Configuration</PlatformLink> for the manual initialization setup.
 
-Pass the destination URL to `get_trace_headers(url)` to apply these targets. Unmatched URLs receive no tracing headers; an empty target list blocks all URLs. Calling `get_trace_headers()` without a URL bypasses filtering. You still need to <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">attach the returned headers to your request</PlatformLink>.
+`SentryHTTPRequest` applies these targets to the initial request URL automatically. For <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">custom trace propagation</PlatformLink>, pass the destination URL to `SentrySpan.get_trace_headers(url)` to apply the same filter. When a URL doesn't match, or when the target list is empty, `SentryHTTPRequest` doesn't add tracing headers and `SentrySpan.get_trace_headers(url)` returns an empty array. Calling `get_trace_headers()` without a URL bypasses filtering.
 
 The <PlatformLink to="/configuration/options/#trace_propagation_targets">option reference</PlatformLink> explains string and regular expression matching and configuration through Project Settings.

@@ -295,6 +295,38 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/processing/batch-processor/',
   },
   {
+    source: '/sdk/telemetry/spans/filtering/',
+    destination: '/sdk/telemetry/spans/#spec-filtering',
+  },
+  {
+    source: '/sdk/telemetry/spans/implementation/',
+    destination: '/sdk/telemetry/spans/#implementation-guidelines',
+  },
+  {
+    source: '/sdk/telemetry/spans/sampling/',
+    destination: '/sdk/telemetry/spans/#spec-sampling',
+  },
+  {
+    source: '/sdk/telemetry/spans/scrubbing-data/',
+    destination: '/sdk/telemetry/spans/#spec-data-scrubbing',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-api/',
+    destination: '/sdk/telemetry/spans/#public-api',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-buffer/',
+    destination: '/sdk/telemetry/spans/#spec-span-buffer',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-protocol/',
+    destination: '/sdk/telemetry/spans/#wire-format',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-trace-propagation/',
+    destination: '/sdk/telemetry/spans/#spec-trace-propagation',
+  },
+  {
     source: '/sdk/telemetry/telemetry-buffer/',
     destination: '/sdk/foundations/processing/telemetry-processor/',
   },
@@ -1290,6 +1322,10 @@ const userDocsRedirects = [
     source: '/organization/integrations/modem/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1499,6 +1535,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/motir/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -2455,6 +2495,85 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/cloudflare/features/workers-ai/:path*',
     destination:
       '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/:path*',
+  },
+  // Flue moved from Agent Tracing to its own guide when the SDK-based setup
+  // replaced the `flue add tooling sentry` blueprint.
+  // Map older names directly to the guide to avoid redirect chains. The
+  // Cloudflare page is listed first so its readers keep landing on it.
+  {
+    source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  // The pre-rename names (ai-agent-monitoring, ai-agent-tracing) need their own
+  // rules: the generic rename redirects rewrite them onto agent-tracing/flue
+  // paths, which the rules above redirect again — a 2-hop chain.
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
   },
   // Mastra lifted from the Agent Tracing integration page to a standalone guide.
   // Map older names directly to the guide to avoid redirect chains.

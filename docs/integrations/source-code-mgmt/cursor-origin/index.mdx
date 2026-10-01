@@ -1,0 +1,92 @@
+---
+title: Cursor Origin
+sidebar_order: 1
+description: >-
+  Connect Cursor Origin to Sentry to link stack traces to source code, import
+  CODEOWNERS, track release commits, and resolve issues from commits and pull requests.
+---
+
+The Cursor Origin integration connects your repositories to Sentry to support [stack trace linking](#stack-trace-linking), [email-based code ownership](#code-owners), [release commit tracking](#commit-tracking), and [resolving issues via commit or pull request](#resolve-via-commit-or-pull-request).
+
+This is a source code integration. To launch Cursor Cloud Agents from Sentry, see the separate [Cursor coding agent integration](/integrations/coding-agents/cursor/).
+
+## Install
+
+We recommend installing the Sentry Origin app from Sentry's integration settings. You can also start the installation from Origin, but you need to be a **Manager or Owner** of your Sentry organization to fully configure the integration.
+
+1. In Sentry, go to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) and select **Cursor Origin**.
+2. Start a new installation and follow the prompts in Origin to authorize the Sentry app for your account and repositories.
+3. Return to Sentry and open the integration's configuration. Sentry syncs the repositories available to the installation. If they don't appear immediately, refresh the page.
+4. Configure the features below for your projects.
+
+Connecting an Origin account to multiple Sentry organizations is supported only on **Business or Enterprise** plans.
+
+## Configure Cursor Origin Integration
+
+After installing, configure code mappings to link stack traces and import CODEOWNERS. Set up release commit tracking to associate code changes with releases and resolve issues from commits or pull requests.
+
+### Stack Trace Linking
+
+Stack trace linking takes you from a stack frame in Sentry to the corresponding file and line in Origin. With commit tracking configured, Sentry can link to the version associated with the event's release. Otherwise, it uses the branch configured in your code mapping.
+
+1. Go to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) and open your **Cursor Origin** installation's configuration.
+2. Select the **Code Mappings** tab, then click **Add Mapping**.
+3. Fill out the mapping:
+   - **Project**: The Sentry project whose stack traces you want to link.
+   - **Repo**: The Origin repository containing the project's source code.
+   - **Branch**: The fallback branch to use when release commit information isn't available.
+   - **Stack Trace Root**: The path prefix shown in your stack traces.
+   - **Source Code Root**: The corresponding path prefix in your repository.
+4. Click **Save Changes**. Add a mapping for each project and repository combination you need.
+
+For example, if a stack frame shows `src/main.py` but the repository path is `backend/src/main.py`, set **Stack Trace Root** to `src/` and **Source Code Root** to `backend/src/`.
+
+For platforms that use package names instead of file paths, additional configuration may be required. For Java, see [setting up code mappings](/platforms/java/source-context/#setting-up-code-mappings).
+
+### Code Owners
+
+<Include name="feature-available-for-plan-business.mdx" />
+
+Import your Origin CODEOWNERS file to automatically assign Sentry issues based on file paths in the event's stack trace. Use email addresses that belong to users in your Sentry organization:
+
+```text
+# Assign backend errors to a Sentry user
+/backend/ backend-owner@example.com
+
+# Assign frontend errors to a different Sentry user
+/frontend/ frontend-owner@example.com
+```
+
+1. Set up [code mappings](#stack-trace-linking) for your project.
+2. Add a CODEOWNERS file to your repository at `CODEOWNERS`, `.github/CODEOWNERS`, or `docs/CODEOWNERS`.
+3. Go to your project's [**Ownership Rules**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/ownership/) settings and import the CODEOWNERS file, selecting the code mapping to apply. During import, Sentry uses the first file it finds in the order listed above.
+
+Email addresses match Sentry users directly, so email-based rules don't require external user mappings. Make sure the users have access to the project.
+
+For supported syntax, rule precedence, and auto-assignment settings, see [Code Owners](/product/issues/ownership-rules/#code-owners).
+
+### Commit Tracking
+
+Commit tracking associates commits and their changed files with Sentry releases. This lets you see which changes went into a release.
+
+After connecting your repository, [configure releases](/product/releases/setup/) and [associate commits with each release](/product/releases/associate-commits/). Use the same release identifier in your SDK configuration and release creation process so Sentry can connect events to their code changes.
+
+### Resolve via Commit or Pull Request
+
+Once you're sending commit data, include `fixes <SENTRY-SHORT-ID>` in a commit message or pull request description to link it to a Sentry issue. For example:
+
+```text
+Prevent empty queries on users
+
+Fixes MYAPP-317
+```
+
+Sentry adds a reference to the commit or pull request on the matching issue. When the associated commit is part of a release, Sentry marks the issue as resolved. Make sure you [associate commits with your releases](/product/releases/associate-commits/); a `fixes` reference alone doesn't tell Sentry when the change ships.
+
+## Troubleshooting
+
+If a repository is missing, check that the Origin installation has access to it, then refresh the integration's configuration in Sentry.
+
+If a stack trace link points to the wrong file, compare the frame's file path with the path in Origin and check your code mapping's **Stack Trace Root**, **Source Code Root**, and **Branch**.
+
+If CODEOWNERS rules don't assign issues, confirm that the email addresses belong to users in your Sentry organization, that those users have project access, and that the selected code mapping matches the stack trace paths.
