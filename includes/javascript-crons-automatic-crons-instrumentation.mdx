@@ -1,4 +1,4 @@
-If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](https://www.npmjs.com/package/node-cron) or [`node-schedule`](https://www.npmjs.com/package/node-schedule) libraries to run your periodic tasks, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs.
+Wrap your scheduler before registering jobs. The wrappers send check-ins for each execution and create or update monitors using the job's schedule. They aren't enabled by `Sentry.init()` alone.
 
 ### Cron
 
@@ -11,17 +11,22 @@ import { CronJob } from "cron";
 
 const CronJobWithCheckIn = Sentry.cron.instrumentCron(CronJob, "my-cron-job");
 
-// use the constructor
 const job = new CronJobWithCheckIn("* * * * *", () => {
   console.log("You will see this message every minute");
 });
 
-// or from method
+job.start();
+```
+
+Alternatively, use `CronJob.from`:
+
+```javascript
 const job = CronJobWithCheckIn.from({
   cronTime: "* * * * *",
   onTick: () => {
     console.log("You will see this message every minute");
   },
+  start: true,
 });
 ```
 
@@ -29,7 +34,7 @@ const job = CronJobWithCheckIn.from({
 
 Requires SDK version `7.92.0` or higher.
 
-Use `Sentry.cron.instrumentNodeCron` to instrument the `cron` export from the [`node-cron`](https://www.npmjs.com/package/node-cron) library. This returns an object with the same API as the original `cron` export, but with the `schedule` method instrumented. You can pass the name of the cron monitor and an optional time zone as part of the third options argument to the function.
+Use `Sentry.cron.instrumentNodeCron` to wrap the [`node-cron`](https://www.npmjs.com/package/node-cron) library's `schedule` method. A monitor `name` is required in the third argument to `schedule`; `timezone` is optional. Other methods, such as `createTask`, aren't instrumented.
 
 ```JavaScript
 import cron from "node-cron";
@@ -49,7 +54,7 @@ cronWithCheckIn.schedule(
 
 Requires SDK version `7.93.0` or higher.
 
-Use `Sentry.cron.instrumentNodeSchedule` to instrument the `schedule` export from the [`node-schedule`](https://www.npmjs.com/package/node-schedule) library. This returns an object with the same API as the original `schedule` export, but with the `scheduleJob` method instrumented. You can pass the name of the cron job as the first argument to the function. Currently this only supports cronstring as the second argument to `scheduleJob`.
+Use `Sentry.cron.instrumentNodeSchedule` to wrap the [`node-schedule`](https://www.npmjs.com/package/node-schedule) library's `scheduleJob` method. Pass a job name as the first argument and a crontab string as the second. Date and recurrence-rule schedules aren't supported by this wrapper; use `withMonitor` or `captureCheckIn` instead.
 
 ```JavaScript
 import * as schedule from "node-schedule";

@@ -1,18 +1,15 @@
-Use the `Sentry.withMonitor()` API to monitor a callback and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
+Use `Sentry.withMonitor()` when your scheduler doesn't have automatic instrumentation. It sends an `in_progress` check-in before the callback runs, then an `ok` check-in when it returns or resolves, or an `error` check-in if it throws or rejects. Errors are rethrown to the caller.
 
-`Sentry.withMonitor()` requires SDK version `7.76.0`.
+Requires SDK version `7.76.0` or higher. Wrap each execution of the job, not the code that registers it with your scheduler. Return or await asynchronous work so Sentry doesn't report success before the job finishes:
 
 ```javascript
-Sentry.withMonitor("<monitor-slug>", () => {
-  // Execute your scheduled task here...
+await Sentry.withMonitor("<monitor-slug>", async () => {
+  // Execute and await your scheduled task here.
 });
 ```
 
-<Alert level="info">
+Create the monitor in Sentry first, or pass a [monitor configuration](#upserting-cron-monitors) as the third argument to create or update it in code.
 
-`Sentry.withMonitor()` does not create new a trace. Events and errors that occur within the monitored callback will be associated with the current trace context.
+By default, `withMonitor` preserves the current trace context. An `error` check-in records the job's failure, but doesn't itself capture an exception event. Use `Sentry.captureException` if the error isn't already captured by your SDK's error handling.
 
-</Alert>
-
-
-If you are using an SDK version prior to `7.76.0`, you can use the `Sentry.captureCheckIn()` API documented below.
+If you need control over individual check-ins, or use an SDK version before `7.76.0`, use `Sentry.captureCheckIn()` below.
