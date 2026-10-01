@@ -64,7 +64,9 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 <SdkOption name="sampleRate" type="float" defaultValue="1.0">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly. In v10, sampling happens after event processors and `beforeSend`, so these callbacks also run for events that are later sampled out.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+
+Sampling happens after event processors and `beforeSend`, so these callbacks also run for events that are later sampled out.
 
 </SdkOption>
 
@@ -227,7 +229,7 @@ Only available in <PlatformLink to="/tracing/streamed-spans/">stream mode</Platf
 
 </Alert>
 
-In SDK v10, this function receives a `SentrySpanV2` and a `Hint`. Modify the span in place; the callback returns `void` or `Future<void>`. On SDK v9, it takes only the span parameter. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
+This function receives a `SentrySpanV2` and a `Hint`. Modify the span in place; the callback returns `void` or `Future<void>`. On SDK v9, it takes only the span parameter. Use it to scrub or modify span attributes before the span is sent to Sentry. Unlike other `beforeSend` callbacks, it can't drop spans — use [`ignoreSpans`](#ignoreSpans) for that.
 
 <Expandable title="Examples">
 
@@ -278,12 +280,12 @@ In stream mode, the sampling context is different: read the span's `name` and `a
 
 </SdkOption>
 
-<SdkOption name="traceLifecycle" type="enum" defaultValue="stream" availableSince="9.23.0">
+<SdkOption name="traceLifecycle" type="enum" defaultValue="stream" defaultNote="since version 10.0.0" availableSince="9.23.0">
 
 Controls how spans are collected and sent to Sentry.
 
 - In transaction mode (`SentryTraceLifecycle.static`), spans are buffered and sent together as a transaction.
-- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`SentryTraceLifecycle.stream`, the default in v10), spans are sent to Sentry in batches as they finish.
+- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`SentryTraceLifecycle.stream`, the default), spans are sent to Sentry in batches as they finish.
 
 </SdkOption>
 
@@ -344,7 +346,7 @@ App start is automatically reported as a standalone `app.start` root on Android 
 
 <SdkOption name="captureNativeFailedRequests" type="bool" defaultValue="false">
 
-Set this option to `true` to capture failed HTTP requests made by the native iOS and macOS SDK's network instrumentation. It is independent of `captureFailedRequests`, which controls Dart-side capture through `SentryHttpClient` and `sentry_dio`. The option is non-nullable in v10 and no longer falls back to `captureFailedRequests`.
+Set this option to `true` to capture failed HTTP requests made by the native iOS and macOS SDK's network instrumentation. It is independent of `captureFailedRequests`, which controls Dart-side capture through `SentryHttpClient` and `sentry_dio`.
 
 </SdkOption>
 
