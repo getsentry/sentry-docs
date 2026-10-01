@@ -50,19 +50,7 @@ Standalone app start tracing is the default in v10. The old `enableStandaloneApp
 
 App start has its own sampling decision. To sample it independently, inspect the operation in `tracesSampler`: transaction mode exposes it on the transaction context, while stream mode carries it in the span's `sentry.op` attribute.
 
-```dart {tabTitle:Transaction Mode} {mdExpandTabs}
-await SentryFlutter.init((options) {
-  options.traceLifecycle = SentryTraceLifecycle.static;
-  options.tracesSampler = (samplingContext) {
-    if (samplingContext.transactionContext.operation == 'app.start') {
-      return 1.0;
-    }
-    return 0.1;
-  };
-});
-```
-
-```dart {tabTitle:Stream Mode (Default)}
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 await SentryFlutter.init((options) {
   options.tracesSampler = (samplingContext) {
     final operation = samplingContext.spanContext.attributes['sentry.op']?.value;
@@ -74,11 +62,23 @@ await SentryFlutter.init((options) {
 });
 ```
 
+```dart {tabTitle:Transaction Mode}
+await SentryFlutter.init((options) {
+  options.traceLifecycle = SentryTraceLifecycle.static;
+  options.tracesSampler = (samplingContext) {
+    if (samplingContext.transactionContext.operation == 'app.start') {
+      return 1.0;
+    }
+    return 0.1;
+  };
+});
+```
+
 ### Extending the App Start
 
 The app start ends when the first frame renders. If your app does startup work that runs past that point — loading initial data from a server or a database, for example — call `SentryFlutter.extendAppStart()` to include that work in the reported duration, then `SentryFlutter.finishExtendedAppStart()` once it's done.
 
-The only requirement is that `extendAppStart()` runs before the first frame renders, so both the `appRunner` callback of `SentryFlutter.init` and your root widget's `initState` work. Reach for `initState` when the startup work belongs to your widget tree, and `appRunner` when it doesn't. Either way, pair the two calls in a `try`/`finally` so an early return or a thrown exception can't leave the app start open.
+The only requirement is that `extendAppStart()` runs before the first frame renders, so both the `appRunner` callback of `SentryFlutter.init` and your root widget's `initState` work. Use `initState` when the startup work belongs to your widget tree, and `appRunner` when it doesn't. Either way, pair the two calls in a `try`/`finally` so an early return or a thrown exception can't leave the app start open.
 
 ```dart {tabTitle:appRunner} {mdExpandTabs}
 await SentryFlutter.init(
@@ -129,23 +129,7 @@ This adds an `Extended App Start` span with the `app.start.extended` operation, 
 
 To see which part of your startup work took the time, retrieve the extension span and attach children to it. Use the getter that matches your trace lifecycle: `getExtendedAppStartSpan()` in transaction mode, `getExtendedAppStartSpanV2()` in stream mode. The other one returns `null`.
 
-```dart {tabTitle:Transaction Mode} {mdExpandTabs}
-SentryFlutter.extendAppStart();
-
-ISentrySpan? child;
-try {
-  child = SentryFlutter.getExtendedAppStartSpan()?.startChild(
-    'http.client',
-    description: 'Fetch remote config',
-  );
-  await fetchRemoteConfig();
-} finally {
-  await child?.finish();
-  await SentryFlutter.finishExtendedAppStart();
-}
-```
-
-```dart {tabTitle:Stream Mode (Default)}
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 SentryFlutter.extendAppStart();
 
 try {
@@ -160,6 +144,22 @@ try {
     await fetchRemoteConfig();
   }
 } finally {
+  await SentryFlutter.finishExtendedAppStart();
+}
+```
+
+```dart {tabTitle:Transaction Mode}
+SentryFlutter.extendAppStart();
+
+ISentrySpan? child;
+try {
+  child = SentryFlutter.getExtendedAppStartSpan()?.startChild(
+    'http.client',
+    description: 'Fetch remote config',
+  );
+  await fetchRemoteConfig();
+} finally {
+  await child?.finish();
   await SentryFlutter.finishExtendedAppStart();
 }
 ```
