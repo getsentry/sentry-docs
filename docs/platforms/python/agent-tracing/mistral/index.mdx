@@ -12,14 +12,14 @@ Sentry AI Observability will automatically collect information about prompts, to
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
+Install Sentry Python SDK version `2.70.0` or later:
 
 ```bash {tabTitle:pip}
-pip install sentry-sdk
+pip install --upgrade "sentry-sdk>=2.70.0"
 ```
 
 ```bash {tabTitle:uv}
-uv add sentry-sdk
+uv add "sentry-sdk>=2.70.0"
 ```
 
 ## Configure
@@ -32,17 +32,17 @@ from sentry_sdk.integrations.mistral import MistralIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
     integrations=[
         MistralIntegration(),
     ],
 )
 ```
+
+<Include name="agent-tracing/python-data-collection" />
 
 ## Verify
 
@@ -57,7 +57,9 @@ from mistralai.client import Mistral
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
     integrations=[
         MistralIntegration(),
     ],
@@ -87,7 +89,7 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - The supported functions are currently `Chat.complete` and `Chat.complete_async` (sync and async). Streaming completions (`stream=True`) are not instrumented.
 
-- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call.
+- Control AI content with `data_collection["gen_ai"]`. See <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
 
 ## Supported Versions
 

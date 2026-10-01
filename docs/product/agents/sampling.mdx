@@ -12,7 +12,9 @@ keywords:
 
 Sentry uses head-based sampling, which means the sampling decision happens once at the root span. All child spans, including `gen_ai.*` operations, inherit that decision. If the root span is dropped, every nested LLM call, tool execution, and agent handoff in the trace is lost with it.
 
-Agent runs can produce many spans per execution. You either capture the full span tree or lose it entirely. A 10% sample rate means you lose visibility into 90% of agent failures.
+Capture 100% of agent runs. Agents are nondeterministic: the same input can lead to different model responses, tool calls, and failures. Sampling out runs can discard the only trace of a failure you cannot reproduce. A 10% sample rate can leave roughly 90% of agent failures without trace context.
+
+The examples below keep agent runs while sampling unrelated application traffic.
 
 ## Sample Standalone Agent Runs at 100%
 
@@ -121,7 +123,7 @@ LLM API calls cost significantly more per agent run than the trace events Sentry
 
 ## Supplement With Metrics and Logs
 
-If 100% trace sampling isn't feasible at your scale, you can supplement lower trace rates with metrics and structured logs that are emitted on every LLM call, regardless of sampling.
+Metrics and structured logs can supplement agent traces, but they do not replace the full sequence of model and tool calls needed to investigate a nondeterministic failure. Keep agent runs at 100% and use these signals for aggregate monitoring.
 
 ### Metrics
 

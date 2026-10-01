@@ -10,24 +10,18 @@ Once you've installed this SDK, you can use Sentry Agents Tracing, a Sentry dash
 
 Sentry AI Observability will automatically collect information about prompts, tools, tokens, and models. Learn more about the [Agents Dashboard](/product/agents/dashboards/).
 
-<Alert level="info" title="Latest Features">
-
-AI frameworks are moving fast, and so are our integrations. To get the most out of our Agents Tracing dashboard, use Python SDK version 2.41.0 or later.
-
-</Alert>
-
 <Include name="python-stream-mode-general-callout.mdx" />
 
 ## Install
 
-Install `sentry-sdk` from PyPI:
+Install Sentry Python SDK version `2.70.0` or later:
 
 ```bash {tabTitle:pip}
-pip install sentry-sdk
+pip install --upgrade "sentry-sdk>=2.70.0"
 ```
 
 ```bash {tabTitle:uv}
-uv add sentry-sdk
+uv add "sentry-sdk>=2.70.0"
 ```
 
 ## Configure
@@ -36,17 +30,17 @@ If you have the `openai` package in your dependencies, the OpenAI integration wi
 
 An additional dependency, `tiktoken`, is required if you want to calculate token usage for streaming chat responses.
 
-<PlatformContent includePath="getting-started-config" />
+<Include name="agent-tracing/python-configuration" />
+
+<Include name="agent-tracing/python-data-collection" />
 
 ## Verify
 
-Verify that the integration works by making a chat request to OpenAI.
+After initializing Sentry as shown above, make a chat request to OpenAI.
 
 ```python
 import sentry_sdk
 from openai import OpenAI
-
-sentry_sdk.init(...)  # same as above
 
 client = OpenAI(api_key="(your OpenAI key)")
 
@@ -63,6 +57,8 @@ def my_llm_stuff():
           .choices[0]
           .message.content
       )
+
+my_llm_stuff()
 ```
 
 After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
@@ -79,37 +75,15 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - The supported modules are currently `responses.create`, `chat.completions.create`, and `embeddings.create`.
 
-- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
-
 ## Options
 
-By adding `OpenAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `OpenAIIntegration` to change its behavior:
-
-```python
-import sentry_sdk
-from sentry_sdk.integrations.openai import OpenAIIntegration
-
-sentry_sdk.init(
-    # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-    integrations=[
-        OpenAIIntegration(
-            include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
-            tiktoken_encoding_name="cl100k_base",
-        ),
-    ],
-)
-```
+Use <PlatformLink to="/agent-tracing/#privacy-controls">`data_collection`</PlatformLink> to control AI inputs and outputs.
 
 You can pass the following keyword arguments to `OpenAIIntegration()`:
 
 - `include_prompts`:
 
-  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
-
-  The default is `True`.
+  Legacy option, used only when `data_collection` is not set. Defaults to `True`, but content is recorded only when `send_default_pii=True`. When `data_collection` is set, its `gen_ai.inputs` and `gen_ai.outputs` values take precedence.
 
 - `tiktoken_encoding_name`:
 
@@ -122,4 +96,4 @@ You can pass the following keyword arguments to `OpenAIIntegration()`:
 - OpenAI: 1.0+
 - tiktoken: 0.3.0+
 - Python: 3.9+
-- Sentry Python SDK 2.41.0+
+- Sentry Python SDK: 2.70.0+ for the `data_collection` configuration shown here

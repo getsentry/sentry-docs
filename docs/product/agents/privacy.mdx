@@ -14,16 +14,21 @@ keywords:
 og_image: /og-images/product-agents-privacy.png
 ---
 
-## SDK PII Settings
+## SDK Data Collection Settings
 
-By default, Sentry agent integrations respect your [SDK's PII settings](/platforms/javascript/guides/nextjs/data-management/data-collected/):
+AI inputs and outputs can contain sensitive information. You can omit this content while still collecting model names, token counts, and timing metadata. The controls depend on your SDK:
 
-- `sendDefaultPii: false` - Only metadata like model names, token counts, tool names, and execution times are collected
-- `sendDefaultPii: true` - Full inputs, outputs, prompts, and responses from AI models and tools are captured.
+- **Python 2.70.0+:** Set `data_collection={"gen_ai": {"inputs": False, "outputs": False}}` to omit AI content. Providing `data_collection` opts into broader defaults for other categories and overrides `send_default_pii` and per-integration `include_prompts`. See [Python Privacy Controls](/platforms/python/agent-tracing/#privacy-controls).
+- **JavaScript v11+:** Inputs and outputs are collected by default. Set `dataCollection: { genAI: { inputs: false, outputs: false } }` to omit them. Explicit integration `recordInputs` and `recordOutputs` options take precedence; Vercel AI also supports per-call controls. See [JavaScript Privacy Controls](/platforms/javascript/guides/node/agent-tracing/#privacy-controls).
+- **Laravel:** AI content is off by default. `SENTRY_SEND_DEFAULT_PII=true` enables it along with other PII. See [Laravel setup](/platforms/php/guides/laravel/agent-tracing/#configure).
+- **.NET:** `Sentry.Extensions.AI` records model inputs and outputs by default. Use `Experimental.RecordInputs` and `Experimental.RecordOutputs` on `AddSentry()` to control them. See [.NET options](/platforms/dotnet/tracing/instrumentation/ai-agents-module/#configuration-options).
+- **React Native:** Use `recordInputs` and `recordOutputs` on the manual AI wrapper or callback handler. `dataCollection` is not supported by the React Native SDK. See [React Native integrations](/platforms/react-native/integrations/).
 
-You can override this per integration with `recordInputs` and `recordOutputs`. For more details see [Options](/platforms/javascript/guides/nextjs/configuration/integrations/vercelai/#options).
+In JavaScript v10 versions that support `dataCollection`, setting it opts into the new collection defaults; omitting it preserves `sendDefaultPii` behavior. JavaScript v11 removed `sendDefaultPii`. For Python without `data_collection`, collection still depends on `send_default_pii` and integration overrides.
 
-## Server side PII Scrubbing
+These options control automatically collected content. They do not filter arbitrary attributes you attach manually, including in [Ruby's manual instrumentation](/platforms/ruby/tracing/instrumentation/custom-instrumentation/ai-agents-module/). Omit or sanitize that content before attaching it.
+
+## Server-Side PII Scrubbing
 
 <Alert level="info">
 

@@ -5,7 +5,7 @@
 By default, the SDK sends the inputs and outputs of your LLM and tool calls, such as prompts, responses, and tool arguments.
 This will give you rich debugging context. Review the data your agent handles before you deploy to production.
 
-The SDK always filters sensitive values whose keys match a built-in denylist, such as `auth` or `password`, and sends `[Filtered]` instead.
+AI message and tool content is not protected by default server-side scrubbing. See [Agent Data Privacy](/product/agents/privacy/) to configure scrubbing rules.
 
 To send less data, turn off the categories you don't need in the `dataCollection` option.
 For the full list of categories and their defaults, <PlatformLink to="/configuration/options/#dataCollection">see the `dataCollection` options</PlatformLink>.
@@ -14,9 +14,10 @@ For the full list of categories and their defaults, <PlatformLink to="/configura
 
 <SplitSectionCode>
 
-```javascript {filename:src/mastra/public/instrument.mjs} {3-5}
+```javascript {filename:src/mastra/public/instrument.mjs} {4-6}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
   dataCollection: {
     genAI: { inputs: false, outputs: false },
   },
