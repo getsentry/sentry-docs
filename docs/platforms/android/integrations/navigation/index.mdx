@@ -12,10 +12,10 @@ The `sentry-android-navigation` and `sentry-android-navigation3` libraries provi
 
 This page covers both:
 
-- **Navigation 2** (`androidx.navigation.NavController`) via `SentryNavigationListener`
-- **Navigation 3** (`androidx.navigation3.runtime`) via `SentryNavEffect`
+- **Navigation 2** (`androidx.navigation`) via `SentryNavigationListener`
+- **Navigation 3** (`androidx.navigation3`) via `SentryNavEffect`
 
-If you're still using `NavController`, follow the Navigation 2 setup below. If you've moved to Jetpack Navigation 3, skip to [Navigation 3](#navigation-3).
+If you're still using `NavController`, follow the Navigation 2 setup below. If you've moved to `NavDisplay`, skip to [Navigation 3](#navigation-3).
 
 ## Navigation 2
 
@@ -29,9 +29,14 @@ If you're using Navigation 2 with Jetpack Compose, see <PlatformLink to="/config
 
 Sentry captures data by adding a `NavController.OnDestinationChangedListener`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-android-navigation` dependency using Gradle:
 
-```groovy
+```groovy {filename:build.gradle}
 implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
 implementation 'io.sentry:sentry-android-navigation:{{@inject packages.version('sentry.java.android.navigation', '6.2.0') }}'
+```
+
+```kotlin {filename:build.gradle.kts}
+implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}")
+implementation("io.sentry:sentry-android-navigation:{{@inject packages.version('sentry.java.android.navigation', '6.2.0') }}")
 ```
 
 ### Configure
@@ -167,7 +172,7 @@ SentryAndroid.init(this) { options ->
 
 <Alert>
 
-Navigation 3 support is available in `sentry-android-navigation3` `8.59.0` and later.
+Navigation 3 support is available in `sentry-android-navigation3` `8.60.0` and later.
 
 </Alert>
 
@@ -180,7 +185,7 @@ Android's [Navigation 3 library](https://developer.android.com/guide/navigation/
 - update the currently tracked screen name
 - record the lastest 10 entries from the back stack as event context
 
-See [Customize Nav3 Options](#customize-nav3-options) for info about how to modify those defaults.
+See [Customize Nav3 Options](#customize-nav3-options) to learn how to modify those defaults.
 
 ### Install
 
@@ -188,15 +193,15 @@ Install the Android SDK and add Sentry's Navigation 3 library:
 
 ```groovy {filename:build.gradle}
 dependencies {
-  implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '8.59.0') }}'
-  implementation 'io.sentry:sentry-android-navigation3:{{@inject packages.version('sentry.java.android.navigation', '8.59.0') }}'
+  implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '8.60.0') }}'
+  implementation 'io.sentry:sentry-android-navigation3:{{@inject packages.version('sentry.java.android.navigation', '8.60.0') }}'
 }
 ```
 
 ```kotlin {filename:build.gradle.kts}
 dependencies {
-  implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '8.59.0') }}")
-  implementation("io.sentry:sentry-android-navigation3:{{@inject packages.version('sentry.java.android.navigation', '8.59.0') }}")
+  implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '8.60.0') }}")
+  implementation("io.sentry:sentry-android-navigation3:{{@inject packages.version('sentry.java.android.navigation', '8.60.0') }}")
 }
 ```
 
@@ -204,15 +209,13 @@ dependencies {
 
 To use `SentryNavEffect`, add it to the composable that owns your `NavDisplay` and pass your back stack to both.
 
-**Note:** Be sure to call `SentryNavEffect` before `NavDisplay` so that its transaction-creating machinery can be set up before any spans are produced by the initial nav destination. Otherwise, initial destination spans may be lost or parented under the wrong transaction.
+**Note:** Be sure to call `SentryNavEffect` before `NavDisplay` so the effect's transaction-creating machinery can be set up before any spans are produced by the initial nav destination. Otherwise, initial destination spans may be lost or parented under the wrong transaction.
 
-Provide a `RouteNameExtractor` that maps each entry from your back stack to the name you want displayed in Sentry. The names you provide will be used in breadcrumbs, as the current screen name, and to identify transactions. Optionally provide a `RouteArgumentsExtractor` that maps each entry from your back stack to one or more arguments for display alongside your extracted names.
+Provide a `BackStackEntryMapper` that maps each entry in your back stack to the name and optional arguments you want displayed in Sentry. Keep names stable and arguments lightweight and performant. Avoid using `::class.simpleName` or anything else that R8 will obfuscate.
 
 <Alert>
 
-Values returned from `nameExtractor` and `argumentsExtractor` are **not** scrubbed by the Sentry SDK before they are sent to Sentry. Only return names and arguments that are already safe to send, or pre-scrub them yourself before returning them.
-
-Keep names stable and arguments lightweight and performant. Avoid using `::class.simpleName` or anything else that R8 will obfuscate.
+Values returned from `BackStackEntryMapper` are **not** scrubbed by the Sentry SDK for PII or other potentially sensitive information before they're sent to Sentry. Only return names and arguments known to be safe, or scrub them yourself in your `BackStackEntryMapper`.
 
 </Alert>
 
@@ -229,11 +232,18 @@ fun AppNavigation() {
   val backStack = rememberNavBackStack(Route.Home)
 
   // Place SentryNavEffect in the same composable as your NavDisplay and call the
-  // effect first. Provide a nameExtractor and an optional argumentsExtractor.
+  // effect first. Provide a BackStackEntryMapper with the values you want to
+  // show up in Sentry. Be sure to scrub them for PII or any sensitive info.
   SentryNavEffect(
     backStack = backStack,
-    nameExtractor = { route -> route.extractName() },
-    argumentsExtractor = { route -> route.extractArguments() },
+    backStackEntryMapper = { entry ->
+      when (entry) {
+        is Home -> SentryBackStackEntry("Home")
+        is ProductDetail ->
+          SentryBackStackEntry("ProductDetail", mapOf("product_id" to entry.productId)
+        ...
+      }
+    }
   )
 
   // Configure your NavDisplay like usual.
@@ -242,26 +252,6 @@ fun AppNavigation() {
     ...
   )
 }
-
-// Example back stack entries and extractors.
-sealed interface Route : NavKey {
-  @Serializable
-  data object Home : Route
-  @Serializable
-  data class Details(val id: String, val query: String?) : Route
-}
-
-private fun Route.extractName(): String =
-  when (this) {
-    Route.Home -> "Home"
-    is Route.Details -> "Details"
-  }
-
-private fun Route.extractArguments(): Map<String, Any?> =
-  when (this) {
-    Route.Home -> emptyMap()
-    is Route.Details -> mapOf("id" to id)
-  }
 ```
 
 ### Using kotlinx.serialization
@@ -269,21 +259,24 @@ private fun Route.extractArguments(): Map<String, Any?> =
 If your Nav3 back stack uses `@Serializable` route types, you can use Kotlin serialization to derive stable extracted names.
 
 ```kotlin
-private fun Route.extractName(): String =
-  when (this) {
-    Route.Home -> Route.Home.serializer().descriptor.serialName
-    is Route.Details -> Route.Details.serializer().descriptor.serialName
-  }
-```
+@Serializable
+@SerialName("Home")
+data class Home(userName: String) : NavKey
 
-For arguments, avoid returning the whole route object when it may be large, nested, or privacy-sensitive. Prefer a small set of diagnostic fields instead.
+@Serializable
+@SerialName("ProductDetail")
+data class ProductDetail(userName: String, productId: String) : NavKey
 
-```kotlin
-private fun Route.extractArguments(): Map<String, Any?> =
-  when (this) {
-    Route.Home -> emptyMap()
-    is Route.Details -> mapOf("id" to id)
+val backStackItemMapper = BackStackEntryMapper<NavKey> { entry ->
+  when (entry) {
+    is Home -> SentryBackStackEntry(Home.serializer().descriptor.serialName)
+    is ProductDetail -> SentryBackStackEntry(
+      name = ProductDetail.serializer().descriptor.serialName,
+      arguments = mapOf("product_id" to entry.productId)
+    )
+    ...
   }
+}
 ```
 
 ### Customize Nav3 Options
