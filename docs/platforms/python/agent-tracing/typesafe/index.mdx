@@ -1,0 +1,85 @@
+---
+title: TypeSafe AI
+description: "Learn about using Sentry for TypeSafe AI."
+sidebar_order: 30
+---
+
+This integration connects Sentry with the [TypeSafe Python SDK](https://github.com/typesafe-ai/typesafe-sdk-python).
+
+Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install sentry-sdk
+```
+
+```bash {tabTitle:uv}
+uv add sentry-sdk
+```
+
+## Configure
+
+Add `TypeSafeIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.typesafe import TypeSafeIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        TypeSafeIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Verify that the integration works by making a request to TypeSafe AI.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.typesafe import TypeSafeIntegration
+
+from typesafe_sdk import Choice, TypeSafeClient
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    integrations=[
+        TypeSafeIntegration(),
+    ],
+)
+
+client = TypeSafeClient(api_key="(your TypeSafe key)")
+
+response = client.system_one(
+    state={"document": "I was charged twice. Please fix this ASAP."},
+    questions={
+        "category": Choice(
+            instructions="What is this ticket about?",
+            criteria={"billing": None, "technical": None, "other": None},
+        ),
+    },
+)
+```
+
+To try the async variant, use `AsyncTypeSafeClient` with `await`.
+
+After running this script, the resulting data should show up in the `AI Spans` tab on the `Explore > Traces > Trace` page on Sentry.io.
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+- TypeSafe AI (`typesafe-sdk`): `0.7.0+`

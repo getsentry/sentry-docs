@@ -396,9 +396,9 @@ config.propagate_traces = false
 
 </SdkOption>
 
-<SdkOption name="trace_ignore_status_codes" type="Array<Integer | Range>" defaultValue="[(301..303), (305..399), (401..404)]">
+<SdkOption name="trace_ignore_status_codes" type="Array<Integer | Range>" defaultValue="[301, (305..399), (401..404)]">
 
-An optional property that disables tracing for HTTP requests with certain status codes.
+An optional property that disables tracing for HTTP requests with certain status codes. By default, redirects with status codes 302 and 303 are traced; 301, 305 through 399, and 401 through 404 are ignored.
 
 Requests are not traced if the status code is contained in the provided list.
 
@@ -431,6 +431,8 @@ The instrumenter to use, `:sentry` or `:otel` for [use with OpenTelemetry](../..
 ## Hooks
 
 The below options can be used to hook the SDK in various ways and customize how events are being reported.
+
+If one of these callbacks raises an exception, the SDK logs the error instead of letting it break your application. It drops the event, transaction, check-in, log, breadcrumb or metric being processed, depending on the callback. For `traces_sampler`, it falls back to `traces_sample_rate`; for `backtrace_cleanup_callback`, it uses the original backtrace.
 
 <SdkOption name="before_send" type="lambda | proc">
 
