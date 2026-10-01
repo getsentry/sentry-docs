@@ -82,6 +82,7 @@ export function PlatformSidebar({
           child =>
             !child.missing &&
             !child.frontmatter.draft &&
+            !child.frontmatter.sidebar_hidden &&
             !UNALIASED_AGENT_TRACING_PAGES.has(child.slug)
         )
         .map(child => ({
