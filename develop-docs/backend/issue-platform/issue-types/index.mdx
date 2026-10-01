@@ -11,19 +11,29 @@ To register a new issue type you need to subclass <Link to="https://github.com/g
 
 When registering the class, set the following required attributes on the class:
 
-- `type_id`: A unique integer to identify your issue type.
-- `slug`: A unique slug to identify your issue type. Used to search by issue type in the issue stream
-- `description`: A human-readable description of your issue type.
-- `category`: Categories are used to group related issue types together. Use one of the existing categories defined in <Link to="https://github.com/getsentry/sentry/blob/97f4174c28041357aa190f27012dc33c1c7bafc7/src/sentry/issues/grouptype.py#L17-L22">this enum</Link> or add a new one.
+- `type_id`: int
+  - A unique integer to identify your issue type.
+- `slug`: str
+  - A unique slug to identify your issue type. Used to search by issue type in the issue stream.
+- `description`: str
+  - A human-readable description of your issue type.
+- `category`: int
+  - Categories are used to group related issue types together. Use one of the existing categories defined in <Link to="https://github.com/getsentry/sentry/blob/97f4174c28041357aa190f27012dc33c1c7bafc7/src/sentry/issues/grouptype.py#L17-L22">this enum</Link> or add a new one.
 
 You may also set these optional attributes:
 
-- `released`: Whether this issue type has been released to all customers. See <Link to="#releasing-your-issue-type">Releasing your issue type</Link>
-- `noise_config`: A `NoiseConfig` that allows you to set policy on how many times a fingerprint must occur in a period of time before an issue is created. NoiseConfig has two attributes:
-  - `ignore_limit`: How many occurrences need to occur before we create a new issue
-  - `expiry_time`: The period of time the occurrences must occur in before we reset the count
-- `enable_auto_resolve`: Whether this issue type can be resolved automatically after a number of days with no events. The auto_resolve window is configurable in each project's settings. By default this attribute is set to true.
-- `enable_escalation_detection`: Whether this issue type can escalate using the <Link to="https://docs.sentry.io/product/issues/states-triage/escalating-issues/">Escalating Issues Algorithm</Link>. By default this attribute is set to true.
+- `released`: bool
+  - Whether this issue type has been released to all customers. See <Link to="#releasing-your-issue-type">Releasing your issue type</Link>.
+- `noise_config`: <Link to="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/issues/grouptype.py#L102-L109">NoiseConfig</Link> | None
+  - A `NoiseConfig` that allows you to set policy on how many times a fingerprint must occur in a period of time before an issue is created. NoiseConfig has two attributes:
+    - `ignore_limit`: int
+      - How many occurrences need to occur before we create a new issue.
+    - `expiry_time`: timedelta
+      - The period of time the occurrences must occur in before we reset the count.
+- `enable_auto_resolve`: bool
+  - Whether this issue type can be resolved automatically after a number of days with no events. The auto_resolve window is configurable in each project's settings. By default this attribute is set to true.
+- `enable_escalation_detection`: bool
+  - Whether this issue type can escalate using the <Link to="https://docs.sentry.io/product/issues/states-triage/escalating-issues/">Escalating Issues Algorithm</Link>. By default this attribute is set to true.
 
 Here's an example issue type:
 
