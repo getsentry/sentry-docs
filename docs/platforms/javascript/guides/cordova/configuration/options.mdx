@@ -1,0 +1,892 @@
+---
+title: Options
+description: "Learn more about how the Sentry JavaScript SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
+customCanonicalTag: "/platforms/javascript/configuration/options/"
+sidebar_order: 1
+---
+
+## Available Options
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+## Core Options
+
+<SdkOption name='dsn' type='string' envVar='SENTRY_DSN'>
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
+
+The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
+Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
+
+<PlatformContent includePath="configuration/dsn" />
+
+</SdkOption>
+
+<SdkOption name="orgId" type='`${number}` | number'>
+
+The organization ID for your Sentry project.
+
+The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
+you can provide the ID with this option. The organization ID is used for trace propagation.
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+It is also used for features like <PlatformLink to="/configuration/options/#strictTraceContinuation">strict trace continuation</PlatformLink>.
+
+</PlatformCategorySection>
+
+</SdkOption>
+
+<SdkOption name="debug" type='boolean' defaultValue='false'>
+
+Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information about what the SDK is doing.
+
+</SdkOption>
+
+<SdkOption name="release" type='string' envVar="SENTRY_RELEASE">
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
+
+Sets the release. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  On the server, the SDK will try to read this value from the `SENTRY_RELEASE`
+  environment variable.
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["browser"]}>
+  In the browser, the SDK will try to read this value from
+  `window.SENTRY_RELEASE.id` if available.
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript.electron"]}>
+  The SDK will read properties from the Electron `app` module to create the
+  release in the format `appName@version`.
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="environment" type='string' defaultValue='production' envVar='SENTRY_ENVIRONMENT'>
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
+
+Sets the environment. Defaults to `development` or `production` depending on whether the application is packaged.
+
+Environments tell you where an error occurred, whether that's in your production system, your staging server, or elsewhere.
+
+Sentry automatically creates an environment when it receives an event with the environment parameter set.
+
+Environments are case-sensitive. The environment name can't contain newlines, spaces or forward slashes, can't be the string "None", or exceed 64 characters. You can't delete environments, but you can hide them.
+
+</SdkOption>
+
+<SdkOption name="tunnel" type='string'>
+
+Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
+
+</SdkOption>
+
+<PlatformSection supported={['javascript.aws-lambda']}>
+
+<SdkOption name="useLayerExtension" type='boolean' defaultValue='true' envVar='SENTRY_LAYER_EXTENSION'>
+
+Controls whether the SDK proxies envelopes through the Sentry Lambda extension at `http://localhost:9000/envelope`. The extension keeps running across Lambda's freeze/thaw boundary, so events queued just before a freeze still get delivered.
+
+Defaults to `true` when the SDK detects it's running inside the [Sentry Lambda Layer](/platforms/javascript/guides/aws-lambda/install/layer/). Has no effect outside the layer — set [`tunnel`](#tunnel) explicitly instead, for example, when [installing the extension into a container image](/platforms/javascript/guides/aws-lambda/install/container-image/).
+
+Set to `false` to opt out, for example, when using a custom `tunnel` or when running behind an HTTP proxy that intercepts `localhost`.
+
+</SdkOption>
+
+</PlatformSection>
+
+<SdkOption name="dataCollection" type='DataCollection' availableSince="10.57.0">
+
+Controls which categories of data the SDK collects automatically. All fields are optional.
+  By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+In version 10 of the SDK, the defaults below apply only when you set the `dataCollection` option.
+Without it, the deprecated `sendDefaultPii` option controls data collection.
+Starting with version 11, the defaults always apply.
+
+For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
+
+| Key                   | Type                         | Default       | Description                                                                                                                              |
+| --------------------- | ---------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `userInfo`            | `boolean`                    | `true`        | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation. For example, the SDK infers the IP address from an incoming HTTP request. Data you set with `Sentry.setUser()` is always sent. |
+| `cookies`             | `CollectBehavior`            | `true`        | Collect cookies. Cookie names are always included. The SDK replaces the values of sensitive cookies with `[Filtered]`. |
+| `httpHeaders`         | `CollectBehavior \| { request?, response? }` | both `true` | Collect HTTP request and response headers. Pass one `CollectBehavior` for both directions, or use `{ request, response }` to control each direction. Header names are always included. |
+| `httpBodies`          | `HttpBodyCollectionTarget[]` | all types     | Body types to collect: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Set to `[]` to disable. |
+| `urlQueryParams`      | `CollectBehavior`            | `true`        | Collect URL query parameters. Parameter names are always included. The SDK replaces the values of sensitive parameters with `[Filtered]`. |
+| `graphQL`             | `{ document?, variables? }`  | both `true`   | `document`: Collect the GraphQL document (the query or mutation source text). <br /><br /> `variables`: Collect the variables that are passed to GraphQL operations. <br /><br /> The operation name and type are always collected. |
+| `genAI`               | `{ inputs?, outputs? }`      | both `true`   | `inputs`: Collect the content of generative AI inputs: system instructions, prompt messages, tool definitions, and tool call arguments. <br /><br /> `outputs`: Collect the content of generative AI outputs, such as completion text and tool call results. <br /><br /> Metadata, such as the model name and token counts, is always collected. Options set on an AI integration take precedence over these values. |
+| `databaseQueryData`   | `boolean`                    | `true`        | Collect the data associated with database queries: bound query parameters, data payloads for write operations, and returned result data. <br /><br /> The sanitized or parameterized query text (`db.query.text`) is **not** controlled by this option. Structural metadata, such as the database system, query summary, operation name, and table, is also **always** collected. |
+| `queues`              | `boolean`                    | `true`        | Collect the arguments passed to tasks within queues. For Kafka, this is the message key. Structural metadata, such as the messaging system, the destination name, and the operation, is always collected. |
+| `stackFrameVariables` | `boolean`                    | `true`        | Capture local variable values in stack frames. |
+| `frameContextLines`   | `number`                     | `5`           | Number of source code lines captured above and below each stack frame. |
+
+The `cookies`, `httpHeaders`, and `urlQueryParams` categories accept a `CollectBehavior` value:
+
+```typescript
+type CollectBehavior = boolean | { allow: string[] } | { deny: string[] };
+// true          → collect all (sensitive denylist still scrubs values)
+// false         → collect nothing
+// { deny: [] }  → collect all, extending the denylist with the given terms
+// { allow: [] } → only the listed keys send their real value
+```
+
+The SDK matches denylist terms against key names. The match is partial and case-insensitive. For example, the term `auth` matches `Authorization` and `X-Auth-Token`. The built-in sensitive denylist always applies, also to keys in an `allow` list:
+
+`["auth", "token", "secret", "password", "passwd", "pwd", "key", "jwt", "bearer", "sso", "saml", "csrf", "xsrf", "credentials", "session", "sid", "identity"]`
+
+Some headers, cookies, and query parameters identify a user without being credentials, such as `x-forwarded-for` or `x-user-id`. To filter these values too, extend the denylist with these terms: `["forwarded", "-ip", "remote-", "via", "-user"]`.
+
+</SdkOption>
+
+<SdkOption name="maxBreadcrumbs" type='number' defaultValue="100">
+
+This variable controls the total amount of breadcrumbs that should be captured. You should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+
+</SdkOption>
+
+<SdkOption name="attachStacktrace" type='boolean' defaultValue='true'>
+
+<PlatformSection supported={["javascript.electron"]}>
+  Enabled per Electron process.
+</PlatformSection>
+
+When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all messages captured with `Sentry.captureMessage()`.
+
+Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+</SdkOption>
+
+<SdkOption name="serverName" type='string' categorySupported={['server', 'serverless']}>
+
+This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+
+Most SDKs will attempt to auto-discover this value.
+
+</SdkOption>
+
+<PlatformSection supported={['javascript.electron']}>
+<SdkOption name="autoSessionTracking" type='boolean' defaultValue='true'>
+
+**Note:** Electron `main` process only.
+
+When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
+
+</SdkOption>
+</PlatformSection>
+
+<SdkOption name="initialScope" type="CaptureContext">
+  <PlatformSection supported={["javascript.electron"]}>
+    **Note:** Electron `main` process only.
+  </PlatformSection>
+
+Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
+
+```javascript
+// Using an object
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  initialScope: {
+    tags: { "my-tag": "my value" },
+    user: { id: 42, email: "john.doe@example.com" },
+  },
+});
+
+// Using a callback function
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  initialScope: (scope) => {
+    scope.setTags({ a: "b" });
+    return scope;
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="maxValueLength" type='number'>
+
+Maximum number of characters every string property on events sent to Sentry can have before it will be truncated.
+
+</SdkOption>
+
+<SdkOption name="normalizeDepth" type='number' defaultValue='3'>
+
+Sentry SDKs normalize any contextual data to a given depth. Any data beyond this depth will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed three levels deep.
+
+</SdkOption>
+
+<SdkOption name="normalizeMaxBreadth" type='number' defaultValue='1000'>
+
+This is the maximum number of properties or entries that will be included in any given object or array when the SDK is normalizing contextual data. Any data beyond this depth will be dropped.
+
+</SdkOption>
+
+<SdkOption name="enabled" type='boolean' defaultValue='true'>
+
+Specifies whether this SDK should send events to Sentry. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
+
+</SdkOption>
+
+<SdkOption name="sendClientReports" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
+
+</SdkOption>
+
+<SdkOption name="includeLocalVariables" type='boolean' defaultValue='false'  categorySupported={['server', 'serverless']}>
+
+Set this option to `true` to add stack local variables to stack traces.
+
+<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno", "javascript.effect", "javascript.elysia", "javascript.firebase", "javascript.nitro"]}>
+
+For more advanced configuration options, see the documentation on the <PlatformLink to="/configuration/integrations/localvariables/">Local Variables integration options</PlatformLink>.
+
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="integrations" type='Array<Integration> | (integrations: Array<Integration>) => Array<Integration>' defaultValue='[]'>
+
+Pass additional integrations that should be initialized with the SDK. Integrations are pieces of code that can be used to extend the SDK's functionality. They can be used to add custom event processors, context providers, or to hook into the SDK's lifecycle.
+
+See <PlatformLink to="/configuration/integrations/">integration docs</PlatformLink> for more information.
+
+</SdkOption>
+
+<SdkOption name="defaultIntegrations" type='undefined | false'>
+
+This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
+
+See <PlatformLink to="/configuration/integrations/#modifying-default-integrations">integration docs</PlatformLink> to see how you can modify the default integrations.
+
+</SdkOption>
+
+<SdkOption name="beforeBreadcrumb" type='(breadcrumb: Breadcrumb, hint?: BreadcrumbHint) => Breadcrumb | null'>
+
+<PlatformSection supported={["javascript.electron"]}>
+  Controls breadcrumb capture in the Electron process where callback is set.
+</PlatformSection>
+
+This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</SdkOption>
+
+<SdkOption name="transport" type="(transportOptions: TransportOptions) => Transport">
+
+<PlatformSection notSupported={["javascript.electron"]}>
+  The JavaScript SDK uses a transport to send events to Sentry. On modern
+  browsers, most transports use the browsers' fetch API to send events.
+  Transports will drop an event if it fails to send due to a lack of connection.
+</PlatformSection>
+
+<PlatformCategorySection supported={["browser"]}>
+  In the browser, a `fetch`-based transport is used by default.
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  On the server, a `https`-based transport is used by default.
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process, the default transport handles queuing events
+  when the users device is offline. In Electron `renderer` processes, the
+  default transport forwards events to the main process.
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="transportOptions" type='TransportOptions'>
+
+Options used to configure the transport. This is an object with the following possible optional keys:
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+<PlatformCategorySection supported={["browser", "desktop"]}>
+  **Options for the node `httpTransport` transport:**
+</PlatformCategorySection>
+
+- `headers`: An object containing headers to be sent with every request.
+- `proxy`: A proxy used for outbound requests. Can be http or https.
+- `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
+- `httpModule`: A custom HTTP module to use for requests. Defaults to the native `http` and `https` modules.
+- `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["browser", "desktop"]}>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  **Options for the browser `fetch` transport:**
+</PlatformCategorySection>
+
+- `headers`: An object containing headers to be sent with every request.
+- `fetchOptions`: An object containing options to be passed to the `fetch` call. Used by the SDK's fetch transport.
+
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript.electron"]}>
+**Options for Electron offline support:**
+
+The Electron SDK provides built-in offline support that queues events when the app is offline and automatically sends them once the connection is restored. These options let you configure the following behavior:
+
+- `maxAgeDays`: The maximum number of days to keep an envelope in the queue.
+- `maxQueueSize`: The maximum number of envelopes to keep in the queue.
+- `flushAtStartup`: Whether the offline store should flush shortly after application startup. Defaults to `false`.
+- `shouldSend`: Called before the SDK attempts to send an envelope to Sentry. If this function returns false, `shouldStore` will be called to determine if the envelope should be stored. Defaults to `() => true`.
+- `shouldStore`: Called before an event is stored. Return `false` to drop the envelope rather than store it. Defaults to `() => true`.
+
+Check out the [Offline Support](/platforms/javascript/guides/electron/features/offline-support/) documentation for a complete example.
+
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="shutdownTimeout" type='number' defaultValue='2000' categorySupported={['server', 'serverless']}>
+
+Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+
+</SdkOption>
+
+<PlatformSection supported={['javascript.electron']}>
+<SdkOption name="ipcMode" type="'IPCMode.Classic' | 'IPCMode.Protocol' | 'IPCMode.Both'" defaultValue="'IPCMode.Both'">
+**Note:** Electron `main` process only.
+
+Inter-process communication mode to receive event and scope updates from renderer processes.
+
+Available options are:
+
+- `IPCMode.Classic` - Configures Electron IPC modules
+- `IPCMode.Protocol` - Configures a custom protocol and `fetch`
+- `IPCMode.Both` (default) - Configures both modes for maximum compatibility
+
+</SdkOption>
+
+<SdkOption name="ipcNamespace" type='string'>
+
+Custom namespace for the inter-process communication (IPC) channels used by the Sentry Electron SDK. This is useful when your Electron application uses multiple IPC channels and you want to prevent potential conflicts between them.
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  ipcNamespace: "myCustomNamespace",
+});
+```
+
+When set, the IPC channels used by Sentry will be prefixed with the specified namespace. Note that you need to configure the same namespace in your main process, renderer processes, and preload scripts for proper communication. See the [Custom IPC Namespace section](/platforms/javascript/guides/electron/#custom-ipc-namespace) for complete setup instructions.
+
+</SdkOption>
+
+<SdkOption name="getSessions" type='() => Electron.Session[]' defaultValue='() => [session.defaultSession]'>
+
+A function that returns an array of Electron `session` objects. These sessions are used to configure communication between the Electron main and renderer processes.
+
+</SdkOption>
+
+<SdkOption name="getRendererName" type='(contents: WebContents) => string | undefined'>
+
+Callback function that allows custom naming of renderer processes.
+If the callback is not set, or it returns `undefined`, the default naming scheme is used.
+
+</SdkOption>
+</PlatformSection>
+
+## Error Monitoring Options
+
+<SdkOption name="sampleRate" type='number' defaultValue='1.0'>
+
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process `sampleRate` applies to events captured all
+  processes. In Electron `renderer` processes, the `sampleRate` only applies to
+  that process.
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="beforeSend" type='(event: Event, hint: EventHint) => Event | null'>
+
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+By the time `beforeSend` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process `beforeSend` is called for events captured in
+  all processes. In Electron `renderer` processes, `beforeSend` only applies to
+  that process.
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="enhanceFetchErrorMessages" type="'always' | 'report-only' | false" defaultValue="always" availableSince="10.34.0">
+
+Controls whether fetch error messages are enhanced by appending the request’s hostname. When enabled, generic fetch errors like "Failed to fetch" will be enhanced to include the hostname (e.g., "Failed to fetch (example.com)") to provide better context in Sentry.
+
+Available options:
+
+- `'always'` (default): Modifies the actual error message directly. This may break third-party packages that rely on exact message matching (e.g., `is-network-error`, `p-retry`).
+- `'report-only'`: Only enhances the message when sending to Sentry. The original error message remains unchanged, preserving compatibility with third-party packages that also check error messages.
+- `false`: Disables hostname enhancement completely.
+
+</SdkOption>
+
+<SdkOption name="ignoreErrors" type='Array<string | RegExp>' defaultValue='[]'>
+
+<Include name="platforms/configuration/options/ignore-errors.mdx" />
+
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron `main` process `ignoreErrors` applies to events captured in
+  all processes. In Electron `renderer` processes, `ignoreErrors` applies only
+  to that process.
+</PlatformSection>
+
+</SdkOption>
+
+<SdkOption name="denyUrls" type='Array<string | RegExp>' defaultValue='[]' categorySupported={['browser']}>
+
+<Include name="platforms/configuration/options/deny-urls.mdx" />
+
+</SdkOption>
+
+<SdkOption name="allowUrls" type='Array<string | RegExp>' defaultValue='[]'  categorySupported={['browser']}>
+
+<Include name="platforms/configuration/options/allow-urls.mdx" />
+
+</SdkOption>
+
+<PlatformSection supported={["javascript.vue", "javascript.nuxt"]}>
+
+<SdkOption name="attachProps" type='boolean' defaultValue='true' categorySupported={['browser']}>
+
+When enabled, all props of the Vue component where the error was thrown in are attached to the event.
+
+</SdkOption>
+
+<SdkOption name="attachErrorHandler" type='boolean' defaultValue='true' categorySupported={['browser']}>
+  By default, the SDK attaches a [Vue error handler](https://vuejs.org/api/application.html#app-config-errorhandler)
+  to capture Vue exceptions and report them to Sentry.
+  When `attachErrorHandler` is set to `false`, automatic error reporting is disabled.
+
+Usually, this option should stay enabled, unless you want to set up Sentry error reporting yourself.
+For example, the Sentry Nuxt SDK does not attach an error handler as it's capturing errors through the error hooks provided by Nuxt.
+
+</SdkOption>
+
+</PlatformSection>
+
+## Tracing Options
+
+<Alert>
+
+If you're using <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>, tracing options work the same way as described but apply to service spans instead of transactions.
+
+</Alert>
+
+<PlatformSection supported={["javascript.electron"]}>
+  **Note:** For Electron, tracing options apply to the process where these
+  options are set.
+</PlatformSection>
+
+<SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
+
+A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `tracesSampler` must be defined to enable tracing.
+
+</SdkOption>
+
+<SdkOption name="tracesSampler" type='(samplingContext: SamplingContext) => number | boolean'>
+
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing.
+
+The `samplingContext` object passed to the function has the following properties:
+
+- `parentSampled`: The sampling decision of the parent transaction. This is `true` if the parent transaction was sampled, and `false` if it was not.
+- `name`: The name of the span as it was started.
+- `attributes`: The initial attributes of the span.
+  <PlatformCategorySection supported={["server", "serverless"]}>
+    - `normalizedRequest`: Request information of the currently active HTTP
+    server request, if applicable.
+  </PlatformCategorySection>
+
+</SdkOption>
+
+<SdkOption name="tracePropagationTargets" type='Array<string | RegExp>'>
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
+If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
+String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+
+<PlatformCategorySection supported={["browser"]}>
+  On the browser, all outgoing requests to the same origin will be propagated by
+  default.
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  On the server, all outgoing requests will be propagated by default.
+</PlatformCategorySection>
+
+If you want to disable trace propagation, you can set this option to `[]`.
+
+</SdkOption>
+
+<PlatformSection supported={['javascript.cloudflare']}>
+
+<SdkOption name="rpcTracePropagationBindings" type='Array<string | RegExp>' availableSince='10.72.0'>
+
+Controls which bindings on `env` receive tracing data over [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) to Durable Objects and other Workers. RPC has no headers, so the SDK appends the trace context as a trailing argument that an instrumented receiver strips again before your method runs.
+
+String entries must match a binding name exactly, so `"DB"` matches `"DB"` but not  `"MY_DB"`. Use a regular expression for pattern matching.
+
+Setting this option, with any value, also lets the Worker continue a trace that arrives on an incoming RPC call. So a Worker that both calls and receives needs only this one option. Setting an empty array, the Worker is a receiver that propagates nothing, and an entry for a binding the Worker never calls is ignored. Because unused entries are harmless, one list can serve every Worker and Durable Object in a deployment.
+
+Only list bindings whose receiver runs Sentry. Anywhere else the trailing argument survives as a real parameter, which changes what your method was called with. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
+
+Propagation over `stub.fetch()` and service binding `fetch()` uses HTTP headers, so `tracePropagationTargets` covers it instead.
+
+</SdkOption>
+
+<SdkOption name="enableRpcTracePropagation" type='boolean' defaultValue='false' availableSince='10.49.0'>
+
+**Deprecated:** Use `rpcTracePropagationBindings` instead, which names the bindings you call rather than propagating to all of them. This option will be removed in the next major version.
+
+Propagates trace context over every RPC call on `env`, including bindings whose receiver doesn't run Sentry and therefore never strips the trailing argument again.
+
+</SdkOption>
+
+</PlatformSection>
+
+<SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false' categorySupported={["server", "serverless"]}>
+
+If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
+`baggage` header matches the organization ID of the current Sentry client.
+
+The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
+
+If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
+This is useful to prevent traces of unknown third-party services from being continued in your application.
+
+</SdkOption>
+
+<SdkOption name="beforeSendSpan" type='(span: StreamedSpanJSON) => StreamedSpanJSON'>
+
+Called for each finished span before it is sent to Sentry, including service spans and their child spans. Return the modified span to rename it or remove sensitive data. Check `span.is_segment` to apply changes only to service spans.
+
+`beforeSendSpan` can only modify spans. It cannot drop them or return `null`. Use [`ignoreSpans`](#ignoreSpans) to drop spans.
+
+The callback receives a serialized `StreamedSpanJSON` object, not a `Span` instance. <PlatformLink to="/configuration/apis/#spanToJSON">`Sentry.spanToJSON()`</PlatformLink> returns the same shape.
+
+With [`traceLifecycle: 'static'`](#traceLifecycle), wrap the callback with `Sentry.withStaticSpan()` to receive and return `SpanJSON`. The static callback runs for the transaction and its child spans. A callback that doesn't match the trace lifecycle is ignored.
+
+<Expandable title="Examples">
+
+<PlatformContent includePath="configuration/before-send-span" />
+
+</Expandable>
+
+</SdkOption>
+
+<SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
+
+This callback has no effect in stream mode. Use [`beforeSendSpan`](#beforeSendSpan) to modify spans and check `span.is_segment` to target service spans. Use [`ignoreSpans`](#ignoreSpans) to drop spans.
+
+With [`traceLifecycle: 'static'`](#traceLifecycle), this callback receives a transaction event and an event hint after all event processors have run. Return the modified event to change its data, or `null` to drop the transaction and its child spans.
+
+<Expandable title="Example in transaction mode">
+
+<PlatformContent includePath="configuration/before-send-transaction" />
+
+</Expandable>
+
+</SdkOption>
+
+<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp, attributes?: Record<string, string | number | boolean | null | undefined>}>' defaultValue='[]' availableSince='10.2.0'>
+
+A list of strings or regex patterns matching spans that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with `name`, `op`, and `attributes` properties to match on multiple conditions. At least one property must be provided.
+
+If a matching span is a service span, its child spans are also dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
+By default, no spans are ignored.
+
+In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
+
+In transaction mode, `ignoreSpans` is evaluated when the transaction ends, using the span's final name and attributes.
+
+To inspect the initial names of automatically created spans, enable SDK debug logging during development with <PlatformLink to="/configuration/options/#debug">`debug: true`</PlatformLink>.
+
+<Expandable title="Examples">
+
+Here are some predefined matches for common spans to get you started:
+
+```javascript
+Sentry.init({
+  ignoreSpans: [
+    // Browser connection events
+    { op: /^browser\.(cache|connect|DNS)$/ },
+
+    // Fonts
+    { op: "resource.other", name: /.+\.(woff2|woff|ttf|eot)$/ },
+
+    // CSS files
+    { op: "resource.link", name: /.+\.css.*$/ },
+
+    // JS files
+    { op: /resource\.(link|script)/, name: /.+\.js.*$/ },
+
+    // Images
+    {
+      op: /resource\.(other|img)/,
+      name: /.+\.(png|svg|jpe?g|gif|bmp|tiff?|webp|avif|heic?|ico).*$/,
+    },
+
+    // Drop spans whose name contains "healthcheck"
+    "healthcheck",
+
+    // Drop spans matching name and attribute conditions
+    {
+      name: /^GET \//,
+      attributes: {
+        "http.route": "/api/status",
+      },
+    },
+
+    // Measure spans
+    { op: "measure" },
+  ],
+});
+```
+
+</Expandable>
+</SdkOption>
+
+<SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
+
+This option has no effect in stream mode. Use [`ignoreSpans`](#ignoreSpans) to filter spans by name, operation, or attributes.
+
+With [`traceLifecycle: 'static'`](#traceLifecycle), this option filters transaction names against a list of strings and regular expressions. Strings match part of the name. Use a regular expression anchored with `^` and `$` for an exact match. A matching transaction and its child spans are dropped.
+
+<Expandable title="Example in transaction mode">
+
+<PlatformContent includePath="configuration/ignore-transactions" />
+
+</Expandable>
+
+</SdkOption>
+
+<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0'>
+
+If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing Http requests made via `fetch` or `XMLHttpRequest`.
+This header is attached in addition to the `sentry-trace` and `baggage` headers.
+Set this option to `true` if your backend services are instrumented with e.g. OpenTelemetry or other W3C Trace Context compatible libraries and you want to continue traces from the client.
+
+<PlatformCategorySection notSupported={["server-only"]}>
+
+**Important:** Make sure that your backend services' CORS configuration allows the `traceparent` header.
+Otherwise, requests might be blocked.
+Use the [`tracePropagationTargets` option](#tracepropagationtargets) to control which requests the `traceparent` header is attached to.
+
+</PlatformCategorySection>
+
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
+
+</SdkOption>
+
+<SdkOption name="traceLifecycle" type="'static' | 'stream'" defaultValue="'stream'" defaultNote='since version 11.0.0' availableSince='10.53.1'>
+
+Controls how spans are sent to Sentry:
+
+- In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink> (`'stream'`, the default), spans are sent in batches as they finish.
+- In transaction mode (`'static'`), spans are collected in memory and sent as a transaction once the root span ends. This mode is available for backwards compatibility.
+
+To opt out of span streaming, set `traceLifecycle: 'static'`. If you use `beforeSendSpan`, wrap it with `Sentry.withStaticSpan()` to receive the `SpanJSON` format:
+
+```javascript
+Sentry.init({
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    span.description = "[filtered]";
+    return span;
+  }),
+});
+```
+
+</SdkOption>
+
+## Logs Options
+
+<PlatformSection supported={["javascript.electron"]}>
+  **Note:** For Electron, log options apply to the process where these options
+  are set.
+</PlatformSection>
+
+<Alert>
+  On SDK versions below `10.71.0`, logs are opt-in. Set `enableLogs: true` in your `Sentry.init` to send them.
+</Alert>
+
+<SdkOption name="beforeSendLog" type='(log: Log) => Log | null'>
+
+This function is called with a log object, and can return a modified log object, or `null` to skip sending this log to Sentry. This can be used, for instance, for manual PII stripping before sending, or to add custom attributes to all logs.
+
+</SdkOption>
+
+## Metrics Options
+
+<PlatformSection supported={["javascript.electron"]}>
+  **Note:** For Electron, metric options apply to the process where these options
+  are set.
+</PlatformSection>
+
+<SdkOption name="beforeSendMetric" type='(metric: Metric) => Metric | null'>
+
+This function is called with a metric object, and can return a modified metric object, or `null` to skip sending this metric to Sentry.
+This can be used, for instance, for manual PII scrubbing before sending, or to add custom attributes to all metrics.
+
+</SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
+
+## Session Replay Options
+
+<SdkOption name="replaysSessionSampleRate" type='number' categorySupported={['browser']}>
+
+The sample rate for replays that begin recording immediately and last the entirety of the user's session. `1.0` collects all replays, and `0` collects none.
+
+</SdkOption>
+
+<SdkOption name="replaysOnErrorSampleRate" type='number' categorySupported={['browser']}>
+
+The sample rate for replays that are recorded when an error happens. This type of replay will record up to a minute of events prior to the error and continue recording until the session ends. `1.0` collects all sessions with an error, and `0` collects none.
+
+</SdkOption>
+
+</PlatformCategorySection>
+
+## Profiling Options
+
+<PlatformSection supported={["javascript.electron"]}>
+
+<SdkOption name="profileSessionSampleRate" type='number' availableSince="7.4.0" defaultValue="0">
+
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none.
+The sampling decision is made once at the beginning of a session.
+This option is required to enable profiling (default is `0`).
+
+</SdkOption>
+
+<SdkOption name="profileLifecycle" type='"trace" | "manual"' defaultValue='"manual"' availableSince="7.4.0">
+
+Determines how profiling sessions are controlled. It has two modes:
+
+- `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling/">profiling API documentation</PlatformLink>.</PlatformSection>
+- `'trace'`: Profiling starts and stops automatically with transactions (or service spans if you're using <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>), as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.electron"]}>
+
+<SdkOption name="profileSessionSampleRate" type='number' availableSince="10.27.0" defaultValue="0">
+
+A number between `0` and `1` that sets the percentage of how many sessions should have profiling enabled. `1.0` enables profiling in every session, `0.5` enables profiling for 50% of the sessions, and `0` enables it for none.
+The sampling decision is made once at the beginning of a session.
+This option is required to enable profiling (default is `0`).
+
+<PlatformCategorySection categorySupported={["server", "serverless"]}>
+  In a server environment, a profiling session starts when the Sentry SDK is
+  initialized and stops when the service terminates. Therefore, the sampling
+  decision is re-evaluated on service restart or redeployment.
+</PlatformCategorySection>
+
+  <PlatformCategorySection supported={['browser']}>
+    In a browser environment, a profiling session corresponds to a user session. A user session starts with a
+    new SDK initialization on page load and ends when the browser tab is closed.
+  </PlatformCategorySection>
+</SdkOption>
+
+<SdkOption name="profileLifecycle" type='"trace" | "manual"' defaultValue='"manual"' availableSince="10.27.0">
+
+Determines how profiling sessions are controlled. It has two modes:
+
+- `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.cordova", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling/">profiling API documentation</PlatformLink>.</PlatformSection>
+- `'trace'`: Profiling starts and stops automatically with transactions, as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cordova", "javascript.capacitor"]}>
+
+## Experimental Options
+
+<SdkOption name="experimental" type='Object'>
+
+An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
+
+</SdkOption>
+
+## Hybrid SDK Options
+
+<SdkOption name="enableNative" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
+
+</SdkOption>
+
+<SdkOption name="enableAutoSessionTracking" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable the [release health](/product/releases/health/) feature.
+
+</SdkOption>
+
+<SdkOption name="sessionTrackingIntervalMillis" type='number' defaultValue='30000'>
+
+Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
+
+</SdkOption>
+
+<SdkOption name="enableNdkScopeSync" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable the scope sync from Java to NDK on Android.
+
+</SdkOption>
+
+<SdkOption name="attachThreads" type='boolean' defaultValue='false'>
+
+Set this option to `true` to automatically attach all threads to all logged events on Android.
+
+</SdkOption>
+
+<SdkOption name="enableOutOfMemoryTracking" supported={["javascript.capacitor"]}>
+
+Set this option to `false` to disable [out of memory](/platforms/apple/guides/ios/configuration/out-of-memory/) tracking on iOS.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.capacitor"]}>
+
+<SdkOption name="enableNativeCrashHandling" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
+
+</SdkOption>
+
+<SdkOption name="enableNativeNagger" type='boolean' defaultValue='true'>
+
+Set this option to `false` to disable the native nagger alert being shown.
+
+</SdkOption>
+
+</PlatformSection>
