@@ -3309,6 +3309,16 @@ const userDocsRedirects = [
     destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
   },
   {
+    source: '/platforms/dart/guides/flutter/profiling/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/troubleshooting/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
+  },
+  {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
     destination: '/platforms/dart/guides/flutter/integrations/:path*',
   },
