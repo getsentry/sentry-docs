@@ -82,19 +82,17 @@ Setting a global job listener using a `SchedulerFactoryBeanCustomizer` in Spring
 
 ## Monitor Config
 
-Starting with the next SDK release, `SentryJobListener` can send a monitor config derived from the job's trigger, so Sentry creates the monitor (or updates its schedule) from your code. To turn it on for a job, set `SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY` to `true` in the job data map:
+Starting with the next SDK release, `SentryJobListener` can send a monitor config derived from the job's trigger, so Sentry creates the monitor (or updates its schedule) from your code. To turn it on for a job, set `SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY` to `true` in the job data map, next to the monitor slug. Like the slug, it also works in the trigger's job data map:
 
 ```java
 JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
-jobDetailFactory.setJobDataAsMap(
-    Map.of(
-        SentryJobListener.SENTRY_SLUG_KEY, "<monitor-slug>",
-        SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY, true));
+jobDetailFactory.setJobDataAsMap(Collections.singletonMap(SentryJobListener.SENTRY_SLUG_KEY, "<monitor-slug>"));
+jobDetailFactory.setJobDataAsMap(Collections.singletonMap(SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY, true));
 ```
 
 The config is derived like this:
 
 - `CronTrigger`: the cron expression and the trigger's time zone. The seconds field must be a fixed number, and the year field, if set, must be `*`.
-- `SimpleTrigger` that repeats: the repeat interval, if it's a whole number of minutes.
+- `SimpleTrigger` that repeats forever: the repeat interval, if it's a whole number of minutes.
 
-Other triggers send no monitor config. Without the key, or for triggers that send no config, create the monitor in Sentry first.
+Other triggers send no monitor config, and neither do cron expressions with syntax Sentry doesn't support (such as `15W`, `L-3`, or wrap-around ranges like `FRI-MON`) or time zones that aren't IANA time zone IDs (whole-hour offsets such as `GMT+2` are sent as `Etc/GMT-2`). Without the key, or for triggers that send no config, create the monitor in Sentry first.
