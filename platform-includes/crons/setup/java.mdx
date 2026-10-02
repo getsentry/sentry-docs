@@ -16,9 +16,6 @@ import io.sentry.MonitorSchedule;
 import io.sentry.util.CheckInUtils;
 
 MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.crontab("0 * * * *"));
-monitorConfig.setCheckinMargin(5L); // Optional check-in margin in minutes
-monitorConfig.setMaxRuntime(15L); // Optional max runtime in minutes
-monitorConfig.setTimezone("Europe/Vienna"); // Optional timezone
 
 String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> {
     // Execute your scheduled task here...
@@ -31,37 +28,14 @@ import io.sentry.MonitorConfig
 import io.sentry.MonitorSchedule
 import io.sentry.util.CheckInUtils
 
-val monitorConfig = MonitorConfig(MonitorSchedule.crontab("0 * * * *")).apply {
-    checkinMargin = 5L // Optional check-in margin in minutes
-    maxRuntime = 15L // Optional max runtime in minutes
-    timezone = "Europe/Vienna" // Optional timezone
-}
+val monitorConfig = MonitorConfig(MonitorSchedule.crontab("0 * * * *"))
 
 CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig) {
     // Execute your scheduled task here...
 }
 ```
 
-If no monitor with this slug exists in Sentry and no `MonitorConfig` is sent, Sentry drops the check-ins. If you already created the monitor in Sentry, you can leave out the config:
-
-```java
-import io.sentry.util.CheckInUtils;
-
-String result = CheckInUtils.withCheckIn("<monitor-slug>", () -> {
-    // Execute your scheduled task here...
-    return "computed result";
-});
-```
-
-```kotlin
-import io.sentry.util.CheckInUtils
-
-CheckInUtils.withCheckIn("<monitor-slug>") {
-    // Execute your scheduled task here...
-}
-```
-
-See [Upserting Cron Monitors](#upserting-cron-monitors) for all schedule and configuration options.
+If the monitor already exists in Sentry, the configuration is optional. See [Upserting Cron Monitors](#upserting-cron-monitors) for all schedule and configuration options.
 
 You can also check-in to a specific environment.
 

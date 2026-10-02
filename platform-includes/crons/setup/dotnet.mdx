@@ -13,9 +13,6 @@ var checkInId = SentrySdk.CaptureCheckIn(
     {
         // Use a crontab schedule (every hour)
         options.Interval("0 * * * *");
-        options.CheckInMargin = TimeSpan.FromMinutes(5); // Optional
-        options.MaxRuntime = TimeSpan.FromMinutes(15); // Optional
-        options.TimeZone = "Europe/Vienna"; // Optional
     });
 
 // Execute your scheduled task here...
@@ -24,17 +21,7 @@ var checkInId = SentrySdk.CaptureCheckIn(
 SentrySdk.CaptureCheckIn("<monitor-slug>", CheckInStatus.Ok, checkInId);
 ```
 
-If no monitor with this slug exists in Sentry and no monitor options are sent, Sentry drops the check-ins. If you already created the monitor in Sentry, you can leave out `configureMonitorOptions`:
-
-```csharp
-// 🟡 Notify Sentry your job is running:
-var checkInId = SentrySdk.CaptureCheckIn("<monitor-slug>", CheckInStatus.InProgress);
-
-// Execute your scheduled task here...
-
-// 🟢 Notify Sentry your job has completed successfully:
-SentrySdk.CaptureCheckIn("<monitor-slug>", CheckInStatus.Ok, checkInId);
-```
+If the monitor already exists in Sentry, the configuration is optional. See [Upserting Cron Monitors](#upserting-cron-monitors) for all configuration options.
 
 If your job execution fails, you can notify Sentry about the failure:
 
