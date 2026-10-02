@@ -1123,14 +1123,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1295,10 +1287,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/synthreo/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1335,14 +1323,6 @@ const userDocsRedirects = [
   // via the wildcard redirect at the bottom of this file
   {
     source: '/integrations/sonarly-integration/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/watchdog-security/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1507,10 +1487,6 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/synthreo/',
     destination: '/integrations/third-party-integrations/',
   },
   {
