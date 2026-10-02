@@ -8,8 +8,10 @@ The [Sentry Kotlin Multiplatform Gradle Plugin](https://github.com/getsentry/sen
 
 The Gradle Plugin supports the following features:
 - Auto-installation of the Sentry Kotlin Multiplatform SDK.
-- Auto-installation of the Sentry Cocoa SDK via Cocoapods (if the Kotlin Cocoapods plugin is applied).
 - Automatic configuration of the Kotlin/Native linker for seamless usage with the Swift Package Manager.
+- Auto-installation of the Sentry Cocoa SDK via CocoaPods (deprecated, only if the Kotlin CocoaPods plugin is applied).
+
+<Include name="kmp-cocoapods-deprecation.mdx" />
 
 ## Setup
 
@@ -48,7 +50,7 @@ sentryKmp {
       sentryKmpVersion = "{{@inject packages.version('sentry.kotlin.kmp', '0.9.0') }}"
     }
 
-    // Configure the Cocoapods plugin.
+    // Configure the Cocoapods plugin (deprecated).
     cocoapods {
       // Enable auto-installation of the Sentry Cocoa SDK with Cocoapods.
       // Default is enabled.
@@ -60,6 +62,7 @@ sentryKmp {
     }
 
     // Configure the linker. This is only relevant if you are using SPM.
+    // The linker is skipped when the Kotlin CocoaPods plugin is applied.
     linker {
       // Path to the Xcode project that will be used to link the framework.
       // This is used to find the derived data path in which the framework is stored for SPM.
@@ -74,3 +77,20 @@ sentryKmp {
   }
 }
 ```
+
+## How Auto-Install and Linking Interact
+
+The plugin decides how to provide Sentry Cocoa based on whether the Kotlin CocoaPods plugin is applied to the module. The two paths don't combine: when the CocoaPods plugin is applied, linker configuration is skipped, even if you set `xcodeprojPath` or `frameworkPath`.
+
+| Your setup | What the plugin does | Supported |
+| --- | --- | --- |
+| Sentry Cocoa added with Swift Package Manager, Kotlin CocoaPods plugin **not** applied | Links the Kotlin/Native framework against Sentry Cocoa, using `linker` settings to locate it | Yes (recommended) |
+| Kotlin CocoaPods plugin applied, `autoInstall.cocoapods.enabled = true` | Adds the `Sentry` pod if you haven't declared one yourself. A pod you declared is left unchanged | Yes (deprecated) |
+| Kotlin CocoaPods plugin applied, `autoInstall.cocoapods.enabled = false` | Does nothing for Apple targets. You must declare the `Sentry` pod yourself | Yes (deprecated) |
+| Kotlin CocoaPods plugin applied **and** Sentry Cocoa added with Swift Package Manager | Skips linking, so the SPM-provided framework isn't linked | No |
+
+A few additional rules apply:
+
+- Sentry Cocoa installation and linking only run on a macOS host. On other hosts, only the `commonMain` dependency is installed.
+- Linking is set up only for the Apple targets being compiled in the current build, so Android-only builds skip it.
+- If you set both `frameworkPath` and `xcodeprojPath`, `frameworkPath` takes precedence. It must point to a `Sentry.xcframework` or `Sentry-Dynamic.xcframework` folder.
