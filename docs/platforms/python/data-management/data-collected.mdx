@@ -16,11 +16,13 @@ The <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pi
 
 How much data the SDK collects by default depends on which option you use. Without `data_collection` (and with `send_default_pii` unset or `False`), the SDK collects conservatively, and the defaults described on this page apply.
 
-As soon as you pass a `data_collection` dictionary, the categories you don't set explicitly fall back to their `data_collection` defaults, which are more permissive. For example, cookies, query parameters (with sensitive values scrubbed), and AI message content are then collected unless you opt out. Setting `send_default_pii=True` is roughly equivalent to enabling all `data_collection` categories.
+As soon as you pass a `data_collection` dictionary, the categories you don't set explicitly fall back to their `data_collection` defaults, which are more permissive. For example, cookies, query parameters (with sensitive values filtered), and AI message content are then collected unless you opt out. Setting `send_default_pii=True` is roughly equivalent to enabling all `data_collection` categories.
 
 If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
 
-Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
+`data_collection` and the `event_scrubber` option are mutually exclusive. If you set `data_collection`, the SDK ignores `event_scrubber` and emits a warning, so use the `data_collection` filtering options described on this page instead. The event scrubber only runs when `data_collection` isn't set.
+
+Regardless of which option you use, you can still remove data in a `before_send` hook before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
 </Expandable>
 
@@ -30,7 +32,7 @@ By default, the Sentry SDK sends HTTP request headers to Sentry but filters out 
 
 To send all HTTP headers, set `send_default_pii=True` in the `sentry_sdk.init()` call.
 
-When using `data_collection`, request headers are collected with sensitive values scrubbed. Use `http_headers` to control this:
+When using `data_collection`, request headers are collected with sensitive values filtered. Use `http_headers` to control this:
 
 ```python
 import sentry_sdk
@@ -48,9 +50,9 @@ sentry_sdk.init(
 )
 ```
 
-Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are always scrubbed, while the keys are kept. See [Key-Value Collection Behavior](#key-value-collection-behavior) below for details on `mode` and `terms`.
+Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are always filtered, while the keys are kept. See [Key-Value Collection Behavior](#key-value-collection-behavior) below for details on `mode` and `terms`.
 
-Additionally a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from headers (and a lot of other fields) right before sending data to Sentry.
+Without `data_collection`, the [event scrubber](/platforms/python/data-management/sensitive-data/#event_scrubber) also removes sensitive data from headers (and a lot of other fields) right before sending data to Sentry. When you use `data_collection`, the event scrubber doesn't run, so add any extra terms to `http_headers` instead.
 
 ## Cookies
 
@@ -58,7 +60,7 @@ By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cook
 
 If you want to send cookies, set `send_default_pii=True` in the `sentry_sdk.init()` call.
 
-When using `data_collection`, cookies are collected by default with sensitive values scrubbed. Opt out with `{"mode": "off"}`, or restrict which values are sent using `"allowlist"` or `"denylist"` mode:
+When using `data_collection`, cookies are collected by default with sensitive values filtered. Opt out with `{"mode": "off"}`, or restrict which values are sent using `"allowlist"` or `"denylist"` mode:
 
 ```python
 import sentry_sdk
@@ -71,7 +73,7 @@ sentry_sdk.init(
 )
 ```
 
-Additionally a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from cookies (and a lot of other fields) right before sending data to Sentry.
+Without `data_collection`, the [event scrubber](/platforms/python/data-management/sensitive-data/#event_scrubber) also removes sensitive data from cookies (and a lot of other fields) right before sending data to Sentry. When you use `data_collection`, the event scrubber doesn't run, so add any extra terms to `cookies` instead.
 
 ## Information About Logged-in User
 
@@ -134,7 +136,7 @@ The full request URL of outgoing and incoming HTTP requests is **always sent to 
 
 By default, the full request query string of outgoing and incoming HTTP requests is sent to Sentry. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
 
-When using `data_collection`, use `url_query_params` to control this. Set it to `{"mode": "off"}` to disable collection entirely, or use `"allowlist"` / `"denylist"` mode to filter which values are sent. Values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
+When using `data_collection`, use `url_query_params` to control this. Set it to `{"mode": "off"}` to disable collection entirely, or use `"allowlist"` / `"denylist"` mode to filter which values are sent. Values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are filtered automatically.
 
 ```python
 import sentry_sdk
