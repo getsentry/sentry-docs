@@ -82,9 +82,19 @@ Setting a global job listener using a `SchedulerFactoryBeanCustomizer` in Spring
 
 ## Monitor Config
 
-Starting with the next SDK release, `SentryJobListener` sends a monitor config derived from the job's trigger, so Sentry creates the monitor (or updates its schedule) from your code:
+Starting with the next SDK release, `SentryJobListener` can send a monitor config derived from the job's trigger, so Sentry creates the monitor (or updates its schedule) from your code. To turn it on for a job, set `SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY` to `true` in the job data map:
+
+```java
+JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
+jobDetailFactory.setJobDataAsMap(
+    Map.of(
+        SentryJobListener.SENTRY_SLUG_KEY, "<monitor-slug>",
+        SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY, true));
+```
+
+The config is derived like this:
 
 - `CronTrigger`: the cron expression and the trigger's time zone. The seconds field must be a fixed number, and the year field, if set, must be `*`.
 - `SimpleTrigger` that repeats: the repeat interval, if it's a whole number of minutes.
 
-Other triggers send no monitor config. To turn it off for a job, set `SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY` to `false` in the job data map.
+Other triggers send no monitor config. Without the key, or for triggers that send no config, create the monitor in Sentry first.
