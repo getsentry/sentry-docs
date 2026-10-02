@@ -4,7 +4,8 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Ignore errors injected by Brave/Firefox iOS browser scripts (third-party browser noise)
-  ignoreErrors: [/__firefox__/, /DarkReader/],
+  // Also ignore Battery Status API errors thrown by privacy-focused browsers (e.g. Chrome Mobile 146+ on Android)
+  ignoreErrors: [/__firefox__/, /DarkReader/, /Battery Status API/],
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 0.3,
