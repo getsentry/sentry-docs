@@ -181,24 +181,20 @@ Browser modules served by the asset server carry debug IDs, so stack traces are 
 
 Run it from your deploy pipeline, with the same code and configuration the server runs. The debug IDs are hashed from the compiled source, so what is uploaded matches what the running server serves.
 
-`--entry` is a browser entry path and can be repeated. The asset server is read from `./app/assets.ts` (export `assets`); set `--assets-module` and `--assets-export` if yours lives elsewhere. `--dry-run` compiles without uploading.
-
 </SplitSectionText>
 <SplitSectionCode>
 
 ```bash
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ \
-node --import @sentry/remix/v3/node \
-  ./node_modules/.bin/sentry-remix-v3-upload-sourcemaps \
-  --entry app/entry.ts \
-  --org ___ORG_SLUG___ \
-  --project ___PROJECT_SLUG___ \
-  --release "$RELEASE"
+node --import @sentry/remix/v3/node ./node_modules/.bin/sentry-remix-v3-upload-sourcemaps --entry app/entry.ts
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
+
+The command reads `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` from the environment, and proposes the release from your git history. Pass `--org`, `--project` or `--release` to set them yourself.
+
+`--entry` is a browser entry path and can be repeated. The asset server is read from `./app/assets.ts` (export `assets`); set `--assets-module` and `--assets-export` if yours lives elsewhere. `--dry-run` compiles without uploading.
 
 Source maps are generated but hidden by default: modules do not reference them and `.map` requests are not served, so the source only reaches Sentry. Set `sourceMaps: "external"` on the asset server to serve them, or `sourceMaps: false` to turn them off.
 
@@ -207,13 +203,3 @@ Source maps are generated but hidden by default: modules do not reference them a
 Start the app and throw an error from a route handler and from a browser component. Both should show up as issues in your project, the browser one with a readable stack trace once the source maps are uploaded.
 
 </StepConnector>
-
-## Troubleshooting
-
-The SDK warns at startup when the instrumentation did not apply:
-
-```
-[Sentry] Remix 3 is not instrumented: @remix-run/fetch-router was imported before the Sentry module hook was registered. Start Node with `--import @sentry/remix/v3/node`.
-```
-
-Make sure the app starts with `--import @sentry/remix/v3/node` and not `--import remix/node-tsx`. A warning that names a version outside the supported range means the installed Remix release is newer than this SDK supports.
