@@ -14,11 +14,22 @@ sentry:
 
 Sentry creates each monitor from the message's schedule on its first check-in:
 
-- Cron expressions are sent with their timezone.
+- Cron expressions are sent with their timezone. Expressions that Sentry can't parse, such as `W`, `?`, or ranges that wrap around like `22-2`, are not monitored.
 - Intervals are sent when they're a whole number of minutes.
-- Messages with any other trigger are not monitored.
+- Triggers with a jitter get a larger check-in margin to cover it.
+- Messages with any other trigger, including triggers that exclude a time range, are not monitored.
+- `RedispatchMessage` is not monitored. The message it redispatches is monitored when a worker consumes it.
+- Retried messages and messages replayed from a failure transport don't send check-ins.
 
-The monitor slug comes from the message: the command for scheduled console commands, the service and method for scheduled services, and the message class name otherwise. Messages on a schedule other than `default` get the schedule name as a prefix.
+The monitor slug comes from the message:
+
+- Scheduled console commands use the command, for example `app:send-report --force` becomes `app-send-report-force`.
+- Scheduled services use the service and method.
+- Other messages use the class name, for example `SendDailyReportMessage` becomes `send-daily-report-message`. If the message has a `__toString()` method, its value is added at the end.
+- Messages on a schedule other than `default` get the schedule name as a prefix.
+- Slugs longer than 50 characters are shortened and end with a hash.
+
+Messages of the same class share a monitor, even if they're scheduled with different arguments or schedules. To give each one its own monitor, implement `__toString()` on the message so that it returns a different value for each.
 
 To monitor other jobs, send check-ins with the PHP SDK as shown below.
 
