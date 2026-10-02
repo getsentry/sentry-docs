@@ -4,31 +4,30 @@
 
 If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), add `cronTriggersIntegration` to send check-ins for every run of the `scheduled` handler. Each check-in carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. The integration isn't enabled by default because each monitor it creates is billed.
 
-Cron Triggers have no names, so give each one a monitor slug, keyed by the cron expression from your `wrangler.toml`:
+Cron Triggers have no names, and the `scheduled` handler only receives the cron expression. Keep one entry per trigger, keyed by its expression from `wrangler.toml`, with the job and its monitor slug, and use it for both:
 
 ```javascript
+const jobs = {
+  "30 9 * * 1-5": { slug: "daily-report", run: dailyReport },
+  "0 */6 * * *": { slug: "sync-inventory", run: syncInventory },
+};
+
 export default Sentry.withSentry(
   (env) => ({
     dsn: env.SENTRY_DSN,
     integrations: [
-      Sentry.cronTriggersIntegration({
-        slug: (cron) =>
-          ({
-            "30 9 * * 1-5": "daily-report",
-            "0 */6 * * *": "sync-inventory",
-          })[cron],
-      }),
+      Sentry.cronTriggersIntegration({ slug: (cron) => jobs[cron]?.slug }),
     ],
   }),
   {
     async scheduled(controller, env, ctx) {
-      // Your cron job logic here
+      await jobs[controller.cron]?.run(env);
     },
   },
 );
 ```
 
-When you change a trigger's schedule, update its entry so the monitor keeps its slug. Sentry then updates the monitor's schedule on the next check-in. Triggers the function returns `undefined` for send no check-ins. The function can also return an object with the slug and other monitor options, such as `{ slug: "daily-report", maxRuntime: 30 }`.
+When you change a schedule in `wrangler.toml`, change its key in `jobs`. The monitor keeps its slug, and Sentry updates its schedule on the next check-in. Triggers without an entry send no check-ins. The `slug` function can also return an object with the slug and other monitor options, such as `{ slug: "daily-report", maxRuntime: 30 }`.
 
 Without a `slug` function, the slug comes from the cron expression, so it changes when the schedule changes: `30 9 * * 1-5` becomes `cron-30-9-x-x-1to5` (`*` is written as `x`, `,` as `_`, `-` as `to`, and `/` as `by`). Expressions with other characters, or slugs longer than 50 characters, end in a hash of the expression. Workers that report to the same project and share a cron expression share a monitor.
 
