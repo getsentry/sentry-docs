@@ -2,13 +2,13 @@
 
 <AvailableSince version="11.5.0" />
 
-If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), set `monitorCronTriggers` to send check-ins for every run of the `scheduled` handler. Each check-in carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. This option is off by default because each monitor it creates is billed.
+If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), add `cronTriggersIntegration` to send check-ins for every run of the `scheduled` handler. Each check-in carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. The integration isn't enabled by default because each monitor it creates is billed.
 
 ```javascript
 export default Sentry.withSentry(
   (env) => ({
     dsn: env.SENTRY_DSN,
-    monitorCronTriggers: true,
+    integrations: [Sentry.cronTriggersIntegration()],
   }),
   {
     async scheduled(controller, env, ctx) {
@@ -20,13 +20,17 @@ export default Sentry.withSentry(
 
 Cloudflare numbers the days of the week from 1 (Sunday) to 7 (Saturday), and Sentry numbers them from 0 (Sunday). The SDK converts the day-of-week field to day names before sending it, so `1-5` is sent as `SUN-THU`. If the field can't be converted, check-ins are sent without a schedule, and you need to create the monitor in Sentry first.
 
-With `true`, the monitor slug comes from the cron expression: `cron-` followed by the lowercased expression, with spaces written as `-`, `*` as `x`, `,` as `_`, `-` as `to`, and `/` as `by`. For example, `30 9 * * 1-5` becomes `cron-30-9-x-x-1to5`. If the expression has other characters or the slug would be longer than 50 characters, the slug is shortened and ends in a hash of the expression. Workers that report to the same project and share a cron expression share a monitor.
+By default, the monitor slug comes from the cron expression: `cron-` followed by the lowercased expression, with spaces written as `-`, `*` as `x`, `,` as `_`, `-` as `to`, and `/` as `by`. For example, `30 9 * * 1-5` becomes `cron-30-9-x-x-1to5`. If the expression has other characters or the slug would be longer than 50 characters, the slug is shortened and ends in a hash of the expression. Workers that report to the same project and share a cron expression share a monitor.
 
-To choose the slug yourself, pass a function that receives the cron expression. It can return the slug, or an object with the slug and other monitor options. Return `undefined` to skip a trigger:
+To choose the slug yourself, pass a `slug` function that receives the cron expression. It can return the slug, or an object with the slug and other monitor options. Return `undefined` to skip a trigger:
 
 ```javascript
-monitorCronTriggers: (cron) =>
-  cron === "0 0 * * *" ? { slug: "nightly-cleanup", maxRuntime: 30 } : undefined,
+integrations: [
+  Sentry.cronTriggersIntegration({
+    slug: (cron) =>
+      cron === "0 0 * * *" ? { slug: "nightly-cleanup", maxRuntime: 30 } : undefined,
+  }),
+],
 ```
 
 Runs without a cron expression, such as some manual runs with `--test-scheduled`, send no check-ins.
