@@ -2,7 +2,22 @@
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
-Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
+Wrap your job with `sentry.WithMonitor`. It sends an in-progress check-in with the monitor config, which creates or updates the monitor, then runs the job and sends an `ok` or `error` check-in with its duration:
+
+```go
+err := sentry.WithMonitor("<monitor-slug>", &sentry.MonitorConfig{
+	Schedule: sentry.CrontabSchedule("0 * * * *"),
+}, func() error {
+	// Execute your scheduled task here...
+	return nil
+})
+```
+
+The job's error is returned unchanged. If the job panics, Sentry gets an `error` check-in and the panic continues. `sentry.WithMonitor` requires a sentry-go version newer than `0.49.0`. If the monitor already exists in Sentry, you can pass `nil` instead of a config.
+
+### Manual Check-Ins
+
+To send check-ins yourself, call `sentry.CaptureCheckIn` at the start and end of your job. Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
 
 ```go
 monitorConfig := &sentry.MonitorConfig{
