@@ -1,0 +1,25 @@
+## Symfony Scheduler
+
+The Symfony SDK can monitor messages run by the [Symfony Scheduler](https://symfony.com/doc/current/scheduler.html). It sends a check-in when a recurring message starts, and another when it finishes or fails. (Please note, this creates a Cron Monitor for every recurring message, which counts against your quota.)
+
+This requires `sentry/sentry-symfony` 5.14.0 or later and `symfony/scheduler` 6.4 or later.
+
+Enable it in your bundle configuration:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    scheduler:
+        enabled: true
+```
+
+Sentry creates each monitor from the message's schedule on its first check-in:
+
+- Cron expressions are sent with their timezone.
+- Intervals are sent when they're a whole number of minutes.
+- Messages with any other trigger are not monitored.
+
+The monitor slug comes from the message: the command for scheduled console commands, the service and method for scheduled services, and the message class name otherwise. Messages on a schedule other than `default` get the schedule name as a prefix.
+
+To monitor other jobs, send check-ins with the PHP SDK as shown below.
+
+<PlatformContent includePath="crons/setup" noGuides />
