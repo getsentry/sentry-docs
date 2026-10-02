@@ -79,3 +79,12 @@ Setting the monitor slug on the `Trigger` will override what is set on the `JobD
 Setting a global job listener using a `SchedulerFactoryBeanCustomizer` in Spring Boot, will override the listener set by Sentry. For Sentry to work properly, you need to add a new `SentryJobListener` instance to the global job listeners.
 
 </Alert>
+
+## Monitor Config
+
+Starting with the next SDK release, `SentryJobListener` sends a monitor config derived from the job's trigger, so Sentry creates the monitor (or updates its schedule) from your code:
+
+- `CronTrigger`: the cron expression and the trigger's time zone. The seconds field must be a fixed number, and the year field, if set, must be `*`.
+- `SimpleTrigger` that repeats: the repeat interval, if it's a whole number of minutes.
+
+Other triggers send no monitor config. To turn it off for a job, set `SentryJobListener.SENTRY_UPSERT_MONITOR_CONFIG_KEY` to `false` in the job data map.
