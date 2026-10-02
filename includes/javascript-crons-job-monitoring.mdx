@@ -2,11 +2,32 @@ Use the `Sentry.withMonitor()` API to monitor a callback and notify you if your 
 
 `Sentry.withMonitor()` requires SDK version `7.76.0`.
 
+Pass a monitor configuration as the third argument so Sentry creates or updates the monitor from your code:
+
+```javascript
+Sentry.withMonitor(
+  "<monitor-slug>",
+  () => {
+    // Execute your scheduled task here...
+  },
+  {
+    schedule: { type: "crontab", value: "0 * * * *" },
+    checkinMargin: 2, // In minutes. Optional.
+    maxRuntime: 10, // In minutes. Optional.
+    timezone: "America/Los_Angeles", // Optional.
+  }
+);
+```
+
+If no monitor with this slug exists in Sentry and no monitor configuration is sent, Sentry drops the check-ins. If you already created the monitor in Sentry, you can leave out the configuration:
+
 ```javascript
 Sentry.withMonitor("<monitor-slug>", () => {
   // Execute your scheduled task here...
 });
 ```
+
+See [Upserting Cron Monitors](#upserting-cron-monitors) for all configuration options.
 
 <Alert level="info">
 

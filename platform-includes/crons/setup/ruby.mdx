@@ -15,12 +15,13 @@ end
 More generally, popular job frameworks such as [Active Job](/platforms/ruby/guides/rails/integrations/active-job/)
 and `Sidekiq` with a `perform` method can use the
 `Sentry::Cron::MonitorCheckIns` mixin module to automatically capture check-ins.
+Pass a `monitor_config` so Sentry creates or updates the monitor from your code.
 
 ```rb {tabTitle: ActiveJob} {mdExpandTabs}
 class ExampleJob < ApplicationJob
   include Sentry::Cron::MonitorCheckIns
 
-  sentry_monitor_check_ins
+  sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_crontab('0 * * * *')
 
   def perform(*args)
     # do stuff
@@ -33,7 +34,7 @@ class SidekiqJob
   include Sidekiq::Job
   include Sentry::Cron::MonitorCheckIns
 
-  sentry_monitor_check_ins
+  sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_crontab('0 * * * *')
 
   def perform(*args)
     # do stuff
@@ -41,7 +42,7 @@ class SidekiqJob
 end
 ```
 
-You can pass in optional attributes to `sentry_monitor_check_ins` as follows.
+If no monitor with this slug exists in Sentry and no `monitor_config` is sent, Sentry drops the check-ins. You can pass in optional attributes to `sentry_monitor_check_ins` as follows.
 
 ```rb
 # slug defaults to the job class name

@@ -8,6 +8,42 @@ Check-in monitoring allows you to track a job's progress by completing two check
 
 The Sentry Java SDK offers a helper that takes care of wrapping your code and sending a check-in at the start and one at the end. It checks for exceptions and sets the status of the check-in accordingly.
 
+Pass a `MonitorConfig` with a `MonitorSchedule` so Sentry creates or updates (upserts) the monitor from your code:
+
+```java
+import io.sentry.MonitorConfig;
+import io.sentry.MonitorSchedule;
+import io.sentry.util.CheckInUtils;
+
+MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.crontab("0 * * * *"));
+monitorConfig.setCheckinMargin(5L); // Optional check-in margin in minutes
+monitorConfig.setMaxRuntime(15L); // Optional max runtime in minutes
+monitorConfig.setTimezone("Europe/Vienna"); // Optional timezone
+
+String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> {
+    // Execute your scheduled task here...
+    return "computed result";
+});
+```
+
+```kotlin
+import io.sentry.MonitorConfig
+import io.sentry.MonitorSchedule
+import io.sentry.util.CheckInUtils
+
+val monitorConfig = MonitorConfig(MonitorSchedule.crontab("0 * * * *")).apply {
+    checkinMargin = 5L // Optional check-in margin in minutes
+    maxRuntime = 15L // Optional max runtime in minutes
+    timezone = "Europe/Vienna" // Optional timezone
+}
+
+CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig) {
+    // Execute your scheduled task here...
+}
+```
+
+If no monitor with this slug exists in Sentry and no `MonitorConfig` is sent, Sentry drops the check-ins. If you already created the monitor in Sentry, you can leave out the config:
+
 ```java
 import io.sentry.util.CheckInUtils;
 
@@ -25,34 +61,7 @@ CheckInUtils.withCheckIn("<monitor-slug>") {
 }
 ```
 
-You may also send a `MonitorConfig` with a `MonitorSchedule` so the monitor is created or updated (upsert) automatically.
-
-```java
-import io.sentry.MonitorConfig;
-import io.sentry.MonitorSchedule;
-import io.sentry.MonitorScheduleUnit;
-import io.sentry.util.CheckInUtils;
-
-MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE));
-
-String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> {
-    // Execute your scheduled task here...
-    return "computed result";
-});
-```
-
-```kotlin
-import io.sentry.MonitorConfig
-import io.sentry.MonitorSchedule
-import io.sentry.MonitorScheduleUnit
-import io.sentry.util.CheckInUtils
-
-val monitorConfig = MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE))
-
-CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig) {
-    // Execute your scheduled task here...
-}
-```
+See [Upserting Cron Monitors](#upserting-cron-monitors) for all schedule and configuration options.
 
 You can also check-in to a specific environment.
 

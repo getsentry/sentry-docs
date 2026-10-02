@@ -2,6 +2,40 @@
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
+Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
+
+```go
+monitorConfig := &sentry.MonitorConfig{
+	Schedule:      sentry.CrontabSchedule("0 * * * *"),
+	CheckInMargin: 5,               // Optional check-in margin in minutes
+	MaxRuntime:    15,              // Optional max runtime in minutes
+	Timezone:      "Europe/Vienna", // Optional timezone
+}
+
+// 🟡 Notify Sentry your job is running:
+checkinId := sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusInProgress,
+	},
+	monitorConfig,
+)
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+sentry.CaptureCheckIn(
+	&sentry.CheckIn{
+		ID:          *checkinId,
+		MonitorSlug: "<monitor-slug>",
+		Status:      sentry.CheckInStatusOK,
+	},
+	monitorConfig,
+)
+```
+
+If no monitor with this slug exists in Sentry and no monitor config is sent, Sentry drops the check-ins. If you already created the monitor in Sentry, you can pass `nil` instead of the monitor config:
+
 ```go
 // 🟡 Notify Sentry your job is running:
 checkinId := sentry.CaptureCheckIn(
