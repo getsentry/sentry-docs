@@ -7,15 +7,16 @@ _Import name: `Sentry.prismaIntegration`_
 
 Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Prisma integration. The integration creates a span for each query and reports relevant details to Sentry.
 
-The integration relies on Node.js APIs, so your Worker must run with the `nodejs_compat` compatibility flag. Add the `prismaIntegration` to your `Sentry.init` call:
+The integration relies on Node.js APIs, so your Worker must run with the `nodejs_compat` compatibility flag. Add the `prismaIntegration` to your `instrument.server.ts` file:
 
-```javascript {3,5}
+```typescript {filename:src/instrument.server.ts} {6}
 import * as Sentry from "@sentry/cloudflare";
 
-Sentry.init({
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
   integrations: [Sentry.prismaIntegration()],
-});
+}));
 ```
 
 This integration supports Prisma versions 5, 6, and 7. In Prisma v5, you also need to add the `tracing` preview feature to the `generator` block of your Prisma schema:
