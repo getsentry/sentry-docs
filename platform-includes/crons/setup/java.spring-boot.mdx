@@ -54,23 +54,25 @@ public class CustomJob {
 
 ### Monitor Configuration From `@Scheduled`
 
-From the next Sentry Java SDK release (after `8.59.0`), `@SentryCheckIn` reads the method's `@Scheduled` annotation and sends a monitor configuration with the in-progress check-in, so Sentry creates the monitor, or updates its schedule, from your code. The schedule is converted like this:
+From the next Sentry Java SDK release (after `8.59.0`), set `upsertMonitorConfig = true` and `@SentryCheckIn` reads the method's `@Scheduled` annotation and sends a monitor configuration with the in-progress check-in, so Sentry creates the monitor, or updates its schedule, from your code:
+
+```java
+@Scheduled(cron = "0 0 * * * *")
+@SentryCheckIn(value = "<monitor-slug>", upsertMonitorConfig = true) // 👈
+void execute() {
+  // your task code
+}
+```
+
+The schedule is converted like this:
 
 - `cron`: a Spring cron expression with a fixed seconds field (for example `0 0 * * * *`) is sent as a crontab schedule without the seconds. Spring macros such as `@hourly` and `@daily` are supported.
 - `fixedRate` and `fixedDelay` (including the `*String` variants, such as `"5m"` or `"PT5M"`, and `timeUnit`): sent as an interval schedule when the period is a whole number of minutes.
 - `zone`: sent as the monitor's timezone for cron schedules. Without `zone`, the JVM's default time zone is sent, since that's where Spring runs the job.
 
-Placeholders such as `${app.cleanup.cron}` are resolved. No configuration is sent for cron expressions with variable seconds (for example `*/30 * * * * *`), periods that aren't whole minutes, methods with more than one `@Scheduled`, or heartbeat check-ins. For those, and for older SDK versions, [create the monitor in Sentry](https://sentry.io/issues/alerts/new/crons/) first.
+Placeholders such as `${app.cleanup.cron}` are resolved. No configuration is sent for cron expressions with variable seconds (for example `*/30 * * * * *`), periods that aren't whole minutes, methods with more than one `@Scheduled`, or heartbeat check-ins. For those, for methods without `upsertMonitorConfig = true`, and for older SDK versions, [create the monitor in Sentry](https://sentry.io/issues/alerts/new/crons/) first.
 
-Sentry only updates the schedule and the fields that were sent, so settings such as margins configured in Sentry are kept. To manage the monitor's schedule in Sentry instead, turn this off:
-
-```java
-@Scheduled(cron = "0 0 * * * *")
-@SentryCheckIn(monitorSlug = "<monitor-slug>", upsertMonitorConfig = false)
-void execute() {
-  // your task code
-}
-```
+Sentry only updates the schedule and the fields that were sent, so settings such as margins configured in Sentry are kept.
 
 ## Heartbeat
 
