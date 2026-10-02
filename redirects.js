@@ -942,6 +942,22 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fixa/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fixa/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/cursor/',
     destination: '/integrations/coding-agents/cursor/',
   },
