@@ -45,3 +45,17 @@ public class PricingUpdateWorker
 ```
 
 The SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.ERROR` instead.
+
+## Send the Recurring Job Schedule
+
+Sentry only creates a monitor from a check-in that includes a monitor config. To send the schedule of your recurring jobs with their check-ins, turn on `SendRecurringJobSchedule`. This is available from the next SDK release.
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+GlobalConfiguration.Configuration.UseSentry(options => options.SendRecurringJobSchedule = true);
+RecurringJob.AddOrUpdate<PricingUpdateWorker>("update-pricing", job => job.Execute(), Cron.Hourly());
+```
+
+The SDK sends the job's cron expression and time zone, and Sentry creates the monitor on the first check-in or updates its schedule. Schedules that Sentry can't represent, such as ones that run every few seconds, aren't sent.
