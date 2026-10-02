@@ -3291,6 +3291,12 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
   },
   {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anr/event-loop-block/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/event-loop-block/:path*',
+  },
+  {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/tracing/instrumentation/:path*',
   },
