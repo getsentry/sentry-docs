@@ -1,0 +1,45 @@
+---
+title: Crons
+description: "Learn how to monitor RQ cron jobs with Sentry Crons."
+---
+
+The RQ integration can monitor jobs scheduled with [RQ's cron scheduler](https://python-rq.org/docs/cron/) (`rq cron`) using [Sentry Crons](/product/monitors-and-alerts/monitors/crons/). You get alerted when a job doesn't run on time, fails, or runs too long.
+
+<Alert>
+  This is available from the next SDK release after `2.71.0`, and needs RQ 2.4 or newer.
+</Alert>
+
+## Configure
+
+Monitoring is off by default. Set `monitor_cron_jobs=True` on `RqIntegration` in your cron configuration file, which `rq cron` loads on startup:
+
+```python {filename:cron_config.py}
+import sentry_sdk
+from sentry_sdk.integrations.rq import RqIntegration
+from rq import cron
+
+from myapp import send_newsletter
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        RqIntegration(monitor_cron_jobs=True),
+    ],
+)
+
+cron.register(send_newsletter, queue_name="email", cron="30 10 * * 2")
+```
+
+Your workers also need to initialize Sentry, as described on the <PlatformLink to="/integrations/rq/">RQ integration page</PlatformLink>. The scheduler sends a check-in when it enqueues a job, and the worker sends one when the job finishes or fails.
+
+Each cron job gets a monitor, created the first time the job runs. The monitor slug is the cron job's `name`, which defaults to the function's import path, like `myapp.send_newsletter`.
+
+The schedule comes from the cron job:
+
+- `cron`: a crontab schedule in UTC. Crontabs with a seconds field aren't monitored.
+- `interval`: an interval schedule. Intervals must be whole minutes.
+
+## Supported Versions
+
+- RQ: 2.4+
+- Python: 3.9+
