@@ -29,3 +29,28 @@ export class MyCronService {
 }
 ```
 
+
+### Monitor Config From `@Cron`
+
+<AvailableSince version="11.5.0" />
+
+If you don't pass a monitor config with a `schedule`, `@SentryCron` sends the schedule and time zone of the `@Cron` decorator on the same method with each check-in, so Sentry creates the monitor on the first run. You can still pass other monitor options, such as `checkinMargin` and `maxRuntime`:
+
+```typescript
+import { Cron } from '@nestjs/schedule';
+import { SentryCron } from '@sentry/nestjs';
+
+export class MyCronService {
+  @Cron('0 * * * *', { timeZone: 'America/Los_Angeles' })
+  @SentryCron('my-monitor-slug', { checkinMargin: 2 })
+  handleCron() {
+    // Your cron job logic here
+  }
+}
+```
+
+If `@Cron` has no `timeZone`, the job runs in your server's local time zone, so that time zone is sent.
+
+A six-field expression is sent without its seconds field if that field is a single number, such as `0 30 9 * * *`. Presets such as `@daily` and `@weekly` are sent too. Sub-minute schedules, `Date` values, `utcOffset`, numeric months (use names such as `MAY`), a `*/n` day field combined with the other day field, and time zones that aren't IANA names send no monitor config, including any other options you pass. In those cases, pass a full monitor config to `@SentryCron` or create the monitor in Sentry first.
+
+To send check-ins without a monitor config, pass `{ fromCronDecorator: false }`.
