@@ -1918,6 +1918,29 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly',
   },
+  // The Ionic Capacitor source maps page only exists for the Capacitor guide.
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
+  },
   {
     source:
       '/platforms/:platform/sourcemaps/:section(generating|validating|best-practices|artifact-and-release-bundles|)/',
