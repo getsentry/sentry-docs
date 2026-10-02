@@ -1,3 +1,29 @@
+## Cron Triggers
+
+<AvailableSince version="11.5.0" />
+
+If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), set `monitorCronTriggers` to send check-ins for every run of the `scheduled` handler. Each check-in carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. This option is off by default because each monitor it creates is billed.
+
+```javascript
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: env.SENTRY_DSN,
+    monitorCronTriggers: true,
+  }),
+  {
+    async scheduled(controller, env, ctx) {
+      // Your cron job logic here
+    },
+  },
+);
+```
+
+With `true`, the monitor slug comes from the cron expression: `cron-` followed by the expression with `*` written as `x` and other characters as `-`. For example, `30 9 * * 1-5` becomes `cron-30-9-x-x-1-5`. Workers that report to the same project and share a cron expression share a monitor. To choose the slug yourself, pass a function that receives the cron expression. Return `undefined` to skip a trigger:
+
+```javascript
+monitorCronTriggers: (cron) => (cron === "0 0 * * *" ? "nightly-cleanup" : undefined),
+```
+
 ## Job Monitoring
 
 <Include name="javascript-crons-job-monitoring.mdx" />
