@@ -3236,12 +3236,6 @@ const userDocsRedirects = [
   },
   {
     source:
-      '/platforms/javascript/common/configuration/integrations/anr/event-loop-block/:path*',
-    destination:
-      '/platforms/javascript/common/configuration/integrations/event-loop-block/:path*',
-  },
-  {
-    source:
       '/platforms/javascript/guides/:guide/configuration/integrations/anr/event-loop-block/:path*',
     destination:
       '/platforms/javascript/guides/:guide/configuration/integrations/event-loop-block/:path*',
