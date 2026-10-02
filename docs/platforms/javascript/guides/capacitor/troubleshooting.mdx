@@ -5,6 +5,37 @@ keywords: ["minimum version", "deployment target"]
 sidebar_order: 9000
 ---
 
+## Source Maps Not Linked When Using Live Reload
+
+When you run your app with live reload (for example, `ionic cap run android -l` or `npx cap run ios -l`), the app loads files from your local dev server instead of the production build in your `www` folder. Stack traces from events captured during a live reload session reference the dev server's URLs, such as `http://192.168.x.x:8100/vendor.js`, which don't match the source maps generated from your production build.
+
+Because of this mismatch, source maps won't apply to events captured over live reload, and you may see an error like this when validating a release with `sentry-cli`:
+
+```
+Uploaded artifacts do not include entry: ~/vendor.js
+```
+
+To verify that your source maps are set up correctly, test against a production build instead of a live reload session:
+
+```bash
+ionic build --configuration=production
+npx cap sync
+```
+
+Then run the production build on your device or emulator and upload source maps from your `www` build output as usual.
+
+## Replay only shows a white Empty page
+
+Session Replay does not work correctly with `@ionic/angular`, `@ionic/vue`, or `@ionic/react` version `8.7.1` or newer. Pin these packages to version `8.7.0` to capture session replays.
+
+## Support 16 KB Page Sizes on Android
+
+Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you'll need to rebuild it for compatibility with these devices.
+
+Update to Sentry Capacitor SDK version `1.5.0` and above order to support 16 KB page sizes on Android devices.
+
+Please read the [Android developer documentation](https://developer.android.com/guide/practices/page-sizes) to update and test your app with 16 KB page size support.
+
 ## Different Versions for Sibling SDKs
 
 If you see the following error during build time, the sibling SDKs installed in your app have mismatched versions:
@@ -89,7 +120,7 @@ If you encounter the following error:
 CocoaPods could not find compatible versions for pod "Sentry"
 ```
 
-You can fix this by udating your pod repository:
+You can fix this by updating your pod repository:
 
 ```bash
 pod repo update

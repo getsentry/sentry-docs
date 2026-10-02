@@ -1,0 +1,81 @@
+---
+title: Migrate from sentry-android 4.3.0 to 5.0.0
+sidebar_order: 8935
+description: "Learn about migrating from Sentry Android SDK 4.3.0 to 5.0.0."
+---
+
+You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/configuration/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+
+`Sentry#startTransaction` by default does not bind created transaction to the scope. To start transaction with binding to the scope, use one of the new overloaded `startTransaction` methods taking `bindToScope` parameter and set it to `true`. Bound transaction can be retrieved with `Sentry#getSpan`.
+
+All SDK methods have been annotated with [JetBrains Annotations](https://github.com/JetBrains/java-annotations): `@Nullable` and `@NotNull`. Kotlin compiler respects these annotations, so in Kotlin code, some fields that were recognized as not-null, are now nullable, and the other way around.
+
+`SentryBaseEvent#getOriginThrowable` has been deprecated in favor of `SentryBaseEvent#getThrowable`, and `SentryBaseEvent#getThrowable` now returns the unwrapped throwable.
+
+`SentryOptions#getCacheDirSize` has been deprecated in favor of `SentryOptions#getMaxCacheItems`.
+
+`InvalidDsnException` has been removed. It is replaced by `IllegalArgumentException`.
+
+`EventProcessor` interface has a new `default` method which could break the instantiation when using trailing lambdas.
+
+_Old_:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+_New_:
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
+        return event
+    }
+})
+```
+
+A random generated `installationId` replaces `Settings.Secure.ANDROID_ID`, which has been removed. This may affect the number of unique users displayed on the Issues page and Alerts.
+If you always set a custom user using `Sentry.setUser(customUser)`, the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet:
+
+```java
+User user = new User();
+user.setId(Settings.Secure.ANDROID_ID);
+
+Sentry.setUser(user);
+```
+
+`SentryOptions#setEnableSessionTracking(boolean)` is deprecated in favor of `SentryOptions#setEnableAutoSessionTracking(boolean)`. It will be removed in future.
+
+_Old_:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableSessionTracking(false);
+});
+```
+
+_New_:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableAutoSessionTracking(false);
+});
+```
+
+`io.sentry.session-tracking.enable` AndroidManifest meta-data is deprecated in favor of `io.sentry.auto-session-tracking.enable`. It will be removed in future.
+
+_Old_:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.session-tracking.enable" android:value="false" />
+</application>
+```
+
+_New_:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-session-tracking.enable" android:value="false" />
+</application>
+```

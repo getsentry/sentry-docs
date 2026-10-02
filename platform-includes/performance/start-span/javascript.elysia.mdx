@@ -1,0 +1,46 @@
+Start a span for a synchronous operation:
+
+```javascript
+const result = Sentry.startSpan({ name: "Important Function" }, () => {
+  return expensiveFunction();
+});
+```
+
+Start a span for an asynchronous operation:
+
+```javascript
+const result = await Sentry.startSpan(
+  { name: "Important Function" },
+  async () => {
+    const res = await doSomethingAsync();
+    return updateRes(res);
+  }
+);
+```
+
+Start a span within an Elysia route handler:
+
+```javascript
+app.get("/checkout", () => {
+  return Sentry.startSpan({ name: "process-payment" }, () => {
+    // ... your code
+  });
+});
+```
+
+You can also nest spans:
+
+```javascript
+const result = await Sentry.startSpan(
+  {
+    name: "Important Function",
+  },
+  async () => {
+    const res = await Sentry.startSpan({ name: "Child Span" }, () => {
+      return expensiveAsyncFunction();
+    });
+
+    return updateRes(res);
+  }
+);
+```

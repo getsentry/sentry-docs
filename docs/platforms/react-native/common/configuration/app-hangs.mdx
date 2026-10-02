@@ -1,0 +1,100 @@
+---
+title: App Hangs
+sidebar_order: 11
+description: "Learn about how to add app hang detection reporting."
+---
+
+This integration tracks app hangs. It's available on iOS, tvOS, macOS, and on Android through NDK-based detection (see [App Hang Tracking on Android](#app-hang-tracking-on-android)).
+
+Trying to use an unresponsive app is extremely frustrating for users. There are many reasons why an app may become unresponsive, such as long-running code, infinite loop bugs, and so on. With app hang tracking you can detect and fix them.
+
+Every time an App Hang is detected Sentry creates an error event. App Hang Tracking is enabled by default. To disable it, set the `enableAppHangTracking` option to `false`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableAppHangTracking: false,
+});
+```
+
+The app hang detection integration has a default timeout of two (2) seconds. This represents the minimum amount of time an app can be unresponsive before it is classified as hanging. You can change the timeout by setting the `appHangTimeoutInterval` option:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  appHangTimeoutInterval: 1,
+});
+```
+
+### App Hang Tracking on Android
+
+The `enableAppHangTracking` and `appHangTimeoutInterval` options above apply to iOS, tvOS, and macOS. On Android, you can enable `sentry-native`'s heartbeat-based app hang detection with the `enableNdkAppHangTracking` option. This is independent of the JVM-based ANR detection and requires NDK to be enabled. It's disabled by default:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableNdkAppHangTracking: true,
+});
+```
+
+The default timeout is 5000 milliseconds. This represents the minimum amount of time the app can be unresponsive before it's classified as hanging. You can change the timeout by setting the `ndkAppHangTimeoutIntervalMillis` option:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableNdkAppHangTracking: true,
+  ndkAppHangTimeoutIntervalMillis: 3000,
+});
+```
+
+### ANR Profiling on Android
+
+When a foreground ANR is detected on Android, the SDK can capture a stack profile of the main thread and attach it to the ANR event on the next app start. This gives you a flamegraph on the issue details page, showing what the main thread was doing at the time of the ANR. This is independent of the JVM-based ANR detection (which is always on by default) and of UI/transaction profiling configured via `profilesSampleRate`.
+
+<Alert>
+
+ANR profiles are powered by the Profiling platform and require a plan with profiling enabled. They're billed as UI Profile Hours. See the [pricing page](https://sentry.io/pricing/) for more details.
+
+</Alert>
+
+ANR profiling is disabled by default. To enable it, set the `anrProfilingSampleRate` option to a value between `0.0` and `1.0`. This controls the probability that a profile is collected for each detected foreground ANR (`0.0` represents 0% while `1.0` represents 100%):
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  anrProfilingSampleRate: 1.0,
+});
+```
+
+To read more about how ANR profiles are captured, check out the `sentry-java` [documentation](/platforms/android/configuration/app-not-respond/#anr-profiling).
+
+### Pause and Resume App Hang Tracking (iOS only)
+
+Starting with version 8.13.0, you can pause and resume app hang tracking at runtime. This is useful when showing system dialogs (for example, permission prompts) that block the main thread but aren't real app hangs.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.pauseAppHangTracking();
+
+// Do something that might cause the app to hang,
+// and you don't want the SDK to report it.
+
+Sentry.resumeAppHangTracking();
+```
+
+To read more about how app hangs are detected, check out the `sentry-cocoa` [documentation](/platforms/apple/configuration/app-hangs/).
+
+## MetricKit Hang Diagnostics
+
+On iOS 15 and up, the operating system can also report hangs through MetricKit. These are separate from the app hangs described above, and the SDK reports them only if you enable the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> integration. If you enable both, a single unresponsive period may be reported twice, once from each source.

@@ -1,0 +1,103 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```go
+// ❌ Scattered thin logs
+logger.Info().Emit("Starting checkout")
+logger.Info().Emit("Validating cart")
+logger.Info().Emit("Processing payment")
+logger.Info().Emit("Checkout complete")
+
+// ✅ One wide event with full context
+logger.Info().
+    String("order_id", order.ID).
+    String("user_id", user.ID).
+    String("user_tier", user.Subscription).
+    Float64("cart_value", cart.Total).
+    Int("item_count", len(cart.Items)).
+    String("payment_method", "stripe").
+    Int64("duration_ms", time.Since(startTime).Milliseconds()).
+    Emit("Checkout completed")
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```go
+logger.Info().
+    // User context
+    String("user_id", user.ID).
+    String("user_tier", user.Plan). // "free" | "pro" | "enterprise"
+    Int("account_age_days", user.AgeDays).
+
+    // Request data
+    String("endpoint", "/api/orders").
+    String("method", "POST").
+    Int64("duration_ms", 234).
+
+    // Business context
+    Float64("order_value", 149.99).
+    Emit("API request completed")
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match common conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```go
+// ❌ Inconsistent naming
+logger.Info().String("user", "123").Emit("msg")
+logger.Info().String("userId", "123").Emit("msg")
+logger.Info().String("user_id", "123").Emit("msg")
+logger.Info().String("UserID", "123").Emit("msg")
+
+// ✅ Consistent snake_case
+logger.Info().
+    String("user_id", "123").
+    String("order_id", "456").
+    Float64("cart_value", 99.99).
+    Int("item_count", 3).
+    Emit("Order processed")
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>

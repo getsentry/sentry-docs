@@ -1,0 +1,19 @@
+App bundles contain code signature data within `_CodeSignature/` directories. In these you'll find a `CodeResources` plist file with hashes of every file within the bundle. Similarly, Mach-O binaries contain additional hashes of every page block within its `LC_CODE_SIGNATURE` load command. This means the size of code signature data will scale linearly with the amount of files in your bundle and size of your binaries.
+
+By default Sentry calculates the size of this data as-is. You may notice differences when comparing against your app downloaded from the App Store. For example, Xcode 26 archives only codesign with `SHA256` hashes, but the App Store can use both `SHA1` and `SHA256` hashes. In other words, App Store downloads of your app may be slightly larger than what's produced by Xcode. This App Store behavior is subject to change at any time.
+
+If you'd like to compare the impact of this on your app, you can re-sign your app before uploading to Sentry:
+
+```bash
+# Inspect the current code signature
+codesign -dvvv '/path/to/your/app.app'
+
+# Re-sign with a new code signature
+codesign --force \
+  --sign 'Apple Distribution: Your Team (team_id)' \
+  --digest-algorithm sha1 \
+  --digest-algorithm sha256 \
+  '/path/to/your/app.app'
+```
+
+This will force both `SHA1` and `SHA256` hashes to be used.

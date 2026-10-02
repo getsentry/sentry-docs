@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
 
 import styles from './banner.module.scss';
 
@@ -13,6 +13,8 @@ type BannerType = {
   linkURL: string;
   /** The main text of the banner */
   text: string;
+  /** Optional text after the link; when set, the link is rendered inline */
+  textAfterLink?: string;
   /** Optional ISO Date string that will hide the banner after this date without the need for a rebuild */
   expiresOn?: string;
 };
@@ -46,6 +48,32 @@ type BannerType = {
 // ];
 
 const BANNERS: BannerType[] = [
+  {
+    appearsOn: ['^/integrations/feature-flag/launchdarkly/$'],
+    text: '',
+    linkURL: 'https://sentry.io/resources/launchdarkly-workshop/',
+    linkText: 'Join a workshop',
+    textAfterLink:
+      ' on September 23rd about protecting releases and fixing bugs with Sentry & LaunchDarkly.',
+    expiresOn: '2026-09-22T23:59:59Z',
+  },
+  {
+    appearsOn: ['^/product/logs/$', '^/platforms/.*/logs/'],
+    text: 'Go deeper with Logs.',
+    linkURL: 'https://sentry.io/resources/beyond-logs-basics-workshop/',
+    linkText: 'Join the workshop',
+    textAfterLink: ' on Oct. 1.',
+    expiresOn: '2026-09-30T23:59:59Z',
+  },
+  {
+    appearsOn: ['^/product/agents/$', '^/platforms/.*/agent-tracing/'],
+    text: "Join Sentry's",
+    linkURL: 'https://sentry.io/resources/agent-tracing-series/',
+    linkText: 'agent debugging series',
+    textAfterLink:
+      ' on October 7th and 14th to learn best practices, including how the Sentry team debugs their own agents.',
+    expiresOn: '2026-10-13T23:59:59Z',
+  },
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
@@ -53,17 +81,6 @@ const BANNERS: BannerType[] = [
     text: 'Edit this banner on `/src/components/banner/index.tsx`',
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
-  },
-  {
-    appearsOn: [
-      '^/platforms/dart/guides/flutter/',
-      '^/platforms/react-native/',
-      '^/platforms/android/',
-      '^/platforms/apple/guides/ios/',
-    ],
-    text: 'Session Replay is now generally available for mobile.',
-    linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
-    linkText: 'Get started today.',
   },
 ];
 
@@ -78,7 +95,7 @@ const fastHash = (input: string) => {
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash &= hash; // Convert to 32bit integer
   }
   return hash;
 };
@@ -91,7 +108,7 @@ const readOrResetLocalStorage = () => {
 
   try {
     return JSON.parse(stored);
-  } catch (e) {
+  } catch {
     localStorage.removeItem(LOCALSTORAGE_NAMESPACE);
     return null;
   }
@@ -132,14 +149,34 @@ export function Banner() {
   if (!banner) {
     return null;
   }
+
+  const hasInlineLink = banner.textAfterLink !== undefined;
+
   return (
     <div className={[styles['promo-banner']].filter(Boolean).join(' ')}>
       <div className={styles['promo-banner-message']}>
-        <span className="flex flex-col md:flex-row gap-4">
-          {banner.text}
-          <a href={banner.linkURL} className="min-w-max">
-            {banner.linkText}
-          </a>
+        <span
+          className={
+            hasInlineLink
+              ? styles['promo-banner-inline-link']
+              : 'flex flex-col md:flex-row gap-4'
+          }
+        >
+          {hasInlineLink ? (
+            <Fragment>
+              {banner.text}
+              {banner.text && ' '}
+              <a href={banner.linkURL}>{banner.linkText}</a>
+              {banner.textAfterLink}
+            </Fragment>
+          ) : (
+            <Fragment>
+              {banner.text}
+              <a href={banner.linkURL} className="min-w-max">
+                {banner.linkText}
+              </a>
+            </Fragment>
+          )}
         </span>
       </div>
       <button

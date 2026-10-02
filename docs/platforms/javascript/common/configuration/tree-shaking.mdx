@@ -1,6 +1,6 @@
 ---
 title: Tree Shaking
-sidebar_order: 11000
+sidebar_order: 70
 description: "Learn how to reduce Sentry bundle size by tree shaking unused code."
 notSupported:
   - javascript.aws-lambda
@@ -75,35 +75,6 @@ For more details, see the documentation for the specific bundler plugin you're u
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.nextjs"]}>
-
-### Tree Shaking With Next.js
-
-To tree shake Sentry debug code in Next.js projects, use webpack's [DefinePlugin](https://webpack.js.org/plugins/define-plugin/) in your Next.js configuration like in the example below:
-
-```javascript {filename:next.config.(js|mjs)}
-const nextConfig = {
-  webpack: (config, { webpack }) => {
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        __SENTRY_DEBUG__: false,
-        __SENTRY_TRACING__: false,
-        __RRWEB_EXCLUDE_IFRAME__: true,
-        __RRWEB_EXCLUDE_SHADOW_DOM__: true,
-        __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
-      })
-    );
-
-    // return the modified config
-    return config;
-  },
-};
-```
-
-For more information on custom webpack configurations in Next.js, see [Custom Webpack Config](https://nextjs.org/docs/api-reference/next.config.js/custom-webpack-config) in the Next.js docs.
-
-</PlatformSection>
-
 ### Manual Tree Shaking
 
 If you want to tree shake optional code, remove the code from your build output by replacing various flags in the Sentry SDK. Note that if you already configured tree shaking via the Sentry Bundler Plugins, you do not need to do this manually - the plugins will take care of it for you.
@@ -120,9 +91,9 @@ Replacing this flag with `false` will tree shake any SDK code that's related to 
 
 <Alert>
   `__SENTRY_TRACING__` must not be replaced with `false` when you're using any
-  tracing-related SDK features (for example,`Sentry.startTransaction()`). This
-  flag is intended to be used in combination with packages like `@sentry/next`
-  or `@sentry/sveltekit`, which automatically include the tracing functionality.
+  tracing-related SDK features (for example, `Sentry.startSpan()`). This flag is
+  intended to be used in combination with packages like `@sentry/next` or
+  `@sentry/sveltekit`, which automatically include the tracing functionality.
 </Alert>
 
 <PlatformCategorySection supported={["browser"]}>
@@ -130,19 +101,19 @@ Replacing this flag with `false` will tree shake any SDK code that's related to 
 </PlatformCategorySection>
 
 <PlatformCategorySection supported={['browser']}>
-<PlatformSection notSupported={["javascript.wasm", "javascript.cordova", "javascript.bun", "javascript.deno"]}>
+<PlatformSection notSupported={["javascript.wasm", "javascript.bun", "javascript.deno"]}>
 
 `__RRWEB_EXCLUDE_IFRAME__`
 
-Replacing this flag with `true` will tree shake any SDK code related to capturing iframe content with Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you don't want to record any iframes. This has no effect if you did not add `replayIntegration`.
+Replacing this flag with `true` will tree shake any SDK code related to capturing iframe content with Session Replay. It's only relevant when using <PlatformLink to="/session-replay/">Session Replay</PlatformLink>. Enable this flag if you don't want to record any iframes. This has no effect if you did not add `replayIntegration`.
 
 `__RRWEB_EXCLUDE_SHADOW_DOM__`
 
-Replacing this flag with `true` will tree shake any SDK code related to capturing shadow dom elements with Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you don't want to record any shadow dom elements. This has no effect if you didn't add `replayIntegration`.
+Replacing this flag with `true` will tree shake any SDK code related to capturing shadow dom elements with Session Replay. It's only relevant when using <PlatformLink to="/session-replay/">Session Replay</PlatformLink>. Enable this flag if you don't want to record any shadow dom elements. This has no effect if you didn't add `replayIntegration`.
 
 `__SENTRY_EXCLUDE_REPLAY_WORKER__`
 
-Replacing this flag with `true` will tree shake any SDK code that's related to the included compression web worker for Session Replay. It's only relevant when using <PlatformLink to="/session-replay">Session Replay</PlatformLink>. Enable this flag if you want to host a compression worker yourself. See <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">Using a Custom Compression Worker</PlatformLink> for details. **We don't recommend enabling this flag unless you provide a custom worker URL.** This has no effect if you did not add `replayIntegration`.
+Replacing this flag with `true` will tree shake any SDK code that's related to the included compression web worker for Session Replay. It's only relevant when using <PlatformLink to="/session-replay/">Session Replay</PlatformLink>. Enable this flag if you want to host a compression worker yourself. See <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">Using a Custom Compression Worker</PlatformLink> for details. **We don't recommend enabling this flag unless you provide a custom worker URL.** This has no effect if you did not add `replayIntegration`.
 
 </PlatformSection>
 </PlatformCategorySection>
@@ -243,11 +214,11 @@ export default {
 
 </PlatformSection>
 
-<PlatformCategorySection supported={['browser']}>
+<PlatformCategorySection supported={['browser-only']}>
 ## Tree Shaking Default Integrations
 
-By default, the Sentry SDK sets up a list of [default integrations](../integrations) that extend your
-SDK functionality. You can also add [additional](../integrations) or [custom](../integrations/custom)
+By default, the Sentry SDK sets up a list of [default integrations](../integrations/) that extend your
+SDK functionality. You can also add [additional](../integrations/) or [custom](../integrations/custom/)
 integrations to your SDK configuration.
 If you don't want to include default integrations in your config, you can [disable](../options/#integration-configuration)
 them and add your custom array of integrations.
@@ -295,22 +266,14 @@ This means that the `ClientOptions.integrations` property is the final array of 
 </Alert>
 </PlatformCategorySection>
 
-<PlatformSection supported={[
-  'javascript.node',
-  'javascript.azure-functions',
-  'javascript.connect',
-  'javascript.express',
-  'javascript.fastify',
-  'javascript.hapi',
-  'javascript.hono',
-  'javascript.koa',
-  'javascript.nestjs'
+<PlatformCategorySection supported={[
+  'server-only',
 ]}>
 
 ## Tree Shaking Default Integrations
 
-By default, the Sentry SDK sets up a list of [default integrations](../integrations) that extend your
-SDK functionality. You can also add [additional](../integrations) or [custom](../integrations/custom)
+By default, the Sentry SDK sets up a list of [default integrations](../integrations/) that extend your
+SDK functionality. You can also add [additional](../integrations/) or [custom](../integrations/custom/)
 integrations to your SDK configuration.
 If you don't want to include default integrations in your config, you can use `Sentry.initWithoutDefaultIntegrations()` and pass the integrations you want manually:
 
@@ -324,7 +287,7 @@ Sentry.initWithoutDefaultIntegrations({
     Sentry.httpIntegration(),
     Sentry.consoleIntegration(),
     Sentry.dedupeIntegration(),
-    Sentry.inboundFiltersIntegration(),
+    Sentry.eventFiltersIntegration(),
   ],
 });
 ```
@@ -347,4 +310,4 @@ Sentry.initWithoutDefaultIntegrations({
 });
 ```
 
-</PlatformSection>
+</PlatformCategorySection>

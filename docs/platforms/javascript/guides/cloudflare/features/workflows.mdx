@@ -1,0 +1,34 @@
+---
+title: Cloudflare Workflows
+description: "Learn how to add Sentry instrumentation for Cloudflare Workflows."
+---
+
+_(Available in version [9.32.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.32.0) and above)_
+
+The <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink> instruments your [Cloudflare
+Workflows](https://developers.cloudflare.com/workflows/) automatically. It reads the Workflow classes from your wrangler config and wraps each one at build time with the options from your `instrument.server.*` file. You don't have to change your code.
+
+If you deploy with `wrangler` directly, wrap each class yourself with `instrumentWorkflowWithSentry`, as shown in the <PlatformLink to="/install/wrangler/#instrument-durable-objects-workflows-and-agents">Wrangler setup</PlatformLink>.
+
+## Trace IDs and Sampling
+
+Because workflows can be hibernated and lose all state, we use the workflows
+`instanceId` to generate the Sentry `trace_id` to link all steps together into a
+single trace. If `instanceId` is a UUID (with or without dashes), it will be
+used directly as the `trace_id`. If not, we SHA1 hash the `instanceId` to
+generate a deterministic `trace_id`.
+
+We use the last 4 characters of the `trace_id` for sampling to ensure all steps
+have the same sampling decision.
+
+Because the `instanceId` is used for both the `trace_id` and for sampling
+decisions, you should ensure that the `instanceId` is unique for each workflow
+instance. If you are using custom UUIDs, you should ensure the last 4 digits are
+sufficiently random to ensure a good distribution of sampling decisions.
+
+<Alert level='warning'>
+  We recommend creating spans only inside `step.do()` callbacks. Due to the nature of Cloudflare Workflows, a workflow
+  can be hibernated and resumed at any point. When a workflow resumes, its `run` method is executed again from the beginning.
+  `step.do()` calls are idempotent and won't re-run completed steps, but any code outside of them will be re-executed.
+  This can lead to duplicated spans and unexpected behavior if you start spans at the top level of your `run` method.
+</Alert>

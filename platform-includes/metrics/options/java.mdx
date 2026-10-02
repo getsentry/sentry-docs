@@ -1,0 +1,78 @@
+The Sentry Java SDK provides several options to configure how metrics are captured and sent to Sentry.
+
+### Filtering and Modifying Metrics
+
+Use the `getMetrics().beforeSend` callback to filter or modify metrics before they're sent to Sentry. This is useful for:
+
+- Removing sensitive data from metric attributes
+- Dropping metrics you don't want to send
+- Adding or modifying attributes
+
+The callback receives a metric object and must return either a modified metric or `null` to drop it.
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryAttributeType;
+import io.sentry.SentryLogEventAttributeValue;
+
+Sentry.init(
+    options -> {
+      // ...
+      options.getMetrics().setBeforeSend((metric, hint) -> {
+        // Drop metrics with specific attributes
+        if (metric.getAttributes().containsKey("dropmetric")) {
+          return null;
+        }
+
+        // Modify metric attributes
+        metric.setAttribute("processed", new SentryLogEventAttributeValue(SentryAttributeType.BOOLEAN, true));
+        return metric;
+      });
+    }
+);
+```
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryAttributeType
+import io.sentry.SentryLogEventAttributeValue
+
+Sentry.init { options ->
+  // ...
+  options.metrics.setBeforeSend { metric, hint ->
+    // Drop metrics with specific attributes
+    if (metric.attributes.containsKey("dropmetric")) {
+      return@setBeforeSend null
+    }
+
+    // Modify metric attributes
+    metric.setAttribute(
+      "processed",
+      SentryLogEventAttributeValue(SentryAttributeType.BOOLEAN, true)
+    )
+    metric
+  }
+}
+```
+
+### Disabling Metrics
+
+If you want to disable metrics collection entirely, you can do so by disabling the `metrics.enabled` flag:
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+
+Sentry.init(
+    options -> {
+      // ...
+      options.getMetrics().setEnabled(false);
+    }
+);
+```
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.init { options ->
+  // ...
+  options.metrics.setEnabled(false)
+}
+```

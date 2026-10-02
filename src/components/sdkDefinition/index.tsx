@@ -1,8 +1,7 @@
 import {PlatformCategory} from 'sentry-docs/types';
 
-import styles from './style.module.scss';
-
 import {PlatformCategorySection} from '../platformCategorySection';
+import styles from './style.module.scss';
 
 type Props = {
   name: string;

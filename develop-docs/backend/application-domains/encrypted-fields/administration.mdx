@@ -1,0 +1,92 @@
+---
+title: "Administration"
+description: "Configuration, key management, and key rotation for encrypted fields."
+sidebar_order: 2
+---
+
+This guide covers the administrative tasks for managing encrypted fields, including configuration, key management, and key rotation.
+
+## Configuration
+
+### Encryption Method
+
+The `database.encryption.method` option controls which encryption method to use:
+
+- `"plaintext"` - No encryption (default for development, base64-encoded only)
+- `"fernet"` - Fernet symmetric encryption (production)
+
+```python
+# In your Sentry options
+options.set("database.encryption.method", "fernet")
+```
+
+### Fernet Keys
+
+Fernet encryption requires two settings in `DATABASE_ENCRYPTION_SETTINGS`:
+
+```python
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys/directory",
+    "fernet_primary_key_id": "key_2024_01"
+}
+```
+
+- `fernet_keys_location`: Directory containing encryption key files
+- `fernet_primary_key_id`: The key ID to use for encrypting new data
+
+### Keys Directory Structure
+
+In Sentry SaaS, keys are stored as Kubernetes secrets and mounted as files to pods that have access to the database. Each secret is mounted as a separate file in the keys directory, with the filename serving as the key ID:
+
+```
+/path/to/keys/
+├── key_2023_12
+├── key_2024_01  # Current primary key
+└── key_2024_02
+```
+
+For self-hosted users, keys should be mounted to all the containers that interact with the database.
+
+## Key Rotation
+
+To rotate encryption keys:
+
+1. Generate a new key and add it to the keys directory
+2. Update `fernet_primary_key_id` to point to the new key
+3. New/updated data will use the new key
+4. Old data can still be decrypted with previous keys
+
+```python
+# Before rotation
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys",
+    "fernet_primary_key_id": "key_2024_01"
+}
+
+# After rotation
+DATABASE_ENCRYPTION_SETTINGS = {
+    "fernet_keys_location": "/path/to/keys",
+    "fernet_primary_key_id": "key_2024_02"  # New key
+}
+```
+
+Data will be gradually re-encrypted as records are updated.
+
+### Generating Keys
+
+Generate a Fernet key using Python:
+
+```python
+from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+print(key.decode())  # Example: gAAAAABh...
+```
+
+## Key Management
+
+- **Never commit keys to version control**
+- Keys are stored as Kubernetes secrets and mounted to pods
+- Use different keys for different environments
+- Keep all historical keys—they're needed to decrypt old data
+- Rotate keys periodically (recommended: annually)

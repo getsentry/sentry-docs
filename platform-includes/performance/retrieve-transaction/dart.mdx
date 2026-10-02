@@ -1,8 +1,9 @@
-## Retrieve a Transaction
+## Retrieve a Transaction/Service Span
 
-In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction, otherwise it returns `null`.
+- Transaction mode: When you want to attach spans to an already ongoing transaction, use `Sentry.getSpan()`. It returns the running `SentryTransaction`, or `null` if there is none.
+- Stream Mode: There's no public API to retrieve the active span. You don't need one: `Sentry.startSpan` attaches to the currently active span automatically, or starts a new service span if none is active.
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 
 final span = Sentry.getSpan()?.startChild('task') ??
@@ -16,4 +17,13 @@ try {
 } finally {
   await span.finish();
 }
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry/sentry.dart';
+
+// Attaches to the active span, or starts a new service span if none is active.
+await Sentry.startSpan('task', (span) async {
+  processOrderBatch();
+});
 ```

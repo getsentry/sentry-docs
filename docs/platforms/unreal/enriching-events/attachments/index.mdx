@@ -1,13 +1,10 @@
 ---
 title: Attachments
-description: "Learn more about how Sentry can store additional files in the same request as event attachments."
+description: >-
+  Learn more about how Sentry can store additional files in the same request as
+  event attachments.
+og_image: /og-images/platforms-unreal-enriching-events-attachments.png
 ---
-
-<Alert>
-
-This feature is supported for iOS and Android only.
-
-</Alert>
 
 Sentry can enrich your events for further investigation by storing additional files, such as config or log files, as attachments.
 
@@ -67,6 +64,10 @@ The specific media content type that determines how the attachment is rendered i
 - `image/jpeg`
 - `image/png`
 - `image/gif`
+- `image/webp`
+- `image/avif`
+- `video/webm`
+- `video/mp4`
 
 ## Uploading Attachments
 
@@ -75,19 +76,10 @@ Attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</Plat
 ```cpp
 USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-FConfigureScopeDelegate ScopeDelegate;
-ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+USentryAttachment* Attachment = NewObject<USentryAttachment>();
+Attachment->InitializeWithPath("your/path/file.log", "file.log");
 
-SentrySubsystem->ConfigureScope(ScopeDelegate);
-
-// Put scope configuration logic here
-void USomeClass::HandleScopeDelegate(USentryScope* Scope)
-{
-    USentryAttachment* Attachment = NewObject<USentryAttachment>();
-    Attachment->InitializeWithPath("your/path/file.log", "file.log");
-
-    Scope->AddAttachment(Attachment);
-}
+SentrySubsystem->AddAttachment(Attachment);
 ```
 
 The same result can be achieved by calling the corresponding function in blueprint:
@@ -96,21 +88,45 @@ The same result can be achieved by calling the corresponding function in bluepri
 
 <Alert>
 
-Sentry allows at most 20MB for a compressed request, and at most 100MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
+Sentry allows at most 40MB for a compressed request, and at most 200MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To send files that exceed these limits, enable [Large Attachments](#large-attachments) on supported platforms.
 
 </Alert>
 
-Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
+Attachments are retained for 30 or 90 days, based on [your plan's data retention period](/security-legal-pii/security/data-retention-periods/#default-data-retention-by-plan); if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
 
 Learn more about how attachments impact your [quota](/pricing/quotas/).
 
-### Access to Attachments
+## Add or Modify Attachments Before Sending
 
-To limit access to attachments, navigate to your organization's **General Settings**, then select the _Attachments Access_ dropdown to set appropriate access — any member of your organization, the organization billing owner, member, admin, manager, or owner.
+It's possible to add or remove attachments before an event is sent by way of the `beforeSend` and `beforeSendFeedback` <PlatformLink to="/configuration/filtering/">hooks</PlatformLink>. The hint passed to the handler contains all attachments that will be sent with the event, including the ones added to the scope and the ones added by the SDK, such as the game log or screenshot.
 
-<Include name="common-imgs/attachments-access" />
+```cpp
+USentryEvent* USomeBeforeSendHandler::HandleBeforeSend_Implementation(USentryEvent* Event, USentryHint* Hint)
+{
+	// Add an attachment to this event only
+	USentryAttachment* Attachment = NewObject<USentryAttachment>();
+	Attachment->InitializeWithPath(TEXT("your/path/config.json"), TEXT("config.json"));
+	Hint->AddAttachment(Attachment);
 
-By default, access is granted to all members when storage is enabled. If a member does not have access to the project, the ability to download an attachment is not available; the button will be greyed out in Sentry. The member may only view that an attachment is stored.
+	// Remove attachments whose filename matches a pattern (case-insensitive, supports `*` and `?` wildcards)
+	Hint->RemoveAttachments(TEXT("*.log"));
+
+	// Or remove all attachments
+	Hint->ClearAttachments();
+
+	return Super::HandleBeforeSend_Implementation(Event, Hint);
+}
+```
+
+The same result can be achieved by calling the corresponding functions on the hint in blueprint.
+
+Changes made to the hint only affect the event being sent and don't modify the scope. Crash reports, such as minidumps, aren't part of the hint and can't be removed this way.
+
+<Alert>
+
+On Android, native crashes are sent the next time the app launches. The scope attachments captured at the time of the crash are sent separately from the event, so they aren't included in the hint.
+
+</Alert>
 
 ## Store Minidumps as Attachments
 
@@ -120,18 +136,20 @@ By default, access is granted to all members when storage is enabled. If a membe
 
 <Include name="store-minidumps-as-attachments-configuration" />
 
-## Viewing Attachments
-
-Attachments display on the bottom of the **Issue Details** page for the event that is shown.
-
-<Include name="common-imgs/attachments-access-denied" />
-
-Alternately, attachments also appear in the _Attachments_ tab on the **Issue Details** page, where you can view the _Type_ of attachment, as well as associated events. Click the Event ID to open the **Issue Details** of that specific event.
-
-<Include name="common-imgs/attachments-list-example" />
+<Include name="attachments/general-attachments"/>
 
 ## Maximum Attachment Size
 
 The scale is bytes and the default is `20 MiB`. Please also check the
 [maximum attachment size of Relay](/product/relay/options/)
 to make sure your attachments don't get discarded there.
+
+## Large Attachments
+
+By default, all attachments are embedded inline in the event envelope, so they're subject to the [size limits](#uploading-attachments) above. To send larger files, enable the `EnableLargeAttachments` option in plugin settings — when enabled, attachments above an internal size threshold are uploaded out-of-band via a separate request and referenced from the envelope by location.
+
+<Alert>
+
+Currently supported on Windows, Linux, Mac (with native backend) and consoles.
+
+</Alert>

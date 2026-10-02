@@ -46,6 +46,10 @@ The specific media content type that determines how the attachment is rendered i
 - `image/jpeg`
 - `image/png`
 - `image/gif`
+- `image/webp`
+- `image/avif`
+- `video/webm`
+- `video/mp4`
 
 ## Uploading Attachments
 
@@ -53,33 +57,33 @@ Attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</Plat
 
 <PlatformContent includePath="enriching-events/attachment-upload" />
 
-<Alert>
+<PlatformSection supported={["dotnet.maui", "dotnet.apple"]}>
 
-Sentry allows at most 20MB for a compressed request, and at most 100MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
+<Alert level="warning">
+
+On iOS, scope attachments are only sent with events captured by the managed .NET SDK. Native crashes handled by the underlying Cocoa SDK do not include scope attachments. `SetBeforeSend` is also not invoked for native iOS crashes.
 
 </Alert>
 
-Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
+</PlatformSection>
+
+<Alert>
+
+Sentry allows at most 40MB for a compressed request, and at most 200MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
+
+</Alert>
+
+Attachments are retained for 30 or 90 days, based on [your plan's data retention period](/security-legal-pii/security/data-retention-periods/#default-data-retention-by-plan); if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
 
 Learn more about how attachments impact your [quota](/pricing/quotas/).
 
-### Access to Attachments
+### Sending Attachments with Transactions
 
-To limit access to attachments, navigate to your organization's **General Settings**, then select the _Attachments Access_ dropdown to set appropriate access — any member of your organization, the organization billing owner, member, admin, manager, or owner.
+By default, scope attachments are only sent with error events, not with transactions. To also send an attachment with transactions, set `addToTransactions` to `true` when you create the `SentryAttachment`, then add it to the scope:
 
-<Include name="common-imgs/attachments-access" />
+<PlatformContent includePath="enriching-events/attachment-add-to-transactions" />
 
-By default, access is granted to all members when storage is enabled. If a member does not have access to the project, the ability to download an attachment is not available; the button will be greyed out in Sentry. The member may only view that an attachment is stored.
-
-## Viewing Attachments
-
-Attachments display on the bottom of the **Issue Details** page for the event that is shown.
-
-<Include name="common-imgs/attachments-access-denied" />
-
-Alternately, attachments also appear in the _Attachments_ tab on the **Issue Details** page, where you can view the _Type_ of attachment, as well as associated events. Click the Event ID to open the **Issue Details** of that specific event.
-
-<Include name="common-imgs/attachments-list-example" />
+<Include name="attachments/general-attachments"/>
 
 ## Maximum Attachment Size
 

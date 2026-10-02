@@ -3,23 +3,24 @@ title: Cloudflare Durable Objects
 description: "Learn how to add Sentry instrumentation for Cloudflare Durable Objects."
 ---
 
-_(Available in version [9.16.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.16.0) and above)_
+<AvailableSince version="9.16.0" />
 
-You can use the `instrumentDurableObjectWithSentry` method to instrument [Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/).
+The <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink> instruments your [Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/) automatically. It reads the Durable Object classes from your wrangler config and wraps each one at build time with the options from your `instrument.server.*` file. You don't have to change your code.
 
-```typescript
-import * as Sentry from "@sentry/cloudflare";
+If you deploy with `wrangler` directly, wrap each class yourself with `instrumentDurableObjectWithSentry`, as shown in the <PlatformLink to="/install/wrangler/#instrument-durable-objects-workflows-and-agents">Wrangler setup</PlatformLink>.
 
-class MyDurableObjectBase extends DurableObject<Env> {
-  // impl
-}
+## Classes That Extend Durable Objects
 
-// Export your named class as defined in your wrangler config
-export const MyDurableObject = Sentry.instrumentDurableObjectWithSentry(
-  (env: Env) => ({
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-  }),
-  MyDurableObjectBase
-);
-```
+The instrumentation works with any class that extends `DurableObject`, not only those that extend it directly. This includes classes built on top of Durable Objects by other libraries.
+
+Classes built on the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/) (`Agent`, `AIChatAgent`, `McpAgent`) get the dedicated agent instrumentation instead (SDK version 10.69.0 or higher). It applies the same Durable Object instrumentation and adds spans for `@callable()` RPC methods as well as automatic conversation IDs. See <PlatformLink to="/agent-tracing/agents-sdk/">Cloudflare Agents SDK</PlatformLink>.
+
+## Durable Object Storage Spans
+
+The SDK automatically instruments Durable Object storage operations (`get`, `put`, `delete`, `list`). Each storage operation creates a span.
+
+The SDK also filters out framework-internal storage operations (version 10.69.0 or higher): keys prefixed with `cf_`, `cf:`, `__ps_`, or `/` (used internally by the Agents SDK and PartyServer) don't create spans, so your traces show only your own storage access.
+
+## RPC Trace Propagation
+
+To enable distributed tracing across RPC calls to your Durable Objects, see <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">Distributed Tracing</PlatformLink>.

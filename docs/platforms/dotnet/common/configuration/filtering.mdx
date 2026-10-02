@@ -1,14 +1,14 @@
 ---
 title: Filtering
-description: "Learn more about how to configure your SDK to filter events reported to Sentry."
+description: "Learn more about how to configure your Sentry .NET SDK to filter events reported to Sentry."
 sidebar_order: 60
 ---
 
 When you add Sentry to your app, you get a lot of valuable information about errors and performance. And lots of information is good -- as long as it's the right information, at a reasonable volume.
 
-The Sentry SDKs have several configuration options to help you filter out events.
+The SDK has several configuration options to help you filter out events.
 
-We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/data-model/event-payloads/).
+We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/).
 
 ## Filtering Error Events
 
@@ -16,11 +16,53 @@ To prevent certain errors from being reported to Sentry, use the <PlatformIdenti
 
 ### Using <PlatformIdentifier name="before-send" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `null`, based on custom logic and the data available on the event.
+The SDK supports the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event's data or drop it completely by returning `null`, based on custom logic and the data available on the event.
 
 <PlatformContent includePath="configuration/before-send/" />
 
-Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
+Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/issues/issue-details/breadcrumbs/).
+
+#### Filtering by Unhandled or Terminal Exceptions
+
+When filtering events in <PlatformIdentifier name="before-send" />, you may want to treat unhandled exceptions differently from handled ones. For example, you might drop noisy exceptions (like network timeouts) if these were handled, but capture them if they crashed your app.
+
+The SDK provides two extension methods on `SentryEvent` to enable this:
+
+- `IsFromUnhandledException()` returns `true` when the event came from an exception that wasn't caught by your application code, but was instead captured through an unhandled exception hook (such as `AppDomain.UnhandledException`, ASP.NET Core middleware, or another integration).
+- `IsFromTerminalException()` returns `true` only when the unhandled exception caused the application to crash. Some integrations capture unhandled exceptions that don't terminate the process (for example, unobserved task exceptions) and mark them as non-terminal.
+
+```csharp
+options.SetBeforeSend((sentryEvent, hint) =>
+{
+    // Always send unhandled exceptions, even if they'd be filtered below
+    if (sentryEvent.IsFromUnhandledException())
+    {
+        return sentryEvent;
+    }
+
+    // Drop noisy handled exceptions
+    if (sentryEvent.Exception is HttpRequestException)
+    {
+        return null; // Don't send this event to Sentry
+    }
+
+    return sentryEvent;
+});
+```
+
+```fsharp
+open Sentry
+open System.Net.Http
+
+options.SetBeforeSend(fun sentryEvent hint ->
+    if sentryEvent.IsFromUnhandledException() then
+        sentryEvent // Always send unhandled exceptions, even if filtered below
+    elif (sentryEvent.Exception :? HttpRequestException) then
+        null // Drop noisy handled exceptions
+    else
+        sentryEvent
+    )
+```
 
 ### Using <PlatformIdentifier name="add-exception-filter" /> and <PlatformIdentifier name="add-exception-filter-for-type" />
 

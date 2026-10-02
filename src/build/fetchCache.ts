@@ -11,12 +11,15 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
 
   while (retry > 0) {
     try {
-      return await fetch(url, opts);
+      const response = await fetch(url, opts);
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      return response;
     } catch (e) {
-      if (retry !== 0) {
-        // eslint-disable-next-line no-console
+      retry -= 1;
+      if (retry > 0) {
         console.warn(`failed to fetch \`${url}\`. Retrying for ${retry} more times`);
-        retry = retry - 1;
         continue;
       }
 
@@ -27,7 +30,7 @@ async function fetchRetry(url: string, opts: RequestInit & {retry?: number}) {
   return null;
 }
 
-interface Options {
+interface Options<DataType> {
   /**
    * URL to fetch the data from
    */
@@ -36,13 +39,18 @@ interface Options {
    * The name of the registry, used for logging messages
    */
   name: string;
+  parseResponse?: (response: Response) => Promise<DataType>;
 }
 
 /**
  * Creates a `ensureData` function that fetches from a URL only once. Subsequent
  * calls will used the already fetched data.
  */
-export function makeFetchCache<DataType>({dataUrl, name}: Options) {
+export function makeFetchCache<DataType>({
+  dataUrl,
+  name,
+  parseResponse = response => response.json() as Promise<DataType>,
+}: Options<DataType>) {
   let activeFetch: Promise<any> | null = null;
   let data: DataType | null = null;
 
@@ -53,14 +61,12 @@ export function makeFetchCache<DataType>({dataUrl, name}: Options) {
 
     async function fetchData() {
       try {
-        // eslint-disable-next-line no-console
         console.log(`Fetching registry ${name} (${dataUrl})`);
         const result = await fetchRetry(dataUrl, {retry: 5});
-        data = await result?.json();
-        // eslint-disable-next-line no-console
+        data = result ? await parseResponse(result) : null;
+
         console.log(`Got data for registry ${name} (${dataUrl})`);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error(`Unable to fetch for ${name}: ${err.message}`);
         data = null;
 

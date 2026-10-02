@@ -6,9 +6,10 @@ Provide a `sentry.dsn` property using either `application.properties` or `applic
 ```properties {filename:application.properties}
 sentry.dsn=___PUBLIC_DSN___
 
-# Add data like request headers and IP for users,
-# see https://docs.sentry.io/platforms/java/guides/spring-boot/data-management/data-collected/ for more info
-sentry.send-default-pii=true
+# Use Data Collection defaults but don't collect automatic user information.
+# https://docs.sentry.io/platforms/java/guides/spring-boot/data-management/data-collected/
+sentry.data-collection.user-info=false
+# Configure other data categories here.
 # ___PRODUCT_OPTION_START___ performance
 
 # Set traces_sample_rate to 1.0 to capture 100%
@@ -16,15 +17,28 @@ sentry.send-default-pii=true
 # We recommend adjusting this value in production.
 sentry.traces-sample-rate=1.0
 # ___PRODUCT_OPTION_END___ performance
+// ___PRODUCT_OPTION_START___ profiling
+
+# Enable profiling
+sentry.profile-session-sample-rate=1.0
+sentry.profile-lifecycle=TRACE
+// ___PRODUCT_OPTION_END___ profiling
+// ___PRODUCT_OPTION_START___ logs
+
+# Enable logs
+sentry.logs.enabled=true
+// ___PRODUCT_OPTION_END___ logs
 ```
 
 ```yaml {filename:application.yml}
 sentry:
   dsn: ___PUBLIC_DSN___
 
-  # Add data like request headers and IP for users,
-  # see https://docs.sentry.io/platforms/java/guides/spring-boot/data-management/data-collected/ for more info
-  send-default-pii: true
+  # Use Data Collection defaults but don't collect automatic user information.
+  # https://docs.sentry.io/platforms/java/guides/spring-boot/data-management/data-collected/
+  data-collection:
+    user-info: false
+    # Configure other data categories here.
   # ___PRODUCT_OPTION_START___ performance
 
   # Set traces_sample_rate to 1.0 to capture 100%
@@ -32,6 +46,18 @@ sentry:
   # We recommend adjusting this value in production.
   tracesSampleRate: 1.0
   # ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  # Enable profiling
+  profileSessionSampleRate: 1.0
+  profileLifecycle: TRACE
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ logs
+
+  # Enable logs
+  logs:
+    enabled: true
+  // ___PRODUCT_OPTION_END___ logs
 ```
 
 By default, only unhandled exceptions are sent to Sentry. This behavior can be tuned through configuring the `sentry.exception-resolver-order` property. For example, setting it to `-2147483647` (the value of `org.springframework.core.Ordered#HIGHEST_PRECEDENCE`) ensures exceptions that have been handled by exception resolvers with higher order are sent to Sentry - including ones handled by `@ExceptionHandler` annotated methods.

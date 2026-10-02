@@ -1,0 +1,49 @@
+---
+title: Supabase Log Drains
+sidebar_title: Supabase
+sidebar_order: 50
+description: Learn how to set up Supabase Log Drains to forward logs to Sentry.
+---
+
+The [Sentry Supabase Log drain](https://supabase.com/docs/guides/telemetry/log-drains#sentry) will forward all logs from your Supabase stack to Sentry.
+
+<Alert level="warning">
+
+Supabase Log Drains are only available on the Supabase Pro, Team, and Enterprise Plans
+
+</Alert>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A Supabase project that you want to monitor
+- A Sentry project you want to send data to
+
+## Adding a Log Drain
+
+To set up the Sentry log drain, follow these steps:
+
+1. Grab your DSN from your Sentry project's [Client Keys (DSN) settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/).
+
+```bash
+___DSN___
+```
+
+2. Create a Sentry log drain in the [Supabase dashboard](https://supabase.com/dashboard/project/_/settings/log-drains). Make sure you provide the DSN you grabbed in the previous step.
+
+Then you should get logs in your Sentry project. All fields from the log event are attached as attributes to the Sentry log, which can be used for filtering and grouping in the Sentry UI.
+
+## Correlating Logs with Sentry Traces
+
+Enable [client-side trace propagation](https://supabase.com/docs/guides/monitoring-and-debugging/client-side-tracing) to add Sentry trace IDs to Supabase API Gateway and Edge Function logs. The shared `trace_id` links sampled spans to their Supabase logs.
+
+Only sampled requests have a Sentry span. Increase your trace sample rate to capture more spans. Setting `respectSamplingDecision: false` sends full context for unsampled requests but does not cause Sentry to sample them.
+
+If traces and logs use different sample rates, use [cross-event querying](https://sentry.io/changelog/cross-event-querying-is-now-ga/) to find traces with logs. For direct browser calls to Supabase Edge Functions, add `sentry-trace` to the CORS allow-list.
+
+Setup instructions by platform:
+
+- **JavaScript**: <PlatformLink to="/configuration/integrations/supabase/#trace-propagation">Supabase JavaScript integration</PlatformLink>
+- **Swift**: [Supabase Swift integration](/platforms/apple/integrations/supabase/)
+- **Flutter/Dart**: [Supabase Dart integration](/platforms/dart/integrations/supabase/)

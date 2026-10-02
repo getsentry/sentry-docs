@@ -1,5 +1,69 @@
+### Issues
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To check that Sentry captures errors, add this middleware before your other middleware in your main application file. Then visit `/debug-sentry` to trigger a test error:
+
+</SplitSectionText>
+<SplitSectionCode>
+
 ```javascript
-router.get("/debug-sentry", function() {
-  throw new Error("My first Sentry error!");
+app.use(async (ctx, next) => {
+  if (ctx.path === "/debug-sentry") {
+    throw new Error("My first Sentry error!");
+  }
+  await next();
 });
 ```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<OnboardingOption optionId="performance">
+### Tracing
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+app.use(async (ctx, next) => {
+  if (ctx.path !== "/debug-sentry") {
+    await next();
+    return;
+  }
+
+  await Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Transaction",
+    },
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      throw new Error("My first Sentry error!");
+    }
+  );
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+</OnboardingOption>
+
+<OnboardingOption optionId="logs">
+
+<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
+
+</OnboardingOption>
+
+<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />

@@ -1,25 +1,29 @@
 ---
-title: "Consecutive HTTP"
+title: Consecutive HTTP
 sidebar_order: 30
-description: "Learn more about Consecutive HTTP issues and how to diagnose and fix them."
+description: Learn more about Consecutive HTTP issues and how to diagnose and fix them.
+og_image: >-
+  /og-images/product-issues-issue-details-performance-issues-consecutive-http.png
 ---
 
-Consecutive HTTP issues are created when a at least 2000ms of time can be saved by parallelizing a minimum of 3 consecutive HTTP calls occuring sequentially.
+Consecutive HTTP issues are created when at least 2000ms of time can be saved by parallelizing a minimum of 3 consecutive HTTP calls occurring sequentially.
+
+Filter HTTP client performance issues with `issue.category:http_client` in **Issues** and **Dashboards**.
 
 ## Detection Criteria
 
 <Alert>
 
-This issue is currently only available for backend and mobile SDKs.
+This issue is only available for backend and mobile SDKs.
 
 </Alert>
 
-The detector for this performance issue looks for a set of sequential, non-overlapping HTTP spans. It intentionally ignores non-HTTP spans because the browser commonly performs other asynchronous operations, such as loading resources between HTTP spans.
+The Consecutive HTTP detector looks for a set of sequential, non-overlapping HTTP spans. It intentionally ignores unrelated, non-HTTP operations that occur between HTTP spans.
 
 Once this sequence is found, the following must hold true for each HTTP span:
 
 - The HTTP method must be a GET, POST, DELETE, PUT, or PATCH
-- The HTTP URL must not begin with \_next/static/ or \_next/data/
+- The HTTP URL must not contain `\_next/static/` , `\_next/data/` , or `googleapis.com`
 
 Once these spans are found, the following must also hold true:
 
@@ -30,7 +34,7 @@ Once these spans are found, the following must also hold true:
 
 If Sentry doesn't detect a Consecutive HTTP issue where you expect one, it's probably because the transaction didn't meet one of the above criteria.
 
-You can configure detector thresholds for Consecutive HTTP issues in **Project Settings > Performance**:
+You can configure detector thresholds for Consecutive HTTP issues in [**Project Settings > Performance**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/performance/).
 
 ![Consecutive HTTP detector threshold settings](./img/consecutive-http-threshold-settings.png)
 
@@ -39,11 +43,11 @@ You can configure detector thresholds for Consecutive HTTP issues in **Project S
 You can find additional information about your Consecutive HTTP issue by looking at two main aspects in the "Span Evidence" section:
 
 - **Transaction name**
-- **Sequential HTTP Spans**
+- **Offending Spans**
 
 ![Consecutive HTTP span evidence](./img/span-evidence.png)
 
-You can view the span evidence by going to the **Issues** page in Sentry, selecting your project, selecting the Consecutive HTTP Queries error you want to examine, then scrolling down to the "Span Evidence" section in the "Details" tab.
+You can view the span evidence by going to the **Issues** page in Sentry, selecting your project, selecting the Consecutive HTTP Queries error you want to examine, then scrolling down to the "Span Evidence" section.
 
 ## Fixing Consecutive HTTP Issues
 

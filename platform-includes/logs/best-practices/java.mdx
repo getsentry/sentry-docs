@@ -1,0 +1,114 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+### Wide Events Over Scattered Logs
+
+Instead of many thin logs that are hard to correlate, emit one comprehensive log per operation with all relevant context.
+
+This makes debugging dramatically faster — one query returns everything about a specific order, user, or request.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```java
+// ❌ Scattered thin logs
+Sentry.logger().info("Starting checkout");
+Sentry.logger().info("Validating cart");
+Sentry.logger().info("Processing payment");
+Sentry.logger().info("Checkout complete");
+
+// ✅ One wide event with full context
+Sentry.logger().log(
+    SentryLogLevel.INFO,
+    SentryLogParameters.create(
+        SentryAttributes.of(
+            SentryAttribute.stringAttribute("order_id", order.getId()),
+            SentryAttribute.stringAttribute("user_id", user.getId()),
+            SentryAttribute.stringAttribute("user_tier", user.getSubscription()),
+            SentryAttribute.doubleAttribute("cart_value", cart.getTotal()),
+            SentryAttribute.integerAttribute("item_count", cart.getItems().size()),
+            SentryAttribute.stringAttribute("payment_method", "stripe")
+        )
+    ),
+    "Checkout completed"
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Include Business Context
+
+Add attributes that help you prioritize and debug:
+
+- **User context** — tier, account age, lifetime value
+- **Transaction data** — order value, item count
+- **Feature state** — active feature flags
+- **Request metadata** — endpoint, method, duration
+
+This lets you filter logs by high-value customers or specific features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```java
+Sentry.logger().log(
+    SentryLogLevel.INFO,
+    SentryLogParameters.create(
+        SentryAttributes.of(
+            // User context
+            SentryAttribute.stringAttribute("user_id", user.getId()),
+            SentryAttribute.stringAttribute("user_tier", user.getPlan()),
+            SentryAttribute.integerAttribute("account_age_days", user.getAgeDays()),
+
+            // Request data
+            SentryAttribute.stringAttribute("endpoint", "/api/orders"),
+            SentryAttribute.stringAttribute("method", "POST"),
+            SentryAttribute.integerAttribute("duration_ms", 234),
+
+            // Business context
+            SentryAttribute.doubleAttribute("order_value", 149.99)
+        )
+    ),
+    "API request completed"
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Consistent Attribute Naming
+
+Pick a naming convention and stick with it across your codebase. Inconsistent names make queries impossible.
+
+**Recommended:** Use `snake_case` for custom attributes to match common conventions.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```java
+// ❌ Inconsistent naming
+SentryAttribute.stringAttribute("user", "123")
+SentryAttribute.stringAttribute("userId", "123")
+SentryAttribute.stringAttribute("user_id", "123")
+SentryAttribute.stringAttribute("UserID", "123")
+
+// ✅ Consistent snake_case
+SentryAttributes.of(
+    SentryAttribute.stringAttribute("user_id", "123"),
+    SentryAttribute.stringAttribute("order_id", "456"),
+    SentryAttribute.doubleAttribute("cart_value", 99.99),
+    SentryAttribute.integerAttribute("item_count", 3)
+)
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>

@@ -3,35 +3,34 @@ import {serverContext} from 'sentry-docs/serverContext';
 
 import {ExternalLink} from './externalLink';
 
-const scenarios = [
-  'performance',
-  'releases',
-  'alerts',
-  'discover',
-  'dashboards',
-  'projects',
-  'oneDiscoverQuery',
-  'oneIssue',
-  'oneBreadcrumb',
-  'oneStackTrace',
-  'oneTransaction',
-  'oneWebVitals',
-  'oneTransactionSummary',
-  'oneRelease',
-] as const;
+type Scenario =
+  | 'performance'
+  | 'releases'
+  | 'alerts'
+  | 'discover'
+  | 'dashboards'
+  | 'projects'
+  | 'oneDiscoverQuery'
+  | 'oneIssue'
+  | 'oneBreadcrumb'
+  | 'oneStackTrace'
+  | 'oneTransaction'
+  | 'oneWebVitals'
+  | 'oneTransactionSummary'
+  | 'oneRelease';
 
 type Props = {
   children: React.ReactNode;
   errorType?: string;
   platform?: string;
   projectSlug?: string;
-  scenario?: (typeof scenarios)[number];
+  scenario?: Scenario;
   target?: string;
 };
 
 /**
  * Obtains the URL to the sandbox start endpoint.
- * @param param0.scenario: One of the scenarios. Determins where in the sandbox
+ * @param param0.scenario: One of the scenarios. Determines where in the sandbox
  * the user will be landed.
  * @param param0.projectSlug:
  * One of react, python, react-native, android, iOS
@@ -45,7 +44,7 @@ export function getSandboxURL({
 }: {
   errorType?: string;
   projectSlug?: string;
-  scenario?: (typeof scenarios)[number];
+  scenario?: Scenario;
 } = {}) {
   const url = new URL('https://sandbox.sentry.io/');
 

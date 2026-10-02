@@ -1,0 +1,34 @@
+---
+title: MetricKit
+sidebar_order: 12
+description: "Learn how to subscribe to MetricKit diagnostic reports and send them to Sentry."
+---
+
+The [MetricKit](https://developer.apple.com/documentation/metrickit) integration subscribes to [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic), [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic), and [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic), which it converts to Sentry events.
+
+This feature is available on React Native SDK version 8.22.0 and up. The SDK supports it on iOS 15 and up and macOS 12 and up, because in these versions MetricKit delivers diagnostic reports immediately, which allows the SDK to apply current data from the scope. It isn't available on Android or tvOS.
+
+Enable this feature by setting the `enableMetricKit` option to `true`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableMetricKit: true,
+});
+```
+
+You can identify MetricKit events by looking at the `mx_hang_diagnostic`, `mx_cpu_exception`, and `mx_disk_write_exception` `mechanism.type`.
+
+## MetricKit Hangs and App Hangs
+
+MetricKit hang diagnostics are reported by the operating system and are separate from the app hangs the SDK detects itself with <PlatformLink to="/configuration/app-hangs/">App Hang Tracking</PlatformLink>. Both features can be enabled at the same time, but a single unresponsive period may then be reported twice, once from each source.
+
+If you only want the SDK's own detection, leave `enableMetricKit` disabled. If you want to rely on MetricKit alone, set `enableAppHangTracking` to `false`.
+
+## Limitations
+
+The SDK has no control over the stack traces provided by MetricKit. Some only offer a couple of frames. If these aren't useful to you, you can drop them in <PlatformLink to="/configuration/filtering/#filtering-error-events">`beforeSend`</PlatformLink>.
+
+To read more about how the underlying integration works, check out the `sentry-cocoa` [documentation](/platforms/apple/configuration/metric-kit/).

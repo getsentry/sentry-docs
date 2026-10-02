@@ -7,9 +7,9 @@ description: "Learn about the data scrubbing Sentry enables by default."
 
 If you can't or don't want to <PlatformLink to="/data-management/sensitive-data/">scrub data within the SDK</PlatformLink>, you can choose from several data scrubbing options in the Sentry app on either an organization-wide or a project level. Data scrubbing is enabled by default and we highly recommend you keep it that way.
 
-To set data scrubbing rules for your entire organization, go to **[Settings] > Security & Privacy**, and scroll down to the "DATA SCRUBBING" section.
+To set data scrubbing rules for your entire organization, go to [**Organization Settings > Security & Privacy**](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) and scroll down to the "DATA SCRUBBING" section.
 
-To set them on a per-project basis, go to **[Settings] > Projects**, select a project, click "Security & Privacy" and scroll down to the "DATA SCRUBBING" section. If organization-wide settings exist, they’ll override any project settings, so be sure to disable them first.
+To set rules on a per-project basis, go to [**Project Settings > Security & Privacy**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) and scroll down to the "DATA SCRUBBING" section. If organization-wide settings exist, they’ll override any project settings, so be sure to disable them first.
 
 With it enabled, Sentry will scrub the following:
 
@@ -27,7 +27,7 @@ With it enabled, Sentry will scrub the following:
   - private_key
   - token
   - bearer
-- Values that contain strings in, or whose keynames are listed in, [Project] > Settings > Security & Privacy in "Additional Sensitive Fields".
+- Values that contain strings in, or whose keynames are listed in, your project's [Security & Privacy](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) settings under "Additional Sensitive Fields".
   - An entry in "Additional Sensitive Fields" such as `mysekret`, for example, will cause the removal of any field named `mysekret`, but also removes any field _value_ that contains `mysekret`. Sentry does this to protect against sensitive data leaking as part of structured data that has been sent as a single string to Sentry (such as a JSON object that is stringified and embedded as JSON string in another JSON structure).
   - As an extreme example where this behavior can become surprising, the string `"Unexpected error"` will be removed from events if the entry `exp` is in "Additional Sensitive Fields".
 
@@ -52,22 +52,22 @@ You can choose to expand the keys that are scrubbed by the server, as well as pr
 
 </Alert>
 
-Only a select number of fields are scrubbed. You can find a list of the fields that will be scrubbed in [Event PII Fields](/data-management-settings/event-pii-fields/).
+Only a select number of fields are scrubbed. You can find a list of the fields that will be scrubbed in [Event PII Fields](/security-legal-pii/scrubbing/server-side-scrubbing/event-pii-fields/).
 
-In addition, we provide an [_Advanced Data Scrubbing_](/security-legal-pii/scrubbing//advanced-datascrubbing/) feature that allows more control over how filters are applied.
+In addition, we provide an [_Advanced Data Scrubbing_](/security-legal-pii/scrubbing/advanced-datascrubbing/) feature that allows more control over how filters are applied.
 
 ## Geographic Information
 
 Geographic information is extracted from the user's IP address. This occurs even if the setting to stop storing IP addresses is turned on.
 
-To scrub geo data, it's necessary to add an [_Advanced Data Scrubbing_](/security-legal-pii/scrubbing//advanced-datascrubbing/) rule.
+To scrub geo data, it's necessary to add an [_Advanced Data Scrubbing_](/security-legal-pii/scrubbing/advanced-datascrubbing/) rule.
 For example, the rule `[Remove] [Anything] from [$user.geo.**]` will remove all geo information.
 
 ## Removing Data
 
 If you’ve accidentally sent sensitive data to the server, you likely don't to want to leave it there. There are a few things to note in removal:
 
-- If you send the data as a tagged value, removing the event is not enough. Visit your **Project Settings > Tags** to permanently remove any related data for a given tag.
+- If you send the data as a tagged value, removing the event is not enough. Visit your [**Project Settings > Tags**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/tags/) to permanently remove any related data for a given tag.
 - While you cannot delete a single event, you can delete the issue the event is in by clicking the trash icon on the **Issue Details** page.
 - If a large number of unique events - representing multiple issues - contain the data, you may need to delete and re-create the project to effectively cleanse the system.
 
@@ -90,12 +90,13 @@ Safe Fields are used to exclude fields and data from scrubbing. For example, tak
 
 When scrubbing is enabled and `id` added as a sensitive field, the `password` string in `extra.'sys.argv'`,
 both `id` fields (`user.id` and `extra.id`), as well as the entire `credentials` object will be scrubbed.
+Note the quotes around `'sys.argv'` which is needed since the key itself contains a dot. Without the quotes `extra.sys.argv` would match the `argv` field inside the `sys` object, the same way that `extra.'sys.argv'` matches the `'sys.argv'` field inside the `extra` object.
 
-To accomodate more fine-grained filtering, the Safe Fields support the same syntax as the
-[Advanced Datascrubbing Sources](/security-legal-pii/scrubbing//advanced-datascrubbing/#sources).
+To accommodate more fine-grained filtering, the Safe Fields support the same syntax as the
+[Advanced Datascrubbing Sources](/security-legal-pii/scrubbing/advanced-datascrubbing/#sources).
 
 If you want to leave the `user.id` field intact, you can configure the `id` as a Safe Field, but this will also
-mark `extra.id` as a Safe Field. To specifically select the user id, use the full path instead of `user.id`.
+mark `extra.id` as a Safe Field. To specifically select the user id, use the full path `user.id`.
 
 Marking elements of an array as safe requires a wildcard selector, for example `'sys.argv'.*`. A deep wildcard
 can be used to mark all elements contained within an object. The two selectors: `extra.credentials` and

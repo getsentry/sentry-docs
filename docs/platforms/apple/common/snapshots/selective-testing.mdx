@@ -1,0 +1,260 @@
+---
+title: Selective Testing with SnapshotPreviews
+sidebar_title: Selective Testing
+sidebar_order: 4952
+sidebar_section: features
+description: Render only selected SnapshotPreviews groups in CI while keeping Sentry aware of the full tracked image set.
+early_access: true
+---
+
+Selective testing is an advanced workflow for large suites where rendering every preview on every pull request is too expensive. On each run you render and upload only a subset of your previews, and Sentry diffs that subset against the baseline.
+
+There are two approaches:
+
+- **Approach A — upload just the subset.** Simplest to set up. Any image you don't upload counts as skipped, so Sentry can't detect deletions or renames.
+- **Approach B — upload the subset plus the full list of tracked image names.** Sentry can then tell apart snapshots that were rendered, skipped, or removed/renamed.
+
+For both implementations, you first organize snapshots into groups and upload a baseline build, covered in the next two sections. The approaches differ only in the final render-and-upload step.
+
+## Organize Snapshots Into Selectable Groups
+
+Create one `SnapshotTest` subclass per group CI can select. Inclusion filters (`snapshotPreviewModules()`, `snapshotPreviews()`) define what each group renders.
+
+```swift {filename:MyAppSnapshotTests.swift}
+import SnapshottingTests
+
+final class ModuleASnapshots: SnapshotTest {
+  override class func snapshotPreviewModules() -> [String]? {
+    ["ModuleA"]
+  }
+}
+
+final class ModuleBSnapshots: SnapshotTest {
+  override class func snapshotPreviewModules() -> [String]? {
+    ["ModuleB"]
+  }
+}
+```
+
+## Upload a Baseline Build
+
+Render and upload the full suite on your base branch — typically via a CI workflow that runs on every merge.
+
+```bash
+TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="/tmp/base_snapshots" \
+xcodebuild test \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+
+sentry-cli snapshots upload "/tmp/base_snapshots" \
+  --app-id com.example.MyApp
+```
+
+In this example, the full suite produces this set of tracked images:
+
+```text
+/tmp/base_snapshots/
+├── ModuleA_HomeView.swift_Light.png
+├── ModuleA_HomeView.swift_Dark.png
+├── ModuleA_ProfileView.swift_Profile.png
+├── ModuleB_CartView.swift_Cart.png
+├── ModuleB_CheckoutView.swift_Checkout.png
+└── ModuleB_SettingsView.swift_Settings.png
+```
+
+Note that we also have a `.json` sidecar for each image (not shown here for brevity).
+
+## Upload the Pull Request Build
+
+On each pull request, render the selected subset of previews and upload it. Your CI decides which groups to render — by changed files, code ownership, shard assignment, or whatever fits your project. In the examples below, we render the Module A group and skip Module B.
+
+Pick one of the two approaches below, depending on whether you need removal and rename detection.
+
+### Approach A: Subset Only
+
+Render the selected group with `xcodebuild test`:
+
+```bash
+TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="/tmp/head_snapshots" \
+xcodebuild test \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+  -only-testing:MyAppTests/ModuleASnapshots
+```
+
+This produces a set of only Module A's rendered images:
+
+```text
+/tmp/head_snapshots/
+├── ModuleA_HomeView.swift_Light.png
+├── ModuleA_HomeView.swift_Dark.png
+└── ModuleA_ProfileView.swift_Profile.png
+```
+
+Upload the subset with the `--selective` flag:
+
+```bash
+sentry-cli snapshots upload "/tmp/head_snapshots" \
+  --app-id com.example.MyApp \
+  --selective
+```
+
+<Alert>
+  With `--selective`, Sentry reports every tracked image you didn't upload as
+  skipped — including ones that might have been removed or renamed.
+</Alert>
+
+### Approach B: Subset and Image-Name File
+
+Alongside the rendered subset, upload a file listing every tracked image name. With that image-name file, Sentry distinguishes images you **rendered** (diffed against the baseline) from ones **skipped** this run, and flags any baseline image absent from the file as **removed or renamed**.
+
+#### Step 1: Build the Test Bundle
+
+Rendering and name generation can't share a run, so in this example we compile the app once up front with `build-for-testing`:
+
+```bash
+xcodebuild build-for-testing \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+  -derivedDataPath /tmp/DerivedData
+```
+
+Steps 2 and 3 then run against the generated `.xctestrun` with `test-without-building`, so neither recompiles:
+
+```bash
+/tmp/DerivedData/Build/Products/<generated>.xctestrun
+```
+
+#### Step 2: Render the Selected Group
+
+Render the selected group with `test-without-building`:
+
+```bash
+TEST_RUNNER_SNAPSHOTS_EXPORT_DIR="/tmp/head_snapshots" \
+xcodebuild test-without-building \
+  -xctestrun /tmp/DerivedData/Build/Products/<generated>.xctestrun \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+  -only-testing:MyAppTests/ModuleASnapshots
+```
+
+This produces a set of only Module A's rendered images:
+
+```text
+/tmp/head_snapshots/
+├── ModuleA_HomeView.swift_Light.png
+├── ModuleA_HomeView.swift_Dark.png
+└── ModuleA_ProfileView.swift_Profile.png
+```
+
+#### Step 3: Generate the Image-Name File
+
+Run each group in name-only mode by setting the environment variable `TEST_RUNNER_SNAPSHOTS_ALL_IMAGE_NAMES_FILE` to point to a file in the path you want to write the names to. Run each group in its own invocation — passing multiple `SnapshotTest` classes to a single name-generation run isn't supported.
+
+In the example below, we generate a name file for each group — including Module B, which we didn't render — so the list covers every tracked image, not just the rendered subset.
+
+```bash
+TEST_RUNNER_SNAPSHOTS_ALL_IMAGE_NAMES_FILE="/tmp/names_1.txt" \
+xcodebuild test-without-building \
+  -xctestrun /tmp/DerivedData/Build/Products/<generated>.xctestrun \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+  -only-testing:MyAppTests/ModuleASnapshots
+
+TEST_RUNNER_SNAPSHOTS_ALL_IMAGE_NAMES_FILE="/tmp/names_2.txt" \
+xcodebuild test-without-building \
+  -xctestrun /tmp/DerivedData/Build/Products/<generated>.xctestrun \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+  -only-testing:MyAppTests/ModuleBSnapshots
+```
+
+```text
+# names_1.txt
+ModuleA_HomeView.swift_Light.png
+ModuleA_HomeView.swift_Dark.png
+ModuleA_ProfileView.swift_Profile.png
+
+# names_2.txt
+ModuleB_CartView.swift_Cart.png
+ModuleB_CheckoutView.swift_Checkout.png
+ModuleB_SettingsView.swift_Settings.png
+```
+
+Next we need to combine the per-group files into one de-duplicated list; here we join them with `cat` and sort them with `sort -u`:
+
+```bash
+cat /tmp/names_1.txt \
+    /tmp/names_2.txt \
+  | sort -u > /tmp/names_all.txt
+```
+
+The result is a single file containing the full tracked set of image names:
+
+```text {filename:names_all.txt}
+ModuleA_HomeView.swift_Dark.png
+ModuleA_HomeView.swift_Light.png
+ModuleA_ProfileView.swift_Profile.png
+ModuleB_CartView.swift_Cart.png
+ModuleB_CheckoutView.swift_Checkout.png
+ModuleB_SettingsView.swift_Settings.png
+```
+
+#### Step 4: Upload With the Image-Name File
+
+Add the flag `--all-image-file-names-file <path>` with your image-name file when uploading.
+
+```bash
+sentry-cli snapshots upload "/tmp/head_snapshots" \
+  --app-id com.example.MyApp \
+  --all-image-file-names-file /tmp/names_all.txt
+```
+
+Alternatively you can pass the image filenames as a comma-separated list by using `--all-image-file-names <names>` instead of `--all-image-file-names-file <path>`.
+
+```bash
+sentry-cli snapshots upload "/tmp/head_snapshots" \
+  --app-id com.example.MyApp \
+  --all-image-file-names "ModuleA_HomeView.swift_Light.png,ModuleA_HomeView.swift_Dark.png,ModuleA_ProfileView.swift_Profile.png,ModuleB_CartView.swift_Cart.png,ModuleB_CheckoutView.swift_Checkout.png,ModuleB_SettingsView.swift_Settings.png"
+```
+
+And that's it! Sentry will now diff the uploaded subset against the baseline and report any changes.
+
+## Exclude Previews From the Tracked Set
+
+The inclusion overrides (`snapshotPreviews()`, `snapshotPreviewModules()`) choose what each group renders — use them to shard your suite. The exclusion overrides (`excludedSnapshotPreviews()`, `excludedSnapshotPreviewModules()`) remove matching previews from the tracked set entirely, both from the rendered images and from the image-name file. Use them to drop previews you don't want tracked, such as flaky ones or whole modules.
+
+For example, to stop tracking a flaky Module A preview:
+
+```swift {filename:MyAppSnapshotTests.swift}
+final class ModuleASnapshots: SnapshotTest {
+  override class func snapshotPreviewModules() -> [String]? {
+    ["ModuleA"]
+  }
+
+  override class func excludedSnapshotPreviews() -> [String]? {
+    ["ModuleA/HomeView.swift:Dark"]
+  }
+}
+```
+
+<Alert>
+  Because exclusions drop previews from the image-name file too, a preview
+  that's in the baseline but excluded on a pull request is reported as
+  **removed** under Approach B. (Approach A has no image-name file, so it's
+  reported as skipped instead.)
+</Alert>
+
+## Notes
+
+- `TEST_RUNNER_SNAPSHOTS_ALL_IMAGE_NAMES_FILE` and `TEST_RUNNER_SNAPSHOTS_EXPORT_DIR` are mutually exclusive. One run writes names; another renders images.
+- Passing an image-name file (`--all-image-file-names-file`, or `--all-image-file-names` for an inline list) marks the upload as selective on its own, so you don't also pass `--selective`.
+- SnapshotPreviews writes each image as `<Module>_<File>.swift_<Preview>.png` with no directory prefix. If your upload root nests images in per-simulator subfolders (for example `iphone/` and `ipad/`), prefix every entry in the image-name file with that subfolder.
+
+## Complete Example
+
+For a complete working example, see the SnapshotPreviews MultiModuleDemo app, CI workflow, and a pull request that triggers a selective run:
+
+- [MultiModuleDemo snapshot test groups](https://github.com/getsentry/SnapshotPreviews/blob/main/Examples/MultiModuleDemo/MultiModuleDemoTests/MultiModuleDemoSnapshotTests.swift)
+- [MultiModuleDemo Sentry Snapshots workflow](https://github.com/getsentry/SnapshotPreviews/blob/main/.github/workflows/ios_sentry_upload_snapshots.yml)
+- [Example pull request: a selective Module A–only run](https://github.com/getsentry/SnapshotPreviews/pull/269)

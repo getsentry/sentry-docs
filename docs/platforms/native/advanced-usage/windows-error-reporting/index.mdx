@@ -1,0 +1,126 @@
+---
+title: Windows Error Reporting
+description: "How to integrate Sentry and Windows Error Reporting (WER) with the Native SDK."
+sidebar_order: 2200
+---
+
+Sentry and [Windows Error Reporting (WER)](https://learn.microsoft.com/en-us/windows/win32/wer/windows-error-reporting) can be used together on Windows. This guide documents how to share data between them.
+
+## WER Compatibility
+
+WER behavior depends on the configured Native SDK backend. The table below shows whether each backend captures SEH and fast-fail crashes in Sentry and whether WER can continue its own report processing.
+
+| Backend    | Sentry                   | WER                      | Notes                                                                                                    |
+| ---------- | ------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `none`     | ❌ SEH<br />❌ fast-fail | ✅ SEH<br />✅ fast-fail | Leaves crash reporting to WER.                                                                           |
+| `inproc`   | ✅ SEH<br />❌ fast-fail | ✅ SEH<br />✅ fast-fail | Does not prevent WER from handling SEH exceptions.<br />Does not install a WER runtime exception module. |
+| `breakpad` | ✅ SEH<br />❌ fast-fail | ❌ SEH<br />✅ fast-fail | Prevents WER from handling SEH exceptions.<br />Does not install a WER runtime exception module.         |
+| `crashpad` | ✅ SEH<br />✅ fast-fail | ❌ SEH<br />❌ fast-fail | Terminates the process before WER report processing.                                                     |
+| `native`   | ✅ SEH<br />✅ fast-fail | ✅ SEH<br />✅ fast-fail | Returns control to WER for report processing.                                                            |
+
+For more information about choosing a backend, see [Backend Tradeoffs](/platforms/native/advanced-usage/backend-tradeoffs/).
+
+## WER Integration
+
+The Native SDK comes with an optional backend-independent WER integration that registers Sentry tags and attachments with WER. Include the integration when configuring the Native SDK; the following example uses the most WER-compatible `native` backend:
+
+```shell
+cmake -B build \
+  -D SENTRY_BACKEND=native \
+  -D SENTRY_INTEGRATION_WER=ON
+```
+
+The WER integration is automatically initialized by the Native SDK. Use the regular Sentry APIs to register tags and attachments. For example:
+
+```c
+sentry_set_tag("channel", "stable");
+sentry_attach_file("C:\\logs\\app.log");
+```
+
+The integration maps common Sentry APIs to their WER equivalents where possible:
+
+| Sentry API                                            | WER API                                                        | Notes                                                                         |
+| ----------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `sentry_set_tag`<br />`sentry_remove_tag`             | `WerRegisterCustomMetadata`<br />`WerUnregisterCustomMetadata` | `WER_METADATA_KEY_MAX_LENGTH` (64)<br />`WER_METADATA_VALUE_MAX_LENGTH` (128) |
+| `sentry_attach_file`<br />`sentry_remove_attachment`  | `WerRegisterFile`<br />`WerUnregisterFile`                     | `WER_MAX_PARAM_LENGTH` (`MAX_PATH`)                                           |
+| `sentry_attach_bytes`<br />`sentry_remove_attachment` | `WerRegisterMemoryBlock`<br />`WerUnregisterMemoryBlock`       | `WER_MAX_MEM_BLOCK_SIZE` (64 KiB)                                             |
+
+Each WER registration is best effort. Values that are incompatible, too long, or too large are skipped. WER also applies its own registration limits, such as `WER_MAX_REGISTERED_METADATA` (8) and `WER_MAX_REGISTERED_ENTRIES` (512).
+
+Custom metadata requires Windows 10 version 1703 or later, or Windows Server 2016 or later. On earlier versions, tag registration is skipped.
+
+Unlike Sentry attachments, WER files and memory blocks aren't always included in every report. WER includes them only when its reporting service requests additional data. Buffer attachments are included only in heap or larger dumps, not in minidumps or smaller dumps.
+
+<Alert level="warning">
+
+The integration registers files as anonymous data. Only attach files that meet Microsoft's definition of anonymous data and your application's privacy requirements.
+
+</Alert>
+
+## WER Migration
+
+Existing WER users can configure and upload local dumps to Sentry while keeping WER responsible for collection. In this guide, the Native SDK only acts as the uploader to make the same dumps also available in Sentry.
+
+### Configure WER to Collect Local Dumps
+
+WER can be configured to store a minidump to a local directory when a process crashes. This requires setting registry keys under `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps`, which needs administrator privileges and is typically done at installation time.
+
+The following registry configuration enables local dump collection for your application:
+
+| Name                   | Type            | Value                                                                                                                                                                                         |
+| ---------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DumpFolder`           | `REG_EXPAND_SZ` | Path to a local directory (e.g., `%LOCALAPPDATA%\YourApp\CrashDumps`)                                                                                                                         |
+| `DumpType` (optional)  | `REG_DWORD`     | `0` ([custom dump](https://learn.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps)), `1` (mini dump, default), or `2` (full dump — includes heap, may contain sensitive data) |
+| `DumpCount` (optional) | `REG_DWORD`     | Maximum number of dumps to keep (default `10`)                                                                                                                                                |
+
+For example, you could deploy this from an installer by running:
+
+```batch
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpFolder /t REG_EXPAND_SZ /d "%%LOCALAPPDATA%%\YourApp\CrashDumps" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpType /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpCount /t REG_DWORD /d 10 /f
+```
+
+```powershell
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpFolder /t REG_EXPAND_SZ /d "%LOCALAPPDATA%\YourApp\CrashDumps" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpType /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\YourApp.exe" /v DumpCount /t REG_DWORD /d 10 /f
+```
+
+For more details, see [Collecting User-Mode Dumps](https://learn.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps).
+
+### Build the Native SDK with Crash Reporting Disabled
+
+To prevent the Native SDK from capturing crashes (which would result in duplicate crash reports alongside WER), build it without a crash backend:
+
+```shell
+cmake -DSENTRY_BACKEND=none ...
+```
+
+With `SENTRY_BACKEND=none`, the SDK will not capture crashes on its own, but you can still use its API to send minidumps and have your crashes stored and processed in Sentry.
+
+<Alert level="info">
+
+For full Sentry experience, consider switching to a [WER-compatible Sentry backend](#wer-compatibility).
+
+</Alert>
+
+### Capture and Send WER Dumps to Sentry
+
+On application startup, initialize the SDK and upload any minidumps WER has stored in the dump directory. For each minidump file, call `sentry_capture_minidumpw()` with its path:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_dsn(options, "___PUBLIC_DSN___");
+sentry_init(options);
+
+/* for each minidump_path in L"%LOCALAPPDATA%\\YourApp\\CrashDumps" */ {
+    sentry_uuid_t event_id = sentry_capture_minidumpw(minidump_path);
+    if (!sentry_uuid_is_nil(&event_id)) {
+        DeleteFileW(minidump_path);
+    }
+}
+sentry_close();
+```
+
+`sentry_capture_minidumpw()` processes the minidump and uploads it to Sentry as a crash event.

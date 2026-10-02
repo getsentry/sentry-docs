@@ -1,6 +1,5 @@
 'use client';
 
-import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
@@ -11,24 +10,17 @@ import {
   standardSDKSlug,
 } from '@sentry-internal/global-search';
 import {usePathname} from 'next/navigation';
-import algoliaInsights from 'search-insights';
-
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {createInsightsClient} from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-
-import styles from './search.module.scss';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 import {MagicIcon} from '../cutomIcons/magic';
 import {Logo} from '../logo';
-
+import styles from './search.module.scss';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
-
-// Initialize Algolia Insights
-algoliaInsights('init', {
-  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
-});
 
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
@@ -45,12 +37,7 @@ const randomUserToken = (() => {
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
 
-const developerDocsSites: SentryGlobalSearchConfig = [
-  'develop',
-  'zendesk_sentry_articles',
-  'docs',
-  'blog',
-];
+const developerDocsSites: SentryGlobalSearchConfig = ['develop', 'docs', 'blog'];
 
 const userDocsSites: SentryGlobalSearchConfig = [
   {
@@ -59,15 +46,55 @@ const userDocsSites: SentryGlobalSearchConfig = [
     platformBias: true,
     legacyBias: true,
   },
-  'zendesk_sentry_articles',
   'develop',
   'blog',
 ];
 const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
+// Insights events are fire-and-forget, so rejected credentials are invisible: a
+// stale NEXT_PUBLIC_ALGOLIA_SEARCH_KEY silently 401'd every click for months.
+// Send them ourselves so a rejection gets reported once per page.
+let insightsRejectionReported = false;
+const algoliaInsights = createInsightsClient(async (url, data) => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      // text/plain keeps this a CORS simple request: an application/json
+      // preflight can be cancelled by the navigation a result click triggers.
+      headers: {'Content-Type': 'text/plain'},
+      keepalive: true,
+    });
+    if (!response.ok && !insightsRejectionReported) {
+      insightsRejectionReported = true;
+      captureException(
+        new Error(`Algolia Insights rejected an event with ${response.status}`)
+      );
+    }
+    return response.ok;
+  } catch (error) {
+    if (!insightsRejectionReported) {
+      insightsRejectionReported = true;
+      captureException(error);
+    }
+    return false;
+  }
+});
+
+const insightsAppId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID;
+const insightsApiKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY;
+// Unconfigured deploys (previews) stay silent: search-insights throws on every
+// call until it is initialized, so nothing may be sent either.
+const insightsEnabled = Boolean(insightsAppId && insightsApiKey);
+if (insightsEnabled) {
+  algoliaInsights('init', {appId: insightsAppId, apiKey: insightsApiKey});
+}
+
 type Props = {
   autoFocus?: boolean;
+  /** Called before the Kapa modal opens, so a parent overlay can close itself first. */
+  onAskAi?: () => void;
   path?: string;
   searchPlatforms?: string[];
   showChatBot?: boolean;
@@ -76,9 +103,22 @@ type Props = {
 
 const STORAGE_KEY = 'sentry-docs-search-platforms';
 
+// Paths outside `/platforms/` whose pages are not about any specific SDK.
+// Restoring the user's last-used SDK on these pages biases query results
+// toward irrelevant SDK pages instead of the product/concept docs they're
+// actually reading. Mirrors PRODUCT_DOC_PREFIXES in scripts/algolia.ts.
+const SDK_AGNOSTIC_PATH_PREFIXES = [
+  '/product/',
+  '/concepts/',
+  '/cli/',
+  '/get-started/',
+  '/integrations/',
+];
+
 export function Search({
   path,
   autoFocus,
+  onAskAi,
   searchPlatforms = [],
   useStoredSearchPlatforms = true,
 }: Props) {
@@ -93,6 +133,9 @@ export function Search({
 
   // Load stored platforms on mount
   useEffect(() => {
+    const isSdkAgnosticPath = SDK_AGNOSTIC_PATH_PREFIXES.some(prefix =>
+      pathname?.startsWith(prefix)
+    );
     const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
     if (!storedPlatforms) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
@@ -101,10 +144,14 @@ export function Search({
       searchPlatforms.length === 0 &&
       useStoredSearchPlatforms
     ) {
-      const platforms = JSON.parse(storedPlatforms);
-      setCurrentSearchPlatforms(platforms);
+      if (isSdkAgnosticPath) {
+        setCurrentSearchPlatforms([]);
+      } else {
+        const platforms = JSON.parse(storedPlatforms);
+        setCurrentSearchPlatforms(platforms);
+      }
     }
-  }, [useStoredSearchPlatforms, searchPlatforms]);
+  }, [useStoredSearchPlatforms, searchPlatforms, pathname]);
 
   // Update stored platforms when they change
   useEffect(() => {
@@ -164,8 +211,47 @@ export function Search({
     };
   }, [autoFocus]);
 
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom');
+  const showResults = query.length >= 2 && inputFocus;
+
+  // Keep the dropdown inside the viewport: cap it to whichever side of the input
+  // has more room, and flip above only when that side is the top.
+  useEffect(() => {
+    if (!showResults) {
+      return undefined;
+    }
+    const GUTTER = 16;
+    const update = () => {
+      const input = inputRef.current;
+      const dropdown = resultsRef.current;
+      if (!input || !dropdown) {
+        return;
+      }
+      const {top, bottom} = input.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - bottom - GUTTER * 2;
+      const spaceAbove = top - GUTTER * 2;
+      const flip = spaceAbove > spaceBelow;
+      setPlacement(flip ? 'top' : 'bottom');
+      dropdown.style.setProperty(
+        '--sgs-available-space',
+        `${Math.round(Math.max(flip ? spaceAbove : spaceBelow, 200))}px`
+      );
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, {passive: true});
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update);
+    };
+  }, [showResults]);
+
   const searchFor = useCallback(
-    async (inputQuery: string, args: Parameters<typeof search.query>[1] = {}) => {
+    async (
+      inputQuery: string,
+      args: Parameters<typeof search.query>[1] & {skipMetrics?: boolean} = {}
+    ) => {
       setQuery(inputQuery);
       if (inputQuery.length === 2) {
         setShowOffsiteResults(false);
@@ -179,6 +265,8 @@ export function Search({
         return;
       }
 
+      const {skipMetrics, ...searchArgs} = args;
+
       const queryResults = await search
         .query(
           inputQuery,
@@ -188,7 +276,7 @@ export function Search({
               platform => standardSDKSlug(platform)?.slug ?? ''
             ),
             searchAllIndexes: showOffsiteResults,
-            ...args,
+            ...searchArgs,
           },
           {clickAnalytics: true, analyticsTags: ['source:documentation']}
         )
@@ -220,9 +308,30 @@ export function Search({
         setLoading(false);
       }
 
+      // Calculate total results and track metrics
+      const totalResults = queryResults.reduce((sum, site) => sum + site.hits.length, 0);
+      const hasResults = totalResults > 0;
+
+      // Track search query metrics (skip on recursive calls to avoid duplicates)
+      if (!skipMetrics) {
+        DocMetrics.searchQuery(hasResults, totalResults, {
+          query_length: inputQuery.length,
+          includes_platform_filter: currentSearchPlatforms.length > 0,
+          search_all_indexes: showOffsiteResults,
+        });
+
+        // Track zero results specifically (indicates content gaps)
+        if (!hasResults) {
+          DocMetrics.searchZeroResults(inputQuery.length, {
+            includes_platform_filter: currentSearchPlatforms.length > 0,
+          });
+        }
+      }
+
       if (queryResults.length === 1 && queryResults[0].hits.length === 0) {
         setShowOffsiteResults(true);
-        searchFor(inputQuery, {searchAllIndexes: true});
+        // Skip metrics on recursive call to avoid duplicate tracking
+        searchFor(inputQuery, {searchAllIndexes: true, skipMetrics: true});
       } else {
         setResults(queryResults);
       }
@@ -233,6 +342,9 @@ export function Search({
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
+    if (!insightsEnabled) {
+      return;
+    }
     try {
       algoliaInsights('clickedObjectIDsAfterSearch', {
         eventName: 'documentation_search_result_click',
@@ -319,27 +431,34 @@ export function Search({
             color="gray"
             size="3"
             radius="medium"
-            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
           >
-            <div>
+            <button type="button" aria-label="Ask AI">
               <MagicIcon />
               <span>Ask AI</span>
-            </div>
+            </button>
           </Button>
         </Fragment>
       </div>
-      {query.length >= 2 && inputFocus && (
-        <div className={styles['sgs-search-results']}>
+      {showResults && (
+        <div
+          className={styles['sgs-search-results']}
+          data-placement={placement}
+          ref={resultsRef}
+        >
           <div className={styles['sgs-ai']}>
             <button
               id="ai-list-entry"
               className={styles['sgs-ai-button']}
               onClick={() => {
                 if (window.Kapa?.open) {
-                  // close search results
                   setInputFocus(false);
-                  // open kapa modal
-                  window.Kapa.open({query, submit: true});
+                  onAskAi?.();
+                  // Open next frame, after the overlay's scroll lock is released
+                  // on commit, so Kapa's lock and ours never overlap.
+                  requestAnimationFrame(() => {
+                    window.Kapa?.open({query, submit: true});
+                  });
                 }
               }}
             >
@@ -374,7 +493,9 @@ export function Search({
               <button
                 className={styles['sgs-expand-results-button']}
                 onClick={() => setShowOffsiteResults(true)}
-                onMouseOver={() => searchFor(query, {searchAllIndexes: true})}
+                onMouseOver={() =>
+                  searchFor(query, {searchAllIndexes: true, skipMetrics: true})
+                }
               >
                 Search <em>{query}</em> across all Sentry sites
               </button>

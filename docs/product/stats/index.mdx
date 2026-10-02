@@ -1,24 +1,26 @@
 ---
 title: Stats
-description: "The Sentry Stats page displays important metrics such as Usage, and Issues that help teams track project health. Learn how to get started here."
-sidebar_order: 130
+description: >-
+  The Sentry Stats page displays important metrics such as Usage, and Issues
+  that help teams track project health. Learn how to get started here.
+sidebar_order: 330
+sidebar_section: measure
+og_image: /og-images/product-stats.png
 ---
 
 The [**Stats**](https://sentry.io/orgredirect/organizations/:orgslug/stats/) page is an overview of the usage data that Sentry receives across your entire organization. It allows you to spot projects that have experienced recent spikes in activity or are showing more errors than others and may require a closer look. You can also adjust the displayed date range, enabling you to narrow down to a specific time period or zoom out for a broader view.
+
 ![Overview of Usage Stats page](./img/usage-stats-page-errors.png)
 
 With the dropdowns at the top of the page, you can set whether the page displays stats for errors, transactions, or attachments, as well as the date range. With the date selector, the time period can be set from an hour to a maximum of 90 days, and all of the page elements change dynamically when you update this setting.
 
 <Alert>
-  This page does not include data about sessions because they are not a billable
-  event type.
+  This page does not include data about sessions because they are not a billable event type.
 </Alert>
-
 
 There are three tabs available on the page: [Usage](#usage-stats), [Issues](#issue-stats), and [Health](#health-stats).
 
 The "Usage" tab shows your organization’s event and attachments usage, while also providing a high-level overview of how different projects are using Sentry. The "Issues" tab shows a breakdown of the issues assigned to your team and how they triaged them, while the "Health" tab provides an overview of your team’s project health.
-
 
 ## Usage Stats
 
@@ -48,9 +50,10 @@ Filtered events and attachments intentionally excluded based on defined settings
 For more details, please consult the [Inbound Filters](/concepts/data-management/filtering/) documentation.
 
 ### Rate Limited
+
 Events and attachments discarded due to rate limits or quota. The following reasons are currently defined:
 
-- **Disabled**:  Data was received for a feature or function that is not available to your organization.
+- **Disabled**: Data was received for a feature or function that is not available to your organization.
 - **DSN Limit**: Traffic exceeded a rate limit defined on the client key (DSN). See [Rate Limits](/pricing/quotas/#rate-limits) for more information.
 - **Global Limit**: Traffic exceeded an organization-wider or project-wide rate limit. This setting is no longer available to most organizations.
 - **Quota**: The monthly quota of your subscription was depleted and there is no pay-as-you-go budget left. See [Adjusting your Quota](/pricing/quotas/#adjusting-your-quota) for more information.
@@ -58,9 +61,10 @@ Events and attachments discarded due to rate limits or quota. The following reas
 - **Internal Limit**: A rate limit for excessive volume was enforced by Sentry. These limits are not configurable.
 
 ### Invalid
+
 Events and attachments might be discarded if they don't match the expected format or contain data that can't be processed. The following reasons are currently defined:
 
-- **Disallowed Domain**: A request from an unallowed origin was sent to Sentry. Check project settings to configure allowed domains.
+- **Disallowed Domain**: A request from an unallowed origin was sent to Sentry. Configure allowed domains in [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/).
 - **Duplicate**: An event with the same id has already been processed for this project. Sentry does not allow duplicate events and only stores the first one.
 - **Empty**: An empty request or a request missing its primary data component was submitted.
 - **Invalid Data**: Data sent by the SDK was invalid and does not meet the basic schema. This likely indicates an SDK implementation bug. Please report a bug if this issue persists.
@@ -69,12 +73,13 @@ Events and attachments might be discarded if they don't match the expected forma
 - **Payload**: The HTTP submission was incomplete and could not be processed. This is likely due to a network failure.
 - **Project Missing**: The specified Sentry project is disabled or project information in the submitted request was inconclusive.
 - **Sampling**: Tracing data that is discarded during sampling.
-- **Security Report**: An invalid or unsupported security report was submitted. If this report originates from an up-to-date browser, please report a bug to Sentry. See [Security Policy Reporting](/security-legal-pii/security/security-policy-reporting/) for more information.
+- **Security Report**: An invalid or unsupported security report was submitted. If this report originates from an up-to-date browser, please report a bug to Sentry. See [Security Policy Reporting](/platform-redirect/?next=/security-policy-reporting/) for more information.
 - **Too Large**: The HTTP submission or its contained data exceeds size limits. If available, what exactly exceeded might be provided as "Too Large &lt;what&gt;", where &lt;what&gt; specifies the specific size limit that was exceeded (e.g., "Too Large Event") else "Too Large Other". For the exact size limits, refer to [this document](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits)
 - **Unreal**: An unsupported or invalid Unreal Engine crash report was submitted. If this request originates from a recent or development version of the Unreal Engine, please report a bug to Sentry. See [Unreal Engine](/platforms/unreal/) for more information.
 - **Internal**: An internal problem at Sentry prevented regular processing or storage of the submitted information.
 
 ### Client Discard
+
 Events and attachments discarded by the SDK. The following reasons are currently defined:
 
 - **Queue Overflow**: An SDK internal queue (for example, a transport queue) overflowed.
@@ -88,6 +93,10 @@ Events and attachments discarded by the SDK. The following reasons are currently
 - **Internal SDK Error**: An event was dropped due to an internal SDK error (for example, a web worker crash).
 - **Insufficient Data**: An event was dropped due to a lack of data in the event (for example, not enough samples in a profile).
 - **Backpressure**: An event was dropped due to downsampling caused by the system being under load.
+- **Invalid**: An event was dropped because it contained invalid data (e.g. replay session exceeded maximum allowed length).
+- **Ignored**: An event was ignored by the SDK (for example, a span was ignored by `ignore_spans`).
+- **No Parent Span**: A span was not started or dropped because no parent span was present at span start (for example, auto-instrumented request spans suppressed when the request happens outside an active span).
+- **Callback Error**: An event was dropped because a callback (e.g., `before_send`, `traces_sampler`) threw an error.
 
 For more details, please consult the [Client Reports](https://develop.sentry.dev/sdk/telemetry/client-reports/#envelope-item-payload) documentation.
 
@@ -105,7 +114,7 @@ When you set a date range that results in intervals of one day or more, the time
 
 The “Project” table provides insight into per-project usage of your errors, transactions, and attachments over time. The table shows you the total errors, transactions, or attachments. Those are further broken down into the accepted, filtered, and dropped categories.
 
-Each project in the table has individual settings, which you can access from by clicking the settings icon (gear wheel) next to the name of the project. For instance, you might want to go to the project settings so you can limit the quota consumed by its DSNs. Clicking the name of the project takes you to the **[Project Details](/product/projects/project-details/)** page.
+Each project in the table has individual settings, which you can access from by clicking the settings icon (gear wheel) next to the name of the project. For instance, you might want to go to the [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/) so you can limit the quota consumed by its DSNs. Clicking the name of the project takes you to the **[Project Details](/product/projects/project-details/)** page.
 
 The table displays only the projects of the teams that you belong to, unless you have permissions to see all projects.
 
@@ -141,7 +150,7 @@ The "Time to Resolution" chart shows the mean time it took for issues to be reso
 
 <Include name="feature-available-for-plan-business.mdx" />
 
-The "Health" tab shows information about the overall health of your projects; the crash free sessions, user misery of your team’s key transactions, the number of alerts triggered by your team’s alert rules, and the number of releases per project.
+The "Health" tab shows information about the overall health of your projects; the crash free sessions, user misery of your team’s key transactions, the number of alerts triggered by your team’s alerts, and the number of releases per project.
 
 ![The Health Stats page](./img/health-stats.png)
 
@@ -153,9 +162,9 @@ The "Crash Free Sessions" table shows the percentage of sessions that didn’t c
 
 The "User Misery" table shows transactions where users experienced load times four times the project’s configured threshold, with the number of unique users for each of those transactions.
 
-#### Metric Alerts Triggered
+#### Alerts Triggered
 
-The "Metric Alerts Triggered" chart and table show alert rules that have been triggered for the projects your team owns.
+The "Alerts Triggered" chart and table show alerts that have been triggered for the projects your team owns.
 
 #### Number of Releases
 

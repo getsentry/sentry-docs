@@ -3,7 +3,7 @@ title: Cross Region Replication
 sidebar_order: 20
 ---
 
-Our data-model includes many relations between users and the objects they create or interact with. Eventually users are deleted, and they need to be detached from the records they created, or those records need to be destroyed. Before sentry became a multi-region application, we relied on a mixture of Django callbacks, and postgres constraints to cascade deletions. However, in a multi-region state we arent't able to rely on these anymore as Users are in [Control Silo](/architecture/#silo-modes) and many of the objects they interact with are in the various Region Silos.
+Our data-model includes many relations between users and the objects they create or interact with. Eventually users are deleted, and they need to be detached from the records they created, or those records need to be destroyed. Before sentry became a multi-region application, we relied on a mixture of Django callbacks, and postgres constraints to cascade deletions. However, in a multi-region state we arent't able to rely on these anymore as Users are in [Control Silo](/application-architecture/#silo-modes) and many of the objects they interact with are in the various Region Silos.
 
 ## HybridCloud Foreign Keys
 
@@ -25,7 +25,7 @@ class GroupHistory(Model):
 
 ## Tombstones
 
-Tracking the absence of a record is complicated. It is far simpler to track the presence of another object. When a cross region resource (like a user) is deleted we create and propagate a marker of what once was aka a *Tombstone*. The presence of a tombstone is used to cleanup data that was previously related now deceased record.
+Tracking the absence of a record is complicated. It is far simpler to track the presence of another object. When a cross region resource (like a user) is deleted we create and propagate a marker of what once was aka a _Tombstone_. The presence of a tombstone is used to cleanup data that was previously related now deceased record.
 
 Tombstones have a few properties:
 
@@ -37,7 +37,7 @@ With these properties we can reconcile a record's removal with data removals in 
 
 ### Tombstone Workflow
 
-User, Organization, and Membership deletions are the most common form of cross region deletions that leverage tombstones. Our implementation of tombstones is powered by [Outbox es](/backend/outboxes/) to reliably and eventually propagate changes to other regions.
+User, Organization, and Membership deletions are the most common form of cross region deletions that leverage tombstones. Our implementation of tombstones is powered by [Outbox es](/backend/application-domains/outboxes/) to reliably and eventually propagate changes to other regions.
 
 The flow for removing a user is
 
@@ -60,7 +60,7 @@ sequenceDiagram
 In step 5 and 6 of the above diagram we reconcile the tombstone changes with the rest of the data in the region. Tombstones needs to be reconciled for each relation that the removed record had. For example, removing a user will:
 
 - Delete the user’s saved searches, dashboards, and more using the `CASCADE` action.
-- Null out the user’s in alert rules, releases and more using the `SET NULL` action.
+- Null out the user’s in alerts, releases and more using the `SET NULL` action.
 
 ### Tombstone Reconciliation
 
@@ -95,7 +95,7 @@ Replicated models allow models to be read locally in all regions where they are 
 - Read operations where the overhead of RPC would cause unacceptable performance overhead.
 - Records where we can accept **eventual consistency**, and don't have requirements for 'read after write' semantics.
 
-Replicated models are powered by [outboxes](/backend/outboxes/) and use outboxes to push state changes from the owning region into regions that are interested in the changes in record state. For organization scoped resources, this is often only the region that the Organization is located in. For User scoped regions, this is generally the regions that a user has membership in.
+Replicated models are powered by [outboxes](/backend/application-domains/outboxes/) and use outboxes to push state changes from the owning region into regions that are interested in the changes in record state. For organization scoped resources, this is often only the region that the Organization is located in. For User scoped regions, this is generally the regions that a user has membership in.
 
 ### Adding a new replicated model
 

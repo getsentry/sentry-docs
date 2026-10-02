@@ -2,15 +2,13 @@
 
 import {Fragment, useEffect, useState} from 'react';
 import {Clipboard} from 'react-feather';
-
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
-import codeBlockStyles from '../codeBlock/code-blocks.module.scss';
-import styles from './apiExamples.module.scss';
-
 import {CodeBlock} from '../codeBlock';
+import codeBlockStyles from '../codeBlock/code-blocks.module.scss';
 import {CodeTabs} from '../codeTabs';
 import {codeToJsx} from '../highlightCode';
+import styles from './apiExamples.module.scss';
 
 const strFormat = (str: string) => {
   const s = str.trim();

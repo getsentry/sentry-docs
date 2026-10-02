@@ -10,6 +10,8 @@ platforms:
   - flutter
 ---
 
+<Include name="dart-stream-mode-general-callout.mdx" />
+
 <Include name="feature-stage-beta.mdx" />
 
 _(New in version 7.13.1)_
@@ -19,7 +21,7 @@ The [sentry_hive](https://pub.dev/packages/sentry_hive) package provides `Hive` 
 
 ## Instrumentation Behaviour
 
-The created spans will be attached to the transaction on the scope - if no transaction is on the scope the Hive span will not be sent to Sentry.
+The created spans attach to the active span. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan()`. If no span is active, the Hive span won't be sent to Sentry.
 
 ## Prerequisites
 
@@ -55,7 +57,7 @@ SentryHive.init(appDir.path);
 
 ### 1. Execute the Code
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry_hive/sentry_hive.dart';
 
 Future<void> hiveTest() async {
@@ -77,6 +79,25 @@ Future<void> hiveTest() async {
   SentryHive.close();
 
   await tr.finish(status: const SpanStatus.ok());
+}
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry_hive/sentry_hive.dart';
+
+Future<void> hiveTest() async {
+  await Sentry.startSpan('hiveTest', (span) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    SentryHive.init(appDir.path);
+
+    final catsBox = await SentryHive.openBox<Map>('cats');
+    await catsBox.put('fluffy', {'name': 'Fluffy', 'age': 4});
+    await catsBox.put('loki', {'name': 'Loki', 'age': 2});
+    await catsBox.clear();
+    await catsBox.close();
+
+    SentryHive.close();
+  }, parentSpan: null);
 }
 ```
 

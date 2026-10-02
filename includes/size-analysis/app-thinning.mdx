@@ -1,0 +1,52 @@
+App Thinning is Apple's technology that automatically optimizes the delivery of iOS apps to reduce their download size for end users. When your app is uploaded to the App Store, Apple creates device-specific variants that only include the resources needed for each device type. For example, an iPhone SE doesn't need images intended for iPads.
+
+Sentry Size Analysis **does not perform any app thinning** as part of the analysis. The underlying app is untouched and results are shown as-is.
+
+If you want results targeting a specific device type (recommended), apply app thinning **before** uploading to Sentry. To do this, first create an XCArchive, then export a thinned IPA from it.
+
+Create an `export_options.plist` file that specifies the desired device model:
+
+<Alert title="Important">
+  Xcode doesn't support thinning when the export method is `app-store-connect`.
+  Use `release-testing` as shown below.
+</Alert>
+
+```xml {filename:export_options.plist}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>method</key>
+<string>release-testing</string>
+<key>teamID</key>
+<string>your-team-id</string> <!-- set to your ID -->
+<key>thinning</key>
+<string>iPhone17,1</string> <!-- set to your device type -->
+</dict>
+</plist>
+```
+
+Then export a thinned IPA from the archive with `xcodebuild`:
+
+```bash
+xcodebuild -exportArchive \
+  -archivePath app.xcarchive \
+  -exportPath build/size-analysis \
+  -exportOptionsPlist export_options.plist
+```
+
+This produces an `app-thinning.plist` file in the export directory with information about the created app variants and their locations. Pick the appropriate IPA for your device type.
+
+On an Apple silicon Mac, Sentry Fastlane plugin version `2.7.0` or later can upload a thinned IPA with its dSYMs:
+
+```ruby {filename:Fastfile}
+sentry_upload_build(
+  org_slug: 'your-org',
+  project_slug: 'your-project',
+  ipa_path: 'path/to/YourApp.ipa',
+  dsym_path: 'path/to/dSYMs',
+  build_configuration: 'Release'
+)
+```
+
+If a build is uploaded without first being thinned, you may see multiple copies of your images (ex. different idiom and colorspace values) in your build analysis. We recommend uploading the thinned build to Sentry for the best results.

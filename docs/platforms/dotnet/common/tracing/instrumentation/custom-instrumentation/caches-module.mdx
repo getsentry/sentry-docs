@@ -6,7 +6,7 @@ description: "Learn how to manually instrument your code to use Sentry's Caches 
 
 A cache can be used to speed up data retrieval, thereby improving application performance. Because instead of getting data from a potentially slow data layer, your application will be getting data from memory (in a best case scenario). Caching can speed up read-heavy workloads for applications like Q&A portals, gaming, media sharing, and social networking.
 
-Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) for getting an overview of your application's caches.
+Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/) for getting an overview of your application's caches.
 
 To make it possible for Sentry to give you an overview of your cache performance, you'll need to create two spans - one indicating that something is being put into the cache, and a second one indicating that something is being fetched from the cache.
 
@@ -54,14 +54,14 @@ public class MyCachingService
         var cacheSpan = SentrySdk.GetSpan()?.StartChild("cache.put");
 
         // Describe the cache server you are accessing
-        cacheSpan?.SetExtra("network.peer.address", "cache.example.com/supercache");
-        cacheSpan?.SetExtra("network.peer.port", 9000);
+        cacheSpan?.SetData("network.peer.address", "cache.example.com/supercache");
+        cacheSpan?.SetData("network.peer.port", 9000);
 
         // Set the key you're going to use to add to the cache
-        cacheSpan?.SetExtra("cache.key", cacheKey);
+        cacheSpan?.SetData("cache.key", cacheKey);
 
         // Optional: You can also provide the cached item's size
-        // cacheSpan?.SetExtra("cache.item_size", /* item size in bytes */);
+        // cacheSpan?.SetData("cache.item_size", /* item size in bytes */);
 
         // Add an item to your cache
         _cache.Set(cacheKey, value);
@@ -74,20 +74,20 @@ public class MyCachingService
         var cacheSpan = SentrySdk.GetSpan()?.StartChild("cache.get");
 
         // Describe the cache server you are accessing
-        cacheSpan?.SetExtra("network.peer.address", "cache.example.com/supercache");
-        cacheSpan?.SetExtra("network.peer.port", 9000);
+        cacheSpan?.SetData("network.peer.address", "cache.example.com/supercache");
+        cacheSpan?.SetData("network.peer.port", 9000);
 
         // Set the key you're going to use to retrieve from the cache
-        cacheSpan?.SetExtra("cache.key", cacheKey);
+        cacheSpan?.SetData("cache.key", cacheKey);
 
         // Attempt to retrieve the cached item
         if (_cache.TryGetValue(cacheKey, out var cachedValue))
         {
             // If you retrieved a value, the cache was hit
-            cacheSpan?.SetExtra("cache.hit", true);
+            cacheSpan?.SetData("cache.hit", true);
 
             // Optional: You can also provide the cached item's size
-            // cacheSpan.SetExtra("cache.item_size", /* item size in bytes */);
+            // cacheSpan.SetData("cache.item_size", /* item size in bytes */);
 
             cacheSpan?.Finish();
 
@@ -95,11 +95,11 @@ public class MyCachingService
         }
 
         // If you could not retrieve a value, it was a miss
-        cacheSpan?.SetExtra("cache.hit", false);
+        cacheSpan?.SetData("cache.hit", false);
         cacheSpan?.Finish();
         return null;
     }
 }
 ```
 
-You should now have the right spans in place. Head over to the [Cache dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) to see how your cache is performing.
+You should now have the right spans in place. Head over to the [Cache dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/) to see how your cache is performing.

@@ -3,8 +3,8 @@ To set up distributed tracing, use Sentry's middleware to inject tracing informa
 Create or modify the `middleware.ts` file and import and add `sentryBeforeResponseMiddleware`
 
 ```typescript {filename: middleware.ts}
-import { sentryBeforeResponseMiddleware } from '@sentry/solidstart/middleware';
-import { createMiddleware } from '@solidjs/start/middleware';
+import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
+import { createMiddleware } from "@solidjs/start/middleware";
 
 export default createMiddleware({
   onBeforeResponse: [
@@ -12,16 +12,16 @@ export default createMiddleware({
     // Add your other middleware handlers after `sentryBeforeResponseMiddleware`
   ],
 });
-````
+```
 
 If you didn't use a middleware before, don't forget to specify it in `app.config.ts`
 
 ```typescript {filename: app.config.ts}
-import { defineConfig } from '@solidjs/start/config';
+import { defineConfig } from "@solidjs/start/config";
 
 export default defineConfig({
   // ...
-  middleware: './src/middleware.ts',
+  middleware: "./src/middleware.ts",
 });
 ```
 
@@ -29,7 +29,7 @@ To get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/W
 
 <Alert>
 
-Note: port numbers are relevant for trace propagation and the origin. You may need to configure the `tracePropagationTargets` to ensure that traces are propagated across your services if they run on different ports. 
+Note: port numbers are relevant for trace propagation and the origin. You may need to configure the `tracePropagationTargets` to ensure that traces are propagated across your services if they run on different ports.
 
 For example, if you have a Node.js backend running locally on port 3000, that destination (`http://localhost:3000`) should be added to the `tracePropagationTargets` array on your frontend to ensure that CORS doesn't restrict the propagation of traces.
 
@@ -66,8 +66,8 @@ Sentry.init({
 
 This tells Sentry to pass trace headers across the following paths:
 
-* Your main API server (where product data comes from)
-* Your authentication server (where logins happen)
+- Your main API server (where product data comes from)
+- Your authentication server (where logins happen)
 
 This way, if a customer experiences an error during checkout, or you want to check the performance of a specific endpoint, you can see the complete path their request took across these different services.
 
@@ -81,15 +81,48 @@ Sentry.init({
   tracePropagationTargets: [
     "https://api.myapp.com",
     "https://media.myapp.com",
-    /^\/local-api\//
+    /^\/local-api\//,
   ],
 });
 ```
 
 This configuration lets your app track user actions across:
 
-* Your main API server (handles most app functions)
-* Your media server (handles images, videos, etc.)
-* Any local API endpoints in your app
+- Your main API server (handles most app functions)
+- Your media server (handles images, videos, etc.)
+- Any local API endpoints in your app
 
 If your app crashes while a user is uploading a photo, you can trace exactly where the problem occurred - in the app itself, the main API, or the media service.
+
+### Strict Trace Continuation
+
+<AvailableSince version="10" />
+
+When your application receives requests, they might include `sentry-trace` and `baggage` headers from an upstream service that is also using Sentry.
+By default, the SDK will continue the trace from these incoming headers. However, this behavior can be undesirable if the requests are from a third-party service,
+as it can lead to unwanted traces, increased billing, and skewed performance data.
+
+To prevent this, you can enable `strictTraceContinuation`. When this option is set to `true`, the SDK checks the incoming request for Sentry trace information and only continues the trace if it belongs to the same Sentry organization.
+Otherwise, it starts a new trace.
+This is useful if your application is a public API or receives requests from services outside your organization.
+
+```javascript {5}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  // Ensure that only traces from your own organization are continued
+  strictTraceContinuation: true,
+});
+```
+
+The SDK automatically parses the organization ID from your DSN. If you use a DSN format that doesn't include the organization ID (number followed by the letter `"o"`), or if you need to override it, you can provide it manually using the `orgId` option:
+
+```javascript {6}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  strictTraceContinuation: true,
+  // Manually provide your organization ID (overrides organization ID parsed from DSN)
+  orgId: 12345,
+});
+```

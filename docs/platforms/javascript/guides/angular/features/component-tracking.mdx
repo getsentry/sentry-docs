@@ -78,7 +78,7 @@ Note: Due to code minification in production builds, you need to pass a `name` p
 The `TraceMethod` decorator tracks specific component lifecycle hooks as point-in-time spans. The added spans are called **`ui.angular.[methodname]`** (like, `ui.angular.ngOnChanges`). For example, you can use this decorator to track how often component changes are detected:
 
 ```typescript {filename:login.component.ts} {2,9}
-import { Component, OnInit } from "@angular/core";
+import { Component, OnChanges, SimpleChanges } from "@angular/core";
 import * as Sentry from "@sentry/angular";
 
 @Component({
@@ -103,20 +103,28 @@ You can combine our component tracking utilities and track the bootstrapping dur
 
 To get the best insights into your components' performance, you can combine `TraceDirective`, `TraceClassDecorator`, and `TraceMethodDecorator`. This allows you to track component initialization durations as well as arbitrary lifecycle events, such as change and destroy events:
 
-```typescript {filename:user-card.component.ts} {2,8,10,13}
-import { Component, OnInit } from "@angular/core";
+```typescript {filename:user-card.component.ts} {8,14,18,21}
+import {
+  Component,
+  Input,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+} from "@angular/core";
 import * as Sentry from "@sentry/angular";
 
 @Component({
   selector: "app-user-card",
   templateUrl: "./user-card.component.html",
 })
-@Sentry.TraceClass()
+@Sentry.TraceClass({ name: "UserCard" })
 export class UserCardComponent implements OnChanges, OnDestroy {
-  @Sentry.TraceMethod()
+  @Input() user!: { name: string };
+
+  @Sentry.TraceMethod({ name: "UserCard.ngOnChanges" })
   ngOnChanges(changes: SimpleChanges) {}
 
-  @Sentry.TraceMethod()
+  @Sentry.TraceMethod({ name: "UserCard.ngOnDestroy" })
   ngOnDestroy() {}
 }
 ```

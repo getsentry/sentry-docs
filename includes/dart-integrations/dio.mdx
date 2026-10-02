@@ -7,6 +7,8 @@ platforms:
 sidebar_order: 4
 ---
 
+<Include name="dart-stream-mode-general-callout.mdx" />
+
 The `sentry_dio` library provides [Dio](https://pub.dev/packages/dio) support for Sentry using the [HttpClientAdapter](https://pub.dev/documentation/dio/latest/dio/HttpClientAdapter-class.html). It is able to collect breadcrumbs, run tracing for HTTP requests, and capture events for failed requests.
 
 ## Install
@@ -67,13 +69,61 @@ await Sentry.init((options) {
 });
 ```
 
+### Failed Request Status Codes
+
+You can customize which status codes should be considered failed requests by setting the `failedRequestStatusCodes` option when calling `addSentry()`.
+
+```dart
+import 'package:sentry_dio/sentry_dio.dart';
+
+final dio = Dio();
+
+dio.addSentry(
+  failedRequestStatusCodes: [
+    SentryStatusCode.range(400, 404), // Capture 400-404
+    SentryStatusCode(500),             // Capture 500
+  ],
+);
+```
+
+**Default Behavior:**
+
+By default, `failedRequestStatusCodes` is set to `[SentryStatusCode.range(500, 599)]`, which captures server errors (status codes 500-599).
+
+### Failed Request Targets
+
+To control which URLs should have failed requests captured, use the `failedRequestTargets` option. This is useful when you only want to capture errors from specific APIs or domains.
+
+The SDK will only capture HTTP client errors if the request URL matches one of the provided targets. Targets can be:
+
+- Strings that appear anywhere in the URL
+- Regular expression patterns
+
+```dart
+import 'package:sentry_dio/sentry_dio.dart';
+
+final dio = Dio();
+
+// Capture failed requests only from specific domains
+dio.addSentry(
+  failedRequestTargets: [
+    'api.example.com',      // Matches any URL containing this string
+    'myapi.com',            // Another domain to track
+  ],
+);
+```
+
+**Default Behavior:**
+
+By default, `failedRequestTargets` is set to `['.*']`, which matches all URLs. This means all failed requests are captured (subject to `failedRequestStatusCodes`).
+
 ## Tracing for HTTP Requests
 
 The Dio integration also provides insight into tracing for your HTTP requests done with Dio.
 
 ### Instrumentation Behaviour
 
-- The created spans will be attached to the transaction on the scope - if no transaction is on the scope the span will not be sent to Sentry.
+- The created spans attach to the active span. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan()`. If no span is active, the span won't be sent to Sentry.
 - The SDK sets the span operation to `http.client` and the description to request `$METHOD $url`. For example, `GET https://sentry.io`.
 - The span finishes once the request has been executed.
 - The span status depends on either the HTTP response code or `SpanStatus.internalError()` if the code does not match any of Sentry's SpanStatus options.
@@ -102,7 +152,7 @@ dio.addSentry();
 
 #### 1. Execute the Code
 
-```dart
+```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
 import 'package:sentry_dio/sentry_dio.dart';
 
 Future<void> makeWebRequestWithDio() async {
@@ -130,6 +180,24 @@ Future<void> makeWebRequestWithDio() async {
     } finally {
       await span.finish();
     }
+}
+```
+
+```dart {tabTitle:Stream Mode}
+import 'package:sentry_dio/sentry_dio.dart';
+
+Future<void> makeWebRequestWithDio() async {
+  final dio = Dio();
+  dio.addSentry();
+
+  // Start a root span — the Dio integration attaches a span for the request
+  await Sentry.startSpan('dio-web-request', (span) async {
+    try {
+      final response = await dio.get<String>(exampleUrl);
+    } catch (exception, stackTrace) {
+      await Sentry.captureException(exception, stackTrace: stackTrace);
+    }
+  }, parentSpan: null);
 }
 ```
 

@@ -1,0 +1,69 @@
+## How Source Maps Work in Nitro
+
+When you wrap your config with `withSentryConfig`, the SDK:
+
+1. Enables source map generation if you haven't set the `sourcemap` option yourself
+2. Injects debug IDs into your build output
+3. Uploads source maps to Sentry after each production build
+4. Deletes `.map` files from the build output to avoid exposing them publicly
+
+Source maps are only uploaded during **production builds**. Development builds (`nitro dev`) skip the upload.
+
+If you already set `sourcemap` in your Nitro config, the SDK respects your setting:
+
+- `true`: the SDK uploads the generated maps
+- `false`: the SDK warns that errors won't be unminified and skips the upload
+
+### Source Map Options
+
+You can customize source map behavior in the Sentry options:
+
+```typescript {filename:nitro.config.ts}
+import { defineNitroConfig } from "nitro/config";
+import { withSentryConfig } from "@sentry/nitro";
+
+const config = defineNitroConfig({
+  // your Nitro options...
+});
+
+export default withSentryConfig(config, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  sourcemaps: {
+    // Glob pattern for source map files to upload
+    assets: [".output/server/**"],
+    // Glob pattern for files to exclude from upload
+    ignore: ["node_modules/**"],
+    // Delete source maps after upload to avoid exposing them publicly
+    filesToDeleteAfterUpload: [".output/server/**/*.map"],
+  },
+});
+```
+
+### Disabling Source Map Uploads
+
+To disable source map uploads entirely, set `sourcemaps.disable` to `true`:
+
+```typescript {filename:nitro.config.ts}
+export default withSentryConfig(config, {
+  sourcemaps: {
+    disable: true,
+  },
+});
+```
+
+To generate and inject debug IDs without uploading (useful if you upload maps separately), set `sourcemaps.disable` to `"disable-upload"`:
+
+```typescript {filename:nitro.config.ts}
+export default withSentryConfig(config, {
+  sourcemaps: {
+    disable: "disable-upload",
+  },
+});
+```
+
+### Troubleshooting
+
+If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/nitro/troubleshooting/).

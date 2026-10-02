@@ -1,171 +1,269 @@
 import Image from 'next/image';
-
+import Link from 'next/link';
+import {type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
-import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
-import PlugImage from 'sentry-docs/imgs/api.png';
-import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
-import TerminalImage from 'sentry-docs/imgs/cli.png';
-import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
-import HeroImage from 'sentry-docs/imgs/home_illustration.png';
-import OrganizationImage from 'sentry-docs/imgs/organization.png';
-import CalculatorImage from 'sentry-docs/imgs/pricing.png';
-import RocketImage from 'sentry-docs/imgs/rocket.png';
-import SecurityImage from 'sentry-docs/imgs/security.png';
-import SupportImage from 'sentry-docs/imgs/support.png';
+import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
+import Cursor from 'sentry-docs/icons/cursor';
+import GitHub from 'sentry-docs/icons/github';
+import Jira from 'sentry-docs/icons/jira';
+import Slack from 'sentry-docs/icons/slack';
+import Vercel from 'sentry-docs/icons/vercel';
+import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import AskAiSearchParams from './askAiSearchParams';
-import {Card} from './card';
 import {Header} from './header';
-import {NavLink, NavLinkProps} from './navlink';
+import styles from './home.module.scss';
+import {HomeAiSetupCard} from './homeAiSetupCard';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
+import {PreferredPlatformLink} from './preferredPlatformLink';
+import {SentryWordmarkLogo} from './wordmarkLogo';
 
-export function Home() {
+export async function Home() {
+  const rootNode = await getDocsRootNode();
+  const platforms = extractPlatforms(rootNode);
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
-      <div className="mt-[var(--header-height)]">
-        <Banner />
-      </div>
-      <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
-          <div className="flex flex-col justify-center items-start">
-            <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
-              Welcome to Sentry Docs
-            </h1>
-            <p className="max-w-[55ch]">
-              Sentry provides end-to-end distributed tracing, enabling developers to
-              identify and debug performance issues and errors across their systems and
-              services.
+      <Header
+        pathname="/"
+        searchPlatforms={[]}
+        useStoredSearchPlatforms={false}
+        platforms={platforms}
+      />
+      <main id="main">
+        <div className="mt-[var(--header-height)]">
+          <Banner />
+        </div>
+
+        {/* Hero */}
+        <section className={`w-full relative ${styles.heroGradient}`}>
+          <div className="max-w-screen-lg mx-auto px-4 sm:px-8 pt-16 pb-10 text-center relative z-10">
+            <div className={styles.heroTitle}>
+              <Image
+                src={SentryLogoSVG}
+                alt=""
+                width={96}
+                height={88}
+                className={styles.heroLogo}
+              />
+              <h1
+                className="font-bold text-[var(--gray-12)] dark:text-white mb-0"
+                style={{fontSize: '40px', lineHeight: 1.15, letterSpacing: '-0.02em'}}
+              >
+                Get started with Sentry
+              </h1>
+            </div>
+            <p
+              className="text-[var(--gray-11)] dark:text-[var(--gray-11)] max-w-2xl mx-auto mb-8 text-balance"
+              style={{fontSize: '17px', lineHeight: 1.5}}
+            >
+              Everything you need to catch errors, trace performance, and fix broken
+              agents.
             </p>
           </div>
-          <div className="self-center">
-            <Image
-              src={HeroImage}
-              alt="Sentry's hero image"
-              className="max-h-[200px] w-auto md:max-h-[390px]"
+        </section>
+
+        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-4">
+          <HomeAiSetupCard />
+        </section>
+
+        <section
+          id="platforms"
+          className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
+        >
+          <div className={styles.orDivider} role="separator" aria-label="or">
+            <span>or</span>
+          </div>
+
+          <div className={styles.manualHeader}>
+            <div className={styles.setupIcon}>
+              <svg
+                width="26"
+                height="26"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <rect x="2.5" y="4" width="19" height="16" rx="2.5" />
+                <path d="M6.5 9l3 3-3 3" />
+                <path d="M12.5 15h5" />
+              </svg>
+            </div>
+            <div>
+              <h2 className={styles.setupTitle}>Set up manually</h2>
+              <p className={styles.setupDesc}>
+                Pick your platform below and follow our step-by-step guides to install the
+                SDK and send your first event.
+              </p>
+            </div>
+          </div>
+
+          <PlatformFilter />
+        </section>
+
+        <section
+          id="integrations"
+          className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-6 scroll-mt-[var(--header-height)]"
+        >
+          <div className="space-y-2 py-8">
+            <h2 className="text-xl font-semibold">
+              <Link
+                href="/integrations/"
+                className="text-[var(--gray-12)] no-underline hover:text-[var(--accent-purple)]"
+              >
+                Integrations
+              </Link>
+            </h2>
+            <p className="m-0">
+              Connect your favorite apps and services to add features that help track and
+              triage your errors.{' '}
+              <Link href="/integrations/" className={styles.seeAllLink}>
+                See all integrations
+              </Link>
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <QuickLink
+              href="/integrations/source-code-mgmt/github/"
+              title="GitHub"
+              desc="Suspect commits, stack traces, and PR comments."
+              icon={<GitHub width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/notification-incidents/slack/"
+              title="Slack"
+              desc="Alerts, issue actions, and Seer in Slack."
+              icon={<Slack width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/issue-tracking/jira/"
+              title="Jira"
+              desc="Create and sync Jira issues from Sentry."
+              icon={<Jira width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/deployment/vercel/"
+              title="Vercel"
+              desc="Deploy notifications and source map uploads."
+              icon={<Vercel width={20} height={20} aria-hidden />}
+            />
+            <QuickLink
+              href="/integrations/coding-agents/cursor/"
+              title="Cursor"
+              desc="Launch Cursor Cloud Agents from Seer."
+              icon={<Cursor width={20} height={20} aria-hidden />}
             />
           </div>
-        </div>
+          <p className="mt-8 mb-4">
+            Start{' '}
+            <Link href="/product/agents/" className={styles.seeAllLink}>
+              debugging your agents
+            </Link>{' '}
+            with one of these agent integrations.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <AgentQuickLink
+              to="/agent-tracing/mastra/"
+              title="Mastra"
+              desc="Export Mastra AI tracing to Sentry."
+              icon={<PlatformIcon platform="mastra" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/eve/"
+              title="Eve"
+              desc="Send Eve agent traces, conversations, and errors to Sentry."
+              icon={<PlatformIcon platform="eve" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/flue/"
+              title="Flue"
+              desc="Send Flue traces, logs, and errors to Sentry."
+              icon={<PlatformIcon platform="flue" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/vercelai/"
+              title="Vercel AI"
+              desc="Instrument the Vercel AI SDK."
+              icon={<PlatformIcon platform="vercel" />}
+            />
+            <AgentQuickLink
+              to="/agent-tracing/openai/"
+              title="OpenAI"
+              desc="Instrument the OpenAI SDK."
+              icon={<PlatformIcon platform="openai" />}
+            />
+          </div>
+        </section>
 
-        <PlatformFilter />
-        <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
-        <div className="flex flex-wrap gap-6">
-          <Card
-            className="w-full"
-            href="/product/"
-            image={RocketImage}
-            imageAlt="Rocket image"
-            title="What is Sentry?"
-            description="Application monitoring and debugging software considered “not bad” by 4 million developers."
+        <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16">
+          <div className="space-y-2 py-8">
+            <h2 className="text-xl font-semibold">Learn More</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <QuickLink
+              href="/product/"
+              title="What is Sentry?"
+              desc="Error monitoring, tracing, and more."
+            />
+            <QuickLink
+              href="/product/ai-in-sentry/seer/"
+              title="Fix faster with Seer"
+              desc="AI debugging, root cause, and autofix."
+            />
+            <QuickLink
+              href="/pricing/"
+              title="Pricing & Billing"
+              desc="How our pricing and quotas work."
+            />
+            <QuickLink href="/api/" title="API" desc="Access Sentry programmatically." />
+            <QuickLink
+              href="/ai/"
+              title="Sentry for AI"
+              desc="See all the ways Sentry plugs into your agents and workflows."
+            />
+          </div>
+        </section>
+      </main>
+      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 px-6 lg:px-8">
+        <div className="pt-10 border-t border-[var(--gray-a4)] flex flex-col-reverse gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              <FooterLink href="/security-legal-pii/">
+                Security, Legal &amp; PII
+              </FooterLink>
+              <FooterLink href="/contributing">Contribute</FooterLink>
+              <FooterLink href="https://www.sentry.help/en/" external>
+                Support
+              </FooterLink>
+              <FooterLink href="https://sentry.io/changelog/" external>
+                Changelog
+              </FooterLink>
+              <FooterLink href="https://sandbox.sentry.io/" external>
+                Sandbox
+              </FooterLink>
+              <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
+                Self-hosting Sentry
+              </FooterLink>
+              <FooterLink href="https://develop.sentry.dev/" external>
+                Developer docs
+              </FooterLink>
+            </div>
+            <p className="text-sm text-[var(--gray-11)]">
+              © {new Date().getFullYear()} • Sentry is a registered trademark of
+              Functional Software, Inc.
+            </p>
+          </div>
+          <SentryWordmarkLogo
+            role="img"
+            aria-label="Sentry"
+            width={128}
+            height={38}
+            className="text-[var(--foreground)] shrink-0"
           />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/organization"
-            image={OrganizationImage}
-            imageAlt="Organization image"
-            title="Organization settings"
-            description="Information for setting up your organization's Sentry account."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/pricing"
-            image={CalculatorImage}
-            imageAlt="Calculator image"
-            title="Pricing & Billing"
-            description="All about our pricing and billing structure."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/api"
-            image={PlugImage}
-            imageAlt="Plug image"
-            title="API"
-            description="APIs for accessing Sentry programmatically."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/cli"
-            image={TerminalImage}
-            imageAlt="Terminal image"
-            title="CLI"
-            description="How to use ‘sentry-cli’ on the command line."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/security-legal-pii"
-            image={SecurityImage}
-            imageAlt="Stamped paper image"
-            title="Security, Legal & PII"
-            description="Security, compliance, and data-scrubbing processes."
-          />
-
-          <Card
-            className="w-full md:w-[calc(50%-12px)]"
-            href="/concepts"
-            image={ConceptsImage}
-            imageAlt="Concept and references image"
-            title="Concepts & Reference"
-            description="Core concepts that make Sentry, Sentry."
-          />
-        </div>
-        <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
-        <div className="flex flex-col md:flex-row gap-6">
-          <Card
-            className="w-full"
-            href="https://discord.com/invite/sentry"
-            image={ChatBubble}
-            imageAlt="Chat bubble image"
-            title="Sentry Discord"
-            description="Real talk in real time. Get in it."
-          />
-
-          <Card
-            className="w-full"
-            href="https://sentry.zendesk.com/hc/en-us/"
-            image={SupportImage}
-            imageAlt="Support image"
-            title="Support"
-            description="See how we can help."
-          />
-        </div>
-      </div>
-      <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">
-        <div className="flex md:items-center flex-wrap md:flex-row flex-col md:space-x-2 space-y-2 md:space-y-0 items-start px-3 pt-10 border-t border-gray">
-          <FooterLink href="/security-legal-pii/">Security, Legal & PII</FooterLink>
-          <FooterLink href="/contributing">Contribute</FooterLink>
-          <FooterLink href="https://sentry.zendesk.com/hc/en-us/" external>
-            Support
-          </FooterLink>
-          <FooterLink href="https://develop.sentry.dev/self-hosted/" external>
-            Self-hosting Sentry
-          </FooterLink>
-          <FooterLink href="https://develop.sentry.dev/" external>
-            Developer docs
-          </FooterLink>
-          <FooterLink href="https://discord.com/invite/sentry">
-            Sentry discord
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              viewBox="0 0 16 13"
-              fill="none"
-              className="inline-block ml-1 fill-[var(--foreground)]"
-            >
-              <path d="M13.5535 1.01557C12.5023 0.5343 11.3926 0.192868 10.2526 0C10.0966 0.278859 9.95549 0.565767 9.82978 0.859525C8.61551 0.676548 7.38069 0.676548 6.16642 0.859525C6.04065 0.565798 5.8995 0.278893 5.74358 0C4.6029 0.194497 3.49241 0.536739 2.44013 1.01809C0.351097 4.10886 -0.215208 7.12286 0.0679445 10.0941C1.29134 10.998 2.66066 11.6854 4.11639 12.1265C4.44418 11.6856 4.73423 11.2179 4.98347 10.7283C4.51008 10.5515 4.05318 10.3334 3.61805 10.0765C3.73257 9.99339 3.84457 9.90782 3.9528 9.82476C5.21892 10.4202 6.60084 10.7289 7.99999 10.7289C9.39914 10.7289 10.7811 10.4202 12.0472 9.82476C12.1567 9.91411 12.2687 9.99969 12.3819 10.0765C11.946 10.3338 11.4882 10.5524 11.014 10.7296C11.2629 11.2189 11.553 11.6863 11.8811 12.1265C13.338 11.6872 14.7084 11.0001 15.932 10.0953C16.2643 6.64968 15.3645 3.66336 13.5535 1.01557ZM5.34213 8.26679C4.55308 8.26679 3.9012 7.55073 3.9012 6.66981C3.9012 5.78889 4.53043 5.06654 5.33961 5.06654C6.1488 5.06654 6.79565 5.78889 6.7818 6.66981C6.76796 7.55073 6.14628 8.26679 5.34213 8.26679ZM10.6578 8.26679C9.86754 8.26679 9.21817 7.55073 9.21817 6.66981C9.21817 5.78889 9.8474 5.06654 10.6578 5.06654C11.4683 5.06654 12.1101 5.78889 12.0963 6.66981C12.0824 7.55073 11.462 8.26679 10.6578 8.26679Z" />
-            </svg>
-          </FooterLink>
-        </div>
-        <p className="px-3 text-sm">
-          © {new Date().getFullYear()} • Sentry is a registered trademark of Functional
-          Software, Inc.
-        </p>
-        <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
-          <SentryWordmarkLogo height={50} fill="#ffffff" />
         </div>
       </footer>
       <AskAiSearchParams />
@@ -173,29 +271,80 @@ export function Home() {
   );
 }
 
+function QuickLink({
+  href,
+  title,
+  desc,
+  icon,
+}: {
+  desc: string;
+  href: string;
+  icon?: ReactNode;
+  title: string;
+}) {
+  return (
+    <Link href={href} className={`${styles.quickLink} no-underline`}>
+      <div className={styles.quickLinkTitle}>
+        {icon}
+        {title}
+      </div>
+      <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
+    </Link>
+  );
+}
+
+function AgentQuickLink({
+  to,
+  title,
+  desc,
+  icon,
+}: {
+  desc: string;
+  icon: ReactNode;
+  title: string;
+  to: string;
+}) {
+  return (
+    <PreferredPlatformLink to={to} className={`${styles.quickLink} no-underline`}>
+      <div className={styles.quickLinkTitle}>
+        {icon}
+        {title}
+      </div>
+      <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
+    </PreferredPlatformLink>
+  );
+}
+
 function FooterLink({
   children,
+  href,
   external,
-  ...props
-}: NavLinkProps & {href: string; external?: boolean}) {
-  const target = props.target ?? (props.href?.startsWith('http') ? '_blank' : undefined);
-
+}: {
+  children: React.ReactNode;
+  href: string;
+  external?: boolean;
+}) {
   return (
-    <NavLink {...props} target={target}>
+    <Link
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noreferrer' : undefined}
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--gray-11)] hover:text-[var(--foreground)] transition-colors no-underline"
+    >
       {children}
       {external && (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="18"
+          width="12"
+          height="12"
           viewBox="0 0 16 16"
-          fill="none"
-          className="inline-block ml-2 fill-[var(--foreground)]"
+          fill="currentColor"
+          aria-hidden="true"
+          className="opacity-60"
         >
-          <g>
-            <path d="M10 0C9.44687 0 9 0.446875 9 1C9 1.55313 9.44687 2 10 2H12.5844L6.29375 8.29375C5.90312 8.68437 5.90312 9.31875 6.29375 9.70938C6.68437 10.1 7.31875 10.1 7.70937 9.70938L14 3.41563V6C14 6.55312 14.4469 7 15 7C15.5531 7 16 6.55312 16 6V1C16 0.446875 15.5531 0 15 0H10ZM2.5 1C1.11875 1 0 2.11875 0 3.5V13.5C0 14.8813 1.11875 16 2.5 16H12.5C13.8813 16 15 14.8813 15 13.5V10C15 9.44687 14.5531 9 14 9C13.4469 9 13 9.44687 13 10V13.5C13 13.775 12.775 14 12.5 14H2.5C2.225 14 2 13.775 2 13.5V3.5C2 3.225 2.225 3 2.5 3H6C6.55312 3 7 2.55312 7 2C7 1.44687 6.55312 1 6 1H2.5Z" />
-          </g>
+          <path d="M10 0C9.44687 0 9 0.446875 9 1C9 1.55313 9.44687 2 10 2H12.5844L6.29375 8.29375C5.90312 8.68437 5.90312 9.31875 6.29375 9.70938C6.68437 10.1 7.31875 10.1 7.70937 9.70938L14 3.41563V6C14 6.55312 14.4469 7 15 7C15.5531 7 16 6.55312 16 6V1C16 0.446875 15.5531 0 15 0H10ZM2.5 1C1.11875 1 0 2.11875 0 3.5V13.5C0 14.8813 1.11875 16 2.5 16H12.5C13.8813 16 15 14.8813 15 13.5V10C15 9.44687 14.5531 9 14 9C13.4469 9 13 9.44687 13 10V13.5C13 13.775 12.775 14 12.5 14H2.5C2.225 14 2 13.775 2 13.5V3.5C2 3.225 2.225 3 2.5 3H6C6.55312 3 7 2.55312 7 2C7 1.44687 6.55312 1 6 1H2.5Z" />
         </svg>
       )}
-    </NavLink>
+    </Link>
   );
 }

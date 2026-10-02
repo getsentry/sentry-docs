@@ -1,0 +1,52 @@
+---
+title: Attributes
+description: "Learn how to construct custom attributes to enrich logs and metrics."
+---
+
+Attributes are a specific kind of `sentry_value_t` object which contains items with a `value`, `type` and optional `unit` field. The type is inferred from the given `sentry_value_t` value, which can be `bool`, `int32`, `int64`, `uint64`, `double` or `string`.
+
+```c
+sentry_value_t attributes = sentry_value_new_object();
+sentry_value_t attr = sentry_value_new_attribute(sentry_value_new_string("my_attribute"), NULL);
+sentry_value_t attr_2 = sentry_value_new_attribute(sentry_value_new_int64(INT64_MAX), "fermions");
+sentry_value_t attr_3 = sentry_value_new_attribute(sentry_value_new_int64(INT64_MIN), "bosons");
+sentry_value_set_by_key(attributes, "my.custom.attribute", attr);
+sentry_value_set_by_key(attributes, "number.first", attr_2);
+sentry_value_set_by_key(attributes, "number.second", attr_3);
+```
+
+Attributes can currently be used to enrich the following:
+
+- [Structured logs](/platforms/native/logs/#additional-attributes)
+- [Metrics](/platforms/native/metrics/#custom-attributes)
+
+## Setting Attributes on a Scope
+
+Passing the same attributes to every call gets repetitive once a group of logs or metrics shares context. Set them on a scope instead, and everything captured with that scope inherits them.
+
+`sentry_set_attribute` writes to the global scope, so every log and metric the SDK sends carries the attribute:
+
+```c
+sentry_set_attribute("cache.backend",
+    sentry_value_new_attribute(sentry_value_new_string("redis"), NULL));
+```
+
+When the context belongs to one unit of work rather than the whole program, set the attribute on a scope you create and capture with it:
+
+```c
+sentry_scope_t *scope = sentry_scope_new();
+sentry_scope_set_attribute(scope, "cache.backend",
+    sentry_value_new_attribute(sentry_value_new_string("redis"), NULL));
+
+sentry_scope_capture_log(scope, SENTRY_LEVEL_INFO, "Cache miss", sentry_value_new_null());
+sentry_scope_capture_metric(scope, SENTRY_METRIC_COUNT, "cache.miss",
+    sentry_value_new_int64(1), NULL, sentry_value_new_null());
+
+sentry_scope_free(scope);
+```
+
+Both setters have an `_n` variant that takes an explicit key length, and `sentry_remove_attribute` / `sentry_scope_remove_attribute` remove an attribute again.
+
+Attribute precedence is resolved from most to least specific: **per-call attributes** > **passed scope** > **global scope**. Attributes are merged from every source, so differently named attributes from all three are included on the resulting log or metric. When the same attribute is set in more than one source, the most specific one is used.
+
+See [Scopes](/platforms/native/enriching-events/scopes/) for how scopes are created and freed.

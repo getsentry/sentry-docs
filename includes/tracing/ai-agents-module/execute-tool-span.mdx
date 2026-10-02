@@ -1,0 +1,26 @@
+Describes a tool execution.
+
+<PlatformSection supported={["python"]}>
+
+In transaction mode, the [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create this span using its `template` parameter. The stream-mode decorator doesn't have a `template` option.
+
+</PlatformSection>
+
+- The span `op` (transaction mode) or the span's `sentry.op` attribute (stream mode) MUST be `"gen_ai.execute_tool"`.
+- The span `name` SHOULD be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
+- The `gen_ai.operation.name` attribute MUST be `"execute_tool"`.
+- The `gen_ai.tool.name` attribute SHOULD be set to the name of the tool. (e.g. `"query_database"`)
+- The `gen_ai.agent.name` attribute SHOULD be set to the agent's name. (e.g. `"Weather Agent"`)
+- If relevant, `gen_ai.pipeline.name` SHOULD be set to the name of the AI workflow or pipeline. (e.g. `"weather-pipeline"`)
+
+Additional attributes on the span:
+
+| Data Attribute               | Type   | Requirement Level | Description                                                                                           | Example                                    |
+| :--------------------------- | :----- | :---------------- | :---------------------------------------------------------------------------------------------------- | :----------------------------------------- |
+| `gen_ai.tool.name`           | string | optional          | Name of the tool executed.                                                                            | `"random_number"`                          |
+| `gen_ai.tool.call.arguments` | string | optional          | Arguments of the tool call (stringified JSON).                                                        | `"{\"max\":10}"`                           |
+| `gen_ai.tool.call.result`    | string | optional          | Result of the tool call (stringified).                                                                | `"7"`                                      |
+| `gen_ai.tool.description`    | string | optional          | Description of the tool executed.                                                                     | `"Tool returning a random number"`         |
+| `gen_ai.tool.type`           | string | optional          | The type of the tools.                                                                                | `"function"`; `"extension"`; `"datastore"` |
+| `gen_ai.tool.input`          | string | optional          | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input given to the executed tool as string. | `"{\"max\":10}"`                           |
+| `gen_ai.tool.output`         | string | optional          | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                      | `"7"`                                      |

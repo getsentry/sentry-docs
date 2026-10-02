@@ -1,27 +1,13 @@
 ---
 title: LocalVariables
 description: "Add local variables to exception frames. (default)"
+supportedCategories:
+  - server
 supported:
-  - javascript.node
-  - javascript.aws-lambda
-  - javascript.azure-functions
-  - javascript.connect
-  - javascript.express
-  - javascript.fastify
-  - javascript.gcp-functions
-  - javascript.hapi
-  - javascript.hono
-  - javascript.koa
-  - javascript.nestjs
   - javascript.electron
-  - javascript.nextjs
-  - javascript.nuxt
-  - javascript.solidstart
-  - javascript.sveltekit
-  - javascript.remix
-  - javascript.react-router
-  - javascript.astro
-  - javascript.tanstackstart-react
+notSupported:
+  - javascript.deno
+  - javascript.cloudflare
 ---
 
 <Alert>
@@ -43,6 +29,14 @@ Sentry.init({
 ```
 
 The local variables integration only captures local variables from application code (`in_app = true`). Frames of a stacktrace originating from `node_modules` will not have local variables attached to them.
+
+<Alert level="info" title="Shallow Capture of Local Variables">
+
+For performance reasons, the integration only captures the top-level properties of local variables. Nested objects will not be fully serialized. This is because the integration uses the V8 debugger to walk all variables up the call stack, and deep inspection would significantly impact application performance.
+
+If you need to capture the full contents of a specific object, you can either destructure it into top-level variables or use [`Sentry.setExtra()`](/platforms/javascript/configuration/apis/#extra-context) to selectively attach the data you need.
+
+</Alert>
 
 <Alert level="warning" title="Issues with ESM">
 

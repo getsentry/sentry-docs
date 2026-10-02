@@ -1,0 +1,67 @@
+---
+title: Cloudflare Agents SDK
+sidebar_title: Agents SDK
+sidebar_hidden: true
+description: "Instrument Cloudflare Agents SDK classes with Sentry and link chats to the Conversations tab."
+---
+
+<AvailableSince version="10.69.0" />
+
+When you build agents with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink> instruments your agent classes automatically. It reads the classes from your wrangler config and wraps each `Agent` from `agents`, `AIChatAgent` from `@cloudflare/ai-chat`, and `McpAgent` from `agents/mcp` at build time with the options from your `instrument.server.*` file. You don't have to change your code.
+
+If you deploy with `wrangler` directly, wrap each class yourself with `instrumentAgentWithSentry`, as shown in the <PlatformLink to="/install/wrangler/#instrument-durable-objects-workflows-and-agents">Wrangler setup</PlatformLink>.
+
+Agents are Durable Objects under the hood, so the agent instrumentation applies everything <PlatformLink to="/features/durableobject/">Durable Object instrumentation</PlatformLink> does (request transactions, alarms, WebSocket handlers, RPC trace propagation), plus agent-specific telemetry:
+
+- **Callable RPC spans**: a span for each `@callable()` method invoked over WebSocket, carrying the agent class and instance name as attributes.
+- **Automatic conversation IDs**: the SDK sets the conversation ID on every chat turn (`onChatMessage`) and every callable RPC call, so `gen_ai` spans group in <Link to="/product/agents/conversations/">Conversations</Link> without any `setConversationId` call.
+
+```typescript
+import { Agent, callable } from "agents";
+
+// Each call to `greet` creates a span
+export class MyAgent extends Agent<Env> {
+  @callable()
+  async greet(name: string): Promise<string> {
+    return `Hello, ${name}!`;
+  }
+}
+```
+
+To continue a trace that a Worker sends to the agent over RPC, see <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>. With the Vite plugin, bindings to agents in the same Worker are propagated automatically.
+
+## Conversation IDs
+
+The automatic conversation ID defaults to the **agent instance name**, which is correct when one agent instance is one chat session (for example `useAgent({ name: chatSessionId })`). When the chat is cleared (`clearHistory()` from `useAgentChat`, or anything that emits the [`message:clear` observability event](https://developers.cloudflare.com/agents/runtime/operations/observability/#channels)), the SDK rotates to a fresh conversation ID, so a reset chat groups as a new conversation.
+
+If your instances are per-user or a shared singleton like `"default"`, the default would group unrelated chats into one conversation. Override it with your own chat session ID at the start of `onChatMessage`, before any model or tool calls:
+
+```typescript
+import * as Sentry from "@sentry/cloudflare";
+import { AIChatAgent } from "@cloudflare/ai-chat";
+
+export class MyChatAgent extends AIChatAgent<Env> {
+  async onChatMessage() {
+    // Your chat session ID (not user id / "default")
+    Sentry.setConversationId("conv_abc123");
+
+    // … run your model and tools …
+  }
+}
+```
+
+Use a real chat session ID, such as a UUID or `conv_...` value your app creates when the user starts a chat. Do not use a user ID or room name: those group unrelated chats into one conversation. To clear the ID, call `Sentry.setConversationId(null)`.
+
+## Users
+
+Populate the **User** column in the Conversations tab with `Sentry.setUser` on every request or handler that performs AI calls, before those calls run. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+
+## Related
+
+- <PlatformLink to="/agent-tracing/workers-ai/">Workers AI</PlatformLink>
+- <PlatformLink to="/features/durableobject/">Durable Objects</PlatformLink>
+- <PlatformLink to="/install/vite-plugin/">Vite Plugin</PlatformLink>
+- <PlatformLink to="/agent-tracing/#tracking-conversations">
+    Tracking Conversations
+  </PlatformLink>
+- <Link to="/product/agents/conversations/">Conversations</Link> product docs

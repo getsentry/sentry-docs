@@ -1,42 +1,62 @@
 ---
 title: Remix on Cloudflare
-description: "Learn how to add Cloudflare instrumentation to your Remix app."
+description: "Learn how to instrument your Remix app on Cloudflare Workers and Pages and capture your first errors with Sentry."
 ---
 
-If you're running your Remix app on Cloudflare Pages, you can use the Sentry Remix SDK in combination with the Sentry Cloudflare SDK to add Sentry instrumentation.
+<PlatformContent
+  includePath="getting-started-prerequisites"
+  platform="javascript.remix"
+/>
+
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-First, install the Sentry Remix SDK in your application. We recommend using the Sentry wizard to automatically install the SDK:
+Choose the features you want to configure, and this guide will show you how:
 
-```bash
-npx @sentry/wizard@latest -i remix
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+  ]}
+/>
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+### Install the Sentry SDK
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Run the command for your preferred package manager to add the Sentry Remix and Cloudflare SDKs to your application.
+
+With npm, add `--legacy-peer-deps`: `@remix-run/cloudflare` requires `@cloudflare/workers-types` version 4, while Wrangler 4 requires version 5.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:npm}
+npm install @sentry/remix @sentry/cloudflare --save --legacy-peer-deps
 ```
 
-If the setup through the wizard doesn't work for you, you can also [set up the Remix SDK manually](/platforms/javascript/guides/remix/manual-setup/).
-
-After installing the Sentry Remix SDK, delete the newly generated `instrumentation.server.mjs` file. This instrumentation is not needed when using the Cloudflare SDK.
-
-Now you can install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
-
-<PlatformContent includePath="getting-started-install" />
-
-## Setup
-
-<PlatformContent includePath="getting-started-config" />
-
-Then create a `_middleware.js` file in your `functions` directory and add the following code:
-
-```javascript {filename:functions/_middleware.js}
-import * as Sentry from "@sentry/cloudflare";
-
-export const onRequest = [
-  // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => ({
-    dsn: "___PUBLIC_DSN___",
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    tracesSampleRate: 1.0,
-  })),
-  // Add more middlewares here
-];
+```bash {tabTitle:yarn}
+yarn add @sentry/remix @sentry/cloudflare
 ```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/remix @sentry/cloudflare
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+<PlatformContent
+  includePath="getting-started-complete"
+  platform="javascript.remix"
+/>
+
+</StepConnector>

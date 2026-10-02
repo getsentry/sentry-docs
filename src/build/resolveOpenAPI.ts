@@ -1,6 +1,4 @@
-/* eslint-env node */
 /* eslint import/no-nodejs-modules:0 */
-/* eslint-disable no-console */
 
 import {promises as fs} from 'fs';
 
@@ -8,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = 'f3ec629d3fc26fcf0a9604011e49e548534bec85';
+const SENTRY_API_SCHEMA_SHA = '41d82c69208a3f24dafa36f584cca981d30cfde5';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -65,6 +63,8 @@ type APIData = DeRefedOpenAPI['paths'][string][string];
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
+  deprecated: boolean;
+  experimental: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -96,6 +96,21 @@ function slugify(s: string): string {
     .toLowerCase();
 }
 
+const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+// Sentry prepends this notice to the description of every experimental operation, so
+// that consumers with no badge of their own still warn the reader. We render a badge,
+// so strip it rather than saying the same thing twice.
+const EXPERIMENTAL_NOTICE_REGEX = /^\*\*Experimental:\*\*[^\n]*\n+/;
+
+function isDeprecatedOperationId(operationId: string | undefined): boolean {
+  return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
+}
+
+function stripDeprecatedPrefix(operationId: string): string {
+  return operationId.replace(DEPRECATED_PREFIX_REGEX, '');
+}
+
 let apiCategoriesCache: Promise<APICategory[]> | undefined;
 
 export function apiCategories(): Promise<APICategory[]> {
@@ -121,6 +136,15 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      // Detect deprecation from either field independently — the (DEPRECATED)
+      // marker may sit on operationId even when a summary is present.
+      const isDeprecated =
+        isDeprecatedOperationId(apiData.operationId) ||
+        isDeprecatedOperationId(apiData.summary);
+      const isExperimental = apiData['x-sentry-experimental'] === true;
+      const titleSource = apiData.summary || apiData.operationId || '';
+      const cleanName = stripDeprecatedPrefix(titleSource);
+
       let server = 'https://sentry.io';
       if (apiData.servers && apiData.servers[0]) {
         server = apiData.servers[0].url;
@@ -129,11 +153,17 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
         categoryMap[tag].apis.push({
           apiPath,
           method,
-          name: apiData.operationId,
+          name: cleanName,
+          deprecated: isDeprecated,
+          experimental: isExperimental,
           server,
-          slug: slugify(apiData.operationId),
-          summary: apiData.summary,
-          descriptionMarkdown: apiData.description,
+          slug: slugify(cleanName),
+          summary: apiData.summary
+            ? stripDeprecatedPrefix(apiData.summary)
+            : apiData.summary,
+          descriptionMarkdown: isExperimental
+            ? apiData.description?.replace(EXPERIMENTAL_NOTICE_REGEX, '')
+            : apiData.description,
           pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],

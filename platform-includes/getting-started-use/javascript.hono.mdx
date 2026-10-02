@@ -1,23 +1,10 @@
 ```javascript
-import * as Sentry from "@sentry/node";
-import { Hono, HTTPException } from "hono";
+// Require this first!
+require("./instrument");
 
-const app = new Hono()
-  // Add an onError hook to report unhandled exceptions to Sentry.
-  .onError((err, c) => {
-    // Report _all_ unhandled errors.
-    Sentry.captureException(err);
-    if (err instanceof HTTPException) {
-      return err.getResponse()
-    }
-    // Or just report errors which are not instances of HTTPException
-    // Sentry.captureException(err);
-    return c.json({ error: "Internal server error" }, 500)
-  })
-  // Your routes...
-  app.get("/", () => {
-    // ...
-  });
+// Now require other modules
+const { serve } = require("@hono/node-server");
+const { Hono } = require("hono");
 
-export default app;
+// Your application code goes here
 ```

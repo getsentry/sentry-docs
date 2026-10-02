@@ -1,0 +1,112 @@
+---
+title: Review and CI
+spec_id: sdk/getting-started/standards/review-ci
+spec_version: 1.1.0
+spec_status: stable
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 1.1.0
+    date: 2026-03-06
+    summary: Add Warden SHOULD requirement
+  - version: 1.0.0
+    date: 2026-02-19
+    summary: Initial Review and CI standard
+sidebar_order: 4
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+These standards cover how code gets reviewed and what CI must check before anything merges or ships. The goal: catch problems early, keep reviews useful, and make sure releases are safe.
+
+<SpecSection id="code-review" status="stable" since="1.0.0">
+
+## Code review
+
+### Who needs to review
+
+Every PR **REQUIRES** at least one approving review. Some changes need review from an [SDK Senior Engineer](https://github.com/orgs/getsentry/teams/sdk-seniors):
+
+- [Public API changes](/sdk/getting-started/standards/api-architecture#public-api-changes)
+- [New dependencies](/sdk/getting-started/standards/code-quality#dependencies)
+- [Security-sensitive code](/sdk/getting-started/standards/code-quality#security)
+- Schema changes
+- Frameworks or architectural shifts
+
+PRs from external contributors need review from someone with context on the affected area.
+
+### Turnaround time
+
+Internal PRs should get a first substantive review within 1 business day. External PRs should get a first response within 2 business days. "First review" means real feedback, not just a reaction.
+
+If you're the sole reviewer for an area and don't have capacity, proactively find coverage — another reviewer or AI assist. PR authors should also help identify an appropriate reviewer to avoid blocking.
+
+### Feedback conventions
+
+Use the LOGAF scale to signal the weight of your feedback:
+
+- **`h:`** (high) — must fix: bugs, security issues, breakage, data loss
+- **`m:`** (medium) — should fix: design, missing tests, clarity
+- **`l:`** (low) — optional nit: style, minor suggestions
+
+Comments without a prefix are treated as medium. A PR **MUST NOT** merge with unresolved `h:` comments.
+
+</SpecSection>
+
+---
+
+<SpecSection id="required-ci-checks" status="stable" since="1.0.0">
+
+## CI checks
+
+Every SDK repo **MUST** have these as required status checks:
+
+1. Build
+2. Lint
+3. Type check (where applicable)
+4. Tests
+5. Secret Scanning
+
+These are also recommended but not yet required everywhere:
+
+- Commit message validation
+- Size and performance checks
+- API snapshot diffs
+- Changelog validation
+
+</SpecSection>
+
+---
+
+<SpecSection id="warden" status="stable" since="1.1.0">
+
+## Warden
+
+SDK repos **SHOULD** have [Warden](https://warden.sentry.dev/) configured in CI via the Warden GitHub Action. Warden runs AI-powered skills against PR diffs to enforce SDK-specific conventions that static linters can't express. Which skills are active varies by SDK.
+
+</SpecSection>
+
+---
+
+<SpecSection id="release-gating" status="stable" since="1.0.0">
+
+## Release gating
+
+A release **MUST NOT** ship if:
+
+- Any required CI check fails
+- Any `h:` review comment remains unresolved on merged PRs since the last release
+- The changelog is empty for user-facing changes
+- Any known regression remains unresolved
+
+See [Setting up release infrastructure](/sdk/getting-started/playbooks/setup/setting-up-release-infrastructure) for initial release setup.
+
+</SpecSection>
+
+---
+
+## Changelog
+
+<SpecChangelog />

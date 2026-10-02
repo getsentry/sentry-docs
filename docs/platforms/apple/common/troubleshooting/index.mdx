@@ -2,11 +2,12 @@
 title: Troubleshooting
 description: "Troubleshoot and resolve common issues with the Cocoa SDK."
 sidebar_order: 9000
+sidebar_section: configuration
 ---
 
 ## "Missing API declaration" after App Store review
 
-Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/apple/data-management/apple-privacy-manifest) guide.
+Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/apple/data-management/apple-privacy-manifest/) guide.
 
 ## Wrong App Start Data
 
@@ -50,24 +51,6 @@ Check your app for any procedure that cleans the cache of your app during runtim
 
 Since Xcode 14 App Store Connect doesn't make debug symbols available for download anymore, see [Xcode Release Notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations). Please use a different way of uploading the debug symbols by following the [documentation](/platforms/apple/dsym/).
 
-## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
-
-If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
-
-```ruby {filename:ios/Podfile}
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      if target.name == 'Sentry'
-        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
-      else
-        # configuration for other targets
-      end
-    end
-  end
-end
-```
-
 ## Crash in `SentrySubClassFinder.actOnSubclassesOfViewControllerInImage`
 
 Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControllerInImage` with a stacktrace similar to the one below:
@@ -86,7 +69,7 @@ Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControlle
 #10	0x000000010514b4c0 in __69-[SentrySubClassFinder actOnSubclassesOfViewControllerInImage:block:]
 ```
 
-Such a crash may be due to a [potential bug in Swift](https://github.com/apple/swift/issues/72657)
+Such a crash may be due to a [potential bug in Swift](https://github.com/swiftlang/swift/issues/72657)
 that's triggered when trying to get a class definition that references a RoomPlan or
 ActivityKit class on an older iOS version that doesn't support RoomPlan or ActivityKit.
 For example, running the code below on iOS 15 with the Sentry Cocoa SDK enabled
@@ -102,7 +85,7 @@ class RoomPlanWrapper {
 ```
 
 You can fix this by excluding the above class from swizzling by using `swizzleClassNameExcludes`,
-which is availabe with Sentry Cocoa SDK version `8.23.0` and above:
+which is available with Sentry Cocoa SDK version `8.23.0` and above:
 
 ```swift
 SentrySDK.start { options in
@@ -115,6 +98,34 @@ SentrySDK.start { options in
      options.swizzleClassNameExcludes = [NSSet setWithObjects: @"RoomPlanWrapper", nil];
 }];
 ```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+     options.swizzleClassNameExcludes = [NSSet setWithObjects: @"RoomPlanWrapper", nil];
+}];
+```
+
+As of Sentry Cocoa SDK version `9.26.0`, there's also an experimental option you can enable that should fix this crash without needing to exclude specific classes:
+
+```swift
+SentrySDK.start { options in
+    options.experimental.enableUIViewControllerInitSwizzling = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+     options.experimental.enableUIViewControllerInitSwizzling = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+     options.experimental.enableUIViewControllerInitSwizzling = YES;
+}];
+```
+
+If enabling this option doesn't fix the crash for you, please add a comment to [this GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/8684).
 
 If you can't upgrade the Sentry Cocoa SDK to version `8.23.0`, you can also disable swizzling, as shown below.
 However, this would also disable some useful features, such as automatic tracing and network breadcrumbs.
@@ -131,6 +142,14 @@ SentrySDK.start { options in
 @import Sentry;
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.enableSwizzling = NO;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.enableSwizzling = NO;
 }];
 ```
@@ -158,49 +177,26 @@ If the release health page shows fewer events in the unhandled tab, your events 
 
 We introduced a bug with a refactoring [#4101](https://github.com/getsentry/sentry-cocoa/pull/4101) released in 8.30.1, that caused unhandled/crash events to have the unhandled property and mach info missing, which is required for release health to show events in the unhandled tab. It's essential to mention that this bug doesn't impact release health statistics, such as crash-free session or user rates.
 
-## Sandbox Error Using Cocoapods
-
-After setting up Cocoapods using a `Podfile` and running `pod install` to set up the project, you might see the following error when building the target:
-
-```
-error: Sandbox: rsync.samba(42924) deny(1) file-read-data <path/to/your/app>/Frameworks/Sentry.framework/Sentry.bundle (in target 'test' from project 'test')
-error: Sandbox: rsync.samba(42925) deny(1) file-read-data <path/to/your/app>/Frameworks/Sentry.framework/_CodeSignature/CodeResources (in target 'test' from project 'test')
-error: Sandbox: rsync.samba(42925) deny(1) file-write-create <path/to/your/app>/Frameworks/Sentry.framework/_CodeSignature/.CodeResources.a2sA9v (in target 'test' from project 'test')
-mkdir -p <path/to/your/app>/Frameworks
-rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "<path/to/derived/data>/Sentry/Sentry.framework" "<path/to/your/app>/Frameworks"
-building file list ... done
-rsync: opendir "<path/to/your/app>/Frameworks/Sentry.framework/Sentry.bundle" failed: Operation not permitted (1)
-IO error encountered -- skipping file deletion
-Sentry.framework/_CodeSignature/CodeResources
-rsync: mkstemp "<path/to/your/app>/Frameworks/Sentry.framework/_CodeSignature/.CodeResources.a2sA9v" failed: Operation not permitted (1)
-
-sent 15034 bytes  received 42 bytes  30152.00 bytes/sec
-total size is 4950281  speedup is 328.36
-rsync error: some files could not be transferred (code 23) at /AppleInternal/Library/BuildRoots/5bb93434-bef0-11ef-bef2-d285688f7a47/Library/Caches/com.apple.xbs/Sources/rsync/rsync/main.c(996) [sender=2.6.9]
-```
-
-While it seems to be related to Sentry, it is actually caused by the user script sandbox feature introduced in [Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes), which is enabled by default. In order to fix this, you need to head to the target settings of your project and set the "Enable User Script Sandbox" option to `NO`.
-
 ## 'required' initializer 'init(from:)' must be provided by subclass
 
 Since Cocoa SDK version [8.45.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8450) and above,
 you might see a compilation error `'required' initializer 'init(from:)' must be provided by subclass ...`, when you subclass any of the following classes:
 
-* `SentryBreadcrumb`
-* `SentryDebugMeta`
-* `SentryEvent`
-* `SentryException`
-* `SentryFrame`
-* `SentryGeo`
-* `SentryId`
-* `SentryMechanism`
-* `SentryMechanismMeta`
-* `SentryMessage`
-* `SentryNSError`
-* `SentryRequest`
-* `SentryStacktrace`
-* `SentryThread`
-* `SentryUser`
+- `SentryBreadcrumb`
+- `SentryDebugMeta`
+- `SentryEvent`
+- `SentryException`
+- `SentryFrame`
+- `SentryGeo`
+- `SentryId`
+- `SentryMechanism`
+- `SentryMechanismMeta`
+- `SentryMessage`
+- `SentryNSError`
+- `SentryRequest`
+- `SentryStacktrace`
+- `SentryThread`
+- `SentryUser`
 
 You can fix this by not subclassing the affected classes. Strictly speaking, this is a breaking change, but these classes are not intended to be subclassed. If you have a strong reason to subclass them, please open a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose).
 
@@ -209,3 +205,65 @@ You can fix this by not subclassing the affected classes. Strictly speaking, thi
 Cocoa SDK versions [8.51.1](https://github.com/getsentry/sentry-cocoa/releases/tag/8.51.1) and [8.52.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.52.0) have a bug that causes unsymbolicated stacktraces for non-fatal events, such as`captureError`, `captureMessage` or `captureException`. All or most stacktrace frames are then marked as `redacted` by Sentry. This bug doesn't impact fatal events or crashes.
 
 Please update the Cocoa SDK to version [8.52.1](https://github.com/getsentry/sentry-cocoa/releases/tag/8.52.1) or above or stay on version [8.51.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.51.0) or below to fix this problem.
+
+## SentrySDK API members not available after updating to 8.54.0
+
+After updating to Cocoa SDK version [8.54.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.54.0), you might encounter build errors indicating that `SentrySDK` has no member `capture` or other API methods that were previously available, such as:
+
+```
+'SentrySDK' has no member 'capture'
+```
+
+To resolve this problem try the following:
+
+1. Clean your build by going to **Product > Clean Build Folder** in Xcode
+2. Close all Xcode projects and close Xcode
+3. Remove derived data by going to **Xcode > Settings > Locations > Derived Data** and clicking the arrow next to the path, then delete the folder for your project or, **please be careful with the following command and double check the path**, run `rm -rf ~/Library/Developer/Xcode/DerivedData`
+4. Restart Xcode
+5. Reset your package cache if using Swift Package Manager by going to **File > Packages > Reset Package Caches**
+6. Rebuild your project
+
+## "Could not parse the DSN" Error on SDK Start
+
+If you see a console error like:
+
+```
+[error] Could not parse the DSN: URL scheme of DSN is missing
+```
+
+This means the SDK received an invalid or empty DSN string. Common causes:
+
+- Setting `options.dsn` to an empty string or a malformed URL
+- A build configuration variable resolving to an empty value
+
+Verify that the DSN you pass to `options.dsn` is a valid Sentry DSN URL starting with `https://`.
+
+## Too Much Rate Limited Data
+
+Cocoa SDK versions before [9.20.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.20.0) and [8.58.4](https://github.com/getsentry/sentry-cocoa/releases/tag/8.58.4) have a bug where, when one data type was rate limited (for example, user feedback), the SDK could also drop unrelated data such as errors, spans, and sessions. Please update the Cocoa SDK to version [9.20.0](https://github.com/getsentry/sentry-cocoa/releases/tag/9.20.0) or [8.58.4](https://github.com/getsentry/sentry-cocoa/releases/tag/8.58.4) or above to fix this problem.
+
+## Linker Errors with SPM Dependencies in Xcode on arm64e
+
+This issue only affects projects that integrate Sentry via Swift Package Manager using the <PlatformLink to="/install/swift-package-manager/">`SentrySPM` (compile from source)</PlatformLink> and build for arm64e using the Xcode IDE. The pre-built binary products (`Sentry`, `Sentry-Dynamic`) are not affected. Builds using xcodebuild or `swift build` are not affected.
+
+When building for arm64e, Xcode may produce linker errors because SPM dependencies are not compiled for the arm64e architecture by default:
+
+```
+Undefined symbols for architecture arm64e: ...
+```
+
+This is a known Xcode bug (Apple Feedback: FB23764103).
+
+### iOS, macOS, and visionOS
+
+Add `iOSPackagesShouldBuildARM64e = YES` to your `.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` file. This tells Xcode to build SPM packages with arm64e support.
+
+### tvOS, watchOS, and Mac Catalyst
+
+The `iOSPackagesShouldBuildARM64e` setting only affects iOS, macOS, and visionOS — tvOS, watchOS, and Mac Catalyst targets still hit the same linker error.
+
+The workaround is to remove `arm64e` from the target's **Architectures** build setting in Xcode so the IDE build succeeds. When building with `xcodebuild`, override this by passing `ARCHS="arm64 arm64e"` on the command line so that arm64e is still included in CI and release builds. For more details, see [sentry-cocoa #8426](https://github.com/getsentry/sentry-cocoa/pull/8426).
+
+## Troubleshooting Session Replay
+
+See [Session Replay - Troubleshooting](/platforms/apple/guides/ios/session-replay/troubleshooting/) for more information.

@@ -1,0 +1,88 @@
+---
+title: Spec Lifecycle
+description: How SDK specs are versioned and how they advance through proposal, draft, candidate, stable, and deprecated.
+sidebar_order: 0
+---
+
+<SpecRfcAlert />
+
+SDK specs define the shared contract that every Sentry SDK implements. Each spec carries a **status** and a **version** so readers can tell, at a glance, how settled it is and whether it's safe to build against.
+
+This page defines what those statuses mean, the criteria for advancing between them, and how versions and changelogs work. It's the one spec that describes the others, so it does not carry spec frontmatter itself.
+
+The lifecycle broadly mirrors the [W3C Process maturity stages](https://www.w3.org/policies/process/#maturity-stages): `draft` ≈ Working Draft, `candidate` ≈ Candidate Recommendation, `stable` ≈ Recommendation, `deprecated` ≈ Obsolete. The key idea borrowed from W3C is that a spec advances based on **implementation evidence**, not just an author's say-so.
+
+## How a Spec Is Structured
+
+Each spec is an MDX page with frontmatter that drives the status badge, version, dependency list, and changelog.
+
+| Field | Required | Purpose |
+| --- | --- | --- |
+| `spec_id` | yes | Stable, path-based identifier (e.g. `sdk/foundations/client/hooks`). |
+| `spec_version` | yes | The spec's [SemVer](https://semver.org/) version. |
+| `spec_status` | yes | One of `proposal`, `draft`, `candidate`, `stable`, `deprecated`. |
+| `spec_changelog` | yes | List of `{version, date, summary}` entries, newest first. |
+| `spec_depends_on` | no | Other specs this one relies on, each `{id, version}` with a SemVer range. |
+| `spec_platforms` | no | Platforms the spec applies to; defaults to `all`. |
+| `spec_superseded_by` | no | `spec_id` of the replacement spec. Set when `deprecated`. |
+
+A spec's body is divided into `<SpecSection>` blocks, each with its own `status`, a `since` version marking when its current requirements landed, and an optional `superseded_by` link. Sections **MAY** advance independently — a `stable` spec can still contain a `candidate` section that's gathering feedback.
+
+## Lifecycle Statuses
+
+What each status means, and what an SDK author should do when they see it:
+
+- **`proposal`** — Reserved. Not yet in use; proposals currently live as [RFCs](https://github.com/getsentry/rfcs). Treat as not-yet-a-spec.
+- **`draft`** — The shape is still being worked out and **MAY** change in breaking ways without notice. **Do not** build against a draft except to prototype the implementation that justifies promoting it.
+- **`candidate`** — Stable enough to implement. The spec is asking for implementations and interoperability feedback. Build against it, but expect refinements driven by what implementation surfaces.
+- **`stable`** — The contract. Safe to rely on. Changes follow the version rules below and **MUST NOT** break existing implementations.
+- **`deprecated`** — Superseded or withdrawn. **Do not** adopt it in new work; follow `spec_superseded_by` and the spec's migration notes to move off it.
+
+## Transition Criteria
+
+Promotion is gated on implementation evidence. The bar is per-feature: a section **MUST NOT** advance ahead of the requirements below.
+
+<Alert level="info">
+The promotion criteria below were ratified for the spec framework introduced in [PR #16461](https://github.com/getsentry/sentry-docs/pull/16461).
+</Alert>
+
+### proposal → draft
+
+A proposal becomes a draft once it's written up as a spec page and the team agrees the problem is worth specifying. No implementation is required.
+
+### draft → candidate
+
+- There **MUST** be at least **one** SDK implementation demonstrating the spec is feasible as written.
+- The spec version remains `0.x`; promotion is signaled by the status, not the version (see [Version semantics](#version-semantics)).
+- Open questions that block implementation **MUST** be resolved or explicitly deferred.
+
+### candidate → stable
+
+- A second independent, interoperable SDK implementation of each feature **SHOULD** exist — the signal that the spec is implementable consistently across SDKs, not just in the one that shaped it.
+- If only one implementation exists at promotion time, the gap **MUST** be recorded (in the changelog summary or an open-questions note) rather than silently promoted.
+- The spec version **MUST** be bumped to `1.0.0` (see [Version semantics](#version-semantics)).
+- No breaking changes **SHOULD** remain outstanding.
+
+### any → deprecated
+
+- `spec_status` is set to `deprecated` and, when a replacement exists, `spec_superseded_by` **MUST** point to it.
+- The spec **SHOULD** keep a migration path for existing implementations.
+
+## Version Semantics
+
+Specs use [SemVer](https://semver.org/), and the major version tracks maturity:
+
+- `proposal`, `draft`, and `candidate` specs **MUST** be `0.x`. The `0.` prefix signals "not yet a frozen contract — anything **MAY** change." Within `0.x`, breaking refinements bump the minor (`0.2.0`); clarifications bump the patch (`0.1.1`).
+- Promoting to `stable` **MUST** bump the version to `1.0.0`. A `1.0.0`-or-higher version means the contract is frozen: breaking changes now require a major bump.
+
+Once at `1.x`:
+
+- **Major** (`2.0.0`) — a breaking change to existing requirements.
+- **Minor** (`1.1.0`) — new requirements added backward-compatibly.
+- **Patch** (`1.0.1`) — clarifications and fixes that don't change requirements.
+
+## Changelog and `since` Conventions
+
+- Every version bump **MUST** add a `spec_changelog` entry (`version`, `date`, `summary`), newest first.
+- A section's `since` **MUST** be the `spec_version` in which that section's current requirements were introduced. Bump it only when the section's requirements actually change.
+- When advancing a spec's status, update the status, bump the version, add a changelog entry describing the promotion, and set each promoted section's `status` (and `since`, if its requirements changed) to match.

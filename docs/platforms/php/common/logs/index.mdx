@@ -1,19 +1,12 @@
 ---
 title: Set Up Logs
 sidebar_title: Logs
-description: "Structured logs allow you to send, view and query logs sent from your applications within Sentry."
-sidebar_order: 5600
+description: "Structured logs allow you to send, view and query logs sent from your applications within Sentry using the PHP SDK."
+sidebar_order: 3
+sidebar_section: features
 ---
 
-<Include name="feature-stage-beta-logs.mdx" />
-
-With Sentry Structured Logs, you can send text based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
-
-<Alert title="Looking for Symfony?">
-
-Let us know what you would like to see on GitHub: [Symfony Logs](https://github.com/getsentry/sentry-symfony/issues/925).
-
-</Alert>
+With Sentry Structured Logs, you can send text-based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
 
 ## Requirements
 
@@ -27,6 +20,33 @@ Let us know what you would like to see on GitHub: [Symfony Logs](https://github.
 
 <PlatformContent includePath="logs/usage" />
 
+To disable sending logs, configure [`before_send_log`](/platforms/php/configuration/options/#before_send_log) to return `null`.
+
+## Automatic Log Flushing
+
+Logs are usually flushed at the end of a request or job. If a single request or job can produce a lot of log lines, set `log_flush_threshold` to flush automatically once the buffer reaches the configured size.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'log_flush_threshold' => 5,
+]);
+```
+
+We don't recommend flushing too often, because each flush sends a network request and can add latency. If you expect frequent flushes for a request or job, a local [Relay](/product/relay/getting-started/) can help reduce that added latency.
+
 ## Options
 
 <PlatformContent includePath="logs/options" />
+
+## Best Practices
+
+<PlatformContent includePath="logs/best-practices" />
+
+## Default Attributes
+
+<PlatformContent includePath="logs/default-attributes" />
+
+## Other Logging Integrations
+
+<PlatformContent includePath="logs/integrations" />

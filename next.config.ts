@@ -1,34 +1,101 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
-import {withSentryConfig} from '@sentry/nextjs';
+import {withSentryConfig} from '@sentry/nextjs/config';
 
 import {redirects} from './redirects.js';
+import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
+
+// Exclude build-time-only dependencies from serverless function bundles to stay under
+// Vercel's 250MB limit. These packages are only needed during build to compile MDX and
+// optimize assets. We use a local getMDXComponent (src/getMDXComponent.ts) instead of
+// mdx-bundler/client to avoid CJS/ESM compatibility issues at runtime.
+const sharedExcludes = [
+  '**/*.map',
+  './.git/**/*',
+  './apps/**/*',
+  './.next/cache/mdx-bundler/**/*',
+  './.next/cache/md-exports/**/*',
+  // Heavy build dependencies
+  'node_modules/@esbuild/**/*',
+  'node_modules/esbuild/**/*',
+  'node_modules/@aws-sdk/**/*',
+  'node_modules/@google-cloud/**/*',
+  'node_modules/prettier/**/*',
+  'node_modules/@prettier/**/*',
+  'node_modules/sharp/**/*',
+  'node_modules/mermaid/**/*',
+  // MDX processing dependencies (local getMDXComponent replaces mdx-bundler/client)
+  'node_modules/mdx-bundler/**/*',
+  'node_modules/rehype-preset-minify/**/*',
+  'node_modules/rehype-prism-plus/**/*',
+  'node_modules/rehype-prism-diff/**/*',
+  'node_modules/remark-gfm/**/*',
+  'node_modules/remark-mdx-images/**/*',
+  'node_modules/unified/**/*',
+  'node_modules/rollup/**/*',
+];
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {
-      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
-    }
+  ? {'/**/*': [...sharedExcludes, 'docs/**/*']}
   : {
-      '/**/*': [
-        './.git/**/*',
-        './apps/**/*',
-        'develop-docs/**/*',
-        'node_modules/@esbuild/darwin-arm64',
+      '/**/*': [...sharedExcludes, 'develop-docs/**/*'],
+      '/platform-redirect': [
+        '**/*.gif',
+        'public/mdx-images/**/*',
+        'public/og-images/**/*',
+        '**/*.pdf',
       ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
+        // Exclude docs to save ~156MB, allow specific files via outputFileTracingIncludes
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
+        'public/og-images/**/*',
       ],
-      'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
+      'sitemap.xml': [
+        'public/mdx-images/**/*',
+        'public/og-images/**/*',
+        '**/*.gif',
+        '**/*.pdf',
+        '**/*.png',
+      ],
+    };
+
+// Explicitly include the pre-computed doc tree files for routes that need them at runtime.
+// Both platform-redirect and [[...path]] need the doctree at runtime:
+// - platform-redirect: dynamic route with searchParams
+// - [[...path]]: calls getDocsRootNode() during prerendering (even though force-static)
+// - sitemap.xml: uses getDocsRootNode() to extract all page paths
+//
+// Additionally, include specific doc files that may be accessed at runtime due to:
+// - Error page rendering (when a static page fails to load)
+// - Cold start edge cases during deployment
+// - On-demand revalidation requests
+// These are whitelisted individually to avoid including the entire docs/ directory.
+const outputFileTracingIncludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/platform-redirect': ['public/doctree-dev.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': ['public/doctree-dev.json'],
+      '/md-exports/\\[\\.\\.\\.path\\]': ['public/doctree-dev.json'],
+      'sitemap.xml': ['public/doctree-dev.json'],
+    }
+  : {
+      '/platform-redirect': ['public/doctree.json'],
+      '\\[\\[\\.\\.\\.path\\]\\]': [
+        'public/doctree.json',
+        'docs/changelog.mdx',
+        'docs/platforms/index.mdx',
+      ],
+      '/md-exports/\\[\\.\\.\\.path\\]': ['public/doctree.json'],
+      'sitemap.xml': ['public/doctree.json'],
     };
 
 if (
   process.env.NODE_ENV !== 'development' &&
-  (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
+  !process.env.NEXT_PUBLIC_SENTRY_DSN &&
+  !process.env.NEXT_TYPEGEN
 ) {
   throw new Error(
-    'Missing required environment variables: NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN must be set in production'
+    'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
   );
 }
 
@@ -36,8 +103,28 @@ if (
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
-  serverExternalPackages: ['rehype-preset-minify'],
+  serverExternalPackages: [
+    'rehype-preset-minify',
+    'esbuild',
+    '@esbuild/darwin-arm64',
+    '@esbuild/darwin-x64',
+    '@esbuild/linux-arm64',
+    '@esbuild/linux-x64',
+    '@esbuild/win32-x64',
+    // mdx-bundler fully excluded via outputFileTracingExcludes
+    'sharp',
+    '@aws-sdk/client-s3',
+    '@google-cloud/storage',
+    'prettier',
+    '@prettier/plugin-xml',
+    'mermaid',
+  ],
   outputFileTracingExcludes,
+  outputFileTracingIncludes,
+  images: {
+    contentDispositionType: 'inline', // "open image in new tab" instead of downloading
+    remotePatterns: REMOTE_IMAGE_PATTERNS,
+  },
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
@@ -51,14 +138,22 @@ const nextConfig = {
     return config;
   },
   env: {
-    // This is used on middleware
-    DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
+    // Edge runtime doesn't have access to server env vars at request time.
+    DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
+    // Freeze this per-deployment value for middleware, matching the pattern above.
+    VERCEL_ENV: process.env.VERCEL_ENV,
   },
   redirects,
-  rewrites: async () => [
+  rewrites: () => [
     {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',
+    },
+    {
+      source: '/api/aws-lambda-layers/:runtime/:sdkVersion',
+      destination:
+        'https://release-registry.services.sentry.io/aws-lambda-layers/:runtime/:sdkVersion',
     },
   ],
   sassOptions: {
@@ -69,6 +164,10 @@ const nextConfig = {
 module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: '/sentry-tunnel',
 
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
@@ -76,22 +175,22 @@ module.exports = withSentryConfig(nextConfig, {
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true,
-
-  reactComponentAnnotation: {
-    enabled: true,
+  webpack: {
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+    // Enables automatic instrumentation of Vercel Cron Monitors
+    // See the following for more information:
+    // https://docs.sentry.io/product/monitors-and-alerts/monitors/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+    reactComponentAnnotation: {
+      enabled: true,
+    },
   },
 
-  unstable_sentryWebpackPluginOptions: {
-    applicationKey: 'sentry-docs',
-  },
+  applicationKey: 'sentry-docs',
 
   _experimental: {
     thirdPartyOriginStackFrames: true,

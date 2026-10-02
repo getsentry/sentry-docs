@@ -1,4 +1,41 @@
-The Sentry Cloudflare SDK has out of the box support for distributed tracing if you've setup the SDK to send traces.
+The Sentry Cloudflare SDK automatically propagates traces for incoming and outgoing HTTP requests if you've setup the SDK to send traces.
+
+For RPC calls within Cloudflare (Worker-to-Durable Object, Worker-to-Worker via service bindings), you name the bindings that should carry the trace. See [RPC Trace Propagation](#rpc-trace-propagation) below.
+
+### RPC Trace Propagation
+
+<AvailableSince version="10.52.0" />
+
+By default, traces are not propagated across [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) between Workers and Durable Objects. This is because [Cap'n Proto](https://capnproto.org/) (which powers Cloudflare RPC) has no native support for headers or metadata. The SDK carries the trace context in a trailing argument instead, and the receiving SDK strips it before your method runs.
+
+That trailing argument is why propagation is opt-in per binding: only a Sentry-instrumented receiver strips it again. List the bindings whose receiver you know runs Sentry in `rpcTracePropagationBindings` (SDK version 10.72.0 or higher). Setting the option also turns on the receiver side, so a Worker that both calls and receives needs nothing else.
+
+If you build with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, it derives the bindings that point at classes in this Worker, such as your own Durable Objects, and wraps those classes as receivers. Traces then connect across these RPC calls with no configuration. See <PlatformLink to="/install/vite-plugin/#derived-rpc-trace-propagation">Derived RPC Trace Propagation</PlatformLink>.
+
+Bindings to other Workers stay opt-in. List them in your `instrument.server.ts` file. The plugin adds the derived bindings to your list:
+
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  // Propagate to `env.AUTH_SERVICE` and every `env.SVC_*` binding
+  rpcTracePropagationBindings: ["AUTH_SERVICE", /^SVC_/],
+}));
+```
+
+The Worker behind each listed binding must also run Sentry, so that it strips the trace argument again.
+
+If you deploy with `wrangler` directly, the plugin can't derive bindings. List every binding yourself, including bindings to your own Durable Objects, and set the option on the wrapped classes too, as shown in the <PlatformLink to="/install/wrangler/#instrument-durable-objects-workflows-and-agents">Wrangler setup</PlatformLink>.
+
+Strings match a binding name exactly, so `"DB"` does not also match `MY_DB`. Use a regular expression for pattern matching. For the full definition, see <PlatformLink to="/configuration/options/#rpcTracePropagationBindings">`rpcTracePropagationBindings`</PlatformLink>.
+
+<Alert level="warning" title="Only List Receivers You Control">
+  A Worker that is not instrumented with Sentry never strips the trailing trace argument, so your method sees an extra parameter it was not called with. This is harmless for methods with fixed parameter lists, but changes behavior if your method uses rest parameters `(...args)` or reads `arguments.length`. Leave those bindings off the list.
+</Alert>
+
+The receiver continues the trace it is sent, creates a span per RPC method, and strips the trailing argument, so your method signatures are unaffected. Listing bindings on the receiver does no harm, so you can share one options object across the whole deployment.
 
 ### Custom Instrumentation
 
@@ -8,22 +45,26 @@ If you don't want to use the default tracing setup, you can set up <PlatformLink
 
 If you want to disable distributed tracing, set the `tracePropagationTargets` option to be an empty array. This will ensure no trace headers are sent.
 
-```javascript
-Sentry.init({
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
   dsn: "___PUBLIC_DSN___",
   // Capture 100% of spans. This is useful for development and debugging. Consider reducing in production or using traceSampler
   tracesSampleRate: 1.0,
   // Overwrite the defaults to ensure no trace headers are sent
   tracePropagationTargets: [],
-});
+}));
 ```
 
 ### Trace Propagation Examples
 
 #### Example 1: Microservices E-commerce Platform
 
-```javascript
-Sentry.init({
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
   dsn: "___PUBLIC_DSN___",
   // Capture 100% of spans. This is useful for development and debugging. Consider reducing in production or using traceSampler
   tracesSampleRate: 1.0,
@@ -31,7 +72,7 @@ Sentry.init({
     "https://api.myecommerce.com",
     "https://auth.myecommerce.com"
   ],
-});
+}));
 ```
 
 This tells Sentry to pass trace headers across the following paths:
@@ -43,15 +84,17 @@ This way, if a customer experiences an error during checkout, or you want to che
 
 #### Example 2: Mobile App with Backend Services
 
-```javascript
-Sentry.init({
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
   dsn: "___PUBLIC_DSN___",
   tracePropagationTargets: [
     "https://api.myapp.com",
     "https://media.myapp.com",
     /^\/local-api\//
   ],
-});
+}));
 ```
 
 This configuration lets your app track user actions across:

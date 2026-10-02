@@ -1,0 +1,249 @@
+---
+title: Breadcrumbs
+description: Structured trail of events that live on scopes and are applied to error events to show what happened before an issue.
+spec_id: sdk/foundations/state-management/scopes/breadcrumbs
+spec_version: 1.1.0
+spec_status: stable
+spec_changelog:
+  - version: 1.1.0
+    date: 2024-02-14
+    summary: Breadcrumbs written via top-level API now go to isolation scope (three-scope model)
+  - version: 1.0.0
+    date: 2020-05-04
+    summary: Initial spec — breadcrumb structure, types, ring buffer, before_breadcrumb hook
+sidebar_order: 20
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Breadcrumbs create a trail of events that happened prior to an issue. They live on [scopes](/sdk/foundations/state-management/scopes/) and are applied to error events at capture time, giving users context about what led to a problem.
+
+Unlike traditional logs, breadcrumbs are structured — they carry a type, category, severity level, and arbitrary data. They are stored in a ring buffer with a configurable maximum size, keeping only the most recent entries.
+
+Related specs:
+- [Scopes](/sdk/foundations/state-management/scopes/) — scope propagation and forking
+- [Breadcrumbs Interface](/sdk/foundations/transport/event-payloads/breadcrumbs/) — wire format reference
+
+---
+
+## Wire Format
+
+<SpecSection id="breadcrumb-structure" status="stable" since="1.0.0">
+
+### Breadcrumb Object
+
+A breadcrumb is a structured record with the following fields:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `timestamp` | string or number | Recommended | RFC 3339 string or Unix epoch (float/integer). Breadcrumbs are most useful when timestamped. |
+| `type` | string | No | Controls rendering. Defaults to `"default"`. See [Breadcrumb Types](#breadcrumb-types). |
+| `category` | string | No | Dotted string identifying the origin, e.g., `ui.click`, `http`, `flask`. Influences rendering color and icon. |
+| `message` | string | No | Human-readable text. Whitespace is preserved. |
+| `data` | object | No | Arbitrary key-value pairs. Contents depend on `type`. Extra keys rendered as a key/value table. |
+| `level` | string | No | Severity: `fatal`, `error`, `warning`, `info` (default), `debug`. |
+| `origin` | string | No | Source identifier. Used by hybrid SDKs to distinguish native vs JS vs Flutter breadcrumbs. |
+
+Breadcrumbs **MUST NOT** be sorted by timestamp. They **MUST** preserve insertion order.
+
+</SpecSection>
+
+<SpecSection id="event-payload" status="stable" since="1.0.0">
+
+### Event Payload
+
+On the event, breadcrumbs appear as either a wrapped or flat array. SDKs **SHOULD** use the wrapped format:
+
+```json
+{
+  "breadcrumbs": {
+    "values": [
+      {"timestamp": "2016-04-20T20:55:53.845Z", "message": "Started", "category": "log"},
+      {"timestamp": "2016-04-20T20:55:53.847Z", "type": "navigation", "data": {"from": "/login", "to": "/dashboard"}}
+    ]
+  }
+}
+```
+
+Entries are ordered oldest to newest. The last entry is the last event before the captured error occurred.
+
+</SpecSection>
+
+<SpecSection id="breadcrumb-types" status="stable" since="1.0.0">
+
+### Breadcrumb Types
+
+| Type | Description | Special `data` fields |
+|---|---|---|
+| `default` | Generic breadcrumb or log message. | None defined. Rendered as key/value table. |
+| `debug` | Log message. Internally, `default` + category `console` renders as `debug`. | None defined. |
+| `error` | An error that occurred before the captured exception. | None defined. |
+| `navigation` | URL change (web) or UI transition (mobile/desktop). Internally, `default` + category `navigation` renders as `navigation`. | `from` **(required)**: original location. `to` **(required)**: new location. |
+| `http` | Outgoing HTTP request (AJAX, server-to-server, etc.). | `url`, `method`, `status_code` (integer), `reason`. |
+| `info` | Information identifying root cause or affected user. | None defined. |
+| `query` | A query made in the application. | None defined. |
+| `transaction` | A tracing event. Wire format: `default` + category `sentry.transaction` or `sentry.event`. | None defined. |
+| `ui` | User interaction. Wire format: `default` + category `ui.*` (e.g., `ui.click`). | None defined. |
+| `user` | User interaction (distinct from `ui` — uses `type: "user"` directly). | None defined. |
+
+</SpecSection>
+
+---
+
+## Behavior
+
+<SpecSection id="ring-buffer" status="stable" since="1.0.0">
+
+### Ring Buffer
+
+Breadcrumbs **MUST** be stored in a ring buffer on the scope. When a breadcrumb is added and the total count exceeds the `max_breadcrumbs` limit, the SDK **MUST** remove the oldest breadcrumb.
+
+The `max_breadcrumbs` limit is a [Client option](/sdk/foundations/client/#client-options). SDKs **SHOULD** default to `100`.
+
+If the SDK is disabled (no active client), breadcrumbs **SHOULD NOT** be recorded.
+
+</SpecSection>
+
+<SpecSection id="scope-behavior" status="stable" since="1.1.0">
+
+### Scope Behavior
+
+Breadcrumbs live on scopes and follow the same [scope data application](/sdk/foundations/state-management/scopes/#applying-scope-data-to-events) rules as other scope data. When an event is captured, breadcrumbs from the global, isolation, and current scopes are merged.
+
+The top-level `Sentry.addBreadcrumb()` **MUST** write to the **isolation scope**. This ensures breadcrumbs are shared across all events within the same request/tab/session.
+
+When merging breadcrumbs from multiple scopes at capture time, the SDK **SHOULD** sort them by insertion order and then reapply the `max_breadcrumbs` limit.
+
+When a scope is forked (via `withScope()` or starting a new span), the forked scope receives a copy of the parent's breadcrumbs. Breadcrumbs added to the forked scope do **not** propagate back to the parent — this follows [copy-on-write semantics](/sdk/foundations/state-management/scopes/#copy-on-write-semantics).
+
+</SpecSection>
+
+<SpecSection id="before-breadcrumb" status="stable" since="1.0.0">
+
+### Before-Breadcrumb Hook
+
+SDKs **SHOULD** support a `before_breadcrumb` Client option — a callback invoked with the breadcrumb (and on some platforms a hint) before it is added to the scope.
+
+The callback **MAY**:
+- Return the breadcrumb (possibly modified) to record it
+- Return `null` to discard it
+
+```javascript
+Sentry.init({
+  beforeBreadcrumb(breadcrumb, hint) {
+    if (breadcrumb.category === 'console') {
+      return null; // discard console breadcrumbs
+    }
+    return breadcrumb;
+  },
+});
+```
+
+</SpecSection>
+
+<SpecSection id="automatic-recording" status="stable" since="1.0.0">
+
+### Automatic Recording
+
+SDKs **SHOULD** automatically record breadcrumbs for common events via default integrations:
+
+- **HTTP requests**: `type: "http"`, `category: "http"`. Added after the request finishes. Level: `info` (2xx-3xx), `warning` (4xx), `error` (5xx). Data **SHOULD** include `url`, `http.request.method`, `http.response.status_code`. HTTP requests matching the configured DSN **MUST** be excluded.
+- **UI events**: `type: "default"`, `category: "ui.click"` (or similar `ui.*`). Button clicks, touch events, etc.
+- **System events**: Low battery, low storage, airplane mode, memory warnings, device orientation changes.
+- **Console/log messages**: `type: "default"`, `category: "console"`.
+- **Navigation**: `type: "navigation"`, with `data.from` and `data.to`.
+
+</SpecSection>
+
+---
+
+## Public API
+
+### Scope Methods
+
+| Method | Description |
+|---|---|
+| `scope.addBreadcrumb(breadcrumb)` | Add a breadcrumb to the scope. Enforces the ring buffer limit. |
+| `scope.clearBreadcrumbs()` | Remove all breadcrumbs from the scope. |
+| `scope.clear()` | Remove all data from the scope, including breadcrumbs. |
+
+### Top-Level API
+
+| Function | Target Scope | Description |
+|---|---|---|
+| `Sentry.addBreadcrumb(breadcrumb)` | Isolation scope | Convenience function. The breadcrumb passes through the `before_breadcrumb` hook before being added. |
+
+### Client Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `max_breadcrumbs` | int | `100` | Maximum number of breadcrumbs per scope. |
+| `before_breadcrumb` | callback | — | Hook to modify or discard breadcrumbs before recording. |
+
+---
+
+## Examples
+
+### JavaScript
+
+```javascript
+// Manual breadcrumb
+Sentry.addBreadcrumb({
+  category: 'auth',
+  message: 'User logged in',
+  level: 'info',
+});
+
+// Navigation breadcrumb
+Sentry.addBreadcrumb({
+  type: 'navigation',
+  data: {
+    from: '/login',
+    to: '/dashboard',
+  },
+});
+
+// HTTP breadcrumb (typically added automatically by integrations)
+Sentry.addBreadcrumb({
+  type: 'http',
+  category: 'xhr',
+  data: {
+    url: 'https://api.example.com/users',
+    method: 'GET',
+    status_code: 200,
+    reason: 'OK',
+  },
+});
+```
+
+### Python
+
+```python
+import sentry_sdk
+
+# Manual breadcrumb
+sentry_sdk.add_breadcrumb(
+    category="auth",
+    message="User logged in",
+    level="info",
+)
+
+# Breadcrumb on a specific scope
+with sentry_sdk.new_scope() as scope:
+    scope.add_breadcrumb(
+        category="db",
+        message="SELECT * FROM users",
+        level="info",
+    )
+    sentry_sdk.capture_exception(error)
+```
+
+---
+
+## Changelog
+
+<SpecChangelog />

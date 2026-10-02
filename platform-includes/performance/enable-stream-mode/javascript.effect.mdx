@@ -1,0 +1,62 @@
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Opt in by adding `spanStreamingIntegration()` to your list of integrations when initializing the SDK in your client:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: main.ts}
+import * as Sentry from "@sentry/effect";
+import { Layer } from "effect";
+const SentryLive = Layer.mergeAll(
+  Sentry.effectLayer({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      // enables stream mode
+      Sentry.spanStreamingIntegration(),
+    ],
+  }),
+  Layer.setTracer(Sentry.SentryEffectTracer)
+);
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Then set the `traceLifecycle` option to `'stream'` when initializing the SDK in your server:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript {filename: main.ts}
+import * as Sentry from "@sentry/effect";
+import { NodeRuntime } from "@effect/platform-node";
+import * as Layer from "effect/Layer";
+import { HttpLive } from "./Http.js";
+
+const SentryLive = Layer.mergeAll(
+  Sentry.effectLayer({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+    // enables stream mode
+    traceLifecycle: "stream",
+  }),
+  Layer.setTracer(Sentry.SentryEffectTracer)
+);
+
+const MainLive = HttpLive.pipe(Layer.provide(SentryLive));
+MainLive.pipe(Layer.launch, NodeRuntime.runMain);
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To revert to transaction mode, remove `traceLifecycle` and `spanStreamingIntegration()` from these files.

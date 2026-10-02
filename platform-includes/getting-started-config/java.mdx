@@ -1,12 +1,3 @@
-<OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance',
-    'profiling',
-    'logs',
-  ]}
-/>
-
 <OnboardingOption optionId="opentelemetry" hideForThisOption>
 Configuration should happen as early as possible in your application's lifecycle.
 
@@ -16,9 +7,11 @@ import io.sentry.Sentry;
 Sentry.init(options -> {
   options.setDsn("___PUBLIC_DSN___");
 
-  // Add data like request headers and IP for users,
-  // see https://docs.sentry.io/platforms/java/data-management/data-collected/ for more info
-  options.setSendDefaultPii(true);
+  // Use Data Collection defaults but don't collect automatic user information.
+  // https://docs.sentry.io/platforms/java/data-management/data-collected/
+  options.getDataCollection().forceDataCollection();
+  options.getDataCollection().setUserInfo(false);
+  // Configure other data categories here.
   // ___PRODUCT_OPTION_START___ performance
 
   // Set traces_sample_rate to 1.0 to capture 100%
@@ -26,6 +19,12 @@ Sentry.init(options -> {
   // We recommend adjusting this value in production.
   options.setTracesSampleRate(1.0);
   // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Enable profiling
+  options.setProfileSessionSampleRate(1.0);
+  options.setProfileLifecycle(ProfileLifecycle.TRACE);
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
@@ -40,9 +39,11 @@ import io.sentry.Sentry
 Sentry.init { options ->
   options.dsn = "___PUBLIC_DSN___"
 
-  // Add data like request headers and IP for users,
-  // see https://docs.sentry.io/platforms/java/data-management/data-collected/ for more info
-  options.isSendDefaultPii = true
+  // Use Data Collection defaults but don't collect automatic user information.
+  // https://docs.sentry.io/platforms/java/data-management/data-collected/
+  options.dataCollection.forceDataCollection()
+  options.dataCollection.userInfo = false
+  // Configure other data categories here.
   // ___PRODUCT_OPTION_START___ performance
 
   // Set traces_sample_rate to 1.0 to capture 100%
@@ -50,6 +51,12 @@ Sentry.init { options ->
   // We recommend adjusting this value in production.
   options.tracesSampleRate = 1.0
   // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Enable profiling
+  options.profileSessionSampleRate = 1.0
+  options.profileLifecycle = ProfileLifecycle.TRACE
+  // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
@@ -57,4 +64,12 @@ Sentry.init { options ->
   // ___PRODUCT_OPTION_END___ logs
 }
 ```
+
+<OnboardingOption optionId="logs">
+<Alert>
+
+Learn more about setting up logging in our <PlatformLink to="/logs/">Logs documentation</PlatformLink>.
+
+</Alert>
+</OnboardingOption>
 </OnboardingOption>

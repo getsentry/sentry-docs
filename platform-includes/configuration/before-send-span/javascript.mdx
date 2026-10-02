@@ -1,7 +1,25 @@
-```javascript
+```javascript {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   beforeSendSpan(span) {
+    if (span.name === "should be renamed") {
+      span.name = "renamed span";
+      span.attributes = {
+        ...span.attributes,
+        myExtraAttribute: true,
+      };
+    }
+
+    return span;
+  },
+});
+```
+
+```javascript {tabTitle:Transaction Mode}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
     if (span.description === "should be renamed") {
       span.description = "renamed span";
       span.data = {
@@ -11,6 +29,6 @@ Sentry.init({
     }
 
     return span;
-  },
+  }),
 });
 ```

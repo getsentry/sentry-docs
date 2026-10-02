@@ -4,8 +4,8 @@ description: "Configure MSBuild properties in your .NET project to automatically
 sidebar_order: 10
 ---
 
-The [Sentry CLI](/cli) has many useful features that can improve your Sentry experience.
-For .NET, you can use it to upload [debug information files](/cli/dif), such as .NET `PDB` symbol files.
+The [Sentry CLI](/cli/) has many useful features that can improve your Sentry experience.
+For .NET, you can use it to upload [debug information files](/cli/dif/), such as .NET `PDB` symbol files.
 This allows Sentry to show a more complete stack trace, including file names and line numbers.
 You can also use it to upload _source code_, which enables Sentry to display [source context](../../data-management/debug-files/source-context/)
 when viewing stack traces.
@@ -45,6 +45,9 @@ However, we generally recommend the following:
   ```
 
   You do not need to separately install Sentry CLI on your build server, as it is already provided by the Sentry NuGet package.
+
+- If building inside a **Docker container**, use a [BuildKit secret](https://docs.docker.com/build/building/secrets/) to pass the auth token securely.
+  See [Building with Docker](#building-with-docker) below for a complete example.
 
 ## Configuration
 
@@ -115,7 +118,7 @@ if you only want these features enabled in a GitHub Actions CI workflow, you cou
   <SentryUploadSources>true</SentryUploadSources>
 
   <!-- If you are targeting Android, sends proguard mapping file to Sentry. -->
-  <SentryUploadAndroidProguardMapping>true</SentryUploadAndroidProguardMapping>
+  <SentryUploadAndroidProGuardMapping>true</SentryUploadAndroidProGuardMapping>
 
 </PropertyGroup>
 
@@ -140,29 +143,29 @@ file, so that they are shared with all projects automatically.
 
 The following MSBuild properties will pass required information to the Sentry CLI:
 
-<ConfigKey name="SentryOrg">
+<SdkOption name="SentryOrg" type="string">
 
 The organization slug for your Sentry account.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryProject">
+<SdkOption name="SentryProject" type="string">
 
 The project slug for the specific Sentry project you are using.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryUrl">
+<SdkOption name="SentryUrl" type="string">
 
 The URL to your Sentry server. Required only if self-hosting Sentry. (Do not use with sentry.io.)
 
-</ConfigKey>
+</SdkOption>
 
 ### Optional MSBuild Properties
 
 There are a few additional properties available to control the Sentry CLI:
 
-<ConfigKey name="SentryCreateRelease">
+<SdkOption name="SentryCreateRelease" type="bool" defaultValue="false">
 
 Enable to automatically create release when building your application. Defaults to `false` (disabled).
 
@@ -172,21 +175,52 @@ Sentry will try to determine the release version automatically by checking the f
 3. The version of the entry assembly for the project
 4. The version suggested by running `sentry-cli releases propose-version`
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentrySetCommits">
+<PlatformSection supported={["dotnet.maui"]}>
+<SdkOption name="SentryProGuardUUID" type="string">
 
-Enable `SentrySetCommits` to automatically [associate commits with the release](https://docs.sentry.io/cli/releases/#commit-integration).
+Define the UUID used to link an APK and its ProGuard mapping file.
 
-</ConfigKey>
+If not defined, Sentry will [generate a UUID](#SentryUploadAndroidProGuardMapping) for you.
 
-<ConfigKey name="SentrySetCommitOptions">
+</SdkOption>
+</PlatformSection>
+
+<SdkOption name="SentrySetCommits" type="bool">
+
+Enable `SentrySetCommits` to automatically [associate commits with the release](/cli/releases/#commit-integration).
+
+</SdkOption>
+
+<SdkOption name="SentrySetCommitOptions" type="string">
 
 By default, when `SentrySetCommits` is enabled, the SDK will set commits with the `--auto` flag. The optional `SentrySetCommitOptions` property allows you to override this to provide whatever flags you want to the `set-commits` CLI command.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryUploadSymbols">
+<PlatformSection supported={["dotnet.maui"]}>
+<SdkOption name="SentryUploadAndroidProGuardMapping" type="bool" defaultValue="false">
+
+Controls whether a ProGuard mapping file is uploaded to Sentry.
+
+Defaults to `false` (disabled).
+
+When set to `true`:
+- A ProGuard UUID is generated automatically, unless you configure your own via [SentryProGuardUUID](#SentryProGuardUUID).
+- This UUID is injected into the APK as manifest metadata under the key `io.sentry.proguard-uuid`.
+- The same UUID is used to associate the uploaded ProGuard mapping file with the build in Sentry.
+
+This ensures that obfuscated stack traces from your Android app can be correctly de-obfuscated in Sentry.
+
+<Alert>
+Do not overwrite the `io.sentry.proguard-uuid` metadata directly. Use [SentryProGuardUUID](#SentryProGuardUUID) if you need to provide a custom UUID.
+</Alert>
+
+</SdkOption>
+</PlatformSection>
+
+<SdkOption name="SentryUploadSymbols" type="bool" defaultValue="false">
 
 Controls uploading symbols to Sentry during the build. Defaults to `false` (disabled).
 
@@ -194,9 +228,9 @@ Set this property to `true` to opt-in to sending symbols to Sentry as [debug inf
 which are used to perform symbolication of stack traces. This will allow you to view file names and line numbers within
 a stack trace, instead of just a function name.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="SentryUploadSources">
+<SdkOption name="SentryUploadSources" type="bool" defaultValue="false">
 
 Controls whether source code files are uploaded to Sentry during the build. Defaults to `false` (disabled).
 
@@ -210,15 +244,15 @@ you do not need to upload them to Sentry separately. In other words, use _either
 
 </Alert>
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="UseSentryCLI">
+<SdkOption name="UseSentryCLI" type="bool" defaultValue="true">
 
 Controls whether the Sentry CLI is enabled in your build.
 Defaults to `true` if any of the individual features are enabled.
 Set to `false` to disable the Sentry CLI completely, ignoring the settings of each feature.
 
-</ConfigKey>
+</SdkOption>
 
 <Alert title="Important">
 
@@ -228,3 +262,76 @@ them, be very careful that their values are not committed to source control or a
 A more secure approach is to set authentication via environment variable or `~/.sentryclirc` file,
 
 </Alert>
+
+## Building with Docker
+
+When building inside a Docker container, there are two things to handle: passing the auth token securely, and avoiding errors in multi-stage builds.
+
+### Passing the Auth Token
+
+Use Docker BuildKit's `--secret` flag to pass the auth token at build time. Unlike `ARG`/`ENV`, BuildKit secrets are never written to any image layer and do not appear in `docker history`.
+
+Pass the secret when building the image:
+
+```bash
+docker build --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN .
+```
+
+In your Dockerfile, add a [syntax directive](https://docs.docker.com/reference/dockerfile/#syntax) at the top, then mount the secret for the `RUN` instruction that performs the build:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+...
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    dotnet build "MyWebApp.csproj" --no-restore -c Release
+```
+
+The `env=` option (available since Dockerfile syntax v1.10) exposes the secret as the `SENTRY_AUTH_TOKEN` environment variable for the duration of that `RUN` instruction only — exactly what the Sentry CLI needs — without persisting it to a layer. The `# syntax=` directive ensures Docker uses a frontend that supports `env=`, regardless of the Docker Engine version.
+
+<Alert>
+
+BuildKit is enabled by default in Docker 23.0 and later. For older versions, set `DOCKER_BUILDKIT=1` in your environment before running `docker build`.
+
+</Alert>
+
+### Multi-Stage Dockerfiles
+
+If your Dockerfile has separate stages for `dotnet build` and `dotnet publish` (a common pattern for ASP.NET Core apps), Sentry CLI only needs to run during the **build** stage, where the auth token is mounted.
+
+By default, `dotnet publish` runs its own implicit build. That would invoke Sentry CLI again — and because the auth token is deliberately scoped to the build stage's `RUN` (so it never reaches the publish stage or the final image), the second run would fail. Pass `--no-build --no-restore` so `dotnet publish` reuses the build stage's output instead of recompiling, plus `-p:UseSentryCLI=false` as an extra safeguard:
+
+```dockerfile
+RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish --no-build --no-restore -p:UseAppHost=false -p:UseSentryCLI=false
+```
+
+### Complete Example
+
+The following is a complete multi-stage Dockerfile for an ASP.NET Core app. It assumes `<SentryOrg>`, `<SentryProject>`, `<SentryUploadSymbols>`, and `<SentryUploadSources>` are configured in your `.csproj` or `Directory.Build.props`.
+
+```dockerfile
+# syntax=docker/dockerfile:1
+# Build: docker build --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN .
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY ["MyWebApp.csproj", "./"]
+RUN dotnet restore "MyWebApp.csproj"
+COPY . .
+
+# The secret is available only for this RUN instruction and is never written to a layer.
+# Sentry CLI runs here and uploads debug symbols as part of the build.
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    dotnet build "MyWebApp.csproj" --no-restore -c Release
+
+# Reuse the build output; --no-build avoids recompiling, which would re-run Sentry CLI without the auth token.
+FROM build AS publish
+RUN dotnet publish "MyWebApp.csproj" -c Release -o /app/publish --no-build --no-restore -p:UseAppHost=false -p:UseSentryCLI=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "MyWebApp.dll"]
+```

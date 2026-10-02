@@ -15,7 +15,7 @@ export type Parameter = {
     enum: string[];
     format: string;
     type: string;
-    items?: {[key: string]: {}};
+    items?: {[key: string]: unknown};
   };
 };
 
@@ -72,6 +72,7 @@ export type DeRefedOpenAPI = {
         description?: string;
         security?: any;
         servers?: ServerMeta[];
+        'x-sentry-experimental'?: boolean;
       };
     };
   };

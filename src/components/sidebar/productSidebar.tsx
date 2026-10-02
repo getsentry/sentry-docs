@@ -1,11 +1,10 @@
 import {nodeForPath} from 'sentry-docs/docTree';
 
 import {DynamicNav, toTree} from './dynamicNav';
-import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode, ProductSidebarProps} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
+export function ProductSidebar({rootNode, items, extraLinks}: ProductSidebarProps) {
   const itemTree = (item: string) => {
     const node = nodeForPath(rootNode, item);
     if (!node) {
@@ -19,7 +18,6 @@ export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
       <ul data-sidebar-tree>
         {items.map(item => {
           const tree = itemTree(item.root);
-
           return (
             tree && (
               <DynamicNav
@@ -27,29 +25,12 @@ export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
                 root={item.root}
                 title={item.title}
                 tree={tree}
-                collapsible
+                collapsible={false}
+                extraLinks={extraLinks}
               />
             )
           );
         })}
-      </ul>
-      <SidebarSeparator />
-      <ul data-sidebar-tree>
-        <li className="mb-3" data-sidebar-branch>
-          <ul data-sidebar-tree>
-            <SidebarLink href="https://about.codecov.io/" title="Codecov" />
-            <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-            <SidebarLink href="https://sentry.zendesk.com/hc/en-us/" title="Support" />
-            <SidebarLink
-              href="https://develop.sentry.dev/self-hosted/"
-              title="Self-Hosting Sentry"
-            />
-            <SidebarLink
-              href="https://develop.sentry.dev"
-              title="Developer Documentation"
-            />
-          </ul>
-        </li>
       </ul>
     </div>
   );

@@ -1,19 +1,36 @@
 ---
-title: Manual Install 
+title: Manual Install
 description: "Integrate Sentry into your Xcode project by using our pre-compiled frameworks."
+sidebar_order: 3000
 ---
 
-To integrate Sentry into your Xcode project, follow these steps:
+<Alert level="info">
+
+We recommend using <PlatformLink to="/install/swift-package-manager/">Swift Package Manager</PlatformLink> with the **`SentrySPM`** product, which compiles the SDK from source. This allows you to step through SDK code while debugging and supports compile-time configuration such as package traits.
+
+</Alert>
+
+To integrate Sentry into your Xcode project using pre-compiled frameworks, follow these steps:
 
 1. Download the latest version of the SDK from the Sentry Cocoa [Releases page](https://github.com/getsentry/sentry-cocoa/releases).
-2. Each release contains the following four framework options:
-    - Sentry-Dynamic.xcframework.zip: Dynamic framework
-	- Sentry.xcframework.zip: Static framework
-	- SentrySwiftUI.xcframework.zip: Static Framework with SwiftUI support
-	- Sentry-WithoutUIKitOrAppKit.xcframework.zip: Static framework without UIKit or AppKit linking and related features
+2. Each release contains the following framework options:
+
+   **Sentry (Swift / standard Objective-C):**
+   - `Sentry.xcframework.zip` — Static framework (recommended)
+   - `Sentry-Dynamic.xcframework.zip` — Dynamic framework
+   - `SentrySwiftUI.xcframework.zip` — Deprecated. SwiftUI tracking is now included in the main `Sentry` framework.
+   - `Sentry-WithoutUIKitOrAppKit.xcframework.zip` — Static framework without UIKit or AppKit linking and related features
+
+   **SentryObjC (pure Objective-C interface):**
+   - `SentryObjC-Static.xcframework.zip` — Static framework (recommended)
+   - `SentryObjC-Dynamic.xcframework.zip` — Dynamic framework
+
 3. Import the chosen framework into your Xcode project target.
 
-### Usage Guidelines:
+### Usage Guidelines
 
-	•	Use `Sentry-Dynamic`, `Sentry`, or `Sentry-WithoutUIKitOrAppKit` independently. Only one of these should be included in your project at a time.
-	•	If you're using `SentrySwiftUI`, it must be combined with `Sentry-Dynamic`.
+- Use `Sentry-Dynamic`, `Sentry`, or `Sentry-WithoutUIKitOrAppKit` independently. Only one of these should be included in your project at a time.
+- `SentrySwiftUI` is deprecated. If you still use it, it must be combined with `Sentry-Dynamic`.
+- Use **SentryObjC** when you need a pure Objective-C interface — no Swift headers, no semantic imports (`@import`), no `-Swift.h`. This is recommended for Objective-C++ projects or projects with Clang modules disabled. Each SentryObjC framework embeds the full Sentry SDK, so do not link both `Sentry` and `SentryObjC` in the same target. See <PlatformLink to="/install/swift-package-manager/#sentryobjc-objective-c">SentryObjC</PlatformLink> for more details.
+- When using **`SentryObjC-Static.xcframework`** in a pure Objective-C target, additional linker flags are needed for the C++ standard library and Swift runtime — see the <PlatformLink to="/install/swift-package-manager/#sentryobjc-static">SentryObjC-Static build settings</PlatformLink> for the full flags.
+- When your project has **Clang modules disabled** or uses **Objective-C++** (`.mm` files), you must link system frameworks explicitly (e.g., `-framework UIKit -framework Foundation` in Other Linker Flags) and use `#import` instead of `@import` — see <PlatformLink to="/install/swift-package-manager/#clang-modules-disabled--objective-c">Clang Modules Disabled / Objective-C++</PlatformLink>.

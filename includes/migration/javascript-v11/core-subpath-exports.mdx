@@ -1,0 +1,22 @@
+---
+id: core-subpath-exports
+title: "Browser and server exports moved to `@sentry/core` subpaths"
+phase: packages
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 15
+---
+
+`@sentry/core` exports only isomorphic code now. Browser-only exports live on `@sentry/core/browser` and server-only ones on `@sentry/core/server`, which keeps server code out of browser bundles. This only affects imports straight from `@sentry/core`, since the platform SDKs re-export as before. TypeScript reports it as `has no exported member`.
+
+```js
+// Before
+import { loadModule, trpcMiddleware } from "@sentry/core";
+import type { BrowserClientReplayOptions } from "@sentry/core";
+
+// After
+import { loadModule, trpcMiddleware } from "@sentry/core/server";
+import type { BrowserClientReplayOptions } from "@sentry/core/browser";
+```

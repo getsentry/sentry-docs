@@ -1,5 +1,3 @@
-import qs from 'query-string';
-
 /**
  * This function is used to filter out any elements that are not truthy and plays nice with TypeScript.
  * @param x - The value to check for truthiness.
@@ -33,10 +31,18 @@ export const capitalize = (str: string) => {
 export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
 
 export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
-  const chunkSize = Math.ceil(arr.length / numChunks);
-  return Array.from({length: numChunks}, (_, i) =>
-    arr.slice(i * chunkSize, i * chunkSize + chunkSize)
-  );
+  // Spread the remainder over the leading chunks so lengths differ by at most
+  // one. A fixed ceil() size dumps the shortfall on the last chunk instead: 22
+  // items in 3 chunks gave 8/8/6 rather than 8/7/7.
+  const baseSize = Math.floor(arr.length / numChunks);
+  const remainder = arr.length % numChunks;
+  let start = 0;
+  return Array.from({length: numChunks}, (_, i) => {
+    const size = baseSize + (i < remainder ? 1 : 0);
+    const chunk = arr.slice(start, start + size);
+    start += size;
+    return chunk;
+  });
 };
 
 type Page = {
@@ -77,11 +83,16 @@ type URLQueryObject = {
 const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
 
 export const marketingUrlParams = (): URLQueryObject => {
-  const query = qs.parse(window.location.search);
-  const marketingParams: Record<string, string> = Object.keys(query).reduce((a, k) => {
-    const matcher = paramsToSync.find(m => m.test(k));
-    return matcher ? {...a, [k]: query[k]} : a;
-  }, {});
+  // Replace + with %2B before parsing to preserve literal + characters.
+  // URLSearchParams decodes + as space per the form-urlencoded spec,
+  // but we want to match the previous query-string behavior.
+  const query = new URLSearchParams(window.location.search.replace(/\+/g, '%2B'));
+  const marketingParams: Record<string, string> = {};
+  for (const [key, value] of query.entries()) {
+    if (paramsToSync.some(m => m.test(key))) {
+      marketingParams[key] = value;
+    }
+  }
 
   // add in original_referrer
   if (document.referrer && !marketingParams.original_referrer) {
@@ -101,7 +112,19 @@ export function captureException(exception: unknown): void {
   }
 }
 
-export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';
+export const isLocalStorageAvailable = () => {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return false;
+    }
+    const testKey = '__sentry_ls_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');
@@ -119,4 +142,18 @@ export function debounce<T extends unknown[]>(func: (...args: T) => void, delay:
     clearTimeout(timer);
     timer = setTimeout(() => func.apply(this, args), delay);
   };
+}
+
+/**
+ * Decode a URL fragment (with or without the leading `#`) into an element id.
+ * Falls back to the raw value when the fragment has invalid percent-encoding,
+ * since `decodeURIComponent` throws a `URIError` on sequences like `%SE`.
+ */
+export function safeDecodeHash(hash: string): string {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }

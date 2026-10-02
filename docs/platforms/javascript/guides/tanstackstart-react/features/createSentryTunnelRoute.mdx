@@ -1,0 +1,58 @@
+---
+title: createSentryTunnelRoute
+description: "Learn how to manually define a Sentry tunnel route in your TanStack Start app."
+---
+
+<AvailableSince version="10.51.0" />
+
+<Alert level="info">
+  If you can use the `sentryTanstackStart` Vite plugin, prefer its
+  [`tunnelRoute`](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/#tunnel-route)
+  option. It registers the route for you and automatically wires up the client
+  `tunnel` option. Use `createSentryTunnelRoute` only when you need full control over
+  the route file, the DSN allowlist, or can't use the Vite plugin.
+</Alert>
+
+The `createSentryTunnelRoute` helper returns a TanStack Start server-route configuration with a `POST` handler that forwards Sentry envelopes to Sentry's ingest servers. Use it inside a file route to expose a same-origin tunnel endpoint.
+
+## Usage
+
+Create a server route at the path you want to tunnel through, and pass the list of DSNs you want to allow:
+
+```typescript {filename:src/routes/monitor.ts}
+import { createFileRoute } from "@tanstack/react-router";
+import * as Sentry from "@sentry/tanstackstart-react";
+
+export const Route = createFileRoute("/monitor")({
+  server: Sentry.createSentryTunnelRoute({
+    allowedDsns: ["___PUBLIC_DSN___"],
+  }),
+});
+```
+
+Then, set the matching `tunnel` option in your client `Sentry.init()` so the browser SDK sends events to your route instead of directly to Sentry:
+
+```tsx {filename:src/router.tsx} {4}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ...
+  tunnel: "/monitor",
+});
+```
+
+## Options
+
+### `allowedDsns`
+
+A list of DSN strings that the route is allowed to forward to. The route validates each incoming envelope against this list and rejects any DSN that isn't allowed.
+
+If `allowedDsns` is omitted or empty, the route falls back to the DSN of the active server-side Sentry SDK at runtime. If neither is available, requests to the route return a 500 response.
+
+```typescript {filename:src/routes/monitor.ts}
+Sentry.createSentryTunnelRoute({
+  allowedDsns: [
+    "https://public@o0.ingest.sentry.io/1",
+    "https://public@o0.ingest.sentry.io/2",
+  ],
+});
+```

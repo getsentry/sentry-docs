@@ -1,6 +1,7 @@
 ---
 title: Record User Information
-sidebar_order: 7
+sidebar_order: 4.2
+sidebar_section: configuration
 description: "Learn about how you can record or customize the capture of user information."
 ---
 
@@ -12,22 +13,25 @@ Record user information from an HTTP request or by registering a Spring bean for
 
 ## Recording User Information From HTTP Request
 
-To record the user's IP address and `Principal#name` as the username, set the personal information flag to `true`.
+To record the user's IP address and `Principal#name` as the username, enable automatic user information through Data Collection:
 
 ```properties {tabTitle:application.properties}
-sentry.send-default-pii=true
+sentry.data-collection.user-info=true
 ```
 
 ```yaml {tabTitle:application.yml}
 sentry:
-  send-default-pii: true
+  data-collection:
+    user-info: true
 ```
+
+Configuring this field activates the <PlatformLink to="/configuration/options/#dataCollection">Data Collection defaults</PlatformLink> for omitted fields.
 
 ## Recording Custom User Information
 
 To record custom user information, you can register a bean that implements `SentryUserProvider` interface.
 
-```java {tabTitle:Java (Spring Boot 2)}
+```java {tabTitle:Java (Spring Boot 2)} {mdExpandTabs}
 import org.springframework.stereotype.Component;
 import io.sentry.protocol.User;
 import io.sentry.spring.SentryUserProvider;
@@ -46,6 +50,21 @@ class CustomSentryUserProvider implements SentryUserProvider {
 import org.springframework.stereotype.Component;
 import io.sentry.protocol.User;
 import io.sentry.spring.jakarta.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+  public User provideUser() {
+    User user = new User();
+    // ... set user information
+    return user
+  }
+}
+```
+
+```java {tabTitle:Java (Spring Boot 4)}
+import org.springframework.stereotype.Component;
+import io.sentry.protocol.User;
+import io.sentry.spring7.SentryUserProvider;
 
 @Component
 class CustomSentryUserProvider implements SentryUserProvider {
@@ -76,6 +95,21 @@ class CustomSentryUserProvider : SentryUserProvider {
 import org.springframework.stereotype.Component
 import io.sentry.protocol.User
 import io.sentry.spring.jakarta.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+  override fun provideUser(): User? {
+    val user = User()
+    // ... set user information
+    return user
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring Boot 4)}
+import org.springframework.stereotype.Component
+import io.sentry.protocol.User
+import io.sentry.spring7.SentryUserProvider
 
 @Component
 class CustomSentryUserProvider : SentryUserProvider {

@@ -1,9 +1,7 @@
 import Image from 'next/image';
 
 import {ExternalLink} from '../externalLink';
-
 import clojure from './icons/clojure.png';
-import cloudflare from './icons/cloudflare.png';
 import coldfusion from './icons/coldfusion.png';
 import crystal from './icons/crystal.png';
 import defold from './icons/defold.png';
@@ -11,6 +9,7 @@ import grails from './icons/grails.png';
 import hono from './icons/hono.png';
 import kubernetes from './icons/kubernetes.png';
 import lua from './icons/lua.png';
+import miniprogram from './icons/miniprogram.png';
 import nuxt from './icons/nuxt.png';
 import ocaml from './icons/ocaml.png';
 import quarkus from './icons/quarkus.png';
@@ -30,11 +29,6 @@ const CommunityPlatforms = [
     name: 'Clojure (Raven Clj)',
     url: 'https://github.com/sethtrain/raven-clj#alternatives',
     icon: clojure,
-  },
-  {
-    name: 'Cloudflare Workers',
-    url: 'https://github.com/robertcepa/toucan-js',
-    icon: cloudflare,
   },
   {
     name: 'ColdFusion',
@@ -70,6 +64,11 @@ const CommunityPlatforms = [
     name: 'Lua',
     url: 'https://github.com/cloudflare/raven-lua',
     icon: lua,
+  },
+  {
+    name: 'Mini Programs',
+    url: 'https://github.com/lizhiyao/sentry-miniapp',
+    icon: miniprogram,
   },
   {
     name: 'Nuxt 2',

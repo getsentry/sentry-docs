@@ -1,0 +1,73 @@
+---
+title: Container Image
+description: >-
+  Learn how to install the Sentry Lambda extension to use Sentry in your
+  container image-based Lambda functions.
+sidebar_order: 3
+---
+
+When you deploy a Lambda function as a container image (for example, with the [Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) for SvelteKit, Next.js, or Remix), you can't attach a Lambda layer. That means you also lose the Sentry Lambda extension that ships with our [Lambda Layer](/platforms/javascript/guides/aws-lambda/install/layer/).
+
+Without the extension, events queued at the moment Lambda freezes the runtime can be lost. The extension runs as a sidecar process that receives events on a local port and forwards them to Sentry, so envelopes leave the function before the freeze.
+
+This guide shows how to install the extension into your Docker image and point any Sentry SDK at it.
+
+## 1. Prerequisites
+
+- Your Lambda function is deployed as a [container image](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html).
+- You have a Sentry SDK in your application (`@sentry/aws-serverless`, `@sentry/sveltekit`, `@sentry/nextjs`, etc.).
+
+## 2. Install `@sentry/aws-serverless`
+
+The extension binaries ship inside the `@sentry/aws-serverless` npm package. Install it as a dependency even if your application uses a different Sentry SDK — only the extension files from this package are copied into the image.
+
+```bash {tabTitle:npm}
+npm install @sentry/aws-serverless
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/aws-serverless
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/aws-serverless
+```
+
+## 3. Copy the Extension into Your Docker Image
+
+AWS Lambda discovers extensions by scanning `/opt/extensions/` for executable files. Copy the wrapper script there and the runtime entrypoint to `/opt/sentry-extension/`:
+
+```dockerfile {filename:Dockerfile}
+FROM public.ecr.aws/lambda/nodejs:22
+
+# Copy the Sentry Lambda extension
+RUN mkdir -p /opt/sentry-extension
+COPY node_modules/@sentry/aws-serverless/build/lambda-extension/sentry-extension /opt/extensions/sentry-extension
+COPY node_modules/@sentry/aws-serverless/build/lambda-extension/index.mjs /opt/sentry-extension/index.mjs
+RUN chmod +x /opt/extensions/sentry-extension /opt/sentry-extension/index.mjs
+
+# ... rest of your Dockerfile
+```
+
+Make sure the wrapper at `/opt/extensions/sentry-extension` is executable, or Lambda will skip it.
+
+## 4. Tunnel Sentry Events Through the Extension
+
+Point your SDK at the extension by setting the `tunnel` option to `http://localhost:9000/envelope`. This URL is fixed — the extension always listens on port 9000.
+
+The same setting works with any Sentry SDK in your image:
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/sveltekit";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "http://localhost:9000/envelope",
+});
+```
+
+## How It Works
+
+When Lambda starts your container, it launches every executable in `/opt/extensions/` alongside the runtime. The Sentry extension registers for `INVOKE` and `SHUTDOWN` events and starts a local HTTP server on port 9000.
+
+Each envelope your SDK sends to `http://localhost:9000/envelope` is forwarded to the Sentry ingestion endpoint derived from the envelope's DSN header. Because the extension is a separate process from your function, Lambda keeps it alive across the freeze/thaw boundary, so that events queued just before a freeze still get delivered.

@@ -1,7 +1,10 @@
 'use client';
 
-import {useCallback} from 'react';
+import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
+import {useCallback} from 'react';
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {getInternalLinkClickProps} from 'sentry-docs/internalLinkTracking';
 
 import {ExternalLink} from './externalLink';
 
@@ -26,29 +29,74 @@ export function SmartLink({
   remote = false,
   className = '',
   isActive,
+  onClick,
   ...props
 }: Props) {
   const realTo = to || href || '';
+  const {emit} = usePlausibleEvent();
 
-  const handleAutolinkClick = useCallback((e: React.MouseEvent) => {
+  const handleAutolinkClick = useCallback(async (e: React.MouseEvent) => {
     const link = e.currentTarget as HTMLAnchorElement;
     if (link.classList.contains('autolink-heading')) {
-      navigator.clipboard.writeText(link.href);
+      try {
+        await navigator.clipboard.writeText(link.href);
+      } catch {
+        Sentry.logger.warn('clipboard.writeText permission denied', {
+          url: link.href,
+          userAgent: navigator.userAgent,
+        });
+      }
     }
   }, []);
 
   if (remote || realTo?.indexOf('://') !== -1) {
     return (
-      <ExternalLink href={realTo} className={className} {...props}>
+      <ExternalLink href={realTo} className={className} onClick={onClick} {...props}>
         {children || to || href}
       </ExternalLink>
+    );
+  }
+
+  // Hash-only links: use a plain <a> so the browser fires hashchange.
+  // When the target is inside a closed <details>, prevent the browser's
+  // premature scroll and let the Expandable handler scroll after opening.
+  if (realTo.startsWith('#')) {
+    return (
+      <a
+        href={realTo}
+        className={className}
+        onClick={e => {
+          handleAutolinkClick(e);
+          onClick?.(e);
+          const targetId = realTo.slice(1);
+          const target = targetId ? document.getElementById(targetId) : null;
+          if (target?.closest('details:not([open])')) {
+            e.preventDefault();
+            window.history.pushState(null, '', realTo);
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          }
+        }}
+        {...props}
+      >
+        {children || to || href}
+      </a>
     );
   }
 
   return (
     <Link
       href={to || href || ''}
-      onClick={handleAutolinkClick}
+      onClick={e => {
+        handleAutolinkClick(e);
+        const clickProps = getInternalLinkClickProps(
+          e.currentTarget.getAttribute('href') ?? realTo,
+          window.location.href
+        );
+        if (clickProps) {
+          emit('Internal Link Click', {props: clickProps});
+        }
+        onClick?.(e);
+      }}
       className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >

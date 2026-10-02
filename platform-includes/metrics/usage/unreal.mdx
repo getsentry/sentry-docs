@@ -1,0 +1,71 @@
+Once metrics are enabled, you can emit metrics using the Sentry subsystem.
+
+### Metric Types
+
+| Type           | Use For                                      |
+| -------------- | -------------------------------------------- |
+| `Counter`      | Events (orders, clicks, API calls)           |
+| `Gauge`        | Current values (queue depth, connections)    |
+| `Distribution` | Value ranges (response times, payload sizes)  |
+
+### Counters
+
+Track the number of times something happens:
+
+```cpp
+#include "SentrySubsystem.h"
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->AddCount(TEXT("api.requests"), 1);
+```
+
+### Gauges
+
+Track current values that can go up or down:
+
+```cpp
+SentrySubsystem->AddGauge(TEXT("active_connections"), 42, USentryUnitHelper::MakeSentryUnit(ESentryUnit::None));
+```
+
+### Distributions
+
+Track a range of values (e.g., response times):
+
+```cpp
+SentrySubsystem->AddDistribution(TEXT("response.time"), 150.5f, USentryUnitHelper::MakeSentryUnit(ESentryUnit::Millisecond));
+```
+
+### Custom Attributes
+
+Add attributes to filter and group metrics in Sentry:
+
+```cpp
+TMap<FString, FSentryVariant> Attributes;
+Attributes.Add(TEXT("endpoint"), FSentryVariant(TEXT("/api/orders")));
+Attributes.Add(TEXT("region"), FSentryVariant(TEXT("us-west")));
+
+SentrySubsystem->AddCountWithAttributes(TEXT("api.calls"), 1, Attributes);
+```
+
+All metric methods have a `WithAttributes` variant:
+- `AddCountWithAttributes()`
+- `AddDistributionWithAttributes()`
+- `AddGaugeWithAttributes()`
+
+### Units
+
+For gauge and distribution metrics, specify a unit to help Sentry display values in a human-readable format. The SDK provides the `ESentryUnit` enum with predefined units for duration, information, and fraction categories:
+
+```cpp
+// Using predefined units
+SentrySubsystem->AddGauge(TEXT("memory.usage"), 1024.0f, USentryUnitHelper::MakeSentryUnit(ESentryUnit::Byte));
+SentrySubsystem->AddDistribution(TEXT("latency"), 42.5f, USentryUnitHelper::MakeSentryUnit(ESentryUnit::Millisecond));
+
+// Using a custom unit
+SentrySubsystem->AddDistribution(TEXT("frame.rate"), 60.0f, USentryUnitHelper::MakeSentryCustomUnit(TEXT("fps")));
+```
+
+### Blueprint Support
+
+You can also emit metrics from Blueprints by calling the **Add Count**, **Add Distribution**, or **Add Gauge** nodes on the Sentry subsystem. Use the **Make Sentry Unit** node to specify measurement units.

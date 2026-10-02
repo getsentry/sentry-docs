@@ -1,0 +1,67 @@
+---
+title: Local Testing
+sidebar_order: 25
+description: Download baseline snapshots and diff images locally with sentry-cli.
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+You can download baseline snapshots from Sentry and diff them against local images without leaving your machine. This is useful for fast iteration during development or for AI-assisted visual regression workflows.
+
+<Alert level="warning">
+  `sentry-cli snapshots download` and `sentry-cli snapshots diff` are
+  experimental. These commands are subject to breaking changes, including
+  removal, in any Sentry CLI release.
+</Alert>
+
+## Downloading Baselines
+
+Use `sentry-cli snapshots download` to pull baseline images from Sentry to a local directory:
+
+```bash
+sentry-cli snapshots download --app-id web-frontend
+```
+
+This resolves the latest baseline snapshot for the given `app-id` and extracts images to `./snapshots-base/`. You can also target a specific branch or snapshot:
+
+```bash
+sentry-cli snapshots download --app-id web-frontend --branch main
+
+sentry-cli snapshots download --snapshot-id 259299
+```
+
+Use `--output` to change the destination directory. See the [full download reference](/cli/snapshots/#download-baselines) for all available flags.
+
+<Alert level="info">
+  For very large test suites (tens of thousands of images), you may hit download
+  size limits. In that case, an alternative would be to generate your baseline
+  snapshots locally instead of downloading them (via your base branch). If
+  you're running into this limit with a smaller number of images than expected,
+  [reach out to support](https://sentry.io/contact/support/).
+</Alert>
+
+## Diffing Locally
+
+Use `sentry-cli snapshots diff` to compare two directories of images. See the [full diff reference](/cli/snapshots/#local-diff) for all available flags.
+
+```bash
+sentry-cli snapshots diff ./snapshots-base ./snapshots-head
+```
+
+This outputs JSON with per-image results (`changed`, `unchanged`, `added`, `removed`, and `skipped` when using `--selective`) and writes diff mask images to `./diff-output/`. Use `--fail-on-diff` to exit with code 1 when any differences are found — useful in CI or pre-push hooks:
+
+```bash
+sentry-cli snapshots diff ./snapshots-base ./snapshots-head --fail-on-diff
+```
+
+Pass `--threshold` to ignore sub-pixel noise (default `0.01`), or `--selective` to treat missing base images as skipped instead of removed.
+
+## End-to-End Workflow
+
+```bash
+sentry-cli snapshots download --app-id web-frontend
+# (Run your snapshot generation command here -> saved into ./path/to/snapshots)
+sentry-cli snapshots diff ./snapshots-base ./path/to/snapshots --fail-on-diff
+```
+
+For the full flag reference, see the [Snapshots CLI reference](/cli/snapshots/).

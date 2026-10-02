@@ -1,0 +1,60 @@
+---
+title: ANR and App Hangs
+description: "Learn how Sentry detects and configures ANRs and App Hangs in Flutter apps."
+sidebar_order: 45
+---
+
+Sentry can detect when your Flutter app's main thread is blocked for too long, causing the app to become unresponsive. The Flutter SDK relies on the underlying native Sentry SDKs to detect these events.
+
+**This feature is available on Android, iOS, and macOS.**
+
+## What Gets Reported
+
+On Android, these are reported as Application Not Responding (ANR) events.
+On iOS and macOS, they're reported as App Hang events.
+Depending on where the app was blocked, events can include stack frames from Dart, Java/Kotlin, Swift/Objective-C, or C/C++ code.
+
+## Configure Detection
+
+ANR and App Hang detection are enabled by default. You can disable them or change their timeout thresholds in `SentryFlutter.init`:
+
+```dart
+await SentryFlutter.init(
+  (options) {
+    // Android only: ANR
+    options.anrEnabled = true; // default: true
+    options.anrTimeoutInterval = const Duration(seconds: 5); // default: 5s
+
+    // iOS/macOS only: App Hang
+    options.enableAppHangTracking = true; // default: true
+    options.appHangTimeoutInterval = const Duration(seconds: 2); // default: 2s
+  },
+);
+```
+
+For more configuration details, see the <Link to="/platforms/android/configuration/app-not-respond/">Android ANR documentation</Link> and the <Link to="/platforms/apple/configuration/app-hangs/">Apple App Hangs documentation</Link>.
+
+## Pause App Hang Tracking
+
+On iOS and macOS, you can pause App Hang tracking at runtime. Use this when you can't avoid a known blocking operation, such as a synchronous database migration during startup, and don't want Sentry to report it as an app hang.
+
+```dart
+await SentryFlutter.pauseAppHangTracking();
+
+// Run code that you don't want Sentry to report as an app hang.
+
+await SentryFlutter.resumeAppHangTracking();
+```
+
+## Readable Stack Traces
+
+Since ANR and App Hang events can include frames from Dart, Java/Kotlin, Swift/Objective-C, and C/C++ code, some frames require platform-specific debug files to appear readable in Sentry.
+
+See the <PlatformLink to="/debug-symbols/dart-plugin/">Sentry Dart Plugin documentation</PlatformLink> for the debug files required on Android, iOS, and macOS.
+
+## Platform Details
+
+For more details about how each native SDK detects these events, see:
+
+- [Android ANR documentation](/platforms/android/configuration/app-not-respond/)
+- [Apple App Hangs documentation](/platforms/apple/configuration/app-hangs/)

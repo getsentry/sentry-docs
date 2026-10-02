@@ -1,4 +1,5 @@
 import path from 'path';
+
 import {watch} from 'node:fs/promises';
 import {WebSocketServer} from 'ws';
 
@@ -9,7 +10,7 @@ export const throttle = (fn, delay) => {
   return (...args) => {
     const now = Date.now();
     if (now - last < delay) {
-      return;
+      return undefined;
     }
     last = now;
     return fn(...args);
@@ -31,7 +32,7 @@ wss.on('connection', async function onConnect(ws) {
   const {signal} = ac;
   ws.on('close', () => ac.abort());
 
-  // avoid fileystem chatter when you save a file
+  // avoid filesystem chatter when you save a file
   const sendReload = throttle(() => ws.send('reload'), 10);
 
   try {

@@ -1,0 +1,22 @@
+---
+id: browser-web-vital-options
+title: "Web Vitals moved to a dedicated integration"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: browser
+order: 220
+---
+
+The `_experiments.enableStandalone*Spans` options were removed, and `browserTracingIntegration` no longer accepts an `_experiments` object. BrowserTracing automatically adds `webVitalsIntegration` to collect Web Vitals.
+
+CLS and LCP are recorded as measurements on the pageload span, or as dedicated spans in stream mode.
+
+Configure collection through `browserTracingIntegration({ webVitals: { ... } })`. The `enableInp` option is deprecated. Use `webVitals: { ignore: ["inp"] }` to disable INP, or include `"cls"` or `"lcp"` in `ignore` to skip those vitals. If you explicitly add `webVitalsIntegration()`, its options take precedence.
+
+Soft-navigation vitals are enabled by default in stream mode on supporting browsers. Set `webVitals: { softNavigations: false }` to keep one set of vitals for the page lifetime. Back/forward-cache vitals are also enabled by default in stream mode when BrowserTracing's `instrumentBfcacheRestore` is enabled. Set `webVitals: { bfcacheNavigations: false }` to disable collection for restores. See <PlatformLink to="/configuration/integrations/webvitals/">WebVitals</PlatformLink> for requirements.
+
+LCP and CLS spans no longer set `browser.web_vital.lcp.report_event` or `browser.web_vital.cls.report_event`, including when soft-navigation reporting is disabled. Finalization timing is unchanged. Remove filters on these attributes from searches and dashboards.
+
+Restore vitals carry `browser.navigation.type: bfcache`. Filter by that attribute to analyze restores separately from page loads, since near-instant restores can lower combined aggregates.

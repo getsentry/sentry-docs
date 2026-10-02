@@ -1,7 +1,8 @@
 ---
 title: Async Methods
 description: "Learn about how to propagate Scope to Spring async methods."
-sidebar_order: 6
+sidebar_order: 4.1
+sidebar_section: configuration
 supported:
   - java.spring
   - java.spring-boot
@@ -13,7 +14,7 @@ Sentry's SDK for Java stores the scope and the context in a thread-local variabl
 
 To propagate Sentry scope to Spring MVC methods returning a `Callable` or a `StreamingResponseBody`, a `ThreadPoolTaskExecutor` decorated with `SentryTaskDecorator` must be set on the `AsyncSupportConfigurer` through an implementation of `WebMvcConfigurer`:
 
-```java {tabTitle:Java (Spring 5)}
+```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -65,6 +66,32 @@ class AsyncWebMvcConfiguration implements WebMvcConfigurer {
 }
 ```
 
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import io.sentry.spring7.SentryTaskDecorator;
+
+@Configuration
+class AsyncWebMvcConfiguration implements WebMvcConfigurer {
+
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setTaskExecutor(asyncExecutor());
+    }
+
+    private AsyncTaskExecutor asyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setTaskDecorator(new SentryTaskDecorator());
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
@@ -97,6 +124,30 @@ import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 import io.sentry.spring.jakarta.SentryTaskDecorator
+
+@Configuration
+class AsyncWebMvcConfiguration : WebMvcConfigurer {
+    override fun configureAsyncSupport(configurer: AsyncSupportConfigurer) {
+        configurer.setTaskExecutor(asyncExecutor())
+    }
+
+    private fun asyncExecutor(): AsyncTaskExecutor {
+        val executor = ThreadPoolTaskExecutor()
+        executor.setTaskDecorator(SentryTaskDecorator())
+        executor.initialize()
+        return executor
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.AsyncTaskExecutor
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+
+import io.sentry.spring7.SentryTaskDecorator
 
 @Configuration
 class AsyncWebMvcConfiguration : WebMvcConfigurer {
@@ -117,7 +168,7 @@ class AsyncWebMvcConfiguration : WebMvcConfigurer {
 
 Alternatively, if there is a single bean of type `TaskDecorator` in the context, instead of custom `WebMvcConfigurer`, it is enough to create a `SentryTaskDecorator` bean.
 
-```java {tabTitle:Java (Spring 5)}
+```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -138,6 +189,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.sentry.spring.jakarta.SentryTaskDecorator;
+
+@Configuration
+class SentryConfig {
+
+    @Bean
+    public SentryTaskDecorator sentryTaskDecorator() {
+        return new SentryTaskDecorator();
+    }
+}
+```
+
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.sentry.spring7.SentryTaskDecorator;
 
 @Configuration
 class SentryConfig {
@@ -177,13 +244,27 @@ class SentryConfig {
 }
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+import io.sentry.spring7.SentryTaskDecorator
+
+@Configuration
+class SentryConfig {
+
+    @Bean
+    fun sentryTaskDecorator() = SentryTaskDecorator()
+}
+```
+
 </PlatformSection>
 
 ## Configuring @Async Methods Task Executor
 
 To propagate Sentry scope to Spring `@Async` annotated methods, a custom `AsyncConfigurerSupport` must be configured to return a `ThreadPoolTaskExecutor` decorated with `SentryTaskDecorator`:
 
-```java {tabTitle:Java (Spring 5)}
+```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -210,6 +291,27 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import io.sentry.spring.jakarta.SentryTaskDecorator;
+
+import java.util.concurrent.Executor;
+
+@Configuration
+class AsyncMethodConfiguration extends AsyncConfigurerSupport {
+    @Override
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setTaskDecorator(new SentryTaskDecorator());
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import io.sentry.spring7.SentryTaskDecorator;
 
 import java.util.concurrent.Executor;
 
@@ -251,6 +353,26 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
 import io.sentry.spring.jakarta.SentryTaskDecorator
+
+import java.util.concurrent.Executor
+
+@Configuration
+class AsyncMethodConfiguration : AsyncConfigurerSupport() {
+    override fun getAsyncExecutor(): Executor {
+        val executor = ThreadPoolTaskExecutor()
+        executor.setTaskDecorator(SentryTaskDecorator())
+        executor.initialize()
+        return executor
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+
+import io.sentry.spring7.SentryTaskDecorator
 
 import java.util.concurrent.Executor
 

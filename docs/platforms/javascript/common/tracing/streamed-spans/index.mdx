@@ -1,0 +1,107 @@
+---
+title: Streamed Spans
+description: "Learn how the SDK sends spans in batches as they finish, and how to configure span attributes, filtering, and delivery."
+sidebar_order: 35
+new: true
+notSupported:
+  - javascript.electron
+---
+
+The Sentry JavaScript SDKs send spans in batches as they finish. This is called stream mode and is the default trace lifecycle. Service spans represent a service's entry point and group its child spans.
+
+<Expandable title="Why use stream mode?">
+
+- **No 1,000-span limit.** Spans are sent in batches, so a trace can contain more than 1,000 spans.
+- **Lower memory usage.** Spans are flushed periodically and don't need to be held in memory until the root span ends. This is especially useful for long-running processes like queue consumers or cron jobs.
+- **Faster visibility.** Span data arrives in Sentry as your application runs, instead of only after the entire operation completes.
+- **No data loss from crashes.** If your process terminates unexpectedly, spans that were already flushed are preserved. Spans still buffered in memory can be lost.
+
+</Expandable>
+
+You can find the following span types mentioned throughout this page:
+
+- **Root span**: The topmost span in a trace. It has no parent span and is always a service span.
+- **Service span**: A parent-level span at the entry of a service, identified by `is_segment` in its serialized data.
+- **Child span**: Any span nested under a parent span within the same trace.
+
+This graph shows how these span types relate to each other within a trace:
+
+```
+Trace
+│
+└── Root span [service A]
+     ├── Child span
+     │    └── Child span
+     └── Service span [service B]
+          ├── Child span
+          └── Child span
+```
+
+## Configuration
+
+<PlatformLink to="/tracing/#configure">Configure tracing</PlatformLink> in your
+app. The SDK uses `traceLifecycle: 'stream'` by default, with no additional
+integration required.
+
+To opt out of span streaming, set <PlatformLink to="/configuration/options/#traceLifecycle">`traceLifecycle: 'static'`</PlatformLink>. With this setting, wrap `beforeSendSpan` with `Sentry.withStaticSpan()` to receive and return `SpanJSON`. Transaction mode also supports <PlatformLink to="/configuration/filtering/#filtering-transaction-events">transaction filtering</PlatformLink> with `beforeSendTransaction` and `ignoreTransactions`.
+
+<Expandable title="How does span flushing work?">
+
+When stream mode is enabled, the SDK maintains an internal buffer that groups spans by trace ID.
+
+Spans are flushed:
+
+- On a regular interval (every 5 seconds by default).
+- When a trace's buffer reaches 1,000 spans or the maximum size limit of a batch.
+- When you call `Sentry.flush()` or `Sentry.close()`.
+
+Each flush sends only the spans accumulated since the last flush, grouped into envelopes by trace ID.
+
+</Expandable>
+
+## Manual Instrumentation (Optional)
+
+Use the same span creation APIs in stream mode as in transaction mode. To measure operations the SDK does not instrument automatically, see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink> for `startSpan`, `startSpanManual`, and `startInactiveSpan` examples.
+
+## Add Attributes
+
+To attach metadata to individual spans, see <PlatformLink to="/tracing/instrumentation/#adding-span-attributes">Adding Span Attributes</PlatformLink>.
+
+### Shared Attributes
+
+Use <PlatformLink to="/enriching-events/attributes/">shared attributes</PlatformLink> to attach the same metadata to spans, logs, and metrics. Scope tags apply to errors and are not included in streamed spans.
+
+## Breadcrumbs
+
+Breadcrumbs are attached to errors. Streamed spans do not include breadcrumbs.
+
+## Extended Configuration (Optional)
+
+Modify span data before sending it or filter out spans you do not need.
+
+### Filter Spans
+
+Use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink> to modify each finished span. In stream mode, the callback receives `StreamedSpanJSON` directly. Check `span.is_segment` to target only service spans.
+
+The callback cannot return `null` to drop spans. See <PlatformLink to="/configuration/filtering/#filtering-spans">Filtering Spans</PlatformLink> for examples of modifying and dropping spans.
+
+### Drop Spans
+
+Use <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> to drop spans by name, operation, or attributes. In stream mode, rules are evaluated when a span starts, so later name and attribute updates do not affect matching.
+
+Ignoring a service span also drops its child spans. Ignoring a child span reparents its children to the nearest ancestor. See <PlatformLink to="/configuration/filtering/#using-ignore-spans">Using `ignoreSpans`</PlatformLink> for matching rules and examples.
+
+## Distributed Tracing (Optional)
+
+Distributed tracing works out of the box when tracing is enabled and works the same way in stream mode. If you need to manually propagate trace context, for example,
+when the SDK can't instrument automatically, see <PlatformLink to="/tracing/distributed-tracing/custom-instrumentation/">custom instrumentation for distributed tracing</PlatformLink>.
+
+## Verify Your Setup
+
+Check the Traces view in Sentry for spans shortly after they finish. Enable `debug: true` to see SDK warnings, including callbacks that do not match the configured trace lifecycle.
+
+<PlatformCategorySection supported={["browser"]}>
+
+In your browser's DevTools network tab, look for span envelopes with content type `application/vnd.sentry.items.span.v2+json`.
+
+</PlatformCategorySection>

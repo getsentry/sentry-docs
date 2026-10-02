@@ -1,16 +1,19 @@
 ---
 title: Release Health
 sidebar_order: 50
-description: "Monitor the health of releases by observing user adoption, usage of the application, percentage of crashes, and session data."
+description: >-
+  Monitor the health of releases by observing user adoption, usage of the
+  application, percentage of crashes, and session data.
+og_image: /og-images/product-releases-health.png
 ---
 
 <Alert>
 
-Note, that Sessions (as described below) are not the same as a [Session Replay](/product/explore/session-replay/), (a video-like reproduction of the user's session). We don't bill for release health sessions.
+Note, that Sessions (as described below) are not the same as a [Session Replay](/product/session-replay/), (a video-like reproduction of the user's session). We don't bill for release health sessions.
 
 </Alert>
 
-You can monitor the health of releases by observing user adoption, usage of your application, percentage of [crashes](#crashes), and [session data](#sessions). Release health data provides insight into the impact of crashes and bugs related to user experience and reveals trends with each new issue through the release details, graphs, and filters. This data is primarily displayed on the [Releases](/product/releases/) and [Release Details](/product/releases/release-details) pages, but is also reflected in other parts of [sentry.io](https://sentry.io).
+You can monitor the health of releases by observing user adoption, usage of your application, percentage of [crashes](#crashes--unhandled), and [session data](#sessions). Release health data provides insight into the impact of crashes and bugs related to user experience and reveals trends with each new issue through the release details, graphs, and filters. This data is primarily displayed on the [Releases](/product/releases/) and [Release Details](/product/releases/release-details/) pages, but is also reflected in other parts of [sentry.io](https://sentry.io).
 
 > Many SDKs automatically manage the start and end of [sessions](#sessions) when the SDK is initialized, but release health configuration is key to ensuring you're receiving useful data, so check out our information on [which SDKs support release health](/product/releases/setup/#release-health) for links to configuring the SDK, as needed.
 
@@ -27,45 +30,25 @@ Sentry distinguishes between two kinds of sessions:
 
 ### User-Mode/Application-Mode Sessions
 
-<ul>
+A user- or application-mode session begins with the start of the application.
+Or, it begins with bringing the already started application back from
+background to the foreground. In this context, a user is defined by one or
+more of the following: a unique ID or UUID, username, or email.
 
-<li style={{listStyleType:'none'}}>
-  A user- or application-mode session begins with the start of the application.
-  Or, it begins with bringing the already started application back from
-  background to the foreground. In this context, a user is defined by one or
-  more of the following: a unique ID or UUID, username, or email.
-</li>
-
-<br></br>
-
-<li style={{listStyleType:'none'}}>
-  This type of session ends with the closing of the application or with the
-  application being sent to the background. If the application is in the
-  background for less than 30 seconds, we do not start the session again.
-  Applications that are active even on the background (for example, a music
-  player) should track the sessions manually for the background process.
-</li>
-
-</ul>
+This type of session ends with the closing of the application or with the
+application being sent to the background. If the application is in the
+background for less than 30 seconds, we do not start the session again.
+Applications that are active even on the background (for example, a music
+player) should track the sessions manually for the background process.
 
 ### Server-Mode/Request-Mode Sessions
 
-<ul>
+Server or request-mode sessions roughly correspond to HTTP requests or RPC
+calls in a server setting. A session is started when the server receives a
+request, and terminates when the server sends a response.
 
-<li style={{listStyleType:'none'}}>
-  Server- or request-mode sessions roughly correspond to HTTP requests or RPC
-  calls in a server setting. A session is started when the server receives a
-  request, and terminates when the server sends a response.
-</li>
-
-<br></br>
-
-<li style={{listStyleType:'none'}}>
-  These are typically high in volume since each session corresponds to a single
-  request.
-</li>
-
-</ul>
+These are typically high in volume since each session corresponds to a single
+request.
 
 Sessions, whether application-mode or request-mode, are submitted to Sentry so you can track the usage and adoption of your application. When a user of your application experiences a crash, error, or abnormal exit, the session will be flagged accordingly, and Sentry calculates derived metrics. The metrics include data such as the number of users that didn't experience a crash in the specified time range.
 
@@ -85,15 +68,11 @@ Depending on your "Display" selection, the sort options for the **Releases** pag
 
 ![Sort By: Active Users dropdown](./img/release_active_users.png)
 
-## Crashes
+## Crashes & Unhandled
 
-A _crash_ is when the application had an explicit unhandled error or hard crash. You'll typically be able to view the corresponding issue that captures this event in [sentry.io](https://sentry.io), and errors that did not cause the end of the application should not be included. To search for crash events in **Discover** or on the **Issues** page, filter by `error.unhandled:true`.
+A _crash_ is when the application had a hard crash, while _unhandled_ is when an error wasn't explicitly handled by the application. You'll typically be able to view the corresponding issue that captured the crashed event in [sentry.io](https://sentry.io); errors that did not cause the end of the application should not be included. To search for crash events in **Errors** or on the **Issues** page, filter by `error.unhandled:true`.
 
-<Alert>
-
-Crash detection is not available for watchOS.
-
-</Alert>
+Starting with v25.9.0, Sentry differentiates between crashes and unhandled errors; both are counted separately. Check your SDK release notes and update to the latest version to support the _unhandled_ session status.
 
 ### Crash Free Sessions/Users
 
@@ -101,7 +80,7 @@ The _crash free sessions_ number is the percentage of sessions in the specified 
 
 The _crash free users_ number is the percentage of distinct users who did not experience a crash during the specified time period. For example, if a user attempts to complete the checkout process on your application and there's a crash, that represents a [crashed user](#crashed-users). By contrast, if the user is able to successfully complete checkout, they are counted as a crash free user.
 
-You can set [crash rate alerts](/product/alerts/alert-types/#sessions-crash-rate-alerts) to tell you when your crash free percentage for either sessions or users falls below a specific threshold.
+You can set [crash rate monitors](/product/monitors-and-alerts/monitors/) to tell you when your crash free percentage for either sessions or users falls below a specific threshold.
 
 Depending on your "Display" selection, the sort options for the **Releases** page change. To sort releases by crash free sessions, select "Sessions" in the "Display" dropdown, and to sort by crash free users, select "Users".
 
@@ -118,6 +97,14 @@ Please note that the number of crashes is not expected to match the number of cr
 ### Crashed Users
 
 The number of users that experienced a crash in the specified time range.
+
+## Sessions vs. Issues
+
+One common misconception is that session data is derived from issues, and that the numbers can be cross referenced. This is not the case.
+
+Session data is always sent from SDKs when the integration is enabled (it is enabled by default in most SDKs). This dataset tracks every session start and end, and includes only basic tags related to release and environment. In contrast, issues are derived from error events, which are subject to [inbound filters](/concepts/data-management/filtering/), [sampling](/platform-redirect/?next=/configuration/sampling/), and [quota](/pricing/quotas/) limits.
+
+These two systems work in parallel to provide different views of your application's health. Session data enables the Release Adoption and Release Health charts and views, which show you the health of your application at a high level, with no sampling or filtering applied. Issues data enables you to drill down into specific issues and have all the context you need to fix them.
 
 ## Release Adoption
 
@@ -140,7 +127,7 @@ This feature is applicable only if the project selected is available for mobile 
 
 If you select a project that has release health configured, and there are releases and user/session data in the selected time period, an adoption chart is displayed. The chart provides you with adoption percentages for each release in the project, over time.
 
-Each release is represented by a line in the chart, and you can navigate to the [Release Details](/product/releases/health/release-details/) by clicking it.
+Each release is represented by a line in the chart, and you can navigate to the [Release Details](/product/releases/release-details/) by clicking it.
 
 ![Release Adoption Chart](./img/release_adoption_chart.png)
 
@@ -170,11 +157,19 @@ A session can have one of the following statuses:
 
 ### Abnormal
 
-The application timed out, froze, or was forced to quit by the operating system. There is usually no corresponding Sentry issue, as this is a passive action.
+An abnormal session occurs when the SDK cannot determine whether the session ended gracefully or not. This happens when the application restarts and there's no crash dump file but also no successful session termination status recorded from the previous run.
+
+Common scenarios that result in abnormal sessions include:
+
+- **Mobile applications**: The device's battery ran out, causing an immediate shutdown without allowing the SDK to properly terminate the session.
+- **Web applications**: The browser crashed, the system was forced to shut down, or the browser process was killed.
+- **General**: The application timed out, froze, or was forcibly quit by the operating system.
+
+There is usually no corresponding Sentry issue, as this is a passive action rather than an explicit error or crash.
 
 ### Crashed
 
-The application had an explicit unhandled error or hard [crash](#crash).
+The application had a hard [crash](#crashes--unhandled).
 
 ### Errored
 
@@ -183,5 +178,9 @@ The application shut down normally, but the session experienced handled errors. 
 ### Healthy
 
 The session ends normally and no errors occurred during its lifetime.
+
+### Unhandled
+
+The application had an [unhandled](#crashes--unhandled) error, but the language or framework prevented the process from terminating. Starting with v25.9.0, this status is tracked separately from [crashed](#crashed).
 
 Session status can be defined slightly differently by platform, and not all platforms use all of the statuses above. Check out the docs for your [specific platform](/platform-redirect/?next=/configuration/releases/%23sessions) for more information.

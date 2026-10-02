@@ -22,7 +22,7 @@ To enable this feature, you must include `spring-aop` and `aspectj` in your appl
 
 Then, import `SentryTracingConfiguration` in one of your `@Configuration` classes:
 
-```java {tabTitle:Java (Spring 5)}
+```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import io.sentry.spring.tracing.SentryTracingConfiguration;
@@ -36,6 +36,16 @@ class SentryConfig {
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import io.sentry.spring.jakarta.tracing.SentryTracingConfiguration;
+
+@Import(SentryTracingConfiguration.class)
+class SentryConfig {
+}
+```
+
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import io.sentry.spring7.tracing.SentryTracingConfiguration;
 
 @Import(SentryTracingConfiguration.class)
 class SentryConfig {
@@ -62,9 +72,19 @@ class SentryConfig {
 }
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import io.sentry.spring7.tracing.SentryTracingConfiguration
+
+@Import(SentryTracingConfiguration::class)
+class SentryConfig {
+}
+```
+
 Methods executed outside of Spring MVC request processing can be turned into transactions by annotating them with `@SentryTransaction` annotation:
 
-```java {tabTitle:Java (Spring 5)}
+```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import org.springframework.stereotype.Component;
 import org.springframework.scheduling.annotation.Scheduled;
 import io.sentry.spring.tracing.SentryTransaction;
@@ -84,6 +104,22 @@ class ScheduledJob {
 import org.springframework.stereotype.Component;
 import org.springframework.scheduling.annotation.Scheduled;
 import io.sentry.spring.jakarta.tracing.SentryTransaction;
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  void execute() {
+    ...
+  }
+}
+```
+
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+import io.sentry.spring7.tracing.SentryTransaction;
 
 @Component
 class ScheduledJob {
@@ -128,6 +164,22 @@ class ScheduledJob {
 }
 ```
 
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Scheduled
+import io.sentry.spring7.tracing.SentryTransaction
+
+@Component
+class ScheduledJob {
+
+  @Scheduled(...)
+  @SentryTransaction(operation = "task")
+  fun execute() {
+    ...
+  }
+}
+```
+
 `@SentryTransaction` can be configured with custom `name`. If not defined, `name` will be resolved from the class, and the method name.
 
 `@SentryTransaction` can be also placed on a class or an interface - it turns every method execution from the annotated type into a transaction.
@@ -138,7 +190,7 @@ Advanced Spring AOP users can redefine transaction pointcut by providing a custo
 
 To create a span around a method execution, annotate method with `@SentrySpan` annotation:
 
-```java {tabTitle:Java (Spring 5)}
+```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import org.springframework.stereotype.Component;
 import io.sentry.spring.tracing.SentrySpan;
 
@@ -155,6 +207,20 @@ class PersonService {
 ```java {tabTitle:Java (Spring 6)}
 import org.springframework.stereotype.Component;
 import io.sentry.spring.jakarta.tracing.SentrySpan;
+
+@Component
+class PersonService {
+
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
+}
+```
+
+```java {tabTitle:Java (Spring 7)}
+import org.springframework.stereotype.Component;
+import io.sentry.spring7.tracing.SentrySpan;
 
 @Component
 class PersonService {
@@ -183,6 +249,20 @@ class PersonService {
 ```kotlin {tabTitle:Kotlin (Spring 6)}
 import org.springframework.stereotype.Component
 import io.sentry.spring.jakarta.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+  @SentrySpan(operation = "task")
+  fun findById(id: Long): Person {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin (Spring 7)}
+import org.springframework.stereotype.Component
+import io.sentry.spring7.tracing.SentrySpan
 
 @Component
 class PersonService {

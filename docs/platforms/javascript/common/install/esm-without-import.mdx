@@ -1,15 +1,22 @@
 ---
-title: ESM without CLI Flag
-sidebar_order: 11
-description: "Learn about running Sentry in an ESM application, without the --import flag."
-supported:
-  - javascript.node
-  - javascript.connect
-  - javascript.express
-  - javascript.fastify
-  - javascript.hapi
-  - javascript.hono
-  - javascript.koa
+title: Deferred Entrypoint
+sidebar_order: 3
+description: "Learn about running Sentry without the --import flag."
+supportedCategories:
+  - server-only
+notSupported:
+  - javascript.bun
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.elysia
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.gcp-functions
+  - javascript.firebase
+  - javascript.eve
+  - javascript.mastra
+  - javascript.nitro
+  - javascript.nestjs
 ---
 
 <Alert>
@@ -17,41 +24,20 @@ supported:
   [installation methods](../).
 </Alert>
 
-When running your application in ESM mode, you will most likely want to <PlatformLink to="/install/esm">follow the ESM instructions</PlatformLink>. However, if you want to avoid using the `--import` command line option, for example if you have no way of configuring a CLI flag, you can also follow an alternative setup that involves importing the `instrument.mjs` file directly in your application.
+If you can neither run your application with `--import`, nor use a bundler, you can use a deferred entrypoint to run your application with Sentry.
 
-<Alert level='warning' title='Restrictions of this installation method'>
+This assumes you've already created an `instrument.mjs` file that calls `Sentry.init()`, as shown in the <PlatformLink to="/">quickstart</PlatformLink>.
 
-This installation method has the fundamental restriction that only native Node.js APIs can be instrumented (such as `fetch` and the `http` module).
+Split the entrypoint in two. The static import runs `Sentry.init()`, and the dynamic `import()` loads your application afterwards, so your application's modules are wrapped:
 
-As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
+```javascript {filename: main.mjs}
+import "./instrument.mjs";
 
-We recommend using this only if the `--import` flag is not an option for you.
-
-</Alert>
-
-You need to create a file named `instrument.mjs` that imports and initializes Sentry:
-
-```javascript {tabTitle:ESM} {filename: instrument.mjs}
-import * as Sentry from "@sentry/node";
-
-// Ensure to call this before importing any other modules!
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // Add Tracing by setting tracesSampleRate
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
-});
+await import("./app.mjs");
 ```
 
-You need to import the `instrument.mjs` file before importing any other modules in your application. This is necessary to ensure that Sentry can automatically instrument all modules in your application:
+Your application code stays in `app.mjs` and needs no changes. Start it as usual:
 
-```javascript {filename: app.mjs}
-// Import this first!
-import "./instrument";
-
-// Now import other modules
-import http from "http";
-
-// Your application code goes here
+```bash
+node main.mjs
 ```

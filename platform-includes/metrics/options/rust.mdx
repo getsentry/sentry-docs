@@ -1,0 +1,19 @@
+### Filtering Metrics
+
+Use [`before_send_metric`](https://docs.rs/sentry/latest/sentry/struct.ClientOptions.html#method.before_send_metric) to drop or update metrics before Sentry sends them. Return `None` to drop a metric.
+
+For example, to filter all metrics with the name `"debug.metric"`, you could use the following `before_send_metric`:
+
+```rust {filename:main.rs}
+let _guard = sentry::init(
+    sentry::ClientOptions::new()
+        .dsn("___PUBLIC_DSN___")
+        .before_send_metric(|metric| {
+            if metric.name == "debug.metric" {
+                return None;
+            }
+
+            Some(metric)
+        }),
+);
+```

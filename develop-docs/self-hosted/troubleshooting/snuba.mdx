@@ -1,0 +1,93 @@
+---
+title: Troubleshooting Snuba
+sidebar_title: Snuba
+sidebar_order: 6
+---
+
+Snuba is the service that handles Sentry's search and analytics. It's separated into two: a consumer that ingests data from Kafka into ClickHouse, and a querier that queries ClickHouse and returns the results to Sentry.
+
+## What Snuba subscription consumers are responsible for
+
+Snuba subscriptions implement Sentry's alerts, meaning periodic queries that run on schedule and emit results back to Sentry. There are two roles per dataset (events, transactions, metrics, generic-metrics, eap-items):
+
+- **Subscription scheduler** — decides _when_ to run each subscribed query. It does **not** consume event data. Instead, it tails a small "clock" topic (the commit log) and emits one Kafka message per scheduled query.
+- **Subscription executor** — picks up those scheduled queries, runs them against ClickHouse, and produces the answers to a results topic that Sentry consumes.
+
+There is also a combined `subscriptions-scheduler-executor` binary that fuses both stages in one process (this is what self-hosted typically runs for `events` / `transactions` / `metrics`).
+
+### Which topics they consume from — and why this matters
+
+| Role      | Reads from                                                                                                                        | Writes to                          | Where defined                                                            |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------ |
+| Scheduler | `snuba-commit-log` (events) / `snuba-transactions-commit-log` / `snuba-metrics-commit-log` / `snuba-generic-metrics-*-commit-log` | `scheduled-subscriptions-<entity>` | `commit_log_topic` + `subscription_scheduled_topic` in each storage YAML |
+| Executor  | `scheduled-subscriptions-<entity>`                                                                                                | `<entity>-subscription-results`    | `subscription_scheduled_topic` + `subscription_result_topic`             |
+
+Critically: the scheduler does not consume from `events` / `transactions` / `snuba-metrics`. It consumes the _commit log_ of those topics. The commit log is written by the main ingest consumer once per commit (i.e. periodically batched), so it has dramatically lower throughput than the data topic itself.
+
+The scheduler reads the `orig_message_ts` header from each commit-log message and uses that as a clock to decide which subscriptions are due. See `subscriptions_scheduler.py` for the design — tick consumer → tick buffer → commit-strategy step → query producer.
+
+### Why offsets may appear static or end offsets missing
+
+This is **expected** in most healthy self-hosted deployments. Reasons, in order of likelihood:
+
+1. **Low traffic on the source topic.** The scheduler reads the _commit log_,
+   which only gets a record when the upstream events/transactions consumer
+   flushes a batch (typically every few seconds, and only if there's data).
+   On a quiet self-hosted instance, that's a tiny trickle.
+2. **No active subscriptions.** Sentry alerts are what create
+   subscription rows; if no alerts are configured for a dataset, the
+   scheduler emits nothing to `scheduled-subscriptions-*`, so the executor's
+   input topic stays empty and its committed offset never moves.
+   End offset = last committed offset = no apparent change.
+3. **GLOBAL watermark mode buffers ticks.** For most entities (transactions,
+   metrics, eap-items, generic-metrics) `subscription_scheduler_mode: global`.
+   The scheduler waits until _every_ partition of the source topic has
+   advanced past a timestamp before scheduling — so on a single-partition
+   self-hosted topic it advances the moment a commit-log message arrives, but
+   on a multi-partition setup with one stalled partition it can stall
+   scheduling without that being a bug.
+4. **kafka-ui showing "no end offset."** kafka-ui sometimes can't render an
+   end offset for a topic with zero recent produces; this is a UI artifact,
+   not a consumer problem. `docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --describe --all-groups` will show
+   the real `LOG-END-OFFSET`.
+5. **At-least-once commit policy.** The scheduler only commits the _earliest_
+   commit-log offset whose tick has been fully scheduled and produced. It
+   deliberately holds the committed offset back relative to the read
+   position; small static lag is normal.
+
+### What "healthy" looks like
+
+- **Scheduler:** committed offset on `snuba-*-commit-log` advances roughly in
+  lockstep with whatever the upstream data consumer commits (so: as fast as
+  events arrive, batched). Lag should stay in the low single-digit-seconds
+  range. Zero movement is fine **if** the source dataset isn't currently
+  ingesting.
+- **Executor:** committed offset on `scheduled-subscriptions-<entity>`
+  advances every time an alert fires. With _no_ configured Sentry alerts for
+  that dataset, expect the offset to never move — that's not a bug, there's
+  literally no work.
+- **Result topic:** `<entity>-subscription-results` should receive one
+  message per executed query; Sentry's own consumer reads these. If alerts
+  in Sentry's UI are firing correctly, this loop is healthy regardless of
+  how kafka-ui renders the numbers.
+
+Quick sanity checks from the host:
+
+- `docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:9092 --topic scheduled-subscriptions-events --from-beginning --max-messages 5`
+  — if you see scheduled queries, the scheduler is producing.
+- `docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:9092 --topic events-subscription-results --from-beginning --max-messages 5`
+  — if you see results, the executor is running and Sentry is being fed.
+- `docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --describe --group snuba-events-subscriptions-consumers`
+  — authoritative `LAG` view.
+
+### Differences vs. the events / regular Snuba consumers
+
+|                      | Ingest consumer (e.g. errors, transactions)                       | Subscription scheduler                                                     | Subscription executor                                                 |
+| -------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Source topic         | High-volume data topic (`events`, `transactions`, `snuba-items`…) | Low-volume **commit log** of that data topic                               | Internal `scheduled-subscriptions-*` topic                            |
+| Driven by            | Event throughput from Sentry/Relay                                | Commit cadence of the ingest consumer + configured alerts                  | Existence of configured alerts                                        |
+| What it writes       | ClickHouse INSERTs + commit-log entry                             | Scheduled-query Kafka messages                                             | Query results to Kafka + ClickHouse SELECTs                           |
+| Expected lag pattern | Continuous offset advance under normal load                       | Periodic, batched advance — long flat stretches between commits are normal | Static if no alerts are configured; otherwise advances per alert tick |
+| If offset is static  | Likely a problem (ingestion stalled)                              | Probably fine (no upstream commits or no alerts)                           | Probably fine (no Sentry alerts for this dataset)                     |
+
+The headline point: **a static offset on a subscription consumer is only a problem if the corresponding feature in Sentry is broken.** Verify by checking whether (a) ingestion is working and (b) any alerts exist for the dataset — not by staring at offsets in isolation.

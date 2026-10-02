@@ -1,0 +1,374 @@
+---
+title: Testing
+description: "Verify that your application reports errors to Sentry correctly using the SDK's built-in test helpers."
+sidebar_order: 7
+sidebar_section: features
+new: true
+---
+
+<Alert>
+
+The testing helpers described on this page require **SDK version 13.0.0 or later** and the [`bypass`](https://hex.pm/packages/bypass) library.
+
+</Alert>
+
+`Sentry.Test` and `Sentry.Test.Assertions` provide an isolated, per-test testing environment so you can verify your application reports errors, transactions, logs, metrics, and check-ins to Sentry — without hitting the real API.
+
+## Setup
+
+Add `bypass` as a test dependency in `mix.exs`:
+
+```elixir {filename:mix.exs}
+defp deps do
+  [
+    {:sentry, "~> 13.0"},
+    {:bypass, "~> 2.0", only: [:test]},
+    # ...
+  ]
+end
+```
+
+Call `Sentry.Test.setup_sentry/1` in your ExUnit `setup` block. It opens a local HTTP server scoped to the current test, points Sentry's DSN at it, and wires up event collection:
+
+```elixir
+defmodule MyAppWeb.ErrorTrackingTest do
+  use ExUnit.Case, async: true
+
+  import Sentry.Test.Assertions
+
+  setup do
+    Sentry.Test.setup_sentry()
+  end
+end
+```
+
+Pass any Sentry config options as keyword arguments:
+
+```elixir
+setup do
+  Sentry.Test.setup_sentry(dedup_events: false, traces_sample_rate: 1.0)
+end
+```
+
+## Errors
+
+Use `assert_sentry_report(:event, criteria)` to assert on captured errors and messages. It fails if any criterion doesn't match or if not exactly one event was captured.
+
+Given a controller that manually reports unrecognized webhook events:
+
+```elixir {filename:lib/my_app_web/controllers/webhook_controller.ex}
+def create(conn, %{"type" => type} = params) do
+  case Webhooks.dispatch(type, params) do
+    :ok ->
+      send_resp(conn, 200, "ok")
+
+    {:error, :unknown_type} ->
+      Sentry.capture_message("Unrecognized webhook event",
+        level: :warning,
+        tags: %{"webhook.provider" => conn.assigns.provider, "event.type" => type}
+      )
+      send_resp(conn, 422, "unrecognized event")
+  end
+end
+```
+
+The test calls the endpoint and asserts on the captured event's level, message, and tags:
+
+```elixir {filename:test/my_app_web/controllers/webhook_controller_test.exs}
+defmodule MyAppWeb.WebhookControllerTest do
+  use MyAppWeb.ConnCase, async: true
+
+  import Sentry.Test.Assertions
+
+  setup do
+    Sentry.Test.setup_sentry()
+  end
+
+  test "reports unrecognized events to Sentry", %{conn: conn} do
+    conn
+    |> assign(:provider, "github")
+    |> post(~p"/webhooks", %{"type" => "unknown.event", "data" => %{}})
+
+    assert_sentry_report(:event,
+      level: :warning,
+      message: %{formatted: "Unrecognized webhook event"},
+      tags: %{"webhook.provider" => "github", "event.type" => "unknown.event"}
+    )
+  end
+end
+```
+
+## Transactions
+
+Transactions in Phoenix are captured automatically by the Sentry plug. Enable tracing in `setup_sentry/1` and assert with `assert_sentry_report(:transaction, criteria)`:
+
+```elixir {filename:test/my_app_web/controllers/product_controller_test.exs}
+defmodule MyAppWeb.ProductControllerTest do
+  use MyAppWeb.ConnCase, async: true
+
+  import Sentry.Test.Assertions
+
+  setup do
+    Sentry.Test.setup_sentry(traces_sample_rate: 1.0)
+  end
+
+  test "traces product listing requests", %{conn: conn} do
+    get(conn, ~p"/api/products")
+
+    assert_sentry_report(:transaction, transaction: "GET /api/products")
+  end
+end
+```
+
+## Logs
+
+Sentry logs flow through an async telemetry pipeline. Both assertion helpers below handle the wait automatically — they flush the pipeline and poll the collector until a matching log appears or the timeout elapses (default: 1000 ms).
+
+Use `assert_sentry_report(:log, criteria)` when your test emits exactly one Sentry log and you want a straight criteria match. Given an `Accounts` module that logs failed authentication attempts:
+
+```elixir {filename:lib/my_app/accounts.ex}
+def authenticate(email, password) do
+  case Repo.get_by(User, email: email) do
+    nil ->
+      Logger.warning("Failed login attempt", user_email: email)
+      {:error, :invalid_credentials}
+
+    user ->
+      verify_password(user, password)
+  end
+end
+```
+
+With that in place, a test can assert on the reported log:
+
+```elixir {filename:test/my_app/accounts_test.exs}
+test "logs failed login attempts" do
+  Accounts.authenticate("ghost@example.com", "wrong")
+
+  assert_sentry_report(:log, level: :warning, body: "Failed login attempt")
+end
+```
+
+### `assert_sentry_log/3`
+
+`assert_sentry_log/3` is the preferred helper for log assertions. It takes `level` and `body` as positional arguments and uses **find semantics** — it finds the first matching log among all captured logs rather than requiring exactly one. This makes it resilient when your code or the framework emits multiple logs in a single test.
+
+```elixir {filename:test/my_app/accounts_test.exs}
+test "includes the email in failed login log attributes" do
+  Accounts.authenticate("ghost@example.com", "wrong")
+
+  assert_sentry_log(:warning, "Failed login attempt",
+    attributes: %{user_email: "ghost@example.com"}
+  )
+end
+
+test "logs failed logins with a regex when the message includes dynamic content" do
+  Accounts.authenticate("ghost@example.com", "wrong")
+
+  assert_sentry_log(:warning, ~r/Failed login/)
+end
+```
+
+Because `assert_sentry_log` uses find semantics, you can call it multiple times in the same test to assert on several logs independently — each call removes the matched item, leaving the rest available for subsequent assertions. Given an order pipeline that emits a log at each stage:
+
+```elixir {filename:lib/my_app/orders.ex}
+def place(user, cart) do
+  Logger.info("Payment initiated", order_id: cart.id)
+
+  with {:ok, payment} <- Payments.charge(user, cart.total),
+       {:ok, _} <- Inventory.reserve(cart.items) do
+    Logger.info("Inventory reserved", order_id: cart.id)
+    Logger.info("Confirmation email enqueued", order_id: cart.id)
+    {:ok, finalize(user, cart, payment)}
+  end
+end
+```
+
+The test asserts on all three logs in a single pass — each `assert_sentry_log` call consumes the matched item and leaves the others available:
+
+```elixir {filename:test/my_app/orders_test.exs}
+test "logs each stage of the order pipeline" do
+  Orders.place(user, cart)
+
+  assert_sentry_log(:info, "Payment initiated")
+  assert_sentry_log(:info, "Inventory reserved")
+  assert_sentry_log(:info, "Confirmation email enqueued")
+end
+```
+
+## Metrics
+
+Metric events flow through an async telemetry pipeline. Both assertion helpers below handle the wait automatically — they flush the pipeline and poll the collector until a matching metric appears or the timeout elapses (default: 1000 ms).
+
+Use `assert_sentry_report(:metric, criteria)` when your test emits exactly one metric and you want a straight criteria match. Given an `Orders` module that tracks completed orders by plan tier:
+
+```elixir {filename:lib/my_app/orders.ex}
+def complete(%Order{} = order) do
+  with {:ok, order} <- mark_complete(order),
+       :ok <- Mailer.send_receipt(order) do
+    Sentry.Metrics.count("orders.completed", 1,
+      attributes: %{plan: order.user.plan}
+    )
+    {:ok, order}
+  end
+end
+```
+
+With that in place, a test can assert on the reported metric:
+
+```elixir {filename:test/my_app/orders_test.exs}
+test "increments the completed orders counter by plan" do
+  order = insert(:order, user: build(:user, plan: "pro"))
+  Orders.complete(order)
+
+  assert_sentry_report(:metric,
+    type: :counter,
+    name: "orders.completed",
+    attributes: %{plan: %{value: "pro"}}
+  )
+end
+```
+
+### `assert_sentry_metric/2`
+
+`assert_sentry_metric/2` is the preferred helper for metric assertions. It takes the metric type (`:counter`, `:distribution`, or `:gauge`) as a positional first argument and uses **find semantics** — it finds the first matching metric among all captured metrics rather than requiring exactly one. This makes it resilient when a single request records several measurements at once.
+
+```elixir {filename:test/my_app/orders_test.exs}
+test "increments the completed orders counter by plan" do
+  order = insert(:order, user: build(:user, plan: "pro"))
+  Orders.complete(order)
+
+  assert_sentry_metric(:counter,
+    name: "orders.completed",
+    attributes: %{plan: %{value: "pro"}}
+  )
+end
+```
+
+Because `assert_sentry_metric` uses find semantics, you can call it multiple times in the same test to assert on several metrics independently — each call removes the matched item, leaving the rest available for subsequent assertions. Given a checkout flow that records multiple measurements:
+
+```elixir {filename:lib/my_app/checkout.ex}
+def process(%Cart{} = cart) do
+  with {:ok, order} <- place_order(cart),
+       {:ok, _} <- Payments.charge(order) do
+    Sentry.Metrics.count("checkout.completed", 1)
+    Sentry.Metrics.distribution("checkout.value", order.total_cents)
+    {:ok, order}
+  end
+end
+```
+
+The test asserts on both metrics in a single pass — each `assert_sentry_metric` call consumes the matched item and leaves the other available:
+
+```elixir {filename:test/my_app/checkout_test.exs}
+test "records a count and a value distribution on successful checkout" do
+  cart = build(:cart, items: [build(:item, price_cents: 4999)])
+  Checkout.process(cart)
+
+  assert_sentry_metric(:counter, name: "checkout.completed")
+  assert_sentry_metric(:distribution, name: "checkout.value")
+end
+```
+
+## Check-ins
+
+Cron check-ins are delivered directly over the network, not through the ETS collector. Use `setup_bypass_envelope_collector/2` to intercept them, then assert with `assert_sentry_report/2`. Given an Oban worker that wraps its job in a check-in:
+
+```elixir {filename:lib/my_app/workers/nightly_report_worker.ex}
+defmodule MyApp.Workers.NightlyReportWorker do
+  use Oban.Worker, cron: {"0 3 * * *", __MODULE__}
+
+  @impl Oban.Worker
+  def perform(%Oban.Job{}) do
+    {:ok, check_in_id} =
+      Sentry.capture_check_in(status: :in_progress, monitor_slug: "nightly-report")
+
+    Reports.generate()
+
+    Sentry.capture_check_in(
+      status: :ok,
+      monitor_slug: "nightly-report",
+      check_in_id: check_in_id
+    )
+
+    :ok
+  end
+end
+```
+
+The test drives the worker with `perform_job/2` and asserts on both check-ins:
+
+```elixir {filename:test/my_app/workers/nightly_report_worker_test.exs}
+defmodule MyApp.Workers.NightlyReportWorkerTest do
+  use MyApp.DataCase, async: true
+
+  import Sentry.Test.Assertions
+
+  setup do
+    %{bypass: bypass} = Sentry.Test.setup_sentry()
+    ref = Sentry.Test.setup_bypass_envelope_collector(bypass, type: "check_in")
+    %{bypass: bypass, ref: ref}
+  end
+
+  test "sends in-progress and ok check-ins around job execution", %{bypass: bypass, ref: ref} do
+    perform_job(NightlyReportWorker, %{})
+
+    [started, finished] = Sentry.Test.collect_sentry_check_ins(ref, 2)
+    assert_sentry_report(started, status: "in_progress", monitor_slug: "nightly-report")
+    assert_sentry_report(finished, status: "ok", monitor_slug: "nightly-report")
+  end
+end
+```
+
+The `%{bypass: bypass}` map is returned by `setup_sentry/1` and merged into the test context automatically.
+
+## Structured Assertions
+
+All `assert_sentry_*` helpers accept a keyword list of _criteria_. Each value is matched as follows:
+
+- **Regex** — matched with `=~`
+- **Plain map** (not a struct) — recursive subset match: every key in the expected map must exist with a matching value in the actual
+- **Any other value** — compared with `==`
+
+Atom keys work on both Elixir structs and decoded JSON maps (like check-in bodies), so you don't need to switch between string and atom keys.
+
+All helpers return the matched item, so you can chain further assertions on the struct:
+
+```elixir
+event = assert_sentry_report(:event,
+  level: :error,
+  tags: %{"webhook.provider" => "github"}
+)
+
+assert [exception] = event.exception
+assert exception.type == "GitHub.APIError"
+assert exception.mechanism.handled == false
+```
+
+### Multiple Items
+
+When a single action triggers several Sentry events, use `find_sentry_report!/2` to select a specific one:
+
+```elixir {filename:test/my_app/billing_test.exs}
+test "reports a Sentry event for each failed subscription renewal" do
+  BillingService.retry_failed_subscriptions()
+
+  events = Sentry.Test.pop_sentry_reports()
+  assert length(events) == 2
+
+  ada_event = find_sentry_report!(events, user: %{email: "ada@example.com"})
+  assert ada_event.tags["billing.reason"] == "card_declined"
+
+  bob_event = find_sentry_report!(events, user: %{email: "bob@example.com"})
+  assert bob_event.tags["billing.reason"] == "insufficient_funds"
+end
+```
+
+### Adjusting the Timeout
+
+For slow background jobs or high-latency async pipelines, override the default 1000 ms timeout via the `:timeout` option:
+
+```elixir
+assert_sentry_log(:info, "PDF report generated", timeout: 5000)
+assert_sentry_metric(:distribution, name: "report.duration", timeout: 5000)
+```

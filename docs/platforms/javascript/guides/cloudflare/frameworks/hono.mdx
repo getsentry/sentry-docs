@@ -1,22 +1,70 @@
 ---
 title: Hono on Cloudflare
-description: "Learn how to add Cloudflare instrumentation to your Hono app."
+description: "Learn how to instrument your Hono app on Cloudflare Workers with Sentry."
 ---
 
-This guide explains how to set up Sentry in your Hono application running on Cloudflare Workers.
+Hono has its own dedicated SDK (`@sentry/hono`) with first-class support for Cloudflare Workers, Node.js, Bun, and Deno. It works as Hono middleware, so you can drop it into an existing app.
 
 ## Install
 
-<PlatformContent includePath="getting-started-install" />
+Install `@sentry/hono` together with `@sentry/cloudflare`. The runtime package is a peer dependency that you never import directly, but it must be present and its version must match `@sentry/hono`.
 
-## Setup
+```bash {tabTitle:npm}
+npm install @sentry/hono @sentry/cloudflare
+```
 
-<PlatformContent includePath="getting-started-config" />
+```bash {tabTitle:yarn}
+yarn add @sentry/hono @sentry/cloudflare
+```
 
-<PlatformContent includePath="getting-started-config" platform="javascript.cloudflare.workers" />
+```bash {tabTitle:pnpm}
+pnpm add @sentry/hono @sentry/cloudflare
+```
 
-<PlatformContent includePath="getting-started-config" platform="javascript.hono" />
+## Configure
 
-## Verify
+The SDK needs `AsyncLocalStorage`, so set the `nodejs_compat` compatibility flag and a `compatibility_date` of `2024-09-23` or later in your Wrangler configuration:
 
-<PlatformContent includePath="getting-started-verify" platform="javascript.hono" />
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  // Set this to today's date
+  "compatibility_date": "{{@inject new Date().toISOString().slice(0, 10) }}",
+  "compatibility_flags": ["nodejs_compat"],
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+# Set this to today's date
+compatibility_date = "{{@inject new Date().toISOString().slice(0, 10) }}"
+compatibility_flags = ["nodejs_compat"]
+```
+
+Add the `sentry()` middleware as early as possible in your Hono app, before any route that you want covered:
+
+```typescript {filename:index.ts}
+import { Hono } from "hono";
+import { sentry } from "@sentry/hono/cloudflare";
+
+const app = new Hono();
+
+app.use(
+  sentry(app, {
+    dsn: "___PUBLIC_DSN___",
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    tracesSampleRate: 1.0,
+  })
+);
+
+// Your routes here
+
+export default app;
+```
+
+To read the DSN from a Worker binding, pass a callback instead of a plain options object. The callback receives the Worker `env`:
+
+```typescript {filename:index.ts}
+app.use(sentry(app, (env) => ({ dsn: env.SENTRY_DSN })));
+```
+
+For the full setup, including verification and the other runtimes, see the **[Hono Quick Start Guide](/platforms/javascript/guides/hono/)**.

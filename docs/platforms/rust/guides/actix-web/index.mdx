@@ -6,7 +6,7 @@ description: "Learn about monitoring your Actix Web application with Sentry."
 The Sentry SDK offers a middleware for the [Actix Web](https://actix.rs/) framework that supports:
 
 - Capturing server errors returned by Actix Web services.
-- Starting a [transaction](https://docs.sentry.io/concepts/key-terms/tracing/) for each request-response cycle.
+- Starting a [transaction](/concepts/key-terms/tracing/) for each request-response cycle.
 
 ## Install
 
@@ -22,6 +22,7 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
 Then, initialize Actix Web with the Sentry middleware.
+The Sentry middleware provides correct request and trace association for any captured errors or panics, so it should be the first to process the request, that means it should be the last in your chain of `wrap` calls.
 
 <Alert level="warning">
 
@@ -40,20 +41,18 @@ async fn failing(_req: HttpRequest) -> Result<String, Error> {
 }
 
 fn main() -> io::Result<()> {
-    let _guard = sentry::init((
-        "___PUBLIC_DSN___",
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
             // Capture all traces and spans. Set to a lower value in production
-            traces_sample_rate: 1.0,
+            .traces_sample_rate(1.0)
             // Capture user IPs and potentially sensitive headers when using HTTP server integrations
             // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-            send_default_pii: true,
+            .send_default_pii(true)
             // Capture all HTTP request bodies, regardless of size
-            max_request_body_size: sentry::MaxRequestBodySize::Always,
-            ..Default::default()
-        },
-    ));
+            .max_request_body_size(sentry::MaxRequestBodySize::Always),
+    );
 
     actix_web::rt::System::new().block_on(async {
         HttpServer::new(|| {
@@ -92,3 +91,7 @@ Learn more about manually capturing an error or message in our <PlatformLink to=
 </Alert>
 
 To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+## Next Steps
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup

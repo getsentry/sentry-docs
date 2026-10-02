@@ -1,11 +1,13 @@
 import * as Sentry from '@sentry/nextjs';
-import * as Spotlight from '@spotlightjs/spotlight';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
+  // Ignore errors injected by Brave/Firefox iOS browser scripts (third-party browser noise)
+  ignoreErrors: [/__firefox__/, /DarkReader/],
+
   // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: 1,
+  tracesSampleRate: 0.3,
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
@@ -23,20 +25,29 @@ Sentry.init({
       maskAllText: false,
       blockAllMedia: false,
     }),
+    Sentry.spanStreamingIntegration(),
     Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
-      behaviour: 'apply-tag-if-contains-third-party-frames',
+      behaviour: 'drop-error-if-exclusively-contains-third-party-frames',
     }),
     Sentry.browserTracingIntegration({
       linkPreviousTrace: 'session-storage',
     }),
+    Sentry.consoleLoggingIntegration(),
   ],
-});
 
-if (process.env.NODE_ENV === 'development') {
-  Spotlight.init({
-    showClearEventsButton: true,
-  });
-}
+  // Filter sensitive metric attributes (no PII in metrics)
+  beforeSendMetric: metric => {
+    // Remove any accidentally added PII attributes
+    if (metric.attributes) {
+      // Remove user queries if accidentally added
+      delete metric.attributes.user_query;
+      // Remove full URLs
+      delete metric.attributes.full_url;
+      delete metric.attributes.full_path;
+    }
+    return metric;
+  },
+});
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

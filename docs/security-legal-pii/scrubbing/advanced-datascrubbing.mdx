@@ -1,11 +1,18 @@
 ---
-title: "Advanced Data Scrubbing"
+title: Advanced Data Scrubbing
 sidebar_order: 2
-keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
-description: "Learn about using Advanced Data Scrubbing as an alternative way to redact sensitive information just before it is saved in Sentry."
+keywords:
+  - pii
+  - gdpr
+  - personally identifiable data
+  - compliance
+description: >-
+  Learn about using Advanced Data Scrubbing as an alternative way to redact
+  sensitive information just before it is saved in Sentry.
+og_image: /og-images/security-legal-pii-scrubbing-advanced-datascrubbing.png
 ---
 
-In addition to <PlatformLink to="/data-management/sensitive-data/">using hooks in your SDK</PlatformLink> or our [server-side data scrubbing features](/security-legal-pii/scrubbing//server-side-scrubbing/) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
+In addition to <PlatformLink to="/data-management/sensitive-data/">using hooks in your SDK</PlatformLink> or our [server-side data scrubbing features](/security-legal-pii/scrubbing/server-side-scrubbing/) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
 
 - Define custom regular expressions to match on sensitive data
 - Detailed tuning on which parts of an event to scrub
@@ -19,7 +26,7 @@ Advanced Data Scrubbing rules take precedence over other Server-Side Data Scrubb
 
 ## A Basic Example
 
-Navigate to your project- or organization-settings, click _Security and Privacy_, then _Advanced Data Scrubbing_.
+Navigate to [**Project Settings > Security & Privacy**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) or [**Organization Settings > Security & Privacy**](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/), then select **Advanced Data Scrubbing**.
 
 1. Click on _Add Rule_. You will be presented with a new dialog.
 2. Select _Mask_ as _Method_.
@@ -28,7 +35,7 @@ Navigate to your project- or organization-settings, click _Security and Privacy_
 
 As soon as you press _Save_, Sentry will attempt to find all credit card numbers in your events going forward, and replace them with a series of `******`.
 
-For a more verbose tutorial check out [this blogpost](https://blog.sentry.io/2020/07/02/sentry-data-wash-now-offering-advanced-scrubbing/).
+For a more verbose tutorial check out [this blogpost](https://blog.sentry.io/sentry-data-wash-now-offering-advanced-scrubbing/).
 
 Rules generally consist of three parts:
 
@@ -49,8 +56,9 @@ Rules generally consist of three parts:
 
   - Do not write `/[a-zA-Z0-9]+/g`, as that will search for a literal `/` and `/g`.
   - For case-insensitivity, prefix your regex with `(?i)`.
-  - If you're trying to use one of the popular regex "IDEs" like [regex101.com](https://regex101.com/), Golang is usually closest to how Sentry understands your regex.
+  - If you're trying to use one of the popular regex "IDEs" like [regex101.com](https://regex101.com/) select the Rust dialect.
   - Escape using `\`, e.g. `\*` is a literal `*`. This works for any of the following characters: `\.+*?()|[]{}^$`.
+  - If you want to replace a substring of a specific search string, wrap it in `()` and check "Only replace first capture match".
 
 - _Credit Card Numbers_: Any substrings that look like credit card numbers.
 - _Password Fields_: Any substrings that look like they may contain passwords. Any string that mentions passwords, auth tokens or credentials, any variable that is called `password` or `auth`.
@@ -75,7 +83,7 @@ Sentry does not know if a local variable that looks like a credit card number ac
 
 Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by event attribute, and can also be used to conservatively test rules on real data. A few examples:
 
-- `**` to scrub [all default event PII fields](/security-legal-pii/scrubbing//server-side-scrubbing/event-pii-fields/) (other fields, like the span description, require specific selectors)
+- `**` to scrub [all default event PII fields](/security-legal-pii/scrubbing/server-side-scrubbing/event-pii-fields/) (other fields, like the span description, require specific selectors)
 - `$error.value` to scrub in the exception message
 - `$message` to scrub the event-level log message
 - `extra.'My Value'` to scrub the key `My Value` in "Additional Data"
@@ -197,13 +205,13 @@ Select known parts of the schema using the following:
 - `$logentry`: Matches the `logentry` attribute of an event. Alias for `logentry`
 - `$thread`: Matches a single thread instance. Alias for `threads.values.*`
 - `$breadcrumb`: Matches a single breadcrumb. Alias for `breadcrumbs.values.*`
-- `$span`: Matches a [trace span](/product/sentry-basics/tracing/distributed-tracing/#spans). Alias for `spans.*`
+- `$span`: Matches a [trace span](/concepts/key-terms/tracing/distributed-tracing/#spans). Alias for `spans.*`
 - `$sdk`: Matches the SDK context. Alias for `sdk`
 
-Select attachment and parts of attachments, see [Attachment Scrubbing](../attachment-scrubbing) for details.
+Select attachment and parts of attachments, see [Attachment Scrubbing](../attachment-scrubbing/) for details.
 
 - `$attachments`: Root selector for attachments.
-- `$minidump`: Selector for [minidump](/platforms/native/guides/minidumps) attachments.
+- `$minidump`: Selector for [minidump](/platforms/native/guides/minidumps/) attachments.
 - `$binary`: Matches all binary data fields in attachments.
 
 ### Escaping Special Characters
@@ -232,4 +240,20 @@ The following limitations generally apply to all server-side data scrubbing, be 
 
 - Sentry's internals require that the event user's IP address must either be `null` or a valid IPv4/IPv6 address. If you're trying to hash, mask or replace IP addresses, data scrubbing will move the replacement value into the user ID (if one is not already set) in order to avoid breaking this requirement while still providing useful data for the Users count on an issue.
 
-- In stack traces, scrubbing works on file paths but not on a file's base name. This would violate assumptions in the processing pipeline resulting in a poor user experience. Instead, you can scrub a file's base name in the SDK itself, using the [`RewriteFrames` integration](https://docs.sentry.io/platforms/javascript/configuration/integrations/rewriteframes/) or [`beforeSend`](https://docs.sentry.io/platforms/javascript/configuration/filtering/).
+- In stack traces, scrubbing works on file paths but not on a file's base name. This would violate assumptions in the processing pipeline resulting in a poor user experience. Instead, you can scrub a file's base name in the SDK itself, using the [`RewriteFrames` integration](/platforms/javascript/configuration/integrations/rewriteframes/) or [`beforeSend`](/platforms/javascript/configuration/filtering/).
+
+## Data Scrubbing for Logs
+
+[Logs](/product/logs/) will honor the default [Server-Side Data Scrubbing rules](/security-legal-pii/scrubbing/server-side-scrubbing/#geographic-information)  applied to your projects. To add advanced data scrubbing rules for Logs, start by choosing the dataset.
+
+![Add an advanced data scrubbing rule dialog showing dataset selection, method, data type, and source fields](img/data_scrub_rule.png)
+
+<Alert>
+Deep wild cards ('**') or $string / $number value selectors will apply across all datasets. For specific data types you can select the log attribute that needs to be scrubbed.
+</Alert>
+
+![Attribute field with auto-completion dropdown showing available log attributes](img/scrub_attribute.png)
+
+You can also edit existing scrubbing rules
+
+![Edit dialog showing an existing rule with custom placeholder and attribute configuration](img/scrub_edit.png)

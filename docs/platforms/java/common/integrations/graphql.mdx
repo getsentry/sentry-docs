@@ -24,7 +24,7 @@ If you're using version 22 of `graphql-java`, please refer to <PlatformLink to="
 
 To install use:
 
-```groovy {tabTitle:Gradle Plugin}
+```groovy {tabTitle:Gradle Plugin} {mdExpandTabs}
 plugins {
   id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.12.0') }}"
 }
@@ -113,6 +113,24 @@ val graphql = GraphQL.newGraphQL()
 The `SentryDataFetcherExceptionHandler` has been deprecated. Please upgrade to `SentryGenericDataFetcherExceptionHandler` and make sure `SentryInstrumentation` is configured to have more exceptions captured, more detailed exceptions, breadcrumbs, and better hub propagation. You may want to filter the errors by using `beforeSend` or an `EventProcessor` (read more about <PlatformLink to="/configuration/filtering/">Filters</PlatformLink>).
 
 </Alert>
+
+## Control GraphQL Content
+
+GraphQL documents, variables, and supported request and response bodies can contain sensitive application data. Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control them independently:
+
+```java
+import io.sentry.Sentry;
+import java.util.Collections;
+
+Sentry.init(
+    options -> {
+      options.getDataCollection().getGraphql().setDocument(false);
+      options.getDataCollection().getGraphql().setVariables(false);
+      options.getDataCollection().setHttpBodies(Collections.emptySet());
+    });
+```
+
+Configuring any field activates the Data Collection defaults for omitted fields. Operation metadata used for tracing and grouping can still be collected when document or variable content is disabled.
 
 ## Capture Tracing Information
 

@@ -37,8 +37,10 @@ export interface Platform extends PlatformConfig {
  * Guide inherits most fields from {@link Platform} object, but it is not quite
  * the same thing as a platform.
  */
-export interface PlatformGuide
-  extends Omit<Platform, 'guides' | 'integrations' | 'type'> {
+export interface PlatformGuide extends Omit<
+  Platform,
+  'guides' | 'integrations' | 'type'
+> {
   /**
    * The key is the fully qualified name of the guide: `${platformKey}.${guideName}`
    */
@@ -111,6 +113,12 @@ export interface PlatformConfig {
    */
   fallbackPlatform?: string;
   /**
+   * When `false` on a guide, skip inheriting the parent platform's `common/`
+   * pages. The guide only renders pages that exist under its own directory.
+   * Defaults to `true` (inherit) when omitted.
+   */
+  inheritCommonContent?: boolean;
+  /**
    * The icon to use for this platform. This is the name of the icon as defined
    */
   icon?: string;
@@ -159,4 +167,11 @@ export type PlatformSupportLevel = 'production' | 'community';
 /**
  * Possible types of categories.
  */
-export type PlatformCategory = 'browser' | 'desktop' | 'mobile' | 'server' | 'serverless';
+export type PlatformCategory =
+  | 'browser'
+  | 'browser-only'
+  | 'desktop'
+  | 'mobile'
+  | 'server'
+  | 'server-only'
+  | 'serverless';

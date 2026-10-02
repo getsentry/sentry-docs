@@ -1,0 +1,49 @@
+#### enable_metrics
+
+You can disable metrics collection globally by setting `enable_metrics` to `false`. When disabled, calls to `Sentry.Metrics` functions will be no-ops. Metrics are enabled by default.
+
+```elixir
+config :sentry, enable_metrics: false
+```
+
+#### before_send_metric
+
+To filter metrics, or update them before they are sent to Sentry, you can use the `before_send_metric` option. If the callback returns `nil`, the metric is not emitted. Attributes can also be updated in the callback function.
+
+```elixir
+config :sentry,
+  before_send_metric: fn metric ->
+    # filter metric
+    if metric.name == "removed-metric" do
+      nil
+    else
+      # add attributes
+      attributes = Map.put(metric.attributes, "extra", "foo")
+
+      # remove attributes
+      attributes = Map.delete(attributes, "browser")
+
+      %{metric | attributes: attributes}
+    end
+  end
+```
+
+You can also pass a `{module, function}` tuple:
+
+```elixir
+config :sentry,
+  before_send_metric: {MyApp.SentryFilters, :filter_metric}
+```
+
+The `before_send_metric` callback receives a `Sentry.Metric` struct, and should return a `Sentry.Metric` struct if you want it to be sent to Sentry, or `nil` if you want to discard it.
+
+The `Sentry.Metric` struct has the following fields:
+
+- `name`: (`String.t()`) The name of the metric.
+- `type`: (`:counter | :gauge | :distribution`) The type of metric.
+- `value`: (`number()`) The numeric value of the metric.
+- `unit`: (`String.t() | nil`) The unit of measurement for the metric value.
+- `attributes`: (`map()`) Additional attributes to be sent with the metric.
+- `timestamp`: (`float()`) Timestamp in seconds indicating when the metric was recorded.
+- `trace_id`: (`String.t() | nil`) The trace ID of the trace this metric belongs to.
+- `span_id`: (`String.t() | nil`) The span ID of the span that was active when the metric was emitted.

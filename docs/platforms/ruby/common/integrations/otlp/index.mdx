@@ -1,0 +1,102 @@
+---
+title: OpenTelemetry (OTLP)
+description: "Learn about using OTLP to automatically send OpenTelemetry Traces to Sentry using the Ruby SDK."
+keywords: ["otlp", "otel", "opentelemetry"]
+---
+
+The OTLP integration configures the Sentry SDK to automatically send trace data instrumented by an OpenTelemetry SDK to Sentry's [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/) [ingestion endpoint](/concepts/otlp/).
+
+## Install
+
+Add the following gems to your `Gemfile`:
+
+```ruby
+gem "sentry-ruby"
+gem "sentry-opentelemetry"
+gem "opentelemetry-sdk"
+gem "opentelemetry-exporter-otlp"
+
+# Add any OpenTelemetry instrumentation gems you need, for example:
+gem "opentelemetry-instrumentation-all"
+```
+
+Then run:
+
+```bash
+bundle install
+```
+
+## Configure
+
+You need to configure both the OpenTelemetry and Sentry SDKs to get trace data.
+
+### OpenTelemetry
+
+For the OpenTelemetry SDK, you need to [configure instrumentation](https://opentelemetry.io/docs/languages/ruby/getting-started/#instrumentation) you want to capture.
+
+```ruby
+OpenTelemetry::SDK.configure do |c|
+  c.use_all # or configure specific instrumentations
+end
+```
+
+### Sentry
+
+For the Sentry SDK, enable the OTLP integration in your existing configuration. The integration links OpenTelemetry spans to Sentry events by default. To automatically export traces to Sentry, also enable the OTLP exporter:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.otlp.enabled = true
+  config.otlp.setup_otlp_traces_exporter = true
+
+  # Enable this for Distributed Tracing with other services using Sentry SDKs.
+  # config.otlp.setup_propagator = true
+end
+```
+
+## Behavior
+
+When enabled, the OTLP integration sets up the following parts:
+
+- Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
+- A [`SpanExporter`](https://opentelemetry.io/docs/concepts/components/#exporters) when `setup_otlp_traces_exporter` is `true`. The exporter automatically configures the OTLP ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Ruby SDK (that is, don't set `traces_sample_rate` or `instrumenter`).
+- A Sentry [`Propagator`](https://opentelemetry.io/docs/concepts/context-propagation/#propagation) when `setup_propagator` is `true`, for compatibility with services using Sentry's native tracing
+
+Cross-service trace propagation between OpenTelemetry services uses OTel's default W3C `traceparent` headers and doesn't require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
+
+## Options
+
+You can configure the following options on `config.otlp`:
+
+- `enabled`:
+
+  Enable the OTLP integration, defaults to `false`.
+
+- `setup_otlp_traces_exporter`:
+
+  Automatically configure an Exporter to send OTLP traces to the right project from the DSN or `collector_url`, defaults to `false`.
+
+  Leave this set to `false` to set up the `TracerProvider` manually.
+
+- `collector_url`:
+
+  URL of your own OpenTelemetry collector. When `setup_otlp_traces_exporter` is `true`, the exporter sends traces to this URL instead of the Sentry OTLP endpoint derived from the DSN.
+
+- `setup_propagator`:
+
+  Automatically configure the Sentry propagator for distributed tracing, defaults to `false`.
+
+  Leave this set to `false` to configure propagators manually or to disable propagation.
+
+  <Alert level="warning" title="Planned Removal">
+
+  The automatic propagator setup will be removed in the next major version. Configure propagators manually using the [OpenTelemetry propagation API](https://opentelemetry.io/docs/languages/ruby/instrumentation/#context-propagation) instead.
+
+  </Alert>
+
+## Supported Versions
+
+- Ruby: 2.7+
+- sentry-ruby: 6.4.0+
+- opentelemetry-sdk: 1.0+

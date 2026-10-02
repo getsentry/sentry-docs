@@ -40,8 +40,10 @@ import DotnetSVG from 'platformicons/svg/dotnet.svg';
 import DotnetcoreSVG from 'platformicons/svg/dotnetcore.svg';
 import DotnetfxSVG from 'platformicons/svg/dotnetfx.svg';
 import EchoSVG from 'platformicons/svg/echo.svg';
+import EffectSVG from 'platformicons/svg/effect.svg';
 import ElectronSVG from 'platformicons/svg/electron.svg';
 import ElixirSVG from 'platformicons/svg/elixir.svg';
+import ElysiaSVG from 'platformicons/svg/elysia.svg';
 import EmberSVG from 'platformicons/svg/ember.svg';
 import ExpressSVG from 'platformicons/svg/express.svg';
 import FalconSVG from 'platformicons/svg/falcon.svg';
@@ -49,6 +51,7 @@ import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
 import FastifySVG from 'platformicons/svg/fastify.svg';
 import FiberSVG from 'platformicons/svg/fiber.svg';
+import FirebaseSVG from 'platformicons/svg/firebase.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -56,6 +59,7 @@ import FsharpSVG from 'platformicons/svg/fsharp.svg';
 import GatsbySVG from 'platformicons/svg/gatsby.svg';
 import GcpSVG from 'platformicons/svg/gcp.svg';
 import GcpfunctionsSVG from 'platformicons/svg/gcp-functions.svg';
+import GeminiSVG from 'platformicons/svg/gemini.svg';
 import GinSVG from 'platformicons/svg/gin.svg';
 import GitSVG from 'platformicons/svg/git.svg';
 import GnuSVG from 'platformicons/svg/gnu.svg';
@@ -64,6 +68,7 @@ import GodotSVG from 'platformicons/svg/godot.svg';
 import GoogleSVG from 'platformicons/svg/google.svg';
 import GrapheneSVG from 'platformicons/svg/graphene.svg';
 import GraphqlSVG from 'platformicons/svg/graphql.svg';
+import GroqSVG from 'platformicons/svg/groq.svg';
 import GrpcSVG from 'platformicons/svg/grpc.svg';
 import HapiSVG from 'platformicons/svg/hapi.svg';
 import HonoSVG from 'platformicons/svg/hono.svg';
@@ -78,17 +83,23 @@ import JavascriptSVG from 'platformicons/svg/javascript.svg';
 import KoaSVG from 'platformicons/svg/koa.svg';
 import KotlinSVG from 'platformicons/svg/kotlin.svg';
 import LangchainSVG from 'platformicons/svg/langchain.svg';
+import LanggraphSVG from 'platformicons/svg/langgraph.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
+import LitellmSVG from 'platformicons/svg/litellm.svg';
 import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
+import MastraSVG from 'platformicons/svg/mastra.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
+import McpSVG from 'platformicons/svg/mcp.svg';
+import MistralSVG from 'platformicons/svg/mistral.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NintendoSwitchSVG from 'platformicons/svg/nintendo-switch.svg';
+import NitroSVG from 'platformicons/svg/nitro.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
@@ -97,6 +108,7 @@ import PhpSVG from 'platformicons/svg/php.svg';
 import PlaystationSVG from 'platformicons/svg/playstation.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
+import PydanticSVG from 'platformicons/svg/pydantic-ai.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
 import QtSVG from 'platformicons/svg/qt.svg';
 import QuartSVG from 'platformicons/svg/quart.svg';
@@ -129,11 +141,15 @@ import SvelteSVG from 'platformicons/svg/svelte.svg';
 import SwiftSVG from 'platformicons/svg/swift.svg';
 import SymfonySVG from 'platformicons/svg/symfony.svg';
 import TanstackSVG from 'platformicons/svg/tanstack.svg';
+import TokioSVG from 'platformicons/svg/tokio.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
+import TracingSVG from 'platformicons/svg/tracing.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
+import TypeSafeSVG from 'platformicons/svg/typesafe-ai.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
 import UnrealSVG from 'platformicons/svg/unreal.svg';
+import VercelSVG from 'platformicons/svg/vercel.svg';
 import VisualbasicSVG from 'platformicons/svg/visual-basic.svg';
 import VueSVG from 'platformicons/svg/vue.svg';
 import WasmSVG from 'platformicons/svg/wasm.svg';
@@ -182,8 +198,10 @@ import DotnetSVGLarge from 'platformicons/svg_80x80/dotnet.svg';
 import DotnetcoreSVGLarge from 'platformicons/svg_80x80/dotnetcore.svg';
 import DotnetfxSVGLarge from 'platformicons/svg_80x80/dotnetfx.svg';
 import EchoSVGLarge from 'platformicons/svg_80x80/echo.svg';
+import EffectSVGLarge from 'platformicons/svg_80x80/effect.svg';
 import ElectronSVGLarge from 'platformicons/svg_80x80/electron.svg';
 import ElixirSVGLarge from 'platformicons/svg_80x80/elixir.svg';
+import ElysiaSVGLarge from 'platformicons/svg_80x80/elysia.svg';
 import EmberSVGLarge from 'platformicons/svg_80x80/ember.svg';
 import ExpressSVGLarge from 'platformicons/svg_80x80/express.svg';
 import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
@@ -191,6 +209,7 @@ import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
 import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
 import FiberSVGLarge from 'platformicons/svg_80x80/fiber.svg';
+import FirebaseSVGLarge from 'platformicons/svg_80x80/firebase.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -198,6 +217,7 @@ import FsharpSVGLarge from 'platformicons/svg_80x80/fsharp.svg';
 import GatsbySVGLarge from 'platformicons/svg_80x80/gatsby.svg';
 import GcpSVGLarge from 'platformicons/svg_80x80/gcp.svg';
 import GcpfunctionsSVGLarge from 'platformicons/svg_80x80/gcp-functions.svg';
+import GeminiSVGLarge from 'platformicons/svg_80x80/gemini.svg';
 import GinSVGLarge from 'platformicons/svg_80x80/gin.svg';
 import GitSVGLarge from 'platformicons/svg_80x80/git.svg';
 import GnuSVGLarge from 'platformicons/svg_80x80/gnu.svg';
@@ -206,6 +226,7 @@ import GodotSVGLarge from 'platformicons/svg_80x80/godot.svg';
 import GoogleSVGLarge from 'platformicons/svg_80x80/google.svg';
 import GrapheneSVGLarge from 'platformicons/svg_80x80/graphene.svg';
 import GraphqlSVGLarge from 'platformicons/svg_80x80/graphql.svg';
+import GroqSVGLarge from 'platformicons/svg_80x80/groq.svg';
 import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import HapiSVGLarge from 'platformicons/svg_80x80/hapi.svg';
 import HonoSVGLarge from 'platformicons/svg_80x80/hono.svg';
@@ -220,17 +241,23 @@ import JavascriptSVGLarge from 'platformicons/svg_80x80/javascript.svg';
 import KoaSVGLarge from 'platformicons/svg_80x80/koa.svg';
 import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
 import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
+import LanggraphSVGLarge from 'platformicons/svg_80x80/langgraph.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
+import LitellmSVGLarge from 'platformicons/svg_80x80/litellm.svg';
 import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
+import MastraSVGLarge from 'platformicons/svg_80x80/mastra.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
+import McpSVGLarge from 'platformicons/svg_80x80/mcp.svg';
+import MistralSVGLarge from 'platformicons/svg_80x80/mistral.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NintendoSwitchSVGLarge from 'platformicons/svg_80x80/nintendo-switch.svg';
+import NitroSVGLarge from 'platformicons/svg_80x80/nitro.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
@@ -239,6 +266,7 @@ import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
 import PlaystationSVGLarge from 'platformicons/svg_80x80/playstation.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
 import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
+import PydanticSVGLarge from 'platformicons/svg_80x80/pydantic-ai.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
 import PythonSVGLarge from 'platformicons/svg_80x80/python.svg';
 import QtSVGLarge from 'platformicons/svg_80x80/qt.svg';
@@ -272,17 +300,29 @@ import SvelteSVGLarge from 'platformicons/svg_80x80/svelte.svg';
 import SwiftSVGLarge from 'platformicons/svg_80x80/swift.svg';
 import SymfonySVGLarge from 'platformicons/svg_80x80/symfony.svg';
 import TanstackSVGLarge from 'platformicons/svg_80x80/tanstack.svg';
+import TokioSVGLarge from 'platformicons/svg_80x80/tokio.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
+import TracingSVGLarge from 'platformicons/svg_80x80/tracing.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
+import TypeSafeSVGLarge from 'platformicons/svg_80x80/typesafe-ai.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
 import UnrealSVGLarge from 'platformicons/svg_80x80/unreal.svg';
+import VercelSVGLarge from 'platformicons/svg_80x80/vercel.svg';
 import VisualbasicSVGLarge from 'platformicons/svg_80x80/visual-basic.svg';
 import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
 import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
+// The Expo icon exists on platformicons master (getsentry/platformicons
+// b20159fb) but isn't in a published release yet (latest is 9.5.0). This local
+// copy is byte-identical to the upstream svg/expo.svg; once platformicons cuts
+// a release with it, bump the dependency and switch to
+// `platformicons/svg/expo.svg` (+ svg_80x80) like every other icon.
+import EveSVG from 'sentry-docs/icons/eve.svg';
+import ExpoSVG from 'sentry-docs/icons/expo.svg';
+import FlueSVG from 'sentry-docs/icons/flue.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -345,6 +385,10 @@ const formatToSVG = {
   awslambda: {
     sm: AwslambdaSVG,
     lg: AwslambdaSVGLarge,
+  },
+  axum: {
+    sm: TokioSVG,
+    lg: TokioSVGLarge,
   },
   'azure-functions': {
     sm: AzurefunctionsSVG,
@@ -458,6 +502,10 @@ const formatToSVG = {
     sm: EchoSVG,
     lg: EchoSVGLarge,
   },
+  effect: {
+    sm: EffectSVG,
+    lg: EffectSVGLarge,
+  },
   electron: {
     sm: ElectronSVG,
     lg: ElectronSVGLarge,
@@ -466,9 +514,21 @@ const formatToSVG = {
     sm: ElixirSVG,
     lg: ElixirSVGLarge,
   },
+  elysia: {
+    sm: ElysiaSVG,
+    lg: ElysiaSVGLarge,
+  },
   ember: {
     sm: EmberSVG,
     lg: EmberSVGLarge,
+  },
+  eve: {
+    sm: EveSVG,
+    lg: EveSVG,
+  },
+  expo: {
+    sm: ExpoSVG,
+    lg: ExpoSVG,
   },
   express: {
     sm: ExpressSVG,
@@ -494,6 +554,10 @@ const formatToSVG = {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
   },
+  flue: {
+    sm: FlueSVG,
+    lg: FlueSVG,
+  },
   flutter: {
     sm: FlutterSVG,
     lg: FlutterSVGLarge,
@@ -517,6 +581,10 @@ const formatToSVG = {
   gcp: {
     sm: GcpSVG,
     lg: GcpSVGLarge,
+  },
+  gemini: {
+    sm: GeminiSVG,
+    lg: GeminiSVGLarge,
   },
   gin: {
     sm: GinSVG,
@@ -590,6 +658,10 @@ const formatToSVG = {
     sm: FastifySVG,
     lg: FastifySVGLarge,
   },
+  firebase: {
+    sm: FirebaseSVG,
+    lg: FirebaseSVGLarge,
+  },
   hapi: {
     sm: HapiSVG,
     lg: HapiSVGLarge,
@@ -606,6 +678,14 @@ const formatToSVG = {
     sm: LangchainSVG,
     lg: LangchainSVGLarge,
   },
+  langgraph: {
+    sm: LanggraphSVG,
+    lg: LanggraphSVGLarge,
+  },
+  groq: {
+    sm: GroqSVG,
+    lg: GroqSVGLarge,
+  },
   laravel: {
     sm: LaravelSVG,
     lg: LaravelSVGLarge,
@@ -618,6 +698,10 @@ const formatToSVG = {
     sm: LitestarSVG,
     lg: LitestarSVGLarge,
   },
+  litellm: {
+    sm: LitellmSVG,
+    lg: LitellmSVGLarge,
+  },
   logback: {
     sm: LogbackSVG,
     lg: LogbackSVGLarge,
@@ -626,9 +710,21 @@ const formatToSVG = {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
   },
+  mastra: {
+    sm: MastraSVG,
+    lg: MastraSVGLarge,
+  },
   maui: {
     sm: MauiSVG,
     lg: MauiSVGLarge,
+  },
+  mcp: {
+    sm: McpSVG,
+    lg: McpSVGLarge,
+  },
+  mistral: {
+    sm: MistralSVG,
+    lg: MistralSVGLarge,
   },
   mongodb: {
     sm: MongodbSVG,
@@ -649,6 +745,10 @@ const formatToSVG = {
   'nintendo-switch': {
     sm: NintendoSwitchSVG,
     lg: NintendoSwitchSVGLarge,
+  },
+  nitro: {
+    sm: NitroSVG,
+    lg: NitroSVGLarge,
   },
   nuxt: {
     sm: NuxtSVG,
@@ -685,6 +785,10 @@ const formatToSVG = {
   pyramid: {
     sm: PyramidSVG,
     lg: PyramidSVGLarge,
+  },
+  pydantic: {
+    sm: PydanticSVG,
+    lg: PydanticSVGLarge,
   },
   python: {
     // todo: switch to small icon https://github.com/getsentry/platformicons/issues/199
@@ -819,9 +923,17 @@ const formatToSVG = {
     sm: TornadoSVG,
     lg: TornadoSVGLarge,
   },
+  tracing: {
+    sm: TracingSVG,
+    lg: TracingSVGLarge,
+  },
   tryton: {
     sm: TrytonSVG,
     lg: TrytonSVGLarge,
+  },
+  'typesafe-ai': {
+    sm: TypeSafeSVG,
+    lg: TypeSafeSVGLarge,
   },
   unity: {
     sm: UnitySVG,
@@ -838,6 +950,10 @@ const formatToSVG = {
   'visual-basic': {
     sm: VisualbasicSVG,
     lg: VisualbasicSVGLarge,
+  },
+  vercel: {
+    sm: VercelSVG,
+    lg: VercelSVGLarge,
   },
   vue: {
     sm: VueSVG,
@@ -896,11 +1012,17 @@ export const PLATFORM_TO_ICON = {
   dotnetfx: 'dotnetfx',
   electron: 'electron',
   elixir: 'elixir',
+  eve: 'eve',
+  expo: 'expo',
+  flue: 'flue',
   flutter: 'flutter',
   font: 'font',
   fsharp: 'fsharp',
   git: 'git',
   go: 'go',
+  'google-genai': 'gemini',
+  groq: 'groq',
+  'together-ai': 'default',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
   'go-fiber': 'fiber',
@@ -910,8 +1032,9 @@ export const PLATFORM_TO_ICON = {
   'go-zerolog': 'go',
   'go-slog': 'go',
   'go-logrus': 'go',
+  'go-zap': 'go',
   godot: 'godot',
-  huggingface: 'huggingface',
+  huggingface_hub: 'huggingface',
   java: 'java',
   'java-appengine': 'app-engine',
   'java-android': 'android',
@@ -935,7 +1058,9 @@ export const PLATFORM_TO_ICON = {
   'javascript-cordova': 'cordova',
   'javascript-cloudflare': 'cloudflare',
   'javascript-deno': 'deno',
+  'javascript-effect': 'effect',
   'javascript-electron': 'electron',
+  'javascript-elysia': 'elysia',
   'javascript-ember': 'ember',
   'javascript-express': 'express',
   'javascript-gatsby': 'gatsby',
@@ -943,11 +1068,15 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-eve': 'eve',
+  'javascript-firebase': 'firebase',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
+  'javascript-mastra': 'mastra',
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
   'javascript-nuxt': 'nuxt',
+  'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',
@@ -963,7 +1092,12 @@ export const PLATFORM_TO_ICON = {
   kotlin: 'kotlin',
   'kotlin-android': 'android',
   langchain: 'langchain',
+  langgraph: 'langgraph',
+  litellm: 'litellm',
   linux: 'linux',
+  mastra: 'mastra',
+  mcp: 'mcp',
+  mistral: 'mistral',
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
@@ -1010,6 +1144,14 @@ export const PLATFORM_TO_ICON = {
   'python-pylons': 'python',
   'python-pymongo': 'mongodb',
   'python-pyramid': 'pyramid',
+  'python-pydantic-ai': 'pydantic',
+  'python-openai-agents': 'openai',
+  'python-mcp': 'mcp',
+  'python-mistral': 'mistral',
+  'python-google-genai': 'gemini',
+  'python-litellm': 'litellm',
+  'python-langgraph': 'langgraph',
+  'pydantic-ai': 'pydantic',
   'python-quart': 'quart',
   'python-redis': 'redis',
   'python-rq': 'redis',
@@ -1026,6 +1168,10 @@ export const PLATFORM_TO_ICON = {
   powershell: 'powershell',
   qt: 'qt',
   'react-native': 'react-native',
+  // The Expo guide's platform key is `react-native.expo` (normalized to
+  // `react-native-expo`); map it so it gets the Expo icon instead of falling
+  // back to the React language icon.
+  'react-native-expo': 'expo',
   ruby: 'ruby',
   'ruby-rack': 'ruby',
   'ruby-rails': 'rails',
@@ -1033,16 +1179,22 @@ export const PLATFORM_TO_ICON = {
   'ruby-sinatra': 'sinatra',
   rust: 'rust',
   'rust-actix-web': 'actix',
+  'rust-tracing': 'tracing',
+  'rust-axum': 'axum',
   scala: 'scala',
+  sentry: 'sentry',
   stride3d: 'stride3d',
   sql: 'sql',
   sqlserver: 'sqlserver',
   swift: 'swift',
+  'typesafe-ai': 'typesafe-ai',
   unity: 'unity',
   // This will be deprecated in favor of 'unrealengine'
   ue4: 'unreal',
   unreal: 'unreal',
   unrealengine: 'unreal',
+  vercel: 'vercel',
+  vercelai: 'vercel',
   visualbasic: 'visual-basic',
   windows: 'windows',
   xbox: 'xbox',
@@ -1085,6 +1237,7 @@ type Props = React.HTMLAttributes<HTMLDivElement | HTMLImageElement> & {
   languageIconStyles?: React.CSSProperties;
   radius?: number | null;
   size?: number;
+  title?: string;
   withLanguageIcon?: boolean;
 };
 
@@ -1096,12 +1249,12 @@ export function PlatformIcon({
   withLanguageIcon,
   languageIconStyles = {},
   style = {},
+  title,
   ...otherProps
 }: Props) {
   const icon = getIcon(platform);
   const svg = formatToSVG[icon][format];
   if (!svg) {
-    // eslint-disable-next-line no-console
     console.log('svg is null');
   }
 
@@ -1118,6 +1271,7 @@ export function PlatformIcon({
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
           loading="eager"
+          title={title}
         />
         <Image
           src={languageSvg}
@@ -1136,6 +1290,20 @@ export function PlatformIcon({
           alt={`${platform} icon`}
         />
       </div>
+    );
+  }
+
+  if (title) {
+    return (
+      <img
+        src={typeof svg === 'string' ? svg : svg?.src}
+        width={size}
+        height={size}
+        style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
+        alt={`${platform} icon`}
+        title={title}
+        {...otherProps}
+      />
     );
   }
 
