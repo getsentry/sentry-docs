@@ -34,7 +34,7 @@ export class MyCronService {
 
 <AvailableSince version="11.5.0" />
 
-If you don't pass a monitor config, `@SentryCron` takes the schedule and `timeZone` from the `@Cron` decorator on the same method and sends them with each check-in, so Sentry creates the monitor on the first run:
+Instead of repeating the schedule, pass `{ fromCronDecorator: true }` to `@SentryCron`. It then takes the schedule and `timeZone` from the `@Cron` decorator on the same method and sends them with each check-in, so Sentry creates the monitor on the first run. You can set other monitor options, such as `checkinMargin` and `maxRuntime`, next to it:
 
 ```typescript
 import { Cron } from '@nestjs/schedule';
@@ -42,11 +42,11 @@ import { SentryCron } from '@sentry/nestjs';
 
 export class MyCronService {
   @Cron('0 * * * *', { timeZone: 'America/Los_Angeles' })
-  @SentryCron('my-monitor-slug')
+  @SentryCron('my-monitor-slug', { fromCronDecorator: true, checkinMargin: 2 })
   handleCron() {
     // Your cron job logic here
   }
 }
 ```
 
-A six-field expression is sent without its seconds field if that field is a single number, such as `0 30 9 * * *`. Sub-minute schedules, presets such as `@daily`, `Date` values, and `utcOffset` send no monitor config. In those cases, pass a monitor config to `@SentryCron` or create the monitor in Sentry first. A monitor config passed to `@SentryCron` always takes precedence.
+A six-field expression is sent without its seconds field if that field is a single number, such as `0 30 9 * * *`. Sub-minute schedules, presets such as `@daily`, `Date` values, and `utcOffset` send no monitor config. In those cases, pass a full monitor config to `@SentryCron` or create the monitor in Sentry first.
