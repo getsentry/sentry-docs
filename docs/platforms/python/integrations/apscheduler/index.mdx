@@ -1,0 +1,80 @@
+---
+title: APScheduler
+description: "Learn how to monitor APScheduler jobs with Sentry Crons."
+---
+
+The APScheduler integration monitors jobs scheduled with [APScheduler](https://apscheduler.readthedocs.io/en/3.x/) using [Sentry Crons](/product/monitors-and-alerts/monitors/crons/). You get alerted when a job doesn't run on time, fails, or runs too long.
+
+<Alert>
+  This integration is available from the next SDK release after `2.71.0`.
+</Alert>
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+The integration isn't enabled automatically. Add `APSchedulerIntegration` with `monitor_jobs=True` in the process that runs the scheduler:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.apscheduler import APSchedulerIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        APSchedulerIntegration(monitor_jobs=True),
+    ],
+)
+```
+
+Each job gets a monitor, created the first time the job runs. The monitor slug is the job's `id`. Give your jobs an explicit `id`. If a job has no `id`, its name is used, which defaults to the function name.
+
+The schedule comes from the job's trigger:
+
+- `CronTrigger`: a crontab schedule in the trigger's timezone. Triggers that use seconds, years, weeks, or both `day` and `day_of_week` aren't monitored.
+- `IntervalTrigger`: an interval schedule. Intervals must be whole minutes.
+- `DateTrigger`: one-off jobs aren't monitored.
+
+## Verify
+
+```python
+from apscheduler.schedulers.blocking import BlockingScheduler
+
+def send_report():
+    1 / 0
+
+scheduler = BlockingScheduler()
+scheduler.add_job(send_report, "cron", minute="*", id="send-report")
+scheduler.start()
+```
+
+Within a minute, a `send-report` cron monitor appears in Sentry with a failed check-in.
+
+## Options
+
+- `monitor_jobs`: Send check-ins for scheduled jobs. Defaults to `False`.
+- `exclude_jobs`: A list of monitor slugs or regular expressions for jobs that shouldn't be monitored.
+
+```python
+APSchedulerIntegration(
+    monitor_jobs=True,
+    exclude_jobs=["cleanup", "report-.*"],
+)
+```
+
+## Supported Versions
+
+- APScheduler: 3.3+ (APScheduler 4 isn't supported)
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />
