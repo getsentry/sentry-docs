@@ -1,0 +1,27 @@
+---
+id: desktop-crash-reporting
+title: "Desktop Crash Reporting Uses Breakpad"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 150
+---
+
+On Windows and Linux, the default native crash backend changes to Breakpad. Native crash reports are uploaded when the application starts again, rather than by a separate Crashpad handler at crash time.
+
+Breakpad handles crashes in the application process, without Crashpad's out-of-process isolation. It also lacks Crashpad's Windows Error Reporting (WER) and fast-fail coverage. Review crash-delivery expectations and test a crash followed by an application restart.
+
+To retain Crashpad, set the `SENTRY_NATIVE_BACKEND` environment variable to `crashpad` in your local build environment and CI before building the application. For example:
+
+```bash {tabTitle:Linux} {mdExpandTabs}
+SENTRY_NATIVE_BACKEND=crashpad flutter build linux
+```
+
+```powershell {tabTitle:Windows}
+$env:SENTRY_NATIVE_BACKEND = "crashpad"
+flutter build windows
+```
+
+This is a build-time setting, not a Dart SDK initialization option.
