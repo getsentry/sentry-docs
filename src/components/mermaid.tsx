@@ -82,18 +82,17 @@ export default function Mermaid() {
         if (rect.width > 0 && rect.height > 0) {
           svgElement.setAttribute('width', rect.width.toString());
           svgElement.setAttribute('height', rect.height.toString());
+          svgPanZoom(svgElement, {
+            zoomEnabled: true,
+            panEnabled: true,
+            controlIconsEnabled: false,
+            fit: true,
+            center: true,
+            minZoom: 0.1,
+            maxZoom: 10,
+            zoomScaleSensitivity: 0.2,
+          });
         }
-
-        svgPanZoom(svgElement, {
-          zoomEnabled: true,
-          panEnabled: true,
-          controlIconsEnabled: false,
-          fit: true,
-          center: true,
-          minZoom: 0.1,
-          maxZoom: 10,
-          zoomScaleSensitivity: 0.2,
-        });
       });
 
       setDoneRendering(true);
