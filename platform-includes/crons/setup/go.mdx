@@ -15,6 +15,21 @@ err := sentry.WithMonitor("<monitor-slug>", &sentry.MonitorConfig{
 
 The job's error is returned unchanged. If the job panics, Sentry gets an `error` check-in and the panic continues. `sentry.WithMonitor` requires a sentry-go version newer than `0.49.0`. If the monitor already exists in Sentry, you can pass `nil` instead of a config.
 
+### robfig/cron
+
+If you schedule jobs with [robfig/cron](https://github.com/robfig/cron), add them with `sentrycron.AddFunc` from `github.com/getsentry/sentry-go/cron`. It wraps the job in `sentry.WithMonitor` and uses the job's spec as the monitor schedule and the cron's location as its timezone:
+
+```go
+c := cron.New(cron.WithLocation(time.UTC))
+sentrycron.AddFunc(c, "0 * * * *", "<monitor-slug>", func() error {
+	// Execute your scheduled task here...
+	return nil
+}, &sentry.MonitorConfig{MaxRuntime: 30})
+c.Start()
+```
+
+Pass `nil` as the last argument to use the default monitor settings. Specs Sentry can't represent, such as seconds other than a fixed value or `@every` under a minute, still send check-ins but don't create the monitor.
+
 ### Manual Check-Ins
 
 To send check-ins yourself, call `sentry.CaptureCheckIn` at the start and end of your job. Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
