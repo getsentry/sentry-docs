@@ -1,30 +1,35 @@
-To enable logging, set `enable_logs: true` in your Sentry configuration:
+To enable logs, set a `:level` under the `:logs` key in your Sentry configuration:
 
 ```elixir
 # In config/config.exs or config/runtime.exs
 config :sentry,
   dsn: "___PUBLIC_DSN___",
-  enable_logs: true
+  logs: [
+    level: :info
+  ]
 ```
 
-When `enable_logs` is `true`, the SDK **automatically attaches** a `Sentry.LoggerHandler` (registered as `:sentry_log_handler`) on application startup. No manual handler setup is required.
+When `:logs` is set, the SDK **automatically attaches** a `Sentry.LoggerHandler` (registered as `:sentry_log_handler`) on application startup. No manual handler setup is required. The `:level` option sets the minimum level of log messages sent to Sentry as logs.
 
 <Alert>
-If you already have a `Sentry.LoggerHandler` registered (for example, for crash and error reporting), the SDK will not add a second one — your existing handler will also capture logs.
+
+The `:level` option is what turns on logs. A `:logs` block without `:level` still attaches the handler, so crashes are reported to Sentry as errors, but no logs are sent.
+
 </Alert>
 
-To configure the minimum log level and other options, use the `:logs` key:
+To configure other options, add them under the same `:logs` key:
 
 ```elixir
 config :sentry,
   dsn: "___PUBLIC_DSN___",
-  enable_logs: true,
   logs: [
-    level: :info,         # minimum log level (default: :info)
+    level: :info,         # minimum log level (default: nil, no logs sent)
     excluded_domains: [], # logger domains to exclude (default: [])
     metadata: []          # metadata keys to include as attributes (default: [])
   ]
 ```
+
+If you register a `Sentry.LoggerHandler` yourself, the SDK removes the auto-attached one so messages aren't captured twice. Your handler sends logs when `:logs` has a `:level`, or when you pass `:logs_level` in the handler's config.
 
 <Alert>
 
