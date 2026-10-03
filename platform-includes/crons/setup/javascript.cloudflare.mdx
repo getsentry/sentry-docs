@@ -8,7 +8,7 @@ Cron Triggers have no names, and the `scheduled` handler only receives the cron 
 
 ```javascript
 const jobs = {
-  "30 9 * * 1-5": { slug: "daily-report", run: dailyReport },
+  "30 9 * * MON-FRI": { slug: "daily-report", run: dailyReport },
   "0 */6 * * *": { slug: "sync-inventory", run: syncInventory },
 };
 
@@ -29,9 +29,9 @@ export default Sentry.withSentry(
 
 When you change a schedule in `wrangler.toml`, change its key in `jobs`. The monitor keeps its slug, and Sentry updates its schedule on the next check-in. Triggers without an entry send no check-ins. The `slug` function can also return an object with the slug and other monitor options, such as `{ slug: "daily-report", maxRuntime: 30 }`.
 
-Without a `slug` function, the slug comes from the cron expression, so it changes when the schedule changes: `30 9 * * 1-5` becomes `cron-30-9-x-x-1to5` (`*` is written as `x`, `,` as `_`, `-` as `to`, and `/` as `by`). Expressions with other characters, or slugs longer than 50 characters, end in a hash of the expression. Workers that report to the same project and share a cron expression share a monitor.
+Without a `slug` function, the slug comes from the cron expression, so it changes when the schedule changes: `30 9 * * MON-FRI` becomes `cron-30-9-x-x-montofri` (`*` is written as `x`, `,` as `_`, `-` as `to`, and `/` as `by`). Expressions with other characters, or slugs longer than 50 characters, end in a hash of the expression. Workers that report to the same project and share a cron expression share a monitor.
 
-Cloudflare numbers the days of the week from 1 (Sunday) to 7 (Saturday), and Sentry numbers them from 0 (Sunday). The SDK converts the day-of-week field to day names before sending it, so `1-5` is sent as `SUN-THU`. If the field can't be converted, check-ins are sent without a schedule, and you need to create the monitor in Sentry first.
+Cloudflare numbers the days of the week from 1 (Sunday) to 7 (Saturday), and Sentry numbers them from 0 (Sunday). The SDK converts the day-of-week field to day names before sending it, so `1-5` is sent as `SUN-THU`. For Monday to Friday, use `2-6` or `MON-FRI`. If the field can't be converted, check-ins are sent without a schedule, and you need to create the monitor in Sentry first.
 
 Runs without a cron expression, such as some manual runs with `--test-scheduled`, send no check-ins.
 
