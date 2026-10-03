@@ -926,6 +926,10 @@ const userDocsRedirects = [
     destination: '/integrations/source-code-mgmt/github/',
   },
   {
+    source: '/integrations/source-code-mgmt/github-enterprise/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
     source: '/integrations/gitlab/',
     destination: '/integrations/source-code-mgmt/gitlab/',
   },
