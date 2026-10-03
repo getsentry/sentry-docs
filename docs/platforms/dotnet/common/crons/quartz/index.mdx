@@ -1,0 +1,77 @@
+---
+title: Quartz.NET
+description: "Learn how to monitor your Quartz.NET jobs."
+sidebar_order: 5002
+---
+
+The `Sentry.Quartz` package monitors your [Quartz.NET](https://www.quartz-scheduler.net/) jobs by [creating check-ins for them](/product/monitors-and-alerts/monitors/crons/job-monitoring/). It's available from the next SDK release and supports Quartz.NET 3.6 and later 3.x versions.
+
+## Install
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Quartz
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Quartz
+```
+
+## Configure
+
+Initialize Sentry as usual, then add `SentryJobListener` to your scheduler. If you register Quartz.NET with dependency injection:
+
+```csharp
+using Quartz;
+using Sentry.Quartz;
+
+builder.Services.AddQuartz(q =>
+{
+    q.AddJobListener<SentryJobListener>();
+});
+```
+
+Or add the listener to a scheduler directly:
+
+```csharp
+scheduler.ListenerManager.AddJobListener(new SentryJobListener());
+```
+
+The SDK captures a check-in with `CheckInStatus.InProgress` when a job starts. When the job finishes, it updates the check-in to `CheckInStatus.OK`, or to `CheckInStatus.ERROR` if the job threw an exception, along with how long the job ran.
+
+## Monitor Slugs
+
+The monitor slug is the job's key in lowercase, with any other characters replaced by a hyphen. Jobs in the default group use only the job name. For example, the job `billing.PricingUpdate` reports to `billing-pricingupdate`, and the job `Cleanup` in the default group reports to `cleanup`.
+
+To use a different slug, set `SentryJobListener.MonitorSlugKey` in the job's data map:
+
+```csharp
+var job = JobBuilder.Create<PricingUpdateJob>()
+    .WithIdentity("PricingUpdate", "billing")
+    .UsingJobData(SentryJobListener.MonitorSlugKey, "update-pricing")
+    .Build();
+```
+
+## Choose Which Jobs to Monitor
+
+The listener monitors every job. To monitor only some jobs, pass Quartz.NET matchers when you add it:
+
+```csharp
+using Quartz.Impl.Matchers;
+
+q.AddJobListener<SentryJobListener>(GroupMatcher<JobKey>.GroupEquals("billing"));
+```
+
+## Monitor Schedule
+
+Sentry only creates a monitor from a check-in that includes a schedule. The SDK sends the schedule of the trigger that started the job:
+
+- Cron triggers, with the trigger's time zone. The cron expression must use a fixed number of seconds and no year, `L`, `W`, or `#`.
+- Simple triggers that repeat forever every whole number of minutes, hours, or days.
+
+Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule. Jobs with more than one trigger are also sent without one, unless each trigger sets its own `SentryJobListener.MonitorSlugKey` in its data map.
+
+Sentry sets the monitor's schedule and time zone from every check-in that includes them, so changes you make to those two settings in Sentry are overwritten. Other monitor settings are kept. To stop sending the schedule:
+
+```csharp
+q.AddJobListener(_ => new SentryJobListener(new SentryQuartzOptions { SendMonitorConfig = false }));
+```
