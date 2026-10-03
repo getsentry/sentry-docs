@@ -7,7 +7,20 @@ Errors reported to Sentry while a transaction or span **bound to the scope** is 
 - Transaction mode: Set `bindToScope: true`.
 - Stream mode: The active span is bound automatically, so no flag is needed.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry/sentry.dart';
+
+// The active span is bound automatically — no bindToScope needed.
+await Sentry.startSpan('processOrderBatch()', (span) async {
+  try {
+    processOrderBatch();
+  } catch (exception) {
+    Sentry.captureException(exception);
+  }
+});
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry/sentry.dart';
 
 final transaction = Sentry.startTransaction(
@@ -25,25 +38,21 @@ try {
 }
 ```
 
-```dart {tabTitle:Stream Mode}
-import 'package:sentry/sentry.dart';
-
-// The active span is bound automatically — no bindToScope needed.
-await Sentry.startSpan('processOrderBatch()', (span) async {
-  try {
-    processOrderBatch();
-  } catch (exception) {
-    Sentry.captureException(exception);
-  }
-});
-```
-
 Exceptions may be thrown within spans that can finish before the exception gets reported to Sentry.
 
 - Transaction mode: Link it by calling the `throwable` setter.
 - Stream mode: An exception thrown inside the callback is recorded on the span and rethrown automatically.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry/sentry.dart';
+
+// If the callback throws, the span is marked as errored and the error is rethrown.
+await Sentry.startSpan('processOrderBatch()', (span) async {
+  processOrderBatch();
+});
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry/sentry.dart';
 
 final transaction = Sentry.startTransaction('processOrderBatch()', 'task');
@@ -56,13 +65,4 @@ try {
 } finally {
   await transaction.finish();
 }
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:sentry/sentry.dart';
-
-// If the callback throws, the span is marked as errored and the error is rethrown.
-await Sentry.startSpan('processOrderBatch()', (span) async {
-  processOrderBatch();
-});
 ```
