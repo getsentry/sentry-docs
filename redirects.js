@@ -1183,6 +1183,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/aether/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1235,6 +1239,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1264,6 +1272,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/clip-by-arito/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1406,6 +1418,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/aether/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1458,6 +1474,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1487,6 +1507,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/clip-by-arito/',
     destination: '/integrations/third-party-integrations/',
   },
   {
