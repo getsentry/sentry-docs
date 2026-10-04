@@ -70,6 +70,7 @@ the same consumer groups — only the SQLite volume differs per replica:
 
 ```yaml
 services:
+
   taskbroker-beta:
     restart: "unless-stopped"
     image: "$TASKBROKER_IMAGE"
@@ -157,7 +158,7 @@ To achieve this work separation we need to make a few changes:
    task namespaces can be found in the [`sentry.taskworker.namespaces`](https://github.com/getsentry/sentry/blob/master/src/sentry/taskworker/namespaces.py) module.
 5. Update task routing option, defining the namespace -> topic mappings. e.g.
    ```yaml
-   # in sentry/config.yml
+   # in sentry/config.yml -- see more values below
    taskworker.route.overrides:
       "ingest.errors": "taskworker-ingest"
       "ingest.transactions": "taskworker-ingest"
@@ -222,10 +223,11 @@ bottom of the file:
 ```yaml
 taskworker.route.overrides:
   "ingest.errors": "taskworker-ingest"
-  "ingest.transactions": "taskworker-ingest"
-  "ingest.profiling": "taskworker-ingest"
-  "ingest.attachments": "taskworker-ingest"
   "ingest.errors.postprocess": "taskworker-ingest"
+  "ingest.transactions": "taskworker-ingest"
+  "ingest.events.raw": "taskworker-ingest"
+  "ingest.profiling.raw": "taskworker-ingest"
+  "ingest.attachments": "taskworker-ingest"
 ```
 
 Any other tasks that are not defined on the routes override above will be
