@@ -25,7 +25,54 @@ To upload native iOS debug symbols, set up a Run Script build phase for uploadin
 
 ## Uploading With sentry-cli
 
-Upload the [Android ProGuard/R8 mapping files and native symbols](/cli/) manually by using `sentry-cli` [upload-proguard](/cli/dif/#proguard-mapping-upload) and [debug-files](/cli/dif/#uploading-files).
+Use `sentry-cli` to upload debug symbols manually if your build does not upload them automatically. [Install the CLI](/cli/installation/) and [authenticate](/cli/configuration/) first. For CI, store your auth token as a secret and expose it through `SENTRY_AUTH_TOKEN`.
+
+Run the following commands from your React Native project root. Replace the organization and project slugs with your Sentry project details, and use files from the same build you distribute.
+
+### Android ProGuard/R8 Mappings
+
+For a minified Android release build, upload its mapping file:
+
+```bash
+sentry-cli proguard upload \
+  --org ___ORG_SLUG___ \
+  --project ___PROJECT_SLUG___ \
+  android/app/build/outputs/mapping/release/mapping.txt
+```
+
+Replace `release` with your build variant if needed. The CLI computes a UUID from the mapping file. To inspect it, run:
+
+```bash
+sentry-cli proguard uuid android/app/build/outputs/mapping/release/mapping.txt
+```
+
+The app must report the same ProGuard UUID as the uploaded mapping. Keep the Sentry Gradle Plugin's mapping metadata generation enabled if you disable automatic uploads. For a custom build pipeline, package the matching UUID in the app's `io.sentry.proguard-uuid` manifest metadata before distributing it. Uploading the mapping alone does not add that metadata to an already-built app. See [ProGuard mapping uploads](/cli/dif/#proguard-mapping-upload) for details.
+
+### Android Native Symbols
+
+Upload the unstripped native libraries or separate debug files from your Android build:
+
+```bash
+sentry-cli debug-files upload \
+  --org ___ORG_SLUG___ \
+  --project ___PROJECT_SLUG___ \
+  /path/to/android/native-symbols
+```
+
+Replace the path with the directory containing your build's native debug files. These files are separate from the ProGuard/R8 mapping file used for Java and Kotlin stack traces.
+
+### iOS dSYMs
+
+Upload the dSYMs from the Xcode archive for your distributed build:
+
+```bash
+sentry-cli debug-files upload \
+  --org ___ORG_SLUG___ \
+  --project ___PROJECT_SLUG___ \
+  /path/to/MyApp.xcarchive/dSYMs
+```
+
+Verify the uploaded files in **Project Settings > Debug Files**, or **Project Settings > ProGuard** for Android mappings. For additional upload options, see the [CLI debug information files guide](/cli/dif/).
 
 ## Uploading Source Context With Sentry Gradle Plugin
 
