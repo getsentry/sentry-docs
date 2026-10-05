@@ -179,7 +179,7 @@ export function ApiPage({api}: Props) {
               <div>
                 <div>
                   {'You need to '}
-                  <SmartLink to="/api/auth">
+                  <SmartLink to="/api/auth/">
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>

@@ -13,6 +13,13 @@ on:
       - 'platform-includes/**/*.mdx'
       - 'platform-includes/**/*.md'
       - 'scripts/lint-trailing-slashes.ts'
+      # A component renders on many pages, so a slash-less path literal there
+      # costs more than one in a single doc.
+      - 'src/**/*.ts'
+      - 'src/**/*.tsx'
+      - 'app/**/*.ts'
+      - 'app/**/*.tsx'
+      - 'scripts/lint-code-link-literals.ts'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -205,3 +212,10 @@ jobs:
         if: steps.lint.outputs.exit_code == '0'
         run: |
           echo "All internal links use trailing slashes."
+
+      # Internal paths written as string literals in src/ and app/. Report-only:
+      # a slash-prefixed literal in code is not always a link, so each hit needs
+      # a human to judge it. Runs regardless of which content files changed.
+      - name: Lint internal path literals in application code
+        if: always()
+        run: npx tsx scripts/lint-code-link-literals.ts
