@@ -4,7 +4,7 @@ description: "Learn how to monitor your Quartz.NET jobs."
 sidebar_order: 5002
 ---
 
-The `Sentry.Quartz` package monitors your [Quartz.NET](https://www.quartz-scheduler.net/) jobs by [creating check-ins for them](/product/monitors-and-alerts/monitors/crons/job-monitoring/). It's available from the next SDK release and supports Quartz.NET 3.6 and later 3.x versions.
+The `Sentry.Quartz` package monitors your [Quartz.NET](https://www.quartz-scheduler.net/) jobs by [creating check-ins for them](/product/monitors-and-alerts/monitors/crons/job-monitoring/). It's available from the next SDK release and supports Quartz.NET 3.6 and later 3.x versions. Quartz.NET 4.x isn't supported.
 
 ## Install
 
@@ -18,7 +18,7 @@ Install-Package Sentry.Quartz
 
 ## Configure
 
-Initialize Sentry as usual, then add `SentryJobListener` to your scheduler. If you register Quartz.NET with dependency injection:
+Initialize Sentry as usual, then add `SentryJobListener` to your scheduler. If you register Quartz.NET with dependency injection, `AddQuartz` comes from the `Quartz.Extensions.DependencyInjection` package, or from `Quartz.Extensions.Hosting` if you also run the scheduler as a hosted service:
 
 ```csharp
 using Quartz;
@@ -40,7 +40,7 @@ The SDK captures a check-in with `CheckInStatus.InProgress` when a job starts. W
 
 ## Monitor Slugs
 
-The monitor slug is the job's key in lowercase, with any other characters replaced by a hyphen. Jobs in the default group use only the job name. For example, the job `billing.PricingUpdate` reports to `billing-pricingupdate`, and the job `Cleanup` in the default group reports to `cleanup`.
+The monitor slug is the job's key, `group.name`, or only the name for jobs in the default group. The SDK lowercases it and keeps ASCII letters, digits, and underscores. Each run of other characters becomes a single hyphen, leading and trailing hyphens and underscores are removed, and the slug is cut to 50 characters. For example, the job `billing.PricingUpdate` reports to `billing-pricingupdate`, `reports.Daily_Email (v2)` reports to `reports-daily_email-v2`, and the job `Cleanup` in the default group reports to `cleanup`. A job whose key leaves nothing is not monitored unless you set a slug.
 
 To use a different slug, set `SentryJobListener.MonitorSlugKey` in the job's data map:
 
@@ -65,7 +65,7 @@ q.AddJobListener<SentryJobListener>(GroupMatcher<JobKey>.GroupEquals("billing"))
 
 Sentry only creates a monitor from a check-in that includes a schedule. The SDK sends the schedule of the trigger that started the job:
 
-- Cron triggers, with the trigger's time zone. The cron expression must use a fixed number of seconds and no year, `L`, `W`, or `#`.
+- Cron triggers, with the trigger's time zone. Quartz.NET cron triggers use the server's local time zone unless you set one with `InTimeZone`, so set it if your servers don't all use the same time zone. The cron expression must use a fixed number of seconds and no year, `L`, `W`, or `#`.
 - Simple triggers that repeat forever every whole number of minutes, hours, or days.
 
 Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule. Jobs with more than one trigger are also sent without one, unless each trigger sets its own `SentryJobListener.MonitorSlugKey` in its data map.
