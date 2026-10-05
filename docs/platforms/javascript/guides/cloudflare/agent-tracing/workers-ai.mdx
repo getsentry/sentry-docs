@@ -37,19 +37,26 @@ You can browse the full list of available models in the [Cloudflare Workers AI m
 Calls to TypeSafe's [Jev model](https://developers.cloudflare.com/ai/models/typesafe/jev/) (`typesafe/jev`) through `env.AI.run()` are traced automatically. No additional integration or setup is needed:
 
 ```typescript
-const result = await env.AI.run("typesafe/jev", {
-  state: "I was charged twice. Please refund the extra charge.",
-  questions: {
-    department: {
-      type: "choice",
-      instructions: "Which team should handle this?",
-      criteria: {
-        billing: "Charges and refunds",
-        technical: "Bugs and outages",
+export default {
+  async fetch(request, env) {
+    // env.AI is automatically instrumented
+    const result = await env.AI.run("typesafe/jev", {
+      state: "I was charged twice. Please refund the extra charge.",
+      questions: {
+        department: {
+          type: "choice",
+          instructions: "Which team should handle this?",
+          criteria: {
+            billing: "Charges and refunds",
+            technical: "Bugs and outages",
+          },
+        },
       },
-    },
+    });
+
+    return new Response(JSON.stringify(result));
   },
-});
+} satisfies ExportedHandler<Env>;
 ```
 
 Sentry treats any `env.AI.run()` call whose input has both `state` and `questions` as an evaluation. Each call creates a `gen_ai.evaluate` span named `evaluate <model>`, with the response model (for example, `jev-1.13.0`), latency, and token usage. When recording is enabled, Sentry captures `state` and `questions` as input messages and `answers` as output messages, including probabilities and confidence values returned by Jev. These spans have the same attributes as spans from the [TypeSafe integration](/platforms/javascript/guides/node/configuration/integrations/typesafe/) on other runtimes.
