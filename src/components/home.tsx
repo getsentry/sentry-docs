@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {type ReactNode} from 'react';
+import {Fragment, type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import Cursor from 'sentry-docs/icons/cursor';
@@ -167,25 +167,25 @@ export async function Home() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <AgentQuickLink
-              to="/agent-tracing/mastra/"
+              href="/platforms/javascript/guides/mastra/"
               title="Mastra"
               desc="Export Mastra AI tracing to Sentry."
               icon={<PlatformIcon platform="mastra" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/eve/"
+              href="/platforms/javascript/guides/eve/"
               title="Eve"
               desc="Send Eve agent traces, conversations, and errors to Sentry."
               icon={<PlatformIcon platform="eve" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/flue/"
+              href="/platforms/javascript/guides/flue/"
               title="Flue"
               desc="Send Flue traces, logs, and errors to Sentry."
               icon={<PlatformIcon platform="flue" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/vercelai/"
+              to="/configuration/integrations/vercelai/"
               title="Vercel AI"
               desc="Instrument the Vercel AI SDK."
               icon={<PlatformIcon platform="vercel" />}
@@ -293,24 +293,46 @@ function QuickLink({
   );
 }
 
-function AgentQuickLink({
-  to,
-  title,
-  desc,
-  icon,
-}: {
+type AgentQuickLinkProps = {
   desc: string;
   icon: ReactNode;
   title: string;
-  to: string;
-}) {
-  return (
-    <PreferredPlatformLink to={to} className={`${styles.quickLink} no-underline`}>
+} & (
+  | {
+      /** Direct link, for integrations documented on a single page (e.g. standalone guides). */
+      href: string;
+      to?: never;
+    }
+  | {
+      /** Platform-relative path, resolved through `/platform-redirect/`. */
+      to: string;
+      href?: never;
+    }
+);
+
+function AgentQuickLink(props: AgentQuickLinkProps) {
+  const className = `${styles.quickLink} no-underline`;
+  const content = (
+    <Fragment>
       <div className={styles.quickLinkTitle}>
-        {icon}
-        {title}
+        {props.icon}
+        {props.title}
       </div>
-      <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
+      <div className="text-sm text-[var(--gray-11)] leading-snug">{props.desc}</div>
+    </Fragment>
+  );
+
+  if (props.href !== undefined) {
+    return (
+      <Link href={props.href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <PreferredPlatformLink to={props.to} className={className}>
+      {content}
     </PreferredPlatformLink>
   );
 }
