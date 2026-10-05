@@ -27,7 +27,7 @@ Regardless of these options, you can always scrub any data before it's sent to S
 
 ## HTTP Headers
 
-The SDK collects the headers of incoming requests, as well as the request and response headers of HTTP requests made with the <PlatformLink to="/tracing/instrumentation/requests-module/#using-the-guzzletracingmiddleware">`GuzzleTracingMiddleware`</PlatformLink>. Values of sensitive headers are scrubbed. Use `http_headers` to control this. A single behavior applies to both request and response headers:
+By default, the SDK collects HTTP request and response headers, with sensitive values scrubbed. Use `http_headers` to control this. A single behavior applies to both request and response headers:
 
 ```php
 \Sentry\init([
@@ -50,7 +50,7 @@ Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `t
 
 ## Cookies
 
-The SDK collects the cookies of incoming requests, as well as the cookies sent and received by HTTP requests made with the `GuzzleTracingMiddleware`. Values of sensitive cookies are scrubbed. Opt out with `['mode' => 'off']`, or restrict which values are sent using `allowList` or `denyList` mode:
+By default, the SDK collects cookies, with sensitive values scrubbed. Opt out with `['mode' => 'off']`, or restrict which values are sent using `allowList` or `denyList` mode:
 
 ```php
 \Sentry\init([
@@ -65,13 +65,11 @@ The SDK collects the cookies of incoming requests, as well as the cookies sent a
 
 ## Information About Logged-in User
 
-The SDK doesn't set the user's ID, email address, or username automatically. User data you set with <PlatformLink to="/enriching-events/identify-user/">`setUser()`</PlatformLink> is always sent to Sentry, regardless of `data_collection`.
-
-The `user_info` category controls the user data the SDK infers on its own, which is the user's IP address (see the next section).
+The `user_info` category controls the user data the SDK infers on its own, such as the user's IP address. User data you set with <PlatformLink to="/enriching-events/identify-user/">`setUser()`</PlatformLink> is always sent to Sentry, regardless of `data_collection`.
 
 ## Users' IP Address
 
-The SDK sends the IP address of incoming requests as the user's IP address by default. Disable it by setting `user_info` to `false`:
+By default, the SDK sends the user's IP address. Disable it by setting `user_info` to `false`:
 
 ```php
 \Sentry\init([
@@ -107,15 +105,13 @@ Even when this is disabled, IP addresses can still reach Sentry through collecte
 
 ## Request URL
 
-The full URL of incoming requests and of HTTP requests made with the `GuzzleTracingMiddleware` is **always sent to Sentry**. Depending on your application, this could contain PII data.
-
-Credentials in the URL (for example, `https://user:password@example.com`) are replaced with `[Filtered]`, and the query string is filtered as described in [Request Query String](#request-query-string).
+The full URL of incoming and outgoing HTTP requests is sent to Sentry. Depending on your application, this could contain PII data. Credentials in the URL (for example, `https://user:password@example.com`) are replaced with `[Filtered]`, and query parameters are filtered as described in [Request Query String](#request-query-string).
 
 ## Request Query String
 
-By default, the query string of incoming requests and of HTTP requests made with the `GuzzleTracingMiddleware` is sent to Sentry. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
+By default, the SDK sends the query string of incoming and outgoing HTTP requests. Depending on your application, this could contain PII data. Values whose keys match the built-in sensitive denylist (such as `auth`, `token`, `password`, and `secret`) are replaced with `[Filtered]`.
 
-Use `url_query_params` to control this. Set it to `['mode' => 'off']` to disable collection entirely, or use `allowList` or `denyList` mode to filter which values are sent. Values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
+Use `url_query_params` to control this. Set it to `['mode' => 'off']` to disable collection entirely, or use `allowList` or `denyList` mode to filter which values are sent:
 
 ```php
 \Sentry\init([
@@ -130,13 +126,13 @@ Sentry also has some additional [server-side data scrubbing](/security-legal-pii
 
 ## Request and Response Bodies
 
-By default, the SDK collects the bodies of incoming requests, as well as the request and response bodies of HTTP requests made with the `GuzzleTracingMiddleware`. Whether a body is sent depends on its type and size:
+By default, the SDK collects HTTP request and response bodies. Whether a body is sent depends on its type and size:
 
 - **The type of the body:**
   - JSON and form bodies are sent, with values whose keys match the built-in sensitive denylist scrubbed
   - Bodies in other formats, or bodies that can't be parsed, are replaced with `[Filtered]`
   - Uploaded files are never sent to Sentry
-- **The size of the body:** The <PlatformLink to="/configuration/options/#max_request_body_size">`max_request_body_size` option</PlatformLink> limits request bodies: `small` collects bodies up to 1,000 bytes, `medium` (the default) up to 10,000 bytes, and `always` up to 100,000 bytes. Response bodies are collected up to 100,000 bytes. Bodies that exceed the limit aren't sent.
+- **The size of the body:** There's a <PlatformLink to="/configuration/options/#max_request_body_size">`max_request_body_size` option</PlatformLink> that's set to `medium` by default. Bodies that exceed the size limit aren't sent to Sentry.
 
 To disable body collection, set `http_bodies` to an empty array, or provide only the body types you want:
 
@@ -150,12 +146,7 @@ To disable body collection, set `http_bodies` to an empty array, or provide only
 ]);
 ```
 
-The valid body types are:
-
-- `incomingRequest`: The body of the request your application handles.
-- `outgoingRequest`: The body of a request sent with the `GuzzleTracingMiddleware`.
-- `incomingResponse`: The body of a response received with the `GuzzleTracingMiddleware`.
-- `outgoingResponse`: The body of the response your application sends. The PHP SDK doesn't capture these bodies.
+The valid body types are `incomingRequest`, `outgoingRequest`, `incomingResponse`, and `outgoingResponse`.
 
 ## Source Context
 
@@ -197,15 +188,13 @@ Setting `zend.exception_ignore_args=1` in your `php.ini` prevents PHP from provi
 
 | Key                     | Type                                                       | Default                                                                          | Description                                                                                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user_info`             | `bool`                                                     | `true`                                                                           | Send the IP address of incoming requests as the user's IP address.                                                                                                                                 |
+| `user_info`             | `bool`                                                     | `true`                                                                           | Populate user fields, such as the IP address, from instrumentation.                                                                                                                                |
 | `cookies`               | key-value behavior                                         | `['mode' => 'denyList']`                                                         | Collect cookies.                                                                                                                                                                                   |
 | `http_headers`          | key-value behavior, or `['request' => …, 'response' => …]` | `['mode' => 'denyList']`                                                         | Collect HTTP headers. A single behavior applies to both request and response headers.                                                                                                              |
 | `http_bodies`           | `string[]`                                                 | `['incomingRequest', 'outgoingRequest', 'incomingResponse', 'outgoingResponse']` | Body types to collect. Set to `[]` to disable.                                                                                                                                                     |
 | `url_query_params`      | key-value behavior                                         | `['mode' => 'denyList']`                                                         | Collect URL query parameters.                                                                                                                                                                      |
 | `stack_frame_variables` | `bool` or key-value behavior                               | `true`                                                                           | Include variable values captured within stack frames. Accepts a boolean (`true` collects all variables, `false` collects none) or a key-value behavior to filter which variables are sent by name. |
 | `frame_context_lines`   | `int`                                                      | `5`                                                                              | Source code lines captured above and below each stack frame.                                                                                                                                       |
-
-`data_collection` also accepts the `gen_ai`, `database_query_data`, and `queues` keys, but the PHP SDK doesn't collect any of this data.
 
 Invalid values are ignored and the default is used instead. The SDK logs a debug message through the configured <PlatformLink to="/configuration/options/#logger">`logger`</PlatformLink> when this happens.
 
