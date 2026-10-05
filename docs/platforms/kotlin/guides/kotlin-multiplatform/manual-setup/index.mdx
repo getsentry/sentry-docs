@@ -8,7 +8,11 @@ If you can't (or prefer not to) use the [gradle plugin](/platforms/kotlin/guides
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
+Sentry captures data by using an SDK within your application's runtime.
+
+<Include name="kmp-cocoapods-deprecation.mdx" />
+
+The manual setup below uses the Kotlin CocoaPods plugin to supply Sentry Cocoa. If you're starting a new project, use the [Gradle plugin with Swift Package Manager](/platforms/kotlin/guides/kotlin-multiplatform/#install) instead.
 
 To install the Kotlin Multiplatform SDK, you need to add the following to your `build.gradle.kts` file in your shared module:
 
@@ -90,8 +94,21 @@ If you already use SPM or prefer it over other package managers on Apple platfor
 
 #### Install
 
-In order to install the Sentry Kotlin Multiplatform SDK, you need to use Cocoapods and Swift Package Manager simultaneously, which might seem unconventional at first, especially if you're accustomed to using SPM for all your dependencies. However, you can achieve a smooth integration by using the [Kotlin Cocoapods plugin](https://kotlinlang.org/docs/native-cocoapods-dsl-reference.html#cocoapods-block) specifically for compiling and building the shared framework. You can then continue to manage all other dependencies with SPM as usual.
+To use Swift Package Manager without the Kotlin CocoaPods plugin, use the [Sentry Gradle plugin](/platforms/kotlin/guides/kotlin-multiplatform/#install). Add the Sentry Cocoa SDK to your Xcode project with [Swift Package Manager](/platforms/apple/install/swift-package-manager/), then apply the Gradle plugin, which links the Kotlin/Native framework against it. Setting up this linking by hand isn't covered in this guide.
 
-Follow the steps for our primary installation method [Cocoapods](/platforms/kotlin/guides/kotlin-multiplatform/manual-setup/#install) to install the Sentry Kotlin Multiplatform SDK.
+Make sure the Sentry Cocoa version you install is compatible with your Sentry Kotlin Multiplatform SDK version. You can find the compatible versions in the [Cocoa SDK version compatibility table](https://github.com/getsentry/sentry-kotlin-multiplatform?tab=readme-ov-file#cocoa-sdk-version-compatibility-table).
 
-After you've consumed the shared framework in your application via Cocoapods, you can continue with SPM for other dependencies without disrupting your existing workflow.
+### Migrating From CocoaPods
+
+If your shared module currently gets Sentry Cocoa through the Kotlin CocoaPods plugin:
+
+1. Remove the `pod("Sentry")` declaration from the `cocoapods {}` block in your shared module's `build.gradle.kts`.
+2. If the Kotlin CocoaPods plugin is only there to supply Sentry, remove `kotlin("native.cocoapods")` and the `cocoapods {}` block, and have your iOS app consume the shared framework through [direct integration](https://kotlinlang.org/docs/multiplatform/multiplatform-direct-integration.html) instead.
+3. Add the Sentry Cocoa SDK to your Xcode project with [Swift Package Manager](/platforms/apple/install/swift-package-manager/), using the version from the compatibility table.
+4. Apply the [Sentry Gradle plugin](/platforms/kotlin/guides/kotlin-multiplatform/configuration/gradle/) so it can link the framework.
+
+<Alert>
+
+The Gradle plugin only sets up Swift Package Manager linking when the Kotlin CocoaPods plugin is **not** applied to the module. If your shared module is itself published as a pod (for example, your iOS app consumes it through CocoaPods), the plugin skips linking entirely. Learn more in [how auto-install and linking interact](/platforms/kotlin/guides/kotlin-multiplatform/configuration/gradle/#how-auto-install-and-linking-interact).
+
+</Alert>
