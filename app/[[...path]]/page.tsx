@@ -352,10 +352,17 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     );
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+      const pageTitle = pageNode.frontmatter.title;
 
-      title =
-        pageNode.frontmatter.title +
-        (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
+      // Platform/guide pages keep `| Sentry for {name}`. Other docs get `| Sentry Docs`.
+      // `/platforms` itself has no guide/platform, so leave that title unchanged.
+      if (guideOrPlatform) {
+        title = `${pageTitle} | Sentry for ${guideOrPlatform.title}`;
+      } else if (params.path[0] !== 'platforms') {
+        title = `${pageTitle} | Sentry Docs`;
+      } else {
+        title = pageTitle;
+      }
       description = pageNode.frontmatter.description ?? '';
 
       if (pageNode.frontmatter.customCanonicalTag) {

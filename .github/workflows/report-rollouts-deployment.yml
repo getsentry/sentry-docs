@@ -1,0 +1,74 @@
+name: Report deployment to Cursor Rollouts
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    name: Report to Rollouts
+    runs-on: ubuntu-latest
+    if: >-
+      startsWith(github.event.deployment.environment, 'Production') &&
+      contains(fromJSON('["success", "failure", "error"]'), github.event.deployment_status.state)
+    timeout-minutes: 5
+    continue-on-error: true
+    env:
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      CHANGE_MONITOR_ENV: production
+      DEPLOY_SOURCE_URI: https://github.com/${{ github.repository }}
+      DEPLOY_VERSION: ${{ github.event.deployment.sha }}
+      VERCEL_ENVIRONMENT: ${{ github.event.deployment.environment }}
+      VERCEL_STATE: ${{ github.event.deployment_status.state }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: scripts/rollouts
+          submodules: false
+
+      - name: Resolve service
+        id: resolve
+        run: |
+          # Vercel names production environments "Production – <project>".
+          case "$VERCEL_ENVIRONMENT" in
+            *sentry-docs) service=sentry-docs ;;
+            *develop-docs) service=develop-docs ;;
+            *) echo "Unrecognized environment '$VERCEL_ENVIRONMENT'; skipping."; exit 0 ;;
+          esac
+          case "$VERCEL_STATE" in
+            success) outcome=succeeded ;;
+            *) outcome=failed ;;
+          esac
+          {
+            echo "service=$service"
+            echo "outcome=$outcome"
+            echo "actor=vercel:${{ github.event.deployment.id }}:${service}:production"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bootstrap catalog
+        if: steps.resolve.outputs.service != ''
+        env:
+          CHANGE_MONITOR_SERVICE: ${{ steps.resolve.outputs.service }}
+          DEPLOY_ACTOR: ${{ steps.resolve.outputs.actor }}
+        run: bash scripts/rollouts/report-deployment.sh bootstrap
+
+      - name: Open deployment
+        id: start
+        if: steps.resolve.outputs.service != ''
+        env:
+          CHANGE_MONITOR_SERVICE: ${{ steps.resolve.outputs.service }}
+          DEPLOY_ACTOR: ${{ steps.resolve.outputs.actor }}
+        run: echo "name=$(bash scripts/rollouts/report-deployment.sh start)" >> "$GITHUB_OUTPUT"
+
+      - name: Close deployment
+        if: steps.resolve.outputs.service != ''
+        env:
+          CHANGE_MONITOR_SERVICE: ${{ steps.resolve.outputs.service }}
+          DEPLOY_ACTOR: ${{ steps.resolve.outputs.actor }}
+          DEPLOYMENT_NAME: ${{ steps.start.outputs.name }}
+          DEPLOY_OUTCOME: ${{ steps.resolve.outputs.outcome }}
+          DEPLOY_FAILURE_MESSAGE: Vercel reported ${{ github.event.deployment_status.state }} for ${{ github.event.deployment.environment }} (${{ github.event.deployment_status.log_url || github.event.deployment_status.target_url }})
+        run: bash scripts/rollouts/report-deployment.sh finish

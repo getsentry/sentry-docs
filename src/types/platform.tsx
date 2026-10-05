@@ -167,4 +167,11 @@ export type PlatformSupportLevel = 'production' | 'community';
 /**
  * Possible types of categories.
  */
-export type PlatformCategory = 'browser' | 'desktop' | 'mobile' | 'server' | 'serverless';
+export type PlatformCategory =
+  | 'browser'
+  | 'browser-only'
+  | 'desktop'
+  | 'mobile'
+  | 'server'
+  | 'server-only'
+  | 'serverless';

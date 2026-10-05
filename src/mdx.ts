@@ -42,7 +42,7 @@ import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
-import {FrontMatter, Platform, PlatformConfig} from './types';
+import {FrontMatter, Platform, PlatformCategory, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, stripVersion, VERSION_INDICATOR} from './versioning';
 
@@ -151,21 +151,34 @@ function formatSlug(slug: string) {
 const isSupported = (
   frontmatter: FrontMatter,
   platformName: string,
-  guideName?: string
+  guideName?: string,
+  categories: PlatformCategory[] = []
 ): boolean => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-  if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.indexOf(canonical) !== -1) {
+
+  const matchesCategory = (list?: PlatformCategory[]) =>
+    !!list?.some(category => categories.includes(category));
+
+  const hasAllowlist =
+    !!frontmatter.supported?.length || !!frontmatter.supportedCategories?.length;
+  if (hasAllowlist) {
+    // An exact guide match always wins.
+    if (frontmatter.supported?.includes(canonical)) {
       return true;
     }
-    if (frontmatter.supported.indexOf(platformName) === -1) {
+    // Otherwise a platform-level or category allowlist match keeps the page, but
+    // still lets the notSupported lists below filter it out.
+    if (
+      !frontmatter.supported?.includes(platformName) &&
+      !matchesCategory(frontmatter.supportedCategories)
+    ) {
       return false;
     }
   }
   if (
-    frontmatter.notSupported &&
-    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
-      frontmatter.notSupported.indexOf(platformName) !== -1)
+    frontmatter.notSupported?.includes(canonical) ||
+    frontmatter.notSupported?.includes(platformName) ||
+    matchesCategory(frontmatter.notSupportedCategories)
   ) {
     return false;
   }
@@ -382,7 +395,14 @@ export async function getAllFilesFrontMatter(
     await Promise.all(
       commonFiles.map(f =>
         limit(async () => {
-          if (!isSupported(f.frontmatter, platformName)) {
+          if (
+            !isSupported(
+              f.frontmatter,
+              platformName,
+              undefined,
+              platformFrontmatter.categories
+            )
+          ) {
             return;
           }
 
@@ -434,7 +454,14 @@ export async function getAllFilesFrontMatter(
       await Promise.all(
         commonFiles.map(f =>
           limit(async () => {
-            if (!isSupported(f.frontmatter, platformName, guideName)) {
+            if (
+              !isSupported(
+                f.frontmatter,
+                platformName,
+                guideName,
+                guideFrontmatter.categories
+              )
+            ) {
               return;
             }
 

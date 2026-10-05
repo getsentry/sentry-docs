@@ -6,45 +6,47 @@ sidebar_order: 1
 
 Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
 
-The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Android SDK collects.
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Android SDK collects. Use <PlatformLink to="/configuration/options/#dataCollection"><PlatformIdentifier name="data-collection" /></PlatformLink> to control automatic collection for supported categories.
 
-Many of the categories listed here require you to enable the <PlatformLink to="/configuration/options/#sendDefaultPii">sendDefaultPii option</PlatformLink>.
+After you configure any Data Collection field or call `options.getDataCollection().forceDataCollection()`, unconfigured fields use their documented defaults.
+
+Data Collection controls only data added automatically by SDK integrations. Data you add through scopes, event processors, `beforeSend`, or other APIs is still sent.
 
 ## HTTP Headers
 
-By default, the Sentry SDK doesn't send any headers for outgoing HTTP requests. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) in place, which filters out any headers that contain sensitive data.
+Request and response headers use `DENY_LIST` by default. Supported integrations collect header names and non-sensitive values while replacing sensitive values with `"[Filtered]"`.
 
-To start sending HTTP headers, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii=true`</PlatformLink>. Outside of the `sendDefaultPii` flag, you can opt to have specific headers captured in recorded user sessions. See the [Session Replay network detail options](/platforms/android/session-replay/configuration/) for more details.
+Configure <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.httpHeaders.request`</PlatformLink> and <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.httpHeaders.response`</PlatformLink> to control header collection. `Cookie` and `Set-Cookie` values in the general HTTP header map are always replaced with `"[Filtered]"`; use `dataCollection.cookies` to control separately collected cookie data. OkHttp, Ktor Client, and Apollo 3 and 4 can attach available request and response headers to captured HTTP client errors.
+
+Session Replay network details use [separate options](/platforms/android/session-replay/configuration/).
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cookies that contain sensitive information, such as the Session ID and CSRF Token cookies.
-
-If you want to send cookies, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+Cookies use `DENY_LIST` by default. Supported integrations collect cookies while replacing sensitive values with `"[Filtered]"`. Use `dataCollection.cookies` to control cookie collection.
 
 ## Information About Logged-in User
 
-By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+The SDK assigns a random installation ID when an event has no user ID. This ID is generated once per app installation and isn't controlled by Data Collection.
 
-To start sending logged-in user information, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+`dataCollection.userInfo` allows integrations to populate other user identity information automatically. It defaults to `true`. Set it to `false` to disable automatic user enrichment. User information you set explicitly with `Sentry.setUser()` or on a scope isn't removed.
 
 ## Users' IP Addresses
 
-By default, the Sentry SDK doesn't send the user's IP address. Once enabled, the Sentry backend services will infer the user ip address based on the incoming request, unless certain integrations you can enable override this behavior.
-
-To enable sending the user's IP address, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+When `dataCollection.userInfo` is `true`, the SDK adds `"{{auto}}"` as the user's IP address so Sentry can infer it from the connection. Set `dataCollection.userInfo=false` to disable automatic IP enrichment.
 
 ## Request URL
 
-The full request URL of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+The request URL (without the query string) of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
 
 ## Request Query String
 
-The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+Query parameters use `DENY_LIST` by default. Use `dataCollection.urlQueryParams` to filter or disable query string collection for instrumented request URLs.
 
 ## Request and Response Bodies
 
-By default, no request or response bodies are sent to Sentry from the Android SDK. If you want to collect request or response bodies in recorded user sessions, see the Session Replay [network detail configuration docs](/platforms/android/session-replay/configuration/).
+All request and response body directions are enabled by default, but integrations collect bodies only where supported. Some integrations collect body content, while others collect only body sizes.
+
+Use `dataCollection.httpBodies` to choose which directions to collect or an empty set to disable body collection. Session Replay network body collection uses [separate options](/platforms/android/session-replay/configuration/).
 
 ## Source Context
 
@@ -54,19 +56,25 @@ To opt into sending this source context to Sentry, you have to enable the featur
 
 ## File I/O
 
-By default the Sentry SDK does not send the name or path of files when instrumenting File I/O.
+File I/O instrumentation collects file names and absolute paths by default. Set `dataCollection.filePaths=false` to omit them. File extensions and byte counts remain available when paths are disabled.
 
-If you want to send file names and paths, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+## Device Context
 
-## Device Information
+The SDK automatically collects device and operating-system context, including the manufacturer, model, architecture, orientation, display details, boot time, timezone, memory size, and emulator status.
 
-By default the Sentry SDK does not send the name of the device (Android phone).
+Set <PlatformLink to="/configuration/options/#collectAdditionalContext">`collectAdditionalContext=false`</PlatformLink> to reduce additional dynamic context such as battery level, available memory, storage state, and connectivity.
 
-If you want to send the device name, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+## GraphQL Data
+
+GraphQL document and variable collection default to `true`. Use `dataCollection.graphql.document` and `dataCollection.graphql.variables` to disable either category. Operation metadata used for tracing and grouping can still be collected when document or variable content is disabled.
 
 ## SQL Queries
 
 While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password=? WHERE id=?;`) is sent instead.
+
+## Logs
+
+Log messages, parameters, and breadcrumb content may contain application data. Data Collection doesn't filter this content. Use `beforeBreadcrumb` for breadcrumbs, `beforeSend` for events, or `options.getLogs().setBeforeSend(...)` for Sentry Logs when you need application-specific filtering.
 
 ## Session Replay
 

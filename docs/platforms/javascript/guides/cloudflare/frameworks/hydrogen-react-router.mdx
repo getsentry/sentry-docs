@@ -180,6 +180,12 @@ On Shopify Oxygen, never import anything directly from `@sentry/cloudflare`. Onl
 
 </Alert>
 
+<Alert level="warning" title="No request isolation">
+
+`wrapRequestHandler` doesn't isolate requests from each other. Scope data you set during a request, for example with `setTag` or `setUser`, can show up on events from other concurrent or later requests in the same isolate. Use `wrapRequestHandler` only on runtimes that can't enable `nodejs_compat`, such as Shopify Oxygen. On Cloudflare Workers, wrap your handler with `Sentry.withSentry()` instead, as described in the [Cloudflare guide](/platforms/javascript/guides/cloudflare/).
+
+</Alert>
+
 </SplitSectionText>
 <SplitSectionCode>
 
@@ -307,7 +313,7 @@ import { reactRouter } from "@react-router/dev/vite";
 import { hydrogen } from "@shopify/hydrogen/vite";
 import { oxygen } from "@shopify/mini-oxygen/vite";
 import { defineConfig } from "vite";
-import { sentryReactRouter } from "@sentry/react-router";
+import { sentryReactRouter } from "@sentry/react-router/vite";
 
 export default defineConfig((config) => ({
   plugins: [
@@ -354,7 +360,11 @@ sentry-cli sourcemaps upload /path/to/build/dir
 
 ### Control the Data You Send to Sentry (Optional)
 
-<PlatformContent includePath="getting-started-data-collection" />
+<PlatformContent
+  includePath="getting-started-data-collection"
+  platform="javascript"
+  noGuides
+/>
 
 ## Verify Your Setup
 
@@ -454,13 +464,13 @@ Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>

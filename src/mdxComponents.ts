@@ -1,3 +1,4 @@
+import {AgentMigrationCallout} from './components/agentMigrationCallout';
 import {AgentSetupCallout} from './components/agentSetupCallout';
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
@@ -77,6 +78,7 @@ export function mdxComponents(
   wrapper: any = ({children}) => children
 ) {
   return {
+    AgentMigrationCallout,
     AgentSetupCallout,
     Alert,
     Arcade,

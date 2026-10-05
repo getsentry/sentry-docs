@@ -3,9 +3,13 @@ title: Configuration
 sidebar_order: 6100
 description: Learn about general User Feedback configuration fields.
 og_image: /og-images/platforms-javascript-common-user-feedback-configuration.png
+notSupported:
+  - javascript.eve
+  - javascript.flue
+  - javascript.mastra
 ---
 
-<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.nitro"]}>
+<PlatformCategorySection notSupported={["server-only", "mobile"]}>
 
 ## User Feedback Widget
 
@@ -426,7 +430,7 @@ document
   });
 ```
 
-</PlatformSection>
+</PlatformCategorySection>
 
 ### Loading Strategies
 
@@ -560,6 +564,7 @@ You can customize the Crash-Report modal to your organization's needs, for examp
 | `successMessage` | Your feedback has been sent. Thank you!                                                              |
 | `onLoad`         | n/a - (**An optional callback that will be invoked when the widget opens.**)                         |
 | `onClose`        | n/a - (**An optional callback that will be invoked when the widget closes.**)                        |
+| `onError`        | n/a - (**An optional callback that receives an `Error` if the dialog cannot be shown.**)        |
 
 The optional callback `onLoad` will be called when users see the widget. You can use this to run custom logic, for example to log an analytics event:
 
@@ -568,3 +573,12 @@ The optional callback `onLoad` will be called when users see the widget. You can
 The optional callback `onClose` will be called when users close the widget. You can use this to run custom logic, for example to reload the page:
 
 <PlatformContent includePath="user-feedback/example-widget-onclose/" />
+
+The dialog cannot open without an event ID or if its script fails to load. Use the optional `onError` callback to handle these failures. It receives an `Error` with one of these messages:
+
+- `No event ID to show the report dialog for`: Neither the `eventId` option nor `Sentry.lastEventId()` provides an event ID.
+- `Failed to load the report dialog script`: The script failed to load, for example, because of an ad blocker or network problem.
+
+<PlatformContent includePath="user-feedback/example-widget-onerror/" />
+
+The `onError` callback handles failures when opening the dialog, not errors when submitting a report.

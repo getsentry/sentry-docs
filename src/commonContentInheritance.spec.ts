@@ -24,7 +24,14 @@ beforeAll(async () => {
   const platformPath = path.join(docsPath, 'platforms', 'test');
   const commonPath = path.join(platformPath, 'common');
   const guidesPath = path.join(platformPath, 'guides');
-  const guideNames = ['index-opt-out', 'config-opt-out', 'default', 'override'];
+  const guideNames = [
+    'index-opt-out',
+    'config-opt-out',
+    'default',
+    'override',
+    'browser-guide',
+    'server-guide',
+  ];
 
   await Promise.all([
     mkdir(commonPath, {recursive: true}),
@@ -40,6 +47,14 @@ beforeAll(async () => {
       frontmatter('Versioned common index')
     ),
     writeFile(path.join(commonPath, 'common-only.mdx'), frontmatter('Common only')),
+    writeFile(
+      path.join(commonPath, 'not-on-browser.mdx'),
+      frontmatter('Not on browser', 'notSupportedCategories:\n  - browser\n')
+    ),
+    writeFile(
+      path.join(commonPath, 'only-browser.mdx'),
+      frontmatter('Only browser', 'supportedCategories:\n  - browser\n')
+    ),
     writeFile(
       path.join(guidesPath, 'index-opt-out', 'index.mdx'),
       frontmatter('Index opt-out', 'inheritCommonContent: false\n')
@@ -61,6 +76,14 @@ beforeAll(async () => {
       frontmatter('Config opt-out own page')
     ),
     writeFile(path.join(guidesPath, 'default', 'index.mdx'), frontmatter('Default')),
+    writeFile(
+      path.join(guidesPath, 'browser-guide', 'index.mdx'),
+      frontmatter('Browser guide', 'categories:\n  - browser\n')
+    ),
+    writeFile(
+      path.join(guidesPath, 'server-guide', 'index.mdx'),
+      frontmatter('Server guide', 'categories:\n  - server\n')
+    ),
     writeFile(
       path.join(guidesPath, 'override', 'index.mdx'),
       frontmatter('Override', 'inheritCommonContent: false\n')
@@ -101,6 +124,20 @@ describe.each([
 
     expect(slugs.has('platforms/test/guides/default/common-only')).toBe(true);
     expect(slugs.has('platforms/test/guides/override/common-only')).toBe(true);
+  });
+
+  test('filters common pages by supportedCategories/notSupportedCategories', async () => {
+    const slugs = new Set(
+      (await collectFrontmatter(docsPath)).map(({slug}) => slug.replace(/\/index$/, ''))
+    );
+
+    // notSupportedCategories: [browser] -> hidden on the browser guide, shown on server
+    expect(slugs.has('platforms/test/guides/browser-guide/not-on-browser')).toBe(false);
+    expect(slugs.has('platforms/test/guides/server-guide/not-on-browser')).toBe(true);
+
+    // supportedCategories: [browser] -> shown only on the browser guide
+    expect(slugs.has('platforms/test/guides/browser-guide/only-browser')).toBe(true);
+    expect(slugs.has('platforms/test/guides/server-guide/only-browser')).toBe(false);
   });
 });
 

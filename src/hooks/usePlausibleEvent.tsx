@@ -1,4 +1,5 @@
 import {usePlausible} from 'next-plausible';
+import {InternalLinkClickProps} from 'sentry-docs/internalLinkTracking';
 import {ReadProgressMilestone} from 'sentry-docs/types/plausible';
 
 // Adding custom events here will make them available via the hook
@@ -44,6 +45,7 @@ type PlausibleEventProps = {
     helpful: boolean;
     page: string;
   };
+  ['Internal Link Click']: InternalLinkClickProps;
   ['Onboarding Option Toggle']: {
     checked: boolean;
     optionId: string;

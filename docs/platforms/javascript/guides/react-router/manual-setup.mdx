@@ -1,15 +1,8 @@
 ---
 title: "Manual Setup"
 sidebar_order: 1
-description: "Learn how to manually set up Sentry in your React Router app (v7+) and capture your first errors."
+description: "Learn how to manually set up Sentry in your React Router app (v7.15+) and capture your first errors."
 ---
-
-<Alert level="warning" title="Important">
-  This SDK is currently in **beta**. Beta features are still in progress and may
-  have bugs. Please reach out on
-  [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if
-  you have any feedback or concerns.
-</Alert>
 
 <PlatformContent includePath="sentry-init/manual-setup-callout" />
 
@@ -190,7 +183,7 @@ Sentry's OpenTelemetry-based auto-instrumentation (loaded through `instrument.se
 - **Node 20:** Version \<20.19
 - **Node 22:** Version \<22.12
 
-This restriction **doesn't** affect tracing for loaders, actions, middleware, and request handlers. Those are instrumented through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (the `instrumentations` export shown below, React Router 7.15+), which works on all Node versions.
+This restriction **doesn't** affect tracing for loaders, actions, middleware, and request handlers. Those are instrumented through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (the `instrumentations` export shown below), which works on all Node versions.
 
 On unsupported Node versions, you'll only lose auto-instrumentation for lower-level operations such as outgoing HTTP requests and database queries.
 
@@ -244,7 +237,7 @@ Sentry.init({
 
 Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions, and export `instrumentations` to enable automatic tracing.
 
-Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) (React Router 7.15+) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
+Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -269,7 +262,7 @@ Exporting `instrumentations` uses React Router's [instrumentation API](https://r
 +});
 
 +// Automatically instruments all server loaders, actions, middleware,
-+// and request handlers. Requires React Router 7.15+.
++// and request handlers.
 +export const instrumentations = [Sentry.createSentryServerInstrumentation()];
 
 // ... rest of your server entry
@@ -279,9 +272,53 @@ Exporting `instrumentations` uses React Router's [instrumentation API](https://r
 </SplitSection>
 </SplitLayout>
 
+<Expandable title="Does your app use Content Security Policy nonces?">
+
+If your Node.js app uses a nonce-based Content Security Policy (CSP), pass `getNonce` to `createSentryHandleRequest`. This lets you use your app's per-request nonce without replacing Sentry's request handler or trace meta-tag injection.
+
+Sentry calls `getNonce({ request, loadContext })` once for each rendered request and passes the returned nonce to both `<ServerRouter>` and `renderToPipeableStream`. The callback must return a string or `undefined` synchronously. If you omit it or return `undefined`, the helper doesn't supply a nonce.
+
+For example, if your app uses React Router's `RouterContextProvider`, define a shared context key:
+
+```ts {filename: app/context.ts}
+import { createContext } from "react-router";
+
+export const cspNonceContext = createContext<string>();
+```
+
+In your server middleware, generate a fresh, unpredictable nonce for each response, such as with Node.js's `randomBytes(16).toString("base64")`. Store it with `context.set(cspNonceContext, nonce)`, then read it in your server entry:
+
+```tsx {filename: app/entry.server.tsx}
+import * as Sentry from "@sentry/react-router";
+import { createReadableStreamFromReadable } from "@react-router/node";
+import { renderToPipeableStream } from "react-dom/server";
+import { RouterContextProvider, ServerRouter } from "react-router";
+import { cspNonceContext } from "./context";
+
+const handleRequest = Sentry.createSentryHandleRequest({
+  ServerRouter,
+  renderToPipeableStream,
+  createReadableStreamFromReadable,
+  getNonce: ({ loadContext }) =>
+    loadContext instanceof RouterContextProvider
+      ? loadContext.get(cspNonceContext)
+      : undefined,
+});
+
+export default handleRequest;
+
+// Keep your existing handleError and instrumentations exports.
+```
+
+Without React Router middleware, `loadContext` is your app's `AppLoadContext` instead. Read the nonce from the property where your server stores it.
+
+Your app must also include the **same nonce** in the response's `Content-Security-Policy` header, for example as `'nonce-${nonce}'` in `script-src`. Sentry doesn't generate the nonce or set the CSP header. Don't reuse a nonce across responses or generate a second nonce for the header. See [React Router's CSP guidance](https://reactrouter.com/how-to/security) for details.
+
+</Expandable>
+
 <Expandable title="Do you need to customize your handleRequest function?">
 
-If you need to customize the logic of your `handleRequest` function, you'll need to use Sentry's helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
+For CSP nonces, use the `getNonce` option described above. If you need other custom rendering logic in your `handleRequest` function, use Sentry's helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
 
 ```tsx {1-4, 44-45, 69-70}
 import {
@@ -420,7 +457,7 @@ If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, im
 <SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
-+import './instrument.server';
++import '../instrument.server';
  import * as Sentry from '@sentry/react-router';
  import { createReadableStreamFromReadable } from '@react-router/node';
  import { renderToPipeableStream } from 'react-dom/server';
@@ -452,7 +489,7 @@ First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
-import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router';
+import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router/vite';
 import { defineConfig } from 'vite';
 
 const sentryConfig: SentryReactRouterBuildOptions = {
@@ -506,14 +543,14 @@ Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
 import type { Config } from "@react-router/dev/config";
-import { sentryOnBuildEnd } from "@sentry/react-router";
+import { sentryOnBuildEnd } from "@sentry/react-router/vite";
 
 export default {
   ssr: true,
   buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
     // ...
     // Call this at the end of the hook
-    +(await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
++    await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
   },
 } satisfies Config;
 ```
@@ -630,13 +667,13 @@ Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>

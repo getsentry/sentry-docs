@@ -467,7 +467,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
-    to: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    to: '/platforms/javascript/guides/nuxt/install/',
   },
   {
     from: '/account/early-adopter-features/discord/',
@@ -1738,6 +1738,106 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/cordova/troubleshooting/',
   },
   {
+    from: '/platforms/javascript/guides/cordova/best-practices/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/micro-frontends/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/multiple-sentry-instances/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/sentry-testkit/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/shared-environments/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/captureconsole/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/console/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/extraerrordata/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/httpclient/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/modulemetadata/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/reportingobserver/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/rewriteframes/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/featureflags/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/graphqlclient/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/supabase/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/zodErrors/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/enriching-events/attributes/',
+    to: '/platforms/javascript/guides/cordova/enriching-events/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/feature-flags/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/security-policy-reporting/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/sourcemaps/uploading/hosting-publicly/',
+    to: '/platforms/javascript/guides/cordova/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/instrumentation/requests-module/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/span-metrics/',
+    to: '/platforms/javascript/guides/cordova/tracing/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/span-metrics/examples/',
+    to: '/platforms/javascript/guides/cordova/tracing/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/user-feedback/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/user-feedback/configuration/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
     from: '/clients/cordova/ionic/',
     to: '/platforms/javascript/guides/cordova/ionic/',
   },
@@ -1915,11 +2015,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clients/node/integrations/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/platforms/node/connect/',
-    to: '/platforms/javascript/guides/connect/',
+    to: '/platforms/javascript/guides/node/',
   },
   {
     from: '/clients/node/integrations/koa/',

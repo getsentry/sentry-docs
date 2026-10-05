@@ -4,9 +4,8 @@ description: Learn how to set up Sentry in your Nitro app to capture errors and 
 sdk: sentry.javascript.nitro
 fallbackGuide: javascript.node
 categories:
-  - javascript
   - server
-  - server-node
+  - server-only
 ---
 
 <Alert>
@@ -21,7 +20,7 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - A Nitro application (`3.0.260415-beta` or newer)
-- Node.js 18.19.0+
+- Node.js 20.19.0+
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -74,20 +73,15 @@ The Nitro SDK is configured in two places: a build-time wrapper that registers a
 
 Wrap your Nitro config with `withSentryConfig` so the Sentry module is registered during the build. Provide your auth token, organization, and project slugs so that source maps are automatically uploaded during production builds.
 
-<OrgAuthTokenNote />
-
 </SplitSectionText>
 <SplitSectionCode>
 
-```bash {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-```typescript {tabTitle:nitro.config.ts} {mdExpandTabs} {filename: nitro.config.ts}
+```typescript {filename: nitro.config.ts}
 import { defineNitroConfig } from "nitro/config";
 import { withSentryConfig } from "@sentry/nitro";
 
 const config = defineNitroConfig({
+  serverDir: "./server",
   // your Nitro options...
 });
 
@@ -98,7 +92,18 @@ export default withSentryConfig(config, {
 });
 ```
 
-```typescript {tabTitle:vite.config.ts} {filename: vite.config.ts}
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+If you use Nitro as a Vite plugin, wrap the options you pass to `nitro()` instead:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename: vite.config.ts}
 import { defineConfig } from "vite";
 import { nitro } from "nitro/vite";
 import { withSentryConfig } from "@sentry/nitro";
@@ -108,6 +113,7 @@ export default defineConfig({
     nitro(
       withSentryConfig(
         {
+          serverDir: "./server",
           // your Nitro options...
         },
         {
@@ -119,6 +125,23 @@ export default defineConfig({
     ),
   ],
 });
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+Add your auth token to your environment:
+
+<OrgAuthTokenNote />
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
 </SplitSectionCode>
@@ -205,7 +228,7 @@ Add a test route that throws an error, then open `/debug-sentry` in your browser
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename: routes/debug-sentry.ts}
+```javascript {filename: server/routes/debug-sentry.ts}
 import { defineHandler } from "nitro/h3";
 
 export default defineHandler(() => {
@@ -230,7 +253,7 @@ To verify tracing, add a handler that starts a manual span:
 </SplitSectionText>
 <SplitSectionCode>
 
-```javascript {filename: routes/debug-sentry.ts}
+```javascript {filename: server/routes/debug-sentry.ts}
 import { defineHandler } from "nitro/h3";
 import * as Sentry from "@sentry/nitro";
 
@@ -318,13 +341,13 @@ The SDK is a wrapper around `@sentry/node` and re-exports its full API. All Node
 ## Next Steps
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>

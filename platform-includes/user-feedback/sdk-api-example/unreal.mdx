@@ -19,3 +19,23 @@ SentrySubsystem->CaptureFeedbackWithParams("Feedback message", "Jon Doe", "test@
 The same result can be achieved by calling corresponding functions in blueprint:
 
 ![Capture user feedback](./img/unreal_user_feedback.png)
+
+Feedback can carry <PlatformLink to="/enriching-events/attachments/">attachments</PlatformLink>, such as screenshots or logs, and can be captured with a <PlatformLink to="/enriching-events/scopes/#local-scopes">local scope</PlatformLink> to add data to a single feedback without affecting other events:
+
+```cpp
+USentryAttachment* Attachment = NewObject<USentryAttachment>();
+Attachment->InitializeWithPath("your/path/screenshot.png", "screenshot.png", "image/png");
+
+UserFeedback->AddAttachment(Attachment);
+
+SentrySubsystem->CaptureFeedbackWithScope(UserFeedback, FConfigureScopeNativeDelegate::CreateLambda([](USentryScope* Scope)
+{
+    Scope->SetTag("feedback-source", "in-game-menu");
+}));
+```
+
+<Alert>
+
+On macOS and iOS, changes made to the local scope are ignored for user feedback.
+
+</Alert>

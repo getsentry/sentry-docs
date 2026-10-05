@@ -1,0 +1,129 @@
+---
+title: Vercel AI
+description: "Adds instrumentation for the Vercel AI SDK. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.mastra
+---
+
+<Alert>
+
+Requires SDK version `11.0.0` or higher. On earlier versions, see the [Agent Tracing](/platforms/javascript/agent-tracing/) setup for your SDK.
+
+</Alert>
+
+_Import name: `Sentry.vercelAIIntegration`_
+
+This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) SDK by Vercel to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.vercelAIIntegration()],
+});
+```
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+<Alert level="warning">
+
+The Edge runtime isn't instrumented. The instrumentation relies on diagnostics channels, which Edge doesn't support. `@sentry/nextjs` still exports `vercelAIIntegration` from its Edge build so imports resolve, but it captures no spans. Run AI calls in the Node runtime.
+
+</Alert>
+
+</PlatformSection>
+
+<Alert level="warning">
+
+Don't use the AI SDK's `registerTelemetry` API (AI SDK v7 and above) together with this integration. `vercelAIIntegration` already instruments the AI SDK, so registering telemetry separately produces duplicate spans.
+
+</Alert>
+
+## Supported Operations
+
+By default, tracing support is added to the following `ai` functions:
+
+- `generateText()`
+- `streamText()`
+- `generateObject()`
+- `streamObject()`
+- `embed()`
+- `embedMany()`
+- `rerank()`
+- `experimental_evaluate()` — requires Sentry SDK `11.1.0` or higher and AI SDK 7
+
+Plus `generate()` and `stream()` on [`ToolLoopAgent`](https://ai-sdk.dev/docs/agents/overview#toolloopagent-class).
+
+## Trace Jev Evaluations
+
+With Sentry SDK `11.1.0` or higher and AI SDK 7, `vercelAIIntegration` automatically traces `experimental_evaluate()` calls, including calls to TypeSafe's Jev model through Vercel AI Gateway. Keep your existing Sentry setup with tracing enabled; no additional integration or telemetry registration is needed.
+
+Configure [AI Gateway authentication](https://ai-sdk.dev/docs/ai-sdk-core/evaluation#default-provider-strings) with `AI_GATEWAY_API_KEY` or Vercel OIDC, then call `experimental_evaluate()`:
+
+```javascript
+import { experimental_evaluate } from "ai";
+
+const result = await experimental_evaluate({
+  model: "typesafe-ai/jev",
+  state: "I was charged twice. Please refund the extra charge.",
+  questions: {
+    department: {
+      type: "choice",
+      instructions: "Which team should handle this?",
+      criteria: {
+        billing: "Charges and refunds",
+        technical: "Bugs and outages",
+      },
+    },
+  },
+});
+
+console.log(result.answers.department);
+```
+
+Each call creates a `gen_ai.evaluate` span with model, latency, and token usage when available. When recording is enabled, Sentry captures `state` and `questions` as input messages and `answers` as output messages. For TypeSafe answers, Sentry also includes confidence values from `providerMetadata.typesafe.confidence` when present.
+
+Evaluation inputs and outputs follow the same [`recordInputs`](#recordinputs) and [`recordOutputs`](#recordoutputs) options as other Vercel AI calls. Disable these options if evaluation state or answers contain sensitive data.
+
+The AI SDK's [evaluation API](https://ai-sdk.dev/docs/ai-sdk-core/evaluation) is experimental and may change in patch releases. If you use `TypeSafeClient.systemOne()` directly instead, see the [TypeSafe integration](/platforms/javascript/guides/node/configuration/integrations/typesafe/).
+
+## Supported Versions
+
+- `ai`: `>=3.0.0 <=7`
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records inputs to `ai` function calls (such as prompts and messages).
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true`, which is the default.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records outputs from `ai` function calls (such as generated text and responses).
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true`, which is the default.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```

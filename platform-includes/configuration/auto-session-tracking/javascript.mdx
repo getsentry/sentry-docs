@@ -1,7 +1,8 @@
 <PlatformCategorySection supported={['browser']}>
 
-By default, the JavaScript Browser SDKs are sending sessions.
-We create a session for every page load. For single-page applications, we will create a new session for every navigation change (History API).
+JavaScript Browser SDKs track sessions by default. A session starts on page load and continues across client-side navigations. A hard reload or navigation starts a new session.
+
+Before SDK version 11, the SDK started a new session on each client-side navigation by default. To configure this behavior, see <PlatformLink to="/configuration/integrations/browsersession/#lifecycle">BrowserSession lifecycle</PlatformLink>.
 
 To disable the default sessions handling, disable the `BrowserSession` integration:
 
@@ -22,13 +23,13 @@ Sentry.init({
 
 By default, the Node.js-based SDKs are sending sessions.
 Sessions are created for every incoming request.
-To disable the default sessions handling, set `trackIncomingRequestsAsSessions: false` in the `httpIntegration`:
+To disable the default sessions handling, set `sessions: false` in the `httpIntegration`:
 
 ```javascript
 import * as Sentry from "@sentry/node";
 
 Sentry.init({
-  integrations: [httpIntegration({ trackIncomingRequestsAsSessions: false })],
+  integrations: [Sentry.httpIntegration({ sessions: false })],
 });
 ```
 
@@ -37,7 +38,18 @@ Sentry.init({
 
 Sessions are marked as:
 
-- `crashed` if an _unhandled error_ or _unhandled promise rejection_ bubbled up to the global handler.
+<PlatformCategorySection supported={['browser']}>
+
+- `unhandled` in the browser if an _unhandled error_ or _unhandled promise rejection_ bubbles up to the global handler. Before SDK version 11, browser sessions used `crashed` for these errors.
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['server']}>
+
+- `crashed` on the server if an _unhandled error_ or _unhandled promise rejection_ bubbles up to the global handler.
+
+</PlatformCategorySection>
+
 - `errored` if the SDK captures an event that contains an exception (this includes manually captured errors).
 
 To receive data on user adoption, such as users crash free rate percentage, and the number of users that have adopted a specific release, set the user on the [`initialScope`](/platforms/javascript/configuration/options/#initial-scope) when initializing the SDK.

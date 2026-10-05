@@ -7,7 +7,7 @@ import {unified} from 'unified';
 import {visit} from 'unist-util-visit';
 import {fileURLToPath} from 'url';
 
-import {resolveLinkUrl} from './url';
+import {isInternalUrl, localizeUrl, resolveLinkUrl} from './url';
 
 const baseUrlIndex = process.argv.indexOf('--base-url');
 const baseURL = new URL(
@@ -109,15 +109,15 @@ async function main() {
     throw new Error(`Failed to fetch sitemap: ${sitemapResponse.status}`);
   }
   const sitemap = await sitemapResponse.text();
-
-  const sitemapSlugs = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)]
-    .map(l => l[1])
-    .map(url => trimSlashes(new URL(url).pathname))
-    .filter(Boolean);
-  if (sitemapSlugs.length === 0) {
+  const sitemapURLs = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map(
+    match => new URL(match[1])
+  );
+  const canonicalOrigin = sitemapURLs[0]?.origin;
+  if (!canonicalOrigin) {
     throw new Error('Sitemap did not contain any pages.');
   }
 
+  const sitemapSlugs = sitemapURLs.map(url => trimSlashes(url.pathname)).filter(Boolean);
   const allSlugs = sitemapSlugs.filter(slug =>
     pathFilter ? slug === pathFilter || slug.startsWith(`${pathFilter}/`) : true
   );
@@ -154,8 +154,7 @@ async function main() {
   };
 
   function shouldSkipLink(href: string, resolvedUrl: URL) {
-    const isExternal =
-      resolvedUrl.origin !== baseURL.origin && resolvedUrl.hostname !== 'docs.sentry.io';
+    const isExternal = !isInternalUrl(resolvedUrl, baseURL, canonicalOrigin);
     const hasUnsupportedScheme = !['http:', 'https:'].includes(resolvedUrl.protocol);
     const isExplicitLocalhost = /^(?:https?:)?\/\/localhost(?::\d+)?(?:\/|$)/.test(href);
     const isIp = (href_: string) => /(\d{1,3}\.){3}\d{1,3}/.test(href_);
@@ -180,13 +179,7 @@ async function main() {
       return false;
     }
 
-    const fullUrl =
-      resolvedUrl.hostname === 'docs.sentry.io' && resolvedUrl.origin !== baseURL.origin
-        ? new URL(
-            `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`,
-            baseURL
-          )
-        : resolvedUrl;
+    const fullUrl = localizeUrl(resolvedUrl, baseURL, canonicalOrigin);
 
     if (isInSitemap(fullUrl.href)) {
       return false;
