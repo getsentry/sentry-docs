@@ -70,9 +70,9 @@ The schedule is converted like this:
 - `fixedRate` (including `fixedRateString`, such as `"5m"` or `"PT5M"`, and `timeUnit`): sent as an interval schedule when the period is a whole number of minutes. `fixedDelay` jobs send no monitor config.
 - `zone`: sent as the monitor's timezone for cron schedules. Without `zone`, the JVM's default time zone is sent, since that's where Spring runs the job. It must be an IANA time zone ID such as `Europe/Vienna`; whole-hour offsets such as `GMT+2` are sent as `Etc/GMT-2`.
 
-Placeholders such as `${app.cleanup.cron}` are resolved. No configuration is sent for cron expressions with variable seconds (for example `*/30 * * * * *`), cron expressions that set both day-of-month and day-of-week, cron syntax Sentry doesn't support (such as `15W`, `L-3`, or wrap-around ranges like `22-2`), other time zones, periods that aren't whole minutes, methods with more than one `@Scheduled`, or heartbeat check-ins. For those, for methods without `upsertMonitorConfig = true`, and for older SDK versions, [create the monitor in Sentry](https://sentry.io/issues/alerts/new/crons/) first.
+Placeholders such as `${app.cleanup.cron}` are resolved. No configuration is sent for cron expressions with variable seconds (for example `*/30 * * * * *`), cron expressions that set both day-of-month and day-of-week (on Spring 5.3 and later, a day-of-month step such as `0 0 9 */2 * MON` is converted; on older Spring versions, none are), `#5` days of week on Spring 5.3 and later, cron syntax Sentry doesn't support (such as `15W`, `L-3`, or wrap-around ranges like `22-2`), other time zones, periods that aren't whole minutes, methods with more than one `@Scheduled`, or heartbeat check-ins. For those, for methods without `upsertMonitorConfig = true`, and for older SDK versions, [create the monitor in Sentry](https://sentry.io/issues/alerts/new/crons/) first.
 
-Sentry only updates the fields that were sent. Margins, max runtime, and thresholds configured in Sentry are kept unless you set defaults for them in `options.cron`, which are sent with every check-in.
+Sentry only updates the fields that were sent. Margins, max runtime, and thresholds configured in Sentry are kept unless you set defaults for them in `options.cron`, which are sent only with check-ins that carry a monitor configuration.
 
 ## Heartbeat
 
