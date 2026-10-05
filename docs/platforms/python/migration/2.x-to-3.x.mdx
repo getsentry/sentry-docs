@@ -49,11 +49,42 @@ Because `contextvars` is always available on Python 3.7+, you no longer need the
 Most `sentry-sdk[extra-name]` extras were removed. Install the base package instead — there's no difference in functionality:
 
 ```bash diff
-- pip install "sentry-sdk[flask]"
+- pip install "sentry-sdk[django]"
 + pip install "sentry-sdk"
 ```
 
 The `asyncio`, `flask`, `grpcio`, `http2`, `opentelemetry-otlp`, `pure-eval`, and `quart` extras remain, because those integrations need additional dependencies.
+
+## Data Collection
+
+The `send_default_pii` option was removed. Passing it to `sentry_sdk.init()` now raises an error, like any other unknown option. The `data_collection` option is always active and is the only built-in gate for the data the SDK collects.
+
+Because of this, the SDK now collects more by default than it did with `send_default_pii` unset. User information, request bodies (including outgoing responses), GraphQL documents and variables, database query data, queue message data, and generative AI inputs and outputs are all collected unless you opt out. Cookies, headers, and query parameters are collected with values for sensitive keys (`auth`, `token`, `password`, and similar) filtered.
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+-   send_default_pii=False,
++   data_collection={
++       "user_info": False,
++       "gen_ai": {"inputs": False, "outputs": False},
++       "graphql": {"document": False, "variables": False},
++       "database_query_data": False,
++       "queues": False,
++   },
+)
+```
+
+To keep the exact behavior of `send_default_pii=False`, see <PlatformLink to="/data-management/data-collected/#using-conservative-collection-settings">Using Conservative Collection Settings</PlatformLink>. For every key and its default, see <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
+
+A few related options were removed because `data_collection` replaces them:
+
+- `EventScrubber` and the `event_scrubber` option. To remove data that `data_collection` doesn't cover, use a `before_send` callback.
+- The `include_prompts` option of the AI integrations. Use the `gen_ai` key of `data_collection`.
+- The `include_source_context` and `include_local_variables` options. Use `frame_context_lines` (set to `0` to turn it off) and `stack_frame_variables` instead.
+- The experimental `record_sql_params` option and the `record_params` option of `AsyncPGIntegration` and `AioMySQLIntegration`. Use `database_query_data`.
 
 ## Configuration Options
 
@@ -174,7 +205,7 @@ import sentry_sdk
 + scope.set_tag("key", "value")
 ```
 
-Direct assignment to `Scope.level` and `Scope.user` was removed. Use `Scope.set_level()` and `Scope.set_user()` instead. `Scope.iter_headers` was also removed.
+`Scope.trace_propagation_meta` no longer accepts a `span` argument, and `add_attachment` no longer accepts `add_to_transactions`. Direct assignment to `Scope.level` and `Scope.user` was removed. Use `Scope.set_level()` and `Scope.set_user()` instead. `Scope.iter_headers` was also removed.
 
 ## OpenTelemetry
 
@@ -184,7 +215,11 @@ Direct assignment to `Scope.level` and `Scope.user` was removed. Use `Scope.set_
 
 - The FastAPI and Starlette integrations no longer eagerly read the request body. It's only included in events if your handler already parsed it with `Request.json()` or `Request.form()` before the event was captured.
 - The ASGI and asyncio integrations no longer suppress chained exceptions by default.
+- Exception groups in exception chains are now properly unfurled.
+- The Django integration now creates spans for cache operations by default. Pass `DjangoIntegration(cache_spans=False)` to turn them off. It also no longer force-enables cache spans when Spotlight is active and `settings.DEBUG` is `True`, so `cache_spans` is always respected.
+- The `transaction_style` option was removed from the Django, Starlette, FastAPI, AIOHTTP, Flask, Pyramid, Quart, Bottle, Falcon, Starlite, and Litestar integrations.
 - The SDK no longer sets any tags on its own.
+- The message of the optional warning that the AWS Lambda and GCP integrations emit when a function is about to time out has changed.
 - `SanicIntegration` no longer accepts `unsampled_statuses`.
 - The `RedisIntegration` `max_data_size` option and the `LangchainIntegration` `max_spans` option were removed.
 - `LaunchDarklyIntegration` no longer accepts a specific client.

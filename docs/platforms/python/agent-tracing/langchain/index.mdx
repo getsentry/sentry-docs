@@ -35,7 +35,6 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     environment="local",
     traces_sample_rate=1.0,
-    send_default_pii=True,
     debug=True,
     integrations=[
         LangchainIntegration(),
@@ -52,7 +51,6 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     environment="local",
     traces_sample_rate=1.0,
-    send_default_pii=True,
     debug=True,
     integrations=[
         LangchainIntegration(),
@@ -162,36 +160,24 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - All exceptions are reported.
 
-- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- LLM inputs and outputs are collected by default. To turn this off, see [Data Collection](#data-collection) below.
 
-## Options
+## Data Collection
 
-By adding `LangchainIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LangchainIntegration` to change its behavior:
+LLM inputs and outputs are collected by default. To stop recording them, set `data_collection` in your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.langchain import LangchainIntegration
 
 sentry_sdk.init(
     # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-    integrations=[
-        LangchainIntegration(
-            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
-        ),
-    ],
+    data_collection={
+        "gen_ai": {"inputs": False, "outputs": False},
+    },
 )
 ```
 
-You can pass the following keyword arguments to `LangchainIntegration()`:
-
-- `include_prompts`
-
-  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
-
-  The default is `True`.
+See [What Data Is Collected](/platforms/python/data-management/data-collected/) for more information.
 
 ## Supported Versions
 

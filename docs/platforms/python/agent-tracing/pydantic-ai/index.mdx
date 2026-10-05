@@ -41,9 +41,6 @@ from sentry_sdk.integrations.openai import OpenAIIntegration
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    # Add data like LLM and tool inputs/outputs;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
     integrations=[
         PydanticAIIntegration(),
     ]
@@ -57,9 +54,6 @@ from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    # Add data like LLM and tool inputs/outputs;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
     integrations=[
         PydanticAIIntegration(),
     ],
@@ -118,9 +112,6 @@ async def main() -> None:
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         traces_sample_rate=1.0,
-        # Add data like LLM and tool inputs/outputs;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
         integrations=[
             PydanticAIIntegration(),
         ]
@@ -182,9 +173,6 @@ async def main() -> None:
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         traces_sample_rate=1.0,
-        # Add data like LLM and tool inputs/outputs;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
         integrations=[
             PydanticAIIntegration(),
         ],
@@ -211,36 +199,24 @@ Data on the following will be collected:
 - LLM models usage
 - model settings (temperature, max_tokens, etc.)
 
-Sentry considers LLM and tool inputs/outputs as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the Options section below.
+LLM and tool inputs and outputs are collected by default. To turn this off, set `data_collection` as shown in the [Options section](#options) below.
 
 ## Options
 
-By adding `PydanticAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PydanticAIIntegration` to change its behavior:
+To stop recording LLM and tool inputs and outputs, set `data_collection` in your `sentry_sdk.init()` call. See [What Data Is Collected](/platforms/python/data-management/data-collected/) for more information.
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
 
 sentry_sdk.init(
     # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-    integrations=[
-        PydanticAIIntegration(
-            include_prompts=False,  # LLM and tool inputs/outputs will be not sent to Sentry, despite send_default_pii=True
-        ),
-    ],
+    data_collection={
+        "gen_ai": {"inputs": False, "outputs": False},
+    },
 )
 ```
 
-You can pass the following keyword arguments to `PydanticAIIntegration()`:
-
-- `include_prompts`:
-
-  Whether LLM and tool inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
-
-  The default is `True`.
+By adding `PydanticAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PydanticAIIntegration` to change its behavior. You can pass the following keyword arguments to `PydanticAIIntegration()`:
 
 - `handled_tool_call_exceptions`:
 

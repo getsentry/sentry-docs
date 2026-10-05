@@ -68,7 +68,7 @@ You can also expect the following for your FastAPI project:
 
 - By default, all exceptions leading to an Internal Server Error are captured and reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
 - Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
-- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Sensitive values such as authorization headers and cookie values are filtered by default, and user information is collected by default. Use the [`data_collection`](/platforms/python/data-management/data-collected/) option to change what is collected.
 
 To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
 
@@ -162,12 +162,10 @@ sentry_sdk.init(
     # same as above
     integrations=[
         StarletteIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={403, *range(500, 599)},
             http_methods_to_capture=("GET",),
         ),
         FastApiIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={403, *range(500, 599)},
             http_methods_to_capture=("GET",),
         ),
@@ -176,53 +174,6 @@ sentry_sdk.init(
 ```
 
 You can pass the following keyword arguments to `StarletteIntegration()` and `FastApiIntegration()`:
-
-<SdkOption name='transaction_style' type='string' defaultValue='"url"'>
-
-How to name transactions that show up in Sentry tracing.
-The default is `"url"`.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-In the code example, the transaction name will be:
-
-- `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
-- `"product_detail"` if you set `transaction_style="endpoint"`
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```python
-  import sentry_sdk
-  from sentry_sdk.integrations.starlette import StarletteIntegration
-  from sentry_sdk.integrations.fastapi import FastApiIntegration
-
-  sentry_sdk.init(
-      # ...
-      integrations=[
-          StarletteIntegration(
-              transaction_style="endpoint",
-          ),
-          FastApiIntegration(
-              transaction_style="endpoint",
-          ),
-      ],
-  )
-
-  app = FastAPI()
-
-  @app.get("/catalog/product/{product_id}")
-  async def product_detail(product_id):
-      return {...}
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</SdkOption>
 
 <SdkOption name='failed_request_status_codes' type='set[int]' defaultValue='{*range(500, 600)}'>
 

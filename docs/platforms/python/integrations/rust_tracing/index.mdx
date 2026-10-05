@@ -80,9 +80,6 @@ import my_rust_extension
 async def main():
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        # Add data like request headers and IP for users, if applicable;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
         # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
@@ -187,15 +184,15 @@ The `pyo3-python-tracing-subscriber` crate has [a working example of a Sentry in
 
   A boolean controlling whether the values of a `tracing` span's key-value fields will be attached to the corresponding Sentry span.
 
-  If it is `None`, this behavior will be controlled by <PlatformLink to="/configuration/options/#send-default-pii">the `send_default_pii` option</PlatformLink> set during SDK initialization. If it is `False`, field values will be redacted on Sentry spans. If it is `True`, field values will be included on Sentry spans.
+  If it is `None` or `False`, field values will be redacted on Sentry spans. If it is `True`, field values will be included on Sentry spans. This option isn't affected by the <PlatformLink to="/data-management/data-collected/">`data_collection`</PlatformLink> option.
 
   The default value of this option is `None`.
 
   <Alert level="warning">
 
-  When the `tracing::instrument` attribute is applied to a Rust function, `tracing` will set all of the function's arguments as span fields by default. This behavior can cause a function argument that contains sensitive data to unintentionally be sent to Sentry. To avoid that, `include_tracing_fields` by default will defer to the <PlatformLink to="/configuration/options/#send-default-pii">`send_default_pii`</PlatformLink> option which can be set during SDK initialization.
+  When the `tracing::instrument` attribute is applied to a Rust function, `tracing` will set all of the function's arguments as span fields by default. This behavior can cause a function argument that contains sensitive data to unintentionally be sent to Sentry. To avoid that, leave `include_tracing_fields` at its default, or set it to `False`.
 
-  If you want to set `include_tracing_fields` or <PlatformLink to="/configuration/options/#send-default-pii">`send_default_pii`</PlatformLink> to `True`, see our documentation for <PlatformLink to="/data-management/sensitive-data/">managing sensitive data</PlatformLink> for ways to keep sensitive data from leaking.
+  If you set `include_tracing_fields` to `True`, see our documentation for <PlatformLink to="/data-management/sensitive-data/">managing sensitive data</PlatformLink> for ways to keep sensitive data from leaking.
 
   </Alert>
 

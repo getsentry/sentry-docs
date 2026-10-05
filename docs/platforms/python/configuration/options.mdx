@@ -95,24 +95,9 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </SdkOption>
 
-<SdkOption name="send_default_pii" type='bool' defaultValue='None'>
+<SdkOption name="data_collection" type='dict' defaultValue='{}'>
 
-If this flag is enabled, [certain personally identifiable information (PII)](/platforms/python/data-management/data-collected/) is added by active integrations.
-
-If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
-
-<Alert>
-  We plan to eventually deprecate `send_default_pii` in favor of the [`data_collection`](#data_collection) option, but that won't happen until a future major version. Until then, `send_default_pii` remains fully supported.
-
-If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
-
-</Alert>
-
-</SdkOption>
-
-<SdkOption name="data_collection" type='dict' defaultValue='None'>
-
-Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+Controls which categories of data the SDK collects automatically. All keys are optional, and any key you don't set falls back to its default.
 
 ```python
 import sentry_sdk
@@ -126,31 +111,9 @@ sentry_sdk.init(
 )
 ```
 
-Passing a `data_collection` dictionary opts you into its defaults, which are more permissive than `send_default_pii=False`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (user identity, request bodies, generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+By default, the SDK collects rich debugging context (user identity, request bodies, generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar). Opt out of the categories you don't want.
 
-If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
-
-For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
-
-</SdkOption>
-
-<SdkOption name="event_scrubber" type='sentry_sdk.scrubber.EventScrubber' defaultValue='None'>
-
-Scrubs the event payload for sensitive information such as cookies, sessions, and passwords from a `denylist`. It can additionally be used to scrub from another `pii_denylist` if `send_default_pii` is disabled. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
-
-Only runs if `data_collection` is not defined. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
-
-</SdkOption>
-
-<SdkOption name="include_source_context" type='bool' defaultValue='True'>
-
-When enabled, source context will be included in events sent to Sentry. This source context includes the five lines of code above and below the line of code where an error happened.
-
-</SdkOption>
-
-<SdkOption name="include_local_variables" type='bool' defaultValue='True'>
-
-When enabled, the SDK will capture a snapshot of local variables to send with the event to help with debugging.
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>. To remove data the SDK doesn't categorize, use a <PlatformIdentifier name="before-send" /> callback.
 
 </SdkOption>
 
@@ -617,4 +580,3 @@ Either this or `profiles_sample_rate` must be defined to enable profiling. Addit
 A number between `0` and `1`, controlling the percentage chance a given session will be profiled. The sampling decision is evaluated only once at SDK initialization.
 
 </SdkOption>
-

@@ -54,7 +54,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 - All exceptions leading to an Internal Server Error are reported.
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sensitive values such as authorization headers and cookie values are filtered by default, and user information is collected by default. Use the [`data_collection`](/platforms/python/data-management/data-collected/) option to change what is collected.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
@@ -72,7 +72,6 @@ sentry_sdk.init(
     # same as above
     integrations=[
         BottleIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={*range(500, 600)},
         ),
     ],
@@ -81,21 +80,6 @@ sentry_sdk.init(
 ```
 
 Each of the following options are supported as keyword arguments to `BottleIntegration()`.
-
-### `transaction_style`
-
-The `transaction_style` option specifies how the transaction name is generated. You can set the option to `"endpoint"` (the default) or `"url"`.
-
-For example, given the following route:
-
-```python
-@app.route("/myurl/<foo>")
-def myendpoint():
-    return "ok"
-```
-
-- If you set `transaction_style="endpoint"`, the transaction name will be `"myendpoint"`, since that is the route handler function's name.
-- If you set `transaction_style="url"`, the transaction name will be `"/myurl/<foo>"`, since that is the URL path.
 
 ### `failed_request_status_codes`
 

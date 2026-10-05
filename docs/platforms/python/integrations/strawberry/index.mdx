@@ -39,9 +39,6 @@ from sentry_sdk.integrations.strawberry import StrawberryIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Add data like request headers and IP for users, if applicable;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
     # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
@@ -138,24 +135,25 @@ sentry_sdk.init(
 ### Capturing Request and Response Bodies
 
 The Strawberry integration can capture request and response bodies
-for each GraphQL error that happens. Since these may contain sensitive data,
-this is the default behavior. To enable capturing request and response bodies, the
-SDK needs to be initialized with the
-[send_default_pii](/platforms/python/configuration/options/#send-default-pii) option set to `True`.
+for each GraphQL error that happens. This data is collected by default. To stop
+collecting GraphQL documents and variables, set the `graphql` key of the
+[`data_collection`](/platforms/python/data-management/data-collected/) option:
 
 ```python
 sentry_sdk.init(
     # ...
-    send_default_pii=True,
+    data_collection={
+        "graphql": {"document": False, "variables": False},
+    },
 )
 ```
 
 <Alert level="warning" title="Note">
 
-Since `send_default_pii` is a global SDK option, setting it to `True` will affect all
-integrations, not just Strawberry. Please make sure to
+`data_collection` is a global SDK option, so it affects all
+integrations, not just Strawberry. Make sure to
 [remove sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option.
+from events if your GraphQL payloads contain it.
 
 </Alert>
 

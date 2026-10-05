@@ -23,7 +23,7 @@ The following information will be available to you on Sentry:
 
 - Performance information about requests to Redis will be available in the waterfall diagram in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section on Sentry.
 - Redis commands will be added as [breadcrumbs](/product/issues/issue-details/breadcrumbs/).
-- If `send_default_pii` is set to `True` in your app's `sentry_sdk.init()` call, you will also see the data used in your Redis commands.
+- The data used in your Redis commands is collected by default. To opt out, set `database_query_data` to `False` in the [`data_collection`](/platforms/python/data-management/data-collected/) option of your `sentry_sdk.init()` call.
 - Sentry will never collect data of the `AUTH` command.
 
 ## Verify Your Setup
@@ -94,7 +94,6 @@ sentry_sdk.init(
     # ...
     integrations=[
         RedisIntegration(
-            max_data_size=None,
             cache_prefixes=["mycache", "template.cache"],
         ),
     ],
@@ -102,15 +101,6 @@ sentry_sdk.init(
 ```
 
 You can pass the following keyword arguments to `RedisIntegration()`:
-
-<SdkOption name='max_data_size' type='int' defaultValue='1024'>
-
-Set `max_data_size` to an integer to control how many characters should be collected.
-When you set this option to a value that evaluates to `False` (like `0` or `None`), no trimming will take place, and the entire Redis command will be recorded.
-
-By default, the integration trims data collected after `1024` characters.
-
-</SdkOption>
 
 <SdkOption name='cache_prefixes' type='list[string]'>
 

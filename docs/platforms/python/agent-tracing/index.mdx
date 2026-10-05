@@ -13,7 +13,7 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 ## Getting Started
 
-Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is off by default — set `send_default_pii=True` to capture it (or configure `include_prompts` per integration).
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is collected by default. To turn this off, see [Privacy Controls](#privacy-controls).
 
 ```python
 import sentry_sdk
@@ -21,7 +21,6 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
 )
 ```
 
@@ -31,17 +30,37 @@ Pick your AI stack. Each page has install and verify details.
 
 <IntegrationGrid
   integrations={[
-    {to: "/agent-tracing/anthropic/", title: "Anthropic", icon: "anthropic"},
-    {to: "/agent-tracing/google-genai/", title: "Google Gen AI", icon: "google-genai"},
-    {to: "/agent-tracing/openai/", title: "OpenAI", icon: "openai"},
-    {to: "/agent-tracing/openai-agents/", title: "OpenAI Agents SDK", icon: "openai"},
-    {to: "/agent-tracing/langchain/", title: "LangChain", icon: "langchain"},
-    {to: "/agent-tracing/langgraph/", title: "LangGraph", icon: "langgraph"},
-    {to: "/agent-tracing/litellm/", title: "LiteLLM", icon: "litellm"},
-    {to: "/agent-tracing/pydantic-ai/", title: "Pydantic AI", icon: "pydantic-ai"},
-    {to: "/agent-tracing/huggingface_hub/", title: "Hugging Face Hub", icon: "huggingface_hub"},
-    {to: "/agent-tracing/mistral/", title: "Mistral", icon: "mistral"},
-    {to: "/agent-tracing/typesafe/", title: "TypeSafe AI", icon: "typesafe-ai"},
+    { to: "/agent-tracing/anthropic/", title: "Anthropic", icon: "anthropic" },
+    {
+      to: "/agent-tracing/google-genai/",
+      title: "Google Gen AI",
+      icon: "google-genai",
+    },
+    { to: "/agent-tracing/openai/", title: "OpenAI", icon: "openai" },
+    {
+      to: "/agent-tracing/openai-agents/",
+      title: "OpenAI Agents SDK",
+      icon: "openai",
+    },
+    { to: "/agent-tracing/langchain/", title: "LangChain", icon: "langchain" },
+    { to: "/agent-tracing/langgraph/", title: "LangGraph", icon: "langgraph" },
+    { to: "/agent-tracing/litellm/", title: "LiteLLM", icon: "litellm" },
+    {
+      to: "/agent-tracing/pydantic-ai/",
+      title: "Pydantic AI",
+      icon: "pydantic-ai",
+    },
+    {
+      to: "/agent-tracing/huggingface_hub/",
+      title: "Hugging Face Hub",
+      icon: "huggingface_hub",
+    },
+    { to: "/agent-tracing/mistral/", title: "Mistral", icon: "mistral" },
+    {
+      to: "/agent-tracing/typesafe/",
+      title: "TypeSafe AI",
+      icon: "typesafe-ai",
+    },
   ]}
 />
 
@@ -73,22 +92,22 @@ Any of `id`, `email`, or `username` is sufficient — the Conversations tab disp
 
 ### Privacy Controls
 
-LLM inputs and outputs are treated as PII and are **off** by default. Set `send_default_pii=True` to capture them. To keep other PII on but turn AI content off, set `include_prompts=False` on the integration:
+LLM inputs and outputs are collected by default. To stop recording them, set `data_collection` in your `sentry_sdk.init()` call:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.openai import OpenAIIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    send_default_pii=True,
-    integrations=[
-        OpenAIIntegration(include_prompts=False),
-    ],
+    # ...
+    data_collection={
+        "gen_ai": {"inputs": False, "outputs": False},
+    },
 )
 ```
 
-See each integration page for the options that apply to your stack.
+These controls apply to the data Sentry's AI integrations collect. Attributes you set yourself on spans aren't affected.
+
+See [What Data Is Collected](/platforms/python/data-management/data-collected/) for details, and each integration page for the options that apply to your stack.
 
 ## Manual Instrumentation
 

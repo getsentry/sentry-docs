@@ -4,33 +4,23 @@ description: "See what data is collected by the Sentry Python SDK."
 sidebar_order: 1
 ---
 
-Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application. The SDK collects rich debugging context by default, and you can opt out of each category individually.
 
 The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Python SDK collects.
 
 <Expandable title="Options to control data collection">
 
-You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you opt in or out of each data category individually.
+You control the categories listed here with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>. Any key you don't set falls back to its default, which is to collect the data and scrub values whose keys match the built-in sensitive denylist (such as `auth`, `token`, or `password`). See the [`data_collection` reference](#data_collection-reference) for every key and its default.
 
-The <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii` option</PlatformLink> is still fully supported. We plan to eventually deprecate it in favor of `data_collection`, but that won't happen until a future major version.
-
-How much data the SDK collects by default depends on which option you use. Without `data_collection` (and with `send_default_pii` unset or `False`), the SDK collects conservatively, and the defaults described on this page apply.
-
-As soon as you pass a `data_collection` dictionary, the categories you don't set explicitly fall back to their `data_collection` defaults, which are more permissive. For example, cookies, query parameters (with sensitive values scrubbed), and AI message content are then collected unless you opt out. Setting `send_default_pii=True` is roughly equivalent to enabling all `data_collection` categories.
-
-If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
-
-Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
+The `send_default_pii` option and the `EventScrubber` were removed in version 3.0. Passing `send_default_pii` raises an error like any other unknown option. If you need to remove data the SDK doesn't categorize, use a <PlatformLink to="/configuration/filtering/">`before_send`</PlatformLink> callback. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
 </Expandable>
 
 ## HTTP Headers
 
-By default, the Sentry SDK sends HTTP request headers to Sentry but filters out any headers that contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L28-L35) that are filtered). The Python SDK doesn't capture response headers.
+By default, the Sentry SDK sends HTTP request headers to Sentry with sensitive values scrubbed. The Python SDK doesn't capture response headers.
 
-To send all HTTP headers, set `send_default_pii=True` in the `sentry_sdk.init()` call.
-
-When using `data_collection`, request headers are collected with sensitive values scrubbed. Use `http_headers` to control this:
+Use `http_headers` to control this:
 
 ```python
 import sentry_sdk
@@ -50,15 +40,11 @@ sentry_sdk.init(
 
 Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are always scrubbed, while the keys are kept. See [Key-Value Collection Behavior](#key-value-collection-behavior) below for details on `mode` and `terms`.
 
-Additionally a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from headers (and a lot of other fields) right before sending data to Sentry.
+Sentry also has [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from headers.
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cookies that contain sensitive information, such as the Session ID and CSRF Token cookies in Django.
-
-If you want to send cookies, set `send_default_pii=True` in the `sentry_sdk.init()` call.
-
-When using `data_collection`, cookies are collected by default with sensitive values scrubbed. Opt out with `{"mode": "off"}`, or restrict which values are sent using `"allowlist"` or `"denylist"` mode:
+By default, the Sentry SDK sends cookies with sensitive values scrubbed, such as the Session ID and CSRF Token cookies in Django. Opt out with `{"mode": "off"}`, or restrict which values are sent using `"allowlist"` or `"denylist"` mode:
 
 ```python
 import sentry_sdk
@@ -71,15 +57,13 @@ sentry_sdk.init(
 )
 ```
 
-Additionally a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from cookies (and a lot of other fields) right before sending data to Sentry.
+Sentry also has [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from cookies.
 
 ## Information About Logged-in User
 
-By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+By default, the SDK populates user identity fields (`user.id`, `user.email`, `user.username`) from instrumentation. The type of logged-in user information you'll see depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
 
-To start sending logged-in user information, set `send_default_pii=True` in the `sentry_sdk.init()` call.
-
-When using `data_collection`, the SDK populates user identity fields (`user.id`, `user.email`, `user.username`) from instrumentation by default. To disable this, set `user_info` to `False`:
+To disable this, set `user_info` to `False`:
 
 ```python
 import sentry_sdk
@@ -94,13 +78,9 @@ sentry_sdk.init(
 
 ## Users' IP Address
 
-By default, the Sentry SDK doesn't send the user's IP address. Even if enabled, whether you're able to send the user's IP address or not, will depend on the integrations you enable in Sentry's SDK. Most integrations won't set the user's IP address at all.
+By default, the SDK sends the user's IP address, depending on the integrations you enable in Sentry's SDK. Most integrations won't set the user's IP address at all. Disable it by setting `user_info` to `False`.
 
-To enable sending the user's IP address, set `send_default_pii=True` in the `sentry_sdk.init()` call.
-
-When using `data_collection`, the user's IP address is sent by default. Disable it by setting `user_info` to `False`.
-
-Even when this is disabled, IP addresses can still reach Sentry through collected HTTP headers, cookies, or query parameters (for example, the `X-Forwarded-For` header). If you use `data_collection`, add these terms to the deny lists for those categories so their values are filtered:
+Even when this is disabled, IP addresses can still reach Sentry through collected HTTP headers, cookies, or query parameters (for example, the `X-Forwarded-For` header). Add these terms to the deny lists for those categories so their values are filtered:
 
 ```python
 import sentry_sdk
@@ -134,7 +114,7 @@ The full request URL of outgoing and incoming HTTP requests is **always sent to 
 
 By default, the full request query string of outgoing and incoming HTTP requests is sent to Sentry. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
 
-When using `data_collection`, use `url_query_params` to control this. Set it to `{"mode": "off"}` to disable collection entirely, or use `"allowlist"` / `"denylist"` mode to filter which values are sent. Values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
+Use `url_query_params` to control this. Set it to `{"mode": "off"}` to disable collection entirely, or use `"allowlist"` / `"denylist"` mode to filter which values are sent. Values whose keys match the built-in sensitive denylist (terms like `auth`, `token`, `password`, and `secret`) are scrubbed automatically.
 
 ```python
 import sentry_sdk
@@ -159,9 +139,7 @@ The request body of incoming HTTP requests can be sent to Sentry. Whether it's s
   - Uploaded files in the request bodies are never sent to Sentry
 - **The size of the request body:** There's a ["max_request_body_size"](/platforms/python/configuration/options/#max-request-body-size) option that's set to `medium` by default. This means that larger request bodies aren't sent to Sentry.
 
-If you want to prevent bodies from being sent to Sentry altogether, set `max_request_body_size` to `"never"`.
-
-When using `data_collection`, incoming and outgoing request bodies are collected by default. To disable body collection, set `http_bodies` to an empty list, or provide only the body types you want:
+Incoming requests, outgoing requests, and outgoing responses are collected by default. To disable body collection, set `http_bodies` to an empty list, or provide only the body types you want:
 
 ```python
 import sentry_sdk
@@ -175,17 +153,15 @@ sentry_sdk.init(
 )
 ```
 
-The valid body types are `"incoming_request"` and `"outgoing_request"`. The Python SDK doesn't capture response bodies, so there are no response body types.
+The valid body types are `"incoming_request"`, `"outgoing_request"`, and `"outgoing_response"`.
 
-`max_request_body_size` still applies on top of `http_bodies`.
+The ["max_request_body_size"](/platforms/python/configuration/options/#max-request-body-size) option still applies on top of `http_bodies`. Set it to `"never"` to prevent request bodies from being sent altogether.
 
 ## Source Context
 
 When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
 
-To opt out of sending this source context to Sentry, set `include_source_context` to `False`.
-
-When using `data_collection`, use `frame_context_lines` to control how many lines above and below each stack frame are captured. It defaults to `5`. Set it to `0` (or `False`) to opt out:
+Use `frame_context_lines` to control how many lines above and below each stack frame are captured. It defaults to `5`. Set it to `0` (or `False`) to opt out:
 
 ```python
 import sentry_sdk
@@ -202,11 +178,7 @@ sentry_sdk.init(
 
 When unhandled errors and exceptions are sent to Sentry, the names and values of local variables that were set when the errors occurred are sent at the same time.
 
-You can stop sending local variables to Sentry by setting `include_local_variables=False` in the `sentry_sdk.init()` call.
-
-When using `data_collection`, `stack_frame_variables` controls this and defaults to `True`.
-
-To opt out explicitly, set `stack_frame_variables` to `False`:
+The `stack_frame_variables` key controls this and defaults to `True`. To stop sending local variables to Sentry, set it to `False`:
 
 ```python
 import sentry_sdk
@@ -223,7 +195,7 @@ sentry_sdk.init(
 
 While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password='%s' WHERE id=%s;`) is sent instead.
 
-When using `data_collection`, set `database_query_data` to `False` to stop collecting database query data:
+Set `database_query_data` to `False` to stop collecting database query data:
 
 ```python
 import sentry_sdk
@@ -238,7 +210,7 @@ sentry_sdk.init(
 
 ## GraphQL Documents And Variables
 
-When using `data_collection`, the GraphQL query document and its variables are collected by default. Both can be disabled independently:
+The GraphQL query document and its variables are collected by default. Both can be disabled independently:
 
 ```python
 import sentry_sdk
@@ -251,11 +223,9 @@ sentry_sdk.init(
 )
 ```
 
-Without `data_collection` (and with `send_default_pii` unset or `False`), GraphQL documents and variables aren't collected.
-
 ## Queue And Task Message Data
 
-When using `data_collection`, message body data for queue and task-queue integrations is collected by default. Set `queues` to `False` to opt out:
+Message body data for queue and task-queue integrations is collected by default. Set `queues` to `False` to opt out:
 
 ```python
 import sentry_sdk
@@ -268,15 +238,9 @@ sentry_sdk.init(
 )
 ```
 
-Without `data_collection` (and with `send_default_pii` unset or `False`), this data isn't collected.
-
 ## LLM Inputs And Responses
 
-When using Sentry in your AI apps, the SDK by default won't add data like LLM inputs and responses to spans. To start recording these, add `send_default_pii=True` to your `sentry_sdk.init()` call.
-
-Most AI integrations have an additional parameter to control whether prompts should be included called `include_prompts`. See the <PlatformLink to="/integrations/#ai">documentation for the specific AI framework</PlatformLink> for more information.
-
-When using `data_collection`, the `gen_ai` category records both inputs and outputs unless you opt out. Metadata like the model ID and token counts is always collected.
+When using Sentry in your AI apps, the SDK records LLM inputs and responses on spans by default, and metadata like the model ID and token counts is always collected. To stop recording inputs and outputs, set the `gen_ai` category:
 
 ```python
 import sentry_sdk
@@ -289,25 +253,25 @@ sentry_sdk.init(
 )
 ```
 
-`gen_ai` supersedes the per-integration `include_prompts` parameter. When `data_collection` is set, `gen_ai` determines whether prompt content is recorded, regardless of what an individual integration's `include_prompts` is set to.
+`gen_ai` is the only control for recording prompt content. The per-integration `include_prompts` parameter was removed in version 3.0.
 
 ## `data_collection` Reference
 
 ### Keys
 
-| Key                     | Type                                    | Default                                                    | Description                                                                                                                                                                                                                                                                                                                                          |
-| ----------------------- | --------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user_info`             | `bool`                                  | `True`                                                     | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                                                                                                                                                                                                                                             |
-| `cookies`               | key-value behavior                      | `{"mode": "denylist"}`                                     | Collect cookies.                                                                                                                                                                                                                                                                                                                                     |
-| `http_headers`          | `{"request": key-value behavior}`       | `{"request": {"mode": "denylist"}}`                        | Collect HTTP request headers. The Python SDK currently doesn't capture response headers.                                                                                                                                                                                                                                                             |
-| `http_bodies`           | `list[str]`                             | `["incoming_request", "outgoing_request"]`                 | Body types to collect. Set to `[]` to disable. The Python SDK currently doesn't capture response bodies.                                                                                                                                                                                                                                             |
-| `url_query_params`      | key-value behavior                      | `{"mode": "denylist"}`                                     | Collect URL query parameters.                                                                                                                                                                                                                                                                                                                        |
-| `graphql`               | `{"document": bool, "variables": bool}` | both `True`                                                | Collect the GraphQL query document and its variables.                                                                                                                                                                                                                                                                                                |
-| `gen_ai`                | `{"inputs": bool, "outputs": bool}`     | both `True`                                                | Collect generative AI input and output content. Metadata such as the model ID and token counts is always collected.                                                                                                                                                                                                                                  |
-| `database_query_data`   | `bool`                                  | `True`                                                     | Collect database query data. Query parameter values are never sent; queries are parameterized first.                                                                                                                                                                                                                                                 |
-| `queues`                | `bool`                                  | `True`                                                     | Collect message body data for queue and task-queue integrations.                                                                                                                                                                                                                                                                                     |
-| `stack_frame_variables` | `bool` or key-value behavior            | `True`  | Include local variable values captured within stack frames. Accepts a boolean (`True` collects all variables, `False` collects none) or a key-value behavior to filter which variables are sent by name (see [Filtering Stack Frame Variables](https://develop.sentry.dev/sdk/foundations/client/data-collection/#filtering-stack-frame-variables)). |
-| `frame_context_lines`   | `int` or `bool`                         | `5`                                                        | Source code lines captured above and below each stack frame. `True` means the default of `5`, `False` means `0`.                                                                                                                                                                                                                                     |
+| Key                     | Type                                    | Default                                                         | Description                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | --------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user_info`             | `bool`                                  | `True`                                                          | Populate `user.*` fields (`id`, `email`, `username`, `ip_address`) from instrumentation.                                                                                                                                                                                                                                                             |
+| `cookies`               | key-value behavior                      | `{"mode": "denylist"}`                                          | Collect cookies.                                                                                                                                                                                                                                                                                                                                     |
+| `http_headers`          | `{"request": key-value behavior}`       | `{"request": {"mode": "denylist"}}`                             | Collect HTTP request headers. The Python SDK currently doesn't capture response headers.                                                                                                                                                                                                                                                             |
+| `http_bodies`           | `list[str]`                             | `["incoming_request", "outgoing_request", "outgoing_response"]` | Body types to collect. Set to `[]` to disable.                                                                                                                                                                                                                                                                                                       |
+| `url_query_params`      | key-value behavior                      | `{"mode": "denylist"}`                                          | Collect URL query parameters.                                                                                                                                                                                                                                                                                                                        |
+| `graphql`               | `{"document": bool, "variables": bool}` | both `True`                                                     | Collect the GraphQL query document and its variables.                                                                                                                                                                                                                                                                                                |
+| `gen_ai`                | `{"inputs": bool, "outputs": bool}`     | both `True`                                                     | Collect generative AI input and output content. Metadata such as the model ID and token counts is always collected.                                                                                                                                                                                                                                  |
+| `database_query_data`   | `bool`                                  | `True`                                                          | Collect database query data. Query parameter values are never sent; queries are parameterized first.                                                                                                                                                                                                                                                 |
+| `queues`                | `bool`                                  | `True`                                                          | Collect message body data for queue and task-queue integrations.                                                                                                                                                                                                                                                                                     |
+| `stack_frame_variables` | `bool` or key-value behavior            | `True`                                                          | Include local variable values captured within stack frames. Accepts a boolean (`True` collects all variables, `False` collects none) or a key-value behavior to filter which variables are sent by name (see [Filtering Stack Frame Variables](https://develop.sentry.dev/sdk/foundations/client/data-collection/#filtering-stack-frame-variables)). |
+| `frame_context_lines`   | `int` or `bool`                         | `5`                                                             | Source code lines captured above and below each stack frame. `True` means the default of `5`, `False` means `0`.                                                                                                                                                                                                                                     |
 
 ### Key-Value Collection Behavior
 
@@ -325,9 +289,9 @@ The `cookies`, `http_headers["request"]`, and `url_query_params` categories take
 
 `terms` match partially and case-insensitively, so `"-ip"` matches `X-Real-IP`. Filtered values are replaced with `[Filtered]`; the key itself is always preserved. The built-in sensitive denylist (`auth`, `token`, `secret`, `password`, `key`, `session`, and similar) always applies, even in `"allowlist"` mode.
 
-### Preserving `send_default_pii=False` Behavior
+### Using Conservative Collection Settings
 
-To keep the conservative collection you get from `send_default_pii=False` while using `data_collection`, opt out of each category explicitly:
+To collect only what the SDK gathered by default in version 2.x without `send_default_pii`, opt out of each category explicitly:
 
 ```python
 import sentry_sdk
@@ -340,7 +304,6 @@ sentry_sdk.init(
         "graphql": {"document": False, "variables": False},
         "database_query_data": False,
         "queues": False,
-        "http_bodies": [],
         "cookies": {
             "mode": "denylist",
             "terms": ["forwarded", "-ip", "remote-", "via", "-user"],

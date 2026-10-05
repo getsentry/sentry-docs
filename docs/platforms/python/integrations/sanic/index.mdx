@@ -46,9 +46,6 @@ app = Sanic(__main__)
 async def init_sentry(_):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        # Add data like request headers and IP for users;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
         # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
@@ -65,35 +62,6 @@ async def init_sentry(_):
         integrations=[AsyncioIntegration()],
     )
 ```
-
-### Configuration options
-
-If you're using tracing, you can configure the Sanic integration to not send transactions for requests that resulted in certain HTTP statuses using the `unsampled_statuses` option.
-
-By default, the Sanic integration generates transactions for all requests, except requests that result in a 404 HTTP status. To generate transactions for all HTTP statuses, including 404, or change which HTTP statuses don't generate transactions, you can manually instantiate the Sanic integration when initializing the Sentry SDK, like so:
-
-```python
-from sanic import Sanic
-import sentry_sdk
-from sentry_sdk.integrations.asyncio import AsyncioIntegration
-from sentry_sdk.integrations.sanic import SanicIntegration
-
-@app.listener("before_server_start")
-async def init_sentry(_):
-    sentry_sdk.init(
-        # ...
-        integrations=[
-            AsyncioIntegration(),
-            SanicIntegration(
-                # Configure the Sanic integration so that we generate
-                # transactions for all HTTP status codes, including 404
-                unsampled_statuses=None,
-            ),
-        ],
-    )
-```
-
-To specify a different set of HTTP statuses for which no transactions should be generated, set `unsampled_statuses` to a set containing the HTTP statuses that don't generate transactions. For example, if you wish to have no transactions for requests resulting in a 200 or 404 HTTP status, use `SanicIntegration(unsampled_statuses={200, 400})`.
 
 ## Verify
 
@@ -123,7 +91,7 @@ When you point your browser to [http://localhost:8000/](http://localhost:8000/) 
 
 - All exceptions leading to an Internal Server Error are reported.
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sensitive values such as authorization headers and cookie values are filtered by default, and user information is collected by default. Use the [`data_collection`](/platforms/python/data-management/data-collected/) option to change what is collected.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 

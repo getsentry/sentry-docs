@@ -31,19 +31,13 @@ Ensure that your team is aware of your company's policy around what can and cann
 
 ## Personally Identifiable Information (PII)
 
-The SDK can be configured to collect or ignore specific data using the [`data_collection`](../../configuration/options/#data_collection) option.
+The SDK collects data by category, and you control each category with the [`data_collection`](../../configuration/options/#data_collection) option. By default, the SDK collects user information, request bodies, and generative AI content, so opt out of the categories that don't fit your policy. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for the full list.
 
-Alternately, you can use the simpler [`send_default_pii`](../../configuration/options/#send_default_pii) option by setting it to `True` or `False`. Note that this option will be phased out in favor of the more fine-grained [`data_collection`](../../configuration/options/#data_collection).
-
-If you _do not_ wish to use the default PII behavior, you can also choose to identify users in a more controlled manner, using our [user identity context](../../enriching-events/identify-user/).
+If you _do not_ wish to collect user information automatically, set `user_info` to `False` and identify users in a more controlled manner, using our [user identity context](../../enriching-events/identify-user/).
 
 ## Scrubbing Data
 
-### `event_scrubber`
-
-If using `send_default_pii`, you can use the <PlatformIdentifier name="event-scrubber" /> configuration parameter to simplify removing sensitive data from your event payload. The event scrubber has no effect when using `data_collection`.
-
-<PlatformContent includePath="configuration/event-scrubber" />
+`data_collection` is the only built-in way the SDK limits what it collects. Beyond the categories it controls, scrub anything else yourself with the hooks below.
 
 ### <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-send-transaction" />, & <PlatformIdentifier name="before-send-span" />
 
@@ -55,7 +49,7 @@ Sensitive data may appear in the following areas:
 
 - Stack-locals → The SDK picks up variable values within the stack trace. These can be scrubbed, or this behavior can be disabled altogether if necessary.
 - Breadcrumbs → The SDK picks up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. The SDK will also record database queries, which may need to be scrubbed. The SDK will add the HTTP query string and fragment as a data attribute to the breadcrumb, which may need to be scrubbed.
-- User context → Automated behavior is controlled via <PlatformIdentifier name="send-default-pii" />.
+- User context → Automated behavior is controlled via the `user_info` key of the [`data_collection`](../../configuration/options/#data_collection) option.
 - HTTP context → Query strings are picked up in web frameworks as part of the HTTP request context.
 - Transaction Names → In certain situations, transaction names might contain sensitive data. For example, an HTTP request transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDK can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the web framework, your routing configuration, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
 - HTTP Spans → The SDK includes the HTTP query string and fragment as a data attribute, which means the HTTP span may need to be scrubbed.
