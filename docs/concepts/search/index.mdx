@@ -140,6 +140,35 @@ You may also combine the wildcard character `*` with other operators like so:
 
 In the above example, the search query returns results which do not have message values like `ConnectionTimeout`, `ReadTimeout`, etc.
 
+#### Regular Expressions
+
+<Include name="feature-available-for-user-group-limited-avail.mdx" />
+
+To match a string attribute in [logs](/product/logs/) against a regular expression, wrap the pattern in double slashes: `key://pattern//`.
+
+```
+message://^Timeout after \d+ms//
+```
+
+In the example above, the search query returns logs whose message starts with `Timeout after`, followed by a number and `ms`.
+
+A pattern matches anywhere in the value unless you anchor it with `^` or `$`. To exclude matching values, use the negation operator `!`:
+
+```
+!message://(ConnectionReset|ReadTimeout)Error//
+```
+
+Keep the following in mind when you write patterns:
+
+- Regular expressions only work on string attributes in logs.
+- Patterns use [RE2 syntax](https://github.com/google/re2/wiki/Syntax), which doesn't support lookarounds or backreferences.
+- Patterns are case sensitive. Start a pattern with `(?i)` to ignore case.
+- Patterns can be up to 64 characters long. An escape sequence like `\d` counts as one character.
+- Spaces and parentheses inside a pattern don't need quotes.
+- A pattern ends at the first `//` followed by a space, a `)`, or the end of the query. To match `//`, escape it as `\/\/`.
+- There's no list form like `key:[value1, value2]`. Use `|` inside the pattern instead.
+- To search for a literal value that starts with `//`, wrap it in quotes, like `url:"//cdn.example.com/"`.
+
 ## Page Filters
 
 Page filters allow you to narrow down the results shown on a page by selecting specific projects, environments, and date ranges. After you've set your filters, they'll persist as you navigate across pages in Sentry.
