@@ -39,12 +39,51 @@ const VERSIONED_PAGE = /__v[0-9][0-9A-Za-z._-]*$/;
 const IGNORE_MARKER = /trailing-slash-ignore/;
 
 /**
- * A path inside a comment is documentation, not a rendered link.
- * `internalLinkTracking.ts` describes its own normalization with
- * "`/product/logs` and `/product/logs/` both become `/product/logs/`" --
- * reporting that would invite someone to "fix" the prose.
+ * Blanks out comments so a path inside one is not reported. A commented path
+ * is documentation, not a rendered link: `internalLinkTracking.ts` describes
+ * its own normalization with "`/product/logs` and `/product/logs/` both become
+ * `/product/logs/`", and reporting that would invite someone to "fix" the prose.
+ *
+ * Block state is carried across lines because a JSX comment is routinely
+ * written over several (`{`+`/*` … `*` + `/}`), and the inner lines look like
+ * ordinary code.
+ *
+ * `state` is the in-block flag, threaded by the caller.
  */
-const COMMENT_LINE = /^\s*(\/\/|\/\*|\*)/;
+export function stripComments(line: string, state: {inBlock: boolean}): string {
+  let out = '';
+  let i = 0;
+  while (i < line.length) {
+    if (state.inBlock) {
+      const end = line.indexOf('*/', i);
+      if (end === -1) {
+        return out;
+      }
+      state.inBlock = false;
+      i = end + 2;
+      continue;
+    }
+    const block = line.indexOf('/*', i);
+    // A `//` preceded by `:` is a URL scheme, not a comment.
+    let lineComment = line.indexOf('//', i);
+    while (lineComment > 0 && line[lineComment - 1] === ':') {
+      lineComment = line.indexOf('//', lineComment + 2);
+    }
+    if (block !== -1 && (lineComment === -1 || block < lineComment)) {
+      out += line.slice(i, block);
+      state.inBlock = true;
+      i = block + 2;
+      continue;
+    }
+    if (lineComment !== -1) {
+      out += line.slice(i, lineComment);
+      return out;
+    }
+    out += line.slice(i);
+    break;
+  }
+  return out;
+}
 
 export interface CodeLinkIssue {
   filePath: string;
@@ -68,19 +107,19 @@ export function isExempt(linkPath: string): boolean {
 export function findIssuesInSource(content: string, filePath: string): CodeLinkIssue[] {
   const issues: CodeLinkIssue[] = [];
   const lines = content.split('\n');
+  const state = {inBlock: false};
   lines.forEach((line, index) => {
+    // Strip first, and unconditionally, so block state stays correct even on
+    // lines that are skipped for another reason.
+    const code = stripComments(line, state);
     // The marker exempts its own line and the one after it, matching
     // lint-trailing-slashes.ts, so it can sit above the line it applies to.
-    if (
-      COMMENT_LINE.test(line) ||
-      IGNORE_MARKER.test(line) ||
-      (index > 0 && IGNORE_MARKER.test(lines[index - 1]))
-    ) {
+    if (IGNORE_MARKER.test(line) || (index > 0 && IGNORE_MARKER.test(lines[index - 1]))) {
       return;
     }
     PATH_LITERAL.lastIndex = 0;
     let match: RegExpExecArray | null;
-    while ((match = PATH_LITERAL.exec(line)) !== null) {
+    while ((match = PATH_LITERAL.exec(code)) !== null) {
       const linkPath = match[1];
       if (isExempt(linkPath)) {
         continue;

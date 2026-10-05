@@ -65,6 +65,7 @@ describe('findIssuesInSource', () => {
   // would invite someone to "fix" prose that is deliberately showing both forms.
   it('ignores paths inside line comments', () => {
     expect(lint('// see /product/logs for details')).toHaveLength(0);
+    expect(lint('const a = 1; // "/one/two"')).toHaveLength(0);
   });
 
   it('ignores paths inside block and JSDoc comments', () => {
@@ -72,9 +73,41 @@ describe('findIssuesInSource', () => {
       '/**',
       ' * `/product/logs` and `/product/logs/` both become `/product/logs/`.',
       ' */',
-      '/* also /product/metrics here */',
+      '/* also "/product/metrics" here */',
     ].join('\n');
     expect(lint(src)).toHaveLength(0);
+  });
+
+  // JSX comments are `{/* ... */}` and routinely span several lines, whose
+  // inner lines look like ordinary code -- so block state has to be tracked
+  // rather than matched per line.
+  it('ignores paths inside a single-line JSX comment', () => {
+    expect(lint('{/* was <Link to="/product/logs"> before */}')).toHaveLength(0);
+  });
+
+  it('ignores paths inside a multi-line JSX comment', () => {
+    const src = ['{/*', '  <Link to="/product/metrics">metrics</Link>', '*/}'].join('\n');
+    expect(lint(src)).toHaveLength(0);
+  });
+
+  it('resumes flagging after a block comment closes', () => {
+    expect(lint('/* x */ const a = "/one/two";').map(i => i.linkPath)).toEqual([
+      '/one/two',
+    ]);
+    const src = ['{/*', '  "/ignored/path"', '*/}', 'const a = "/one/two";'].join('\n');
+    expect(lint(src).map(i => i.linkPath)).toEqual(['/one/two']);
+  });
+
+  it('flags code before a block comment opens on the same line', () => {
+    expect(lint('const a = "/one/two"; /* "/three/four"').map(i => i.linkPath)).toEqual([
+      '/one/two',
+    ]);
+  });
+
+  it('does not mistake a URL scheme for a line comment', () => {
+    expect(
+      lint('const u = "https://x.com", p = "/one/two";').map(i => i.linkPath)
+    ).toEqual(['/one/two']);
   });
 
   it('honors an inline ignore marker', () => {
