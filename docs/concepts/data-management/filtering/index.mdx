@@ -23,9 +23,8 @@ Inbound filters include:
 - React hydration errors
 - ChunkLoadErrors
 - Events from certain IP addresses
-- Events with certain error messages
-- Events from specific release versions of your code
 - Events from non-allowed domains (origin-based; see [Allowed Domains](#allowed-domains))
+- [Custom filters](#custom-filters) on error messages, error types, log messages, metric names, releases, and IP addresses
 
 ### Legacy Browser Filters
 
@@ -149,54 +148,124 @@ Inbound data filters have partial support for [Application Metrics](/product/met
 - **Application Metrics** - Filters Application Metrics by metric name (supports glob pattern matching, for example `my_metric.*`)
 - **Releases** - Filters Application Metrics from specific release versions
 
-## How Custom Filtering Works
+## Custom Filters
 
 <Include name="feature-available-for-plan-trial-business.mdx" />
 
-Inbound data filters are not case-sensitive.
+A custom filter drops data that matches all of its conditions. Use it for noise the built-in filters do not cover, such as a flaky error message, traffic from one IP range, or logs from an old release. Like every inbound filter, a custom filter runs at ingest time, and filtered data does not count toward your quota.
 
-### Error Message
+Create and manage custom filters under **Filter Rules** in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/), or with the [API](#custom-filter-api). A filter has:
 
-To use inbound data filters for error messages, keep the following in mind:
+- A **name** that identifies it in the table and in its statistics.
+- A **data type** that selects the kind of data the filter inspects.
+- One or more **conditions**. The filter drops data only when every condition matches.
+- An **active** toggle. An inactive filter is kept but has no effect.
 
-- You can provide multiple patterns, one per line. The filter applies if any of the patterns match.
-- On error events, the filter matches the entire error description in the format `{exception.type}: {exception.value}`. We do not recommend matching the full error description including the colon, and suggest you match with wildcards. For example, to match any "ConnectionError", use the filter `*ConnectionError*`. The wildcard matcher can be used at the beginning or end of the string.
-- On message events, the filter matches the fully formatted message.
-- Transactions are never matched by this filter.
+The Releases, Error Message, Log Message, and Application Metrics lists from the previous version of this page appear in the table as custom filters. They keep their statistics.
 
-To ensure you're adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the "title" field near the end of the file.
+### Data Types
+
+| Data type      | What the filter inspects                                               |
+| -------------- | ---------------------------------------------------------------------- |
+| Errors         | Error and message events                                               |
+| Logs           | [Logs](/product/logs/)                                                 |
+| Metrics        | [Application Metrics](/product/metrics/)                               |
+| Spans          | Spans                                                                  |
+| All Data Types | Every kind of data Sentry ingests, including kinds added in the future |
+
+A filter on **All Data Types** only accepts the conditions that every data type carries: **Release** and **IP Address**.
+
+### Conditions
+
+A condition names a property and lists the values to match. Enter one value per line. The condition matches when any of its values matches. Values are [glob patterns](#glob-matching), except for IP addresses.
+
+| Condition     | Data types | Matches                                                                    |
+| ------------- | ---------- | -------------------------------------------------------------------------- |
+| Error Message | Errors     | The exception type, the exception value, or the message of the event       |
+| Error Type    | Errors     | The exception type alone, such as `TypeError`                              |
+| Log Message   | Logs       | The body of the log                                                        |
+| Metric Name   | Metrics    | The name of the metric, such as `checkout.*`                               |
+| Release       | All        | The release the data was sent from                                         |
+| IP Address    | All        | The IP address the data was sent from, as a single address or a CIDR range |
+
+Conditions in one filter combine with AND. To drop data that matches either of two patterns, put both patterns in one condition. To drop data that matches both, use two conditions. A filter has at most 10 conditions, and a project has at most 50 filters. The values of one filter add up to at most 4000 characters.
+
+Custom filters are not case-sensitive.
+
+#### Error Message
+
+- The condition checks the exception type, the exception value, and the message of the event separately. It does not check the combined `{exception.type}: {exception.value}` description, so match with wildcards. For example, to drop any "ConnectionError", use `*ConnectionError*`.
+- On message events, the condition matches the fully formatted message.
+- Transactions are never matched by this condition.
+
+To find the text to match, open the JSON of an event in the issue. The condition matches the data found in the `exception` values and in the `logentry` field.
 
 <Alert title="Note" level="warning">
 
-Matching on the deobfuscated `{exception.type}` is not supported for <PlatformLink to="/enhance-errors/proguard/">ProGuard</PlatformLink> events, because deobfuscation of class names happens after ingestion.
+Matching on the deobfuscated `{exception.type}` is not supported for <PlatformLink to="/enhance-errors/proguard/">ProGuard</PlatformLink> events, because deobfuscation of class names happens after ingestion. See [Troubleshooting](#error-message-filters-do-not-match-deobfuscated-exception-types).
 
 </Alert>
 
-### Releases
+#### Error Type
 
-To filter releases, keep the following in mind:
+The condition checks the exception type alone. An event with several chained exceptions matches when any of their types matches. Use it to narrow a filter to one type without also matching events that only mention that type in their message.
 
-- The filter matches the full release name provided during SDK initialization. If you provide the recommended package prefix, the release is in the format `package@version`, for example: `my-example@1.4.0-beta.1`.
+#### Release
+
+- The condition matches the full release name provided during SDK initialization. If you provide the recommended package prefix, the release is in the format `package@version`, for example: `my-example@1.4.0-beta.1`.
 - Globbing rules apply and there is no special casing for SemVer. This allows for matching prefixes, such as `my-example@1.*`.
-- The filter never applies to events without a release.
+- The condition never matches data without a release.
 
-### Log Message
+While you edit a release condition, Sentry warns you about a pattern that matches no release of the project. The filter still saves, because the pattern may be meant for a release that has not shipped yet.
 
-To use inbound data filters for log messages, keep the following in mind:
+#### Log Message
 
-- You can provide multiple patterns, one per line. The filter applies if any of the patterns match.
-- On logs, the filter matches the log message in the format. We do not recommend matching the full log message, and suggest you match with wildcards. For example, to match any "Connection timeout asbq33q", use the filter `*Connection timeout*`. The wildcard matcher can be used at the beginning or end of the string.
+The condition matches the body of the log. Match with wildcards instead of the full message. For example, to drop any "Connection timeout asbq33q", use `*Connection timeout*`.
 
-### Application Metrics
+#### Metric Name
 
-To use inbound data filters for application metrics, keep the following in mind:
+The condition matches the name of the metric. For example, to drop all metrics under the `my_metric` namespace, use `my_metric.*`.
 
-- You can provide multiple patterns, one per line. The filter applies if any of the patterns match.
-- The filter matches on the metric name. For example, to filter all metrics under the `my_metric` namespace, use `my_metric.*`.
+#### IP Address
+
+The condition matches the originating IP address of the request, with the same rules as the built-in [IP Addresses](#ip-addresses) filter. Enter a single address or a network range in CIDR notation, such as `203.0.113.7` or `10.0.0.0/8`. Sentry rejects a value that is not a valid address or range.
+
+### Filter Statistics
+
+The **Trend** and **Filtered** columns of the table show how much data each filter dropped in the last 30 days, split by data category. The [Stats](/product/stats/) page counts this data as filtered.
+
+### Custom Filter API
+
+You can manage custom filters with the API. The requests need an auth token with the `project:write` scope.
+
+| Operation                     | Endpoint                                                                                                                |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| List the filters of a project | [`GET /projects/{org}/{project}/custom-inbound-filters/`](/api/projects/list-a-projects-custom-inbound-filters/)        |
+| Create a filter               | [`POST /projects/{org}/{project}/custom-inbound-filters/`](/api/projects/create-a-custom-inbound-filter/)               |
+| Retrieve a filter             | [`GET /projects/{org}/{project}/custom-inbound-filters/{filter_id}/`](/api/projects/retrieve-a-custom-inbound-filter/)  |
+| Update a filter               | [`PUT /projects/{org}/{project}/custom-inbound-filters/{filter_id}/`](/api/projects/update-a-custom-inbound-filter/)    |
+| Delete a filter               | [`DELETE /projects/{org}/{project}/custom-inbound-filters/{filter_id}/`](/api/projects/delete-a-custom-inbound-filter/) |
+
+The `dataType` field takes `error`, `log`, `metric`, `span`, or `all`. Each condition has a `type` of `error_message`, `error_type`, `log_message`, `metric_name`, `release`, or `ip_address`, and a list of values. For example, this request creates a filter that drops errors whose message mentions a refused connection:
+
+```bash
+curl https://sentry.io/api/0/projects/{organization_id_or_slug}/{project_id_or_slug}/custom-inbound-filters/ \
+  -H 'Authorization: Bearer <auth_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Ignore flaky connection errors",
+    "dataType": "error",
+    "conditions": [
+      {"type": "error_message", "value": ["*connection refused*", "*ECONNRESET*"]}
+    ]
+  }'
+```
+
+The built-in filters on this page, such as the browser extension or web crawler filters, use the separate [data filters](/api/projects/list-a-projects-data-filters/) endpoints.
 
 ### Glob Matching
 
-The error messages, log messages, application metrics, and releases filters use glob patterns. Globs are case insensitive and allow you to specify wildcards to match variable input. For example, `*panic*` matches any error that contains the words "panic", "PANIC" or "PaNiC".
+The error message, error type, log message, metric name, and release conditions use glob patterns. Globs are case insensitive and allow you to specify wildcards to match variable input. For example, `*panic*` matches any error that contains the words "panic", "PANIC" or "PaNiC".
 
 Some symbols, such as the `*` character, receive special meaning as meta characters. To match a literal asterisk, escape it with a backslash: `\*`. Inbound data filters use the following meta characters:
 
