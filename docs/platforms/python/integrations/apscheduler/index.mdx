@@ -37,13 +37,15 @@ sentry_sdk.init(
 )
 ```
 
-Each job gets a monitor, created the first time the job runs. The monitor slug is the job's `id`. Give your jobs an explicit `id`. If a job has no `id`, its name is used, which defaults to the function name.
+Each job gets a monitor, created the first time the job runs. The monitor slug is the job's `id`. Give your jobs an explicit `id`. If a job has no `id`, the SDK uses its name, which defaults to the function name, and logs a warning.
 
 The schedule comes from the job's trigger:
 
-- `CronTrigger`: a crontab schedule in the trigger's timezone. Triggers that use seconds, years, weeks, or both `day` and `day_of_week` aren't monitored.
+- `CronTrigger`: a crontab schedule in the trigger's timezone. Triggers that use seconds, years, weeks, or both `day` and `day_of_week` aren't monitored, and neither are triggers whose timezone has no IANA name (such as a fixed UTC offset).
 - `IntervalTrigger`: an interval schedule. Intervals must be whole minutes.
 - `DateTrigger`: one-off jobs aren't monitored.
+
+Runs that APScheduler skips because the job reached `max_instances` don't send check-ins.
 
 ## Verify
 
@@ -63,7 +65,7 @@ Within a minute, a `send-report` cron monitor appears in Sentry with a failed ch
 ## Options
 
 - `monitor_jobs`: Send check-ins for scheduled jobs. Defaults to `False`.
-- `exclude_jobs`: A list of monitor slugs or regular expressions for jobs that shouldn't be monitored.
+- `exclude_jobs`: A list of monitor slugs or regular expressions for jobs that shouldn't be monitored. Each entry must match the end of the slug, so `cleanup` also excludes `nightly-cleanup`. Use `^cleanup` to match only `cleanup`.
 
 ```python
 APSchedulerIntegration(
