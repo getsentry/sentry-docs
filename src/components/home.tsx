@@ -186,12 +186,14 @@ export async function Home() {
             />
             <AgentQuickLink
               to="/configuration/integrations/vercelai/"
+              defaultPlatform="javascript.node"
               title="Vercel AI"
               desc="Instrument the Vercel AI SDK."
               icon={<PlatformIcon platform="vercel" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/openai/"
+              to="/configuration/integrations/openai/"
+              defaultPlatform="javascript.node"
               title="OpenAI"
               desc="Instrument the OpenAI SDK."
               icon={<PlatformIcon platform="openai" />}
@@ -306,6 +308,8 @@ type AgentQuickLinkProps = {
   | {
       /** Platform-relative path, resolved through `/platform-redirect/`. */
       to: string;
+      /** Platform to use when the user hasn't picked one yet. */
+      defaultPlatform?: string;
       href?: never;
     }
 );
@@ -331,7 +335,11 @@ function AgentQuickLink(props: AgentQuickLinkProps) {
   }
 
   return (
-    <PreferredPlatformLink to={props.to} className={className}>
+    <PreferredPlatformLink
+      to={props.to}
+      defaultPlatform={props.defaultPlatform}
+      className={className}
+    >
       {content}
     </PreferredPlatformLink>
   );
