@@ -1,0 +1,121 @@
+---
+title: Pulse
+description: "Integrate Pulse with Sentry to capture and send structured logs."
+sidebar_order: 40
+---
+
+The [`SentryPulse`](https://github.com/getsentry/sentry-apple-pulse) package provides a [Pulse](https://github.com/kean/Pulse) integration that automatically forwards log entries to Sentry's structured logging system. Once started, all Pulse log messages are captured and sent to Sentry with full context, including metadata, source location, and log levels.
+
+## Requirements
+
+- Sentry Cocoa SDK `9.27.0` or above
+- Pulse `5.0.0` or above
+
+## Install
+
+Add the package via Swift Package Manager:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-pulse", from: "9.0.0")
+]
+```
+
+Or add it in Xcode via **File > Add Package Dependencies** using the URL `https://github.com/getsentry/sentry-apple-pulse`.
+
+### Building Sentry From Source
+
+By default, the integration uses precompiled Sentry binary xcframeworks. If you need to build Sentry from source, enable the `SentryFromSource` trait:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-pulse", from: "9.0.0", traits: ["SentryFromSource"])
+]
+```
+
+## Configure
+
+Initialize the Sentry SDK with logs enabled, then start the Pulse integration:
+
+```swift
+import Sentry
+import Pulse
+import SentryPulse
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableLogs = true
+}
+
+SentryPulse.start()
+```
+
+### Custom LoggerStore
+
+By default, `SentryPulse.start()` observes `LoggerStore.shared`. You can pass a custom store:
+
+```swift
+let customStore = try LoggerStore(storeURL: customURL, options: [.inMemory])
+SentryPulse.start(loggerStore: customStore)
+```
+
+### Lifecycle Management
+
+You can stop and restart the integration at any time:
+
+```swift
+SentryPulse.stop()    // Stop forwarding Pulse logs to Sentry
+SentryPulse.start()   // Re-enable the integration
+```
+
+Calling `start()` multiple times has no effect — the integration is started only once.
+
+## Verify
+
+```swift
+import Pulse
+
+let logger = LoggerStore.shared.makeLogger(label: "com.example.app")
+
+logger.info("User logged in", metadata: ["userId": "12345"])
+logger.error("Payment failed", metadata: ["errorCode": "500"])
+```
+
+## Log Level Mapping
+
+Pulse log levels are automatically mapped to Sentry log levels:
+
+| Pulse Level | Sentry Log Level |
+| ----------- | ---------------- |
+| `.trace`    | `.trace`         |
+| `.debug`    | `.debug`         |
+| `.info`     | `.info`          |
+| `.notice`   | `.info`          |
+| `.warning`  | `.warn`          |
+| `.error`    | `.error`         |
+| `.critical` | `.fatal`         |
+
+## Metadata Handling
+
+All Pulse metadata is automatically forwarded to Sentry with the `pulse.` prefix:
+
+```swift
+logger.info("User action", metadata: [
+    "userId": "12345",
+    "action": "purchase"
+])
+// Produces attributes: pulse.userId, pulse.action
+```
+
+## Automatic Attributes
+
+The integration automatically includes the following attributes with every log entry:
+
+| Attribute | Description |
+| --------- | ----------- |
+| `sentry.origin` | `"auto.logging.pulse"` |
+| `pulse.level` | The original Pulse level name |
+| `pulse.label` | The logger label |
+| `code.file.path` | The source file path (if available) |
+| `code.function.name` | The function name (if available) |
+| `code.line.number` | The line number |

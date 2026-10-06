@@ -1,0 +1,115 @@
+---
+title: SwiftLog
+description: "Integrate Apple's SwiftLog with Sentry to capture and send structured logs."
+sidebar_order: 10
+---
+
+The [`SentrySwiftLog`](https://github.com/getsentry/sentry-apple-swift-log) package provides a [SwiftLog](https://github.com/apple/swift-log) `LogHandler` that forwards log entries to Sentry's structured logging system. Once configured, any logs emitted through SwiftLog are automatically captured and sent to Sentry with full context, including metadata, source location, and log levels.
+
+## Requirements
+
+- Sentry Cocoa SDK `9.27.0` or above
+- SwiftLog `1.5.0` or above
+
+## Install
+
+Add the package via Swift Package Manager:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-swift-log", from: "1.0.0")
+]
+```
+
+Or add it in Xcode via **File > Add Package Dependencies** using the URL `https://github.com/getsentry/sentry-apple-swift-log`.
+
+### Building Sentry From Source
+
+By default, the integration uses precompiled Sentry binary xcframeworks. If you need to build Sentry from source (for example, for custom architectures), enable the `SentryFromSource` trait:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-swift-log", from: "1.0.0", traits: ["SentryFromSource"])
+]
+```
+
+## Configure
+
+Initialize the Sentry SDK with logs enabled, then register `SentryLogHandler` as your SwiftLog bootstrap:
+
+```swift
+import Sentry
+import Logging
+import SentrySwiftLog
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableLogs = true
+}
+
+LoggingSystem.bootstrap { _ in
+    SentryLogHandler(logLevel: .info)
+}
+```
+
+### Log Level Threshold
+
+Set the minimum log level for messages to be sent to Sentry. Messages below this threshold are filtered out:
+
+```swift
+// Only send warnings and above to Sentry
+let handler = SentryLogHandler(logLevel: .warning)
+```
+
+### Handler Metadata
+
+Add metadata that will be included with all log entries. Handler-level metadata is merged with per-message metadata, with per-message values taking precedence:
+
+```swift
+var handler = SentryLogHandler(logLevel: .info)
+handler.metadata["app_version"] = "1.0.0"
+handler.metadata["environment"] = "production"
+
+LoggingSystem.bootstrap { _ in handler }
+```
+
+## Verify
+
+```swift
+import Logging
+
+let logger = Logger(label: "com.example.app")
+
+logger.info("User logged in", metadata: ["userId": "12345"])
+logger.error("Payment failed", metadata: ["errorCode": "500"])
+logger.warning("API rate limit approaching", metadata: ["remaining": "10"])
+```
+
+## Log Level Mapping
+
+SwiftLog levels are automatically mapped to Sentry log levels:
+
+| SwiftLog Level | Sentry Log Level |
+| -------------- | ---------------- |
+| `.trace`       | `.trace`         |
+| `.debug`       | `.debug`         |
+| `.info`        | `.info`          |
+| `.notice`      | `.info`          |
+| `.warning`     | `.warn`          |
+| `.error`       | `.error`         |
+| `.critical`    | `.fatal`         |
+
+## Automatic Attributes
+
+The handler automatically includes the following attributes with every log entry:
+
+| Attribute | Description |
+| --------- | ----------- |
+| `sentry.origin` | `"auto.logging.swift-log"` |
+| `swift-log.level` | The original SwiftLog level |
+| `swift-log.source` | The log source |
+| `code.file.path` | The source file path |
+| `code.function.name` | The function name |
+| `code.line.number` | The line number |
+
+All SwiftLog metadata is prefixed with `swift-log.` in Sentry attributes (for example, `swift-log.userId`).

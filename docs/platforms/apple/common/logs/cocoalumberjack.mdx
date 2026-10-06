@@ -1,0 +1,102 @@
+---
+title: CocoaLumberjack
+description: "Integrate CocoaLumberjack with Sentry to capture and send structured logs."
+sidebar_order: 20
+---
+
+The [`SentryCocoaLumberjack`](https://github.com/getsentry/sentry-apple-cocoalumberjack) package provides a [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack) logger that forwards log entries to Sentry's structured logging system. Once configured, any logs emitted through CocoaLumberjack are automatically captured and sent to Sentry with full context, including source location, thread information, and log levels.
+
+## Requirements
+
+- Sentry Cocoa SDK `9.27.0` or above
+- CocoaLumberjack `3.8.0` or above
+
+## Install
+
+Add the package via Swift Package Manager:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-cocoalumberjack", from: "9.0.0")
+]
+```
+
+Or add it in Xcode via **File > Add Package Dependencies** using the URL `https://github.com/getsentry/sentry-apple-cocoalumberjack`.
+
+### Building Sentry From Source
+
+By default, the integration uses precompiled Sentry binary xcframeworks. If you need to build Sentry from source, enable the `SentryFromSource` trait:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-cocoalumberjack", from: "9.0.0", traits: ["SentryFromSource"])
+]
+```
+
+## Configure
+
+Initialize the Sentry SDK with logs enabled, then add `SentryCocoaLumberjackLogger` to CocoaLumberjack:
+
+```swift
+import Sentry
+import CocoaLumberjackSwift
+import SentryCocoaLumberjack
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableLogs = true
+}
+
+// Only logs at .info level and above will be sent to Sentry
+DDLog.add(SentryCocoaLumberjackLogger(), with: .info)
+```
+
+### Log Level Threshold
+
+Use CocoaLumberjack's built-in filtering when adding the logger to control which messages are sent to Sentry:
+
+```swift
+// Only send error logs to Sentry
+DDLog.add(SentryCocoaLumberjackLogger(), with: .error)
+```
+
+## Verify
+
+```swift
+import CocoaLumberjackSwift
+
+DDLogInfo("User logged in")
+DDLogError("Payment failed")
+DDLogWarn("API rate limit approaching")
+DDLogDebug("Processing request")
+DDLogVerbose("Detailed trace information")
+```
+
+## Log Level Mapping
+
+CocoaLumberjack log levels are automatically mapped to Sentry log levels:
+
+| CocoaLumberjack Level | Sentry Log Level |
+| --------------------- | ---------------- |
+| `.error`              | `.error`         |
+| `.warning`            | `.warn`          |
+| `.info`               | `.info`          |
+| `.debug`              | `.debug`         |
+| `.verbose`            | `.trace`         |
+
+## Automatic Attributes
+
+The logger automatically includes the following attributes with every log entry:
+
+| Attribute | Description |
+| --------- | ----------- |
+| `sentry.origin` | `"auto.logging.cocoalumberjack"` |
+| `cocoalumberjack.level` | The original CocoaLumberjack log level |
+| `code.file.path` | The source file path |
+| `code.function.name` | The function name |
+| `code.line.number` | The line number |
+| `cocoalumberjack.context` | The log context |
+| `cocoalumberjack.timestamp` | The log timestamp |
+| `cocoalumberjack.threadID` | The thread ID |
+| `cocoalumberjack.threadName` | The thread name (if available) |
+| `cocoalumberjack.queueLabel` | The dispatch queue label (if available) |
