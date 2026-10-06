@@ -48,7 +48,7 @@ The SDK will automatically capture a check-in with `CheckInStatus.InProgress` wh
 
 ## Send the Recurring Job Schedule
 
-Sentry only creates a monitor from a check-in that includes a monitor config. To send the schedule of your recurring jobs with their check-ins, turn on `SendRecurringJobSchedule`. This is available from the next SDK release.
+Sentry only creates a monitor from a check-in that includes a monitor config. From the next SDK release, the SDK sends the schedule of your recurring jobs with their check-ins by default.
 
 The job still needs the `SentryMonitorSlug` attribute. The SDK doesn't use the recurring job ID as the monitor slug.
 
@@ -56,7 +56,7 @@ The job still needs the `SentryMonitorSlug` attribute. The SDK doesn't use the r
 using Hangfire;
 using Sentry.Hangfire;
 
-GlobalConfiguration.Configuration.UseSentry(options => options.SendRecurringJobSchedule = true);
+GlobalConfiguration.Configuration.UseSentry();
 RecurringJob.AddOrUpdate<PricingUpdateWorker>("update-pricing", job => job.Execute(), Cron.Hourly());
 
 public class PricingUpdateWorker
@@ -72,3 +72,9 @@ public class PricingUpdateWorker
 The SDK sends the job's cron expression and time zone each time the job runs. Sentry creates the monitor on the first check-in and sets its schedule and time zone from the job on every check-in after that, so changes you make to those two settings in Sentry are overwritten. Other monitor settings are kept.
 
 If Sentry doesn't support the job's cron expression or time zone, the check-in is sent without a schedule. This includes crons that run every few seconds, crons that restrict both the day of the month and the day of the week, and Windows time zone IDs on .NET Framework.
+
+When you upgrade, existing monitors for recurring jobs get their schedule and time zone from the job. To keep managing the schedule in Sentry instead, turn off `SendRecurringJobSchedule`:
+
+```csharp
+GlobalConfiguration.Configuration.UseSentry(options => options.SendRecurringJobSchedule = false);
+```
