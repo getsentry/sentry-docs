@@ -202,17 +202,23 @@ because ProGuard files work on projects. For more information about this refer t
 
 </Alert>
 
-The `upload-proguard` command is the one to use for uploading ProGuard files. It
-takes the path to one or more ProGuard mapping files and will upload them to
-Sentry.
+Use `sentry-cli proguard upload` to upload ProGuard mapping files:
 
 ```bash
-sentry-cli upload-proguard \
+sentry-cli proguard upload \
+    --org ___ORG_SLUG___ \
+    --project ___PROJECT_SLUG___ \
     app/build/outputs/mapping/{BuildVariant}/mapping.txt
 ```
 
-Since the Android Sentry SDK needs to know the UUID of the mapping file, you need
-to associate it with the upload. However, you first have to place that UUID into the `AndroidManifest.xml` file:
+The Android SDK needs the mapping UUID in the app's `AndroidManifest.xml`. Run
+`sentry-cli proguard uuid` to print the deterministic UUID for the mapping file:
+
+```bash
+sentry-cli proguard uuid app/build/outputs/mapping/{BuildVariant}/mapping.txt
+```
+
+Add the returned UUID to the manifest:
 
 ```xml
 <application>
@@ -220,13 +226,8 @@ to associate it with the upload. However, you first have to place that UUID into
 </application>
 ```
 
-The same UUID needs to be used to upload the mapping file:
-
-```bash
-sentry-cli upload-proguard \
-    --uuid A_VALID_UUID \
-    app/build/outputs/mapping/{BuildVariant}/mapping.txt
-```
+The upload command computes the same UUID from the mapping file, so you don't
+need to pass `--uuid`.
 
 After the upload, Sentry deobfuscates future events.
 To make sure that it worked, you can check [_Project Settings > ProGuard_](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/proguard/) and see if the upload mapping files are listed.
@@ -236,7 +237,7 @@ To make sure that it worked, you can check [_Project Settings > ProGuard_](https
 The command's `--help` output lists and explains all options:
 
 ```bash
-sentry-cli upload-proguard --help
+sentry-cli proguard upload --help
 ```
 
 ## JVM Source Bundles
