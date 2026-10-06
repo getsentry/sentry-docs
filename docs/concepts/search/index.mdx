@@ -142,22 +142,40 @@ In the above example, the search query returns results which do not have message
 
 #### Regular Expressions (logs only)
 
+A regular expression (regex) is a pattern that describes a sequence of characters you want to find in text. They're useful when a plain value or a wildcard isn't precise enough, like finding every log message that starts with `Timeout after` followed by any number of milliseconds.
+
 You can match a string attribute in [logs](/product/logs/) against a regular expression.
 
-In the search bar, add a filter for the attribute, open its operator dropdown, and choose **matches regex**, or **does not match regex** to exclude matching values. 
+In the search bar, add a filter for the attribute, open its operator dropdown, and choose **matches regex**, or **does not match regex** to exclude matching values.
 
 In query syntax, wrap the pattern in double slashes: `key://pattern//`.
 
-```
-message://^Timeout after \d+ms//
-```
-
-In the example above, the search query returns logs whose message starts with `Timeout after`, followed by a number and `ms`.
-
-A pattern matches anywhere in the value unless you anchor it with `^` or `$`. To exclude matching values, use the negation operator `!`:
+Without any special symbols, a pattern matches anywhere in the value. This matches both `Timeout after 30ms` and `Request Timeout`:
 
 ```
-!message://(ConnectionReset|ReadTimeout)Error//
+message://Timeout//
+```
+
+Patterns support [RE2 syntax](https://github.com/google/re2/wiki/Syntax) to define more specific matchers.
+
+You can use either or both of `^` to match the start of the log, and/or `$` to match the end of the log.
+This matches only messages that start with "Timeout":
+
+```
+message://^Timeout//
+```
+
+`\d` is a character class, meaning it matches any one character from a set. `\d` matches any digit. This matches `Timeout after 1s` and `Timeout after 234ms`, but not `Timeout after a while`:
+
+```
+message://^Timeout after \d+//
+```
+
+To exclude matching values, use the negation operator `!`.
+This excludes timeouts whose amounts start with `\w`, or word characters:
+
+```
+!message://^Timeout after \w//
 ```
 
 Keep the following in mind when you write patterns:
