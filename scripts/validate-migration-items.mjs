@@ -1,15 +1,14 @@
 /**
- * Validates the v11 migration item collection in `includes/migration/javascript-v11/`.
+ * Validates migration item collections in `includes/migration/`.
  *
  * Each item is a standalone MDX file with tagged frontmatter, rendered by the
- * interactive migration guide at
- * `docs/platforms/javascript/common/migration/v10-to-v11/interactive.mdx`.
+ * corresponding interactive migration guide.
  * Frontmatter controls platform filtering, reading order and item anchors.
  * Validate it so mistakes cannot silently drop items from the guide.
  *
- * `loadItems` is called from `migrationGuide.spec.ts`, so `pnpm test` fails on
- * invalid frontmatter. Run `pnpm migration-items` for the breakdown by phase,
- * severity and category as well.
+ * `loadItems` is called from `validate-migration-items.spec.ts`, so `pnpm test`
+ * fails on invalid frontmatter. Run `pnpm migration-items` (JavaScript) or
+ * `pnpm migration-items flutter-v10` for the phase, severity and category counts.
  */
 import {readdirSync, readFileSync} from 'fs';
 import path from 'path';
@@ -17,8 +16,10 @@ import {pathToFileURL} from 'url';
 
 import matter from 'gray-matter';
 
-const ITEMS_DIR = 'includes/migration/javascript-v11';
-const GUIDES_DIR = 'docs/platforms/javascript/guides';
+const COLLECTIONS = {
+  'javascript-v11': 'docs/platforms/javascript/guides',
+  'flutter-v10': 'docs/platforms/dart/guides',
+};
 
 /** The change itself, stated once. Anything longer is an explanation. */
 const MAX_FIRST_PARAGRAPH = 400;
@@ -36,9 +37,12 @@ export const SEVERITIES = ['action-required', 'behavior-change', 'informational'
 export const PLATFORM_CATEGORIES = ['browser', 'server', 'serverless', 'all'];
 
 /** Reads and validates every item. Returns `{items, errors}`. */
-export function loadItems(root = process.cwd()) {
-  const dir = path.join(root, ITEMS_DIR);
-  const guides = new Set(readdirSync(path.join(root, GUIDES_DIR)));
+export function loadItems(root = process.cwd(), collection = 'javascript-v11') {
+  if (!Object.hasOwn(COLLECTIONS, collection)) {
+    throw new Error(`Unknown migration collection "${collection}"`);
+  }
+  const dir = path.join(root, 'includes/migration', collection);
+  const guides = new Set(readdirSync(path.join(root, COLLECTIONS[collection])));
   const files = readdirSync(dir).filter(f => f.endsWith('.mdx'));
 
   const errors = [];
@@ -134,7 +138,7 @@ export function loadItems(root = process.cwd()) {
 }
 
 function main() {
-  const {items, errors} = loadItems();
+  const {items, errors} = loadItems(process.cwd(), process.argv[2]);
   const count = (list, predicate) => list.filter(predicate).length;
   const pad = (value, width) => String(value).padEnd(width);
 
