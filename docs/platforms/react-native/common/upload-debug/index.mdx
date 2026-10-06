@@ -31,22 +31,37 @@ Run the following commands from your React Native project root. Replace the orga
 
 ### Android ProGuard/R8 Mappings
 
-For a minified Android release build, upload its mapping file:
+The mapping upload must use the UUID packaged in your app. If you use the Sentry
+Gradle Plugin, set `autoUploadProguardMapping` to `false` and keep
+`includeProguardMapping` enabled so it still generates and packages the mapping
+metadata during the build.
+
+For a minified Android release build, upload its mapping file with that UUID:
 
 ```bash
 sentry-cli proguard upload \
   --org ___ORG_SLUG___ \
   --project ___PROJECT_SLUG___ \
+  --uuid BUILD_MAPPING_UUID \
   android/app/build/outputs/mapping/release/mapping.txt
 ```
 
-Replace `release` with your build variant if needed. The CLI computes a UUID from the mapping file. To inspect it, run:
+Replace `release` with your build variant and `BUILD_MAPPING_UUID` with the
+matching UUID from the `io.sentry.ProguardUuids` property in the generated
+`sentry-debug-meta.properties` asset. The CLI retains `--uuid` for compatibility
+with builds that already contain a mapping UUID.
+
+For a custom build pipeline, you can calculate the mapping's default UUID with:
 
 ```bash
 sentry-cli proguard uuid android/app/build/outputs/mapping/release/mapping.txt
 ```
 
-The app must report the same ProGuard UUID as the uploaded mapping. If you disable automatic uploads, keep the Sentry Gradle Plugin's mapping metadata generation enabled. For a custom build pipeline, add the UUID printed by `sentry-cli proguard uuid` to the app's `io.sentry.proguard-uuid` manifest metadata before distributing it. Uploading the mapping alone does not add metadata to an app that's already built. See [ProGuard mapping uploads](/cli/dif/#proguard-mapping-upload) for the manual workflow.
+Your build must calculate and package that UUID after generating the mapping but
+before packaging and signing the APK or AAB. Uploading a mapping or editing the
+source manifest afterward does not add metadata to an app that's already built.
+See [ProGuard mapping uploads](/cli/dif/#proguard-mapping-upload) for the custom
+build workflow.
 
 ### Android Native Symbols
 
