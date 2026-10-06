@@ -942,6 +942,22 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fixa/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fixa/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/cursor/',
     destination: '/integrations/coding-agents/cursor/',
   },
@@ -1171,6 +1187,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1188,6 +1208,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/shiprail/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/shipfox/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1386,6 +1410,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1403,6 +1431,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/shiprail/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/shipfox/',
     destination: '/integrations/third-party-integrations/',
   },
   {

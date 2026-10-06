@@ -8,32 +8,14 @@ Check-in monitoring allows you to track a job's progress by completing two check
 
 The Sentry Java SDK offers a helper that takes care of wrapping your code and sending a check-in at the start and one at the end. It checks for exceptions and sets the status of the check-in accordingly.
 
-```java
-import io.sentry.util.CheckInUtils;
-
-String result = CheckInUtils.withCheckIn("<monitor-slug>", () -> {
-    // Execute your scheduled task here...
-    return "computed result";
-});
-```
-
-```kotlin
-import io.sentry.util.CheckInUtils
-
-CheckInUtils.withCheckIn("<monitor-slug>") {
-    // Execute your scheduled task here...
-}
-```
-
-You may also send a `MonitorConfig` with a `MonitorSchedule` so the monitor is created or updated (upsert) automatically.
+Pass a `MonitorConfig` with a `MonitorSchedule` so Sentry creates or updates (upserts) the monitor from your code:
 
 ```java
 import io.sentry.MonitorConfig;
 import io.sentry.MonitorSchedule;
-import io.sentry.MonitorScheduleUnit;
 import io.sentry.util.CheckInUtils;
 
-MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE));
+MonitorConfig monitorConfig = new MonitorConfig(MonitorSchedule.crontab("0 * * * *"));
 
 String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> {
     // Execute your scheduled task here...
@@ -44,15 +26,16 @@ String result = CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig, () -> 
 ```kotlin
 import io.sentry.MonitorConfig
 import io.sentry.MonitorSchedule
-import io.sentry.MonitorScheduleUnit
 import io.sentry.util.CheckInUtils
 
-val monitorConfig = MonitorConfig(MonitorSchedule.interval(3, MonitorScheduleUnit.MINUTE))
+val monitorConfig = MonitorConfig(MonitorSchedule.crontab("0 * * * *"))
 
 CheckInUtils.withCheckIn("<monitor-slug>", monitorConfig) {
     // Execute your scheduled task here...
 }
 ```
+
+If the monitor already exists in Sentry, the configuration is optional. See [Upserting Cron Monitors](#upserting-cron-monitors) for all schedule and configuration options.
 
 You can also check-in to a specific environment.
 

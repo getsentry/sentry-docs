@@ -108,9 +108,24 @@ Set to `false` to opt out, for example, when using a custom `tunnel` or when run
 Controls which categories of data the SDK collects automatically. All fields are optional.
   By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
 
+<PlatformSection notSupported={["javascript.electron"]}>
+
 In version 10 of the SDK, the defaults below apply only when you set the `dataCollection` option.
 Without it, the deprecated `sendDefaultPii` option controls data collection.
 Starting with version 11, the defaults always apply.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+The Electron SDK supports `dataCollection` in version `7.14.0` and above.
+In version 7 of the Electron SDK, the defaults below apply only when you set the `dataCollection` option.
+Without it, the deprecated `sendDefaultPii` option controls data collection.
+Starting with version 8, the defaults always apply.
+
+**Note:** For Electron, the `userInfo` value set in the `main` process controls IP address inference for events from all processes. The other categories apply to the process where they are set.
+
+</PlatformSection>
 
 For more on what data Sentry collects and how to control it, see <PlatformLink to="/data-management/">Data Management</PlatformLink>.
 
@@ -177,16 +192,6 @@ This option can be used to supply a server name. When provided, the name of the 
 Most SDKs will attempt to auto-discover this value.
 
 </SdkOption>
-
-<PlatformSection supported={['javascript.electron']}>
-<SdkOption name="autoSessionTracking" type='boolean' defaultValue='true'>
-
-**Note:** Electron `main` process only.
-
-When not set to `false`, the SDK tracks sessions linked to the lifetime of the Electron main process.
-
-</SdkOption>
-</PlatformSection>
 
 <SdkOption name="initialScope" type="CaptureContext">
   <PlatformSection supported={["javascript.electron"]}>
@@ -715,6 +720,11 @@ Controls how spans are sent to Sentry:
 - In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink> (`'stream'`, the default), spans are sent in batches as they finish.
 - In transaction mode (`'static'`), spans are collected in memory and sent as a transaction once the root span ends. This mode is available for backwards compatibility.
 
+<PlatformSection supported={["javascript.electron"]}>
+  In the Electron SDK, this option is available since version `7.17.0` and
+  defaults to `'stream'` since version `8.0.0`.
+</PlatformSection>
+
 To opt out of span streaming, set `traceLifecycle: 'static'`. If you use `beforeSendSpan`, wrap it with `Sentry.withStaticSpan()` to receive the `SpanJSON` format:
 
 ```javascript
@@ -728,6 +738,20 @@ Sentry.init({
 ```
 
 </SdkOption>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+<SdkOption name="enableOpenTelemetrySetup" type='boolean' defaultValue='false' availableSince='8.0.0'>
+
+**Note:** Electron `main` and utility processes only.
+
+By default, the SDK does not set up OpenTelemetry and ignores spans created with the OpenTelemetry API. Set this option to `true` to register the Sentry OpenTelemetry tracer provider, so that the SDK sends spans created with `@opentelemetry/api` to Sentry.
+
+Do not set this option if you use your own OpenTelemetry setup. Instead, add `Sentry.openTelemetryIntegration()` to link Sentry events to your OpenTelemetry spans.
+
+</SdkOption>
+
+</PlatformSection>
 
 ## Logs Options
 

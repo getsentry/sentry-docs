@@ -166,7 +166,7 @@ const Container = styled('div')`
   position: relative;
   overflow-y: visible; /* Allow copy button to be visible */
 
-  pre[class*='language-'] {
+  pre {
     padding: 10px 12px;
     border-radius: 0 0 6px 6px;
     border: 1px solid var(--accent-11);
