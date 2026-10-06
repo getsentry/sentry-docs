@@ -21,6 +21,16 @@ cleanup() {
   trap - EXIT
   kill -- "-$server_pid" 2>/dev/null || true
   wait "$server_pid" 2>/dev/null || true
+  # `next start` can outlive the pnpm wrapper while it closes the socket, so
+  # give the process group time to exit before forcing it.
+  for _ in {1..10}; do
+    if ! kill -0 -- "-$server_pid" 2>/dev/null && ! lsof -t -i:"$port" >/dev/null; then
+      exit "$exit_code"
+    fi
+    sleep 1
+  done
+  kill -KILL -- "-$server_pid" 2>/dev/null || true
+  sleep 1
   if lsof -t -i:"$port" >/dev/null; then
     echo "Docs server still owns port $port after cleanup" >&2
     exit 1
