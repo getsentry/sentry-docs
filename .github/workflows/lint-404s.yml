@@ -45,30 +45,33 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      # Both builds write to `.next`, so build, serve, and lint each site before
+      # building the next one. Otherwise the developer docs build overwrites the
+      # docs build and only developer docs get checked.
+      - name: Build docs
+        run: pnpm build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: pnpm build:developer-docs
+      - name: Lint docs for 404s
+        run: ./scripts/lint-404s/serve-and-lint.sh
+        if: steps.filter.outputs.docs == 'true'
+        env:
+          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+
+      - name: Build developer docs
+        run: pnpm build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - name: Start Http Server
-        run: pnpm start &
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+      - name: Lint developer docs for 404s
+        run: ./scripts/lint-404s/serve-and-lint.sh
+        if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-
-      - name: Lint 404s
-        run: npx tsx ./scripts/lint-404s/main.ts
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
-
-      - name: Kill Http Server
-        run: kill $(lsof -t -i:3000) || true
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
-        continue-on-error: true
