@@ -157,7 +157,8 @@ export function SidebarTableOfContents() {
   // Mark the active item based on the scroll position
   useEffect(() => {
     const innerHeight = window.innerHeight;
-    if (!tocItems.length || !innerHeight) {
+    // IntersectionObserver may be unavailable (e.g. disabled in some browsers/webviews)
+    if (!tocItems.length || !innerHeight || typeof IntersectionObserver === 'undefined') {
       return () => {};
     }
     // account for the header height
