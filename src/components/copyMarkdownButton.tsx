@@ -8,6 +8,7 @@ import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import ChatGPT from 'sentry-docs/icons/chatgpt';
 import Chevron from 'sentry-docs/icons/Chevron';
 import Claude from 'sentry-docs/icons/claude';
+import Cursor from 'sentry-docs/icons/cursor';
 import ExternalLink from 'sentry-docs/icons/external-link';
 import Markdown from 'sentry-docs/icons/Markdown';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -85,6 +86,12 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   const handleOpenClaudeClick = () => {
     emit('Open in Claude', {props: {page: pathname, source: 'claude_link'}});
     DocMetrics.copyPageDropdown(pathname, 'open_claude');
+    setIsOpen(false);
+  };
+
+  const handleOpenCursorClick = () => {
+    emit('Open in Cursor', {props: {page: pathname, source: 'cursor_link'}});
+    DocMetrics.copyPageDropdown(pathname, 'open_cursor');
     setIsOpen(false);
   };
 
@@ -264,6 +271,26 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                   </div>
                   <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
                     Ask Claude questions about this page
+                  </div>
+                </div>
+              </a>
+
+              <a
+                href={`https://cursor.com/link/prompt?text=${encodeURIComponent('Read from ' + window.location.href + ' so I can ask questions about its contents')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${dropdownItemClass} no-underline`}
+                onClick={handleOpenCursorClick}
+              >
+                <div className={iconContainerClass}>
+                  <Cursor width={14} height={14} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                    Open in Cursor <ExternalLink aria-hidden="true" />
+                  </div>
+                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                    Ask Cursor questions about this page
                   </div>
                 </div>
               </a>
