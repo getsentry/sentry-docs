@@ -195,24 +195,24 @@ For each operation, the following span data attributes are captured:
 **General (all operations):**
 
 - `mcp.method.name`: The MCP method name (e.g., `tools/call`, `prompts/get`, `resources/read`)
+- `network.transport`: Network transport (`pipe` for stdio, `tcp` otherwise)
 - `mcp.transport`: Transport type (`http` for Streamable HTTP, `sse` for Server-Sent Events or `stdio`)
 - `mcp.request_id`: Request identifier (when available)
 - `mcp.session_id`: Session identifier (when available)
 
 **Tools:**
 
-- `mcp.tool.name`: The name of the tool being executed
+- `gen_ai.tool.name`: The name of the tool being executed
 - `mcp.request.argument.*`: Tool input arguments
-- `mcp.tool.result.content`: Tool output
-- `mcp.tool.result.is_error`: Whether the tool execution resulted in an error
+- `gen_ai.tool.call.result`: Tool output
 
 **Prompts:**
 
-- `mcp.prompt.name`: The name of the prompt being requested
+- `gen_ai.prompt.name`: The name of the prompt being requested
 - `mcp.request.argument.*`: Prompt input arguments
-- `mcp.prompt.result.message.count`: Number of messages in the prompt result
-- `mcp.prompt.result.message.role`: Role of the message (for single-message prompts)
-- `mcp.prompt.result.message.content`: Message content (for single-message prompts)
+- `mcp.prompt.result.message_count`: Number of messages in the prompt result
+- `mcp.prompt.result.message_role`: Role of the message (for single-message prompts)
+- `mcp.prompt.result.message_content`: Message content (for single-message prompts)
 
 **Resources:**
 
@@ -221,7 +221,7 @@ For each operation, the following span data attributes are captured:
 
 ## Options
 
-Tool and prompt inputs and outputs are collected by default. To stop recording them, set `data_collection` in your `sentry_sdk.init()` call:
+Tool and prompt inputs and outputs are collected by default. To stop recording them, set the `mcp` category of `data_collection` in your `sentry_sdk.init()` call. `inputs` controls the arguments passed to your tool and prompt handlers, and `outputs` controls the results they return:
 
 ```python
 import sentry_sdk
@@ -229,7 +229,7 @@ import sentry_sdk
 sentry_sdk.init(
     # ...
     data_collection={
-        "gen_ai": {"inputs": False, "outputs": False},
+        "mcp": {"inputs": False, "outputs": False},
     },
 )
 ```

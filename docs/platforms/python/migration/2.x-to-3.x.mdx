@@ -18,31 +18,32 @@ Because `contextvars` is always available on Python 3.7+, you no longer need the
 
 `3.0` raises the minimum supported version of many instrumented packages. If you're below one of these, the SDK won't instrument that package anymore:
 
-| Package       | Minimum |
-| ------------- | ------- |
-| aiohttp       | 3.7     |
-| Celery        | 5.0     |
-| Chalice       | 1.22    |
-| Django        | 2.0     |
-| Falcon        | 3.0     |
-| FastAPI       | 0.85    |
-| Flask         | 2.0     |
-| gevent        | 20.9    |
-| greenlet      | 0.4.17  |
-| huey          | 2.0     |
-| Litestar      | 2.0     |
-| MCP           | 2.0     |
-| OpenAI Agents | 0.10.3  |
-| Pydantic AI   | 1.76    |
-| Pyramid       | 2.0     |
-| PySpark       | 3.0     |
-| Quart         | 0.19    |
-| redis-py      | 4.2     |
-| RQ            | 1.0     |
-| Sanic         | 22.0    |
-| SQLAlchemy    | 1.4     |
-| Starlette     | 0.20    |
-| trytond       | 5.4     |
+| Package          | Minimum |
+| ---------------- | ------- |
+| aiohttp          | 3.7     |
+| Celery           | 5.0     |
+| Chalice          | 1.22    |
+| Django           | 2.0     |
+| Falcon           | 3.0     |
+| FastAPI          | 0.85    |
+| Flask            | 2.0     |
+| gevent           | 20.9    |
+| greenlet         | 0.4.17  |
+| huey             | 2.0     |
+| Hugging Face Hub | 2.0     |
+| Litestar         | 2.0     |
+| MCP              | 2.0     |
+| OpenAI Agents    | 0.10.3  |
+| Pydantic AI      | 1.76    |
+| Pyramid          | 2.0     |
+| PySpark          | 3.0     |
+| Quart            | 0.19    |
+| redis-py         | 4.2     |
+| RQ               | 1.0     |
+| Sanic            | 22.0    |
+| SQLAlchemy       | 1.4     |
+| Starlette        | 0.20    |
+| trytond          | 5.4     |
 
 ## Install Extras
 
@@ -59,7 +60,7 @@ The `asyncio`, `flask`, `grpcio`, `http2`, `opentelemetry-otlp`, `pure-eval`, an
 
 The `send_default_pii` option was removed. Passing it to `sentry_sdk.init()` now raises an error, like any other unknown option. The `data_collection` option is always active and is the only built-in gate for the data the SDK collects.
 
-Because of this, the SDK now collects more by default than it did with `send_default_pii` unset. User information, request bodies (including outgoing responses), GraphQL documents and variables, database query data, queue message data, and generative AI inputs and outputs are all collected unless you opt out. Cookies, headers, and query parameters are collected with values for sensitive keys (`auth`, `token`, `password`, and similar) filtered.
+Because of this, the SDK now collects more by default than it did with `send_default_pii` unset. User information, request bodies (including outgoing responses), GraphQL documents and variables, database query data, queue message data, generative AI inputs and outputs, and MCP tool and prompt inputs and outputs are all collected unless you opt out. Cookies, headers, and query parameters are collected with values for sensitive keys (`auth`, `token`, `password`, and similar) filtered.
 
 ```python diff
 import sentry_sdk
@@ -70,6 +71,7 @@ sentry_sdk.init(
 +   data_collection={
 +       "user_info": False,
 +       "gen_ai": {"inputs": False, "outputs": False},
++       "mcp": {"inputs": False, "outputs": False},
 +       "graphql": {"document": False, "variables": False},
 +       "database_query_data": False,
 +       "queues": False,
@@ -79,10 +81,24 @@ sentry_sdk.init(
 
 To keep the exact behavior of `send_default_pii=False`, see <PlatformLink to="/data-management/data-collected/#using-conservative-collection-settings">Using Conservative Collection Settings</PlatformLink>. For every key and its default, see <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
 
+If you already used the experimental `data_collection` option in `2.x`, move it out of `_experiments`. It's now a top-level option:
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+-   _experiments={
+-       "data_collection": {"user_info": False},
+-   },
++   data_collection={"user_info": False},
+)
+```
+
 A few related options were removed because `data_collection` replaces them:
 
 - `EventScrubber` and the `event_scrubber` option. To remove data that `data_collection` doesn't cover, use a `before_send` callback.
-- The `include_prompts` option of the AI integrations. Use the `gen_ai` key of `data_collection`.
+- The `include_prompts` option of the AI integrations. Use the `gen_ai` key of `data_collection`. For the MCP integration, use the `mcp` key instead.
 - The `include_source_context` and `include_local_variables` options. Use `frame_context_lines` (set to `0` to turn it off) and `stack_frame_variables` instead.
 - The experimental `record_sql_params` option and the `record_params` option of `AsyncPGIntegration` and `AioMySQLIntegration`. Use `database_query_data`.
 
@@ -221,6 +237,7 @@ import sentry_sdk
 - The SDK no longer sets any tags on its own.
 - The message of the optional warning that the AWS Lambda and GCP integrations emit when a function is about to time out has changed.
 - `SanicIntegration` no longer accepts `unsampled_statuses`.
+- The MCP integration now sets `gen_ai.tool.name`, `gen_ai.tool.call.result`, and `gen_ai.prompt.name` instead of `mcp.tool.name`, `mcp.tool.result.content`, and `mcp.prompt.name`. It no longer sets `mcp.tool.result.content_count`.
 - The `RedisIntegration` `max_data_size` option and the `LangchainIntegration` `max_spans` option were removed.
 - `LaunchDarklyIntegration` no longer accepts a specific client.
 - The Django Spotlight integration was removed.

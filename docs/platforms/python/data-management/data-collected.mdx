@@ -255,6 +255,21 @@ sentry_sdk.init(
 
 `gen_ai` is the only control for recording prompt content. The per-integration `include_prompts` parameter was removed in version 3.0.
 
+## MCP Tool And Prompt Data
+
+When you use the <PlatformLink to="/integrations/mcp/">MCP integration</PlatformLink>, the SDK records the arguments passed to your tool and prompt handlers and the results they return by default. These are controlled by the `mcp` category, separately from `gen_ai`:
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    data_collection={
+        "mcp": {"inputs": False, "outputs": False},
+    },
+)
+```
+
 ## `data_collection` Reference
 
 ### Keys
@@ -268,6 +283,7 @@ sentry_sdk.init(
 | `url_query_params`      | key-value behavior                      | `{"mode": "denylist"}`                                          | Collect URL query parameters.                                                                                                                                                                                                                                                                                                                        |
 | `graphql`               | `{"document": bool, "variables": bool}` | both `True`                                                     | Collect the GraphQL query document and its variables.                                                                                                                                                                                                                                                                                                |
 | `gen_ai`                | `{"inputs": bool, "outputs": bool}`     | both `True`                                                     | Collect generative AI input and output content. Metadata such as the model ID and token counts is always collected.                                                                                                                                                                                                                                  |
+| `mcp`                   | `{"inputs": bool, "outputs": bool}`     | both `True`                                                     | Collect MCP tool and prompt handler arguments (`inputs`) and results (`outputs`).                                                                                                                                                                                                                                                                    |
 | `database_query_data`   | `bool`                                  | `True`                                                          | Collect database query data. Query parameter values are never sent; queries are parameterized first.                                                                                                                                                                                                                                                 |
 | `queues`                | `bool`                                  | `True`                                                          | Collect message body data for queue and task-queue integrations.                                                                                                                                                                                                                                                                                     |
 | `stack_frame_variables` | `bool` or key-value behavior            | `True`                                                          | Include local variable values captured within stack frames. Accepts a boolean (`True` collects all variables, `False` collects none) or a key-value behavior to filter which variables are sent by name (see [Filtering Stack Frame Variables](https://develop.sentry.dev/sdk/foundations/client/data-collection/#filtering-stack-frame-variables)). |
@@ -301,6 +317,7 @@ sentry_sdk.init(
     data_collection={
         "user_info": False,
         "gen_ai": {"inputs": False, "outputs": False},
+        "mcp": {"inputs": False, "outputs": False},
         "graphql": {"document": False, "variables": False},
         "database_query_data": False,
         "queues": False,
