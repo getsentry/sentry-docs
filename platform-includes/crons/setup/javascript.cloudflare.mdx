@@ -4,7 +4,7 @@
 
 If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), add `cronTriggersIntegration` to send check-ins for every run of the `scheduled` handler. The in-progress check-in of each run carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. The integration isn't enabled by default because each monitor it creates is billed.
 
-With the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, add the integration to your `instrument.server.*` file. Cron Triggers have no names, and the `scheduled` handler only receives the cron expression. Keep a map from each expression in your wrangler config to its monitor slug in its own module, and use it in `instrument.server.ts` for the slugs and in the `scheduled` handler to select the job:
+With the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, add the integration to your `instrument.server.*` file. Cron Triggers have no names, and the `scheduled` handler only receives the cron expression, so the setup uses three files. First, keep a map from each expression in your wrangler config to its monitor slug in its own module:
 
 ```typescript {filename:monitorSlugs.ts}
 export const monitorSlugs: Record<string, string> = {
@@ -12,6 +12,8 @@ export const monitorSlugs: Record<string, string> = {
   "0 */6 * * *": "sync-inventory",
 };
 ```
+
+Then use the map in `instrument.server.ts` for the slugs:
 
 ```typescript {filename:instrument.server.ts}
 import * as Sentry from "@sentry/cloudflare";
@@ -26,6 +28,8 @@ export default Sentry.defineCloudflareOptions((env) => ({
   ],
 }));
 ```
+
+And in the `scheduled` handler of your Worker to select the job:
 
 ```typescript {filename:index.ts}
 import { monitorSlugs } from "./monitorSlugs";
