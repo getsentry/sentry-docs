@@ -144,7 +144,9 @@ export const assets = createAssetServer({
 
 Call `init()` in your browser entry, before `run()`.
 
-Page loads and navigations get a span each. Errors thrown while a component renders are reported; the Remix runtime does not rethrow those, so nothing else would see them.
+Page loads and navigations get a span each, named after the matched route pattern. The browser has no route table, so the server SDK reports the route on each HTML response in a `Server-Timing` header. A navigation to a route the app has not loaded yet starts under a fallback name and is renamed once the response arrives. If a proxy strips the header, spans keep the fallback name.
+
+Errors thrown while a component renders are reported; the Remix runtime does not rethrow those, so nothing else would see them.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -192,7 +194,7 @@ node --import @sentry/remix/v3/node ./node_modules/.bin/sentry-remix-v3-upload-s
 </SplitSection>
 </SplitLayout>
 
-The command reads `SENTRY_AUTH_TOKEN` and `SENTRY_ORG` from the environment, and proposes the release from your git history. `--project` has to be passed. Pass `--org` or `--release` to set those yourself.
+The command reads `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` from the environment, and proposes the release from your git history. A project is required: pass `--project` or set `SENTRY_PROJECT`. Pass `--org` or `--release` to set those yourself.
 
 `--entry` is a browser entry path and can be repeated. The asset server is read from `./app/assets.ts` (export `assets`); set `--assets-module` and `--assets-export` if yours lives elsewhere. `--dry-run` compiles without uploading.
 
