@@ -14,11 +14,17 @@ Requires SDK version `11.0.0` or higher. On earlier versions, see the [Agent Tra
 
 </Alert>
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 _Import name: `Sentry.googleGenAIIntegration`_
+
+</PlatformSection>
 
 This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
 The `googleGenAIIntegration` adds instrumentation for the [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ```javascript
 Sentry.init({
@@ -28,6 +34,26 @@ Sentry.init({
   integrations: [Sentry.googleGenAIIntegration()],
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, there is no `Sentry.init()`. Add `sentryCloudflareVitePlugin()` alongside Cloudflare's Vite plugin so the bundled Google Gen AI SDK is instrumented:
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+Build-time instrumentation is enabled by default, and the plugin registers the integration in both `vite dev` and `vite build`. Keep the `nodejs_compat` flag enabled in your Wrangler configuration, and see the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink> page for the full setup. Without the plugin, or with `buildTimeInstrumentation: false`, wrap your client with `Sentry.instrumentGoogleGenAIClient()`.
+
+</PlatformSection>
 
 ## Supported Operations
 
@@ -64,6 +90,8 @@ Records outputs from Google Gen AI SDK calls (such as generated text and respons
 
 Defaults to `true` if `dataCollection.genAI.outputs` is `true`, which is the default.
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -76,3 +104,23 @@ Sentry.init({
   ],
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, `@sentry/cloudflare` doesn't export `googleGenAIIntegration`, so set these through the `dataCollection` option in your `instrument.server.ts` file instead. This applies to all AI integrations:
+
+```typescript {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+}));
+```
+
+</PlatformSection>

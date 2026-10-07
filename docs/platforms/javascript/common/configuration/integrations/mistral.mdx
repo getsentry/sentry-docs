@@ -14,11 +14,17 @@ Requires SDK version `11.0.0` or higher.
 
 </Alert>
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 _Import name: `Sentry.mistralAIIntegration`_
+
+</PlatformSection>
 
 This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
 The `mistralAIIntegration` adds instrumentation for the [`@mistralai/mistralai`](https://www.npmjs.com/package/@mistralai/mistralai) SDK to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans, recording model, token usage, latency, and (when enabled) inputs and outputs.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ```javascript
 Sentry.init({
@@ -28,6 +34,8 @@ Sentry.init({
   integrations: [Sentry.mistralAIIntegration()],
 });
 ```
+
+</PlatformSection>
 
 <PlatformSection supported={["javascript.deno"]}>
 
@@ -122,6 +130,8 @@ Records outputs from Mistral AI SDK calls (such as generated text and responses)
 
 Defaults to `true` if `dataCollection.genAI.outputs` is `true`, which is the default.
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -134,6 +144,26 @@ Sentry.init({
   ],
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, `@sentry/cloudflare` doesn't export `mistralAIIntegration`, so set these through the `dataCollection` option in your `instrument.server.ts` file instead. This applies to all AI integrations:
+
+```typescript {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+}));
+```
+
+</PlatformSection>
 
 <PlatformSection notSupported={["javascript.deno", "javascript.solidstart"]}>
 
