@@ -4,32 +4,49 @@
 
 If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), add `cronTriggersIntegration` to send check-ins for every run of the `scheduled` handler. The in-progress check-in of each run carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. The integration isn't enabled by default because each monitor it creates is billed.
 
-Cron Triggers have no names, and the `scheduled` handler only receives the cron expression. Keep one entry per trigger, keyed by its expression from `wrangler.toml`, with the job and its monitor slug, and use it for both:
+With the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, add the integration to your `instrument.server.*` file. Cron Triggers have no names, and the `scheduled` handler only receives the cron expression. Keep a map from each expression in your wrangler config to its monitor slug in its own module, and use it in `instrument.server.ts` for the slugs and in the `scheduled` handler to select the job:
 
-```javascript
-const jobs = {
-  "30 9 * * MON-FRI": { slug: "daily-report", run: dailyReport },
-  "0 */6 * * *": { slug: "sync-inventory", run: syncInventory },
+```typescript {filename:monitorSlugs.ts}
+export const monitorSlugs: Record<string, string> = {
+  "30 9 * * MON-FRI": "daily-report",
+  "0 */6 * * *": "sync-inventory",
 };
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: env.SENTRY_DSN,
-    integrations: [
-      Sentry.cronTriggersIntegration({
-        monitorSlug: (cron) => jobs[cron]?.slug,
-      }),
-    ],
-  }),
-  {
-    async scheduled(controller, env, ctx) {
-      await jobs[controller.cron]?.run(env);
-    },
-  }
-);
 ```
 
-When you change a schedule in `wrangler.toml`, change its key in `jobs`. The monitor keeps its slug, and Sentry updates its schedule on the next check-in. Triggers without an entry send no check-ins. The `monitorSlug` function can also return an object with the slug and other monitor options, such as `{ monitorSlug: "daily-report", maxRuntime: 30 }`.
+```typescript {filename:instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { monitorSlugs } from "./monitorSlugs";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  integrations: [
+    Sentry.cronTriggersIntegration({
+      monitorSlug: (cron) => monitorSlugs[cron],
+    }),
+  ],
+}));
+```
+
+```typescript {filename:index.ts}
+import { monitorSlugs } from "./monitorSlugs";
+
+export default {
+  async scheduled(controller, env, ctx) {
+    switch (monitorSlugs[controller.cron]) {
+      case "daily-report":
+        // Your daily report job
+        break;
+      case "sync-inventory":
+        // Your inventory sync job
+        break;
+    }
+  },
+};
+```
+
+If you deploy with `wrangler` directly, pass the same integration to `Sentry.withSentry` in your Worker, as shown in the <PlatformLink to="/install/wrangler/#configure">Wrangler setup</PlatformLink>.
+
+When you change a schedule in your wrangler config, change its key in `monitorSlugs`. The monitor keeps its slug, and Sentry updates its schedule on the next check-in. Triggers without an entry send no check-ins. The `monitorSlug` function can also return an object with the slug and other monitor options, such as `{ monitorSlug: "daily-report", maxRuntime: 30 }`.
 
 Without a `monitorSlug` function, the slug comes from the cron expression, so it changes when the schedule changes: `30 9 * * MON-FRI` becomes `cron-30-9-x-x-montofri` (`*` is written as `x`, `,` as `_`, `-` as `to`, and `/` as `by`). Expressions with other characters, or slugs longer than 50 characters, end in a hash of the expression. Workers that report to the same project and share a cron expression share a monitor.
 
