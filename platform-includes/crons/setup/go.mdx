@@ -2,7 +2,53 @@
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
-Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
+Wrap your job with `sentry.WithMonitor`. It sends an in-progress check-in with the monitor config, which creates or updates the monitor, then runs the job and sends an `ok` or `error` check-in with its duration:
+
+```go
+err := sentry.WithMonitor("<monitor-slug>", &sentry.MonitorConfig{
+	Schedule: sentry.CrontabSchedule("0 * * * *"),
+}, func() error {
+	// Execute your scheduled task here...
+	return nil
+})
+```
+
+The job's error is returned unchanged. If the job panics, Sentry gets an `error` check-in and the panic continues. `sentry.WithMonitor` requires a sentry-go version newer than `0.49.0`. If the monitor already exists in Sentry, you can pass `nil` instead of a config.
+
+### robfig/cron
+
+If you schedule jobs with [robfig/cron](https://github.com/robfig/cron), add them with `sentrycron.AddFunc`. Install the package:
+
+```bash
+go get github.com/getsentry/sentry-go/cron
+```
+
+It wraps the job in `sentry.WithMonitor` and uses the job's spec as the monitor schedule and the cron's location as its timezone:
+
+```go
+import (
+	"time"
+
+	"github.com/getsentry/sentry-go"
+	sentrycron "github.com/getsentry/sentry-go/cron"
+	"github.com/robfig/cron/v3"
+)
+
+c := cron.New(cron.WithLocation(time.UTC))
+sentrycron.AddFunc(c, "0 * * * *", "<monitor-slug>", func() error {
+	// Execute your scheduled task here...
+	return nil
+}, &sentry.MonitorConfig{MaxRuntime: 30})
+c.Start()
+```
+
+Pass `nil` as the last argument to use the default monitor settings. Specs Sentry can't represent, such as seconds other than a fixed value or `@every` under a minute, still send check-ins but don't create the monitor.
+
+With the default `time.Local` location, the timezone comes from `$TZ` or `/etc/localtime`. If that isn't an IANA name, such as `America/New_York`, only check-ins are sent, so set the schedule in Sentry or use `cron.WithLocation`.
+
+### Manual Check-Ins
+
+To send check-ins yourself, call `sentry.CaptureCheckIn` at the start and end of your job. Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
 
 ```go
 monitorConfig := &sentry.MonitorConfig{
