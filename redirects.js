@@ -1287,6 +1287,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1495,6 +1499,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/holmes/',
     destination: '/integrations/third-party-integrations/',
   },
   {
