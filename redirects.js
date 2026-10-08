@@ -926,6 +926,10 @@ const userDocsRedirects = [
     destination: '/integrations/source-code-mgmt/github/',
   },
   {
+    source: '/integrations/source-code-mgmt/github-enterprise/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
     source: '/integrations/gitlab/',
     destination: '/integrations/source-code-mgmt/gitlab/',
   },
@@ -1183,6 +1187,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/ando/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1284,6 +1292,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/holmes/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1394,6 +1406,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/ando/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1495,6 +1511,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/fml/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/holmes/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -3196,8 +3216,16 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
+    source: '/product/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
+  },
+  {
+    source: '/concepts/key-terms/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source: '/concepts/key-terms/key-terms/tracing/trace-view/',
@@ -3207,6 +3235,49 @@ const userDocsRedirects = [
     source: '/organization/integrations/shortcut/',
     destination: '/integrations/issue-tracking/shortcut/',
   },
+  // Former span metrics pages now live in SDK instrumentation guides.
+  {
+    source: '/platforms/javascript/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/examples/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/python/metrics/',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
+  },
   // Redirects for JavaScript tracing docs
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
@@ -3214,17 +3285,18 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source: '/platforms/javascript/profiling/browser-profiling/',
@@ -3257,11 +3329,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
     destination: '/platforms/javascript/guides/:guide/profiling/',
-  },
-  {
-    source:
-      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
