@@ -5,11 +5,10 @@ sidebar_order: 45
 new: true
 ---
 
-Starting with SDK 3.0, the Sentry Python SDK sends spans to Sentry in batches as they finish. This is called stream mode. Service spans, which represent a service's entry point, replace transactions as the main grouping for each service.
+By default, the Sentry Python SDK collects all spans in memory and sends them to Sentry as a single transaction once the root span ends. This is called transaction mode.
+Stream mode changes this by sending spans to Sentry in batches as they finish. Service spans, which represent a service's entry point, replace transactions as the main grouping for each service.
 
-In SDK 2.x, the default was transaction mode, which collects all spans in memory and sends them to Sentry as a single transaction once the root span ends. Transaction mode no longer exists in SDK 3.0.
-
-<Expandable title="Why stream mode?">
+<Expandable title="Why use stream mode?">
 
 - **No 1,000-span limit.** In transaction mode, transactions are capped at 1,000 spans. Stream mode has no upper limit since spans are sent in batches. This is especially beneficial for complex generative AI pipelines that easily exceed standard span limits.
 - **Lower memory usage.** Spans are flushed periodically and don't need to be held in memory until the root span ends. This is especially useful for long-running processes like queue consumers or cron jobs.
@@ -37,9 +36,9 @@ Trace
           └── Child span
 ```
 
-<Alert level="warning" title="Upgrading from SDK 2.x?">
+<Alert level="warning" title="Migrating from transaction mode?">
 
-Stream mode uses a different Span API than transaction mode. If you have existing custom instrumentation, see the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Guide</PlatformLink> for a full list of changes.
+Stream mode requires the streamed Span API, so migrating to stream mode and migrating to the streamed Span API are the same step. If you have existing custom instrumentation, see the <PlatformLink to="/tracing/streamed-spans/migration-guide__v2.x">Migration Guide</PlatformLink> for a full list of changes.
 
 </Alert>
 
@@ -49,13 +48,40 @@ You need:
 
 - <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in
   your app
-- Sentry SDK `>=3.0.0`
+- Sentry SDK `>=2.62.0`
 
-Stream mode is always on when tracing is enabled. No additional configuration is needed.
+## Enable Stream Mode
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Opt in by adding the `trace_lifecycle` option when initializing the SDK:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # enables stream mode
+    trace_lifecycle="stream",
+)
+
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+To revert to transaction mode, remove the `trace_lifecycle` option or set it to `"static"` (the default).
 
 <Expandable title="How does span flushing work?">
 
-The SDK maintains an internal buffer that groups spans by trace ID.
+When stream mode is enabled, the SDK maintains an internal buffer that groups spans by trace ID.
 
 Spans are flushed:
 
@@ -75,7 +101,7 @@ Each flush sends only the spans accumulated since the last flush, grouped into e
 <SplitSection>
 <SplitSectionText>
 
-Use `sentry_sdk.start_span()` to create a span that ends automatically when the `with` block exits:
+Use `sentry_sdk.traces.start_span()` to create a span that ends automatically when the `with` block exits:
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -83,7 +109,7 @@ Use `sentry_sdk.start_span()` to create a span that ends automatically when the 
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(name="my-operation") as span:
+with sentry_sdk.traces.start_span(name="my-operation") as span:
     # Your code here
     do_work()
 ```
@@ -101,11 +127,11 @@ Child spans created inside an active span are automatically associated with the 
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(name="parent-operation"):
-    with sentry_sdk.start_span(name="child-step-1"):
+with sentry_sdk.traces.start_span(name="parent-operation"):
+    with sentry_sdk.traces.start_span(name="child-step-1"):
         step_one()
 
-    with sentry_sdk.start_span(name="child-step-2"):
+    with sentry_sdk.traces.start_span(name="child-step-2"):
         step_two()
 ```
 
@@ -123,7 +149,7 @@ If you want to force a new service span, regardless of whether it has a parent s
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(name="task-name", parent_span=None) as span:
+with sentry_sdk.traces.start_span(name="task-name", parent_span=None) as span:
     do_work()
 ```
 
@@ -138,7 +164,7 @@ You can also use the `@trace` decorator to instrument a function. It accepts opt
 <SplitSectionCode>
 
 ```python
-from sentry_sdk import trace
+from sentry_sdk.traces import trace
 
 @trace(name="checkout", attributes={"flow.pipeline": "legacy"})
 def checkout():
@@ -173,7 +199,7 @@ You can set attributes when starting a span:
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(
+with sentry_sdk.traces.start_span(
     name="process-order",
     attributes={
         "sentry.op": "queue.process",
@@ -199,7 +225,7 @@ Or add them to an already running span:
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(name="handle-request") as span:
+with sentry_sdk.traces.start_span(name="handle-request") as span:
     # Set a single attribute
     span.set_attribute("http.response.status_code", 200)
 
@@ -214,11 +240,11 @@ with sentry_sdk.start_span(name="handle-request") as span:
 </SplitSection>
 </SplitLayout>
 
-For examples, see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/#adding-span-attributes">Adding Span Attributes</PlatformLink>.
+Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span Metrics</PlatformLink> documentation.
 
 ## Breadcrumbs
 
-Breadcrumbs aren't sent with spans.
+In stream mode, breadcrumbs are no longer sent with spans.
 They remain attached to errors, so you don't need to change how you record them.
 
 ## Distributed Tracing (Optional)
@@ -229,8 +255,8 @@ They remain attached to errors, so you don't need to change how you record them.
 <SplitSection>
 <SplitSectionText>
 
-When your service receives a request from an upstream service that includes Sentry trace headers, use `sentry_sdk.continue_trace()` to connect your spans to the existing distributed trace.
-`continue_trace()` isn't a context manager. Instead, it sets the propagation context and the next span picks it up automatically.
+When your service receives a request from an upstream service that includes Sentry trace headers, use `sentry_sdk.traces.continue_trace()` to connect your spans to the existing distributed trace.
+Unlike the legacy `sentry_sdk.continue_trace()`, the new version is not a context manager. Instead, it sets the propagation context and the next span picks it up automatically.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -243,8 +269,8 @@ headers = {
     "baggage": "sentry-trace_id=...",
 }
 
-sentry_sdk.continue_trace(headers)
-with sentry_sdk.start_span(name="handle request"):
+sentry_sdk.traces.continue_trace(headers)
+with sentry_sdk.traces.start_span(name="handle request"):
     ...
 ```
 
@@ -258,7 +284,7 @@ with sentry_sdk.start_span(name="handle request"):
 <SplitSection>
 <SplitSectionText>
 
-If you need to start a completely new trace unconnected to the current one, use `sentry_sdk.new_trace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
+If you need to start a completely new trace unconnected to the current one, use `sentry_sdk.traces.new_trace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -266,12 +292,12 @@ If you need to start a completely new trace unconnected to the current one, use 
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(name="span in trace 1"):
+with sentry_sdk.traces.start_span(name="span in trace 1"):
     ...
 
-sentry_sdk.new_trace()
+sentry_sdk.traces.new_trace()
 
-with sentry_sdk.start_span(name="span in trace 2"):
+with sentry_sdk.traces.start_span(name="span in trace 2"):
     # This span is the root of a new, separate trace
     ...
 ```
@@ -311,6 +337,7 @@ def postprocess_span(span, hint):
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
+    trace_lifecycle="stream",
     before_send_span=postprocess_span,
 )
 ```
@@ -343,6 +370,7 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
+    trace_lifecycle="stream",
     ignore_spans=[
         # String match against span name
         "/health",
@@ -374,13 +402,13 @@ If a matching span is a service span, all of its child spans are dropped as well
 
 ## Sampling (Optional)
 
-If you're upgrading from SDK 2.x and use `traces_sample_rate`, no changes are needed — it works the same way as in transaction mode.
+If you use `traces_sample_rate`, no changes are needed — it works the same way in stream mode.
 
-If you use a custom `traces_sampler`, not all keys in the sampling context might be populated. See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Streamed Span API migration guide</PlatformLink> for details.
+If you use a custom `traces_sampler`, the shape of the sampling context is different in stream mode. See the <PlatformLink to="/tracing/streamed-spans/migration-guide__v2.x">Streamed Span API migration guide</PlatformLink> for details.
 
 ## Verify Your Setup
 
-To make sure your setup works:
+To make sure you've enabled stream mode successfully:
 
 - **Check the Sentry dashboard**: Spans should appear in the Traces view shortly after they complete. Traces look similar to transaction mode, but contain only spans and no transactions.
-- **Check your custom instrumentation**: If your code fails with an `ImportError` or `AttributeError` related to `sentry_sdk.tracing`, `start_transaction`, or span methods like `set_data()`, you're still using the transaction-mode Span API. See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Guide</PlatformLink> for how to update it.
+- **Check your logs**: If the SDK logs warnings about unsupported span operations, you may still be using the legacy Span API somewhere in your code.
