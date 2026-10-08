@@ -73,8 +73,10 @@ The SDK sends the job's cron expression and time zone each time the job runs. Se
 
 If Sentry doesn't support the job's cron expression or time zone, the check-in is sent without a schedule. This includes crons that run every few seconds, crons that restrict both the day of the month and the day of the week, and Windows time zone IDs on .NET Framework.
 
-When you upgrade, existing monitors for recurring jobs get their schedule and time zone from the job. To keep managing the schedule in Sentry instead, turn off `SendRecurringJobSchedule`:
+When you upgrade, existing monitors for recurring jobs get their schedule and time zone from the job. To keep managing the schedule in Sentry instead, turn off `SendMonitorConfig`:
 
 ```csharp
-GlobalConfiguration.Configuration.UseSentry(options => options.SendRecurringJobSchedule = false);
+GlobalConfiguration.Configuration.UseSentry(options => options.SendMonitorConfig = false);
 ```
+
+If you delete a monitor while its job still has `[SentryMonitorSlug]`, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute.
