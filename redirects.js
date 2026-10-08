@@ -1183,6 +1183,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/ando/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1395,6 +1399,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
