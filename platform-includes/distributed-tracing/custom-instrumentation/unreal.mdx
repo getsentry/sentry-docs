@@ -1,19 +1,66 @@
 On this page you will learn how to manually propagate trace information into and out of your Unreal Engine game.
 
-Continuing a trace from an upstream service requires using `ContinueTrace()`, which will create a transaction context with the provided `sentry-trace` header. This transaction starts with the transaction context will contain everything needed to continue the trace.
+To set it up, make sure your game extracts incoming tracing information and attaches it again when making an outgoing request.
+
+## Step 1) Extract Incoming Tracing Information
+
+To continue a trace from another service, for example a backend that uses another Sentry SDK, pass its `sentry-trace` and `baggage` headers to `ContinueTrace()`. It returns a transaction context that continues the upstream trace, including its sampling decision:
 
 ```cpp
-// Get incoming tracing information
-const FString inTrace = ...
-TArray<FString> inBaggage = ...
+void OnResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bSucceeded)
+{
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-USentryTransactionContext* transactionContext =
-    SentrySubsystem->ContinueTrace(inTrace, inBaggage);
+    const FString SentryTrace = Response->GetHeader(TEXT("sentry-trace"));
 
-USentryTransaction* transaction =
-    SentrySubsystem->StartTransactionWithContext(transactionContext);
+    TArray<FString> BaggageHeaders;
+    const FString Baggage = Response->GetHeader(TEXT("baggage"));
+    if (!Baggage.IsEmpty())
+    {
+        BaggageHeaders.Add(Baggage);
+    }
+
+    if (USentryTransactionContext* TransactionContext = SentrySubsystem->ContinueTrace(SentryTrace, BaggageHeaders))
+    {
+        USentryTransaction* Transaction = SentrySubsystem->StartTransactionWithContext(TransactionContext);
+
+        // Process the response here...
+
+        Transaction->Finish();
+    }
+}
 ```
 
-To obtain trace header from a transaction or span, use `GetTrace()`. Pass the returned value to the downstream service. If communication happens over HTTP, we recommend you attach this header to the outgoing HTTP request.
+The `sentry-trace` header must follow the format defined in [the telemetry docs](https://develop.sentry.dev/sdk/telemetry/traces/#header-sentry-trace): a 32-character hexadecimal `traceId`, followed by a 16-character hexadecimal `spanId`, and an optional `sampled` flag.
 
-The format of the `sentry-trace` header should follow the one defined in [the telemetry docs](https://develop.sentry.dev/sdk/telemetry/traces/#header-sentry-trace). It should consist of a 32 character hexadecimal string for the `traceId`, followed by a 16 character hexadecimal string for the `spanId` and an optional single character for the `sampled` flag. If the given string doesn't match this format, the update is ignored and the values in the transaction context will remain unchanged.
+Always check the result of `ContinueTrace()`. It returns `nullptr` if the SDK isn't initialized. On Android, it also returns `nullptr` if tracing is disabled, and on macOS and iOS, if the `sentry-trace` header is malformed.
+
+<Alert>
+
+On macOS and iOS, only the sample rate and sample rand are taken from the incoming `baggage`, and only when the `sentry-trace` header includes a sampling decision (`-1` or `-0`). Other values, such as release and environment, aren't carried over yet.
+
+</Alert>
+
+## Step 2) Inject Tracing Information to Outgoing Requests
+
+For distributed tracing to work, the two headers `sentry-trace` and `baggage` must also be added to outgoing requests. Get them from the current transaction or span with `GetTraceHeaders()`:
+
+```cpp
+TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+HttpRequest->SetURL(TEXT("https://example.com/api/action"));
+
+for (const TPair<FString, FString>& Header : Transaction->GetTraceHeaders())
+{
+    HttpRequest->SetHeader(Header.Key, Header.Value);
+}
+
+HttpRequest->ProcessRequest();
+```
+
+`GetTrace()` is still available, but it only returns the `sentry-trace` header.
+
+The two services are now connected with your custom distributed tracing implementation.
+
+## Verification
+
+If you make outgoing requests from your game to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
