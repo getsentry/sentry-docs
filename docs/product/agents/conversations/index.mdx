@@ -139,7 +139,35 @@ The header summarizes the conversation's project, user, tools, LLM calls, errors
 
 Use the two tabs to inspect the conversation:
 
-- **Transcript** shows user messages, assistant responses, tool calls, collapsible thinking or reasoning rows, and embedding operations in chronological order. Failed tool calls use error styling so they stand out. Select an assistant response or tool call to inspect its input, output, attributes, duration, and status. Use **Copy Transcript** to copy the conversation as Markdown.
+- **Transcript** shows user messages, assistant responses, tool calls, evaluations, collapsible thinking or reasoning rows, and embedding operations in chronological order. Failed tool calls use error styling so they stand out. Select any row to inspect its input, output, attributes, duration, and status. Use **Copy Transcript** to copy the conversation as Markdown.
 - **Timeline** shows the AI spans in execution order, including spans that don't have content to display in the transcript. Select a span to open the same input, output, and attribute details.
 
 The error count links to the conversation's failed spans, while **Trace** or **Traces** links connect the conversation to the surrounding distributed trace data.
+
+## Evaluation Spans
+
+Some conversations include evaluation spans: LLM-as-judge checks that grade generated content against a set of questions, such as scoring a model's reply for accuracy or classifying a support message by department. Models like TypeSafe Jev produce these spans.
+
+Sentry recognizes an evaluation by its `gen_ai.operation.name` attribute (`evaluate`). Evaluations share the `ai_client` operation type with ordinary LLM calls, so this attribute is what tells them apart.
+
+### In the Transcript and Timeline
+
+In the **Transcript**, an evaluation appears as a row like a tool call, showing the evaluator, a one-line result (for example `authIssue: Yes, wantsRefund: Yes, urgency: high (1.6)`), and its duration. In the **Timeline**, the same one-line result shows as the span's secondary text. **Copy Transcript** includes these results in the Markdown.
+
+![Evaluation in the conversation transcript](./img/evaluation-transcript-row.png)
+
+### Evaluation Detail
+
+Select an evaluation — from the transcript, the timeline, or the trace view — to open its span detail. Unlike an LLM call, an evaluation stores the evaluated content, its questions, and its answers rather than chat messages, so the detail is laid out around those:
+
+- **Input** shows the evaluated text, followed by one card per question with its instructions, type, and allowed answers. A `score` question lists its scale (for example `0 · low`, `1 · medium`, `2 · high`); a `choice` question lists each option with its description.
+- **Output** shows one card per answer with a short result, and, where the evaluator reports them, a probability bar per option or score value and a confidence percentage. Answers come in a few types: `boolean` (Yes/No), `score` (a value, named after the question's scale), and `choice` (the selected option).
+
+Both tabs have a **Pretty/Raw** toggle. Questions or answers that don't match the expected format are shown as their raw value and tagged **Unrecognized**.
+
+![Evaluation span detail, Input tab](./img/evaluation-span-detail-input.png)
+![Evaluation span detail, Output tab](./img/evaluation-span-detail-output.png)
+
+### Setup
+
+Evaluation spans come from your SDK instrumentation. If you call an evaluator through a supported integration (for example the `@typesafe-ai/sdk` package or the Vercel AI SDK), these spans are created automatically. To record them by hand, see the Evaluation Span section of the manual instrumentation guide for [JavaScript](/platforms/javascript/guides/node/agent-tracing/manual-instrumentation/#evaluation-span) or [Python](/platforms/python/agent-tracing/manual-instrumentation/#evaluation-span).
