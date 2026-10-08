@@ -2,12 +2,15 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.24.0
+spec_version: 1.25.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.25.0
+    date: 2026-10-08
+    summary: Clarified that discarded envelopes are counted per contained item, not as a quantity of 1
   - version: 1.24.0
     date: 2026-09-01
     summary: Added `callback_error` discard reason
@@ -203,6 +206,20 @@ When failures occur that are caused by processing in the SDK itself, SDKs **MUST
 #### Transport Errors
 
 SDKs **MAY** retry sending the envelope when a network error occurs (connection timeout, DNS resolution failure, connection reset by peer). No client report is required for retried network errors.
+
+</SpecSection>
+
+<SpecSection id="network-discarded-quantity" status="candidate" since="1.25.0">
+
+#### Quantity of Discarded Envelopes
+
+When SDKs discard an envelope because sending it failed, they **MUST** record a client report entry for every telemetry item contained in the envelope, not just one entry per envelope or per envelope item. The `quantity` for each data category **MUST** be the number of items of that category in the envelope:
+
+- For `log`, `trace_metric`, and `span` envelope items, which batch multiple items into one envelope item, the quantity is the number of entries in the envelope item's `items` array, not 1.
+- For logs and metrics, SDKs **MUST** also record the respective [`log_byte`](#log-byte-outcomes) and [`trace_metric_byte`](#metric-byte-outcomes) entries.
+- For transactions, SDKs **MUST** also record the [span outcomes](#span-outcomes).
+
+For example, if an envelope containing a `log` item with 100 logs fails to send with an `HTTP 500` response, the SDK records a `send_error` entry with category `log_item` and quantity `100`, plus a `send_error` entry with category `log_byte` and the approximate byte size of these logs.
 
 </SpecSection>
 

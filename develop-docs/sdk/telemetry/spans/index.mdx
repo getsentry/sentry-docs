@@ -2,7 +2,7 @@
 title: Spans
 description: Span creation, sampling, filtering, buffering, and wire format for the span-first tracing model.
 spec_id: sdk/telemetry/spans
-spec_version: 1.0.0
+spec_version: 1.1.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/trace-propagation
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.1.0
+    date: 2026-10-08
+    summary: Added client reports section listing discard reasons for spans and clarifying that the quantity is the number of discarded spans
   - version: 1.0.0
     date: 2026-06-22
     summary: Initial stable release
@@ -473,6 +476,25 @@ SDKs **SHOULD** materialize and freeze the DSC as late as possible:
 
 - The buffer **SHOULD** enqueue spans but only create the final envelope at **flush time**.
 - At flush time, the buffer **SHOULD** materialize and freeze the DSC on the segment span if not already done. That way, the `trace` envelope header (e.g. the transaction name in the DSC) reflects the latest data.
+
+</SpecSection>
+
+<SpecSection id="client-reports" status="candidate" since="1.1.0">
+
+### Client Reports
+
+SDKs **MUST** record a [client report](/sdk/telemetry/client-reports/) with the `span` data category in at least the following cases:
+
+- `sample_rate`: the span was not recorded because its trace was negatively sampled, so a [Noop span](#noop-span) was returned instead. SDKs **SHOULD** record one outcome per Noop span.
+- `ignored`: the span matched an `ignoreSpans` pattern. See the [filtering implementation requirements](#implementation-requirements) for how to count ignored segments and their children.
+- `no_parent_span`: the span was not started because no parent span was present (for example, auto-instrumented spans that are only created within an active span).
+- `buffer_overflow`: the [span buffer](#span-buffer) dropped the span.
+- `ratelimit_backoff`: the span was dropped because the `span` data category is rate limited.
+- `send_error`, `internal_sdk_error`, `network_error`: the envelope containing the span was discarded because sending it failed, as specified in [Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording).
+
+The quantity **MUST** be the number of discarded spans, not the number of discarded envelopes or envelope items. For example, if a span envelope with 500 spans fails to send, the SDK records a `span` quantity of 500 (see [Quantity of Discarded Envelopes](/sdk/telemetry/client-reports/#quantity-of-discarded-envelopes)).
+
+[`beforeSendSpan`](#beforesendspan) cannot remove spans and the [`captureSpan` pipeline](#single-span-processing-pipeline) **MUST NOT** drop spans, so no client reports are recorded at these stages.
 
 </SpecSection>
 
