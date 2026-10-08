@@ -158,3 +158,25 @@ String entries do not have to be full matches, meaning the URL of a request is m
 If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
 
 </SdkOption>
+
+<SdkOption name="enablePropagateTraceparent" type="bool" defaultValue="false" availableSince="0.28.0">
+
+Controls whether the native SDKs on Apple, Android, and JVM attach a W3C `traceparent` header, in addition to the `sentry-trace` and `baggage` headers, to outgoing HTTP requests they instrument. This is useful when downstream services use OpenTelemetry or other W3C Trace Context-compatible tracing. The <PlatformIdentifier name="tracePropagationTargets" /> option still controls which requests receive the header.
+
+</SdkOption>
+
+<SdkOption name="strictTraceContinuation" type="bool" defaultValue="false" availableSince="0.28.0">
+
+If set to `true`, the native SDKs on Apple, Android, and JVM only continue an incoming trace if the organization ID in the incoming `baggage` header matches the organization ID of the current Sentry client. If either organization ID is missing, the SDK starts a new trace.
+
+If set to `false`, the SDK tolerates missing organization IDs, but still starts a new trace if both organization IDs are present and different.
+
+The client's organization ID is extracted from the DSN or can be set with the <PlatformIdentifier name="orgId" /> option. This is useful to prevent traces of unknown third-party services from being continued in your application.
+
+</SdkOption>
+
+<SdkOption name="orgId" type="string" availableSince="0.28.0">
+
+The organization ID used for trace continuation. By default, the SDK extracts the organization ID from the DSN. Set this option if your DSN doesn't contain an organization ID, for example, when you use self-hosted Sentry or Relay.
+
+</SdkOption>
