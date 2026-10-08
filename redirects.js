@@ -926,6 +926,10 @@ const userDocsRedirects = [
     destination: '/integrations/source-code-mgmt/github/',
   },
   {
+    source: '/integrations/source-code-mgmt/github-enterprise/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
     source: '/integrations/gitlab/',
     destination: '/integrations/source-code-mgmt/gitlab/',
   },
@@ -1139,14 +1143,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1188,6 +1184,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1295,6 +1295,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1316,10 +1320,6 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/superlog/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/synthreo/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1359,14 +1359,6 @@ const userDocsRedirects = [
   // via the wildcard redirect at the bottom of this file
   {
     source: '/integrations/sonarly-integration/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/watchdog-security/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1411,6 +1403,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1518,6 +1514,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1539,10 +1539,6 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/synthreo/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -3238,6 +3234,10 @@ const userDocsRedirects = [
   {
     source: '/concepts/key-terms/tracing/span-metrics/',
     destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     source: '/organization/integrations/shortcut/',

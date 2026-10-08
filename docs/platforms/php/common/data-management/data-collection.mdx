@@ -1,0 +1,240 @@
+---
+title: Data Collection
+description: "See what data the Sentry PHP SDK collects when you use the data_collection option, and how to control it."
+sidebar_order: 2
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry PHP SDK collects when you use the `data_collection` option.
+
+<Expandable title="Options to control data collection">
+
+You can control the categories listed here with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you opt in or out of each data category individually. The option is available in version 4.33.0 and later.
+
+The <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii` option</PlatformLink> remains fully supported until the next major version. Without `data_collection`, the SDK collects conservatively, and the defaults described on <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> apply.
+
+As soon as you pass a `data_collection` array, the categories you don't set explicitly fall back to the defaults described on this page, which are more permissive. For example, cookies, the user's IP address, and request and response bodies are then collected unless you opt out. Values whose keys match the built-in sensitive denylist are always scrubbed.
+
+If you set both, `send_default_pii` is ignored. The same applies to the `context_lines` option, which `data_collection` replaces with `frame_context_lines`.
+
+Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
+
+</Expandable>
+
+## HTTP Headers
+
+By default, the SDK collects HTTP request and response headers, with sensitive values scrubbed. Use `http_headers` to control this. A single behavior applies to both request and response headers:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        // Collect nothing:
+        'http_headers' => ['mode' => 'off'],
+        // Or only send real values for the listed headers:
+        // 'http_headers' => ['mode' => 'allowList', 'terms' => ['content-type']],
+        // Or configure request and response headers separately:
+        // 'http_headers' => [
+        //     'request' => ['mode' => 'denyList', 'terms' => ['-ip']],
+        //     'response' => ['mode' => 'off'],
+        // ],
+    ],
+]);
+```
+
+Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are always scrubbed, while the keys are kept. The `Cookie` and `Set-Cookie` headers are never included in the collected headers. Use the [`cookies`](#cookies) category to control them instead. See [Key-Value Collection Behavior](#key-value-collection-behavior) below for details on `mode` and `terms`.
+
+## Cookies
+
+By default, the SDK collects cookies, with sensitive values scrubbed. Opt out with `['mode' => 'off']`, or restrict which values are sent using `allowList` or `denyList` mode:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'cookies' => ['mode' => 'off'],
+        // Or only send the real value of the `locale` cookie:
+        // 'cookies' => ['mode' => 'allowList', 'terms' => ['locale']],
+    ],
+]);
+```
+
+## Information About Logged-in User
+
+The `user_info` category controls the user data the SDK infers on its own, such as the user's IP address. User data you set with <PlatformLink to="/enriching-events/identify-user/">`setUser()`</PlatformLink> is always sent to Sentry, regardless of `data_collection`.
+
+## Users' IP Address
+
+By default, the SDK sends the user's IP address. Disable it by setting `user_info` to `false`:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'user_info' => false,
+    ],
+]);
+```
+
+Even when this is disabled, IP addresses can still reach Sentry through collected HTTP headers, cookies, or query parameters (for example, the `X-Forwarded-For` header). Add these terms to the deny lists for those categories so their values are filtered:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'user_info' => false,
+        'http_headers' => [
+            'mode' => 'denyList',
+            'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user'],
+        ],
+        'cookies' => [
+            'mode' => 'denyList',
+            'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user'],
+        ],
+        'url_query_params' => [
+            'mode' => 'denyList',
+            'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user'],
+        ],
+    ],
+]);
+```
+
+## Request URL
+
+The full URL of incoming and outgoing HTTP requests is sent to Sentry. Depending on your application, this could contain PII data. Credentials in the URL (for example, `https://user:password@example.com`) are replaced with `[Filtered]`, and query parameters are filtered as described in [Request Query String](#request-query-string).
+
+## Request Query String
+
+By default, the SDK sends the query string of incoming and outgoing HTTP requests. Depending on your application, this could contain PII data. Values whose keys match the built-in sensitive denylist (such as `auth`, `token`, `password`, and `secret`) are replaced with `[Filtered]`.
+
+Use `url_query_params` to control this. Set it to `['mode' => 'off']` to disable collection entirely, or use `allowList` or `denyList` mode to filter which values are sent:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'url_query_params' => ['mode' => 'off'],
+    ],
+]);
+```
+
+Sentry also has some additional [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from the query string.
+
+## Request and Response Bodies
+
+By default, the SDK collects HTTP request and response bodies. Whether a body is sent depends on its type and size:
+
+- **The type of the body:**
+  - JSON and form bodies are sent, with values whose keys match the built-in sensitive denylist scrubbed
+  - Bodies in other formats, or bodies that can't be parsed, are replaced with `[Filtered]`
+  - Uploaded files are never sent to Sentry
+- **The size of the body:** There's a <PlatformLink to="/configuration/options/#max_request_body_size">`max_request_body_size` option</PlatformLink> that's set to `medium` by default. Bodies that exceed the size limit aren't sent to Sentry.
+
+To disable body collection, set `http_bodies` to an empty array, or provide only the body types you want:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    // Collect only incoming request bodies:
+    'data_collection' => [
+        'http_bodies' => ['incomingRequest'],
+    ],
+]);
+```
+
+The valid body types are `incomingRequest`, `outgoingRequest`, `incomingResponse`, and `outgoingResponse`.
+
+## Source Context
+
+When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
+
+Use `frame_context_lines` to control how many lines above and below each stack frame are captured. It defaults to `5`. Set it to `0` to only send the line where the error occurred:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'frame_context_lines' => 0,
+    ],
+]);
+```
+
+## Local Variables In Stack Trace
+
+When unhandled errors and exceptions are sent to Sentry, the names and values of local variables that were set when the errors occurred are sent at the same time.
+
+`stack_frame_variables` controls this and defaults to `true`. Values of variables whose names match the built-in sensitive denylist are scrubbed. Set it to `false` to stop sending variables, or use a key-value behavior to filter which variables are sent by name:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'stack_frame_variables' => false,
+        // Or filter additional variables by name:
+        // 'stack_frame_variables' => ['mode' => 'denyList', 'terms' => ['email']],
+    ],
+]);
+```
+
+Setting `zend.exception_ignore_args=1` in your `php.ini` prevents PHP from providing variables to the SDK, regardless of `stack_frame_variables`. On some distributions, this setting is already set to `1` by default.
+
+## `data_collection` Reference
+
+### Keys
+
+| Key                     | Type                                                       | Default                                                                          | Description                                                                                                                                                                                        |
+| ----------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user_info`             | `bool`                                                     | `true`                                                                           | Populate user fields, such as the IP address, from instrumentation.                                                                                                                                |
+| `cookies`               | key-value behavior                                         | `['mode' => 'denyList']`                                                         | Collect cookies.                                                                                                                                                                                   |
+| `http_headers`          | key-value behavior, or `['request' => …, 'response' => …]` | `['mode' => 'denyList']`                                                         | Collect HTTP headers. A single behavior applies to both request and response headers.                                                                                                              |
+| `http_bodies`           | `string[]`                                                 | `['incomingRequest', 'outgoingRequest', 'incomingResponse', 'outgoingResponse']` | Body types to collect. Set to `[]` to disable.                                                                                                                                                     |
+| `url_query_params`      | key-value behavior                                         | `['mode' => 'denyList']`                                                         | Collect URL query parameters.                                                                                                                                                                      |
+| `stack_frame_variables` | `bool` or key-value behavior                               | `true`                                                                           | Include variable values captured within stack frames. Accepts a boolean (`true` collects all variables, `false` collects none) or a key-value behavior to filter which variables are sent by name. |
+| `frame_context_lines`   | `int`                                                      | `5`                                                                              | Source code lines captured above and below each stack frame.                                                                                                                                       |
+
+Invalid values are ignored and the default is used instead. The SDK logs a debug message through the configured <PlatformLink to="/configuration/options/#logger">`logger`</PlatformLink> when this happens.
+
+### Key-Value Collection Behavior
+
+The `cookies`, `http_headers`, `url_query_params`, and `stack_frame_variables` categories take an array with a `mode` and an optional list of `terms`:
+
+```php
+['mode' => 'denyList', 'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user']]
+```
+
+| `mode`        | Behavior                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `'denyList'`  | Collect everything, replacing the value of any key matching `terms` (in addition to the built-in sensitive denylist). |
+| `'allowList'` | Only keys matching `terms` send their real value. Every other key is kept, but its value is replaced.                 |
+| `'off'`       | Collect nothing in this category.                                                                                     |
+
+If you omit `mode`, it defaults to `'denyList'`. `terms` match partially and case-insensitively, so `'-ip'` matches `X-Real-IP`. Filtered values are replaced with `[Filtered]`; the key itself is always preserved. The built-in sensitive denylist (`auth`, `token`, `secret`, `password`, `key`, `session`, and similar) always applies, even in `'allowList'` mode.
+
+### Preserving `send_default_pii` Behavior
+
+To keep roughly the conservative collection you get with `send_default_pii` set to `false` while using `data_collection`, opt out of each category explicitly:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'user_info' => false,
+        'cookies' => ['mode' => 'off'],
+        'http_headers' => [
+            'request' => [
+                'mode' => 'denyList',
+                'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user'],
+            ],
+            'response' => ['mode' => 'off'],
+        ],
+        'url_query_params' => [
+            'mode' => 'denyList',
+            'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user'],
+        ],
+        'http_bodies' => ['incomingRequest'],
+    ],
+]);
+```
+
+If you previously set `send_default_pii` to `true`, pass an empty `data_collection` array to use the defaults described on this page.
