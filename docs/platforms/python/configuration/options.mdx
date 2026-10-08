@@ -95,24 +95,9 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </SdkOption>
 
-<SdkOption name="send_default_pii" type='bool' defaultValue='None'>
+<SdkOption name="data_collection" type='dict' defaultValue='{}'>
 
-If this flag is enabled, [certain personally identifiable information (PII)](/platforms/python/data-management/data-collected/) is added by active integrations.
-
-If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
-
-<Alert>
-  We plan to eventually deprecate `send_default_pii` in favor of the [`data_collection`](#data_collection) option, but that won't happen until a future major version. Until then, `send_default_pii` remains fully supported.
-
-If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
-
-</Alert>
-
-</SdkOption>
-
-<SdkOption name="data_collection" type='dict' defaultValue='None'>
-
-Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+Controls which categories of data the SDK collects automatically. All keys are optional, and any key you don't set falls back to its default.
 
 ```python
 import sentry_sdk
@@ -126,31 +111,9 @@ sentry_sdk.init(
 )
 ```
 
-Passing a `data_collection` dictionary opts you into its defaults, which are more permissive than `send_default_pii=False`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (user identity, request bodies, generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+By default, the SDK collects rich debugging context (user identity, request bodies, generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar). Opt out of the categories you don't want.
 
-If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
-
-For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
-
-</SdkOption>
-
-<SdkOption name="event_scrubber" type='sentry_sdk.scrubber.EventScrubber' defaultValue='None'>
-
-Scrubs the event payload for sensitive information such as cookies, sessions, and passwords from a `denylist`. It can additionally be used to scrub from another `pii_denylist` if `send_default_pii` is disabled. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
-
-Only runs if `data_collection` is not defined. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
-
-</SdkOption>
-
-<SdkOption name="include_source_context" type='bool' defaultValue='True'>
-
-When enabled, source context will be included in events sent to Sentry. This source context includes the five lines of code above and below the line of code where an error happened.
-
-</SdkOption>
-
-<SdkOption name="include_local_variables" type='bool' defaultValue='True'>
-
-When enabled, the SDK will capture a snapshot of local variables to send with the event to help with debugging.
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>. To remove data the SDK doesn't categorize, use a <PlatformIdentifier name="before-send" /> callback.
 
 </SdkOption>
 
@@ -313,7 +276,6 @@ def before_send_span(span, hint):
 
 sentry_sdk.init(
     # ...
-    trace_lifecycle="stream",
     before_send_span=before_send_span,
 )
 ```
@@ -436,22 +398,7 @@ If you want to disable all tracing you need to set `traces_sample_rate=None`. In
 
 <PlatformContent includePath="/performance/traces-sampler-config-option" />
 
-<SdkOption name="trace_lifecycle" type='string' defaultValue='"static"' availableSince='2.62.0'>
-
-Controls how spans are sent to Sentry:
-
-- In transaction mode (`"static"`, the default), all spans are collected in memory and sent to Sentry as a single transaction once the root span ends.
-- In <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`"stream"`), spans are sent in batches as they finish.
-
-</SdkOption>
-
 <SdkOption name="ignore_spans" type='list[str | Pattern | dict]' defaultValue='[]' availableSince='2.62.0'>
-
-<Alert>
-
-Only available in <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>.
-
-</Alert>
 
 A list of strings, compiled regular expressions, or dictionaries describing spans that shouldn't be sent to Sentry. When using strings, a span name containing the string will be filtered out. For exact or more complex pattern matching, use compiled regular expressions instead. You can also provide a dictionary with `name` and/or `attributes` keys to match on multiple conditions. At least one key must be provided.
 
@@ -467,7 +414,6 @@ import re
 import sentry_sdk
 
 sentry_sdk.init(
-    trace_lifecycle="stream",
     ignore_spans=[
         # String match against span name
         "/health",
@@ -577,16 +523,6 @@ The threshold in milliseconds for adding the source location to an outgoing HTTP
 
 </SdkOption>
 
-<SdkOption name="trace_ignore_status_codes" type='bool' defaultValue='frozenset()'>
-
-An optional property that disables tracing for HTTP requests with certain status codes.
-
-Requests are not traced if the status code is contained in the provided set.
-
-If `trace_ignore_status_codes` is not provided, requests with any status code may be traced.
-
-</SdkOption>
-
 <SdkOption name="custom_repr" type='function' defaultValue='None'>
 
 A custom [repr](https://docs.python.org/3/library/functions.html#repr) function to run while serializing an object. Use this to control how your custom objects and classes are visible in Sentry.
@@ -644,37 +580,3 @@ Either this or `profiles_sample_rate` must be defined to enable profiling. Addit
 A number between `0` and `1`, controlling the percentage chance a given session will be profiled. The sampling decision is evaluated only once at SDK initialization.
 
 </SdkOption>
-
-<SdkOption name="stream_gen_ai_spans" type='bool' defaultValue='True' defaultNote='since version 2.64.0' availableSince='2.60.0'>
-
-When enabled, `gen_ai` spans are sent as standalone envelope items instead of being bundled in the transaction payload. This prevents AI spans with large inputs and outputs from being dropped due to transaction payload size limits.
-
-This is enabled by default starting with SDK version `2.64.0` (before that, it defaulted to `False`). Set it to `False` to send `gen_ai` spans as part of the transaction instead.
-
-Self-hosted Sentry users should set this option to `False`, as standalone `gen_ai` spans may not be ingested by their Sentry instance.
-
-</SdkOption>
-
-## Logs Options
-
-<SdkOption name="enable_logs" type='bool' defaultValue='False'>
-
-**Deprecated:** This option will be removed in the next major version. Use the `capture_sentry_logs` option on the [`logging`](/platforms/python/integrations/logging/#options) and [Loguru](/platforms/python/integrations/loguru/#options) integrations instead.
-
-The `sentry_sdk.logger` API works standalone and is not affected by this option.
-
-For automatic capture of logs from the standard library `logging` module and from Loguru, this option acts as a fallback. If an integration leaves `capture_sentry_logs` unset, `enable_logs=True` turns automatic capture on for that integration. Setting `capture_sentry_logs` on the integration always wins.
-
-| `enable_logs`     | `capture_sentry_logs` | Automatic capture |
-| ----------------- | --------------------- | ----------------- |
-| not set / `False` | not set               | off               |
-| `True`            | not set               | on                |
-| any               | `True`                | on                |
-| any               | `False`               | off               |
-
-In SDK versions prior to `2.68.0`, this option had to be set to `True` to use the `sentry_sdk.logger` API, and it also enabled automatic capture of logs from the standard library `logging` module and from Loguru. In version `2.68.0` only, the option had no effect at all. Upgrade to `2.68.1` or later if you rely on it.
-
-Deprecated in version `2.68.1`. New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
-
-</SdkOption>
-

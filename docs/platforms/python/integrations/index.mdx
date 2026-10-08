@@ -24,7 +24,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.sanic"     label="Sanic"     url="/platforms/python/integrations/sanic/" />     |        ✓         |
 | <LinkWithPlatformIcon platform="python.starlette" label="Starlette" url="/platforms/python/integrations/starlette/" /> |        ✓         |
 | <LinkWithPlatformIcon platform="python.starlite"  label="Starlite"  url="/platforms/python/integrations/starlite/" />  |        ✓         |
-| <LinkWithPlatformIcon platform="python.litestar"  label="Litestar"  url="/platforms/python/integrations/litestar/" />  |                  |
+| <LinkWithPlatformIcon platform="python.litestar"  label="Litestar"  url="/platforms/python/integrations/litestar/" />  |        ✓         |
 | <LinkWithPlatformIcon platform="python.tornado"   label="Tornado"   url="/platforms/python/integrations/tornado/" />   |        ✓         |
 
 ### Databases
@@ -108,20 +108,20 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 | <LinkWithPlatformIcon platform="python.ariadne"    label="Ariadne"    url="/platforms/python/integrations/ariadne/" />     |        ✓         |
 | <LinkWithPlatformIcon platform="python.gql"        label="GQL"        url="/platforms/python/integrations/gql/" />         |        ✓         |
 | <LinkWithPlatformIcon platform="python.graphene"   label="Graphene"   url="/platforms/python/integrations/graphene/" />    |        ✓         |
-| <LinkWithPlatformIcon platform="python.strawberry" label="Strawberry" url="/platforms/python/integrations/strawberry/" /> |        ✓         |
+| <LinkWithPlatformIcon platform="python.strawberry" label="Strawberry" url="/platforms/python/integrations/strawberry/" /> |                  |
 
 ### RPC
 
 |                                                                                                        | **Auto-enabled** |
 | ------------------------------------------------------------------------------------------------------ | :--------------: |
-| <LinkWithPlatformIcon platform="python.grpc" label="gRPC" url="/platforms/python/integrations/grpc/" /> |        ✓         |
+| <LinkWithPlatformIcon platform="python.grpc" label="gRPC" url="/platforms/python/integrations/grpc/" /> |                  |
 
 ### Logging
 
 |                                                                                                                 | **Auto-enabled** |
 | --------------------------------------------------------------------------------------------------------------- | :--------------: |
-| <LinkWithPlatformIcon platform="python.logging" label="Logging" url="/platforms/python/integrations/logging/" /> |        ✓         |
-| <LinkWithPlatformIcon platform="python.loguru"  label="Loguru"  url="/platforms/python/integrations/loguru/" />  |        ✓         |
+| <LinkWithPlatformIcon platform="python.logging" label="Logging" url="/platforms/python/integrations/logging/" /> |                  |
+| <LinkWithPlatformIcon platform="python.loguru"  label="Loguru"  url="/platforms/python/integrations/loguru/" />  |                  |
 
 ### Miscellaneous
 
@@ -141,16 +141,16 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 
 ### Default Integrations
 
-| Integration                                          |
-| ---------------------------------------------------- |
-| [Argv](default-integrations/#argv)                   |
-| [Atexit](default-integrations/#atexit)               |
-| [Excepthook](default-integrations/#excepthook)       |
-| [Deduplication](default-integrations/#deduplication) |
-| [Stdlib](default-integrations/#stdlib)               |
-| [Modules](default-integrations/#modules)             |
-| [Logging](default-integrations/#logging)             |
-| [Threading](default-integrations/#threading)         |
+| Integration                                              |
+| -------------------------------------------------------- |
+| [Argv](default-integrations/#argv)                       |
+| [Atexit](default-integrations/#atexit)                   |
+| [Excepthook](default-integrations/#excepthook)           |
+| [Unraisablehook](default-integrations/#unraisablehook)   |
+| [Deduplication](default-integrations/#deduplication)     |
+| [Stdlib](default-integrations/#stdlib)                   |
+| [Modules](default-integrations/#modules)                 |
+| [Threading](default-integrations/#threading)             |
 
 ## Configuration
 
@@ -158,7 +158,7 @@ The Sentry SDK uses integrations to hook into the functionality of popular libra
 
 Integrations can be added using the [`integrations`](/platforms/python/configuration/options/#integrations) config option.
 
-Integrations marked as "auto-enabled" in the above table will be turned on automatically, unless you set [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) to `False`. If you want to configure a specific integration's settings (for instance, change Flask's default `transaction_style`), add it to your `integrations` list as you would a non-auto-enabling integration and pass in the desired options.
+Integrations marked as "auto-enabled" in the above table will be turned on automatically, unless you set [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) to `False`. If you want to configure a specific integration's settings (for instance, limit which HTTP methods Flask creates transactions for), add it to your `integrations` list as you would a non-auto-enabling integration and pass in the desired options.
 
 ```python
 import sentry_sdk
@@ -167,9 +167,9 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 sentry_sdk.init(
     integrations=[
-        # The Flask integration is auto-enabling, but we want to change
-        # transaction_style from the default "endpoint" to "url"
-        FlaskIntegration(transaction_style="url"),
+        # The Flask integration is auto-enabling, but we want to
+        # only create transactions for GET requests
+        FlaskIntegration(http_methods_to_capture=("GET",)),
         # The asyncio integration is not enabled automatically
         # and needs to be added manually.
         AsyncioIntegration(),

@@ -48,40 +48,10 @@ You need:
 
 - <PlatformLink to="/tracing/#configure">Tracing configured</PlatformLink> in
   your app
-- Sentry SDK `>=2.62.0`
 
-## Enable Stream Mode
+## Span Flushing
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Opt in by adding the `trace_lifecycle` option when initializing the SDK:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    traces_sample_rate=1.0,
-    # enables stream mode
-    trace_lifecycle="stream",
-)
-
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-To revert to transaction mode, remove the `trace_lifecycle` option or set it to `"static"` (the default).
-
-<Expandable title="How does span flushing work?">
-
-When stream mode is enabled, the SDK maintains an internal buffer that groups spans by trace ID.
+The SDK maintains an internal buffer that groups spans by trace ID.
 
 Spans are flushed:
 
@@ -90,8 +60,6 @@ Spans are flushed:
 - When the SDK shuts down.
 
 Each flush sends only the spans accumulated since the last flush, grouped into envelopes by trace ID.
-
-</Expandable>
 
 ## Manual Instrumentation (Optional)
 
@@ -337,7 +305,6 @@ def postprocess_span(span, hint):
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    trace_lifecycle="stream",
     before_send_span=postprocess_span,
 )
 ```
@@ -370,7 +337,6 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    trace_lifecycle="stream",
     ignore_spans=[
         # String match against span name
         "/health",

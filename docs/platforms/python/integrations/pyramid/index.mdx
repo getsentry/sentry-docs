@@ -58,9 +58,9 @@ When you point your browser to [http://localhost:6543/](http://localhost:6543/) 
 
 - The SDK will report all exceptions leading to an Internal Server Error. These two kinds of exceptions are:
   - exceptions that are not handled by any exception view
-  - exceptions whose exception view returns a status code of 500 (Pyramid version 1.9+ only)
+  - exceptions whose exception view returns a status code of 500
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sensitive values such as authorization headers and cookie values are filtered by default, and user information is collected by default. Use the [`data_collection`](/platforms/python/data-management/data-collected/) option to change what is collected.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
@@ -68,44 +68,9 @@ When you point your browser to [http://localhost:6543/](http://localhost:6543/) 
   the [Logging](/platforms/python/integrations/logging/)
   integration is enabled (done by default).
 
-## Options
-
-<Include name="python-stream-mode-integration-option-callout.mdx" />
-
-By adding `PyramidIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PyramidIntegration` to change its behavior:
-
-```python
-import sentry_sdk
-from sentry_sdk.integrations.pyramid import PyramidIntegration
-
-sentry_sdk.init(
-    # ...
-    integrations=[
-        PyramidIntegration(
-            transaction_style="route_pattern",
-        )
-    ]
-)
-```
-
-You can pass the following keyword arguments to `PyramidIntegration()`:
-
-- `transaction_style`:
-
-  ```python
-  config.add_route("myroute", "/myurl/{id}")
-  config.add_view(myfunction, route_name="myroute")
-  ```
-
-  In the above code, you can set the transaction to:
-  - `/myurl/{id}` if you set `transaction_style="route_pattern"`
-  - `myroute` if you set `transaction_style="route_name"`
-
-  The default is `"route_name"`.
-
 ## Supported Versions
 
-- Pyramid: 1.6+
-- Python: 3.6+
+- Pyramid: 2.0+
+- Python: 3.7+
 
 <Include name="python-use-older-sdk-for-legacy-support.mdx" />

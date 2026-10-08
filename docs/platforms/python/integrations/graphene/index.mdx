@@ -56,32 +56,27 @@ code snippet is run, a new error event should appear in the Issues section of
 When used together with one of our web framework integrations like
 [FastAPI](/platforms/python/integrations/fastapi/) or
 [Flask](/platforms/python/integrations/flask/), the Graphene
-integration can capture the request body for each GraphQL error that happens.
-Since the requests may contain sensitive data, no request bodies will be attached
-by default.
+integration captures the request body for each GraphQL error that happens.
+This data is collected by default, as long as the integration for the web
+framework you're using is enabled.
 
-To capture request bodies:
-
-- Initialize the SDK with the
-  [send_default_pii](/platforms/python/configuration/options/#send-default-pii)
-  option set to `True`.
-- Make sure the integration for the web framework you're using is enabled.
+To stop collecting GraphQL documents and variables, set the `graphql` key of the
+[`data_collection`](/platforms/python/data-management/data-collected/) option:
 
 ```python
 sentry_sdk.init(
     # same options as above
-    # Add data like request headers and IP for users, if applicable;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    data_collection={
+        "graphql": {"document": False, "variables": False},
+    },
 )
 ```
 
 <Alert level="warning" title="Note">
 
-Since `send_default_pii` is a global SDK option, setting it to `True` affects all
-integrations, not just Graphene. Please make sure to take care of
+`data_collection` is a global SDK option, so it affects all integrations, not just Graphene. Make sure to take care of
 [scrubbing sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option.
+from events if your GraphQL payloads contain it.
 
 </Alert>
 

@@ -47,9 +47,6 @@ from sentry_sdk.integrations.mcp import MCPIntegration
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    # Add data like tool inputs/outputs;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
     integrations=[
         MCPIntegration(),
     ],
@@ -74,9 +71,6 @@ from mcp.server.fastmcp import FastMCP
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    # Add data like tool inputs/outputs;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
     integrations=[
         MCPIntegration(),
     ],
@@ -131,7 +125,6 @@ from mcp.types import Tool, TextContent, GetPromptResult, PromptMessage
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
     integrations=[
         MCPIntegration(),
     ],
@@ -166,7 +159,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         b = arguments.get("b", 0)
         result = a + b
         return [TextContent(type="text", text=f"The sum is {result}")]
-    
+
     return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
 async def main():
@@ -193,66 +186,57 @@ Data on the following will be collected:
 - **Request context**: Request IDs, session IDs, and transport types (stdio/HTTP)
 - **Execution spans**: Timing information for all handler invocations
 
-Sentry considers tool inputs/outputs and prompt content as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude this data despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+Tool inputs/outputs and prompt content are collected by default. To turn this off, see the [Options section](#options) below.
 
 ### Captured Span Data
 
 For each operation, the following span data attributes are captured:
 
 **General (all operations):**
+
 - `mcp.method.name`: The MCP method name (e.g., `tools/call`, `prompts/get`, `resources/read`)
+- `network.transport`: Network transport (`pipe` for stdio, `tcp` otherwise)
 - `mcp.transport`: Transport type (`http` for Streamable HTTP, `sse` for Server-Sent Events or `stdio`)
 - `mcp.request_id`: Request identifier (when available)
 - `mcp.session_id`: Session identifier (when available)
 
 **Tools:**
-- `mcp.tool.name`: The name of the tool being executed
+
+- `gen_ai.tool.name`: The name of the tool being executed
 - `mcp.request.argument.*`: Tool input arguments
-- `mcp.tool.result.content`: Tool output (when `send_default_pii=True`)
-- `mcp.tool.result.is_error`: Whether the tool execution resulted in an error
+- `gen_ai.tool.call.result`: Tool output
 
 **Prompts:**
-- `mcp.prompt.name`: The name of the prompt being requested
+
+- `gen_ai.prompt.name`: The name of the prompt being requested
 - `mcp.request.argument.*`: Prompt input arguments
-- `mcp.prompt.result.message.count`: Number of messages in the prompt result
-- `mcp.prompt.result.message.role`: Role of the message (for single-message prompts)
-- `mcp.prompt.result.message.content`: Message content (for single-message prompts, when `send_default_pii=True`)
+- `mcp.prompt.result.message_count`: Number of messages in the prompt result
+- `mcp.prompt.result.message_role`: Role of the message (for single-message prompts)
+- `mcp.prompt.result.message_content`: Message content (for single-message prompts)
 
 **Resources:**
+
 - `mcp.resource.uri`: The URI of the resource being accessed
 - `mcp.resource.protocol`: The URI protocol/scheme (e.g., `config`, `data`, `file`)
 
 ## Options
 
-By adding `MCPIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `MCPIntegration` to change its behavior:
+Tool and prompt inputs and outputs are collected by default. To stop recording them, set the `mcp` category of `data_collection` in your `sentry_sdk.init()` call. `inputs` controls the arguments passed to your tool and prompt handlers, and `outputs` controls the results they return:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.mcp import MCPIntegration
 
 sentry_sdk.init(
     # ...
-    # Add data like tool inputs and outputs;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-    integrations=[
-        MCPIntegration(
-            include_prompts=False,  # Tool and prompt inputs/outputs will not be sent to Sentry
-        ),
-    ],
+    data_collection={
+        "mcp": {"inputs": False, "outputs": False},
+    },
 )
 ```
 
-You can pass the following keyword arguments to `MCPIntegration()`:
-
-- `include_prompts`:
-
-  Whether tool inputs/outputs and prompt content should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
-
-  The default is `True`.
+See [What Data Is Collected](/platforms/python/data-management/data-collected/) for more information.
 
 ## Supported Versions
 
-- MCP SDK: 1.15.0+
+- MCP SDK: 2.0+
 - Python: 3.9+
-

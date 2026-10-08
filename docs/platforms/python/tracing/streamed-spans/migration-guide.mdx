@@ -4,23 +4,15 @@ sidebar_order: 10
 description: "Learn how to migrate your custom instrumentation from transaction mode to stream mode."
 ---
 
-Stream mode requires the streamed Span API. If you use custom instrumentation (creating spans manually, setting span data, or filtering spans) you'll need to update that code before you can switch to stream mode. This guide walks through the changes.
+Stream mode uses the streamed Span API. If you use custom instrumentation (creating spans manually, setting span data, or filtering spans) you'll need to update that code. This guide walks through the changes.
 
 For an introduction to stream mode itself, see <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink>.
 
-## Enable Stream Mode
+<Alert>
 
-Add the `trace_lifecycle` option when initializing the SDK:
+Stream mode is the only mode — there's nothing to turn on. Transactions were removed in SDK `3.0`.
 
-```python diff
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    traces_sample_rate=1.0,
-+   trace_lifecycle="stream",
-)
-```
+</Alert>
 
 ## Span Creation
 
@@ -194,7 +186,6 @@ def traces_sampler(sampling_context):
 
 sentry_sdk.init(
     traces_sampler=traces_sampler,
-    trace_lifecycle="stream",
 )
 ```
 
@@ -230,7 +221,6 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
 -   before_send_transaction=my_filter,
-+   trace_lifecycle="stream",
 +   ignore_spans=[
 +       "/health",
 +       re.compile(r"^GET /api/v1/internal"),
