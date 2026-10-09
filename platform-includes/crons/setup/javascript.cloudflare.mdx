@@ -1,3 +1,66 @@
+## Cron Triggers
+
+<AvailableSince version="11.5.0" />
+
+If your Worker runs on [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), add `cronTriggersIntegration` to send check-ins for every run of the `scheduled` handler. The in-progress check-in of each run carries the trigger's cron expression as the schedule, so Sentry creates the monitor on the first run. The integration isn't enabled by default because each monitor it creates is billed.
+
+With the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, add the integration to your `instrument.server.*` file. Cron Triggers have no names, and the `scheduled` handler only receives the cron expression, so the setup uses three files. First, keep a map from each expression in your wrangler config to its monitor slug in its own module:
+
+```typescript {filename:monitorSlugs.ts}
+export const monitorSlugs: Record<string, string> = {
+  "30 9 * * MON-FRI": "daily-report",
+  "0 */6 * * *": "sync-inventory",
+};
+```
+
+Then use the map in `instrument.server.ts` for the slugs:
+
+```typescript {filename:instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+import { monitorSlugs } from "./monitorSlugs";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  integrations: [
+    Sentry.cronTriggersIntegration({
+      monitorSlug: (cron) => monitorSlugs[cron],
+    }),
+  ],
+}));
+```
+
+And in the `scheduled` handler of your Worker to select the job:
+
+```typescript {filename:index.ts}
+import { monitorSlugs } from "./monitorSlugs";
+
+export default {
+  async scheduled(controller, env, ctx) {
+    switch (monitorSlugs[controller.cron]) {
+      case "daily-report":
+        // Your daily report job
+        break;
+      case "sync-inventory":
+        // Your inventory sync job
+        break;
+    }
+  },
+};
+```
+
+If you deploy with `wrangler` directly, pass the same integration to `Sentry.withSentry` in your Worker, as shown in the <PlatformLink to="/install/wrangler/#configure">Wrangler setup</PlatformLink>.
+
+When you change a schedule in your wrangler config, change its key in `monitorSlugs`. The monitor keeps its slug, and Sentry updates its schedule on the next check-in. Triggers without an entry send no check-ins. The `monitorSlug` function can also return an object with the slug and other monitor options, such as `{ monitorSlug: "daily-report", maxRuntime: 30 }`.
+
+Without a `monitorSlug` function, the slug comes from the cron expression: `30 9 * * MON-FRI` becomes `cron-30-9-x-x-montofri` (`*` is written as `x`, `,` as `_`, `-` as `to`, and `/` as `by`). Expressions with other characters, or slugs longer than 50 characters, end in a hash of the expression. Set a `monitorSlug` function in these cases:
+
+- You change a schedule. A new expression gives a new slug, so Sentry creates a new monitor. The old monitor gets no more check-ins and reports missed check-ins, so delete it in Sentry.
+- Two or more Workers report to the same project and environment with the same cron expression. Without a `monitorSlug` function, these Workers share one monitor, and the check-ins of one Worker can hide the missed runs of another.
+
+Cloudflare numbers the days of the week from 1 (Sunday) to 7 (Saturday), and Sentry numbers them from 0 (Sunday). The SDK converts the day-of-week field to day names before sending it, so `1-5` is sent as `SUN-THU`. For Monday to Friday, use `2-6` or `MON-FRI`. If the day-of-week field can't be converted, the day-of-month field has `W`, `?`, or `L` with an offset (such as `L-3`), or both day fields are set and one of them starts with `*` (such as `*/2`), check-ins are sent without a schedule or other monitor options, and you need to create the monitor in Sentry first.
+
+Runs without a cron expression, such as some manual runs with `--test-scheduled`, send no check-ins.
+
 ## Job Monitoring
 
 <Include name="javascript-crons-job-monitoring.mdx" />
