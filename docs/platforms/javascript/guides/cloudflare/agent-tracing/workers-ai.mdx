@@ -30,7 +30,7 @@ Only `env.AI.run` is instrumented. Streaming spans end when the stream is fully 
 
 You can browse the full list of available models in the [Cloudflare Workers AI models directory](https://developers.cloudflare.com/ai/models/).
 
-## Trace Jev Evaluations
+## Trace Jev and Clef Evaluations
 
 <AvailableSince version="11.3.0" />
 
@@ -59,7 +59,19 @@ export default {
 } satisfies ExportedHandler<Env>;
 ```
 
-Each call creates a `gen_ai.evaluate` span named `evaluate <model>`, with the response model (for example, `jev-1.13.0`), latency, and token usage. When recording is enabled, Sentry captures `state` and `questions` as input messages and `answers` as output messages, including probabilities and confidence values returned by Jev. These spans have the same attributes as spans from the [TypeSafe integration](/platforms/javascript/guides/node/configuration/integrations/typesafe/) on other runtimes.
+The SDK traces calls to Cloudflare's [Clef model](https://developers.cloudflare.com/workers-ai/models/clef/) (`@cf/cloudflare/clef`) the same way. Clef takes the same `state` and `questions` input as Jev:
+
+```typescript
+const result = await env.AI.run("@cf/cloudflare/clef", {
+  model: "clef",
+  state: "Checkout has been failing for every customer for the last hour.",
+  questions: {
+    urgent: { type: "noul", instructions: "Is this support request urgent?" },
+  },
+});
+```
+
+Each call creates a `gen_ai.evaluate` span named `evaluate <model>`, with the response model (for example, `jev-1.13.0` or `clef`), latency, and token usage. When recording is enabled, Sentry captures `state` and `questions` as input messages and `answers` as output messages, including probabilities and confidence values returned by the model. These spans have the same attributes as spans from the [TypeSafe integration](/platforms/javascript/guides/node/configuration/integrations/typesafe/) on other runtimes.
 
 Evaluation state and answers can contain sensitive data. To stop recording them, set `genAI: { inputs: false, outputs: false }` in the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink>.
 
