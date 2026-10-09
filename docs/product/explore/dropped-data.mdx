@@ -6,12 +6,20 @@ description: >-
   Learn how to investigate and troubleshoot dropped data in Sentry.
 ---
 
+<Alert>
+
+Dropped data is in limited early access. It's only available to organizations that Sentry has invited to try it.
+
+</Alert>
+
 When data is ingested into Sentry, it can be dropped for a number of reasons. Sample rate, queue 
 overflow, inbound filters, and invalid or malformed data are some top examples for why data might be 
 dropped.
 
 ## Troubleshooting Dropped Data
 Traces, Logs, and Application Metrics charts in [Explore](/product/explore/) can show data that Sentry did not store. Hover over the dropped data line at the bottom of the chart to see the summary. Click on the line to see the details and troubleshoot.
+
+The dropped data line leaves out data you chose to drop: inbound filters, `before_send`, and `sample_rate`. These reasons still appear in the details list.
 
 Below are all the possible reasons why data might be dropped. They correspond with the title you will see when exploring dropped data in Sentry. 
 
@@ -42,14 +50,14 @@ Reason code: `queue_overflow`.
 
 Your application is generating events faster than the SDK can buffer and send them. The SDK allows a limited number of operations in flight at once. Beyond that, new events are dropped immediately rather than queued.
 
-- **Short:** SDK send queue was full.
+- **Short:** SDK's send queue was full.
 - **Causes:**
   - Application code sending events in a tight loop, for example an exception inside a `while` loop.
   - Requests to Sentry are slow or hanging. A proxy, firewall, misconfigured Relay, or a request without a timeout can cause this.
 - **Actions:**
   - Confirm that requests to Sentry are completing.
   - Look for suspect code, including async work that does not finish inside [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) filters.
-  - If this volume of events is expected, [contact Sentry support](https://sentry.zendesk.com/hc/en-us).
+  - If this volume of events is expected, [contact Sentry support](https://www.sentry.help/en/).
 
 #### Buffer Overflow
 
@@ -97,12 +105,14 @@ The event reached Sentry and Sentry rejected it with an error status.
 
 Reason code: `before_send`.
 
-Your [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) function, or your [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) config, omitted the event. If that was not intentional, check your Sentry config.
+Your [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) function omitted the event. If that was not intentional, check your Sentry config.
 
-- **Short:** Event dropped by your before-send function. See [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend).
+Before JavaScript SDK v11, spans dropped by [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) are also reported under this reason. Starting with v11, they're reported as [Ignored Spans](#ignored-spans).
+
+- **Short:** Event dropped by your before send function. See [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend).
 - **Causes:**
   - Your before-send filter is behaving as written.
-  - [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) omitted spans before they were sent.
+  - Before JavaScript SDK v11, [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) omitted spans before they were sent.
   - Application code in a before-send hook returned `false` or `null`.
 - **Actions:**
   - Update [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) if it is blocking spans you want to receive.
@@ -114,7 +124,11 @@ Reason code: `ignore_spans`.
 
 Spans matched an ignore rule in your SDK configuration and were not sent. See [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans).
 
-- **Short:** Span dropped by your ignored-spans configuration. See [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans).
+{/* TODO: Update this copy when SDK versions that emit ignore_spans are widely adopted. */}
+
+This reason is only reported in span-first mode, which is the default starting with JavaScript SDK v11. In earlier versions, ignored spans are reported as [Before Send](#before-send).
+
+- **Short:** Span dropped by your ignored spans configuration. See [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans).
 - **Causes:**
   - [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) omitted specific spans before they were sent to Sentry.
 - **Actions:**
@@ -147,7 +161,7 @@ This indicates a bug or an infrastructure problem during ingestion. During healt
   - A problem in Sentry's ingestion service.
 - **Actions:**
   - Check the [Sentry status page](https://status.sentry.io/) for an ongoing incident.
-  - [Contact Sentry support](https://sentry.zendesk.com/hc/en-us) if this happens at a high rate.
+  - [Contact Sentry support](https://www.sentry.help/en/) if this happens at a high rate.
 
 #### Invalid Dynamic Sampling Context
 
@@ -155,13 +169,13 @@ Reason code: `invalid_dsc`.
 
 The trace ID in the metadata header did not match the trace ID on the spans.
 
-- **Short:** Trace header did not match the spans that were sent.
+- **Short:** Trace header did not match the spans sent.
 - **Causes:**
   - A custom implementation of Sentry's transport protocol.
   - An outdated SDK.
 - **Actions:**
   - If you use an official Sentry SDK, upgrade to the latest version. This is not fixable through configuration.
-  - [Contact Sentry support](https://sentry.zendesk.com/hc/en-us) if this continues after the upgrade.
+  - [Contact Sentry support](https://www.sentry.help/en/) if this continues after the upgrade.
 
 #### Invalid JSON
 
@@ -169,14 +183,14 @@ Reason code: `invalid_json`.
 
 Sentry could not parse the event that was sent.
 
-- **Short:** Event rejected because the JSON was invalid.
+- **Short:** Event rejected due to invalid JSON.
 - **Causes:**
   - A truncated or incomplete payload.
   - Unescaped control characters or non-UTF-8 bytes in string fields.
   - A mismatch between the body encoding and the declared `Content-Encoding`.
 - **Actions:**
   - If you send payloads directly, log the raw body on failure and parse it locally. Confirm that envelope item length headers match the actual byte lengths.
-  - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://sentry.zendesk.com/hc/en-us) if it continues.
+  - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
 
 #### Invalid Transaction
 
@@ -190,7 +204,7 @@ The transaction was valid JSON, but Sentry could not accept its contents.
   - A negative duration, where the end timestamp is before the start timestamp.
 - **Actions:**
   - Verify clock synchronization (NTP) on the hosts that send the data. [Clock skew](/concepts/key-terms/tracing/distributed-tracing/#clock-skew) across machines can produce timestamps Sentry rejects.
-  - Check whether the affected transactions are backdated. Sentry does not ingest transactions older than the accepted window.
+  - Check whether the affected transactions are backdated. Sentry does not ingest transactions older than the accepted window. See [How far back can errors and transactions be backdated?](https://www.sentry.help/en/articles/13964214-how-far-back-can-errors-and-transactions-be-backdated-when-uploaded-to-sentry)
 
 #### Missing Dynamic Sampling Context
 
@@ -203,19 +217,19 @@ The envelope contained spans and no trace header.
   - An outdated SDK.
   - A custom implementation of Sentry's transport protocol.
 - **Actions:**
-  - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://sentry.zendesk.com/hc/en-us) if it continues.
-  - If you are not running a custom SDK and upgrading does not help, [contact Sentry support](https://sentry.zendesk.com/hc/en-us).
+  - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+  - If you are not running a custom SDK and upgrading does not help, [contact Sentry support](https://www.sentry.help/en/).
 
 #### Too Large Event
 
 Reason code: `too_large:event`.
 
-The event exceeded the maximum payload size. The same limit applies to other item types, with a reason code such as `too_large:log` or `too_large:span`. The sections below cover the common types.
+The event exceeded the maximum payload size. The same limit applies to every item type, with a reason code such as `too_large:log` or `too_large:span`. Attachments are broken down further by attachment type, such as `too_large:attachment:minidump`. The sections below cover the common types.
 
-- **Short:** The event exceeded the maximum payload size.
+- **Short:** The event exceeded maximum payload size.
 - **Causes:**
   - Very deep stack traces, typically from recursion or stack-overflow errors.
-  - Too much data attached with `setContext`, or other large payloads.
+  - Too much data in `contexts` (for example, set with `setContext`) or added as `extra`.
 - **Actions:**
   - Trim the payload in [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend). That lets you drop the largest fields and still keep the event.
 
@@ -225,7 +239,7 @@ Reason code: `too_large:log`.
 
 The log exceeded the maximum payload size.
 
-- **Short:** The log exceeded the maximum payload size.
+- **Short:** The log event exceeded maximum payload size.
 - **Causes:**
   - Large attributes or messages, such as request bodies or application configuration.
 - **Actions:**
@@ -238,7 +252,7 @@ Reason code: `too_large:span`.
 
 The span exceeded the maximum payload size.
 
-- **Short:** The span exceeded the maximum payload size.
+- **Short:** The span event exceeded maximum payload size.
 - **Causes:**
   - Large span attributes, such as a full request body instead of individual HTTP fields.
   - Large context windows from AI agents attached to spans.
@@ -251,7 +265,7 @@ Reason code: `too_large:trace_metric`.
 
 The metric event exceeded the maximum payload size.
 
-- **Short:** The application metric exceeded the maximum payload size.
+- **Short:** The application metric event exceeded maximum payload size.
 - **Causes:**
   - Large metric attributes, such as a full request body instead of individual fields.
 - **Actions:**
@@ -263,7 +277,7 @@ Reason code: `too_large:transaction`.
 
 The transaction exceeded the maximum payload size. Transactions carry their spans inline, so size usually comes from span count rather than one large field.
 
-- **Short:** The transaction exceeded the maximum payload size.
+- **Short:** The transaction exceeded maximum payload size.
 - **Causes:**
   - A very high number of spans on one transaction.
   - Long span descriptions, large span attributes, or both.
@@ -279,13 +293,13 @@ Sentry throttled requests or dropped events after they arrived.
 
 Your requests were throttled by Sentry's edge protection, not by a quota. The limit applies to a single DSN key and to all data types, for the duration Sentry returned in `Retry-After`.
 
-- **Short:** Requests across all event types were rate limited.
+- **Short:** Your requests across all event types were rate limited.
 - **Causes:**
   - A very high request rate from one DSN key. A runaway loop, or a retry storm after a batch of failures, is a common cause.
   - A project with legitimately high traffic hitting the rate limit.
 - **Actions:**
   - Look for a loop or retry storm. Check whether the burst lines up with a deploy.
-  - If this volume is expected, [contact Sentry support](https://sentry.zendesk.com/hc/en-us) or your account manager.
+  - If this volume is expected, [contact Sentry support](https://www.sentry.help/en/) or your account manager.
 
 #### Project Abuse Limit
 
@@ -293,13 +307,13 @@ Reason code: `project_abuse_limit`.
 
 Your project exceeded Sentry's abuse limit for a data type. This is a short-window rate limit. It is not your billing quota and it is not spike protection.
 
-- **Short:** Events of one data type exceeded the project abuse limit.
+- **Short:** Your events exceeded the project abuse limit.
 - **Causes:**
   - A very high rate of one telemetry type on a project. An error emitted in a tight loop can trigger this.
   - A project with legitimately high traffic hitting the abuse limit.
 - **Actions:**
   - Look for a loop or retry storm. Check whether the burst lines up with a deploy.
-  - If this volume is expected, [contact Sentry support](https://sentry.zendesk.com/hc/en-us) or your account manager.
+  - If this volume is expected, [contact Sentry support](https://www.sentry.help/en/) or your account manager.
 
 #### Spike Protection
 
@@ -307,7 +321,7 @@ Reason code: `spike-protection`.
 
 [Spike protection](/pricing/quotas/spike-protection/) detected a sudden increase in event volume for this project and dropped events so the spike would not consume your quota.
 
-- **Short:** Spike protection dropped events to preserve quota. See [Spike Protection](/pricing/quotas/spike-protection/).
+- **Short:** Spike protection dropped events to preserve your quota. See [Spike Protection](/pricing/quotas/spike-protection/).
 - **Causes:**
   - A sudden increase in volume for one project.
   - A low-volume or newly created project. Thresholds are derived partly from recent history.
