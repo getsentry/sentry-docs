@@ -29,7 +29,7 @@ Each reason includes what happened, why it happens, and what to change so less d
 
 The SDK dropped the data before it left your application.
 
-#### Backpressure
+#### SDK Backpressure Drop
 
 Reason code: `backpressure`.
 
@@ -44,7 +44,7 @@ Your SDK detected that it was under load and reduced trace sampling so telemetry
   - Check for unusual increases in application traffic or span volume around the time backpressure occurred.
   - Look for instrumentation that produces unexpectedly large numbers of spans, such as N+1 queries, tight loops, or high-frequency operations.
 
-#### Queue Overflow
+#### SDK Queue Overflow
 
 Reason code: `queue_overflow`.
 
@@ -59,7 +59,7 @@ Your application is generating events faster than the SDK can buffer and send th
   - Look for suspect code, including async work that does not finish inside [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) filters.
   - If this volume of events is expected, [contact Sentry support](https://www.sentry.help/en/).
 
-#### Buffer Overflow
+#### SDK Buffer Overflow
 
 Reason code: `buffer_overflow`.
 
@@ -71,7 +71,7 @@ A fixed-size in-memory buffer in the SDK reached its limit and dropped data. Thi
 - **Actions:**
   - For replays, record less. Use [block or ignore](/platforms/javascript/session-replay/privacy/#blocking) to skip high-churn elements, `blockAllMedia` for heavy media, [`mutationLimit`](/platforms/javascript/session-replay/configuration/#mutation-limits) to cap mutation storms from animations or infinite scroll, and [`maxReplayDuration`](/platforms/javascript/session-replay/configuration/#general-integration-configuration) to shorten sessions. If canvas recording is enabled, lower its sampling rate and quality.
 
-#### Network Error
+#### Unretried Network Error
 
 Reason code: `network_error`.
 
@@ -87,7 +87,7 @@ The request failed without a response. Ad blockers and browser extensions are a 
   - For browsers, confirm in devtools that requests to your ingest domain are not blocked, and check your CORS configuration.
   - For servers, verify outbound connectivity to your ingest domain from the host or container.
 
-#### Send Error
+#### SDK Send Failure
 
 Reason code: `send_error`.
 
@@ -101,13 +101,13 @@ The event reached Sentry and Sentry rejected it with an error status.
   - Enable debug mode in your SDK and look for `Sentry responded with status code 413`. The log identifies which events were rejected.
   - Reduce the size of those events. Trim large objects in [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend), and lower `maxValueLength`, `normalizeDepth`, or `maxBreadcrumbs` as needed.
 
-#### Before Send
+#### Dropped by Before Send
 
 Reason code: `before_send`.
 
 Your [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) function omitted the event. If that was not intentional, check your Sentry config.
 
-Before JavaScript SDK v11, spans dropped by [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) are also reported under this reason. Starting with v11, they're reported as [Ignored Spans](#ignored-spans).
+Before JavaScript SDK v11, spans dropped by [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) are also reported under this reason. Starting with v11, they're reported as [Dropped by Ignored Spans](#dropped-by-ignored-spans).
 
 - **Short:** Event dropped by your before send function. See [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend).
 - **Causes:**
@@ -118,7 +118,7 @@ Before JavaScript SDK v11, spans dropped by [`ignoreSpans`](/platform-redirect/?
   - Update [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) if it is blocking spans you want to receive.
   - Correct before-send logic that is omitting spans unintentionally.
 
-#### Ignored Spans
+#### Dropped by Ignored Spans
 
 Reason code: `ignore_spans`.
 
@@ -126,7 +126,7 @@ Spans matched an ignore rule in your SDK configuration and were not sent. See [`
 
 {/* TODO: Update this copy when SDK versions that emit ignore_spans are widely adopted. */}
 
-This reason is only reported in span-first mode, which is the default starting with JavaScript SDK v11. In earlier versions, ignored spans are reported as [Before Send](#before-send).
+This reason is only reported in span-first mode, which is the default starting with JavaScript SDK v11. In earlier versions, ignored spans are reported as [Dropped by Before Send](#dropped-by-before-send).
 
 - **Short:** Span dropped by your ignored spans configuration. See [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans).
 - **Causes:**
@@ -134,7 +134,7 @@ This reason is only reported in span-first mode, which is the default starting w
 - **Actions:**
   - Update [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) if it is blocking spans you want to receive.
 
-#### Sample Rate
+#### Dropped by Sample Rate
 
 Reason code: `sample_rate`.
 
@@ -150,7 +150,7 @@ Events were dropped because of the sample rate configured in the SDK.
 
 Sentry received the payload and could not accept it.
 
-#### Internal
+#### Sentry Processing Error
 
 Reason code: `internal`.
 
@@ -163,7 +163,7 @@ This indicates a bug or an infrastructure problem during ingestion. During healt
   - Check the [Sentry status page](https://status.sentry.io/) for an ongoing incident.
   - [Contact Sentry support](https://www.sentry.help/en/) if this happens at a high rate.
 
-#### Invalid Dynamic Sampling Context
+#### Invalid Trace Context
 
 Reason code: `invalid_dsc`.
 
@@ -177,7 +177,7 @@ The trace ID in the metadata header did not match the trace ID on the spans.
   - If you use an official Sentry SDK, upgrade to the latest version. This is not fixable through configuration.
   - [Contact Sentry support](https://www.sentry.help/en/) if this continues after the upgrade.
 
-#### Invalid JSON
+#### Malformed JSON Payload
 
 Reason code: `invalid_json`.
 
@@ -192,7 +192,7 @@ Sentry could not parse the event that was sent.
   - If you send payloads directly, log the raw body on failure and parse it locally. Confirm that envelope item length headers match the actual byte lengths.
   - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
 
-#### Invalid Transaction
+#### Invalid Transaction Data
 
 Reason code: `invalid_transaction`.
 
@@ -206,7 +206,7 @@ The transaction was valid JSON, but Sentry could not accept its contents.
   - Verify clock synchronization (NTP) on the hosts that send the data. [Clock skew](/concepts/key-terms/tracing/distributed-tracing/#clock-skew) across machines can produce timestamps Sentry rejects.
   - Check whether the affected transactions are backdated. Sentry does not ingest transactions older than the accepted window. See [How far back can errors and transactions be backdated?](https://www.sentry.help/en/articles/13964214-how-far-back-can-errors-and-transactions-be-backdated-when-uploaded-to-sentry)
 
-#### Missing Dynamic Sampling Context
+#### Missing Trace Context
 
 Reason code: `missing_dsc`.
 
@@ -220,7 +220,7 @@ The envelope contained spans and no trace header.
   - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
   - If you are not running a custom SDK and upgrading does not help, [contact Sentry support](https://www.sentry.help/en/).
 
-#### Too Large Event
+#### Event Payload Too Large
 
 Reason code: `too_large:event`.
 
@@ -233,7 +233,7 @@ The event exceeded the maximum payload size. The same limit applies to every ite
 - **Actions:**
   - Trim the payload in [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend). That lets you drop the largest fields and still keep the event.
 
-#### Too Large Log
+#### Log Payload Too Large
 
 Reason code: `too_large:log`.
 
@@ -246,7 +246,7 @@ The log exceeded the maximum payload size.
   - Trim the payload in [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend).
   - Do not attach an entire large JSON payload as log attributes. Pick the fields you need.
 
-#### Too Large Span
+#### Span Payload Too Large
 
 Reason code: `too_large:span`.
 
@@ -259,7 +259,7 @@ The span exceeded the maximum payload size.
 - **Actions:**
   - Trim the payload in [`beforeSendSpan`](/platform-redirect/?next=/configuration/options/#beforeSendSpan).
 
-#### Too Large Application Metric
+#### Application Metric Payload Too Large
 
 Reason code: `too_large:trace_metric`.
 
@@ -271,7 +271,7 @@ The metric event exceeded the maximum payload size.
 - **Actions:**
   - Audit attributes on application metrics. Set the specific parameters you need, not an entire HTTP request object.
 
-#### Too Large Transaction
+#### Transaction Payload Too Large
 
 Reason code: `too_large:transaction`.
 
@@ -289,7 +289,7 @@ The transaction exceeded the maximum payload size. Transactions carry their span
 
 Sentry throttled requests or dropped events after they arrived.
 
-#### Generic
+#### Generic Rate Limit
 
 Your requests were throttled by Sentry's edge protection, not by a quota. The limit applies to a single DSN key and to all data types, for the duration Sentry returned in `Retry-After`.
 
@@ -330,7 +330,7 @@ Reason code: `spike-protection`.
   - Find what caused the spike. Sort the project's issues by event count over the affected window, and check whether it lines up with a deploy.
   - Turn spike protection on or off per project in settings. See [Spike Protection](/pricing/quotas/spike-protection/).
 
-#### Quota
+#### Quota Exceeded
 
 Reason code: `usage_exceeded`.
 
@@ -360,7 +360,7 @@ The transaction name matched Sentry's [health check filter](/concepts/data-manag
 - **Actions:**
   - Turn the filter off in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/) if you want these transactions.
 
-#### Error Message
+#### Error Message Filter
 
 Reason code: `error-message`.
 
@@ -372,7 +372,7 @@ The event matched a custom glob in your error-message filter. See [custom filter
 - **Actions:**
   - If events you expect are missing, review the glob in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
 
-#### Release Version
+#### Release Version Filter
 
 Reason code: `release-version`.
 
@@ -384,7 +384,7 @@ The event's release matched a custom release filter. See [custom filtering](/con
 - **Actions:**
   - If events you expect are missing, review the release rule in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
 
-#### IP Addresses
+#### IP Address Filter
 
 Reason code: `ip-addresses`.
 
@@ -396,7 +396,7 @@ The event matched an IP range in a custom filter. See [IP address filters](/conc
 - **Actions:**
   - If events you expect are missing, review the IP rule in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
 
-#### Legacy Browsers
+#### Legacy Browser Filter
 
 Reason code: `legacy-browsers`.
 
@@ -409,7 +409,7 @@ The browser matched the [legacy browser filter](/concepts/data-management/filter
 - **Actions:**
   - If the dropped browsers are ones your users actually use, review the legacy browser list in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/) and turn individual browsers off.
 
-#### Web Crawlers
+#### Web Crawler Filter
 
 Reason code: `web-crawlers`.
 
