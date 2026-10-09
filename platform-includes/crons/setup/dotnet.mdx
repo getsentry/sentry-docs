@@ -2,7 +2,31 @@
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
-Pass monitor options with the in-progress check-in so Sentry creates or updates the monitor from your code:
+Wrap your job with `SentrySdk.WithMonitor`. It sends an in-progress check-in with the monitor options, which creates or updates the monitor, then runs the job and sends an ok or error check-in with its duration:
+
+```csharp
+await SentrySdk.WithMonitor("<monitor-slug>", async () =>
+{
+    // Execute your scheduled task here...
+}, options => options.Interval("0 * * * *"));
+```
+
+If your job returns a `ValueTask<T>`, pass `async () => await RunJobAsync()` so the check-in waits for the job to finish.
+
+For synchronous jobs, pass an `Action` or `Func<T>` instead:
+
+```csharp
+SentrySdk.WithMonitor("<monitor-slug>", () =>
+{
+    // Execute your scheduled task here...
+}, options => options.Interval("0 * * * *"));
+```
+
+Exceptions thrown by the job are rethrown, and the job's return value is passed through. Each run gets its own trace, shared by its check-ins and any errors captured during the run, unless a transaction or span is already active. `SentrySdk.WithMonitor` requires a Sentry .NET SDK version newer than `6.12.0`. If the monitor already exists in Sentry, you can leave out the monitor options.
+
+### Manual Check-Ins
+
+To send check-ins yourself, call `SentrySdk.CaptureCheckIn` at the start and end of your job. Pass monitor options with the in-progress check-in so Sentry creates or updates the monitor from your code:
 
 ```csharp
 // 🟡 Notify Sentry your job is running:
