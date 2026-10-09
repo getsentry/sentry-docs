@@ -1,0 +1,139 @@
+---
+title: Quartz.NET
+description: "Learn how to monitor your Quartz.NET jobs."
+sidebar_order: 5002
+---
+
+The `Sentry.Quartz` and `Sentry.Quartz3` packages monitor your [Quartz.NET](https://www.quartz-scheduler.net/) jobs by [creating check-ins for them](/product/monitors-and-alerts/monitors/crons/job-monitoring/). They're available from the next SDK release. Use `Sentry.Quartz` with Quartz.NET 4.x and `Sentry.Quartz3` with Quartz.NET 3.x (3.6 and later).
+
+## Install
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Quartz
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Quartz
+```
+
+For Quartz.NET 3.x, install `Sentry.Quartz3` instead. With Quartz.NET 4.x, `Sentry.Quartz3` sends no check-ins and logs an error in <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink>.
+
+## Configure
+
+Initialize Sentry as usual, then add Sentry to your scheduler.
+
+### Quartz.NET 4.x
+
+Call `AddSentry` when you configure Quartz.NET:
+
+```csharp
+using Quartz;
+using Sentry.Quartz;
+
+builder.Services.AddQuartz(q =>
+{
+    q.AddSentry();
+});
+```
+
+Each job then runs in its own Sentry scope and trace, tagged with `quartz.job`.
+
+### Quartz.NET 3.x
+
+Add `SentryJobListener` to your scheduler. If you register Quartz.NET with dependency injection, `AddQuartz` comes from the `Quartz.Extensions.DependencyInjection` package, or from `Quartz.Extensions.Hosting` if you also run the scheduler as a hosted service:
+
+```csharp
+using Quartz;
+using Sentry.Quartz;
+
+builder.Services.AddQuartz(q =>
+{
+    q.AddJobListener<SentryJobListener>();
+});
+```
+
+Or add the listener to a scheduler directly:
+
+```csharp
+scheduler.ListenerManager.AddJobListener(new SentryJobListener());
+```
+
+## Choose Which Jobs to Monitor
+
+Add the `SentryCronMonitorSlug` attribute to each job class you want to monitor. Jobs without it aren't monitored.
+
+```csharp
+[SentryCronMonitorSlug]
+public class PricingUpdateJob : IJob
+{
+    // ...
+}
+```
+
+The SDK captures a check-in with `CheckInStatus.InProgress` when a job starts. When the job finishes, it updates the check-in to `CheckInStatus.Ok`, or to `CheckInStatus.Error` if the job threw an exception or was cancelled, along with how long the job ran.
+
+The SDK doesn't capture the exceptions jobs throw. Quartz.NET logs them as errors, and Sentry's logging integration captures that log entry, for example when you use `Sentry.AspNetCore` or `Sentry.Extensions.Logging`.
+
+## Monitor Slugs
+
+To choose the slug, pass it to the attribute:
+
+```csharp
+[SentryCronMonitorSlug("update-pricing")]
+public class PricingUpdateJob : IJob
+```
+
+Without one, the slug is the job's key, `group.name`, or only the name for jobs in the default group. The SDK lowercases it and keeps ASCII letters, digits, and underscores. Each run of other characters becomes a single hyphen, leading and trailing hyphens and underscores are removed, and the slug is cut to 50 characters. For example, the job `billing.PricingUpdate` reports to `billing-pricingupdate`, `reports.Daily_Email (v2)` reports to `reports-daily_email-v2`, and the job `Cleanup` in the default group reports to `cleanup`. A job whose key leaves nothing is not monitored unless you set a slug.
+
+A job built without `WithIdentity` gets a new random name each time it's created, so the SDK uses the name of the job's class instead, such as `pricingupdatejob`, and logs a warning. Give the job an identity or a slug to keep its monitor the same. The SDK also logs a warning when two jobs use the same slug.
+
+To use a different slug for one job or trigger, set `SentryCronMonitorSlugAttribute.JobDataKey` in its data map:
+
+```csharp
+var job = JobBuilder.Create<PricingUpdateJob>()
+    .WithIdentity("PricingUpdate", "billing")
+    .UsingJobData(SentryCronMonitorSlugAttribute.JobDataKey, "update-pricing")
+    .Build();
+```
+
+## Monitor Schedule
+
+Sentry only creates a monitor from a check-in that includes a schedule. For monitored jobs, the SDK sends the schedule of the trigger that started the job:
+
+- Cron triggers, with the trigger's time zone. Quartz.NET cron triggers use the server's local time zone unless you set one with `InTimeZone`, so set it if your servers don't all use the same time zone. The cron expression must use a fixed number of seconds and no year, `L`, `W`, or `#`. Quartz.NET 3.x needs `?` in exactly one of the two day fields. Quartz.NET 4.x also accepts `*` or values in both. When both have values, the job runs on days that match either field, and Sentry reads the schedule the same way.
+- Simple triggers that repeat forever every whole number of minutes, hours, or days.
+
+Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule. Jobs with more than one trigger are also sent without one, unless each trigger sets its own slug in its data map.
+
+Sentry sets the monitor's schedule and time zone from every check-in that includes them, so changes you make to those two settings in Sentry are overwritten. Other monitor settings are kept. To stop sending the schedule for one job, set `SendMonitorConfig` on its attribute:
+
+```csharp
+[SentryCronMonitorSlug(SendMonitorConfig = false)]
+public class PricingUpdateJob : IJob
+```
+
+To stop sending it for all jobs, set `SendMonitorConfig` in the options:
+
+```csharp {tabTitle:Quartz.NET 4.x}
+q.AddSentry(options => options.SendMonitorConfig = false);
+```
+
+```csharp {tabTitle:Quartz.NET 3.x}
+q.AddJobListener(_ => new SentryJobListener(new SentryQuartzOptions { SendMonitorConfig = false }));
+```
+
+If you delete a monitor while its job still has `[SentryCronMonitorSlug]`, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute.
+
+## Monitor Settings
+
+To set other monitor settings, such as the thresholds or the maximum runtime, use `ConfigureMonitorOptions`. It runs before each in-progress check-in with the job's `IJobExecutionContext`, unless `SendMonitorConfig` is off. A schedule or time zone you set here is used instead of the trigger's. Sentry only receives these settings along with a schedule, from the trigger or set here, so you can also use it to set the schedule of a trigger the SDK can't send:
+
+```csharp
+q.AddSentry(options => options.ConfigureMonitorOptions = (context, monitorOptions) =>
+{
+    monitorOptions.MaxRuntime = TimeSpan.FromMinutes(30);
+    monitorOptions.FailureIssueThreshold = 3;
+});
+```
+
+With Quartz.NET 3.x, set it on the `SentryQuartzOptions` you pass to `SentryJobListener`.
