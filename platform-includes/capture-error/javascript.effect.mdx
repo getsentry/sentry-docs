@@ -1,0 +1,82 @@
+In Effect, a failure is a value in the error channel, not a thrown exception, so `try`/`catch` never sees it. How you capture failures depends on your Effect version.
+
+### Effect v3
+
+Effect v3 has no `ErrorReporter` API. To capture a failure, call `captureException()` inside `Effect.sync` from `Effect.tapError`. `tapError` doesn't recover from the failure, so the rest of your program handles it as before:
+
+```typescript
+import * as Sentry from "@sentry/effect";
+import { Effect } from "effect";
+
+const loadUser = (id: string) =>
+  Effect.fail(new Error(`User ${id} could not be loaded`));
+
+const program = loadUser("42").pipe(
+  Effect.tapError((error) => Effect.sync(() => Sentry.captureException(error)))
+);
+```
+
+`tapError` only sees typed failures, such as the ones from `Effect.fail`. To also capture defects, such as an exception thrown inside `Effect.sync`, use `Effect.tapErrorCause` and pass `Cause.squash(cause)` to `captureException()`.
+
+### Effect v4
+
+<AvailableSince version="10.75.0" />
+
+On Effect v4, `Sentry.effectLayer` registers a Sentry `ErrorReporter`, so you don't call `captureException()` yourself. Sentry captures every failure that Effect reports:
+
+- Failures that pass through `Effect.withErrorReporting`
+- Causes that you pass to `ErrorReporter.report`
+- Failures at the reporting boundaries of Effect's HTTP and RPC servers, for example a route handler that fails
+
+To report a failure in your own code, add `Effect.withErrorReporting`. It reports typed failures and defects, and it doesn't recover from them, so the rest of your program handles the failure as before.
+
+Add it before any operator that recovers from the failure, such as `Effect.catch`, because Effect doesn't report a recovered failure. To report only defects, use `Effect.withErrorReporting({ defectsOnly: true })`.
+
+```typescript
+import { Effect } from "effect";
+
+const loadUser = (id: string) =>
+  Effect.fail(new Error(`User ${id} could not be loaded`));
+
+const program = loadUser("42").pipe(Effect.withErrorReporting);
+```
+
+Sentry doesn't capture interruptions, and it captures an error that passes through more than one boundary only once. On the server, `effectLayer` also enables `contextLinesIntegration` and `linkedErrorsIntegration` by default, so these events include source context and the errors of their `cause` chain.
+
+#### Control How Errors Are Reported
+
+Add Effect's `ErrorReporter` annotations to your error classes to change the Sentry event:
+
+- `ErrorReporter.ignore`: Set to `true` to skip expected failures, such as a missing record.
+- `ErrorReporter.severity`: Sets the event level. For example, `"Warn"` becomes `warning` and `"Fatal"` becomes `fatal`. Errors without this annotation get the level `error`.
+- `ErrorReporter.attributes`: Adds key-value pairs to the event as extra data.
+
+```typescript {filename:errors.ts}
+import { Data, ErrorReporter } from "effect";
+
+class NotFoundError extends Data.TaggedError("NotFoundError")<{
+  readonly id: string;
+}> {
+  // Not sent to Sentry
+  readonly [ErrorReporter.ignore] = true;
+}
+
+class RateLimitError extends Data.TaggedError("RateLimitError")<{
+  readonly retryAfter: number;
+}> {
+  // Sent with the level `warning` and `retryAfter` as extra data
+  readonly [ErrorReporter.severity] = "Warn" as const;
+  readonly [ErrorReporter.attributes] = { retryAfter: this.retryAfter };
+}
+```
+
+If you register your own reporters with `ErrorReporter.layer`, pass `mergeWithExisting: true`. Without it, your reporters replace all reporters registered before them, which can include the Sentry reporter.
+
+```typescript
+import { ErrorReporter } from "effect";
+
+const ConsoleReporterLive = ErrorReporter.layer(
+  [ErrorReporter.make(({ error }) => console.error(error))],
+  { mergeWithExisting: true }
+);
+```
