@@ -167,11 +167,13 @@ Controls whether the native SDKs on Apple, Android, and JVM attach a W3C `tracep
 
 <SdkOption name="strictTraceContinuation" type="bool" defaultValue="false" availableSince="0.28.0">
 
-If set to `true`, the native SDKs on Apple, Android, and JVM only continue an incoming trace if the organization ID in the incoming `baggage` header matches the organization ID of the current Sentry client. If either organization ID is missing, the SDK starts a new trace.
+If set to `true`, the SDK only continues an incoming trace if the organization ID in the incoming `baggage` header matches the organization ID of the current Sentry client. If only one of the two organization IDs is missing, the SDK starts a new trace. If both are missing, the SDK still continues the trace.
 
 If set to `false`, the SDK tolerates missing organization IDs, but still starts a new trace if both organization IDs are present and different.
 
 The client's organization ID is extracted from the DSN or can be set with the <PlatformIdentifier name="orgId" /> option. This is useful to prevent traces of unknown third-party services from being continued in your application.
+
+This option applies to incoming traces handled by the Android and JVM SDKs. On Apple platforms, the SDK passes the option to the Sentry Cocoa SDK, which doesn't continue incoming traces automatically, so the option has no effect there.
 
 </SdkOption>
 
