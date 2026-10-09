@@ -1,0 +1,156 @@
+---
+title: pi-durable
+description: "Adds instrumentation for pi-durable. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.mastra
+---
+
+<AvailableSince version="11.6.0" />
+
+_Import name: `Sentry.piDurableIntegration`_
+
+The `piDurableIntegration` adds instrumentation for [`@earendil-works/pi-durable`](https://www.npmjs.com/package/@earendil-works/pi-durable), Earendil's durable agent harness, to capture <PlatformLink to="/agent-tracing/">agent tracing</PlatformLink> `gen_ai` spans for agent runs, model requests, and tool calls.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+This integration is enabled by default when <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled. To customize it, see [Modifying Default Integrations](./../#modifying-default-integrations).
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.piDurableIntegration()],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+On Deno, preload Sentry's import hook so pi-durable can be instrumented:
+
+```bash
+deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preload=npm:@sentry/deno/import app.ts
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia"]}>
+
+<PlatformSection supported={["javascript.elysia"]}>
+
+With the Node.js adapter, no build step is needed. The integration is enabled by default when tracing is enabled.
+
+On Bun, add `sentryBunPlugin()` to your build so the plugin can instrument the bundled pi-durable package:
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.elysia"]}>
+
+On Bun, add `sentryBunPlugin()` to your build so the plugin can instrument the bundled pi-durable package:
+
+</PlatformSection>
+
+```typescript {filename:build.ts}
+import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+await Bun.build({
+  entrypoints: ["./src/index.ts"],
+  outdir: "./dist",
+  target: "bun",
+  plugins: [sentryBunPlugin()],
+});
+```
+
+pi-durable must be part of the bundle. The plugin only runs during a build, so an application started with `bun run` without a build gets no pi-durable spans.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink> adds this integration when your Worker bundles pi-durable. This includes pi-durable in a Durable Object hosted by the <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink> `PiHarness`. You don't have to add the integration yourself.
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+Without the plugin, or with `buildTimeInstrumentation: false`, the SDK doesn't instrument pi-durable. To choose whether the SDK records prompts and responses, use the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> option.
+
+pi-durable in the Agents SDK keeps its state in SQLite tables with the `pi_` prefix. Their statements don't create spans. See <PlatformLink to="/features/durableobject/#durable-object-sql-spans">Durable Object SQL Spans</PlatformLink>.
+
+</PlatformSection>
+
+## Supported Operations
+
+- **Agent Runs** (`gen_ai.invoke_agent`): One span for each run. A run lasts until pi-durable settles the input of the conversation, so it covers every model request and tool round in between.
+- **Model Requests** (`gen_ai.chat`): One span for each request that pi-ai sends, with the model, token usage, and finish reason.
+- **Tool Calls** (`gen_ai.execute_tool`): One span for each tool call. The span records the result that the model receives, after `afterTool` hooks and output limits.
+
+Each run starts a new trace. pi-durable runs the work in background tasks, which can continue after a restart, so a run isn't part of the trace of the request that submitted the input. When a tool call creates a conversation for a subagent, the first run of that conversation is a child of the tool call span.
+
+All spans of a run get a `gen_ai.conversation.id` in the form `<harness id>:<conversation id>`, so the runs of one conversation group in [Conversations](/product/agents/conversations/). The SDK creates a new harness ID each time `Harness.open()` runs. After a restart, a pi-durable conversation therefore continues with a new ID.
+
+## Captured Errors
+
+The integration captures:
+
+- Errors that a tool throws. pi-durable turns them into an error result for the model, so your code can't catch them.
+- Errors that pi-durable passes to `onReport`, such as a hook that throws. If you pass your own `onReport`, the SDK still captures them and marks them as handled.
+- Errors that a task phase throws.
+
+The SDK doesn't capture errors of the built-in coding tools (`bash`, `read`, `edit`, and `write`), because these tools throw for expected failures, such as a command that exits with a non-zero code. Their spans still get an error status.
+
+## Model Requests of Provider SDKs
+
+pi-ai sends its model requests through the `openai`, `@anthropic-ai/sdk`, and `@google/genai` clients, or on Cloudflare through the Workers AI binding. To report each request only once, the OpenAI, Anthropic, Google Gen AI, and Workers AI integrations stop creating spans from the first pi-durable model request on. This applies to the whole process, so model calls that your code makes with these clients outside of pi-durable also get no spans.
+
+The AWS integration still creates spans for Amazon Bedrock requests, so Sentry reports pi-durable model requests to Bedrock twice.
+
+## Supported Versions
+
+- `@earendil-works/pi-durable`: `>=1.0.0 <2.0.0`
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean` (optional)_
+
+Records the system instructions, input messages, and tool definitions of model requests, and the arguments of tool calls.
+
+Defaults to `true` if `dataCollection.genAI.inputs` is `true`, which is the default.
+
+### `recordOutputs`
+
+_Type: `boolean` (optional)_
+
+Records the output messages of model requests and the results of tool calls.
+
+Defaults to `true` if `dataCollection.genAI.outputs` is `true`, which is the default.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.piDurableIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+</PlatformSection>

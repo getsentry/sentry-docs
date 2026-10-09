@@ -21,6 +21,27 @@ The SDK automatically instruments Durable Object storage operations (`get`, `put
 
 The SDK also filters out framework-internal storage operations (version 10.69.0 or higher): keys prefixed with `cf_`, `cf:`, `__ps_`, or `/` (used internally by the Agents SDK and PartyServer) don't create spans, so your traces show only your own storage access.
 
+## Durable Object SQL Spans
+
+The SDK creates a `db.query` span for each statement that a SQLite-backed Durable Object runs with `ctx.storage.sql.exec()` (version 10.61.0 or higher). The span name is the query summary, such as `SELECT orders`.
+
+Frameworks built on Durable Objects keep their own state in SQLite tables, and a single request can run hundreds of statements against them. Statements on these tables don't create spans:
+
+- Tables with the `cf_` prefix, used by the Agents SDK and PartyServer (version 10.67.0 or higher)
+- Tables with the `pi_` prefix, used by pi-durable in the Agents SDK `PiHarness` (version 11.6.0 or higher)
+
+A table of your own with one of these prefixes also gets no spans. To keep its spans, add it to <PlatformLink to="/configuration/options/#durableObjectSqlSpanAllowlist">`durableObjectSqlSpanAllowlist`</PlatformLink>. A string keeps the table with exactly that name, and a regular expression keeps every table whose name it matches. To see the statements of pi-durable, add `/^pi_/`:
+
+```typescript {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  durableObjectSqlSpanAllowlist: ["cf_my_table", /^pi_/],
+}));
+```
+
 ## RPC Trace Propagation
 
 To enable distributed tracing across RPC calls to your Durable Objects, see <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">Distributed Tracing</PlatformLink>.
