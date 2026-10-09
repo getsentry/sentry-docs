@@ -53,4 +53,67 @@ compatibility_flags = ["nodejs_compat"]
 compatibility_date = "2025-08-16"
 ```
 
-After adding these settings, build and deploy your Next.js application to Cloudflare Workers. You should start seeing error events, traces, and logs appear in Sentry.
+## Wrap the Worker Entry
+
+<AvailableSince version="11.6.0" />
+
+On Cloudflare Workers, your Next.js app runs inside the Worker entry that OpenNext generates (`.open-next/worker.js`). Wrap this entry with `withSentry` from `@sentry/nextjs/cloudflare` to get the same Next.js spans as on Node.js, plus Cloudflare data such as spans for D1 queries. Each request gets one `http.server` span with the name of the Next.js route, and the Next.js spans become its children.
+
+`@sentry/nextjs` depends on `@sentry/cloudflare`, so you don't need to install another package.
+
+First, create a [custom Worker](https://opennext.js.org/cloudflare/howtos/custom-worker) that imports the handler of OpenNext and wraps it with `withSentry`. Pass your Sentry options to `withSentry`:
+
+```typescript {filename:worker.ts}
+import * as Sentry from "@sentry/nextjs/cloudflare";
+// @ts-ignore `.open-next/worker.js` is generated at build time
+import handler from "./.open-next/worker.js";
+
+// Re-export the Durable Objects your app uses, for example for the DO Queue and DO Tag Cache of OpenNext
+// @ts-ignore `.open-next/worker.js` is generated at build time
+export { DOQueueHandler, DOShardedTagCache } from "./.open-next/worker.js";
+
+export default Sentry.withSentry(
+  () => ({
+    dsn: "___PUBLIC_DSN___",
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+    tracesSampleRate: 1.0,
+  }),
+  handler
+);
+```
+
+Then, point `main` in your Wrangler configuration to this file:
+
+```json {tabTitle:wrangler.jsonc}
+{
+  "main": "./worker.ts"
+}
+```
+
+```toml {tabTitle:wrangler.toml}
+main = "./worker.ts"
+```
+
+### Server and Edge Configuration in the Worker
+
+In the Worker, `withSentry` creates the Sentry client. `Sentry.init()` in `sentry.server.config.ts` and `sentry.edge.config.ts` still runs, but it creates no client and only applies the `release` option. Set all other options in `withSentry`.
+
+On Workers, these two files are optional. Keep them if you use `next dev`, which runs on Node.js and doesn't use the Worker entry. They also pass on the release that `withSentryConfig` sets at build time.
+
+Keep `instrumentation.ts`, because Next.js reports server errors, for example from Server Components and route handlers, through its `onRequestError` hook.
+
+The SDK takes the release from the first of these sources that has a value:
+
+1. The `release` option of `withSentry`
+2. The `SENTRY_RELEASE` environment variable
+3. The ID of the `CF_VERSION_METADATA` binding
+4. The `release` option of `Sentry.init()` in `sentry.server.config.ts` or `sentry.edge.config.ts`, or else the release that `withSentryConfig` sets at build time
+
+On Node.js, the build release comes before `SENTRY_RELEASE`.
+
+## Deploy
+
+Build and deploy your Next.js application to Cloudflare Workers. You should start seeing error events, traces, and logs appear in Sentry.
