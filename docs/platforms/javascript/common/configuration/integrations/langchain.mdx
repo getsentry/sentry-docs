@@ -56,6 +56,45 @@ The integration captures `gen_ai.embeddings` spans for `embedQuery()` and `embed
 - `@langchain/mistralai`
 - `@langchain/google-vertexai`
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+## Trace Classifier Evaluations
+
+<AvailableSince version="11.6.0" />
+
+[`@langchain/typesafe`](https://www.npmjs.com/package/@langchain/typesafe)'s `TypeSafeClassifier` asks TypeSafe's Jev model typed questions about your input. The `langChainIntegration` traces these calls for you, whether you call the classifier yourself, from a <PlatformLink to="/configuration/integrations/langgraph/#trace-classifier-evaluations">LangGraph</PlatformLink> node, or through the `modelRouterMiddleware` and `autoModeMiddleware` of `@langchain/typesafe/middleware` inside a `createAgent` run. No additional integration or setup is needed.
+
+```javascript
+import { TypeSafeClassifier } from "@langchain/typesafe";
+
+const classifier = new TypeSafeClassifier({
+  questions: {
+    department: {
+      type: "choice",
+      instructions: "Which team should handle this?",
+      criteria: {
+        billing: "Charges and refunds",
+        technical: "Bugs and outages",
+      },
+    },
+  },
+});
+
+const result = await classifier.invoke(
+  "I was charged twice. Please refund the extra charge."
+);
+
+console.log(result.answers.department.choice);
+```
+
+Each `invoke()` call creates a `gen_ai.evaluate` span named `evaluate <model>`, with the model, provider, latency, and token usage. Inside an agent, the span also records the agent name. If the evaluation fails, the span is marked as failed. When recording is enabled, Sentry captures the `state` and `questions` sent to Jev as input messages and `answers` as output messages, including probabilities returned by the model. LangChain messages in the input are recorded as transcript lines, the same way the classifier sends them.
+
+Evaluation inputs and outputs follow the same [`recordInputs`](#recordinputs) and [`recordOutputs`](#recordoutputs) options as other LangChain calls. Disable these options if evaluation state or answers contain sensitive data.
+
+If you call Jev through `TypeSafeClient.systemOne()` or Vercel AI SDK's `experimental_evaluate()` instead, see the <PlatformLink to="/configuration/integrations/typesafe/">TypeSafe</PlatformLink> or <PlatformLink to="/configuration/integrations/vercelai/#trace-jev-evaluations">Vercel AI</PlatformLink> integration.
+
+</PlatformSection>
+
 ## Supported Versions
 
 - `langchain`: `>=0.1.0 <2.0.0`
@@ -70,6 +109,12 @@ Automatic embeddings instrumentation supports these package versions:
 | `@langchain/google-common` | `>=0.1.0 <3.0.0`   |
 
 For `@langchain/google-vertexai`, the version requirement applies to its `@langchain/google-common` dependency, which implements the embedding methods.
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+Classifier evaluation tracing supports `@langchain/typesafe` `>=0.0.1 <1.0.0`.
+
+</PlatformSection>
 
 ## Options
 

@@ -36,6 +36,42 @@ By default, tracing support is added to the following LangGraph operations:
 - **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
 - **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+## Trace Classifier Evaluations
+
+<AvailableSince version="11.6.0" />
+
+When a graph node calls a `TypeSafeClassifier` from [`@langchain/typesafe`](https://www.npmjs.com/package/@langchain/typesafe), the <PlatformLink to="/configuration/integrations/langchain/#trace-classifier-evaluations">LangChain integration</PlatformLink> records the call as a `gen_ai.evaluate` span. The span is a child of the graph's `invoke_agent` span and records the graph name as the agent name. No additional setup is needed.
+
+```javascript
+import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import { TypeSafeClassifier } from "@langchain/typesafe";
+
+const classifier = new TypeSafeClassifier({
+  questions: {
+    urgent: { type: "noul", instructions: "Is this urgent?" },
+  },
+});
+
+const State = Annotation.Root({ ticket: Annotation(), urgent: Annotation() });
+
+const graph = new StateGraph(State)
+  .addNode("triage", async (state) => {
+    const result = await classifier.invoke(state.ticket);
+    return { urgent: result.nouls.urgent.noul };
+  })
+  .addEdge(START, "triage")
+  .addEdge("triage", END)
+  .compile({ name: "triage_graph" });
+
+await graph.invoke({ ticket: "My payouts have been failing for 3 days." });
+```
+
+The evaluation state, questions, and answers follow the LangChain integration's `recordInputs` and `recordOutputs` options.
+
+</PlatformSection>
+
 ## Supported Versions
 
 - `@langchain/langgraph`: `>=0.2.0 <2.0.0`
