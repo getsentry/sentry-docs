@@ -1,0 +1,168 @@
+---
+title: Cloudflare Quick Start
+sidebar_order: 0.5
+description: Learn how to send Pi Durable agent runs, model requests, tool calls, and errors to Sentry from Cloudflare Durable Objects.
+---
+
+[Pi Durable](https://earendil.com/posts/pi-durable/) is Earendil's durable agent harness, built on the same foundations as the Pi coding agent. This guide sets up the Sentry SDK in a Worker that runs Pi Durable in a Durable Object, for example through the Agents SDK `PiHarness`, so agent runs, model requests, tool calls, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="pi-durable/experimental-alert" />
+
+Running Pi Durable on Node.js? Follow the [Pi Durable Quick Start](../) instead.
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Worker using `@earendil-works/pi-durable` version `1.0.0` or later, built with Vite and `@cloudflare/vite-plugin`. To host Pi Durable with `PiHarness`, you need the Agents SDK (`agents`) version `0.26.0` or later.
+- `@sentry/cloudflare` version `11.6.0` or later.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+  defaults={["performance"]}
+/>
+
+Install the Sentry Cloudflare SDK:
+
+```bash {tabTitle:npm}
+npm install @sentry/cloudflare@^11.6.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cloudflare@^11.6.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cloudflare@^11.6.0
+```
+
+## Configure
+
+Add the Sentry Vite plugin to your Vite config:
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+The plugin instruments `Harness.open()` at build time, so every Harness your Worker opens is traced. It also wraps your Worker entry, your Durable Object classes, and your Agents SDK classes with Sentry, so `Sentry.init()` runs in the Durable Object that hosts Pi Durable without any changes to your code.
+
+Create an `instrument.server.ts` file next to your Worker entry (the file named in Wrangler's `main`). The plugin picks it up by convention and uses its default export as the Sentry options:
+
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+}));
+```
+
+Enable Node.js compatibility in your Wrangler config so the SDK can run on Workers:
+
+```toml {filename:wrangler.toml}
+main = "src/index.ts"
+compatibility_flags = ["nodejs_compat"]
+```
+
+Your Pi Durable code doesn't change. For example, an Agents SDK class that hosts Pi Durable with `PiHarness` is traced as is:
+
+```typescript {filename:src/assistant.ts}
+import { createModels } from "@earendil-works/pi-ai/models";
+import { openaiProvider } from "@earendil-works/pi-ai/providers/openai";
+import { createRegistry, Harness } from "@earendil-works/pi-durable";
+import { Agent } from "agents";
+import { PiHarness } from "agents/harness/pi";
+
+export class Assistant extends Agent<Env> {
+  registry = createRegistry();
+
+  harness = new PiHarness({
+    harness: ({ storage, context }) => {
+      // pi-ai reads provider keys from `process.env` by default, so hand over the Worker's secret.
+      const models = createModels({
+        authContext: {
+          env: async (name) =>
+            name === "OPENAI_API_KEY" ? this.env.OPENAI_API_KEY : undefined,
+          fileExists: async () => false,
+        },
+      });
+      models.setProvider(openaiProvider());
+      return Harness.open(
+        storage,
+        { models, registry: this.registry },
+        context
+      );
+    },
+    defaults: { model: { provider: "openai", id: "gpt-6.1-sol" } },
+  });
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    this.lifecycle.use(this.harness);
+  }
+}
+```
+
+<Include name="pi-durable/captured-summary" />
+
+### Control the Data You Send to Sentry (Optional)
+
+By default, the SDK sends the inputs and outputs of your model requests and tool calls, such as prompts, responses, and tool arguments.
+This will give you rich debugging context. Review the data your agent handles before you deploy to production.
+
+The SDK always filters sensitive values whose keys match a built-in denylist, such as `auth` or `password`, and sends `[Filtered]` instead.
+
+To send less data, turn off the categories you don't need in the `dataCollection` option:
+
+```typescript {filename:src/instrument.server.ts} {5-7}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+}));
+```
+
+For the full list of categories and their defaults, see the [`dataCollection` options](../configuration/options/#dataCollection).
+
+<Include name="pi-durable/link-conversations" />
+
+<Include name="pi-durable/verify" />
+
+</StepConnector>
+
+## Troubleshooting
+
+- **No AI spans at all.** Confirm `sentryCloudflareVitePlugin()` is in your Vite config and that you build and run the Worker through Vite. A Worker you deploy with `wrangler` directly, without the plugin, doesn't get the build-time instrumentation of `Harness.open()`.
+- **Every restart of the Durable Object starts a new conversation in Sentry.** This is expected for now. See [Link Conversations](#link-conversations).
+
+<Include name="pi-durable/next-steps" />
+
+<Include name="pi-durable/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/cloudflare`: `>=11.6.0`
+- `@earendil-works/pi-durable`: `>=1.0.0 <2.0.0`
+- `agents`: `>=0.26.0`, when you host Pi Durable with `PiHarness`
