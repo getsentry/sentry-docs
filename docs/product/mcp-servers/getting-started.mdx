@@ -27,13 +27,13 @@ To start sending MCP data to Sentry, make sure you've created a Sentry project f
   minVersion="9.46.0"
 />
 
-The example below uses [`@modelcontextprotocol/sdk`](https://www.npmjs.com/package/@modelcontextprotocol/sdk) 1.x. The Sentry wrapper automatically captures spans for MCP server workflows, including tool executions, resource access, and client connections.
+Starting with Sentry JavaScript SDK version `11.1.0`, the SDK automatically instruments every `McpServer` from [`@modelcontextprotocol/server`](https://www.npmjs.com/package/@modelcontextprotocol/server) 2.x and [`@modelcontextprotocol/sdk`](https://www.npmjs.com/package/@modelcontextprotocol/sdk) 1.x when tracing is enabled. It captures spans for MCP server workflows, including tool executions, resource access, and client connections.
 
 #### Quick Start with MCP Server
 
 ```javascript
 import * as Sentry from "@sentry/node";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 
 // Sentry init needs to be above everything else
 Sentry.init({
@@ -41,22 +41,20 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-// Wrap every MCP server instance
-const server = Sentry.wrapMcpServerWithSentry(
-  new McpServer({
-    name: "my-mcp-server",
-    version: "1.0.0",
-  }),
-);
+// No wrapping needed, the SDK instruments the server automatically
+const server = new McpServer({
+  name: "my-mcp-server",
+  version: "1.0.0",
+});
 
 ...
 ```
 
-Stable `@modelcontextprotocol/server` 2.x support requires Sentry JavaScript SDK version `10.70.0` or newer. For framework-specific setup, see MCP Monitoring for [Node.js](/platforms/javascript/guides/node/mcp-monitoring/), [Hono](/platforms/javascript/guides/hono/mcp-monitoring/), or [Cloudflare](/platforms/javascript/guides/cloudflare/mcp-monitoring/).
+On Cloudflare Workers, or on SDK versions earlier than `11.1.0`, wrap each server instance with `Sentry.wrapMcpServerWithSentry(new McpServer(...))`. Stable `@modelcontextprotocol/server` 2.x support requires Sentry JavaScript SDK version `10.70.0` or newer. For framework-specific setup, see MCP Monitoring for [Node.js](/platforms/javascript/guides/node/mcp-monitoring/), [Hono](/platforms/javascript/guides/hono/mcp-monitoring/), or [Cloudflare](/platforms/javascript/guides/cloudflare/mcp-monitoring/).
 
 #### Options
 
-The `recordInputs` and `recordOutputs` options require Sentry JavaScript SDK version `10.33.0` or newer.
+Pass these options to `wrapMcpServerWithSentry` to configure a specific server, including one the SDK already instrumented automatically. The `recordInputs` and `recordOutputs` options require Sentry JavaScript SDK version `10.33.0` or newer.
 
 ##### `recordInputs`
 

@@ -14,7 +14,17 @@ Before you begin, <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
 
 ## Instrument the MCP Server
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
+Starting with Sentry JavaScript SDK version `11.1.0`, the SDK instruments every `McpServer` instance automatically when tracing is enabled. It records MCP requests, tool calls, prompt retrievals, resource reads, and handler errors. Automatic instrumentation supports `@modelcontextprotocol/server` `>=2.0.0 <3` and `@modelcontextprotocol/sdk` `>=1.9.0 <2`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
 Wrap each `McpServer` instance with `wrapMcpServerWithSentry` to automatically record MCP requests, tool calls, prompt retrievals, resource reads, and handler errors.
+
+</PlatformSection>
 
 <PlatformContent includePath="mcp-monitoring/setup" />
 
@@ -35,7 +45,7 @@ Sentry.init({
 });
 ```
 
-Use `recordInputs` and `recordOutputs` to control recording for a specific server. These options override the `dataCollection.genAI` settings:
+To control recording for a specific server, pass it to `wrapMcpServerWithSentry` with the `recordInputs` and `recordOutputs` options. These options override the `dataCollection.genAI` settings, and they also apply to a server the SDK has already instrumented automatically:
 
 ```javascript
 const server = Sentry.wrapMcpServerWithSentry(mcpServer, {
@@ -77,15 +87,15 @@ app.use(
 );
 ```
 
-You still need `wrapMcpServerWithSentry` to instrument MCP operations. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
+Cloudflare Workers don't support automatic MCP server instrumentation, so you still need `wrapMcpServerWithSentry` to instrument MCP operations. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
 
 </PlatformSection>
 
 ## Manual Instrumentation
 
-The setup above automatically instruments MCP servers built with the official [MCP SDK](https://github.com/modelcontextprotocol/typescript-sdk) (`@modelcontextprotocol/sdk`). If your server uses a different library or a custom implementation that `wrapMcpServerWithSentry` can't wrap, you can record the same spans manually.
+The setup above instruments MCP servers built with the official [MCP SDK](https://github.com/modelcontextprotocol/typescript-sdk) (`@modelcontextprotocol/server` or `@modelcontextprotocol/sdk`). If your server uses a different library or a custom implementation that the SDK can't instrument, you can record the same spans manually.
 
-You don't need this if you're already using `wrapMcpServerWithSentry` — it creates these spans for you. Otherwise, use [Sentry.startSpan()](/platforms/javascript/tracing/instrumentation/custom-instrumentation/#starting-a-span) to create the spans described below.
+You don't need this if your server is already instrumented, automatically or with `wrapMcpServerWithSentry`. The SDK creates these spans for you. Otherwise, use [Sentry.startSpan()](/platforms/javascript/tracing/instrumentation/custom-instrumentation/#starting-a-span) to create the spans described below.
 
 ## Spans
 
