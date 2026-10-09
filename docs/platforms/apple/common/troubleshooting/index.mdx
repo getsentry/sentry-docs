@@ -7,7 +7,7 @@ sidebar_section: configuration
 
 ## "Missing API declaration" after App Store review
 
-Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/apple/data-management/apple-privacy-manifest) guide.
+Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/apple/data-management/apple-privacy-manifest/) guide.
 
 ## Wrong App Start Data
 
@@ -104,6 +104,28 @@ SentrySDK.start { options in
      options.swizzleClassNameExcludes = [NSSet setWithObjects: @"RoomPlanWrapper", nil];
 }];
 ```
+
+As of Sentry Cocoa SDK version `9.26.0`, there's also an experimental option you can enable that should fix this crash without needing to exclude specific classes:
+
+```swift
+SentrySDK.start { options in
+    options.experimental.enableUIViewControllerInitSwizzling = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+     options.experimental.enableUIViewControllerInitSwizzling = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+     options.experimental.enableUIViewControllerInitSwizzling = YES;
+}];
+```
+
+If enabling this option doesn't fix the crash for you, please add a comment to [this GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/8684).
 
 If you can't upgrade the Sentry Cocoa SDK to version `8.23.0`, you can also disable swizzling, as shown below.
 However, this would also disable some useful features, such as automatic tracing and network breadcrumbs.
@@ -244,4 +266,4 @@ The workaround is to remove `arm64e` from the target's **Architectures** build s
 
 ## Troubleshooting Session Replay
 
-See [Session Replay - Troubleshooting](/platforms/apple/guides/ios/session-replay/troubleshooting) for more information.
+See [Session Replay - Troubleshooting](/platforms/apple/guides/ios/session-replay/troubleshooting/) for more information.

@@ -5,25 +5,18 @@
     background-color: rgba(106, 95, 193, 0.5);
   }
 
-  pre {
-    background-color: var(--code-background);
-    border-radius: 0 0 6px 6px;
-    margin-top: 0;
-    margin-bottom: 0;
-    /* Use horizontal scroll instead of wrapping */
-    white-space: pre;
-    overflow-x: auto;
-    max-width: 100%;
-    box-sizing: border-box;
-    tab-size: 2;
-  }
-
   code[class*='language-'],
-  pre[class*='language-'] {
+  pre {
     font-family: var(--font-family-monospace);
   }
 
-  pre[class*='language-'] {
+  /*
+   * Target every <pre>, not just pre[class*='language-']: rehype-prism-plus
+   * only adds the language class to <pre> for languages Prism knows, so
+   * blocks like `pseudocode` would otherwise lose their border and sizing.
+   */
+  pre {
+    background-color: var(--code-background);
     font-size: 0.85rem;
     border: 1px solid var(--accent-11);
     border-radius: 6px;
@@ -31,7 +24,9 @@
     /* Use horizontal scroll instead of wrapping */
     white-space: pre;
     overflow-x: auto;
+    max-width: 100%;
     box-sizing: border-box;
+    tab-size: 2;
 
     /* Custom scrollbar styling to match code block theme */
     /* Firefox */
@@ -67,7 +62,7 @@
   /**
   * Shift padding on code diffs, so the background highlight covers the whole line
   */
-  pre[class^='language-']:has(:global(.code-diff)) {
+  pre:has(:global(.code-diff)) {
     padding-right: 0;
 
     & :global(.diff-deleted) :global(.token.operator:first-of-type),
@@ -76,7 +71,7 @@
     }
   }
 
-  pre[class^='language-']:has(:global(.highlight-line)) {
+  pre:has(:global(.highlight-line)) {
     padding-left: 0;
     padding-right: 0;
 
@@ -124,9 +119,9 @@
 
   /* Diff highlighting, classes provided by rehype-prism-plus */
   /* Set inserted line (+) color */
-  /* Move the margin left and adjust width so we can keep the parent padding  */
-  :global(.diff-inserted),
-  :global(.inserted) {
+  /* Extend only the outer line; nested diff tokens must not shift the text. */
+  :global(.code-line.diff-inserted),
+  :global(.code-line.inserted) {
     background-color: rgba(16, 185, 129, 0.2);
     margin-left: -12px;
     width: calc(100% + 12px);
@@ -134,9 +129,9 @@
 
   /* Diff highlighting, classes provided by rehype-prism-plus */
   /* Set deleted line (-) color */
-  /* Move the margin left and adjust width so we can keep the parent padding  */
-  :global(.diff-deleted),
-  :global(.deleted) {
+  /* Extend only the outer line; nested diff tokens must not shift the text. */
+  :global(.code-line.diff-deleted),
+  :global(.code-line.deleted) {
     background-color: rgba(239, 68, 68, 0.2);
     margin-left: -12px;
     width: calc(100% + 12px);
@@ -153,10 +148,10 @@
     }
 
     /* Adjust diff highlighting for mobile - prevent overflow */
-    :global(.diff-inserted),
-    :global(.inserted),
-    :global(.diff-deleted),
-    :global(.deleted) {
+    :global(.code-line.diff-inserted),
+    :global(.code-line.inserted),
+    :global(.code-line.diff-deleted),
+    :global(.code-line.deleted) {
       width: 100%;
       margin-left: 0;
     }

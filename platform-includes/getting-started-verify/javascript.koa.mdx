@@ -4,14 +4,17 @@
 <SplitSection>
 <SplitSectionText>
 
-First, let's make sure Sentry is correctly capturing errors and creating issues in your project. Add the following code snippet to your main application file; it defines a route that will deliberately trigger an error when called:
+To check that Sentry captures errors, add this middleware before your other middleware in your main application file. Then visit `/debug-sentry` to trigger a test error:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```javascript
-router.get("/debug-sentry", function () {
-  throw new Error("My first Sentry error!");
+app.use(async (ctx, next) => {
+  if (ctx.path === "/debug-sentry") {
+    throw new Error("My first Sentry error!");
+  }
+  await next();
 });
 ```
 
@@ -32,7 +35,12 @@ To test your tracing configuration, update the previous code snippet by starting
 <SplitSectionCode>
 
 ```javascript
-router.get("/debug-sentry", async (ctx) => {
+app.use(async (ctx, next) => {
+  if (ctx.path !== "/debug-sentry") {
+    await next();
+    return;
+  }
+
   await Sentry.startSpan(
     {
       op: "test",
@@ -57,3 +65,5 @@ router.get("/debug-sentry", async (ctx) => {
 <Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
 
 </OnboardingOption>
+
+<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />

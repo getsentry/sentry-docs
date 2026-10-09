@@ -11,18 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-404:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      sites: ${{ steps.sites.outputs.sites }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
-
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
-        id: setup-node
-        with:
-          node-version-file: 'package.json'
-          cache: 'pnpm'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: filter
@@ -33,42 +27,95 @@ jobs:
               - 'includes/**'
               - 'platform-includes/**'
               - 'scripts/lint-404s/**'
+              - '.github/workflows/lint-404s.yml'
             dev-docs:
               - 'develop-docs/**'
+              - 'scripts/lint-404s/**'
+              - '.github/workflows/lint-404s.yml'
+
+      # Both sites build into `.next`, so each one gets its own runner instead of
+      # sharing a build directory and port 3000 in a single job.
+      - name: Select sites to lint
+        id: sites
+        env:
+          DOCS: ${{ steps.filter.outputs.docs }}
+          DEV_DOCS: ${{ steps.filter.outputs.dev-docs }}
+        run: |
+          sites=()
+          if [[ "$DOCS" == 'true' ]]; then
+            sites+=('{"name":"docs","build":"build"}')
+          fi
+          if [[ "$DEV_DOCS" == 'true' ]]; then
+            sites+=('{"name":"developer-docs","build":"build:developer-docs"}')
+          fi
+          echo "sites=[$(IFS=,; echo "${sites[*]}")]" >> "$GITHUB_OUTPUT"
+
+  lint-site:
+    name: Lint ${{ matrix.site.name }} for 404s
+    needs: changes
+    if: needs.changes.outputs.sites != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        site: ${{ fromJSON(needs.changes.outputs.sites) }}
+    env:
+      SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+      NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        id: setup-node
+        with:
+          node-version-file: 'package.json'
+          cache: 'pnpm'
+
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ${{ github.workspace }}/.next/cache
-          key: nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: lint-404-${{ matrix.site.name }}-nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
+            lint-404-${{ matrix.site.name }}-nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
             nextjs-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
-        if: steps.filter.outputs.docs == 'true'
+      - name: Build ${{ matrix.site.name }}
+        run: pnpm "$BUILD_SCRIPT"
         env:
-          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          BUILD_SCRIPT: ${{ matrix.site.build }}
 
-      - run: pnpm build:developer-docs
-        if: steps.filter.outputs.dev-docs == 'true'
-        env:
-          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-
-      - name: Start Http Server
-        run: pnpm start &
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
-        env:
-          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
-          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+      # The runner is discarded after the job, so the server does not need to be
+      # stopped explicitly.
+      - name: Start HTTP server
+        run: |
+          pnpm start &
+          curl --retry 30 --retry-delay 2 --retry-connrefused --fail --silent http://localhost:3000/sitemap.xml > /dev/null
 
       - name: Lint 404s
         run: npx tsx ./scripts/lint-404s/main.ts
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
 
-      - name: Kill Http Server
-        run: kill $(lsof -t -i:3000) || true
-        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
-        continue-on-error: true
+  # Required status check. Passes when every changed site passes its lint, or
+  # when no site changed.
+  lint-404:
+    needs: [changes, lint-site]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check 404 lint results
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          LINT_RESULT: ${{ needs.lint-site.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" != 'success' ]]; then
+            echo "Detecting changed sites ended with: $CHANGES_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$LINT_RESULT" != 'success' && "$LINT_RESULT" != 'skipped' ]]; then
+            echo "404 lint ended with: $LINT_RESULT" >&2
+            exit 1
+          fi

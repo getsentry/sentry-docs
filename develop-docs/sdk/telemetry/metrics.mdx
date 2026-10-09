@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 2.10.0
+spec_version: 3.1.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,18 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 3.1.0
+    date: 2026-10-08
+    summary: Listed client report discard reasons for metrics and clarified that the quantity is the number of discarded metrics
+  - version: 3.0.0
+    date: 2026-09-28
+    summary: Removed the global metrics enablement option; retained explicit opt-in for integrations
+  - version: 2.11.1
+    date: 2026-09-28
+    summary: Removed obsolete experimental namespace guidance and example from the stable spec
+  - version: 2.11.0
+    date: 2026-09-22
+    summary: Added sentry.is_localhost default attribute for localhost inbound filtering
   - version: 2.10.0
     date: 2026-06-22
     summary: Added client reports requirement (trace_metric count, trace_metric_byte size)
@@ -70,7 +82,7 @@ The envelope item type is named `trace_metric` for internal usage to avoid namin
 
 Related specs:
 - [Envelopes](/sdk/foundations/envelopes/) — transport format
-- [Attributes](/sdk/foundations/state-management/scopes/attributes) — attribute types and structure
+- [Attributes](/sdk/foundations/state-management/scopes/attributes/) — attribute types and structure
 - [Tracing without Performance](/sdk/foundations/trace-propagation/#default-propagation) — required before adding metrics support
 - [Telemetry Processor](/sdk/foundations/processing/telemetry-processor/) — buffer data forwarding scenarios
 
@@ -104,20 +116,19 @@ An SDK **SHOULD** implement [Tracing without Performance](/sdk/foundations/trace
 
 </Alert>
 
-<SpecSection id="processing-pipeline" status="stable" since="2.0.0">
+<SpecSection id="processing-pipeline" status="stable" since="3.0.0">
 
 ### Processing Pipeline
 
 Metric processing **MUST** follow this order:
 
 1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.count`).
-2. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration — if so, skip the rest of the steps.
-3. Pass the metric to Hub/Scope via a generic method (e.g., `captureMetric(metric)`).
-4. Pass the metric to the Client via a generic method (e.g., `captureMetric(metric)`).
-5. Process captured metric (attach default attributes as per [Default Attributes](#default-attributes)).
-6. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
-7. Add metric to buffer/batch processor as detailed in [Buffering](#buffering).
-8. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
+2. Pass the metric to Hub/Scope via a generic method (e.g., `captureMetric(metric)`).
+3. Pass the metric to the Client via a generic method (e.g., `captureMetric(metric)`).
+4. Process captured metric (attach default attributes as per [Default Attributes](#default-attributes)).
+5. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
+6. Add metric to buffer/batch processor as detailed in [Buffering](#buffering).
+7. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [Data Category and Rate Limiting](#data-category-and-rate-limiting).
 
 </SpecSection>
 
@@ -131,6 +142,7 @@ SDKs **MUST** attach the following attributes to every metric by default:
 2. `sentry.release` — the release set in the SDK, if defined.
 3. `sentry.sdk.name` — the name of the SDK that sent the metric.
 4. `sentry.sdk.version` — the version of the SDK that sent the metric.
+5. `sentry.is_localhost` — whether the SDK determined the application is running on localhost (since 2.11.0). Used to enable the localhost inbound filter. The definition of "localhost" is platform-specific.
 
 SDKs **SHOULD** minimize the number of default attributes. Metrics cardinality can explode quickly with too many attributes. New default attributes **SHOULD** only be added after significant feedback from users and discussion internally with the SDK and ingest teams.
 
@@ -239,13 +251,11 @@ If `debug` is set to `true` in SDK init, calls to the Sentry metrics API **SHOUL
 
 </SpecSection>
 
-<SpecSection id="auto-emitted-metrics" status="candidate" since="2.7.0">
+<SpecSection id="auto-emitted-metrics" status="candidate" since="3.0.0">
 
 ### Auto-Emitted Metrics
 
-Metrics emitted via the [public API](#metrics-module) are opt-out. The `enableMetrics`/`enable_metrics` option **MUST** act as a general kill switch for all metrics sent to Sentry — when set to `false`, no metrics **MUST** be sent, regardless of whether they originate from the public API, auto-emitting integrations, or third-party bindings.
-
-However, metrics that are **automatically emitted by integrations or libraries** without an explicit user call follow different rules because they can generate unexpected volume and cost.
+Metrics that are **automatically emitted by integrations or libraries** without an explicit user call require opt-in because they can generate unexpected volume and cost.
 
 **Integrations that auto-emit metrics** — An SDK integration that automatically captures metrics (e.g., recording HTTP request durations, database query counts, or runtime resource usage) **MUST** be opt-in. The integration **MUST NOT** emit any metrics unless the user explicitly enables it. The opt-in mechanism **MAY** be a dedicated integration-level option or requiring the user to explicitly add the integration.
 
@@ -260,6 +270,15 @@ These rules exist because auto-emitted metrics can cause a high volume of teleme
 ### Client Reports
 
 SDKs **MUST** report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g., by counting as if serialized).
+
+SDKs **MUST** record a [client report](/sdk/telemetry/client-reports/) in at least the following cases:
+
+- `before_send`: `beforeSendMetric`/`before_send_metric` returned `null`.
+- `buffer_overflow`: the metric was dropped because the [buffer](#buffering) reached its size limit.
+- `ratelimit_backoff`: the metric was dropped because the `trace_metric` data category is [rate limited](#data-category-and-rate-limiting).
+- `send_error`, `internal_sdk_error`, `network_error`: the envelope containing the metric was discarded because sending it failed, as specified in [Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording).
+
+The `trace_metric` quantity **MUST** be the number of discarded metrics, not the number of discarded envelopes or envelope items. For example, if a `trace_metric` envelope with 100 metrics fails to send, the SDK records a `trace_metric` quantity of 100 (see [Quantity of Discarded Envelopes](/sdk/telemetry/client-reports/#quantity-of-discarded-envelopes)).
 
 </SpecSection>
 
@@ -349,27 +368,15 @@ Each metric in the `items` array is a JSON object with the following fields:
 
 ## Public API
 
-<SpecSection id="initialization-options" status="stable" since="2.0.0">
+<SpecSection id="initialization-options" status="stable" since="3.0.0">
 
 ### Initialization Options
 
-SDKs **MUST** expose the following configuration options:
-
-- `enableMetrics`/`enable_metrics` — a boolean flag to control if metric envelopes will be generated and sent to Sentry. If `false`, the SDK **MUST NOT** send metrics. Defaults to `true`.
+SDKs **MUST** expose the following configuration option:
 
 - `beforeSendMetric`/`before_send_metric` — an **OPTIONAL** function that takes a metric object and returns a metric object. Called before sending the metric to Sentry. Can be used to modify the metric or prevent it from being sent (by returning `null`/`None`).
 
-While metrics functionality is in an experimental state, SDKs **SHOULD** put these options in an experimental namespace to avoid breaking changes:
-
-```
-Sentry.init({
-  // stable
-  enableMetrics: true,
-
-  // experimental
-  _experiments: { enableMetrics: true },
-})
-```
+SDKs **SHOULD NOT** provide an API whose sole purpose is to disable all metrics.
 
 </SpecSection>
 

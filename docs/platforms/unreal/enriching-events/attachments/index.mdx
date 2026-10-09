@@ -96,13 +96,37 @@ Attachments are retained for 30 or 90 days, based on [your plan's data retention
 
 Learn more about how attachments impact your [quota](/pricing/quotas/).
 
-### Access to Attachments
+## Add or Modify Attachments Before Sending
 
-To limit access to attachments, navigate to your organization's **General Settings**, then select the _Attachments Access_ dropdown to set appropriate access — any member of your organization, the organization billing owner, member, admin, manager, or owner.
+It's possible to add or remove attachments before an event is sent by way of the `beforeSend` and `beforeSendFeedback` <PlatformLink to="/configuration/filtering/">hooks</PlatformLink>. The hint passed to the handler contains all attachments that will be sent with the event, including the ones added to the scope and the ones added by the SDK, such as the game log or screenshot.
 
-<Include name="common-imgs/attachments-access" />
+```cpp
+USentryEvent* USomeBeforeSendHandler::HandleBeforeSend_Implementation(USentryEvent* Event, USentryHint* Hint)
+{
+	// Add an attachment to this event only
+	USentryAttachment* Attachment = NewObject<USentryAttachment>();
+	Attachment->InitializeWithPath(TEXT("your/path/config.json"), TEXT("config.json"));
+	Hint->AddAttachment(Attachment);
 
-By default, access is granted to all members when storage is enabled. If a member does not have access to the project, the ability to download an attachment is not available; the button will be greyed out in Sentry. The member may only view that an attachment is stored.
+	// Remove attachments whose filename matches a pattern (case-insensitive, supports `*` and `?` wildcards)
+	Hint->RemoveAttachments(TEXT("*.log"));
+
+	// Or remove all attachments
+	Hint->ClearAttachments();
+
+	return Super::HandleBeforeSend_Implementation(Event, Hint);
+}
+```
+
+The same result can be achieved by calling the corresponding functions on the hint in blueprint.
+
+Changes made to the hint only affect the event being sent and don't modify the scope. Crash reports, such as minidumps, aren't part of the hint and can't be removed this way.
+
+<Alert>
+
+On Android, native crashes are sent the next time the app launches. The scope attachments captured at the time of the crash are sent separately from the event, so they aren't included in the hint.
+
+</Alert>
 
 ## Store Minidumps as Attachments
 
@@ -112,15 +136,7 @@ By default, access is granted to all members when storage is enabled. If a membe
 
 <Include name="store-minidumps-as-attachments-configuration" />
 
-## Viewing Attachments
-
-Attachments display on the bottom of the **Issue Details** page for the event that is shown.
-
-<Include name="common-imgs/attachments-access-denied" />
-
-Alternately, attachments also appear in the _Attachments_ tab on the **Issue Details** page, where you can view the _Type_ of attachment, as well as associated events. Click the Event ID to open the **Issue Details** of that specific event.
-
-<Include name="common-imgs/attachments-list-example" />
+<Include name="attachments/general-attachments"/>
 
 ## Maximum Attachment Size
 

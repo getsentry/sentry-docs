@@ -1,6 +1,6 @@
 ---
 title: Custom Instrumentation
-description: "Learn how to capture performance data on any action in your app."
+description: "Learn how to capture performance data on any action in your app using the Sentry Unreal SDK."
 sidebar_order: 20
 ---
 
@@ -10,11 +10,52 @@ To capture transactions and spans customized to your organization's needs, you m
 
 </Alert>
 
-<Include name="tracing/span-metrics-application-metrics-callout" />
+<Include name="tracing/span-attributes-application-metrics-callout" />
 
 <PlatformContent includePath="performance/enable-manual-instrumentation" />
 
 <PlatformContent includePath="performance/add-spans-example" />
+
+## Custom Timestamps
+
+Sometimes the work you want to measure has already happened, or its timing was recorded somewhere the SDK can't observe directly (for example, during a loading phase before tracing was started). For these cases, use the explicitly timed variants of the tracing functions:
+
+- `USentrySubsystem::StartTransactionWithContextAndTimestamp`
+- `USentryTransaction::StartChildSpanWithTimestamp`
+- `USentryTransaction::FinishWithTimestamp`
+- `USentrySpan::StartChildWithTimestamp`
+- `USentrySpan::FinishWithTimestamp`
+
+They only differ from their non-timestamped counterparts by taking an additional timestamp parameter, which is the Unix epoch offset in microseconds.
+
+The following example records timestamps while a level is loading and reports them as a transaction once loading is complete:
+
+```cpp
+int64 GetUnixTimestampMicros()
+{
+    return (FDateTime::UtcNow() - FDateTime(1970, 1, 1)).GetTicks() / ETimespan::TicksPerMicrosecond;
+}
+
+// LoadStart, AssetsLoaded and LoadEnd were captured with GetUnixTimestampMicros() during loading
+void ReportLevelLoad(int64 LoadStart, int64 AssetsLoaded, int64 LoadEnd)
+{
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+    USentryTransactionContext* TransactionContext = NewObject<USentryTransactionContext>();
+    TransactionContext->Initialize(TEXT("level-load"), TEXT("game.load"));
+
+    USentryTransaction* Transaction =
+        SentrySubsystem->StartTransactionWithContextAndTimestamp(TransactionContext, LoadStart);
+
+    USentrySpan* AssetsSpan = Transaction->StartChildSpanWithTimestamp(
+        TEXT("game.load.assets"), TEXT("Loading level assets"), LoadStart);
+    AssetsSpan->FinishWithTimestamp(AssetsLoaded);
+
+    Transaction->FinishWithTimestamp(LoadEnd);
+}
+```
+
+When using these functions, make sure the provided timestamps are consistent: a span shouldn't start before its parent or finish after it. Use the regular functions with automatic timestamps whenever possible, and only use the explicitly timed ones when you need to.
 
 <PlatformContent includePath="performance/connect-errors-spans" />
 

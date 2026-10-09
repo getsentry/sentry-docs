@@ -1,6 +1,6 @@
 ---
 title: Custom Instrumentation
-description: "Learn how to capture performance data on any action in your app."
+description: "Learn how to capture performance data on any action in your app using the Sentry Python SDK."
 ---
 
 The Sentry SDK for Python does a very good job of auto instrumenting your application. If you use one of the popular frameworks, we've got you covered because well-known operations like HTTP calls and database queries will be instrumented out of the box. The Sentry SDK will also check your installed Python packages and auto-enable the matching SDK integrations. If you want to enable tracing in a piece of code that performs some other operations, add the `@sentry_sdk.trace` decorator.
@@ -498,49 +498,37 @@ def eat_slice(slice):
         span.set_attribute("slice_id", slice.id)
 ```
 
-## Improving Data on Transactions and Spans
+## Adding Span Attributes
 
-In transaction mode, you can add data attributes to your transactions. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
+Span attributes describe an operation in a trace: which provider handled a request, which fallback ran, or what outcome it produced. When investigating a slow checkout, compare charge spans by `payment.provider` and open an outlier trace to see what happened. The span already records its duration, so you don't need a separate duration attribute.
 
-```python {tabTitle:Transaction Mode (Default)}
-with sentry_sdk.start_transaction(name="my-transaction") as transaction:
-    transaction.set_data("my-data-attribute-1", "value1")
-    transaction.set_data("my-data-attribute-2", 42)
-    transaction.set_data("my-data-attribute-3", True)
-
-    transaction.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
-    transaction.set_data("my-data-attribute-5", [42, 43, 44])
-    transaction.set_data("my-data-attribute-6", [True, False, True])
-```
-
-You can add data attributes to any span the same way, with the same type restrictions as described above.
+Add attributes to the span for the operation they describe, rather than creating an empty span just to hold attributes. In transaction mode, use `set_data()`; in stream mode, use `set_attribute()` or `set_attributes()`. Values can be strings, numbers, booleans, or arrays containing only one of these types. For example, record what happens during a payment charge:
 
 ```python {tabTitle:Transaction Mode (Default)}
-with sentry_sdk.start_span(name="my-span") as span:
-    span.set_data("my-data-attribute-1", "value1")
-    span.set_data("my-data-attribute-2", 42)
-    span.set_data("my-data-attribute-3", True)
-
-    span.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
-    span.set_data("my-data-attribute-5", [42, 43, 44])
-    span.set_data("my-data-attribute-6", [True, False, True])
+with sentry_sdk.start_span(op="payment.charge", name="Charge payment provider") as span:
+    span.set_data("payment.provider", provider.name)
+    result = provider.charge(order)
+    span.set_data("payment.retry_count", result.retry_count)
+    span.set_data("payment.outcome", result.outcome)
 ```
 
 ```python {tabTitle:Stream Mode}
-with sentry_sdk.traces.start_span(name="my-span") as span:
-    span.set_attribute("my-data-attribute-1", "value1")
-    span.set_attribute("my-data-attribute-2", 42)
-    span.set_attribute("my-data-attribute-3", True)
-
-    # or use set_attributes to set multiple attributes at once
+with sentry_sdk.traces.start_span(
+    name="Charge payment provider",
+    attributes={"sentry.op": "payment.charge", "payment.provider": provider.name},
+) as span:
+    result = provider.charge(order)
     span.set_attributes({
-        "my-data-attribute-4": ["value1", "value2", "value3"],
-        "my-data-attribute-5": [42, 43, 44],
-        "my-data-attribute-6": [True, False, True]
+        "payment.retry_count": result.retry_count,
+        "payment.outcome": result.outcome,
     })
 ```
 
-<PlatformContent includePath="tracing/span-metrics/add-all-spans" />
+Choose consistent names and values you can filter or group by. Avoid sensitive values such as raw search terms and payment details. In [Trace Explorer](/product/trace-explorer/), filter on `span.op:payment.charge`, compare `span.duration` by `payment.provider`, and open a slow sample to inspect retries and other bottlenecks.
+
+Attributes belong to sampled traces. For counters, gauges, or distributions independent of trace sampling, such as failed checkout counts or queue depth, use [Application Metrics](/product/metrics/) instead. To add shared context to every span, use the appropriate callback for your tracing mode:
+
+<PlatformContent includePath="tracing/span-attributes/add-all-spans" />
 
 <Alert>
 

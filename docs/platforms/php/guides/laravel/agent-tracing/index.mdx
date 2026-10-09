@@ -45,6 +45,7 @@ You can opt out of all AI spans, or individual AI span types, in `config/sentry.
     'gen_ai_chat' => env('SENTRY_TRACE_GEN_AI_CHAT_ENABLED', true),
     'gen_ai_execute_tool' => env('SENTRY_TRACE_GEN_AI_EXECUTE_TOOL_ENABLED', true),
     'gen_ai_embeddings' => env('SENTRY_TRACE_GEN_AI_EMBEDDINGS_ENABLED', true),
+    'gen_ai_evaluate' => env('SENTRY_TRACE_GEN_AI_EVALUATE_ENABLED', true),
 ],
 ```
 
@@ -62,6 +63,7 @@ The Laravel SDK automatically instruments the [Laravel AI](https://laravel.com/d
 - LLM requests
 - Tool executions
 - Embeddings
+- Classifications, such as [Jev evaluations](#trace-jev-evaluations)
 - Token usage
 - Model and provider metadata
 
@@ -96,6 +98,34 @@ If you use a custom provider, or override a provider's endpoint, include a `url`
 
 The provider key (`my-llm` in this example) is what Laravel AI passes to Sentry as the provider name. Sentry looks for `ai.providers.my-llm.url` and uses that value as the URL prefix for chat span detection.
 
+## Trace Jev Evaluations
+
+<AvailableSince version="4.29.0" />
+
+Classifications made with `laravel/ai` 1.0 or later, such as calls to TypeSafe's Jev model, are traced automatically. No additional setup is needed:
+
+```php
+use Laravel\Ai\Classification;
+use Laravel\Ai\Classification\Boolean;
+use Laravel\Ai\Classification\Choice;
+
+$response = Classification::of('I was charged twice. Please refund the extra charge.')
+    ->questions([
+        'is_urgent' => new Boolean('Does this message convey urgency?'),
+        'department' => new Choice('Which team should handle this?', [
+            'billing' => 'Charges and refunds',
+            'technical' => 'Bugs and outages',
+        ]),
+    ])
+    ->classify('typesafe');
+```
+
+Each classification creates a `gen_ai.evaluate` span named `evaluate <model>`, with the provider, the response model (for example, `jev-1.13.0`), latency, and token usage. If the provider returns an error, the span is marked as failed. When recording is enabled, Sentry captures the classified text and the questions as input messages and the answers as output messages. Sentry shows these spans as <Link to="/product/agents/conversations/#evaluation-spans">evaluation spans</Link>.
+
+Classified text and answers can contain sensitive data, so Sentry only records them if `send_default_pii` is enabled. With the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, use the `gen_ai` key's `inputs` and `outputs` instead.
+
+To stop creating these spans, set `tracing.gen_ai_evaluate` to `false` in `config/sentry.php`.
+
 ## Verify
 
 Prompt one of your Laravel agents. For example, from a route:
@@ -115,5 +145,36 @@ Visiting this route triggers an agent invocation that Sentry captures. It may ta
 ## Conversations
 
 If your agent uses Laravel AI's [remembering conversations](https://laravel.com/docs/13.x/ai-sdk#remembering-conversations) feature, Sentry automatically tracks the `conversationId` returned by Laravel AI. The integration adds it to AI spans as `gen_ai.conversation.id`, which lets Sentry group multiple prompts into the same conversation in **Explore > Agents**.
+
+To keep later prompts in the same Sentry conversation, the agent must implement `Conversational` and use `RemembersConversations`. Store the first response's `conversationId`, then pass it to `continue()` for each later prompt:
+
+```php
+use App\Ai\Agents\TimeAgent;
+use App\Models\User;
+
+$user = User::firstOrFail();
+$conversationId = null;
+
+foreach (["Hello", "What did I just ask you?"] as $message) {
+    $agent = $conversationId
+        ? (new TimeAgent)->continue($conversationId, as: $user)
+        : (new TimeAgent)->forUser($user);
+
+    $response = $agent->prompt($message);
+    $conversationId = $response->conversationId;
+}
+```
+
+Starting a new agent without passing the previous ID creates a separate conversation in Sentry.
+
+Classifications don't have a conversation ID of their own. They're added to the conversation of an agent in the same trace, including classifications made while the agent runs, for example, from a tool. To set the conversation ID yourself, for example, for a classification that runs without an agent or for AI calls that span multiple requests, call `Integration::setConversationId()` before making the call:
+
+```php
+use Sentry\Laravel\Integration;
+
+Integration::setConversationId($conversationId);
+```
+
+The ID applies to the AI spans started afterwards in the current trace, so a transaction must be active. Pass `null` to stop adding it.
 
 For CLI commands and other non-HTTP entry points, create a transaction around each agent call so the AI spans are captured.

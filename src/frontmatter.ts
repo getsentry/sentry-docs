@@ -7,7 +7,8 @@ import {limitFunction} from 'p-limit';
 
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
-import {FrontMatter, PlatformConfig} from './types';
+import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
+import {FrontMatter, PlatformCategory, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {VERSION_INDICATOR} from './versioning';
 
@@ -24,21 +25,34 @@ const formatSlug = (slug: string): string => slug.replace(/\.(mdx|md)$/, '');
 const isSupported = (
   frontmatter: FrontMatter,
   platformName: string,
-  guideName?: string
+  guideName?: string,
+  categories: PlatformCategory[] = []
 ): boolean => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-  if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.includes(canonical)) {
+
+  const matchesCategory = (list?: PlatformCategory[]) =>
+    !!list?.some(category => categories.includes(category));
+
+  const hasAllowlist =
+    !!frontmatter.supported?.length || !!frontmatter.supportedCategories?.length;
+  if (hasAllowlist) {
+    // An exact guide match always wins.
+    if (frontmatter.supported?.includes(canonical)) {
       return true;
     }
-    if (!frontmatter.supported.includes(platformName)) {
+    // Otherwise a platform-level or category allowlist match keeps the page, but
+    // still lets the notSupported lists below filter it out.
+    if (
+      !frontmatter.supported?.includes(platformName) &&
+      !matchesCategory(frontmatter.supportedCategories)
+    ) {
       return false;
     }
   }
   if (
-    frontmatter.notSupported &&
-    (frontmatter.notSupported.includes(canonical) ||
-      frontmatter.notSupported.includes(platformName))
+    frontmatter.notSupported?.includes(canonical) ||
+    frontmatter.notSupported?.includes(platformName) ||
+    matchesCategory(frontmatter.notSupportedCategories)
   ) {
     return false;
   }
@@ -54,8 +68,15 @@ export function getDocsFrontMatter(): Promise<FrontMatter[]> {
   return getDocsFrontMatterCache;
 }
 
-async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs');
+function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
+  return getDocsFrontMatterFromDirectory(path.join(root, 'docs'), true);
+}
+
+/** @internal Only exported for testing. */
+export async function getDocsFrontMatterFromDirectory(
+  docsPath: string,
+  includeApiDocs = false
+): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
 
@@ -90,20 +111,22 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   );
 
   // Add API documentation pages (categories and endpoints)
-  const categories = await apiCategories();
-  categories.forEach(category => {
-    allFrontMatter.push({
-      title: category.name,
-      slug: `api/${category.slug}`,
-    });
-
-    category.apis.forEach(api => {
+  if (includeApiDocs) {
+    const categories = await apiCategories();
+    categories.forEach(category => {
       allFrontMatter.push({
-        title: api.name,
-        slug: `api/${category.slug}/${api.slug}`,
+        title: category.name,
+        slug: `api/${category.slug}`,
+      });
+
+      category.apis.forEach(api => {
+        allFrontMatter.push({
+          title: api.name,
+          slug: `api/${category.slug}/${api.slug}`,
+        });
       });
     });
-  });
+  }
 
   // Now process all common files for each platform and expand them into platform/guide pages
   const platformsPath = path.join(docsPath, 'platforms');
@@ -181,7 +204,14 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
       commonFiles.map(
         limitFunction(
           commonFile => {
-            if (!isSupported(commonFile.frontmatter, platformName)) {
+            if (
+              !isSupported(
+                commonFile.frontmatter,
+                platformName,
+                undefined,
+                platformFrontmatter.categories
+              )
+            ) {
               return;
             }
 
@@ -231,41 +261,43 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     }
 
     // Batch read all guide config files in parallel
-    const guideConfigResults = await Promise.allSettled(
-      guideNames.map(guideName => {
-        const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
-        return readFile(guideConfigPath, 'utf8').then(content => ({
+    const guideConfigResults = await Promise.all(
+      guideNames.map(async guideName => {
+        const guidePath = path.join(guidesPath, guideName);
+        return {
           guideName,
-          config: yaml.load(content) as FrontMatter,
-        }));
+          config: await readGuideConfig(guidePath),
+        };
       })
     );
 
     // Create a map of guide configs
-    const guideConfigs = new Map<string, FrontMatter | null>();
-    guideConfigResults.forEach((result, index) => {
-      const guideName = guideNames[index];
-      if (result.status === 'fulfilled') {
-        guideConfigs.set(guideName, result.value.config);
-      } else {
-        // If the file doesn't exist, use null; for other errors, throw
-        const err = result.reason;
-        if (err.code !== 'ENOENT') {
-          throw err;
-        }
-        guideConfigs.set(guideName, null);
-      }
-    });
+    const guideConfigs = new Map(
+      guideConfigResults.map(({guideName, config}) => [guideName, config] as const)
+    );
 
     // Process each guide
     for (const guideName of guideNames) {
-      const guideFrontmatter = guideConfigs.get(guideName) || null;
+      const guideFrontmatter = guideConfigs.get(guideName) || {};
+
+      // Standalone framework guides opt out of platform common/ inheritance.
+      // Defaults to true when omitted (normal SDK guides).
+      if (!shouldInheritCommonContent(guideFrontmatter)) {
+        continue;
+      }
 
       await Promise.all(
         commonFiles.map(
           limitFunction(
             commonFile => {
-              if (!isSupported(commonFile.frontmatter, platformName, guideName)) {
+              if (
+                !isSupported(
+                  commonFile.frontmatter,
+                  platformName,
+                  guideName,
+                  guideFrontmatter.categories
+                )
+              ) {
                 return;
               }
 

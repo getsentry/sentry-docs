@@ -1,0 +1,36 @@
+```cpp
+UCLASS()
+class USomeBeforeSendFeedbackHandler : public USentryBeforeSendFeedbackHandler
+{
+	GENERATED_BODY()
+
+public:
+	virtual USentryEvent* HandleBeforeSendFeedback_Implementation(USentryEvent* Event, USentryHint* Hint) override
+    {
+        // The feedback fields are available through the event
+        if (USentryFeedback* Feedback = Event->GetFeedback())
+        {
+            // Scrub or modify the feedback before it's sent
+            Feedback->SetContactEmail(TEXT("redacted@example.com"));
+        }
+
+	    return Super::HandleBeforeSendFeedback_Implementation(Event, Hint);
+    }
+};
+
+...
+
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    Settings->BeforeSendFeedbackHandler = USomeBeforeSendFeedbackHandler::StaticClass();
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
+```

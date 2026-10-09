@@ -13,7 +13,7 @@ The SDK exposes the following main options to configure Session Replay for your 
 | Key                     | AndroidManifest                                 | Type                                                                 | Default                              | Description                                                                                                                                                                                                            |
 |-------------------------|--------------------------------------------------------|----------------------------------------------------------------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
  | sessionSampleRate     | `io.sentry.session-replay.session-sample-rate`          | double                                                             | `0.0`                                | Sample rate for replay sessions that start immediately and last the entirety of the user's session. `1.0` collects all sessions.                                                                                        |
- | onErrorSampleRate     | `io.sentry.session-replay.on-error-sample-rate`         | double                                                             | `0.0`                                | Sample rate for buffered replays that are triggered when an error occurs. The SDK keeps the previous minute of activity and continues until the session ends when an error is sampled.                                     |
+ | onErrorSampleRate     | `io.sentry.session-replay.on-error-sample-rate`         | double                                                             | `0.0`                                | Sample rate for buffered replays that are triggered when an error occurs. The SDK keeps the previous 30 seconds of activity and continues until the session ends when an error is sampled.                                |
 
 and the following options provide further customization:
 
@@ -32,6 +32,37 @@ and the following options provide further customization:
  | captureSurfaceViews | `io.sentry.session-replay.capture-surface-views`       | boolean                                                            | `false`                              | When enabled, the SDK captures content rendered inside `SurfaceView` components (e.g. Unity, video players, maps) that are normally invisible to the default PixelCopy window capture. Only works with the `PixelCopy` strategy (default). See [SurfaceView Capture](/platforms/android/session-replay/#surfaceview-capture). **Experimental.** |
  | beforeErrorSampling | `—`                                                     | `BeforeErrorSamplingCallback`                                      | `null`                               | A callback invoked before the `onErrorSampleRate` is checked. Return `false` to skip replay capture for this error, or `true` to proceed with the normal sample rate check. If the callback throws, replay capture proceeds normally (fail-open). Only configurable in code. See [Ignore Certain Errors from Error Sampling](/platforms/android/session-replay/#ignore-certain-errors-from-error-sampling). |
 
+
+## Disable Automatic Replay Sampling
+
+To configure Session Replay to start only after user consent or an app-specific condition, set both sample rates to `0.0` during initialization. This disables automatic session and error recording while keeping the Session Replay integration available for manual control.
+
+```kotlin {tabTitle:Kotlin} {mdExpandTabs}
+SentryAndroid.init(context) { options ->
+  options.sessionReplay.sessionSampleRate = 0.0
+  options.sessionReplay.onErrorSampleRate = 0.0
+}
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(context, options -> {
+  options.getSessionReplay().setSessionSampleRate(0.0);
+  options.getSessionReplay().setOnErrorSampleRate(0.0);
+});
+```
+
+```xml {tabTitle:AndroidManifest.xml}
+<application>
+  <meta-data
+    android:name="io.sentry.session-replay.session-sample-rate"
+    android:value="0.0" />
+  <meta-data
+    android:name="io.sentry.session-replay.on-error-sample-rate"
+    android:value="0.0" />
+</application>
+```
+
+Explicit calls to `Sentry.replay().start()` and `Sentry.replay().startBuffering()` bypass these sample rates. With `onErrorSampleRate` set to `0.0`, call `flush()` to send a manually started buffer. See [Manual Control](/platforms/android/session-replay/#manual-control) for the complete API behavior.
 
 ## Network Details
 

@@ -1,0 +1,31 @@
+Describes an evaluation of generated content against a set of questions (for example a TypeSafe Jev evaluation).
+
+- The span `op` (transaction mode) or the span's `sentry.op` attribute (stream mode) MUST be `"gen_ai.evaluate"`.
+- The span `name` SHOULD be `"evaluate {gen_ai.request.model}"`. (e.g. `"evaluate typesafe/jev-1.13"`)
+- The `gen_ai.operation.name` attribute MUST be `"evaluate"`. Sentry uses this attribute, not the span `op`, to tell evaluations apart from ordinary LLM calls (both share the `ai_client` operation type).
+- The `gen_ai.request.model` attribute SHOULD be the requested evaluation model. (e.g. `"typesafe/jev-1.13"`)
+- The `gen_ai.response.model` attribute SHOULD be the concrete model that responded. (e.g. `"typesafe/jev-1.13-20260917"`)
+- The `gen_ai.provider.name` attribute SHOULD be set to the provider. (e.g. `"typesafe"`)
+- The `gen_ai.agent.name` attribute SHOULD be set to the agent's name when the evaluation runs under an agent. (e.g. `"Support Agent"`)
+
+Additional attributes on the span:
+
+| Data Attribute               | Type   | Requirement Level | Description                                                                                                   | Example                                                                                                                          |
+| :--------------------------- | :----- | :---------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------- |
+| `gen_ai.input.messages`      | string | optional          | A single evaluation object holding the evaluated `state` and the `questions` (stringified JSON). **[0]**      | `'[{"type": "evaluation", "state": "...", "questions": {"accuracy": {"type": "score", "criteria": ["incorrect", "correct"]}}}]'` |
+| `gen_ai.output.messages`     | string | optional          | A single evaluation object holding the `answers`, keyed by the same question keys (stringified JSON). **[1]** | `'[{"type": "evaluation", "answers": {"accuracy": {"type": "score", "score": 1}}}]'`                                             |
+| `gen_ai.usage.input_tokens`  | int    | optional          | The number of tokens used in the evaluation input.                                                            | `154`                                                                                                                            |
+| `gen_ai.usage.output_tokens` | int    | optional          | The number of tokens used in the evaluation output.                                                           | `28`                                                                                                                             |
+
+**[0]** Each entry in `questions` has an `instructions` string and a `type`. For a `score` question, `criteria` is an ordered string array whose index is the score (`["low", "medium", "high"]`). For a `choice` question, `criteria` maps each label to its description (`{"positive": "...", "negative": "..."}`).
+
+**[1]** Each answer carries a `type` that matches its question:
+
+| Answer `type` | Fields                                                                              |
+| :------------ | :---------------------------------------------------------------------------------- |
+| `boolean`     | `probability`                                                                       |
+| `noul`        | `noul` holds the probability (Jev's variant of `boolean`).                          |
+| `score`       | `score`, plus optional `legend` (`{"0": "low"}`), `probabilities`, and `confidence` |
+| `choice`      | `choice`, plus optional `probabilities` and `confidence`                            |
+
+Optional fields may be omitted, but a field present with the wrong type makes that question or answer unreadable and it's shown raw in the span detail.

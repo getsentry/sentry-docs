@@ -1,0 +1,188 @@
+---
+title: Pi Durable
+description: Learn how to send Pi Durable agent runs, model requests, tool calls, and errors to Sentry with the Sentry SDK.
+sdk: sentry.javascript.node
+fallbackGuide: javascript.node
+icon: pi-durable
+categories:
+  - server
+  - server-only
+keywords:
+  - pi
+  - pi-durable
+  - earendil
+  - ai
+  - agents
+  - agent tracing
+---
+
+[Pi Durable](https://earendil.com/posts/pi-durable/) is Earendil's durable agent harness, built on the same foundations as the Pi coding agent. It runs many conversations at once and survives crashes, picking each run up from its last checkpoint. This guide sets up the Sentry SDK in a Pi Durable app so agent runs, model requests, tool calls, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="pi-durable/experimental-alert" />
+
+Running Pi Durable in a Cloudflare Durable Object? Follow the [Cloudflare Quick Start](./cloudflare/) instead.
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Node.js application using `@earendil-works/pi-durable` version `1.0.0` or later.
+- `@sentry/node` version `11.6.0` or later, or [`@sentry/cloudflare@^11.6.0` when running on Cloudflare](./cloudflare/). Browser runtimes are not supported.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+  defaults={["performance"]}
+/>
+
+Install the Sentry Node SDK:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.6.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.6.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.6.0
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/node@^11.6.0 @sentry/profiling-node@^11.6.0
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node@^11.6.0 @sentry/profiling-node@^11.6.0
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node@^11.6.0 @sentry/profiling-node@^11.6.0
+```
+
+</OnboardingOption>
+
+## Configure
+
+Create an instrument file that calls `Sentry.init()`. The Pi Durable integration is enabled by default, so you don't add it to `integrations`:
+
+```javascript {filename:instrument.mjs}
+import * as Sentry from "@sentry/node";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ profiling
+
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/node/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set profileSessionSampleRate to 1.0 to profile every session.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  profileSessionSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+```
+
+Preload the instrument file with the `--import` flag when you start your app:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "start": "node --import ./instrument.mjs server.mjs"
+  }
+}
+```
+
+The SDK instruments `Harness.open()` while Node.js loads `@earendil-works/pi-durable`, so Sentry has to start before your app imports it. If you import the instrument file from your app instead of preloading it, the SDK can't instrument Pi Durable. If you bundle your server and can't pass `--import`, use the <PlatformLink to="/install/bundler/">bundler plugin</PlatformLink> instead.
+
+Your Pi Durable code doesn't change. Every Harness your app opens is traced, whichever storage and execution environment it uses:
+
+```javascript {filename:server.mjs}
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import { createModels } from "@earendil-works/pi-ai/models";
+import { openaiProvider } from "@earendil-works/pi-ai/providers/openai";
+import { createRegistry, Harness } from "@earendil-works/pi-durable";
+import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node";
+
+const context = BACKGROUND_CONTEXT;
+const models = createModels();
+models.setProvider(openaiProvider());
+
+const harness = await Harness.open(
+  await openNodeSqliteStorage("./agent.sqlite"),
+  { models, registry: createRegistry() },
+  context
+);
+harness.resume();
+```
+
+<Include name="pi-durable/captured-summary" />
+
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+To change recording for Pi Durable only, pass `recordInputs` and `recordOutputs` to the integration. They take precedence over `dataCollection`:
+
+```javascript {filename:instrument.mjs}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.piDurableIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+<Include name="pi-durable/link-conversations" />
+
+<Include name="pi-durable/verify" />
+
+</StepConnector>
+
+## Troubleshooting
+
+- **No AI spans at all.** Confirm the instrument file is preloaded with `--import`, or that your bundle is built with the Sentry bundler plugin. Importing it at the top of your entry file runs too late, because `@earendil-works/pi-durable` is already loaded by then.
+- **OpenAI, Anthropic, or Google Gen AI calls outside Pi Durable stopped showing up.** Once a Pi Durable run starts, the SDK turns off these provider integrations for the whole process, so Pi Durable's model requests aren't counted twice. See _What gets captured?_ below.
+
+<Include name="pi-durable/next-steps" />
+
+<Include name="pi-durable/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/node`: `>=11.6.0`
+- `@sentry/cloudflare`: `>=11.6.0`
+- `@earendil-works/pi-durable`: `>=1.0.0 <2.0.0`

@@ -54,6 +54,23 @@ Optionally, for more accurate cost calculation:
 
 If no tokens are reported, or the model name doesn't match a known model, cost will be zero.
 
+## Send Custom Costs
+
+If your provider reports costs, or you use custom pricing, send your own costs on each AI span. Set `gen_ai.cost.total_tokens` to a numeric value. Sentry preserves your cost attributes and doesn't replace them with its estimates. Without a numeric total, Sentry may calculate and overwrite cost attributes.
+
+Send costs as numbers in USD. [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) don't currently define cost attributes for spans, so these attributes are Sentry extensions:
+
+| Attribute                                 | Value                                                            |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| `gen_ai.cost.total_tokens`                | Total cost of all input and output tokens. Required.             |
+| `gen_ai.cost.input_tokens`                | Total input cost, including cache read and cache creation costs. |
+| `gen_ai.cost.cache_read.input_tokens`     | Cache read portion of input cost.                                |
+| `gen_ai.cost.cache_creation.input_tokens` | Cache creation portion of input cost.                            |
+| `gen_ai.cost.output_tokens`               | Total output cost, including reasoning cost.                     |
+| `gen_ai.cost.reasoning.output_tokens`     | Reasoning portion of output cost.                                |
+
+Provide only `gen_ai.cost.total_tokens` if you don't have a cost breakdown. Sentry preserves any breakdown fields you provide but doesn't derive missing fields from your total. Don't add cache costs to input cost or reasoning cost to output cost because those totals already include their respective breakdowns.
+
 ## Costs Not Covered
 
 Cost estimates only account for **token-based pricing**. The following are **not** included:

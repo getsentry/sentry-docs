@@ -1,0 +1,89 @@
+---
+title: Set Up Session Replay
+sidebar_title: Session Replay
+sidebar_order: 5500
+sidebar_section: features
+description: Enable Session Replay for Android and iOS apps from shared Kotlin Multiplatform code.
+---
+
+[Session Replay](/product/session-replay/) helps you understand what a user was doing before and after an error. Configure it in shared Kotlin code to record replays through the Sentry Android and Cocoa SDKs.
+
+## Prerequisites
+
+Use Sentry Kotlin Multiplatform SDK **0.12.0 or later**. Follow the <PlatformLink to="/">installation guide</PlatformLink> if you haven't set up the SDK yet.
+
+Session Replay is supported on **Android and iOS**. Android recording requires Android 8 (API level 26) or newer.
+
+<Alert title="Compose Multiplatform">
+
+Session Replay is not supported for Compose Multiplatform UI. This guide covers KMP apps using native Android and iOS UI.
+
+</Alert>
+
+## Set Up
+
+Add Replay sampling to your existing shared initializer:
+
+```kotlin {filename:commonMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+
+fun initializeSentry() {
+    Sentry.init { options ->
+        options.dsn = "___PUBLIC_DSN___"
+        options.sessionReplay.sessionSampleRate = 0.1
+        options.sessionReplay.onErrorSampleRate = 1.0
+    }
+}
+```
+
+Call the initializer early in each app's lifecycle, as described in <PlatformLink to="/initialization-strategies/#where-to-place-initialization-code">Initialization Options</PlatformLink>.
+
+## Verify
+
+Temporarily set `sessionSampleRate` to `1.0` to record every session. Launch your app, interact with a few screens, and look for the recording on Sentry's **Replays** page. Inspect text and images in the recording to verify masking. Lower the sample rate before releasing your app.
+
+To test error-only recording, set `sessionSampleRate` to `0.0` and `onErrorSampleRate` to `1.0`, then restart the app. Interact with the app before capturing a test error:
+
+```kotlin
+Sentry.captureException(Exception("Test error with Session Replay"))
+```
+
+Open the error event in Sentry and check for its linked replay.
+
+## Sampling
+
+Both sample rates accept values from `0.0` to `1.0` and default to `null` (disabled):
+
+| Option                            | Behavior                                                                                                                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sessionReplay.sessionSampleRate` | Samples sessions for recording from the start. For example, `0.1` records approximately 10% of sessions.                                                                    |
+| `sessionReplay.onErrorSampleRate` | Samples sessions that weren't selected for full recording when an error occurs. The native SDK buffers up to 30 seconds before the error and continues recording afterward. |
+
+These settings control Replay sampling independently of error-event sampling.
+
+Session duration and lifecycle behavior follow the native SDK. See the [Android](/platforms/android/session-replay/) and [iOS](/platforms/apple/guides/ios/session-replay/) guides for details.
+
+## Privacy and Quality
+
+The shared options expose these defaults:
+
+| Option                        | Default                              | Purpose                                                                                                           |
+| ----------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `sessionReplay.maskAllText`   | `true`                               | Masks text in supported UI elements.                                                                              |
+| `sessionReplay.maskAllImages` | `true`                               | Masks images in supported UI elements.                                                                            |
+| `sessionReplay.quality`       | `SentryReplayOptions.Quality.MEDIUM` | Sets recording quality to `LOW`, `MEDIUM`, or `HIGH`. Higher quality increases data transfer and processing cost. |
+
+Keep masking enabled unless you have reviewed the content your app can display. Masking behavior depends on the native SDK and UI framework. Review the [Android privacy guide](/platforms/android/session-replay/privacy/) or [iOS custom redaction guide](/platforms/apple/guides/ios/session-replay/customredact/) before customizing it.
+
+To change recording quality, import `io.sentry.kotlin.multiplatform.SentryReplayOptions` and set `options.sessionReplay.quality` inside your initializer.
+
+## Advanced Configuration
+
+For options beyond the shared sampling, masking, and quality settings, use <PlatformLink to="/initialization-strategies/#native-platform-options">native platform options</PlatformLink> and the native [Android configuration](/platforms/android/session-replay/configuration/) or [iOS configuration](/platforms/apple/guides/ios/session-replay/configuration/) guide. Available options depend on the native SDK version used by your KMP SDK.
+
+## Troubleshooting
+
+If a replay is missing, confirm that sampling is enabled, initialization runs early, and the device uses a supported platform. Use the native guides for platform-specific diagnostics and performance information:
+
+- Android: [Troubleshooting](/platforms/android/session-replay/troubleshooting/) and [Performance Overhead](/platforms/android/session-replay/performance-overhead/)
+- iOS: [Troubleshooting](/platforms/apple/guides/ios/session-replay/troubleshooting/) and [Performance Overhead](/platforms/apple/guides/ios/session-replay/performance-overhead/)

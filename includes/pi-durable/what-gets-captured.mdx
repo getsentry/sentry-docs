@@ -1,0 +1,27 @@
+<Expandable permalink={false} title="What gets captured?">
+
+Sentry's Pi Durable integration maps Pi Durable's runtime operations to Sentry operations for the Agents dashboards:
+
+| Pi Durable Operation            | Sentry Operation      |
+| ------------------------------- | --------------------- |
+| Run of a conversation           | `gen_ai.invoke_agent` |
+| Model request (`pi.generation`) | `gen_ai.chat`         |
+| Tool call (`pi.tool`)           | `gen_ai.execute_tool` |
+
+Spans are tagged with `sentry.origin: auto.ai.pi_durable` and carry the model, token usage, and finish reasons for each request. Each run starts a trace of its own, separate from the request that submitted it, so concurrent runs never end up in each other's traces.
+
+**Crash recovery.** When the process dies during a run, the spans that were open in that process are lost. Once a new process resumes the run, its spans arrive in a new trace that starts with the resumed step, such as the rerun of a tool call.
+
+**Tool results.** A tool span records the result the model receives, including output streamed with `api.output()` and results an `afterTool` hook rewrote.
+
+**Errors.** A tool that throws is captured as an error, and its span is marked failed. Pi Durable hands the throw back to the model as a tool result, so your app never sees it.
+
+The built-in coding tools (`bash`, `read`, `edit`, `write`) are the exception: they throw to report expected failures, such as a command that exits with a non-zero code, so their span is marked failed but no error is captured.
+
+Failures Pi Durable only passes to `onReport`, such as a hook or system prompt section that throws, are captured too. A failed model request isn't captured as an error; its `chat` span carries the error status.
+
+**Provider SDKs.** Pi Durable sends model requests through `@earendil-works/pi-ai`, which calls the `openai`, `@anthropic-ai/sdk`, and `@google/genai` clients, or the Workers AI binding. From the first run on, the SDK turns off its OpenAI, Anthropic, Google Gen AI, and Workers AI integrations for the whole process, so these requests aren't counted twice. Calls your app makes with those clients outside Pi Durable aren't traced either. Amazon Bedrock requests are still reported a second time by the AWS integration.
+
+**Not captured yet.** Tool calls that Pi Durable answers without running the tool, custom tasks you define with `defineTask`, agent names (Pi Durable has none), a link between a run and the request that submitted it, and a marker for compaction requests.
+
+</Expandable>

@@ -45,19 +45,18 @@ Currently available integrations are:
 
 #### Removed Processors
 
-In `sentry-raven` we have different processor classes for data scrubbing. But updated Sentry Ruby SDK doesn't support these processors. Instead, to protect users' sensitive data, the Ruby SDK adds a new configuration option of `send_default_pii`. When the value is set to `false` (default), sensitive information, such as
+In `sentry-raven` we have different processor classes for data scrubbing. The updated Sentry Ruby SDK doesn't support these processors. The SDK uses <PlatformLink to="/configuration/options/#data_collection"><PlatformIdentifier name="data-collection" /></PlatformLink> to control what sensitive data is sent. Use <PlatformIdentifier name="data-collection" /> to customize automatic data collection and the <PlatformIdentifier name="before-send" /> hook to protect sensitive data, such as
 
-- user ip
+- user IP address
 - user cookie
 - request body
 - query parameters
 
-will **not** be sent to Sentry.
-
-You can re-enable it by setting:
+You can opt into additional data categories by modifying <PlatformLink to="/configuration/options/#data_collection"><PlatformIdentifier name="data-collection" /></PlatformLink>:
 
 ```ruby
-config.send_default_pii = true
+config.data_collection.user_info = true
+config.data_collection.http_bodies = [:incoming_request, :outgoing_request]
 ```
 
 As for scrubbing sensitive data, please use Sentry's [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advanced-datascrubbing/) feature.
@@ -197,9 +196,8 @@ New:
 Sentry.init do |config|
   config.dsn = "DSN"
 
-  # Add data like request headers and IP for users, if applicable;
-  # see https://docs.sentry.io/platforms/ruby/data-management/data-collected/ for more info
-  config.send_default_pii = true
+  config.data_collection.user_info = true
+  config.data_collection.http_bodies = [:incoming_request, :outgoing_request]
 end
 ```
 

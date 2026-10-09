@@ -72,6 +72,7 @@ export type DeRefedOpenAPI = {
         description?: string;
         security?: any;
         servers?: ServerMeta[];
+        'x-sentry-experimental'?: boolean;
       };
     };
   };

@@ -209,14 +209,14 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
  * @returns The next DocNode in the tree, or undefined if there is no next node
  */
 export const getNextNode = (node: DocNode): DocNode | undefined => {
-  const children = node.children.filter(filterVisibleSiblings).sort(sortBySidebarOrder);
+  const firstChild = getFirstVisibleDescendant(node);
   // Check for children first
   if (
-    children.length > 0 &&
-    !isRootPlatformPath(children[0].path) &&
-    !isRootGuidePath(children[0].path)
+    firstChild &&
+    !isRootPlatformPath(firstChild.path) &&
+    !isRootGuidePath(firstChild.path)
   ) {
-    return children[0];
+    return firstChild;
   }
 
   // If no children, look for siblings or parent siblings
@@ -251,13 +251,12 @@ export const getPreviousNode = (node: DocNode): DocNode | undefined | 'root' => 
   }
 
   const previousSibling = getPreviousSiblingNode(node);
-  if (previousSibling) {
-    if (previousSibling.path === 'platforms') {
-      return undefined;
-    }
-    return previousSibling;
+  const previousNode = previousSibling ?? node.parent;
+  if (!previousNode || previousNode.path === 'platforms') {
+    return undefined;
   }
-  return node.parent;
+
+  return previousNode.missing ? getPreviousNode(previousNode) : previousNode;
 };
 
 const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
@@ -265,13 +264,18 @@ const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
     return undefined;
   }
 
-  const siblings = node.parent.children
-    .sort(sortBySidebarOrder)
-    .filter(filterVisibleSiblings);
-
+  const siblings = [...node.parent.children].sort(sortBySidebarOrder);
   const index = siblings.indexOf(node);
-  if (index < siblings.length - 1) {
-    return siblings[index + 1];
+  for (let i = index + 1; i < siblings.length; i++) {
+    if (filterVisibleSiblings(siblings[i])) {
+      return siblings[i];
+    }
+    if (siblings[i].missing) {
+      const descendant = getFirstVisibleDescendant(siblings[i]);
+      if (descendant) {
+        return descendant;
+      }
+    }
   }
 
   return undefined;
@@ -282,13 +286,18 @@ const getPreviousSiblingNode = (node: DocNode): DocNode | undefined => {
     return undefined;
   }
 
-  const siblings = node.parent.children
-    .sort(sortBySidebarOrder)
-    .filter(filterVisibleSiblings);
-
+  const siblings = [...node.parent.children].sort(sortBySidebarOrder);
   const index = siblings.indexOf(node);
-  if (index > 0) {
-    return siblings[index - 1];
+  for (let i = index - 1; i >= 0; i--) {
+    if (filterVisibleSiblings(siblings[i])) {
+      return siblings[i];
+    }
+    if (siblings[i].missing) {
+      const descendant = getLastVisibleDescendant(siblings[i]);
+      if (descendant) {
+        return descendant;
+      }
+    }
   }
 
   return undefined;
@@ -297,7 +306,38 @@ const getPreviousSiblingNode = (node: DocNode): DocNode | undefined => {
 const sortBySidebarOrder = (a: DocNode, b: DocNode) =>
   (a.frontmatter.sidebar_order ?? 10) - (b.frontmatter.sidebar_order ?? 10);
 
+const getFirstVisibleDescendant = (node: DocNode): DocNode | undefined => {
+  for (const child of [...node.children].sort(sortBySidebarOrder)) {
+    if (filterVisibleSiblings(child)) {
+      return child;
+    }
+    if (child.missing) {
+      const descendant = getFirstVisibleDescendant(child);
+      if (descendant) {
+        return descendant;
+      }
+    }
+  }
+  return undefined;
+};
+
+const getLastVisibleDescendant = (node: DocNode): DocNode | undefined => {
+  for (const child of [...node.children].sort(sortBySidebarOrder).reverse()) {
+    if (filterVisibleSiblings(child)) {
+      return child;
+    }
+    if (child.missing) {
+      const descendant = getLastVisibleDescendant(child);
+      if (descendant) {
+        return descendant;
+      }
+    }
+  }
+  return undefined;
+};
+
 const filterVisibleSiblings = (s: DocNode) =>
+  !s.missing &&
   (s.frontmatter.sidebar_title || s.frontmatter.title) &&
   !s.frontmatter.sidebar_hidden &&
   !s.frontmatter.draft &&

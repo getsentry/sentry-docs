@@ -1,0 +1,94 @@
+---
+title: Mistral
+description: "Learn about using Sentry for Mistral."
+sidebar_order: 29
+---
+
+This integration connects Sentry with the [Mistral Python SDK](https://github.com/mistralai/client-python).
+
+Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+Sentry AI Observability will automatically collect information about prompts, tokens, and models. Learn more about the [Agents Dashboard](/product/agents/dashboards/).
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install sentry-sdk
+```
+
+```bash {tabTitle:uv}
+uv add sentry-sdk
+```
+
+## Configure
+
+Add `MistralIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.mistral import MistralIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        MistralIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Verify that the integration works by making a chat request to Mistral.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.mistral import MistralIntegration
+
+from mistralai.client import Mistral
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    integrations=[
+        MistralIntegration(),
+    ],
+)
+
+client = Mistral(api_key="(your Mistral key)")
+
+response = client.chat.complete(
+    model="mistral-medium-latest",
+    messages=[
+        {"role": "user", "content": "What is the best French cheese?"}
+    ],
+)
+```
+
+To try the async variant, use `client.chat.complete_async(...)` with `await`.
+
+After running this script, the resulting data should show up in the `AI Spans` tab on the `Explore > Traces > Trace` page on Sentry.io.
+
+If you manually created an <PlatformLink to="/agent-tracing/manual-instrumentation/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [Agents Dashboard](/product/agents/dashboards/).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Mistral integration will connect Sentry with the supported Mistral methods automatically.
+
+- The supported functions are currently `Chat.complete` and `Chat.complete_async` (sync and async). Streaming completions (`stream=True`) are not instrumented.
+
+- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+## Supported Versions
+
+- Mistral AI (`mistralai`): 2.0.5+

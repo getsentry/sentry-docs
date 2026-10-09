@@ -1,0 +1,81 @@
+---
+title: Scopes
+description: "SDKs will typically automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
+---
+
+When an event is captured and sent to Sentry, SDKs will merge that event data with extra
+information from the current scope. SDKs will typically automatically manage the scopes
+for you in the framework integrations and you don't need to think about them. However,
+you should know what a scope is and how you can use it to your advantage.
+
+## What's a Scope?
+
+Scopes hold useful information that gets sent along with the
+event. For instance, [contexts](../context/) and
+[breadcrumbs](../breadcrumbs/) are stored on
+the scope. When a scope is forked, it inherits all data from its parent scope.
+
+The default SDK integrations will fork scopes intelligently. For
+instance, web framework integrations will fork scopes around your
+routes or request handlers.
+
+## How Scopes Work
+
+Scopes are basically a stack of data that is attached to events. When an event is captured, the SDK will merge the data from the active scopes into the event. This allows you to attach data to events that is relevant to the context in which the event was captured.
+
+A scope is generally valid inside of a callback or an execution context. This means that multiple parts of your application may have different scopes active at the same time. For instance, a web server might handle multiple requests at the same time, and each request may have different scope data to apply to its events.
+
+## The Current Scope
+
+Top-level methods like `Sentry.setTag()` set data on the current scope, which is applied to all events captured afterwards.
+
+To apply data only to some events, use `withScope` to fork the current scope. Data set inside of the callback only applies to events captured inside of it:
+
+```javascript
+Sentry.withScope((scope) => {
+  // scope is the current scope inside of this callback!
+  scope.setTag("my-tag", "my value");
+  // this tag will only be applied to events captured inside of this callback
+  // the following event will have the tag:
+  Sentry.captureException(new Error("my error"));
+});
+// this event will not have the tag:
+Sentry.captureException(new Error("my other error"));
+```
+
+You can access the current scope via `Sentry.getCurrentScope()`.
+
+## Configuring the Scope
+
+In most cases, you should use top-level methods like `Sentry.setTag()` directly, which will set the data on the current scope, ensuring it is applied to all events captured afterwards.
+
+If you want to apply data to a more narrow scope, you can use `withScope` to create a new scope that is only active for a specific part of your code. `withScope` receives the scope as a callback argument, which you can use to set data on the scope.
+
+<PlatformContent includePath="enriching-events/import" />
+
+You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
+
+```javascript
+Sentry.setTag("my-tag", "my value");
+Sentry.setUser({
+  id: 42,
+  email: "john.doe@example.com",
+});
+
+// Alternatively, you can use `withScope` as documented below.
+```
+
+To learn what useful information can be associated with scopes see
+[context](../context/), [tags](../tags), [users](../identify-user) and [breadcrumbs](../breadcrumbs/).
+
+To apply data to all events, use the top-level methods, e.g. `Sentry.setTag()`. To apply data to a more narrow scope, use `withScope` to create a new scope that is only active for a specific part of your code.
+
+## Using `withScope`
+
+In the following example we use <PlatformIdentifier name="with-scope" /> to attach a `level` and a `tag` to only one specific error:
+
+<PlatformContent includePath="enriching-events/scopes/with-scope" />
+
+The scope inside the `withScope()` callback is only valid inside of the callback. Once the callback ends, the scope will be removed and no longer applied. The inner scope is only applied to events that are captured inside of the callback. `withScope()` will clone (or fork) the current scope, so that the current scope is not modified. This allows you to
+more easily isolate pieces of context information to specific locations in your code or
+even call <PlatformIdentifier name="clear" /> to briefly remove all context information.

@@ -112,7 +112,19 @@ export function captureException(exception: unknown): void {
   }
 }
 
-export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';
+export const isLocalStorageAvailable = () => {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      return false;
+    }
+    const testKey = '__sentry_ls_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 export const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');
@@ -130,4 +142,18 @@ export function debounce<T extends unknown[]>(func: (...args: T) => void, delay:
     clearTimeout(timer);
     timer = setTimeout(() => func.apply(this, args), delay);
   };
+}
+
+/**
+ * Decode a URL fragment (with or without the leading `#`) into an element id.
+ * Falls back to the raw value when the fragment has invalid percent-encoding,
+ * since `decodeURIComponent` throws a `URIError` on sequences like `%SE`.
+ */
+export function safeDecodeHash(hash: string): string {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }

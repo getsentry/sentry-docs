@@ -3,6 +3,7 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {Fragment, useMemo} from 'react';
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
+import {canonicalPath} from 'sentry-docs/canonical';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
@@ -289,17 +290,6 @@ type MetadataProps = {
   }>;
 };
 
-// Helper function to clean up canonical tags missing leading or trailing slash
-function formatCanonicalTag(tag: string) {
-  if (tag.charAt(0) !== '/') {
-    tag = '/' + tag;
-  }
-  if (tag.charAt(tag.length - 1) !== '/') {
-    tag += '/';
-  }
-  return tag;
-}
-
 // Helper function to resolve OG image URLs
 function resolveOgImageUrl(
   imageUrl: string | undefined,
@@ -362,14 +352,21 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     );
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+      const pageTitle = pageNode.frontmatter.title;
 
-      title =
-        pageNode.frontmatter.title +
-        (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
+      // Platform/guide pages keep `| Sentry for {name}`. Other docs get `| Sentry Docs`.
+      // `/platforms` itself has no guide/platform, so leave that title unchanged.
+      if (guideOrPlatform) {
+        title = `${pageTitle} | Sentry for ${guideOrPlatform.title}`;
+      } else if (params.path[0] !== 'platforms') {
+        title = `${pageTitle} | Sentry Docs`;
+      } else {
+        title = pageTitle;
+      }
       description = pageNode.frontmatter.description ?? '';
 
       if (pageNode.frontmatter.customCanonicalTag) {
-        customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
+        customCanonicalTag = pageNode.frontmatter.customCanonicalTag;
       }
 
       noindex = pageNode.frontmatter.noindex;
@@ -399,11 +396,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
-  const canonical = customCanonicalTag
-    ? domain + customCanonicalTag
-    : params.path
-      ? `${domain}/${params.path.join('/')}/`
-      : domain;
+  const canonical = `${domain}${canonicalPath(
+    customCanonicalTag || params.path?.join('/') || ''
+  )}`;
 
   return {
     title,

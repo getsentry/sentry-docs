@@ -1,3 +1,4 @@
+import {hasServerCategory} from 'sentry-docs/categories';
 import {getCurrentPlatformOrGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
@@ -30,8 +31,7 @@ function getPlatformsWithFallback(
     else if (
       'platform' in curPlatformOrGuide &&
       curPlatformOrGuide.platform === 'javascript' &&
-      (curPlatformOrGuide.categories?.includes('server') ||
-        curPlatformOrGuide.categories?.includes('serverless'))
+      hasServerCategory(curPlatformOrGuide.categories)
     ) {
       // Include node platform for server-side JavaScript guides
       result.push('node');
@@ -129,7 +129,7 @@ export function PlatformLink({
 
         const targetNode = nodeForPath(rootNode, [...platformPath, ...pathParts]);
 
-        if (targetNode) {
+        if (targetNode && !targetNode.missing) {
           contentExistsInChain = true;
           break;
         }

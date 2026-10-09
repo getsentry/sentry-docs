@@ -19,19 +19,18 @@ The [**Trace Explorer**](https://sentry.io/orgredirect/organizations/:orgslug/tr
 - A trace represents a series of transactions or requests through a single system. This includes things like user browser sessions, HTTP requests, DB queries, middleware, caches and more.
 - It captures a series of operations (_spans_) that show how different parts of your application interacted during each transaction.
 - Each trace is identified by a **Trace ID**, which you can use to follow a request across services or projects.
-- A [distributed trace](/platforms/javascript/tracing/trace-propagation/#what-is-distributed-tracing) is made of transactions and spans that traverse multiple servers, clients, edge workers, and other parts of your system. It is assembled by passing the Trace ID through browser headers.
+- A [distributed trace](/platforms/javascript/tracing/distributed-tracing/#what-is-distributed-tracing) is made of transactions and spans that traverse multiple servers, clients, edge workers, and other parts of your system. It is assembled by passing the Trace ID through browser headers.
 
 ### Spans
 
 - A _span_ represents an individual operation within a trace. This could be a database query, HTTP request, or UI rendering task.
 - Each span has:
-  - **Attributes**: Key-value pairs like `http.method`, `db.query`, `span.description`, or custom attributes like `cart.value`, provide additional context that can be useful for debugging and investigating patterns. These are either numbers or strings. Note: numeric span attributes can be used to calculate a metric based on span data, shown below.
+  - **Attributes**: Key-value pairs such as `http.method` or custom attributes such as `payment.provider` provide context for debugging an operation and investigating patterns. Numeric attributes can also be aggregated across sampled spans.
   - **Duration (`span.duration`)**: The time the operation took, used to measure performance.
 
-### Span Metrics
+### Aggregating Span Attributes
 
-- [Span metrics](/concepts/key-terms/tracing/span-metrics/) are derived from applying a function to your span attributes (default or custom), like `p50(cart.value)` or `sum(ai.token_use)`, over a granular time frame. This calculation extrapolates metrics that then populate dashboards and alerts. based on that rolling time window.
-- These 'metrics' aren't stored separately from your span data. Rather, they're queried on the fly. This reduces your need to manage, ingest, and store custom metrics.
+You can group span durations by custom span attributes to investigate patterns, such as `p95(span.duration)` by `payment.provider`. These aggregations query sampled span data. See your SDK's <PlatformLink to="/tracing/instrumentation/">tracing instrumentation guide</PlatformLink> for examples of adding attributes to spans. For counters, gauges, and distributions independent of trace sampling, use [Application Metrics](/product/metrics/).
 
 ## Practical Examples
 
@@ -41,6 +40,13 @@ The [**Trace Explorer**](https://sentry.io/orgredirect/organizations/:orgslug/tr
 - **Database query analysis**: Aggregate by `db.query` and sort by `avg(span.duration)` to find inefficient queries.
 
 With these tools, the new Trace Explorer gives you powerful ways to understand your application's performance, identify bottlenecks, and make informed optimizations.
+
+### Agent Tracing
+
+Set up <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> to capture traces for agents in Trace Explorer. [agent traces](/product/agents/) include model calls, tool executions, and token usage, so you can use the same search and aggregation tools when debugging agents.
+
+- **Finding slow agent runs**: Search for `span.op:gen_ai.invoke_agent` and visualize `p90(span.duration)` grouped by `gen_ai.agent.name` to compare traces for agents.
+- **Debugging tool calls**: Search for `span.op:gen_ai.execute_tool` and visualize `avg(span.duration)` grouped by `gen_ai.tool.name` to find tools that stall your agent.
 
 <Alert>
   You plan type determines your query window: Developer: 7 days | Team: 14 days | Business: 30 days.
@@ -98,7 +104,7 @@ Dive deeper into your data with aggregation capabilities in Trace Explorer.
 
 <Alert level="info">
 
-Attribute Breakdowns is currently in beta. To access this feature, enable the Early Adopter flag in your [organization settings](https://sentry.io/orgredirect/settings/:orgslug/).
+Attribute Breakdowns is currently in beta. To access this feature, enable the Early Adopter flag in your [organization settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/).
 
 </Alert>
 
@@ -108,7 +114,7 @@ This helps you quickly identify whether a latency spike, error surge, or other a
 
 ### How to Use Attribute Comparison
 
-- On the Trace Explorer page, begin by dragging across a chart's timeline to narrow down to the time range that you want to compare. You will see an option to `Compare Attribute Breakdowns`. 
+- On the Trace Explorer page, begin by dragging across a chart's timeline to narrow down to the time range that you want to compare. You will see an option to `Compare Attribute Breakdowns`.
 
 - When you click on `Compare Attribute Breakdowns`, the attribute comparison charts below will load with the baseline and time range differences. Purple bars on the left are the time range values, and gray bars on the right are the baseline values. **Note:** Clicking anywhere else on the page while in *compare attributes* mode will stop the comparison and reset to baseline.
 
@@ -321,4 +327,10 @@ For example, you might sample your checkout flow at 100% to catch any issues, wh
 
 To configure `tracesSampler` for your SDK, see the tracing options in your SDK's [configuration documentation](/platform-redirect/?next=/configuration/options/).
 
-With these tools, the new Trace Explorer gives you powerful ways to understand your application’s performance, identify bottlenecks, and make informed optimizations.
+## Ingestion Delay
+
+Newly sent spans can take a short time to show up in Sentry. Sentry estimates this delay for your organization, so the most recent part of a chart may be marked as incomplete. Hover over an incomplete bucket to see roughly when its data should settle. Counts there may go up as the rest of the data arrives. This also applies to logs and metrics.
+
+![Incomplete chart data tooltip](./img/Trace_explorer_ingestion_delay.png)
+
+This estimate is not a guarantee. Some delays, such as data sent late from your application, can't be measured, so data may still arrive after buckets are marked as settled.

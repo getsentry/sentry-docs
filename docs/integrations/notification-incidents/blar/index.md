@@ -17,6 +17,6 @@ Sentry owner, manager, or admin permissions are required to install this integra
 
 </Alert>
 
-1. Navigate to **Settings > Integrations > Blar**
+1. Navigate to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) > **Blar**
 
 2. Follow the full [Blar installation instructions](https://blar.io).

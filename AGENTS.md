@@ -45,13 +45,30 @@ Run `pnpm test` for vitest. Tests live alongside source files or in `__tests__` 
 
 ## CLI Commands
 
-| Command              | Description      |
-| -------------------- | ---------------- |
-| `make develop`       | Initial setup    |
-| `make test`          | Run tests        |
-| `pnpm lint:ts`       | TypeScript check |
-| `pnpm lint:eslint`   | ESLint check     |
-| `pnpm lint:prettier` | Prettier check   |
+| Command                        | Description                       |
+| ------------------------------ | --------------------------------- |
+| `make develop`                 | Initial setup                     |
+| `make test`                    | Run tests                         |
+| `pnpm lint:ts`                 | TypeScript check                  |
+| `pnpm lint:eslint`             | ESLint check                      |
+| `pnpm lint:prettier`           | Prettier check                    |
+| `pnpm lint:trailing-slash`     | Find internal links missing a `/` |
+| `pnpm lint:trailing-slash:fix` | Add the missing trailing slashes  |
+
+## Internal links
+
+`next.config.ts` sets `trailingSlash: true`, so an internal link written without a trailing slash is served a 308 redirect before the page loads. Write internal links in their canonical form (`/product/issues/`, not `/product/issues`). A pre-commit hook fixes staged files automatically, and `pnpm lint:trailing-slash:fix` fixes the whole repo.
+
+Exceptions the tooling already handles: versioned pages (`__v10.7.0`) invert the rule and must _not_ get a trailing slash; links whose path already ends in a slash before a query string (`/platform-redirect/?next=%2Fx%2F`) are correct as-is; and attributes that carry filesystem paths or config values rather than URLs (`includePath`, `path`, `endpoint`) are left alone, as is anything inside a code block.
+
+If you hit a link that genuinely must stay bare, add a `trailing-slash-ignore` marker in a comment on the link's line or the line above it. Both the hook and CI honor it:
+
+```mdx
+{/* trailing-slash-ignore */}
+See [the thing](/foo).
+```
+
+To bypass the hook once without marking the file, use `SKIP=trailing-slashes git commit`. That only affects your local commit — CI will still flag the link, so prefer the marker for anything permanent.
 
 ## Repo UX / Generated files
 
@@ -99,7 +116,7 @@ When writing requirements in `develop-docs/`:
 
 ## Sentry Product Skills (sentry-for-ai)
 
-Skills for *using Sentry* (SDK setup, debugging, alerts) live in a separate repo: https://github.com/getsentry/sentry-for-ai. The skills in *this* repo (`.claude/skills/`, `.agents/skills/`) are for *contributing to the docs*. See `SKILL.md` at the repo root for a routing guide.
+Skills for _using Sentry_ (SDK setup, debugging, alerts) live in a separate repo: https://github.com/getsentry/sentry-for-ai. The skills in _this_ repo (`.claude/skills/`, `.agents/skills/`) are for _contributing to the docs_. See `SKILL.md` at the repo root for a routing guide.
 
 ## Plan Mode
 

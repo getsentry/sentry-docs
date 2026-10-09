@@ -28,6 +28,7 @@ import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
+import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
 import remarkDefList from './mdx-deflist';
 import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
@@ -41,9 +42,9 @@ import remarkImageProcessing from './remark-image-processing';
 import remarkImageResize from './remark-image-resize';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
-import {FrontMatter, Platform, PlatformConfig} from './types';
+import {FrontMatter, Platform, PlatformCategory, PlatformConfig} from './types';
 import {isNotNil} from './utils';
-import {isVersioned, VERSION_INDICATOR} from './versioning';
+import {isVersioned, stripVersion, VERSION_INDICATOR} from './versioning';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};
@@ -150,21 +151,34 @@ function formatSlug(slug: string) {
 const isSupported = (
   frontmatter: FrontMatter,
   platformName: string,
-  guideName?: string
+  guideName?: string,
+  categories: PlatformCategory[] = []
 ): boolean => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-  if (frontmatter.supported && frontmatter.supported.length) {
-    if (frontmatter.supported.indexOf(canonical) !== -1) {
+
+  const matchesCategory = (list?: PlatformCategory[]) =>
+    !!list?.some(category => categories.includes(category));
+
+  const hasAllowlist =
+    !!frontmatter.supported?.length || !!frontmatter.supportedCategories?.length;
+  if (hasAllowlist) {
+    // An exact guide match always wins.
+    if (frontmatter.supported?.includes(canonical)) {
       return true;
     }
-    if (frontmatter.supported.indexOf(platformName) === -1) {
+    // Otherwise a platform-level or category allowlist match keeps the page, but
+    // still lets the notSupported lists below filter it out.
+    if (
+      !frontmatter.supported?.includes(platformName) &&
+      !matchesCategory(frontmatter.supportedCategories)
+    ) {
       return false;
     }
   }
   if (
-    frontmatter.notSupported &&
-    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
-      frontmatter.notSupported.indexOf(platformName) !== -1)
+    frontmatter.notSupported?.includes(canonical) ||
+    frontmatter.notSupported?.includes(platformName) ||
+    matchesCategory(frontmatter.notSupportedCategories)
   ) {
     return false;
   }
@@ -305,8 +319,10 @@ export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
   return getDevDocsFrontMatterCache;
 }
 
-async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
-  const docsPath = path.join(root, 'docs');
+/** @internal Only exported for testing. */
+export async function getAllFilesFrontMatter(
+  docsPath = path.join(root, 'docs')
+): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   const limit = pLimit(FILE_CONCURRENCY_LIMIT);
@@ -379,7 +395,14 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     await Promise.all(
       commonFiles.map(f =>
         limit(async () => {
-          if (!isSupported(f.frontmatter, platformName)) {
+          if (
+            !isSupported(
+              f.frontmatter,
+              platformName,
+              undefined,
+              platformFrontmatter.categories
+            )
+          ) {
             return;
           }
 
@@ -421,22 +444,24 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       }
       const guideName = guide.name;
 
-      let guideFrontmatter: FrontMatter | null = null;
-      const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
-      try {
-        guideFrontmatter = yaml.load(
-          await readFile(guideConfigPath, 'utf8')
-        ) as FrontMatter;
-      } catch (err) {
-        if (err.code !== 'ENOENT') {
-          throw err;
-        }
+      const guideFrontmatter = await readGuideConfig(path.join(guidesPath, guideName));
+
+      // Standalone framework guides opt out of platform common/ inheritance.
+      if (!shouldInheritCommonContent(guideFrontmatter)) {
+        continue;
       }
 
       await Promise.all(
         commonFiles.map(f =>
           limit(async () => {
-            if (!isSupported(f.frontmatter, platformName, guideName)) {
+            if (
+              !isSupported(
+                f.frontmatter,
+                platformName,
+                guideName,
+                guideFrontmatter.categories
+              )
+            ) {
               return;
             }
 
@@ -505,6 +530,85 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
   return `${filePath}__v${version}`;
 };
 
+export async function getSourcePathsBySlug(
+  slug: string,
+  pathRoot = root
+): Promise<string[]> {
+  let mdxPath = path.join(pathRoot, `${slug}.mdx`);
+  let mdxIndexPath = path.join(pathRoot, slug, 'index.mdx');
+  let versionedMdxIndexPath = getVersionedIndexPath(pathRoot, slug, '.mdx');
+  let mdPath = path.join(pathRoot, `${slug}.md`);
+  let mdIndexPath = path.join(pathRoot, slug, 'index.md');
+
+  if (
+    slug.startsWith('docs/platforms/') &&
+    (
+      await Promise.allSettled(
+        [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].map(p =>
+          access(p)
+        )
+      )
+    ).every(r => r.status === 'rejected')
+  ) {
+    // Try the common folder, unless this guide opted out of inheritance.
+    const slugParts = slug.split('/');
+    const guideSkipsCommon =
+      slugParts.length >= 5 &&
+      slugParts[1] === 'platforms' &&
+      slugParts[3] === 'guides' &&
+      !shouldInheritCommonContent(
+        await readGuideConfig(
+          path.join(pathRoot, ...slugParts.slice(0, 4), stripVersion(slugParts[4]))
+        )
+      );
+
+    if (!guideSkipsCommon) {
+      const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
+      let commonFilePath: string | undefined;
+      if (
+        slugParts.length >= 5 &&
+        slugParts[1] === 'platforms' &&
+        slugParts[3] === 'guides'
+      ) {
+        commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
+      } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
+        commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
+        versionedMdxIndexPath = getVersionedIndexPath(pathRoot, commonFilePath, '.mdx');
+      }
+      if (commonFilePath) {
+        try {
+          await access(path.join(pathRoot, commonPath));
+          mdxPath = path.join(pathRoot, `${commonFilePath}.mdx`);
+          mdxIndexPath = path.join(pathRoot, commonFilePath, 'index.mdx');
+          mdPath = path.join(pathRoot, `${commonFilePath}.md`);
+          mdIndexPath = path.join(pathRoot, commonFilePath, 'index.md');
+          versionedMdxIndexPath = getVersionedIndexPath(pathRoot, commonFilePath, '.mdx');
+        } catch (err) {
+          // If the common folder does not exist, we can ignore it.
+          if (err.code !== 'ENOENT') {
+            throw err;
+          }
+        }
+      }
+    }
+  }
+
+  // check if a versioned index file exists
+  if (isVersioned(slug)) {
+    try {
+      await access(mdxIndexPath);
+      mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
+    } catch (err) {
+      // pass, the file does not exist
+      if (err.code !== 'ENOENT') {
+        throw err;
+      }
+    }
+  }
+
+  return [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath, mdIndexPath];
+}
+
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // Block MDX compilation at Vercel runtime.
   // MDX should only be compiled during CI builds - all pages are statically generated.
@@ -531,7 +635,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   }
 
   // no versioning on a config file
-  const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
+  const configPath = path.join(root, stripVersion(slug), 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
   try {
@@ -543,69 +647,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     }
   }
 
-  let mdxPath = path.join(root, `${slug}.mdx`);
-  let mdxIndexPath = path.join(root, slug, 'index.mdx');
-  let versionedMdxIndexPath = getVersionedIndexPath(root, slug, '.mdx');
-  let mdPath = path.join(root, `${slug}.md`);
-  let mdIndexPath = path.join(root, slug, 'index.md');
-
-  if (
-    slug.startsWith('docs/platforms/') &&
-    (
-      await Promise.allSettled(
-        [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].map(p =>
-          access(p)
-        )
-      )
-    ).every(r => r.status === 'rejected')
-  ) {
-    // Try the common folder.
-    const slugParts = slug.split('/');
-    const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
-    let commonFilePath: string | undefined;
-    if (
-      slugParts.length >= 5 &&
-      slugParts[1] === 'platforms' &&
-      slugParts[3] === 'guides'
-    ) {
-      commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
-    } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
-      commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
-      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-    }
-    if (commonFilePath) {
-      try {
-        await access(commonPath);
-        mdxPath = path.join(root, `${commonFilePath}.mdx`);
-        mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
-        mdPath = path.join(root, `${commonFilePath}.md`);
-        mdIndexPath = path.join(root, commonFilePath, 'index.md');
-        versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-      } catch (err) {
-        // If the common folder does not exist, we can ignore it.
-        if (err.code !== 'ENOENT') {
-          throw err;
-        }
-      }
-    }
-  }
-
-  // check if a versioned index file exists
-  if (isVersioned(slug)) {
-    try {
-      await access(mdxIndexPath);
-      mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
-    } catch (err) {
-      // pass, the file does not exist
-      if (err.code !== 'ENOENT') {
-        throw err;
-      }
-    }
-  }
-
   let source: string | undefined = undefined;
   let sourcePath: string | undefined = undefined;
-  const sourcePaths = [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath, mdIndexPath];
+  const sourcePaths = await getSourcePathsBySlug(slug);
   const errors: Error[] = [];
   for (const p of sourcePaths) {
     try {
