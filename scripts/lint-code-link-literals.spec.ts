@@ -110,6 +110,29 @@ describe('findIssuesInSource', () => {
     ).toEqual(['/one/two']);
   });
 
+  // `//` inside a string is not a comment delimiter. `config/images.ts` and
+  // `imageLightbox/index.tsx` both test for protocol-relative URLs this way,
+  // and truncating there would hide any path written later on the line.
+  it('does not mistake a `//` inside a string for a line comment', () => {
+    expect(
+      lint('const u = src.startsWith("//") ? x : "/one/two";').map(i => i.linkPath)
+    ).toEqual(['/one/two']);
+    expect(lint(`const a = '//cdn', b = '/three/four';`).map(i => i.linkPath)).toEqual([
+      '/three/four',
+    ]);
+  });
+
+  it('does not mistake a `/*` inside a string for a block comment', () => {
+    const src = ['const glob = "/*";', 'const a = "/one/two";'].join('\n');
+    expect(lint(src).map(i => i.linkPath)).toEqual(['/one/two']);
+  });
+
+  it('handles an escaped quote inside a string literal', () => {
+    expect(lint(`const a = 'it\\'s', b = '/one/two';`).map(i => i.linkPath)).toEqual([
+      '/one/two',
+    ]);
+  });
+
   it('honors an inline ignore marker', () => {
     expect(lint("const x = '/product/logs'; // trailing-slash-ignore")).toHaveLength(0);
   });

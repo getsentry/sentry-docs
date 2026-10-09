@@ -44,6 +44,11 @@ const IGNORE_MARKER = /trailing-slash-ignore/;
  * its own normalization with "`/product/logs` and `/product/logs/` both become
  * `/product/logs/`", and reporting that would invite someone to "fix" the prose.
  *
+ * Scans character by character rather than searching for `//`, because a
+ * delimiter inside a string literal is not a comment: `src.startsWith('//')`
+ * in `config/images.ts` would otherwise truncate the line and hide any path
+ * written after it. Quote state resets each line; a string does not span one.
+ *
  * Block state is carried across lines because a JSX comment is routinely
  * written over several (`{`+`/*` … `*` + `/}`), and the inner lines look like
  * ordinary code.
@@ -52,35 +57,50 @@ const IGNORE_MARKER = /trailing-slash-ignore/;
  */
 export function stripComments(line: string, state: {inBlock: boolean}): string {
   let out = '';
+  let quote: string | null = null;
   let i = 0;
   while (i < line.length) {
+    const char = line[i];
     if (state.inBlock) {
-      const end = line.indexOf('*/', i);
-      if (end === -1) {
-        return out;
+      if (char === '*' && line[i + 1] === '/') {
+        state.inBlock = false;
+        i += 2;
+      } else {
+        i++;
       }
-      state.inBlock = false;
-      i = end + 2;
       continue;
     }
-    const block = line.indexOf('/*', i);
-    // A `//` preceded by `:` is a URL scheme, not a comment.
-    let lineComment = line.indexOf('//', i);
-    while (lineComment > 0 && line[lineComment - 1] === ':') {
-      lineComment = line.indexOf('//', lineComment + 2);
+    if (quote) {
+      // Kept verbatim: the path literals being linted live inside strings.
+      out += char;
+      if (char === '\\') {
+        out += line[i + 1] ?? '';
+        i += 2;
+        continue;
+      }
+      if (char === quote) {
+        quote = null;
+      }
+      i++;
+      continue;
     }
-    if (block !== -1 && (lineComment === -1 || block < lineComment)) {
-      out += line.slice(i, block);
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      out += char;
+      i++;
+      continue;
+    }
+    if (char === '/' && line[i + 1] === '*') {
       state.inBlock = true;
-      i = block + 2;
+      i += 2;
       continue;
     }
-    if (lineComment !== -1) {
-      out += line.slice(i, lineComment);
+    // A `//` preceded by `:` is a URL scheme, not a comment.
+    if (char === '/' && line[i + 1] === '/' && line[i - 1] !== ':') {
       return out;
     }
-    out += line.slice(i);
-    break;
+    out += char;
+    i++;
   }
   return out;
 }
