@@ -14,17 +14,7 @@ Before you begin, <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
 
 ## Instrument the MCP Server
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 Starting with Sentry JavaScript SDK version `11.1.0`, the SDK instruments every `McpServer` instance automatically when tracing is enabled. It records MCP requests, tool calls, prompt retrievals, resource reads, and handler errors. Automatic instrumentation supports `@modelcontextprotocol/server` `>=2.0.0 <3` and `@modelcontextprotocol/sdk` `>=1.9.0 <2`.
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-Wrap each `McpServer` instance with `wrapMcpServerWithSentry` to automatically record MCP requests, tool calls, prompt retrievals, resource reads, and handler errors.
-
-</PlatformSection>
 
 <PlatformContent includePath="mcp-monitoring/setup" />
 
@@ -60,13 +50,13 @@ The `recordInputs` and `recordOutputs` options require Sentry JavaScript SDK ver
 
 ## Preserve MCP Spans After the Response
 
-Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. The SDK streams spans by default, sending each sampled span as it finishes, so this work is captured without extra configuration. You still need to wrap the MCP server as shown above.
+Cloudflare MCP work can finish after the Worker returns an HTTP response, including work kept alive with `waitUntil()`. The SDK streams spans by default, sending each sampled span as it finishes, so this work is captured without extra configuration. You still need to instrument the MCP server as shown above.
 
 If you set `traceLifecycle: "static"`, the SDK snapshots the request transaction when the response is returned and MCP spans that finish later are dropped. Remove the option to get them back.
 
 Streaming sends span records instead of assembling one transaction event with embedded spans. `beforeSendTransaction` and `ignoreTransactions` don't apply to streamed spans. Use  <PlatformLink to="/configuration/options/#beforeSendSpan">beforeSendSpan</PlatformLink> and  <PlatformLink to="/configuration/options/#ignoreSpans">ignoreSpans</PlatformLink> instead.
 
-If you use `McpAgent`, wrap the `McpServer` returned by its `server` getter, and make sure that the Agent class is instrumented to preserve request and RPC context. The <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink> does this automatically. On a plain Wrangler build, wrap the class with `instrumentAgentWithSentry`. Agent instrumentation, MCP server wrapping, and span streaming solve different parts of the setup; none replaces the others. See <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>.
+If you use `McpAgent`, make sure the `McpServer` returned by its `server` getter is instrumented, and that the Agent class is instrumented to preserve request and RPC context. The <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink> does both automatically. On a plain Wrangler build, wrap the server with `wrapMcpServerWithSentry` and the class with `instrumentAgentWithSentry`. Agent instrumentation, MCP server instrumentation, and span streaming solve different parts of the setup; none replaces the others. See <PlatformLink to="/agent-tracing/agents-sdk/">Agents SDK</PlatformLink>.
 
 </PlatformSection>
 
@@ -87,7 +77,7 @@ app.use(
 );
 ```
 
-Cloudflare Workers don't support automatic MCP server instrumentation, so you still need `wrapMcpServerWithSentry` to instrument MCP operations. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
+On Cloudflare Workers, MCP servers are instrumented automatically only when you build with the Sentry Cloudflare Vite plugin. Otherwise, you still need `wrapMcpServerWithSentry` to instrument MCP operations. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
 
 </PlatformSection>
 

@@ -1,4 +1,15 @@
-Import Sentry from `@sentry/cloudflare`, then wrap the MCP server instance before connecting it to a transport:
+If you build your Worker with the <PlatformLink to="/install/vite-plugin/">Sentry Vite plugin</PlatformLink>, create your MCP server as usual. No Sentry-specific code is needed:
+
+```javascript {filename:mcp-server.js}
+import { McpServer } from "@modelcontextprotocol/server";
+
+const server = new McpServer({
+  name: "my-mcp-server",
+  version: "1.0.0",
+});
+```
+
+On a plain Wrangler build, or on SDK versions earlier than `11.1.0`, import Sentry from `@sentry/cloudflare` and wrap the MCP server instance before connecting it to a transport:
 
 ```javascript {filename:mcp-server.js}
 import * as Sentry from "@sentry/cloudflare";
@@ -12,4 +23,4 @@ const server = Sentry.wrapMcpServerWithSentry(
 );
 ```
 
-Register tools, prompts, and resources on `server` as usual. The wrapper returns the same server instance.
+The wrapper returns the same server instance. Wrapping a server the SDK already instrumented doesn't instrument it twice.
