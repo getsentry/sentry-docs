@@ -96,7 +96,42 @@ final sentryDatabase = SentryDatabase(database);
 
 ### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry_sqflite/sentry_sqflite.dart';
+import 'package:sqflite/sqflite.dart';
+
+Future<void> sqfliteTest() async {
+  await Sentry.startSpan('sqfliteTest', (span) async {
+    // You can also use the other configuration methods
+    final db = await openDatabaseWithSentry(inMemoryDatabasePath);
+
+    await db.execute('''CREATE TABLE Product (id INTEGER PRIMARY KEY,title TEXT)''');
+    final dbTitles = <String>[];
+    for (int i = 1; i <= 20; i++) {
+      final title = 'Product $i';
+      dbTitles.add(title);
+      await db.insert('Product', <String, Object?>{'title': title});
+    }
+
+    await db.query('Product');
+
+    await db.transaction((txn) async {
+      await txn
+      .insert('Product', <String, Object?>{'title': 'Product Another one'});
+      await txn.delete('Product',
+      where: 'title = ?', whereArgs: ['Product Another one']);
+    });
+
+    await db.delete('Product', where: 'title = ?', whereArgs: ['Product 1']);
+
+    await db.close();
+  }, parentSpan: null);
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry_sqflite/sentry_sqflite.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -135,40 +170,13 @@ Future<void> sqfliteTest() async {
 }
 ```
 
-```dart {tabTitle:Stream Mode}
-import 'package:sentry_sqflite/sentry_sqflite.dart';
-import 'package:sqflite/sqflite.dart';
-
-Future<void> sqfliteTest() async {
-  await Sentry.startSpan('sqfliteTest', (span) async {
-    // You can also use the other configuration methods
-    final db = await openDatabaseWithSentry(inMemoryDatabasePath);
-
-    await db.execute('''CREATE TABLE Product (id INTEGER PRIMARY KEY,title TEXT)''');
-    final dbTitles = <String>[];
-    for (int i = 1; i <= 20; i++) {
-      final title = 'Product $i';
-      dbTitles.add(title);
-      await db.insert('Product', <String, Object?>{'title': title});
-    }
-
-    await db.query('Product');
-
-    await db.transaction((txn) async {
-      await txn
-      .insert('Product', <String, Object?>{'title': 'Product Another one'});
-      await txn.delete('Product',
-      where: 'title = ?', whereArgs: ['Product Another one']);
-    });
-
-    await db.delete('Product', where: 'title = ?', whereArgs: ['Product 1']);
-
-    await db.close();
-  }, parentSpan: null);
-}
-```
-
 ### 2. View the Transaction on Sentry
 
 To view the recorded transaction, log into [sentry.io](https://sentry.io) and open your project (via main navigation menu Dashboards).
 Clicking **View Transactions** (in _Quick Links_ section) will open a page with transactions, where you can select the just recorded transaction with the name `sqfliteTest`.
+
+## Span Attributes
+
+Database spans identify the database system with `db.system.name` (`sqlite`) and the database name with `db.namespace`, when available. Use these keys in queries and span-filtering callbacks.
+
+Database breadcrumbs also use `db.system.name` and `db.namespace`.
