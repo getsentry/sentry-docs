@@ -192,7 +192,7 @@ _Requires SvelteKit `2.31.0` or higher and `@sentry/sveltekit` `10.8.0` or highe
 <SplitSection>
 <SplitSectionText>
 
-Configure server-side instrumentation and tracing. Where this config lives depends on your SvelteKit version — SvelteKit 2 uses `svelte.config.js`, while SvelteKit 3 moved it into the `sveltekit()` Vite plugin instead (see [Configure Vite](#configure-vite) below).
+Configure server-side instrumentation and tracing. Where this config lives depends on your SvelteKit version — SvelteKit 2 uses `svelte.config.js`, while SvelteKit 3 moved it into the `sveltekit()` Vite plugin options in `vite.config.(js|ts)` instead (see [Configure Vite](#configure-vite) below). SvelteKit 3 no longer needs an instrumentation flag, so the only option to set there is `tracing`.
 
 </SplitSectionText>
 
@@ -218,10 +218,21 @@ export default config;
 ```
 
 ```js {tabTitle:SvelteKit 3} {filename:vite.config.(js|ts)}
-sveltekit({
-  // ___PRODUCT_OPTION_START___ performance
-  tracing: { server: true },
-  // ___PRODUCT_OPTION_END___ performance
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      // ___PRODUCT_OPTION_START___ performance
+      tracing: {
+        server: true,
+      },
+      // ___PRODUCT_OPTION_END___ performance
+      // ... rest of your SvelteKit config
+    }),
+  ],
+  // ... rest of your Vite config
 });
 ```
 
