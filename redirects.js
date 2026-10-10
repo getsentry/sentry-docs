@@ -1243,6 +1243,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/figue-studio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/leroy/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1459,6 +1463,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/fencer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/figue-studio/',
     destination: '/integrations/third-party-integrations/',
   },
   {
