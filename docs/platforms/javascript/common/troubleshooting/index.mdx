@@ -101,6 +101,21 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
 </Expandable>
 
+<Expandable permalink title="Events blocked by Chrome's local network access prompt">
+
+Since Chrome 142, a page needs the user's permission before it can send requests to a more private address space than the one it was loaded from. Address spaces go from public, to private network (for example `10.x.x.x` or `192.168.x.x`), to loopback (`localhost`).
+
+| App runs on           | Sends events to       | Result            |
+| --------------------- | --------------------- | ----------------- |
+| localhost             | localhost             | Allowed           |
+| localhost or intranet | public Sentry         | Allowed           |
+| public                | intranet or localhost | Permission prompt |
+| intranet              | localhost             | Permission prompt |
+
+This affects a publicly hosted app reporting to a self-hosted Sentry that is only reachable on an internal address, and Spotlight enabled on a non-localhost page. To avoid the prompt, expose Sentry on a public hostname, or use the [`tunnel` option](#using-the-tunnel-option) to send events through your app's own origin.
+
+</Expandable>
+
 </PlatformCategorySection>
 
 <PlatformSection supported={["javascript.sveltekit"]}>
