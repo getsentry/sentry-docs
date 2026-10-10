@@ -467,6 +467,31 @@ A number between `0` and `1`, controlling the percentage chance a given profile 
 
 <PlatformSection notSupported={["php.symfony"]}>
 
+<SdkOption name="profiler_factory" type='function (\Sentry\Options $options): \Sentry\Profiling\ProfilerInterface' defaultValue="null" availableSince="4.35.0">
+
+Supplies a custom profiler for each transaction selected for profiling. For example, when concurrent requests share a PHP process, your profiler can keep only the samples that belong to its request.
+
+The callback receives the client's `\Sentry\Options` and must return a new `\Sentry\Profiling\ProfilerInterface` instance each time it's called.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sample_rate' => 1.0,
+    'profiles_sample_rate' => 0.1,
+    'profiler_factory' => static function (\Sentry\Options $options): \Sentry\Profiling\ProfilerInterface {
+        return new \App\Monitoring\RequestProfiler($options);
+    },
+]);
+```
+
+The SDK calls `start()` when profiling begins and `stop()` when the transaction finishes. Return a `\Sentry\Profiling\Profile` from `getProfile()`, or `null` if no profile is available.
+
+Set the profile's Unix start timestamp with `setStartTimeStamp()` and its collected samples with `setExcimerLog()`. Sample timestamps are offsets in seconds from that start time.
+
+When this option is `null`, the SDK uses its default Excimer profiler. Continuous profiling uses a separate profiler.
+
+</SdkOption>
+
 <SdkOption name="profile_session_sample_rate" type="float" defaultValue="null">
 
 A number between `0` and `1`, controlling the percentage chance a profiling session is sampled for continuous profiling. It has no effect if `profiles_sample_rate` is set. Available in `sentry/sentry` `4.36.0` and later.
