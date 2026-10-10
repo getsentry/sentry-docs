@@ -342,7 +342,7 @@ const program = Effect.gen(function* () {
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
-To verify that Sentry catches your logs, add some log statements to your application:
+The `SentryEffectLogger` configured above forwards Effect logs to Sentry. Run the following program with your `SentryLive` layer to verify it. For existing console calls, also configure [`Sentry.consoleLoggingIntegration()`](/platforms/javascript/logs/#console-integration) in `Sentry.effectLayer`.
 
 </SplitSectionText>
 
@@ -379,7 +379,37 @@ const program = Effect.gen(function* () {
 
 <OnboardingOption optionId="metrics">
 
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
+### Application Metrics <FeatureBadge type="new" size="small" />
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+The `SentryEffectMetricsLayer` configured above forwards Effect metrics to Sentry every 10 seconds. Run this program with your `SentryLive` layer to verify it. Keep the layer running long enough for the reporter to collect the metrics.
+
+For browser apps, add `Sentry.SentryEffectMetricsLayer` to the client `SentryLive` layer as well. You can also send metrics directly with <PlatformLink to="/metrics/">`Sentry.metrics`</PlatformLink> without the Effect metrics layer.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript
+import { Effect, Metric } from "effect";
+
+const checkoutFailed = Metric.counter("checkout.failed");
+const queueDepth = Metric.gauge("queue.depth");
+
+const program = Effect.gen(function* () {
+  yield* Metric.update(checkoutFailed, 1);
+  yield* Metric.update(queueDepth, 42);
+  yield* Effect.sleep("11 seconds");
+});
+
+Effect.runPromise(program.pipe(Effect.provide(SentryLive), Effect.scoped));
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 </OnboardingOption>
 
