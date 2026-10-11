@@ -143,10 +143,11 @@ Links that are stored in child spans are serialized in `spans[i].links`.
 Links don't require a special meaning or type but if necessary (e.g. for identifying special links in the product), set the `sentry.link.type` attribute on the link to define the link type.
 Any string can be used, but these types have predefined meanings:
 
-| `sentry.link.type` | Usage                                                          | UI Implications                                                                                   |
-|--------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| "previous_trace"   | Linking e.g. a navigation span to the previous page load span. | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
-| "next_trace"       | Linking e.g. a page load span to the next navigation span.     | Used to query linked traces. Shows a button to go to linked next trace in the trace explorer.     |
+| `sentry.link.type` | Usage                                                                                                        | UI Implications                                                                                   |
+|--------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| "previous_trace"   | Linking e.g. a navigation span to the previous page load span.                                               | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
+| "next_trace"       | Linking e.g. a page load span to the next navigation span.                                                   | Used to query linked traces. Shows a button to go to linked next trace in the trace explorer.     |
+| "cache_origin"     | Linking a span that reads a cached value to the trace that produced that value (e.g. server-side rendering). | Used to navigate from a cache-hit span to the origin trace.                                       |
 
 ### `previous_trace`
 
@@ -175,6 +176,39 @@ We will not link to the previous positively sampled trace if a negatively sample
 Furthermore, we will not show how many traces were negatively sampled in between two trace chains; only that there was at least one trace in between (see Trace 5-8).
 
 ![](./span-links-previous-trace-negative-sample.png)
+
+### `cache_origin`
+
+When a server responds with a cached value, the work that produced that value ran in an earlier trace, under a different request and a different sampling decision.
+The serving trace cannot contain those spans as creates wrong parent/child trace relationships.
+So without a link, the trace shows a cache read with no way to find the code that produced the value.
+
+A `cache_origin` link connects the span that reads the cached value to the trace that produced it. "Origin" here means the producing trace (not "origin server" in CDN terms).
+
+Add the link to the span that reads the cache (for example, a `cache.get` span):
+
+```ts
+span.addLink({
+  context: originSpanContext, // stored at cache-fill time
+  attributes: {
+    'sentry.link.type': 'cache_origin'
+  }
+})
+```
+
+One trace can read multiple cache entries. Each cache-read span carries its own link.
+In case the entire response is the cached unit (for example, a cached HTML page) the link belongs on the root span instead.
+
+To attach the link on a cache hit, the SDK must record trace context at cache-fill time:
+
+- On cache write, store the current span context (`trace_id`, `span_id`, sampling decision) keyed by the cache key. The storage mechanism is up to the SDK (e.g. an in-memory map, or metadata stored with the cache entry).
+- On cache read, look up the stored context and add the link.
+- Cache metadata (`cache.hit`, `cache.key`, item size) belongs in span attributes, not link attributes.
+- If no context is found, emit the cache-read span **without** a link.
+
+The origin trace may be negatively sampled. The link is still added, with `sampled: false` from the stored span context (same behavior as `previous_trace`).
+
+A background revalidation (for example, stale-while-revalidate) starts its own trace rather than continuing the serving trace, and becomes the origin for future cache hits.
 
 ## Usage Example
 
