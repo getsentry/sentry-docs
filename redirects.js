@@ -1179,6 +1179,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/aether/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1235,6 +1239,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1264,6 +1272,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/clip-by-arito/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1398,6 +1410,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/aether/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1454,6 +1470,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1483,6 +1503,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/clip-by-arito/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1929,6 +1953,29 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/:guide/sourcemaps/hosting-publicly/',
     destination:
       '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly',
+  },
+  // The Ionic Capacitor source maps page only exists for the Capacitor guide.
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
   },
   {
     source:
@@ -3394,6 +3441,16 @@ const userDocsRedirects = [
     source:
       '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
     destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/troubleshooting/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
   },
   {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
