@@ -71,11 +71,14 @@ fn main() {
 
 ## Add Context to Crash Reports
 
-The crash reporter can't read your app's scope, so data you set with functions like `sentry::configure_scope` isn't included in crash events. To add the user, tags, extra data, or breadcrumbs to crash events, send them to the crash reporter through the integration:
+The crash reporter can't read your app's scope, so data you set with functions like `sentry::configure_scope` isn't included in crash events. To add the user, tags, extra data, or breadcrumbs to crash events, send them to the crash reporter through the integration.
+
+Call `sentry::with_integration` after you initialize the SDK with the `MinidumpIntegration`, as shown in [Setup](#setup). If you call it before `sentry::init`, or without the integration, it does nothing:
 
 ```rust
 use sentry::integrations::minidump::MinidumpIntegration;
 
+// Call this after `sentry::init`, with the `MinidumpIntegration` added.
 sentry::with_integration(|minidump: &MinidumpIntegration, _| {
     minidump.set_user(Some(sentry::User {
         id: Some("42".into()),
