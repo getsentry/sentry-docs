@@ -20,6 +20,7 @@ function getPlatformsWithFallback(
 type Props = {
   children?: React.ReactNode;
   noGuides?: boolean;
+  noWrapper?: boolean;
   notSupported?: string[];
   platform?: string;
   supported?: string[];
@@ -71,6 +72,8 @@ export function isPlatformSupported(
  * @param supported - Array of platform/guide keys that should show this content
  * @param notSupported - Array of platform/guide keys that should not show this content
  * @param noGuides - If true, content will not be shown for platform guides
+ * @param noWrapper - If true, render children without the wrapping `div`, e.g. for a
+ *   conditional `<li>` inside a `<ul>`
  * @param children - Content to be conditionally rendered
  * @param platform - (Optional) Override the current platform
  *
@@ -82,6 +85,7 @@ export function PlatformSection({
   supported = [],
   notSupported = [],
   noGuides,
+  noWrapper,
   children,
 }: Props) {
   const {rootNode, path} = serverContext();
@@ -97,6 +101,10 @@ export function PlatformSection({
 
   if (!isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)) {
     return null;
+  }
+
+  if (noWrapper) {
+    return children;
   }
 
   return <div className={styles['no-space-around-ul']}>{children}</div>;
