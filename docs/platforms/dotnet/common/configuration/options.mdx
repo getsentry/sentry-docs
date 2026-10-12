@@ -282,6 +282,29 @@ By the time <PlatformIdentifier name="SetBeforeSendTransaction" /> is executed, 
 
 </SdkOption>
 
+<PlatformSection supported={["dotnet.apple", "dotnet.maui"]}>
+
+<SdkOption name="OnCrashedLastRun" type="function">
+
+Only available on iOS and Mac Catalyst.
+
+This function is called when the previous run of the app ended in a crash, so you can react on the next launch, for example by asking the user for feedback. It's called at most once, shortly after the SDK is initialized, with the crash event that's being sent to Sentry. Changes to that event aren't sent.
+
+The function isn't called if the crash event is dropped, for example by <PlatformIdentifier name="SampleRate" />, <PlatformIdentifier name="SetBeforeSend" />, or `Native.SuppressSignalAborts`. Most crashes aren't recorded while a debugger is attached, so test it without one. The function may run on a background thread.
+
+```csharp
+#if IOS || MACCATALYST
+options.OnCrashedLastRun = crashEvent =>
+{
+    Console.WriteLine($"The app crashed during its last run. Event ID: {crashEvent.EventId}");
+};
+#endif
+```
+
+</SdkOption>
+
+</PlatformSection>
+
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
