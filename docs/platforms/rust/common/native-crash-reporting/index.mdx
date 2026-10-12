@@ -1,0 +1,93 @@
+---
+title: Native Crash Reporting
+description: "Learn how to capture native crashes, such as segmentation faults, from your Rust application as minidumps."
+sidebar_order: 20
+sidebar_section: features
+---
+
+The SDK reports panics automatically, but some crashes aren't panics. For example, a segmentation fault in `unsafe` code or in a C library called through FFI kills your process without running Rust's panic handling. The minidump integration captures these native crashes as [minidumps](/platforms/native/guides/minidumps/#what-is-a-minidump) and sends them to Sentry.
+
+## Requirements
+
+- Sentry Rust SDK version `0.49.3` or later.
+- Linux, macOS, or Windows. On other targets, the `minidump` feature has no effect.
+
+## Setup
+
+Enable the `minidump` feature in your `Cargo.toml`:
+
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["minidump"] }
+```
+
+Then, add the `MinidumpIntegration` when you initialize the SDK at the start of `main`:
+
+```rust {filename:main.rs}
+use sentry::integrations::minidump::MinidumpIntegration;
+
+fn main() {
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .add_integration(MinidumpIntegration::new()),
+    );
+
+    // Your app code goes here.
+}
+```
+
+## How It Works
+
+When you call `sentry::init`, the integration starts a separate crash reporter process by running your app's binary a second time. If your app crashes, the crash reporter writes a minidump and sends it to Sentry as a fatal event, with the minidump attached. The crash reporter uses the same client options as your app, so options such as `release` and `environment` also apply to crash events.
+
+Because the crash reporter runs your binary:
+
+- Any code before `sentry::init` runs in both processes.
+- In the crash reporter process, `sentry::init` never returns, so code after it only runs in your app.
+- Only one crash reporter runs per process. Calling `sentry::init` again doesn't start another one.
+
+If you need to run code before `sentry::init`, use `is_crash_reporter_process` to skip work that should only happen in your app:
+
+```rust {filename:main.rs}
+use sentry::integrations::minidump::MinidumpIntegration;
+
+fn main() {
+    let minidump = MinidumpIntegration::new();
+
+    if !minidump.is_crash_reporter_process() {
+        // App-only setup, for example, writing a PID file.
+    }
+
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .add_integration(minidump),
+    );
+}
+```
+
+## Add Context to Crash Reports
+
+The crash reporter can't read your app's scope, so data you set with functions like `sentry::configure_scope` isn't included in crash events. To add the user, tags, extra data, or breadcrumbs to crash events, send them to the crash reporter through the integration:
+
+```rust
+use sentry::integrations::minidump::MinidumpIntegration;
+
+sentry::with_integration(|minidump: &MinidumpIntegration, _| {
+    minidump.set_user(Some(sentry::User {
+        id: Some("42".into()),
+        ..Default::default()
+    }));
+    minidump.set_tag("tier".into(), Some("premium".into()));
+});
+```
+
+## Symbolication
+
+To show function names and source locations in crash stack traces, Sentry needs your app's debug information files. Follow the steps in <PlatformLink to="/source-context/">Source Context</PlatformLink> to create and upload them. To learn more, see [Debug Information Files](/platforms/native/data-management/debug-files/).
+
+## Next Steps
+
+- To configure the minidump directory, upload timeout, crash reporter process name, and more, see the [`sentry-minidump` API docs](https://docs.rs/sentry-minidump/latest/sentry_minidump/).
+- By default, Sentry deletes minidumps after processing them. To keep them, [store minidumps as attachments](/platforms/native/guides/minidumps/#store-minidumps-as-attachments).
