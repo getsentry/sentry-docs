@@ -511,19 +511,24 @@ If you're using <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="ja
 
 <SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
 
-A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `tracesSampler` must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given trace will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all traces created in the app. Either this or `tracesSampler` must be defined to enable tracing.
 
 </SdkOption>
 
 <SdkOption name="tracesSampler" type='(samplingContext: SamplingContext) => number | boolean'>
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing.
+A function that determines the percentage chance a given trace will be sent to Sentry. It receives information about the span and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent), or a boolean (`false` equals `0`, `true` equals `1`). Can also be used for filtering traces, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing. If both are defined, `tracesSampler` takes precedence.
 
 The `samplingContext` object passed to the function has the following properties:
 
-- `parentSampled`: The sampling decision of the parent transaction. This is `true` if the parent transaction was sampled, and `false` if it was not.
+- `parentSampled`: The sampling decision of the parent span, if available. This is `true` if the parent span was sampled, and `false` if it was not.
+- `parentSampleRate`: The sample rate from the incoming trace, if available.
+- `inheritOrSampleWith`: A function that inherits the incoming trace's sampling decision or uses the supplied fallback sample rate.
 - `name`: The name of the span as it was started.
 - `attributes`: The initial attributes of the span.
+  <PlatformCategorySection supported={["browser"]}>
+    - `location`: The current page or worker URL, if available. Provided by the BrowserTracing integration.
+  </PlatformCategorySection>
   <PlatformCategorySection supported={["server", "serverless"]}>
     - `normalizedRequest`: Request information of the currently active HTTP
     server request, if applicable.
