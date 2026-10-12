@@ -23,7 +23,7 @@ Enable the `minidump` feature in your `Cargo.toml`:
 sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["minidump"] }
 ```
 
-Then, add the `MinidumpIntegration` when you initialize the SDK at the start of `main`:
+Then, add the [`MinidumpIntegration`](https://docs.rs/sentry-minidump/latest/sentry_minidump/struct.MinidumpIntegration.html) when you initialize the SDK at the start of `main`:
 
 ```rust {filename:main.rs}
 use sentry::integrations::minidump::MinidumpIntegration;
@@ -71,21 +71,22 @@ fn main() {
 
 ## Add Context to Crash Reports
 
-The crash reporter can't read your app's scope, so data you set with functions like `sentry::configure_scope` isn't included in crash events. To add the user, tags, extra data, or breadcrumbs to crash events, send them to the crash reporter through the integration.
+The crash reporter can't read your app's scope, so data you set with functions like `sentry::configure_scope` isn't included in crash events. To add the user, tags, extra data, or breadcrumbs to crash events, send them to the crash reporter through the integration after you initialize the SDK:
 
-Call `sentry::with_integration` after you initialize the SDK with the `MinidumpIntegration`, as shown in [Setup](#setup). If you call it before `sentry::init`, or without the integration, it does nothing:
-
-```rust
+```rust {filename:main.rs}
 use sentry::integrations::minidump::MinidumpIntegration;
 
-// Call this after `sentry::init`, with the `MinidumpIntegration` added.
-sentry::with_integration(|minidump: &MinidumpIntegration, _| {
-    minidump.set_user(Some(sentry::User {
-        id: Some("42".into()),
-        ..Default::default()
-    }));
-    minidump.set_tag("tier".into(), Some("premium".into()));
-});
+fn main() {
+    let _guard = sentry::init(/* ... as above ... */);
+
+    sentry::with_integration(|minidump: &MinidumpIntegration, _| {
+        minidump.set_user(Some(sentry::User {
+            id: Some("42".into()),
+            ..Default::default()
+        }));
+        minidump.set_tag("my_tag".into(), Some("my_value".into()));
+    });
+}
 ```
 
 ## Symbolication
