@@ -12,7 +12,7 @@ spec_depends_on:
 spec_changelog:
   - version: 1.8.0
     date: 2026-10-02
-    summary: Added draft flamegraph attachment contract
+    summary: Added draft flame graph attachment contract
   - version: 1.7.0
     date: 2026-09-08
     summary: Disallowed sending attachments in separate envelopes
@@ -60,7 +60,7 @@ spec_changelog:
 
 ## Overview
 
-Attachments are files stored alongside an event or trace. They are sent as envelope items with type `"attachment"` and carry raw file payloads such as crash dumps, screenshots, view hierarchies, flamegraphs, or arbitrary user-provided files.
+Attachments are files stored alongside an event or trace. They are sent as envelope items with type `"attachment"` and carry raw file payloads such as crash dumps, screenshots, view hierarchies, flame graphs, or arbitrary user-provided files.
 
 Related specs:
 
@@ -78,7 +78,7 @@ Attachments are distinguished by the `attachment_type` header on the envelope it
 - **Standard attachments** (`event.attachment`) — arbitrary files with no special processing.
 - **Crash-related attachments** — minidumps (`event.minidump`), Apple crash reports (`event.applecrashreport`), and Unreal Engine metadata (`unreal.context`, `unreal.logs`). These trigger error event creation and/or symbolication.
 - **View hierarchies** (`event.view_hierarchy`) — JSON snapshots of the application's UI tree.
-- **Flamegraphs** (`event.flamegraph`) — aggregated call trees using profiling frames.
+- **Flame Graphs** (`event.flamegraph`) — aggregated call trees using profiling frames.
 - **Screenshots** — image captures taken during a crash or error, identified by filename containing `"screenshot"`.
 
 ### Association Model
@@ -166,13 +166,13 @@ When using `Crashpad` as the crash-capturing backend in the Native SDK, the file
 
 <SpecSection id="flamegraph" status="draft" since="1.8.0">
 
-### Flamegraph
+### Flame Graph
 
 SDKs **MAY** attach a `flamegraph.json` file containing aggregated call trees, such as those captured for application hangs. The attachment **MUST** use `attachment_type: "event.flamegraph"` and `content_type: "application/json"`.
 
 The format reuses profiling frame objects and debug metadata to support symbolication. Tree nodes describe aggregated call paths and sample counts.
 
-#### Flamegraph Attachment Transport
+#### Flame Graph Attachment Transport
 
 The attachment **MUST** use these envelope item headers:
 
@@ -188,7 +188,7 @@ The attachment **MUST** be sent in the same envelope as its associated event. Th
 
 Event context such as release, environment, SDK identity, device, OS, and hang duration belongs on the associated event. Symbolication inputs belong in the attachment so they remain available when the diagnostic describes a different process run from the uploading SDK.
 
-#### Flamegraph Payload
+#### Flame Graph Payload
 
 The top-level object describes one collection of call trees and their shared frame table.
 
@@ -198,11 +198,11 @@ The top-level object describes one collection of call trees and their shared fra
 | `platform`   | String                 | **REQUIRED**                                     | Existing Sentry platform identifier. Used as the default platform for frames. Native Apple frames use `"cocoa"`.                    |
 | `frames`     | Array of frame objects | **REQUIRED**                                     | Non-empty frame table using the same frame objects as a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data).                  |
 | `trees`      | Array of tree objects  | **REQUIRED**                                     | Non-empty collection of independent call trees.                                                                                     |
-| `debug_meta` | Debug Meta object      | **REQUIRED** for native frames with known images | Existing debug metadata for the process that produced the diagnostic. See [Native Symbolication](#flamegraph-native-symbolication). |
+| `debug_meta` | Debug Meta object      | **REQUIRED** for native frames with known images | Existing debug metadata for the process that produced the diagnostic. See [Native Symbolication](#flame-graph-native-symbolication). |
 
 Consumers **MUST** process the payload according to its `version`. Within version `"1"`, consumers **SHOULD** ignore unknown fields and **SHOULD** retain them when rewriting the attachment.
 
-##### Flamegraph Frames
+##### Flame Graph Frames
 
 Frame entries **MUST** use the same schema as the `profile.frames` entries in a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data). Each entry **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. Native frames **MUST** retain `instruction_addr`, even when already symbolicated.
 
@@ -210,7 +210,7 @@ Producers **SHOULD** deduplicate frames using their complete frame data, includi
 
 Nodes carry sample counts. Debug images carry binary UUIDs. Symbolicated frames use the existing `function`, `filename` or `abs_path`, and `lineno` fields.
 
-##### Flamegraph Trees
+##### Flame Graph Trees
 
 A tree object groups root nodes that share the same sample population. Each object preserves a separate source call stack or thread.
 
@@ -222,7 +222,7 @@ A tree object groups root nodes that share the same sample population. Each obje
 
 Each tree is an independent sample population. Producers **MUST** include `thread_id` only when the source provides a thread identifier.
 
-##### Flamegraph Nodes
+##### Flame Graph Nodes
 
 Each node describes one frame occurrence in a call path.
 
@@ -240,7 +240,7 @@ Counts **MUST** be exact integers no greater than `9007199254740991`, the larges
 
 A tree can have multiple roots representing different oldest captured callers. Its total sample count is the sum of its root counts.
 
-#### Flamegraph Native Symbolication
+#### Flame Graph Native Symbolication
 
 Native frames require an `instruction_addr` and a matching debug image for symbolication. The attachment's `debug_meta` **MUST** use the same format as a [V2 profile chunk](/sdk/telemetry/profiles/#v2-sample-format-payload), as defined by the [Debug Meta Interface](/sdk/foundations/envelopes/event-payloads/debugmeta/). Image metadata **MUST** describe the process that produced the diagnostic.
 
@@ -250,13 +250,13 @@ Symbolication **MUST** preserve captured addresses, addressing modes, and debug 
 
 Consumers **MUST** track symbolication state and skip symbolication for already-processed payloads. If symbolication is rerun, it **MUST** start from the original, unexpanded frames and trees.
 
-##### Flamegraph Inline Frames
+##### Flame Graph Inline Frames
 
 Compiler-inlined functions share a physical stack frame with their caller. [Native symbolication](/ingestion/symbolicator/#native-symbolication) can recover these functions as separate logical frames.
 
 A processor that expands inline frames **MUST** replace each affected node occurrence with a caller-to-callee chain, assign the original `sample_count` to every node in that chain, and attach the original children to its innermost node. The expansion **MUST** preserve the tree's total sample count. Frame-table changes **MUST** update all affected indices.
 
-#### Flamegraph Example
+#### Flame Graph Example
 
 This example contains 10 samples. Six continue from `main` into `process` and four end at `main`. Both frames retain their captured addresses alongside symbolicated function names. The leaf omits `children`, which defaults to `[]`.
 
@@ -310,13 +310,13 @@ This example contains 10 samples. Six continue from `main` into `process` and fo
 }
 ```
 
-#### Flamegraph Validation and Limits
+#### Flame Graph Validation and Limits
 
-A flamegraph attachment **MUST NOT** exceed 10 MiB of serialized UTF-8 JSON.
+A flame graph attachment **MUST NOT** exceed 10 MiB of serialized UTF-8 JSON.
 
 Symbolication **MUST** process at most 2,500 entries from the attachment's `frames` array, in frame-index order. This limit applies to input frames, before inline expansion. Each frame-table entry counts once, regardless of how many tree nodes reference it.
 
-Frames beyond this limit **MUST** retain their original data. Processing **MUST** preserve call-path relationships and sample counts. Inline expansion **MAY** add nodes and remap frame indices as described in [Inline Frames](#flamegraph-inline-frames).
+Frames beyond this limit **MUST** retain their original data. Processing **MUST** preserve call-path relationships and sample counts. Inline expansion **MAY** add nodes and remap frame indices as described in [Inline Frames](#flame-graph-inline-frames).
 
 </SpecSection>
 
