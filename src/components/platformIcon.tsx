@@ -323,6 +323,7 @@ import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 import EveSVG from 'sentry-docs/icons/eve.svg';
 import ExpoSVG from 'sentry-docs/icons/expo.svg';
 import FlueSVG from 'sentry-docs/icons/flue.svg';
+import PiDurableSVG from 'sentry-docs/icons/pi-durable.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -766,6 +767,10 @@ const formatToSVG = {
     sm: PerlSVG,
     lg: PerlSVGLarge,
   },
+  'pi-durable': {
+    sm: PiDurableSVG,
+    lg: PiDurableSVG,
+  },
   php: {
     sm: PhpSVG,
     lg: PhpSVGLarge,
@@ -1079,6 +1084,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nuxt': 'nuxt',
   'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
+  'javascript-pi-durable': 'pi-durable',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',
   'javascript-remix': 'remix',
@@ -1105,6 +1111,7 @@ export const PLATFORM_TO_ICON = {
   'nintendo-switch': 'nintendo-switch',
   openai: 'openai',
   perl: 'perl',
+  'pi-durable': 'pi-durable',
   php: 'php',
   'php-laravel': 'laravel',
   'php-monolog': 'php',

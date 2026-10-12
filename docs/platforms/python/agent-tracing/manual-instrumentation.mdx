@@ -261,6 +261,94 @@ Marking failed tools with an error status populates the Tool Errors widget.
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
 
+## Evaluation Span
+
+This span represents an evaluation of generated content against a set of questions, such as grading a model's reply for accuracy or tone. Models like <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Jev</PlatformLink> produce these spans.
+
+Sentry identifies an evaluation by `gen_ai.operation.name: "evaluate"`. Evaluations share the `ai_client` operation type with ordinary LLM calls, so the operation name is what sets them apart.
+
+```python
+import json
+import sentry_sdk
+
+questions = {
+    "resolves_issue": {
+        "type": "boolean",
+        "instructions": "Does the reply resolve the customer's issue?",
+    },
+    "accuracy": {
+        "type": "score",
+        "instructions": "Does the reply correctly answer the user's question?",
+        # For a score question, criteria is an ordered list; the index is the score.
+        "criteria": ["incorrect", "partially correct", "correct"],
+    },
+    "tone": {
+        "type": "choice",
+        "instructions": "Classify the tone of the reply.",
+        # For a choice question, criteria maps each label to its description.
+        "criteria": {
+            "friendly": "Warm and helpful",
+            "neutral": "Plain and factual",
+            "rude": "Dismissive or hostile",
+        },
+    },
+}
+
+evaluation_input = [
+    {
+        "type": "evaluation",
+        "state": "Your refund has been processed and will arrive in 3-5 days.",
+        "questions": questions,
+    }
+]
+
+with sentry_sdk.start_span(
+    op="gen_ai.evaluate",
+    name="evaluate typesafe/jev-1.13",
+    attributes={
+        "gen_ai.operation.name": "evaluate",
+        "gen_ai.request.model": "typesafe/jev-1.13",
+        "gen_ai.provider.name": "typesafe",
+        "gen_ai.agent.name": "Support Agent",  # when this evaluation runs under an agent
+        "gen_ai.input.messages": json.dumps(evaluation_input),
+    },
+) as span:
+    result = your_evaluator.evaluate(state=evaluation_input[0]["state"], questions=questions)
+
+    span.set_data("gen_ai.response.model", result.model)  # e.g. "typesafe/jev-1.13-20260917"
+    span.set_data("gen_ai.output.messages", json.dumps([
+        {
+            "type": "evaluation",
+            "answers": {
+                "resolves_issue": {"type": "boolean", "probability": 0.98},
+                "accuracy": {"type": "score", "score": 2, "confidence": 0.91},
+                "tone": {
+                    "type": "choice",
+                    "choice": "friendly",
+                    "probabilities": {"friendly": 0.87, "neutral": 0.1, "rude": 0.03},
+                    "confidence": 0.87,
+                },
+            },
+        }
+    ]))
+    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
+```
+
+The input is a single `{"type": "evaluation", "state": ..., "questions": ...}` object. `state` is the text being evaluated, and each entry in `questions` describes one question. The output is a single `{"type": "evaluation", "answers": ...}` object keyed by those same question names. Answers come in a few types (`boolean`, `noul`, `score`, and `choice`), each with its own fields. See the attributes below for the full shape.
+
+Pass the raw provider model string in `gen_ai.request.model` (and `gen_ai.response.model`) so Sentry can resolve the model icon and any [model costs](/product/agents/costs/).
+
+<Alert>
+
+If you call Jev through the <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Python SDK</PlatformLink>, these spans are created automatically, so you don't need to instrument them by hand.
+
+</Alert>
+
+<Expandable title="Evaluation span attributes">
+  <Include name="tracing/ai-agents-module/evaluation-span" />
+</Expandable>
+
 ## Streaming Responses
 
 When the model streams tokens, keep the span open until the stream finishes (including when you yield chunks to the client). Set response attributes when you have the final usage and text:

@@ -69,7 +69,89 @@ This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
+<Alert>
+
+For more fine-grained control, use the [`data_collection`](#data_collection) option. `send_default_pii` remains fully supported until the next major version.
+
+If you set both, `send_default_pii` is ignored.
+
+</Alert>
+
 </SdkOption>
+
+<PlatformSection notSupported={["php.laravel", "php.symfony"]}>
+
+<SdkOption name="data_collection" type='array|\Sentry\DataCollection\DataCollectionOptions|null' defaultValue='null' availableSince="4.33.0">
+
+Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'user_info' => false,
+        'http_bodies' => ['incomingRequest'],
+    ],
+]);
+```
+
+Passing a `data_collection` array opts you into its defaults, which are more permissive than `send_default_pii` set to `false`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (the user's IP address, cookies, and request and response bodies) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored. The `context_lines` option is ignored as well, in favor of `frame_context_lines`.
+
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink>.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["php.symfony"]}>
+
+<SdkOption name="data_collection" type='array|null' defaultValue='null' availableSince="5.14.0">
+
+Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            user_info: false
+            http_bodies: ['incomingRequest']
+```
+
+Setting `data_collection` opts you into its defaults, which are more permissive than `send_default_pii` set to `false`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (the logged-in user, cookies, request and response bodies, and database query parameters) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar). Set it to `{}` to apply the defaults of every key.
+
+If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored. The `context_lines` option is ignored as well, in favor of `frame_context_lines`.
+
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink>.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["php.laravel"]}>
+
+<SdkOption name="data_collection" type='array|null' defaultValue='null' availableSince="4.29.0">
+
+Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+
+```php {filename:config/sentry.php}
+'data_collection' => [
+    'user_info' => false,
+    'http_bodies' => ['incomingRequest'],
+],
+```
+
+Passing a `data_collection` array opts you into its defaults, which are more permissive than `send_default_pii` set to `false`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (the logged-in user, cookies, request and response bodies, SQL query bindings, and AI prompts and responses) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar). Pass an empty array to apply the defaults of every key.
+
+If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored. The `context_lines`, `breadcrumbs.sql_bindings`, and `tracing.sql_bindings` options are ignored as well, in favor of `frame_context_lines` and `database_query_data`.
+
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink>.
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="server_name" type='string' defaultValue='gethostname()'>
 
@@ -173,6 +255,8 @@ By default, the error types reported are determined by the value returned by the
 <SdkOption name="context_lines" type='int' defaultValue='5'>
 
 The number of context lines for each frame in the stack trace when loading a file.
+
+This option is ignored when [`data_collection`](#data_collection) is set. Use its <PlatformLink to="/data-management/data-collection/#source-context">`frame_context_lines`</PlatformLink> key instead.
 
 </SdkOption>
 

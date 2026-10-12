@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 3.0.0
+spec_version: 3.1.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 3.1.0
+    date: 2026-10-08
+    summary: Listed client report discard reasons for metrics and clarified that the quantity is the number of discarded metrics
   - version: 3.0.0
     date: 2026-09-28
     summary: Removed the global metrics enablement option; retained explicit opt-in for integrations
@@ -267,6 +270,15 @@ These rules exist because auto-emitted metrics can cause a high volume of teleme
 ### Client Reports
 
 SDKs **MUST** report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g., by counting as if serialized).
+
+SDKs **MUST** record a [client report](/sdk/telemetry/client-reports/) in at least the following cases:
+
+- `before_send`: `beforeSendMetric`/`before_send_metric` returned `null`.
+- `buffer_overflow`: the metric was dropped because the [buffer](#buffering) reached its size limit.
+- `ratelimit_backoff`: the metric was dropped because the `trace_metric` data category is [rate limited](#data-category-and-rate-limiting).
+- `send_error`, `internal_sdk_error`, `network_error`: the envelope containing the metric was discarded because sending it failed, as specified in [Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording).
+
+The `trace_metric` quantity **MUST** be the number of discarded metrics, not the number of discarded envelopes or envelope items. For example, if a `trace_metric` envelope with 100 metrics fails to send, the SDK records a `trace_metric` quantity of 100 (see [Quantity of Discarded Envelopes](/sdk/telemetry/client-reports/#quantity-of-discarded-envelopes)).
 
 </SpecSection>
 
