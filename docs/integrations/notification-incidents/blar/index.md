@@ -7,6 +7,7 @@ description: "Learn about Sentry's Blar integration"
 
 
 Blar captures new errors and alerts from Sentry, triggering an agent that traverses and explores the user's code to generate a detailed report on what went wrong. This helps developers save time by allowing them to go straight into solving the issue.
+
 <Alert title="Created by Blar AI, inc">
 
 Built and supported by Blar AI, inc, not Sentry. For help installing or using this integration, contact Blar AI, inc directly.
