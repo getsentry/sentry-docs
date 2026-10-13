@@ -1,0 +1,28 @@
+---
+id: telemetry-callbacks
+title: "Telemetry Callbacks Receive a Hint"
+phase: code-changes
+category: type
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 60
+---
+
+Add a second `Hint` parameter to `beforeSendLog`, `beforeSendMetric`, and `beforeSendSpan`, even if you don't use it:
+
+```dart
+options.beforeSendLog = (log, hint) {
+  return log;
+};
+
+options.beforeSendMetric = (metric, hint) {
+  return metric;
+};
+
+options.beforeSendSpan = (span, hint) {
+  span.removeAttribute('private.attribute');
+};
+```
+
+`beforeSendSpan` modifies the span in place. It cannot drop spans by returning `null`; use `options.ignoreSpans` to filter spans in stream mode.
