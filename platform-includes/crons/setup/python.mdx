@@ -6,14 +6,18 @@ If you're using **Celery Beat** to run your periodic tasks, have a look at our [
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
 
-Use the `monitor` decorator to wrap your tasks:
+Use the `monitor` decorator to wrap your tasks. Pass a `monitor_config` so Sentry creates or updates the monitor from your code (requires SDK version `1.45.0` or higher):
 
 ```python
 import sentry_sdk
 from sentry_sdk.crons import monitor
 
+monitor_config = {
+    "schedule": {"type": "crontab", "value": "0 * * * *"},
+}
+
 # Add the @monitor decorator to your task
-@monitor(monitor_slug='<monitor-slug>')
+@monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config)
 def tell_the_world():
     print('My scheduled task...')
 ```
@@ -25,9 +29,11 @@ import sentry_sdk
 from sentry_sdk.crons import monitor
 
 def tell_the_world():
-    with monitor(monitor_slug='<monitor-slug>'):
+    with monitor(monitor_slug='<monitor-slug>', monitor_config=monitor_config):
         print('My scheduled task...')
 ```
+
+If the monitor already exists in Sentry, the configuration is optional. See [Configuring Cron Monitors](#configuring-cron-monitors) for all configuration options.
 
 <Alert>
 
