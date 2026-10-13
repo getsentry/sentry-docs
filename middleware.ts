@@ -986,6 +986,38 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/rust/guides/actix-web/',
   },
   {
+    from: '/platforms/rust/user-feedback/',
+    to: '/platforms/rust/',
+  },
+  {
+    from: '/platforms/rust/user-feedback/configuration/',
+    to: '/platforms/rust/',
+  },
+  {
+    from: '/platforms/rust/guides/actix-web/user-feedback/',
+    to: '/platforms/rust/guides/actix-web/',
+  },
+  {
+    from: '/platforms/rust/guides/actix-web/user-feedback/configuration/',
+    to: '/platforms/rust/guides/actix-web/',
+  },
+  {
+    from: '/platforms/rust/guides/axum/user-feedback/',
+    to: '/platforms/rust/guides/axum/',
+  },
+  {
+    from: '/platforms/rust/guides/axum/user-feedback/configuration/',
+    to: '/platforms/rust/guides/axum/',
+  },
+  {
+    from: '/platforms/rust/guides/tracing/user-feedback/',
+    to: '/platforms/rust/guides/tracing/',
+  },
+  {
+    from: '/platforms/rust/guides/tracing/user-feedback/configuration/',
+    to: '/platforms/rust/guides/tracing/',
+  },
+  {
     from: '/clients/java/modules/log4j2/',
     to: '/platforms/java/legacy/log4j2/',
   },
