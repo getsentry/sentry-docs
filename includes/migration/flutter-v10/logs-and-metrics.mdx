@@ -1,0 +1,26 @@
+---
+id: logs-and-metrics
+title: "Logs and Metrics Are Always Enabled"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 50
+---
+
+Remove assignments to `options.enableLogs` and `options.enableMetrics`. These options no longer exist. Calls to `Sentry.logger` and `Sentry.metrics` send telemetry without an enable flag. To filter logs or metrics, return `null` from `beforeSendLog` or `beforeSendMetric`.
+
+If you use `sentry_logging`, adding `LoggingIntegration` now also forwards records as Sentry logs, with a default minimum level of `Level.INFO`. If you previously disabled logs and want to keep only breadcrumbs and error events, set `minSentryLogLevel` to `Level.OFF`:
+
+```dart
+import 'package:logging/logging.dart';
+import 'package:sentry_logging/sentry_logging.dart';
+
+// Inside your SentryFlutter.init options callback:
+options.addIntegration(LoggingIntegration(minSentryLogLevel: Level.OFF));
+```
+
+The `Sentry.logger` and `Sentry.logger.fmt` methods now return `void`. Remove `await` from log calls. Update custom implementations of `SentryLogger` and `SentryLoggerFormatter` to match these return types. Custom `Hub.captureLog` overrides now return `Future<void>` instead of `FutureOr<void>`.
+
+Replace `SentryLogAttribute` with `SentryAttribute`, using the same typed factories such as `SentryAttribute.string(...)`. If you construct `SentryLog` directly, its `traceId` is now a required, non-nullable `SentryId`. Prefer `Sentry.logger` for application logging so the SDK supplies trace context.
