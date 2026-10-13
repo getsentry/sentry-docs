@@ -57,7 +57,11 @@ export function usePlatforms(): PlatformsState {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    // Another instance may have loaded the list since this one mounted, e.g. when
+    // retrying after this instance's load failed
     if (loadedPlatforms) {
+      setPlatforms(loadedPlatforms);
+      setStatus('loaded');
       return undefined;
     }
     let cancelled = false;
