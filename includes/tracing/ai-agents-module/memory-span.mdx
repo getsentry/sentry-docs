@@ -1,0 +1,18 @@
+Describes a read from, write to, or management operation against an agent's persistent memory store.
+
+- The span `op` (transaction mode) or the span's `sentry.op` attribute (stream mode) MUST be `"gen_ai.memory.client"`. Sentry uses this op, not the span `name`, to classify the span as a memory operation.
+- The `gen_ai.operation.name` attribute MUST be one of `"create_memory_store"`, `"delete_memory_store"`, `"create_memory"`, `"update_memory"`, `"upsert_memory"`, `"search_memory"`, or `"delete_memory"`. It names the specific action.
+- The span `name` SHOULD be the `gen_ai.operation.name` value. (e.g. `"search_memory"`)
+- The `gen_ai.agent.name` attribute SHOULD be set to the agent's name when the operation runs under an agent. (e.g. `"Support Agent"`)
+
+Additional attributes on the span:
+
+| Data Attribute               | Type   | Requirement Level | Description                                                                                                                                            | Example                                                                     |
+| :--------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- |
+| `gen_ai.memory.store.id`     | string | optional          | The memory store the operation targets. What this maps to is implementation-specific (a collection, namespace, or vector index).                       | `"user-preferences-store"`                                                  |
+| `gen_ai.memory.record.id`    | string | optional          | The record the operation applies to. For `delete_memory`, its absence may indicate that every record in the store is deleted.                          | `"mem_5j66UpCpwteGg4YSxUnt7lPY"`                                            |
+| `gen_ai.memory.record.count` | int    | optional          | The number of records relevant to the operation: records returned for `search_memory`, or records the operation attempted to write or delete.          | `3`                                                                         |
+| `gen_ai.memory.query.text`   | string | optional          | The search query used to retrieve memories. Only applicable to `search_memory`. Opt-in: may contain sensitive data, so capture it only on purpose.     | `"user dietary preferences"`                                                |
+| `gen_ai.memory.records`      | string | optional          | The records stored or retrieved, as a stringified JSON array. **[0]** Opt-in: may contain sensitive data including PII, so capture it only on purpose. | `'[{"content": "User prefers dark mode", "id": "mem_123", "score": 0.95}]'` |
+
+**[0]** Each element follows the `MemoryRecord` schema: a required `content` (a string or a JSON object) plus optional `id`, `metadata`, and `score`.
