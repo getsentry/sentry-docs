@@ -88,9 +88,12 @@ export type APICategory = {
   description?: string;
 };
 
+// Slashes become separators: an endpoint slug must be one URL segment, because the
+// API route only matches /api/<category>/<endpoint>/.
 function slugify(s: string): string {
   return s
-    .replace(/[^a-zA-Z0-9/ ]/g, '')
+    .replace(/\//g, ' ')
+    .replace(/[^a-zA-Z0-9 ]/g, '')
     .trim()
     .replace(/\s/g, '-')
     .toLowerCase();
