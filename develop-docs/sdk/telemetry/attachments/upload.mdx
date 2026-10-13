@@ -85,20 +85,19 @@ This allows the client to upload attachments that are much larger than what the 
     ```
     HTTP/1.1 204 No Content
     Tus-Resumable: 1.0.0
-    Upload-Offset: 53477376
+    Upload-Offset: 1073741824
     Upload-Metadata: sentry eyJhdHRhY2htZW50X3R5cGUiOiJldmVudC5hdHRhY2htZW50In0="
     ```
 
     Plug the returned `Upload-Offset` into the next patch request to resume:
 
     ```shell
-    tail -c 53477377 myfile.log | # Skip the offset
-    head -c 1073741824 | \  # Take the first `Max-Chunk-Size` bytes
+    tail -c 1073741825 myfile.log | \ # Skip the offset
     curl -X PATCH https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/ \
       --header "Tus-Resumable: 1.0.0" \
       --header "Content-Type: application/offset+octet-stream" \
-      --header "Upload-Offset: 53477376" \
-      --header "X-Decoded-Content-Length: 2345256"
+      --header "Upload-Offset: 1073741824" \
+      --header "X-Decoded-Content-Length: 2345256" \ # remaining file size
       --data-binary @-
     ```
 
@@ -109,8 +108,8 @@ This allows the client to upload attachments that are much larger than what the 
     ```
     HTTP/1.1 204 No Content
     Tus-Resumable: 1.0.0
-    Upload-Offset: 5695864832
-    Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/?upload_length=11&upload_signature=..."
+    Upload-Offset: 1076087080
+    Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/?upload_length=1076087080&upload_signature=..."
     ```
 
     SDKs **MUST** use this location to attach a [placeholder item](/sdk/telemetry/attachments/#attachment-placeholders) to the event envelope. SDKs **MUST NOT** use the `Location` header from the initial `POST` request, or any intermediate request, because it may not contain all the fields needed to create a valid placeholder.
