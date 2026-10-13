@@ -79,7 +79,6 @@ Response details:
 
 This is an opt-out feature. The following example shows how to disable it:
 
-
 ```dart
 import 'package:sentry/sentry.dart';
 
@@ -177,7 +176,6 @@ try {
 
 By default, `failedRequestTargets` is set to `['.*']`, which matches all URLs. This means all failed requests are captured (subject to `failedRequestStatusCodes`).
 
-
 ## Tracing for HTTP Requests
 
 <Alert>
@@ -188,7 +186,25 @@ Capturing transactions requires that you first <PlatformLink to="/tracing/">set 
 
 The `SentryHttpClient` starts a span off the active span for each HTTP request. In transaction mode, that's the transaction bound to the scope; in stream mode, it's the span started with `Sentry.startSpan()`.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:sentry/sentry.dart';
+
+// Start a root span — a span is attached for each HTTP request
+await Sentry.startSpan('webrequest', (span) async {
+  var client = SentryHttpClient();
+  try {
+    var uriResponse = await client.post('https://example.com/whatsit/create',
+      body: {'name': 'doodle', 'color': 'blue'});
+    print(await client.get(uriResponse.bodyFields['uri']));
+  } finally {
+    client.close();
+  }
+}, parentSpan: null);
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:sentry/sentry.dart';
 
 final transaction = Sentry.startTransaction(
@@ -209,18 +225,10 @@ try {
 await transaction.finish(status: SpanStatus.ok());
 ```
 
-```dart {tabTitle:Stream Mode}
-import 'package:sentry/sentry.dart';
+## HTTP Error and Span Data
 
-// Start a root span — a span is attached for each HTTP request
-await Sentry.startSpan('webrequest', (span) async {
-  var client = SentryHttpClient();
-  try {
-    var uriResponse = await client.post('https://example.com/whatsit/create',
-      body: {'name': 'doodle', 'color': 'blue'});
-    print(await client.get(uriResponse.bodyFields['uri']));
-  } finally {
-    client.close();
-  }
-}, parentSpan: null);
-```
+Failed status responses use the stable exception type `SentryHttpClientError` with a message such as `HTTP Client Error with status code: 500`. The message has no `Exception:` prefix. Requests to the configured Sentry DSN host are excluded from failed-request capture.
+
+HTTP spans use `url.full` for the URL and `http.response.body.size` for the response body size. Use these keys in custom span processing and queries.
+
+On iOS and macOS, Dart-side `captureFailedRequests` does not enable capture by native network instrumentation. Set `captureNativeFailedRequests = true` separately if you need native failed-request events.
