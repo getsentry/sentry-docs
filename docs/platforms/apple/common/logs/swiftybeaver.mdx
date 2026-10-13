@@ -1,0 +1,123 @@
+---
+title: SwiftyBeaver
+description: "Integrate SwiftyBeaver with Sentry to capture and send structured logs."
+sidebar_order: 30
+---
+
+The [`SentrySwiftyBeaver`](https://github.com/getsentry/sentry-apple-swiftybeaver) package provides a [SwiftyBeaver](https://github.com/SwiftyBeaver/SwiftyBeaver) destination that forwards log entries to Sentry's structured logging system. Once configured, any logs emitted through SwiftyBeaver are automatically captured and sent to Sentry with full context, including metadata, source location, and log levels.
+
+## Requirements
+
+- Sentry Cocoa SDK `9.27.0` or above
+- SwiftyBeaver `2.0.0` or above
+
+## Install
+
+Add the package via Swift Package Manager:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-swiftybeaver", from: "9.0.0")
+]
+```
+
+Or add it in Xcode via **File > Add Package Dependencies** using the URL `https://github.com/getsentry/sentry-apple-swiftybeaver`.
+
+### Building Sentry From Source
+
+By default, the integration uses precompiled Sentry binary xcframeworks. If you need to build Sentry from source, enable the `SentryFromSource` trait:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/getsentry/sentry-apple-swiftybeaver", from: "9.0.0", traits: ["SentryFromSource"])
+]
+```
+
+## Configure
+
+Initialize the Sentry SDK with logs enabled, then add `SentryDestination` to SwiftyBeaver:
+
+```swift
+import Sentry
+import SwiftyBeaver
+import SentrySwiftyBeaver
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableLogs = true
+}
+
+let log = SwiftyBeaver.self
+let sentryDestination = SentryDestination()
+log.addDestination(sentryDestination)
+```
+
+### Log Level Threshold
+
+Use SwiftyBeaver's `minLevel` property on the destination to control which messages are sent to Sentry:
+
+```swift
+let sentryDestination = SentryDestination()
+sentryDestination.minLevel = .error
+log.addDestination(sentryDestination)
+```
+
+## Verify
+
+```swift
+log.info("User logged in")
+log.error("Payment failed")
+log.warning("API rate limit approaching")
+```
+
+## Context Handling
+
+The destination supports SwiftyBeaver's `context` parameter for additional metadata.
+
+### Dictionary Context
+
+When `context` is a `[String: Any]` dictionary, each key-value pair is added as an individual Sentry log attribute prefixed with `swiftybeaver.context.`:
+
+```swift
+log.info("User action", context: [
+    "userId": "12345",
+    "action": "purchase",
+    "amount": 99.99
+])
+// Produces attributes: swiftybeaver.context.userId, swiftybeaver.context.action, etc.
+```
+
+### Non-Dictionary Context
+
+For non-dictionary contexts, the value is converted to a single string attribute `swiftybeaver.context`:
+
+```swift
+log.info("Test message", context: "simple string context")
+```
+
+## Log Level Mapping
+
+SwiftyBeaver levels are automatically mapped to Sentry log levels:
+
+| SwiftyBeaver Level | Sentry Log Level |
+| ------------------ | ---------------- |
+| `.verbose`         | `.trace`         |
+| `.debug`           | `.debug`         |
+| `.info`            | `.info`          |
+| `.warning`         | `.warn`          |
+| `.error`           | `.error`         |
+| `.critical`        | `.fatal`         |
+| `.fault`           | `.fatal`         |
+
+## Automatic Attributes
+
+The destination automatically includes the following attributes with every log entry:
+
+| Attribute | Description |
+| --------- | ----------- |
+| `sentry.origin` | `"auto.logging.swiftybeaver"` |
+| `swiftybeaver.level` | The original SwiftyBeaver level (as raw value) |
+| `swiftybeaver.thread` | The thread identifier |
+| `code.file.path` | The source file path |
+| `code.function.name` | The function name |
+| `code.line.number` | The line number |
