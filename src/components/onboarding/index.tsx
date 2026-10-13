@@ -359,15 +359,7 @@ export function OnboardingOptionButtons({
   validateOptionIds(defaults.map(id => ({id})));
   const defaultOptionIds = new Set(defaults);
 
-  // temporary filter to remove error-monitoring from rendering even if it is requested
-  const filteredOptions = initialOptions.filter(option => {
-    if (typeof option === 'string') {
-      return option !== 'error-monitoring';
-    }
-    return true;
-  });
-
-  const normalizedOptions = filteredOptions
+  const normalizedOptions = initialOptions
     .map(option => {
       if (typeof option === 'string') {
         return {
