@@ -184,17 +184,17 @@ Configuring any field activates the Data Collection defaults for omitted fields.
 
 ### Customize or Drop the Error Event
 
-Use the request and response stored in the event hint to customize failed GraphQL events:
+To customize or drop the error event, [initialize the Sentry Android SDK manually](/platforms/android/manual-setup/#configuration-via-sentryoptions). Then use the request and response stored in the event hint in a `BeforeSendCallback`:
 
 ```kotlin
 import com.apollographql.apollo.api.http.HttpRequest
 import com.apollographql.apollo.api.http.HttpResponse
-import io.sentry.Sentry
 import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.android.core.SentryAndroid
 import io.sentry.TypeCheckHint.APOLLO_REQUEST
 import io.sentry.TypeCheckHint.APOLLO_RESPONSE
 
-Sentry.init { options ->
+SentryAndroid.init(this) { options ->
     options.beforeSend = BeforeSendCallback { event, hint ->
         val request = hint.getAs(APOLLO_REQUEST, HttpRequest::class.java)
         val response = hint.getAs(APOLLO_RESPONSE, HttpResponse::class.java)
