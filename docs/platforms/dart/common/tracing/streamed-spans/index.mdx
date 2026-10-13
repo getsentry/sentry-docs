@@ -5,8 +5,7 @@ sidebar_order: 10
 new: true
 ---
 
-By default, the Sentry SDK collects all spans in memory and sends them to Sentry as a single transaction once the root span ends. This is called transaction mode.
-Stream mode changes this by sending spans to Sentry in batches as they finish, instead of waiting for the whole transaction to complete.
+Stream mode is the default. The Sentry SDK sends spans in batches as they finish. Transaction mode (`SentryTraceLifecycle.static`) instead collects spans in memory and sends them together once the root span ends.
 
 <Expandable title="Why use stream mode?">
 
@@ -46,11 +45,11 @@ You need:
 
 ## Migrate from Transaction Mode
 
-For most apps, switching to stream mode requires no code changes beyond the initial opt-in. Automatic instrumentation switches to the streaming span APIs for you.
+Automatic instrumentation uses the streaming span APIs without additional configuration.
 
 If you use custom instrumentation or transaction-specific configuration, follow these steps:
 
-1. [Enable stream mode](#enable-stream-mode).
+1. [Configure tracing](#configuration).
 2. Replace `Sentry.startTransaction` and `ISentrySpan.startChild` with the [streaming span APIs](#start-a-span).
 3. Replace span data and tags with [attributes](#add-attributes).
 4. Replace `beforeSendTransaction` and `ignoreTransactions` with [`beforeSendSpan`](#filter-spans) and [`ignoreSpans`](#drop-spans).
@@ -63,16 +62,18 @@ See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Gu
 Copy the following prompt and paste it into your AI agent:
 
 ```txt
-Follow ___CURRENT_URL___ to enable and migrate to span streaming in the Sentry SDK.
+Follow ___CURRENT_URL___ to migrate custom instrumentation and filtering to span streaming in the Sentry SDK.
 ```
 
-## Enable Stream Mode
+## Configuration
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-Opt in by setting `traceLifecycle` to `SentryTraceLifecycle.stream` when initializing the SDK. This is the only required config change:
+<PlatformLink to="/tracing/#configure">Configure tracing</PlatformLink> with
+`tracesSampleRate` or `tracesSampler`. No additional lifecycle setting is
+required.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -83,7 +84,7 @@ Opt in by setting `traceLifecycle` to `SentryTraceLifecycle.stream` when initial
 </SplitSection>
 </SplitLayout>
 
-To revert to transaction mode, remove the option or set `traceLifecycle` to `SentryTraceLifecycle.static` (the default).
+To opt out of span streaming, set `options.traceLifecycle = SentryTraceLifecycle.static`. Transaction mode supports `beforeSendTransaction` and `ignoreTransactions`; these options have no effect in stream mode.
 
 Use only the APIs for the tracing mode you choose. Calls to APIs from the other mode are ignored:
 
@@ -420,7 +421,7 @@ To modify or redact span data before it's sent, use `beforeSendSpan`:
 <SplitSectionCode>
 
 ```dart
-options.beforeSendSpan = (span) {
+options.beforeSendSpan = (span, hint) {
   span.removeAttribute('http.request.body');
 };
 ```

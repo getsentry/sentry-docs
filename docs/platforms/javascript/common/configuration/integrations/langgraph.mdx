@@ -4,8 +4,6 @@ description: "Adds instrumentation for the LangGraph SDK. (default)"
 supportedCategories:
   - server
   - serverless
-notSupported:
-  - javascript.mastra
 ---
 
 <Alert>
@@ -35,6 +33,39 @@ By default, tracing support is added to the following LangGraph operations:
 
 - **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
 - **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
+- **Classifier Evaluations** (`gen_ai.evaluate`) - Captures spans for `TypeSafeClassifier` calls in graph nodes
+
+## Trace Classifier Evaluations
+
+<AvailableSince version="11.6.0" />
+
+When a graph node calls a `TypeSafeClassifier` from [`@langchain/typesafe`](https://www.npmjs.com/package/@langchain/typesafe), the <PlatformLink to="/configuration/integrations/langchain/#trace-classifier-evaluations">LangChain integration</PlatformLink> records the call as a `gen_ai.evaluate` span. The span is a child of the graph's `invoke_agent` span and records the graph name as the agent name. No additional setup is needed.
+
+```javascript
+import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import { TypeSafeClassifier } from "@langchain/typesafe";
+
+const classifier = new TypeSafeClassifier({
+  questions: {
+    urgent: { type: "noul", instructions: "Is this urgent?" },
+  },
+});
+
+const State = Annotation.Root({ ticket: Annotation(), urgent: Annotation() });
+
+const graph = new StateGraph(State)
+  .addNode("triage", async (state) => {
+    const result = await classifier.invoke(state.ticket);
+    return { urgent: result.nouls.urgent.noul };
+  })
+  .addEdge(START, "triage")
+  .addEdge("triage", END)
+  .compile({ name: "triage_graph" });
+
+await graph.invoke({ ticket: "My payouts have been failing for 3 days." });
+```
+
+The evaluation state, questions, and answers follow the LangChain integration's `recordInputs` and `recordOutputs` options.
 
 ## Supported Versions
 
@@ -48,7 +79,7 @@ _Type: `boolean` (optional)_
 
 Records inputs to LangGraph operations (such as messages and state data passed to the graph).
 
-Defaults to `true` if `dataCollection.genAI.inputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+Defaults to `true` if `dataCollection.genAI.inputs` is `true`, which is the default.
 
 ### `recordOutputs`
 
@@ -56,7 +87,7 @@ _Type: `boolean` (optional)_
 
 Records outputs from LangGraph operations (such as generated responses, agent outputs, and final state).
 
-Defaults to `true` if `dataCollection.genAI.outputs` is `true` (which is the default when using `dataCollection`), or if the deprecated `sendDefaultPii` is `true`.
+Defaults to `true` if `dataCollection.genAI.outputs` is `true`, which is the default.
 
 ```javascript
 Sentry.init({
@@ -64,8 +95,8 @@ Sentry.init({
   tracesSampleRate: 1.0,
   integrations: [
     Sentry.langGraphIntegration({
-      recordInputs: true,
-      recordOutputs: true,
+      recordInputs: false,
+      recordOutputs: false,
     }),
   ],
 });
@@ -116,8 +147,8 @@ const agent = new StateGraph(MessagesAnnotation)
 
 // Instrument the graph before compiling
 Sentry.instrumentStateGraph(agent, {
-  recordInputs: true,
-  recordOutputs: true,
+  recordInputs: false,
+  recordOutputs: false,
 });
 
 const graph = agent.compile({ name: "my_agent" });
