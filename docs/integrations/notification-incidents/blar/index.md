@@ -10,7 +10,7 @@ Blar captures new errors and alerts from Sentry, triggering an agent that traver
 
 <Alert title="Created by Blar AI, inc">
 
-Built and supported by Blar AI, inc, not Sentry. For help installing or using this integration, contact Blar AI, inc directly.
+Built and supported by Blar AI, inc. For help installing or using this integration, contact Blar AI, inc directly.
 
 - **Website:** [blar.io](https://blar.io)
 - **In Sentry:** [Settings > Integrations > Blar](https://sentry.io/orgredirect/organizations/:orgslug/settings/sentry-apps/blar/)
