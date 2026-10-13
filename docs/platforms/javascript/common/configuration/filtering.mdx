@@ -57,7 +57,7 @@ This integration can be very helpful in reducing noise that's not related to you
 
 <Alert>
 
-**Prerequisite**: To use the `thirdPartyErrorFilterIntegration`, ensure you are using a bundler and one of [Sentry's bundler plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins). For **Next.js with Turbopack**, use the [`_experimental.turbopackApplicationKey`](/platforms/javascript/guides/nextjs/configuration/build/#_experimentalturbopackapplicationkey) build option instead.
+**Prerequisite**: To use the `thirdPartyErrorFilterIntegration`, ensure you are using a bundler and one of [Sentry's bundler plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins). For **Next.js**, set the [`applicationKey`](/platforms/javascript/guides/nextjs/configuration/build/#applicationKey) build option, which works for both Webpack and Turbopack builds.
 
 </Alert>
 
@@ -111,53 +111,17 @@ This is the case because the Sentry Loader Script and CDN Bundles are detected a
 
 </Alert>
 
-## Filtering Transaction Events
-
-<Alert>
-  The options in this section are only available in transaction mode. If you're
-  using <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, go to
-  [Filtering Spans](#filtering-spans).
-</Alert>
-
-To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
-
-### Using <PlatformIdentifier name="ignore-transactions" />
-
-You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of strings and regular expressions to match against the transaction name. When using strings, partial matches will be filtered out. If you need to filter by exact match, use regex patterns instead.
-
-<PlatformContent includePath="configuration/ignore-transactions" />
-
-See <PlatformLink to="/configuration/options/#ignoreTransactions">ignoreTransactions</PlatformLink> for details.
-
-### Using <PlatformIdentifier name="traces-sampler" />
-
-You can also use the <PlatformLink to="/configuration/options/#tracesSampler">tracesSampler</PlatformLink> option to prevent certain transactions from being reported to Sentry.
-
-See <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">Sampling</PlatformLink> on information about how to use it.
-
-### Using `beforeSendTransaction`
-
-<PlatformContent includePath="configuration/before-send-transaction" />
-
-See <PlatformLink to="/configuration/options/#beforeSendTransaction">beforeSendTransaction</PlatformLink> for details, and [Using Hints](#using-hints) for details on the `hint` object.
-
 ## Filtering Spans
+
+Use `beforeSendSpan` to change span data and `ignoreSpans` to drop spans. To make sampling decisions when spans start, use <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">`tracesSampler`</PlatformLink>.
 
 ### Using <PlatformIdentifier name="before-send-span" />
 
-Use the <PlatformIdentifier name="before-send-span" /> configuration option, which lets you provide a function to modify a span.
-This function is called for the transaction (service span in stream mode) and all child spans.
+Use the <PlatformIdentifier name="before-send-span" /> configuration option to modify each finished span before it is sent. This function is called for all spans, including service spans and their child spans.
 
-If you want to drop the transaction/service span, including its child spans:
+Check `span.is_segment` to modify only service spans. In transaction mode, wrap the callback with `Sentry.withStaticSpan()` to modify the transaction and its child spans using the `SpanJSON` format.
 
-- Use [`beforeSendTransaction`](#using-beforesendtransaction) in transaction mode.
-- Use [`ignoreSpans`](#using-ignore-spans) in stream mode.
-
-<Alert>
-
-If you're using <PlatformLink to="/tracing/streamed-spans">stream mode</PlatformLink>, make sure to wrap <PlatformIdentifier name="before-send-span" /> with `Sentry.withStreamedSpan()`.
-
-</Alert>
+To drop a service span and its child spans, use [`ignoreSpans`](#using-ignore-spans). `beforeSendSpan` cannot return `null` to drop spans.
 
 <PlatformContent includePath="configuration/before-send-span" />
 
@@ -169,12 +133,14 @@ You can use the <PlatformIdentifier name="ignore-spans" /> option to filter out 
 
 You can also provide an object with `name`, `op`, and `attributes` properties to match on multiple conditions. At least one property must be provided.
 
+In stream mode, rules run when the span starts, so later name and attribute changes do not affect matching. In transaction mode, rules use the final name and attributes when the transaction ends. Ignoring a service span drops its child spans; ignoring a child span reparents its children to the nearest ancestor.
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   ignoreSpans: [
-    "partial/match",
-    /^Exact Span Name$/,
+    { name: "partial/match", op: "http.server" },
+    { name: /^Exact Span Name$/, op: "http.server" },
     {
       name: /^GET \//,
       attributes: {
@@ -185,7 +151,29 @@ Sentry.init({
 });
 ```
 
+Use the operation of your service span, such as `http.server`, `pageload`, or `navigation`, to avoid matching unrelated child spans with the same name.
+
 See <PlatformLink to="/configuration/options/#ignoreSpans">ignoreSpans</PlatformLink> for details.
+
+## Filtering Transaction Events
+
+These options apply when <PlatformLink to="/configuration/options/#traceLifecycle">`traceLifecycle: 'static'`</PlatformLink> is set. In the default stream mode, use [Filtering Spans](#filtering-spans).
+
+### Using <PlatformIdentifier name="ignore-transactions" />
+
+Use `ignoreTransactions` to drop transactions whose names match a string or regular expression. Strings match part of the name. Use an anchored regular expression for an exact match. Matching transactions and their child spans are dropped.
+
+<PlatformContent includePath="configuration/ignore-transactions" />
+
+See <PlatformLink to="/configuration/options/#ignoreTransactions">`ignoreTransactions`</PlatformLink> for details.
+
+### Using `beforeSendTransaction`
+
+Use `beforeSendTransaction` to modify or drop a completed transaction before it is sent. Return the transaction event to send it, or `null` to drop it and its child spans.
+
+<PlatformContent includePath="configuration/before-send-transaction" />
+
+See <PlatformLink to="/configuration/options/#beforeSendTransaction">`beforeSendTransaction`</PlatformLink> for details and [Using Hints](#using-hints) for the `hint` argument.
 
 ## Filtering Breadcrumbs
 

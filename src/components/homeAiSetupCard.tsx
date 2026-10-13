@@ -14,7 +14,7 @@ import {ExternalLink} from './externalLink';
 import styles from './home.module.scss';
 
 /** Keep in sync with /ai/agent-plugin/. */
-const INSTALL_COMMAND = 'npx @sentry/ai install';
+const INSTALL_COMMAND = 'npx @sentry/agent-plugin install';
 
 export function HomeAiSetupCard() {
   const [copied, setCopied] = useState(false);

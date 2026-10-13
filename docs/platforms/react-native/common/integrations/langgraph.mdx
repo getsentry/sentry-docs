@@ -3,9 +3,14 @@ title: LangGraph
 description: "Manually instrument LangGraph in React Native to capture spans for agent compilation and invocation."
 ---
 
-_Import name: `Sentry.instrumentLangGraph`_
+_Import names: `Sentry.instrumentStateGraph`, `Sentry.instrumentCreateReactAgent`_
 
-The `instrumentLangGraph` helper adds instrumentation for [`@langchain/langgraph`](https://www.npmjs.com/package/@langchain/langgraph) by wrapping a `StateGraph` before compilation and recording agent interactions with configurable input/output capture. The OpenTelemetry-based automatic integration available for Node.js does not work in React Native, so calling `instrumentLangGraph` on the graph **before** `.compile()` is the only supported path.
+The OpenTelemetry-based automatic integration available for Node.js does not work in React Native, so manual instrumentation is the only supported path. Two helpers are available, depending on how you build your agent:
+
+- **`instrumentStateGraph`** — for graphs you build yourself with `StateGraph`. Call it on the graph **before** calling `.compile()`.
+- **`instrumentCreateReactAgent`** — for LangGraph's prebuilt `createReactAgent`. Wrap the factory, then use the wrapped version exactly like `createReactAgent`. This also captures the model and wraps tools, so you get `execute_tool` spans as well.
+
+Both accept the same input/output recording options.
 
 ## Usage
 
@@ -35,7 +40,7 @@ const agent = new StateGraph(MessagesAnnotation)
   .addEdge("agent", END);
 
 // Instrument the graph BEFORE compiling
-Sentry.instrumentLangGraph(agent, {
+Sentry.instrumentStateGraph(agent, {
   recordInputs: true,
   recordOutputs: true,
 });
@@ -48,6 +53,18 @@ const result = await graph.invoke({
     new HumanMessage("Hello!"),
   ],
 });
+```
+
+Or, instrument LangGraph's prebuilt `createReactAgent`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+// Instrument createReactAgent, then use the wrapped version in its place
+const instrumentedCreateReactAgent = Sentry.instrumentCreateReactAgent(createReactAgent);
+
+const agent = instrumentedCreateReactAgent({ llm, tools });
 ```
 
 Make sure <PlatformLink to="/tracing/">tracing is enabled</PlatformLink> for the spans produced by this integration to be captured.

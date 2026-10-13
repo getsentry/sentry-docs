@@ -143,3 +143,17 @@ export function debounce<T extends unknown[]>(func: (...args: T) => void, delay:
     timer = setTimeout(() => func.apply(this, args), delay);
   };
 }
+
+/**
+ * Decode a URL fragment (with or without the leading `#`) into an element id.
+ * Falls back to the raw value when the fragment has invalid percent-encoding,
+ * since `decodeURIComponent` throws a `URIError` on sequences like `%SE`.
+ */
+export function safeDecodeHash(hash: string): string {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}

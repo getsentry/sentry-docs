@@ -4,6 +4,12 @@ sidebar_order: 20
 og_image: /og-images/backend-application-domains-database-migrations.png
 ---
 
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
+  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
 Django migrations are how we handle changes to the database in Sentry.
 
 Django migration official docs: [https://docs.djangoproject.com/en/5.1/topics/migrations/](https://docs.djangoproject.com/en/5.1/topics/migrations/) . These will cover most things you need to understand what a migration is doing.
@@ -74,6 +80,33 @@ Always commit the changes to `migrations_lockfile.txt` with your migration.
 ## Guidelines
 
 There are some things we need to be careful about when running migrations.
+
+### Route New Tables Before Migration
+
+Sentry uses Django database routers for reads, writes, and migrations. If a new table belongs on a logical database other than `default`, deploy its routing change to production before the migration that creates the table. Without this mapping, the migration creates the table on `default`. Later code then looks for it on the intended database.
+
+Database routing uses these layers:
+
+- In `sentry`, `@cell_silo_model` and `@control_silo_model` assign each model to a silo. [`SiloRouter`](https://github.com/getsentry/sentry/blob/master/src/sentry/db/router.py) uses that assignment to select the Cell or Control connection.
+- In `getsentry`, [`_default_db_routing_map`](https://github.com/getsentry/getsentry/blob/master/getsentry/db/router.py) maps a table name to a logical database such as `attachments`, `usage`, `files`, or `crons`.
+- Each environment maps that logical database to a physical connection. Production can use separate primaries, while development and test environments can share connections.
+- Django calls `db_for_read` or `db_for_write` for application queries. It calls `allow_migrate` to run each migration only on the selected connection.
+
+```mermaid
+flowchart LR
+  A["Django read, write, or migration"] --> B["Model table name"]
+  B --> C["Silo assignment<br/>Cell or Control"]
+  C --> D["Table routing map<br/>Logical database"]
+  D --> E["Environment map<br/>Physical connection"]
+  E --> F["Selected database"]
+```
+
+Before creating a table on a non-default logical database:
+
+1. Choose the silo and logical database based on data ownership and related tables.
+2. Add the exact `Meta.db_table` name to `_default_db_routing_map` in `getsentry/db/router.py`.
+3. Merge and deploy this routing change before merging the migration.
+4. Add the correct silo decorator to the model, then create and deploy the migration.
 
 ### Testing
 

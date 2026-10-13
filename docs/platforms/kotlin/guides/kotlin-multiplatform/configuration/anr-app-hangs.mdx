@@ -1,0 +1,50 @@
+---
+title: ANR and App Hangs
+description: Configure Android ANR and Apple App Hang detection from shared Kotlin Multiplatform code.
+sidebar_order: 45
+---
+
+Sentry reports when your app's main thread becomes unresponsive so you can investigate the code that blocked it. The KMP SDK uses the native Android and Apple SDKs to detect these events.
+
+## Supported Platforms
+
+Use KMP SDK **0.5.0 or later** to configure detection through shared options:
+
+- **Android**: Application Not Responding (ANR) events.
+- **iOS, macOS, and tvOS**: App Hang events.
+
+## Configure Detection
+
+Both detection options are enabled by default. To disable either feature, add the corresponding option to your shared initializer:
+
+```kotlin {filename:commonMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+
+fun initializeSentry() {
+    Sentry.init { options ->
+        options.dsn = "___PUBLIC_DSN___"
+        options.isAnrEnabled = false // Android
+        options.enableAppHangTracking = false // Apple
+    }
+}
+```
+
+### Android ANR Timeout
+
+The `anrTimeoutIntervalMillis` option controls the watchdog detector's timeout in milliseconds. Its default is `5000` (five seconds). Set it in your initializer to change how long the main thread can remain blocked before that detector reports an ANR.
+
+On Android 11 and newer, the native SDK uses the operating system's `ApplicationExitInfo` records. Changing `anrTimeoutIntervalMillis` does not change the operating system's ANR threshold. See the [Android ANR guide](/platforms/android/configuration/app-not-respond/) for detection behavior and reporting differences.
+
+### Apple App Hang Timeout
+
+<Alert level="warning" title="Timeout Units">
+
+In KMP SDK versions 0.5.0 through 0.27.0, `appHangTimeoutIntervalMillis` is passed to Cocoa as seconds without conversion. The shared default of `2000` therefore becomes 2000 seconds, rather than two seconds. To set a timeout in these versions, use <PlatformLink to="/initialization-strategies/#native-platform-options">native platform options</PlatformLink> and configure Cocoa's `appHangTimeoutInterval` in seconds.
+
+</Alert>
+
+See the [Apple App Hangs guide](/platforms/apple/configuration/app-hangs/) for configuration, limitations, and guidance on using MetricKit for system-provided hang diagnostics.
+
+## Readable Stack Traces
+
+Upload the relevant debug files so Sentry can display readable stack traces for ANR and App Hang events. Follow the <PlatformLink to="/debug-symbols/">Debug Symbols guide</PlatformLink> for Android mapping files and Apple debug symbols.

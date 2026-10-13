@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
+import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {PlatformIcon} from './platformIcon';
@@ -10,6 +10,8 @@ type Integration = {
   icon: string;
   /** Display name of the integration. */
   title: string;
+  /** Absolute path for links that target a different platform or guide. */
+  href?: string;
   /** Platform-relative path, e.g. "/integrations/anthropic/". */
   to: string;
   /** Optional one-line description shown under the title. */
@@ -39,15 +41,31 @@ export function IntegrationGrid({integrations}: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
 
-  const hrefFor = (to: string) =>
-    currentPlatformOrGuide
+  const hrefFor = (to: string, href?: string) =>
+    href ??
+    (currentPlatformOrGuide
       ? currentPlatformOrGuide.url + to.slice(1)
-      : `/platform-redirect/?next=${encodeURIComponent(to)}`;
+      : `/platform-redirect/?next=${encodeURIComponent(to)}`);
 
   const visibleIntegrations = currentPlatformOrGuide
-    ? integrations.filter(({supported, notSupported}) =>
-        isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)
-      )
+    ? integrations.filter(({to, href, supported, notSupported}) => {
+        if (
+          !isPlatformSupported(rootNode, currentPlatformOrGuide, supported, notSupported)
+        ) {
+          return false;
+        }
+
+        const targetUrl = new URL(hrefFor(to, href), 'https://docs.sentry.io');
+        if (targetUrl.hostname !== 'docs.sentry.io') {
+          return true;
+        }
+
+        const targetNode = nodeForPath(
+          rootNode,
+          targetUrl.pathname.split('/').filter(Boolean)
+        );
+        return Boolean(targetNode && !targetNode.missing);
+      })
     : integrations;
 
   if (visibleIntegrations.length === 0) {
@@ -56,10 +74,10 @@ export function IntegrationGrid({integrations}: Props) {
 
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 not-prose mt-4 mb-6">
-      {visibleIntegrations.map(({icon, title, to, description}) => (
+      {visibleIntegrations.map(({icon, title, href, to, description}) => (
         <Link
-          key={to}
-          href={hrefFor(to)}
+          key={href ?? to}
+          href={hrefFor(to, href)}
           className="no-underline group flex flex-row items-center gap-3 px-4 py-2 rounded-lg shadow border border-[var(--gray-5)] dark:bg-[var(--gray-4)] text-[var(--foreground)] transition-shadow hover:shadow-md"
         >
           <PlatformIcon

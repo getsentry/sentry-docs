@@ -1,0 +1,36 @@
+---
+id: before-send-transaction-removed
+title: "`beforeSendTransaction` no longer runs"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 60
+---
+
+Move data changes to `beforeSendSpan` and guard on `is_segment` to target the service span, which is what used to be the transaction. Use `ignoreSpans` to drop spans: `beforeSendSpan` can only change spans, not drop them.
+
+```js
+// Before
+Sentry.init({
+  ignoreTransactions: ["GET /health"],
+  beforeSendTransaction: (event) => {
+    event.transaction = scrubIds(event.transaction);
+    return event;
+  },
+});
+
+// After
+Sentry.init({
+  ignoreSpans: ["GET /health"],
+  beforeSendSpan: (span) => {
+    if (span.is_segment) {
+      span.name = scrubIds(span.name);
+    }
+    return span;
+  },
+});
+```
+
+Scope `tags` and `extra` [aren't carried over to streamed spans](#scope-attributes) either.

@@ -176,6 +176,39 @@ describe('docTree', () => {
       expect(nextNode?.slug).toBe('b');
     });
 
+    test('should skip missing siblings', () => {
+      const missing = createNode('missing', 'Missing');
+      missing.missing = true;
+      rootNode.children = [nodeWithChildren, missing, createNode('b', 'B')];
+      rootNode.children.forEach(child => {
+        child.parent = rootNode;
+      });
+
+      expect(getNextNode(nodeWithChildren.children[1])?.slug).toBe('b');
+    });
+
+    test('should descend through a missing sibling', () => {
+      const before = createNode('before', 'Before');
+      const missing = createNode('missing', '');
+      const firstChild = createNode('missing/first', 'First');
+      const lastChild = createNode('missing/last', 'Last');
+      const after = createNode('after', 'After');
+      missing.missing = true;
+      missing.children = [firstChild, lastChild];
+      missing.children.forEach(child => {
+        child.parent = missing;
+      });
+      rootNode.children = [before, missing, after];
+      rootNode.children.forEach(node => {
+        node.parent = rootNode;
+      });
+
+      expect(getNextNode(before)).toBe(firstChild);
+      expect(getPreviousNode(after)).toBe(lastChild);
+      expect(getNextNode(before)).toBe(firstChild);
+      expect(missing.children).toEqual([firstChild, lastChild]);
+    });
+
     test('should return undefined if no children or siblings', () => {
       const nextNode = getNextNode(createNode('d', 'D'));
       expect(nextNode).toBeUndefined();
@@ -256,6 +289,36 @@ describe('docTree', () => {
 
     test('should return parent for first child', () => {
       expect(getPreviousNode(a1)).toBe(a);
+    });
+
+    test('should skip a missing parent', () => {
+      const previous = createNode('previous', 'Previous');
+      const missingParent = createNode('missing', '');
+      const child = createNode('missing/child', 'Child');
+      missingParent.missing = true;
+      missingParent.children = [child];
+      missingParent.parent = root;
+      child.parent = missingParent;
+      root.children = [previous, missingParent];
+      previous.parent = root;
+
+      expect(getPreviousNode(child)).toBe(previous);
+    });
+
+    test('should descend through a missing previous sibling', () => {
+      const previous = createNode('previous', 'Previous');
+      const missingParent = createNode('missing', '');
+      const child = createNode('missing/child', 'Child');
+      const next = createNode('next', 'Next');
+      missingParent.missing = true;
+      missingParent.children = [child];
+      child.parent = missingParent;
+      root.children = [previous, missingParent, next];
+      root.children.forEach(node => {
+        node.parent = root;
+      });
+
+      expect(getPreviousNode(next)).toBe(child);
     });
 
     test('should respect sidebar order for sorting', () => {

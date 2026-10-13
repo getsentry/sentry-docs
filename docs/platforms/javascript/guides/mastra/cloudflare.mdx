@@ -1,0 +1,124 @@
+---
+title: Cloudflare Quick Start
+sidebar_order: 0.5
+description: Learn how to send Mastra agent traces, model calls, tool executions, and errors to Sentry from Cloudflare Workers.
+---
+
+[Mastra](https://mastra.ai/) is a TypeScript framework for building AI applications and agents. This guide sets up the Sentry SDK in a Mastra app running on Cloudflare Workers so agent runs, model generations, tool calls, workflows, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="mastra/sdk-setup-alert" />
+
+Running Mastra on Node.js? Follow the [Mastra Quick Start](../) instead.
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Mastra application using `@mastra/core` version `1.63.2` or later.
+- `@mastra/observability`. Sentry's Mastra integration needs it to attach to Mastra's telemetry pipeline.
+- `@sentry/cloudflare` version `11.0.0` or later.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+  defaults={["performance"]}
+/>
+
+Install the Sentry Cloudflare SDK and Mastra's observability package:
+
+```bash {tabTitle:npm}
+npm install @sentry/cloudflare@^11.0.0 @mastra/observability@latest
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cloudflare@^11.0.0 @mastra/observability@latest
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cloudflare@^11.0.0 @mastra/observability@latest
+```
+
+If Mastra can't load `@mastra/observability`, the integration warns and creates no spans.
+
+## Configure
+
+Add the Sentry Vite plugin to your Vite config. It wraps your Worker entry with Sentry at build time:
+
+```typescript {filename:vite.config.mts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [cloudflare(), sentryCloudflareVitePlugin()],
+});
+```
+
+Create an `instrument.server.ts` file next to your Worker entry (the file named in Wrangler's `main`). The plugin picks it up by convention and uses its default export as the Sentry options:
+
+```typescript {filename:src/instrument.server.ts}
+export default (env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+Enable Node.js compatibility in your `wrangler.toml` so Mastra and the SDK can run on Workers:
+
+```toml {filename:wrangler.toml}
+main = "src/index.ts"
+compatibility_date = "2026-04-26"
+compatibility_flags = ["nodejs_compat"]
+```
+
+With the plugin in place, `Sentry.init()` runs automatically — you don't add an instrument file or `--import` flag as you do for Node.js.
+
+<Include name="mastra/captured-summary" />
+
+### Control the Data You Send to Sentry (Optional)
+
+By default, the SDK sends the inputs and outputs of your LLM and tool calls, such as prompts, responses, and tool arguments.
+This will give you rich debugging context. Review the data your agent handles before you deploy to production.
+
+The SDK always filters sensitive values whose keys match a built-in denylist, such as `auth` or `password`, and sends `[Filtered]` instead.
+
+To send less data, turn off the categories you don't need in the `dataCollection` option:
+
+```typescript {filename:src/instrument.server.ts} {3-5}
+export default (env: Env) => ({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    genAI: { inputs: false, outputs: false },
+  },
+});
+```
+
+For the full list of categories and their defaults, see the [`dataCollection` options](../configuration/options/#dataCollection).
+
+<Include name="mastra/link-conversations" />
+
+<Include name="mastra/verify" />
+
+</StepConnector>
+
+<Include name="mastra/next-steps" />
+
+<Include name="mastra/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/cloudflare`: `>=11.0.0`
+- `@mastra/core`: `>=1.63.2`
+- `@mastra/observability`: required for the integration to create spans

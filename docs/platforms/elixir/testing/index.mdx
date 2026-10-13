@@ -21,11 +21,17 @@ Add `bypass` as a test dependency in `mix.exs`:
 ```elixir {filename:mix.exs}
 defp deps do
   [
-    {:sentry, "~> 13.0"},
+    {:sentry, "~> 14.0"},
     {:bypass, "~> 2.0", only: [:test]},
     # ...
   ]
 end
+```
+
+Turn on test mode in your test configuration. It starts the registry the test helpers depend on and isolates Sentry configuration per test:
+
+```elixir {filename:config/test.exs}
+config :sentry, test_mode: true
 ```
 
 Call `Sentry.Test.setup_sentry/1` in your ExUnit `setup` block. It opens a local HTTP server scoped to the current test, points Sentry's DSN at it, and wires up event collection:
@@ -49,6 +55,12 @@ setup do
   Sentry.Test.setup_sentry(dedup_events: false, traces_sample_rate: 1.0)
 end
 ```
+
+`setup_sentry/1` returns a map that ExUnit merges into the test context. It contains:
+
+- `:bypass` — the local HTTP server that receives this test's envelopes
+- `:telemetry_processor` — the name of this test's telemetry processor
+- `:client_report_sender` — the name of this test's client report sender, so counts of discarded events don't leak between tests (SDK 14.0.0 and later)
 
 ## Errors
 
@@ -272,7 +284,9 @@ end
 
 ## Check-ins
 
-Cron check-ins are delivered directly over the network, not through the ETS collector. Use `setup_bypass_envelope_collector/2` to intercept them, then assert with `assert_sentry_report/2`. Given an Oban worker that wraps its job in a check-in:
+Cron check-ins aren't stored in the per-test collector that the other helpers read from. The SDK sends them to the test's local HTTP server, the same way it sends them to Sentry.
+
+Use `setup_bypass_envelope_collector/2` to intercept them, then assert with `assert_sentry_report/2`. Given an Oban worker that wraps its job in a check-in:
 
 ```elixir {filename:lib/my_app/workers/nightly_report_worker.ex}
 defmodule MyApp.Workers.NightlyReportWorker do
@@ -320,7 +334,76 @@ defmodule MyApp.Workers.NightlyReportWorkerTest do
 end
 ```
 
-The `%{bypass: bypass}` map is returned by `setup_sentry/1` and merged into the test context automatically.
+### Collecting Several Envelope Types
+
+<AvailableSince version="14.0.0" />
+
+The `:type` option also accepts a list. Use it when one action sends several kinds of envelopes that you want to assert on together. Given a job that reports its own failures:
+
+```elixir {filename:lib/my_app/reports.ex}
+def generate_nightly(date) do
+  {:ok, check_in_id} =
+    Sentry.capture_check_in(status: :in_progress, monitor_slug: "nightly-report")
+
+  try do
+    build_report!(date)
+    Sentry.capture_check_in(status: :ok, monitor_slug: "nightly-report", check_in_id: check_in_id)
+  rescue
+    exception ->
+      Sentry.capture_exception(exception, stacktrace: __STACKTRACE__)
+      Sentry.capture_check_in(status: :error, monitor_slug: "nightly-report", check_in_id: check_in_id)
+  end
+end
+```
+
+The test collects the error and both check-ins, then splits them by type with `extract_events/1` and `extract_check_ins/1`:
+
+```elixir {filename:test/my_app/reports_test.exs}
+test "reports the exception and an error check-in", %{bypass: bypass} do
+  ref = Sentry.Test.setup_bypass_envelope_collector(bypass, type: ["event", "check_in"])
+
+  Reports.generate_nightly(:invalid_date)
+
+  envelopes = Sentry.Test.collect_envelopes(ref, 3)
+
+  [event] = Sentry.Test.extract_events(envelopes)
+  assert_sentry_report(event, level: "error")
+
+  [_started, finished] = Sentry.Test.extract_check_ins(envelopes)
+  assert_sentry_report(finished, status: "error", monitor_slug: "nightly-report")
+end
+```
+
+## Failed Deliveries
+
+<AvailableSince version="14.0.0" />
+
+By default, the collector answers every envelope with a successful response. Pass a `:response` function to `setup_bypass_envelope_collector/2` to simulate a failed response from Sentry instead.
+
+The function receives the `Plug.Conn` and the raw envelope body, and must return the response connection. The collector still records the envelope before the function runs.
+
+This test simulates Sentry rejecting the envelope and checks that a synchronous capture returns an error:
+
+```elixir {filename:test/my_app/error_reporting_test.exs}
+test "returns an error when Sentry rejects the event", %{bypass: bypass} do
+  ref =
+    Sentry.Test.setup_bypass_envelope_collector(bypass,
+      response: fn conn, _body -> Plug.Conn.resp(conn, 413, "") end
+    )
+
+  assert {:error, %Sentry.ClientError{reason: :envelope_too_large}} =
+           Sentry.capture_message("Payment failed", result: :sync)
+
+  [event] = Sentry.Test.collect_sentry_events(ref, 1)
+  assert_sentry_report(event, message: %{formatted: "Payment failed"})
+end
+```
+
+<Alert level="warning">
+
+**Don't simulate a `429` response.** The SDK treats it as a rate limit that applies to the whole test run, not only the current test. It stops sending data for 60 seconds, or for the `Retry-After` duration, so later tests stop receiving envelopes. The SDK retries most other error statuses, such as `503`, and waits between attempts, which makes each of those tests take about 15 seconds.
+
+</Alert>
 
 ## Structured Assertions
 

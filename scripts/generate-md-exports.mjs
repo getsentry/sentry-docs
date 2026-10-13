@@ -2,7 +2,6 @@
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import imgLinks from '@pondorasti/remark-img-links';
-import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
 import {mkdir, opendir, readdir, readFile, rm, writeFile} from 'node:fs/promises';
@@ -28,6 +27,7 @@ import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
 import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
+import {selectMarkdownContent} from './md-export-content.mjs';
 import {replaceCurrentUrlTokens} from './markdown-keywords.mjs';
 
 // Default values for code keyword placeholders (e.g. ___PUBLIC_DSN___) that are
@@ -979,16 +979,17 @@ function stripUnstableElements(html) {
 /**
  * Extracts only the content-relevant portions of HTML for stable cache key computation.
  *
- * The unified pipeline only uses three pieces of data from each page:
- * 1. <title> — the page title (becomes the H1 heading)
+ * The unified pipeline only uses four pieces of data from each page:
+ * 1. <title> — the fallback H1 for non-SDK pages
  * 2. <link rel="canonical"> — the canonical URL (used for link rewriting)
- * 3. <div id="main"> — the main content area (becomes the markdown body)
+ * 3. <span data-md-heading> — the SDK page H1, when present
+ * 4. <div id="main"> — the main content area (becomes the markdown body)
  *
  * Everything else (header, sidebar, footer, scripts, styles, fonts) is irrelevant for
- * markdown output. By extracting only these three elements, we make the cache key immune
+ * markdown output. By extracting only these elements, we make the cache key immune
  * to layout changes (sidebar updates from merged PRs), CSS hash changes (Emotion, CSS
  * modules), font hash changes, and any other build-specific variation in the surrounding
- * HTML shell.
+ * HTML shell. Including the SDK heading invalidates the cache when only its H1 changes.
  *
  * Within the extracted content, we still normalize build-specific hashes that can appear
  * inside div#main (e.g., Emotion classes on code block components, CSS module hashes on
@@ -998,10 +999,14 @@ function stripUnstableElements(html) {
 function extractContentForCacheKey(html) {
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const canonicalMatch = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]*)"/i);
+  const sdkHeadingMatch = html.match(
+    /<span[^>]*data-md-heading[^>]*>([\s\S]*?)<\/span>/i
+  );
   const mainMatch = html.match(/<div id="main"[^>]*>([\s\S]*)<\/main>/i);
 
   const title = titleMatch ? titleMatch[1] : '';
   const canonical = canonicalMatch ? canonicalMatch[1] : '';
+  const sdkHeading = sdkHeadingMatch ? sdkHeadingMatch[1] : '';
   const mainContent = mainMatch ? mainMatch[1] : '';
 
   // Normalize build-specific hashes that appear inside main content
@@ -1014,7 +1019,14 @@ function extractContentForCacheKey(html) {
     // Normalize CSS module hashes (e.g., style_sidebar__iEJoR -> style_sidebar__X)
     .replace(/(\w+__)[a-zA-Z0-9]{5}/g, '$1X');
 
-  return title + '\0' + canonical + '\0' + normalizedMain;
+  return (
+    title +
+    '\0' +
+    canonical +
+    '\0' +
+    normalizedMain +
+    (sdkHeading ? '\0' + sdkHeading : '')
+  );
 }
 
 async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
@@ -1050,13 +1062,10 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Select only the elements we need for markdown (title, canonical URL, main content).
+      // SDK pages use their visible H1; other pages use the metadata title.
       // Build-specific elements (scripts, CSS links, etc.) are already stripped by
       // stripUnstableElements() above, so we don't need to remove them here.
-      .use(
-        () => tree =>
-          selectAll('head > title, head > link[rel="canonical"], div#main', tree)
-      )
+      .use(() => selectMarkdownContent)
       // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
       .use(() => tree => ({
         type: 'element',
