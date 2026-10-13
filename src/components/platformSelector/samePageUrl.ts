@@ -1,4 +1,5 @@
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
+import {getUnversionedPath} from 'sentry-docs/versioning';
 
 type PlatformOrGuide = Pick<
   Platform | PlatformGuide | PlatformIntegration,
@@ -23,7 +24,8 @@ export function getSamePageCandidates(
     return [];
   }
 
-  const parts = pathname.split('/').filter(Boolean);
+  // Versioned pages (e.g. `/options__v8.x/`) map to the unversioned page
+  const parts = getUnversionedPath(pathname, false).split('/').filter(Boolean);
   if (parts[0] !== 'platforms') {
     return [];
   }

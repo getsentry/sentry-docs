@@ -6,6 +6,9 @@ import {Platform} from 'sentry-docs/types';
 const PLATFORMS_URL = '/platforms.json';
 
 let platformsPromise: Promise<Platform[]> | undefined;
+// Kept so components mounted after the list has loaded (e.g. after client-side
+// navigation) can use it right away.
+let loadedPlatforms: Platform[] | undefined;
 
 /**
  * Loads the list of all platforms and guides. The request is only made once per
@@ -19,6 +22,10 @@ export function loadPlatforms(): Promise<Platform[]> {
           throw new Error(`Failed to load ${PLATFORMS_URL}: ${res.status}`);
         }
         return res.json() as Promise<Platform[]>;
+      })
+      .then(platforms => {
+        loadedPlatforms = platforms;
+        return platforms;
       })
       .catch(err => {
         platformsPromise = undefined;
@@ -43,11 +50,16 @@ type PlatformsState = {
  * available by the time someone opens a platform picker.
  */
 export function usePlatforms(): PlatformsState {
-  const [platforms, setPlatforms] = useState<Platform[]>();
-  const [status, setStatus] = useState<PlatformsState['status']>('loading');
+  const [platforms, setPlatforms] = useState(loadedPlatforms);
+  const [status, setStatus] = useState<PlatformsState['status']>(
+    loadedPlatforms ? 'loaded' : 'loading'
+  );
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (loadedPlatforms) {
+      return undefined;
+    }
     let cancelled = false;
     const load = () => {
       loadPlatforms()
@@ -64,8 +76,9 @@ export function usePlatforms(): PlatformsState {
         });
     };
 
-    // Retries load right away; the initial load waits until the browser is idle.
-    if (attempt > 0) {
+    // The initial load waits until the browser is idle. Retries, and loads that
+    // another component already started, don't need to wait.
+    if (attempt > 0 || platformsPromise) {
       load();
       return () => {
         cancelled = true;

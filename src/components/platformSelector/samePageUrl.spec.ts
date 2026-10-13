@@ -53,6 +53,21 @@ describe('getSamePageCandidates', () => {
     ]);
   });
 
+  it('uses the unversioned page for versioned pages', () => {
+    expect(
+      getSamePageCandidates(
+        platform,
+        '/platforms/javascript/guides/sveltekit/configuration/options__v8.x/'
+      )
+    ).toEqual([
+      '/platforms/python/configuration/options/',
+      '/platforms/python/configuration/',
+    ]);
+    expect(
+      getSamePageCandidates(guide, '/platforms/javascript__v7.x/configuration/options/')
+    ).toEqual([]);
+  });
+
   it('returns nothing on platform and guide root pages', () => {
     expect(getSamePageCandidates(platform, '/platforms/javascript/')).toEqual([]);
     expect(
