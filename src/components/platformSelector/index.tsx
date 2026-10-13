@@ -15,25 +15,54 @@ import {
   useState,
 } from 'react';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
+import {usePlatforms} from 'sentry-docs/hooks/usePlatforms';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
 import {isLocalStorageAvailable, uniqByReference} from 'sentry-docs/utils';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
+import {resolveSamePageUrl} from './samePageUrl';
 import styles from './style.module.scss';
 
+/**
+ * Until the full list has loaded, only the current platform or guide is known.
+ * Radix Select needs the selected item to be rendered to display it in the trigger.
+ */
+function getFallbackPlatforms(currentPlatform?: Platform | PlatformGuide): Platform[] {
+  if (!currentPlatform) {
+    return [];
+  }
+  if (currentPlatform.type === 'platform') {
+    return [currentPlatform];
+  }
+  return [
+    {
+      key: currentPlatform.platform,
+      name: currentPlatform.platform,
+      type: 'platform',
+      url: `/platforms/${currentPlatform.platform}/`,
+      guides: [currentPlatform],
+      integrations: [],
+    },
+  ];
+}
+
 export function PlatformSelector({
-  platforms,
   currentPlatform,
   alwaysOpen = false,
   listOnly = false,
   dropdownStyle = false,
 }: {
-  platforms: Array<Platform>;
   alwaysOpen?: boolean;
   currentPlatform?: Platform | PlatformGuide;
   dropdownStyle?: boolean;
   listOnly?: boolean;
 }) {
+  const loadedPlatforms = usePlatforms();
+  const platforms = useMemo(
+    () => loadedPlatforms ?? getFallbackPlatforms(currentPlatform),
+    [loadedPlatforms, currentPlatform]
+  );
+
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
     title.replace(/\./g, ' ').replace(/ +/g, ' ').trim();
@@ -117,8 +146,11 @@ export function PlatformSelector({
       if (isLocalStorageAvailable()) {
         localStorage.setItem('active-platform', platform_.key);
       }
+      // Go to the same page for the selected platform if it exists.
       // Use hard navigation for faster page load
-      window.location.href = platform_.url;
+      resolveSamePageUrl(platform_, pathname ?? '').then(url => {
+        window.location.href = url;
+      });
     }
   };
 
