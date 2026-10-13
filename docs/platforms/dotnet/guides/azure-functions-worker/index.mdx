@@ -40,7 +40,7 @@ The [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) pa
 
 ## Configure
 
-The core features of Sentry are enabled by calling `AddSentry` when configuring logging.
+Initialize Sentry with `SentrySdk.Init`, then call `AddSentry` when configuring logging to capture log messages.
 
 <OnboardingOption optionId="performance">
 Performance tracing can be enabled by adding Sentry to the OpenTelemetry `TracerProviderBuilder` and then configuring Sentry itself to use OpenTelemetry.
@@ -57,6 +57,17 @@ using OpenTelemetry.Trace;
 // ___PRODUCT_OPTION_END___
 using Sentry.OpenTelemetry;
 
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    // ___PRODUCT_OPTION_START___ performance
+    options.TracesSampleRate = 1.0;
+    options.UseOpenTelemetry(); // <-- Configure Sentry to use open telemetry
+    options.DisableSentryHttpMessageHandler = true; // So Sentry doesn't also create spans for outbound HTTP requests
+    // ___PRODUCT_OPTION_END___
+    options.Debug = true;
+});
+
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
 // ___PRODUCT_OPTION_START___ performance
@@ -70,24 +81,18 @@ var host = new HostBuilder()
         });
     })
 // ___PRODUCT_OPTION_END___
-    .ConfigureLogging(logging =>
-    {
-        logging.AddSentry(options =>
-        {
-            options.Dsn = "___PUBLIC_DSN___";
-            // ___PRODUCT_OPTION_START___ performance
-            options.TracesSampleRate = 1.0;
-            options.UseOpenTelemetry(); // <-- Configure Sentry to use open telemetry
-            options.DisableSentryHttpMessageHandler = true; // So Sentry doesn't also create spans for outbound HTTP requests
-            // ___PRODUCT_OPTION_END___
-            options.Debug = true;
-        });
-    })
+    .ConfigureLogging(logging => logging.AddSentry())
     .Build();
 
 
 await host.RunAsync();
 ```
+
+<Alert>
+
+Before version 7.0.0, `AddSentry` initializes the SDK itself. Pass the options to `logging.AddSentry(options => ...)` instead of calling `SentrySdk.Init`.
+
+</Alert>
 
 ## Verify
 
