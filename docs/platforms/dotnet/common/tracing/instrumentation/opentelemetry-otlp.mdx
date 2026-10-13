@@ -67,10 +67,22 @@ SentrySdk.Init(options =>
 
 Under the hood, the OTLP exporter sets up the following parts:
 
-* An OTLP exporter that automatically configures the ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Sentry SDK (i.e. do not set `TracesSampleRate`).
+* An OTLP exporter that automatically configures the ingestion endpoint from your Sentry DSN. This enables tracing in Sentry.
 * Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
 
 Calling `UseOtlp()` on `SentryOptions` sets `DisableSentryTracing = true`, which turns off Sentry's automatic span creation from `SentryHttpMessageHandler`, `DiagnosticSource` listener, and Entity Framework interception to avoid duplicate spans.
+
+## Sampling
+
+Because Sentry doesn't create transactions of its own when you call `UseOtlp()`, `TracesSampleRate` and `TracesSampler` have no effect. OpenTelemetry decides which spans are exported, so configure sampling on the `TracerProvider` instead:
+
+```csharp
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddSource("MyApp")
+    .SetSampler(new ParentBasedSampler(new TraceIdRatioBasedSampler(0.25)))
+    .AddSentryOtlpExporter("___PUBLIC_DSN___")
+    .Build();
+```
 
 ## Trace Propagation
 
