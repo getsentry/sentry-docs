@@ -296,8 +296,7 @@ The callback gets a second argument (called a "hint") which contains the origina
 <SdkOption name="transport" type="(transportOptions: TransportOptions) => Transport">
 
 <PlatformSection notSupported={["javascript.electron"]}>
-  The JavaScript SDK uses a transport to send events to Sentry. On modern
-  browsers, most transports use the browsers' fetch API to send events.
+  The JavaScript SDK uses a transport to send events to Sentry.
   Transports will drop an event if it fails to send due to a lack of connection.
 </PlatformSection>
 
@@ -305,9 +304,15 @@ The callback gets a second argument (called a "hint") which contains the origina
   In the browser, a `fetch`-based transport is used by default.
 </PlatformCategorySection>
 
+<PlatformSection notSupported={["javascript.bun", "javascript.elysia", "javascript.deno", "javascript.cloudflare"]}>
 <PlatformCategorySection supported={["server", "serverless"]}>
   On the server, a `https`-based transport is used by default.
 </PlatformCategorySection>
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia", "javascript.deno", "javascript.cloudflare"]}>
+  A `fetch`-based transport is used by default.
+</PlatformSection>
 
 <PlatformSection supported={["javascript.electron"]}>
   In the Electron `main` process, the default transport handles queuing events
@@ -321,6 +326,7 @@ The callback gets a second argument (called a "hint") which contains the origina
 
 Options used to configure the transport. This is an object with the following possible optional keys:
 
+<PlatformSection notSupported={["javascript.bun", "javascript.elysia", "javascript.deno", "javascript.cloudflare"]}>
 <PlatformCategorySection supported={["server", "serverless"]}>
 
 <PlatformCategorySection supported={["browser", "desktop"]}>
@@ -334,6 +340,19 @@ Options used to configure the transport. This is an object with the following po
 - `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
 
 </PlatformCategorySection>
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun", "javascript.elysia", "javascript.deno", "javascript.cloudflare"]}>
+
+- `headers`: An object containing headers to be sent with every request.
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+- `fetchOptions`: An object containing options to be passed to the `fetch` call.
+- `fetch`: A custom `fetch` function to use for requests.
+
+</PlatformSection>
+</PlatformSection>
 
 <PlatformCategorySection supported={["browser", "desktop"]}>
 
@@ -365,7 +384,7 @@ Check out the [Offline Support](/platforms/javascript/guides/electron/features/o
 
 <SdkOption name="shutdownTimeout" type='number' defaultValue='2000' categorySupported={['server', 'serverless']}>
 
-Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+Controls how many milliseconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is `2000` milliseconds (two seconds). Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
 </SdkOption>
 
@@ -513,19 +532,24 @@ Tracing uses <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javas
 
 <SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
 
-A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `tracesSampler` must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given trace will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all traces started in the app. Either this or `tracesSampler` must be defined to enable tracing.
 
 </SdkOption>
 
 <SdkOption name="tracesSampler" type='(samplingContext: SamplingContext) => number | boolean'>
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing.
+A function that determines the percentage chance a given trace will be sent to Sentry. It receives information about the span and the context in which it's being started, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Always return the sample rate wrapped in `inheritOrSampleWith` to ensure the trace is continued with the correct sampling values. It can also be used for filtering traces, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing. If both are defined, `tracesSampler` takes precedence.
 
 The `samplingContext` object passed to the function has the following properties:
 
-- `parentSampled`: The sampling decision of the parent transaction. This is `true` if the parent transaction was sampled, and `false` if it was not.
+- `inheritOrSampleWith`: A function that inherits the incoming trace's sampling decision or uses the supplied fallback sample rate.
+- `parentSampled`: The sampling decision of the parent span, if available. This is `true` if the parent span was sampled, and `false` if it was not.
+- `parentSampleRate`: The sample rate from the incoming trace, if available.
 - `name`: The name of the span as it was started.
 - `attributes`: The initial attributes of the span.
+  <PlatformCategorySection supported={["browser"]}>
+    - `location`: The current page or worker URL, if available. Provided by the BrowserTracing integration.
+  </PlatformCategorySection>
   <PlatformCategorySection supported={["server", "serverless"]}>
     - `normalizedRequest`: Request information of the currently active HTTP
     server request, if applicable.
@@ -855,7 +879,7 @@ A number between `0` and `1` that sets the percentage of how many sessions shoul
 The sampling decision is made once at the beginning of a session.
 This option is required to enable profiling (default is `0`).
 
-<PlatformCategorySection categorySupported={["server", "serverless"]}>
+<PlatformCategorySection supported={["server", "serverless"]}>
   In a server environment, a profiling session starts when the Sentry SDK is
   initialized and stops when the service terminates. Therefore, the sampling
   decision is re-evaluated on service restart or redeployment.
@@ -872,7 +896,7 @@ This option is required to enable profiling (default is `0`).
 Determines how profiling sessions are controlled. It has two modes:
 
 - `'manual'` (default): You control when profiling starts and stops using the `startProfiler()` and `stopProfiler()` functions. In this mode, profile sampling is only affected by `profileSessionSampleRate`.<PlatformSection notSupported={["javascript.bun", "javascript.capacitor", "javascript.deno", "javascript.cloudflare"]}> Read more about these functions in the <PlatformLink to="/profiling/">profiling API documentation</PlatformLink>.</PlatformSection>
-- `'trace'`: Profiling starts and stops automatically with transactions, as long as tracing is enabled. The profiler runs as long as there is at least one sampled transaction. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
+- `'trace'`: Profiling starts and stops automatically with root spans, as long as tracing is enabled. The profiler runs while there is at least one active, sampled root span, up to a maximum of 5 minutes per root span. In this mode, profiling is affected by both `profileSessionSampleRate` and your tracing sample rate (`tracesSampleRate` or `tracesSampler`).
 
 </SdkOption>
 
