@@ -23,4 +23,27 @@ _Import name: `Sentry.statsigIntegration`_
 
 <PlatformContent includePath="/configuration/statsig" />
 
+## Tracking Experiments
+
+The integration doesn't track [Statsig experiments](https://docs.statsig.com/experiments-plus/), because their assigned groups aren't boolean values. To see which experiment group a user was in when an error happened, listen to Statsig's `experiment_evaluation` event and record the group as a tag and an attribute:
+
+```javascript
+statsigClient.on("experiment_evaluation", ({ experiment }) => {
+  // `groupName` is null when the user isn't part of the experiment
+  if (!experiment.groupName) {
+    return;
+  }
+
+  const key = `statsig.experiment.${experiment.name}`;
+  // Tags are added to error events
+  Sentry.setTag(key, experiment.groupName);
+  // Attributes are added to spans, logs, and metrics
+  Sentry.setAttribute(key, experiment.groupName);
+});
+```
+
+Register the listener before calling `initializeAsync()` so evaluations made during startup are captured. You can then search for errors from a group, for example `statsig.experiment.my_experiment:Control`, and filter spans, logs, and metrics by the same attribute.
+
+Experiment names have to be valid [tag keys](/platforms/javascript/enriching-events/tags/). `Sentry.setAttribute` requires SDK version 10.61.0 or higher, see [Attributes](/platforms/javascript/enriching-events/attributes/). These values don't show up in the feature flag section of an issue.
+
 <PlatformContent includePath="feature-flags/next-steps" />
