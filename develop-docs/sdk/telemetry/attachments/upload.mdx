@@ -56,7 +56,7 @@ This allows the client to upload attachments that are much larger than what the 
 
     If the server replies with a [501 Not Implemented](https://www.rfc-editor.org/info/rfc9110/#status.501) response, the SDK **SHOULD** either fall back to submitting the attachment in an envelope (if it is [small enough](/sdk/foundations/envelopes/#size-limits)), or drop the attachment.
 
-1. Start uploading:
+1. Upload the first chunk:
 
     ```shell
     head -c 1073741824 myfile.log | \  # Take the first `Max-Chunk-Size` bytes
@@ -64,8 +64,11 @@ This allows the client to upload attachments that are much larger than what the 
       --header "Tus-Resumable: 1.0.0" \
       --header "Content-Type: application/offset+octet-stream" \
       --header "Upload-Offset: 0" \
+      --header "X-Decoded-Content-Length: 1073741824"
       --data-binary @-
     ```
+
+    The client **SHOULD** compress the request body to speed up the upload (see [Request Compression](/sdk/foundations/transport/compression/)). When it does, the `Content-Length` header refers to the compressed length of the current chunk. Therefore, the client **MUST** send the custom `X-Decoded-Content-Length` header containing the original, uncompressed length of the current chunk, to inform the storage backend about its size upfront.
 
 1. Resume the upload:
 
@@ -95,12 +98,13 @@ This allows the client to upload attachments that are much larger than what the 
       --header "Tus-Resumable: 1.0.0" \
       --header "Content-Type: application/offset+octet-stream" \
       --header "Upload-Offset: 53477376" \
+      --header "X-Decoded-Content-Length: 2345256"
       --data-binary @-
     ```
 
 1. Finalize the upload:
 
-    Upon success, the server returns the **final** location of the upload in the `Location` response header:
+    Once the total number of uploaded bytes matches the `Upload-Length` that was announced in the initial `POST` request, the server returns the **final** location of the upload in the `Location` response header:
 
     ```
     HTTP/1.1 204 No Content
@@ -109,7 +113,7 @@ This allows the client to upload attachments that are much larger than what the 
     Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/?upload_length=11&upload_signature=..."
     ```
 
-    SDKs **MUST** use this location to attach a [placeholder item](/sdk/telemetry/attachments/#attachment-placeholders) to the event envelope. SDKs **MUST NOT** use the `Location` header from the initial `POST` request, or any intermediate requests, because it may not contain all the fields needed to create a valid placeholder.
+    SDKs **MUST** use this location to attach a [placeholder item](/sdk/telemetry/attachments/#attachment-placeholders) to the event envelope. SDKs **MUST NOT** use the `Location` header from the initial `POST` request, or any intermediate request, because it may not contain all the fields needed to create a valid placeholder.
 
 ## Compression
 
