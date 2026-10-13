@@ -25,6 +25,8 @@ Sentry.setTag("tag", "value");
 
 ## Core APIs
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 <SdkApi
   name="init"
   signature="function init(options: InitOptions): Client | undefined"
@@ -33,6 +35,8 @@ Sentry.setTag("tag", "value");
   <PlatformLink to="/configuration/options/">Options</PlatformLink> for the
   options you can pass to `init`.
 </SdkApi>
+
+</PlatformSection>
 
 <SdkApi name="getClient" signature="function getClient(): Client | undefined">
   Returns the currently active client.
@@ -134,13 +138,12 @@ Sentry.withScope((scope) => {
 });
 ```
 
-  <Expandable title='What is the difference to `beforeSend`, `beforeSendTransaction`, and `beforeSendSpan`?'>
-    `beforeSend`, `beforeSendTransaction`, and `beforeSendSpan` are guaranteed to be run last, after all other event processors, (which means they get the final version of the event right before it's sent, hence the name). Event processors added with `addEventProcessor` are run in an undetermined order, which means changes to the event may still be made after the event processor runs.
+  <Expandable title='What is the difference to `beforeSend` and `beforeSendSpan`?'>
+    `beforeSend` runs after all event processors and receives the final error or message event before it is sent. Event processors added with `addEventProcessor` run in an undetermined order, so another processor may still change the event afterward.
 
-    There can only be a single `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` callback, but you can add multiple event processors via `addEventProcessor()`.
+    You can configure one `beforeSend` callback and add multiple event processors with `addEventProcessor()`.
 
-    If you're using <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, use `beforeSendSpan`, since event processors are not applied to spans.
-
+    Event processors do not run on streamed spans. Use `beforeSendSpan` to modify each finished span before it is sent. In transaction mode, event processors also run on transaction events, followed by `beforeSendTransaction`. You can configure one `beforeSendTransaction` callback.
   </Expandable>
 </SdkApi>
 
@@ -153,7 +156,7 @@ integrations after `Sentry.init()` has been called. Note that it is
 recommended to pass integrations to `init` instead of calling this method,
 where possible.
 
-See <PlatformLink to="/configuration/integrations">Integrations</PlatformLink> for
+See <PlatformLink to="/configuration/integrations/">Integrations</PlatformLink> for
 more information on how to use integrations.
 
 </SdkApi>
@@ -174,7 +177,7 @@ Sentry.lazyLoadIntegration("replayIntegration")
 
 If you use a bundler, using e.g. `const { replayIntegration } = await import('@sentry/browser')` is recommended instead.
 
-See <PlatformLink to="/configuration/integrations">Integrations</PlatformLink> for
+See <PlatformLink to="/configuration/integrations/">Integrations</PlatformLink> for
 more information on how to use integrations.
 
 </SdkApi>
@@ -346,7 +349,7 @@ Set a tag to be sent with Sentry events.
     },
   ]}
 >
-Set a single attribute. Unlike tags, attributes are applied to your logs and metrics (rather than errors).
+Set a single attribute. Unlike tags, attributes are applied to your logs and metrics (rather than errors). They also apply to spans when <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">span streaming</PlatformLink> is enabled, which is the default in SDK version 11 and later.
 
 ```javascript
 Sentry.setAttribute("is_admin", true);
@@ -394,7 +397,7 @@ There are no restrictions on context name. In the context object, all keys are a
 
 By default, Sentry SDKs normalize nested structured context data up to three levels deep.
 Any data beyond this depth will be trimmed and marked using its type instead.
-To adjust this default, use the <PlatformLink to="/configuration/options#normalize-depth">`normalizeDepth`</PlatformLink> SDK option.
+To adjust this default, use the <PlatformLink to="/configuration/options/#normalize-depth">`normalizeDepth`</PlatformLink> SDK option.
 
 Learn more about conventions for common contexts in the [contexts interface developer documentation](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/contexts/).
 
@@ -473,23 +476,23 @@ Sentry.setContext("character", {
   <Expandable title="Capturing User IP-Addresses">
     <PlatformCategorySection supported={['server', 'serverless']}>
     On the server, the IP address will be inferred from the incoming HTTP request, if available.
-    This is automatically done if you have configured <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: true }`</PlatformLink> (or the deprecated `sendDefaultPii: true`) in your SDK configuration.
+    This is automatically done if you have configured <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: true }`</PlatformLink> in your SDK configuration.
     </PlatformCategorySection>
 
     <PlatformCategorySection supported={["browser"]}>
     On the browser, if the users' `ip_address` is set to `"{{ auto }}"`, Sentry
     will infer the IP address from the connection between your app and Sentry's
-    server. `{{auto}}` is automatically set if you have configured <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: true }`</PlatformLink> (or the deprecated `sendDefaultPii: true`) in your SDK configuration.
+    server. `{{auto}}` is automatically set if you have configured <PlatformLink to="/configuration/options/#dataCollection">`dataCollection: { userInfo: true }`</PlatformLink> in your SDK configuration.
     </PlatformCategorySection>
 
-    To ensure your users' IP addresses are never stored in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data scrubbing](/security-legal-pii/scrubbing/) to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+    To ensure your users' IP addresses are never stored in your event data, you can go to your project settings, click on ["Security & Privacy"](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/), and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data scrubbing](/security-legal-pii/scrubbing/) to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
 
   </Expandable>
 
 <PlatformCategorySection supported={["server"]}>
   <Expandable title="Setting The User For the Current Request ">
-    <PlatformSection notSupported={['javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.react-router', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.gcp-functions']}>
-    `Sentry.setUser()` will set the user for the currently active request - see <PlatformLink to="/enriching-events/request-isolation">Request Isolation</PlatformLink> for more information. For example, if you want to set the user for a single request, you can do this like this:
+    <PlatformSection notSupported={['javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.effect', 'javascript.elysia', 'javascript.firebase', 'javascript.react-router', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.gcp-functions']}>
+    `Sentry.setUser()` will set the user for the currently active request - see <PlatformLink to="/enriching-events/request-isolation/">Request Isolation</PlatformLink> for more information. For example, if you want to set the user for a single request, you can do this like this:
     </PlatformSection>
     <PlatformContent includePath="enriching-events/set-user-request" />
 
@@ -573,10 +576,10 @@ parameters={[
       name: 'StartSpanOptions',
       properties: [
         { name: "name", type: "string", required: true },
-        { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
-        { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
+        { name: 'attributes', type: 'Record<string, string | number | boolean | Array<string> | Array<number> | Array<boolean> | undefined>', description: 'Attributes to add to the span.' },
+        { name: 'startTime', type: 'number | Date | [number, number]', description: 'The timestamp to use for the span start, as seconds, a Date, or a [seconds, nanoseconds] tuple. If not provided, the current time will be used.' },
         { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
-        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span. \n// Not available in stream mode. Use `parentSpan: null` instead to make this span show up as service span.' },
+        { name: 'forceTransaction', type: 'boolean', description: <>In <PlatformLink to="/configuration/options/#traceLifecycle">transaction mode</PlatformLink>, if true, the span will be forced to be sent as a transaction, even if it is not the root span.{"\n// Deprecated and will be removed in the next major version. In most cases, this option can be omitted. If you need a service span, use `parentSpan: null` instead."}</> },
         { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
         { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
       ]
@@ -622,10 +625,10 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
       name: 'StartSpanOptions',
       properties: [
         { name: "name", type: "string", required: true },
-        { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
-        { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
+        { name: 'attributes', type: 'Record<string, string | number | boolean | Array<string> | Array<number> | Array<boolean> | undefined>', description: 'Attributes to add to the span.' },
+        { name: 'startTime', type: 'number | Date | [number, number]', description: 'The timestamp to use for the span start, as seconds, a Date, or a [seconds, nanoseconds] tuple. If not provided, the current time will be used.' },
         { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
-        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span. \n// Not available in stream mode. Use `parentSpan: null` instead to make this span show up as service span.' },
+        { name: 'forceTransaction', type: 'boolean', description: <>In <PlatformLink to="/configuration/options/#traceLifecycle">transaction mode</PlatformLink>, if true, the span will be forced to be sent as a transaction, even if it is not the root span.{"\n// Deprecated and will be removed in the next major version. In most cases, this option can be omitted. If you need a service span, use `parentSpan: null` instead."}</> },
         { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
         { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
       ]
@@ -659,10 +662,10 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
       name: 'StartSpanOptions',
       properties: [
         { name: "name", type: "string", required: true },
-        { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
-        { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
+        { name: 'attributes', type: 'Record<string, string | number | boolean | Array<string> | Array<number> | Array<boolean> | undefined>', description: 'Attributes to add to the span.' },
+        { name: 'startTime', type: 'number | Date | [number, number]', description: 'The timestamp to use for the span start, as seconds, a Date, or a [seconds, nanoseconds] tuple. If not provided, the current time will be used.' },
         { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
-        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span. \n// Not available in stream mode. Use `parentSpan: null` instead to make this span show up as service span.' },
+        { name: 'forceTransaction', type: 'boolean', description: <>In <PlatformLink to="/configuration/options/#traceLifecycle">transaction mode</PlatformLink>, if true, the span will be forced to be sent as a transaction, even if it is not the root span.{"\n// Deprecated and will be removed in the next major version. In most cases, this option can be omitted. If you need a service span, use `parentSpan: null` instead."}</> },
         { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
         { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
       ]
@@ -812,7 +815,7 @@ availableSince="10.13.0"
 >
 
 Signals to the Sentry SDK that the initial page was fully loaded.
-Requires the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`enableReportPageLoaded` option</PlatformLink> in `browserTracingIntegration` to
+Requires the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded" fallbackPlatform="javascript">`enableReportPageLoaded` option</PlatformLink> in `browserTracingIntegration` to
 be set to `true`. Once called, the SDK ends the pageload span automatically,
 
 By default, the SDK takes care of ending the pageload span automatically, based on
@@ -821,7 +824,7 @@ You can alternatively use explicit pageload reporting if the inactivity heuristi
 `browserTracingIntegration` don't work well for your use case.
 However, you must ensure that you call `reportPageLoaded` in every situation.
 If `reportPageLoaded` is not called, the pageload span will be ended after 30 seconds
-or whatever custom value is set on the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`finalTimeout` option</PlatformLink>.
+or whatever custom value is set on the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded" fallbackPlatform="javascript">`finalTimeout` option</PlatformLink>.
 
 
 <Expandable title="Examples">
@@ -842,18 +845,15 @@ Sentry.reportPageLoaded();
 
 These utilities can be used for more advanced tracing use cases.
 
-<SdkApi name="spanToJSON" signature="function spanToJSON(span: Span): SpanJSON">
-  Convert a span to a JSON object. If you're using{" "}
-  <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>, we
-  recommend using [`spanToStreamedSpanJSON`](#spanToStreamedSpanJSON) instead.
+<SdkApi name="spanToJSON" signature="function spanToJSON(span: Span): StreamedSpanJSON">
+  Convert a span to a JSON object. If you're using {" "}
+  <PlatformLink to="/configuration/options/#traceLifecycle">`traceLifecycle: 'static'`</PlatformLink>,
+  use [`spanToStaticSpanJSON`](#spanToStaticSpanJSON) to get the `SpanJSON` format.
 </SdkApi>
 
-<SdkApi
-  name="spanToStreamedSpanJSON"
-  signature="function spanToStreamedSpanJSON(span: Span): StreamedSpanJSON"
->
-  Convert a span to a JSON object. Only available in{" "}
-  <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>.
+<SdkApi name="spanToStaticSpanJSON" signature="function spanToStaticSpanJSON(span: Span): SpanJSON">
+  Convert a span to the static `SpanJSON` format. Use this when working with transaction data in
+  transaction mode.
 </SdkApi>
 
 <SdkApi
@@ -915,7 +915,11 @@ Sentry.setConversationId(null);
 
 </Expandable>
 
+<PlatformCategorySection supported={["server"]}>
+
 See <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> for more information on tracking AI conversations.
+
+</PlatformCategorySection>
 
 </SdkApi>
 
@@ -1461,9 +1465,9 @@ export const GET = wrapServerRouteWithSentry(async () => {
 <PlatformSection supported={["javascript.astro"]}>
 ## Server Request Instrumentation
 
-Astro server requests are automatically instrumented starting from Astro version `3.5.2`.
+Astro server requests are automatically instrumented.
 
-If you're below Astro version `3.5.2` or want to customize instrumentation, you can use `Sentry.handleRequest()` as an Astro middleware.
+If you want to customize instrumentation, you can use `Sentry.handleRequest()` as an Astro middleware.
 
 <SdkApi
   name="handleRequest"
@@ -1474,17 +1478,19 @@ If you're below Astro version `3.5.2` or want to customize instrumentation, you 
   {
     name: "trackClientIp",
     type: "boolean",
-    description: "When enabled, Sentry attaches the client's IP address to the event. This requires your Astro app to be configured for SSR or Hybrid rendering. Defaults to `false`.",
-    defaultValue: "false" },
+    description: "When enabled, Sentry attaches the client's IP address to the event. This requires your Astro app to be configured for SSR or Hybrid rendering.",
+    defaultValue: "dataCollection.userInfo" },
   ]}
 >
 Returns an Astro middleware handler that instruments incoming server requests with Sentry error and performance monitoring. It lets you control which additional data should be added to recorded request spans.
+
+`trackClientIp` defaults to the value of <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.userInfo`</PlatformLink>, which defaults to `true`.
 
 If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
 
 <Alert>
 
-If you're using Astro version `>=3.5.2`, you must <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#disable-automatic-instrumentation">disable automatic instrumentation</PlatformLink> before adding this middleware manually.
+You must <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#disable-automatic-instrumentation">disable automatic instrumentation</PlatformLink> before adding this middleware manually.
 
 </Alert>
 
@@ -1496,7 +1502,7 @@ import { sequence } from "astro:middleware";
 
 export const onRequest = sequence(
   Sentry.handleRequest({
-    trackClientIp: true, // defaults to false
+    trackClientIp: true, // defaults to dataCollection.userInfo
   })
   // other middleware handlers
 );

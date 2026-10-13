@@ -1,0 +1,59 @@
+`urlRequest`
+
+For breadcrumbs created from HTTP network operations, the hint contains the original `URLRequest`. This can be used to filter breadcrumbs by URL or extract additional request data.
+
+`httpResponse`
+
+For breadcrumbs created from HTTP network operations, the hint contains the `HTTPURLResponse`. This can be used to inspect status codes, headers, or other response metadata.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeBreadcrumbWithHint = { breadcrumb, hint in
+        // Access the original HTTP request for network breadcrumbs
+        if let request = hint.urlRequest {
+            if request.url?.host == "internal-api.example.com" {
+                return nil // Drop breadcrumbs for internal API calls
+            }
+        }
+
+        return breadcrumb
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeBreadcrumbWithHint = ^SentryBreadcrumb * _Nullable(SentryBreadcrumb * _Nonnull breadcrumb, SentryHint * _Nonnull hint) {
+        // Access the original HTTP request for network breadcrumbs
+        NSURLRequest *request = hint.urlRequest;
+        if ([request.URL.host isEqualToString:@"internal-api.example.com"]) {
+            return nil; // Drop breadcrumbs for internal API calls
+        }
+
+        return breadcrumb;
+    };
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeBreadcrumbWithHint = ^SentryObjCBreadcrumb * _Nullable(SentryObjCBreadcrumb * _Nonnull breadcrumb, SentryObjCHint * _Nonnull hint) {
+        // Access the original HTTP request for network breadcrumbs
+        NSURLRequest *request = hint.urlRequest;
+        if ([request.URL.host isEqualToString:@"internal-api.example.com"]) {
+            return nil; // Drop breadcrumbs for internal API calls
+        }
+
+        return breadcrumb;
+    };
+}];
+```

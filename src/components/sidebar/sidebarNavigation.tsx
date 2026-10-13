@@ -32,10 +32,13 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
-  // Guides section
-  if (path[0] === 'guides') {
+  // Get Started section (guides + cookbook live under /get-started/)
+  if (path[0] === 'get-started') {
     return (
-      <ProductSidebar rootNode={rootNode} items={[{title: 'Guides', root: 'guides'}]} />
+      <ProductSidebar
+        rootNode={rootNode}
+        items={[{title: 'Get Started', root: 'get-started'}]}
+      />
     );
   }
 

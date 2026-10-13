@@ -138,13 +138,7 @@
   {
     "type": "Timer",
     "name": "buffer.spool.duration",
-    "description": "Timing in milliseconds for the time it takes for the buffer to pack & spool a batch.\n\nContains the time it takes to pack multiple envelopes into a single memory blob.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "buffer.spooled_envelopes",
-    "description": "Number of envelopes spool to disk.",
+    "description": "Timing in milliseconds for the time it takes for the buffer to pack & spool a batch.\n\nContains the time it takes to pack multiple envelopes into a single memory blob.\n\nThis metric is tagged with:\n- `partition_id`\n- `reason`: \"size\" or \"timeout\".",
     "features": []
   },
   {
@@ -166,12 +160,6 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "buffer.unspooled_envelopes",
-    "description": "Number of envelopes unspooled from disk.",
-    "features": []
-  },
-  {
     "type": "Timer",
     "name": "buffer.write.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to spool data to SQLite.",
@@ -181,6 +169,12 @@
     "type": "Counter",
     "name": "cogs.usage",
     "description": "All COGS tracked values.\n\nThis metric is tagged with:\n- `resource_id`: The COGS resource id.\n- `app_feature`: The COGS app feature.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "config.reload",
+    "description": "Amount of times the configuration was reloaded.",
     "features": []
   },
   {
@@ -240,7 +234,7 @@
   {
     "type": "Timer",
     "name": "event.processing_time",
-    "description": "Time in milliseconds spent in synchronous processing of envelopes.\n\nThis timing covers the end-to-end processing in the CPU pool and comprises:\n\n- `event_processing.deserialize`\n- `event_processing.pii`\n- `event_processing.serialization`\n\nWith Relay in processing mode, this also includes the following timings:\n\n- `event_processing.process`\n- `event_processing.filtering`\n- `event_processing.rate_limiting`",
+    "description": "Time in milliseconds spent in synchronous processing of envelopes.\n\nThis timing covers the end-to-end processing in the CPU pool and comprises:\n\n- `event_processing.deserialize`\n- `event_processing.pii`\n- `event_processing.serialization`\n\nWith Relay in processing mode, this also includes the following timings:\n\n- `event_processing.process`\n- `event_processing.filtering`\n- `event_processing.rate_limiting`\n\nThis metric is tagged with:\n- `is_intermediate`: Whether this envelope contains \"intermediates\",\ni.e. items produced by one processor for processing by others.",
     "features": []
   },
   {
@@ -388,144 +382,6 @@
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.connects",
-    "description": "The number of connection attempts, including successful and failed attempts, and name resolution failures.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.disconnects",
-    "description": "The number of disconnections, whether triggered by the broker, the network, the load balancer, or something else.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.int_latency.avg",
-    "description": "Average internal producer queue latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.int_latency.p99",
-    "description": "99th percentile internal producer queue latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.outbuf.messages",
-    "description": "The number of messages awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.outbuf.requests",
-    "description": "The number of requests awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.outbuf_latency.avg",
-    "description": "Average output buffer latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.outbuf_latency.p99",
-    "description": "99th percentile output buffer latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.request_timeouts",
-    "description": "The total number of requests that timed out.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.rtt.avg",
-    "description": "Average round-trip time to the broker, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.rtt.p99",
-    "description": "99th percentile round-trip time to the broker, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.rx_idle",
-    "description": "Milliseconds since the last socket receive.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.state",
-    "description": "A snapshot of the broker state.\n\nAll broker states are emitted as a separate series tagged with `state`.\nThe current state is emitted with value `1`, and all other states are emitted\nwith value `0`.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.\n- `state`: The current [`rdkafka::statistics::Broker::state`] of the broker.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.tx",
-    "description": "Total number of requests sent to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.tx_idle",
-    "description": "Milliseconds since the last socket send.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.txbytes",
-    "description": "Total number of bytes sent to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.broker.waitresp.requests",
-    "description": "The number of in-flight requests awaiting a response from the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.message_count",
-    "description": "The current number of messages in producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.message_count_max",
-    "description": "The maximum number of messages allowed in the producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.message_size",
-    "description": "The current total size of messages in producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.message_size_max",
-    "description": "The maximum total size of messages allowed in the producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.replyq",
-    "description": "The number of operations and callbacks waiting in the librdkafka reply queue.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "kafka.stats.txmsgs",
-    "description": "The total number of messages transmitted (produced) to all brokers.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "logs.envelope",
     "description": "Whether a logs envelope has a trace context header or not\n\nThis metric is tagged with:\n- `dsc`: yes or no\n- `sdk`: low-cardinality client name",
@@ -631,12 +487,6 @@
     "type": "Timer",
     "name": "metrics.router.message.duration",
     "description": "Timing in milliseconds for processing a message in the metric router service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "minidump.compressed.count",
-    "description": "The number of times that relay receives a compressed minidump.",
     "features": []
   },
   {
@@ -921,6 +771,12 @@
     "features": []
   },
   {
+    "type": "Distribution",
+    "name": "requests.decompression_ratio",
+    "description": "The ratio of bytes read after and before request decompression.\n\nReports zero when no request body bytes were read.\n\nThis metric is tagged with:\n- `route`: The matched route pattern.\n- `content_encoding`: The request's content encoding.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "requests.duration",
     "description": "Total duration in milliseconds for handling inbound web requests until the HTTP response is\nreturned to the client.\n\nThis does **not** correspond to the full event ingestion time. Requests for events that are\nnot immediately rejected due to bad data or cached rate limits always return `200 OK`. Full\nvalidation and normalization occur asynchronously, which is reported by\n`event.processing_time`.\n\nThis metric is tagged with:\n- `method`: The HTTP method of the request.\n- `route`: Unique dashed identifier of the endpoint.",
@@ -1054,6 +910,12 @@
   },
   {
     "type": "Counter",
+    "name": "sampling.dropped_external",
+    "description": "Number of items discarded by dynamic sampling on untrusted relays, reported via client reports.\n\nThis metric is tagged with:\n- `category`: the data category of the discarded items.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "sampling.project_unresolved",
     "description": "The number of times the sampling project was unresolved.\n\nThis metric is tagged with:\n- `item`: what item the decision is taken for (transaction vs span).",
     "features": []
@@ -1172,6 +1034,12 @@
   },
   {
     "type": "Counter",
+    "name": "upload.head",
+    "description": "The number of times the progress of an upload location is queried through the upload service.\n\nThis metric is tagged with:\n- `result`: `success` or the failure reason.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "upload.killswitched",
     "description": "How often a call to the upload endpoint was rejected because of the global kill switch.\n\nThis is intended as a temporary metric to debug 503 flakiness.",
     "features": []
@@ -1179,7 +1047,7 @@
   {
     "type": "Counter",
     "name": "upload.upload",
-    "description": "The number of times an upload location is created through the upload service.\n\nThis metric is tagged with:\n- `result`: `success` or the failure reason.",
+    "description": "The number of times data is uploaded to an upload location through the upload service.\n\nThis metric is tagged with:\n- `result`: `success` or the failure reason.",
     "features": []
   },
   {

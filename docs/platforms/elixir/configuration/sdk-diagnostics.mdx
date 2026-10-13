@@ -1,0 +1,26 @@
+---
+title: SDK Diagnostics
+description: "Learn how to control the diagnostic messages the Sentry Elixir SDK writes to your own logs."
+sidebar_order: 20
+---
+
+When data doesn't reach Sentry — an API failure, a network error, an active rate limit, or an event the SDK can't process — the SDK says so through Elixir's [`Logger`](https://hexdocs.pm/logger/Logger.html) rather than failing silently.
+
+## Setting the Level
+
+The SDK reports these problems by default. The `:log_level` option controls how loudly they arrive, and defaults to `:warning`:
+
+```elixir {filename:config/prod.exs}
+config :sentry,
+  log_level: :debug
+```
+
+`:log_level` applies to messages about data that didn't make it to Sentry — an event dropped as empty or duplicate, a full transport queue, a failed send. Diagnostics about your own code misbehaving — a `before_send_log` callback raising, a `traces_sampler` crashing — log at their own fixed level and ignore `:log_level`, so lowering it won't quiet them. That's deliberate: those point at a bug to fix, not noise to tune out.
+
+## Rate Limits
+
+Rate limits are the one case the SDK deliberately doesn't announce per event. When your organization exceeds its quota, the SDK logs the rate limit **once per rate-limit window**, and logs each event dropped while that limit is active at `:debug`.
+
+<Alert>
+  Per-window rate-limit logging is available since version `13.5.1`.
+</Alert>

@@ -1,0 +1,36 @@
+---
+id: removed-apis
+title: "Profiling and Deprecated APIs Are Removed"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 90
+---
+
+Remove `options.profilesSampleRate`. The Flutter SDK no longer captures profiles, and there is no replacement profiling option in v10.
+
+Update code that uses the following APIs:
+
+| Removed or Internal API                                                                                                           | Migration                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SentryFeedbackWidget`                                                                                                            | Use `SentryFeedbackForm`.                                                                                                                                               |
+| Deprecated `copyWith(...)` methods on SDK data classes                                                                            | Assign mutable fields directly.                                                                                                                                         |
+| Deprecated protocol `clone()` methods                                                                                             | Stop calling them; remaining SDK clone helpers are internal. Construct a new object explicitly if you need an independent copy.                                         |
+| `PerformanceCollector`, `PerformanceContinuousCollector`, `options.performanceCollectors`, `options.addPerformanceCollector(...)` | Remove custom collector registration. These deprecated APIs have been removed.                                                                                          |
+| `BindingWrapper`, `options.bindingUtils`                                                                                          | Remove custom binding-wrapper overrides. `SentryWidgetsFlutterBinding` remains public.                                                                                  |
+| `options.log`, `SdkLogCallback`                                                                                                   | Remove usage of these diagnostic logging APIs. Use `options.debug` and `options.diagnosticLevel` to configure SDK diagnostics, or `Sentry.logger` for application logs. |
+
+The `SentryEventLike<T>` mixin has also been removed with `copyWith`. Use `SentryEvent` as the common type for events and transactions (`SentryTransaction` extends `SentryEvent`).
+
+`Sentry.clone()`, `Hub.clone()`, and `Scope.clone()` are now internal APIs. Remove direct calls to them. For capture-specific context, use the capture method's `withScope` callback.
+
+For example, mutate events in `beforeSend` instead of using `copyWith`:
+
+```dart
+options.beforeSend = (event, hint) {
+  event.release = 'my-release';
+  return event;
+};
+```

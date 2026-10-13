@@ -1,27 +1,54 @@
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 
-import {DynamicNav, toTree} from './dynamicNav';
+import {DynamicNav, EntityTree, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
 /**
- * Platforms whose AI library pages live under agent-tracing, mapped to where that
- * platform keeps its integrations list. The library pages are mirrored into that
- * list so they stay discoverable from both places.
+ * Platforms whose AI pages live under agent-tracing, mapped to where those pages
+ * are mirrored in the sidebar by default.
  */
 const INTEGRATIONS_PATH_BY_PLATFORM: Record<string, string> = {
   javascript: 'configuration/integrations',
   python: 'integrations',
 };
 
-/** Pages under agent-tracing that document the feature rather than a library. */
-const NON_LIBRARY_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
+const AGENT_TRACING_ALIAS_PATH_OVERRIDES: Record<string, Record<string, string>> = {
+  'javascript.cloudflare': {
+    'agents-sdk': 'features',
+    'workers-ai': 'features',
+  },
+};
 
-export function PlatformSidebar({
-  rootNode,
-  platformName,
-  guideName,
-}: PlatformSidebarProps) {
+const UNALIASED_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
+
+/**
+ * Building the tree walks the whole platform subtree (including every guide),
+ * which is expensive for large platforms. The result only depends on the
+ * platform and guide, so cache it per root node instead of rebuilding it for
+ * every page.
+ */
+const sidebarTreeCache = new WeakMap<DocNode, Map<string, EntityTree[]>>();
+
+function getPlatformSidebarTree(
+  rootNode: DocNode,
+  platformNode: DocNode,
+  platformName: string,
+  guideName: string | undefined,
+  pathRoot: string
+): EntityTree[] {
+  let treesForRoot = sidebarTreeCache.get(rootNode);
+  if (!treesForRoot) {
+    treesForRoot = new Map();
+    sidebarTreeCache.set(rootNode, treesForRoot);
+  }
+
+  const cacheKey = `${platformName}:${guideName ?? ''}`;
+  const cached = treesForRoot.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const docNodeToPlatformSidebarNode = (n: DocNode) => {
     if (n.frontmatter.draft) {
       return undefined;
@@ -45,6 +72,50 @@ export function PlatformSidebar({
     };
   };
 
+  const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
+
+  // Mirror Agent Tracing pages elsewhere in the sidebar as link-only entries.
+  // Most are integrations; guide-specific overrides can place pages in a more
+  // appropriate section while keeping Agent Tracing as their canonical location.
+  const integrationsPath = INTEGRATIONS_PATH_BY_PLATFORM[platformName];
+  const aliasPathOverrides = guideName
+    ? AGENT_TRACING_ALIAS_PATH_OVERRIDES[`${platformName}.${guideName}`]
+    : undefined;
+  const agentTracingNode =
+    integrationsPath && nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing']);
+
+  const agentTracingAliases = !agentTracingNode
+    ? []
+    : agentTracingNode.children
+        .filter(
+          child =>
+            !child.missing &&
+            !child.frontmatter.draft &&
+            !child.frontmatter.sidebar_hidden &&
+            !UNALIASED_AGENT_TRACING_PAGES.has(child.slug)
+        )
+        .map(child => ({
+          context: {
+            platform: {platformName},
+            title: child.frontmatter.title,
+            sidebar_title: child.frontmatter.sidebar_title,
+            // Deliberately no sidebar_order: aliases sort alphabetically in their
+            // secondary location instead of using their Agent Tracing order.
+            href: '/' + child.path + '/',
+          },
+          path: `/${pathRoot}/${aliasPathOverrides?.[child.slug] ?? integrationsPath}/${child.slug}/`,
+        }));
+
+  const tree = toTree([...nodes, ...agentTracingAliases].filter(n => !!n.context));
+  treesForRoot.set(cacheKey, tree);
+  return tree;
+}
+
+export function PlatformSidebar({
+  rootNode,
+  platformName,
+  guideName,
+}: PlatformSidebarProps) {
   const platformNode = nodeForPath(rootNode, ['platforms', platformName]);
   if (!platformNode) {
     return null;
@@ -53,44 +124,19 @@ export function PlatformSidebar({
   if (!platform) {
     return null;
   }
-  const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
   const guide = guideName && getGuide(rootNode, platformName, guideName);
 
   const pathRoot = guide
     ? `platforms/${platformName}/guides/${guideName}`
     : `platforms/${platformName}`;
 
-  // The AI library pages live under agent-tracing, but they're also integrations,
-  // so mirror them into the integrations list. These are link-only entries: they
-  // sit under the integrations path but point at the real agent-tracing page.
-  // The list is derived from whatever pages exist under agent-tracing for this
-  // platform or guide, so it needs no maintenance as libraries come and go.
-  const integrationsPath = INTEGRATIONS_PATH_BY_PLATFORM[platformName];
-  const agentTracingNode =
-    integrationsPath && nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing']);
-
-  const aiIntegrationAliases = !agentTracingNode
-    ? []
-    : agentTracingNode.children
-        .filter(
-          child =>
-            !child.missing &&
-            !child.frontmatter.draft &&
-            !NON_LIBRARY_AGENT_TRACING_PAGES.has(child.slug)
-        )
-        .map(child => ({
-          context: {
-            platform: {platformName},
-            title: child.frontmatter.title,
-            sidebar_title: child.frontmatter.sidebar_title,
-            // Deliberately no sidebar_order: these sort alphabetically among the
-            // other integrations rather than carrying their agent-tracing ordering.
-            href: '/' + child.path + '/',
-          },
-          path: `/${pathRoot}/${integrationsPath}/${child.slug}/`,
-        }));
-
-  const tree = toTree([...nodes, ...aiIntegrationAliases].filter(n => !!n.context));
+  const tree = getPlatformSidebarTree(
+    rootNode,
+    platformNode,
+    platformName,
+    guideName,
+    pathRoot
+  );
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';

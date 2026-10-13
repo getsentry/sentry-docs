@@ -21,10 +21,6 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
     <appender name="Sentry" class="io.sentry.logback.SentryAppender">
         <options>
-            <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
-            <dsn>___PUBLIC_DSN___</dsn>
-            <!-- Add data like request headers and IP for users, see https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/ for more info -->
-            <sendDefaultPii>true</sendDefaultPii>
             // ___PRODUCT_OPTION_START___ logs
             <logs>
                 <enabled>true</enabled>
@@ -67,23 +63,19 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 </OnboardingOption>
 
 <OnboardingOption optionId="opentelemetry" hideForThisOption>
-### DSN Configuration
+### SDK Configuration
 
-Note that **you need to configure your DSN** (client key).
+Configure the SDK using a `sentry.properties` file:
 
-
-```xml
-<appender name="Sentry" class="io.sentry.logback.SentryAppender">
-    <options>
-        <!-- NOTE: Replace the test DSN below with your DSN to see the events from this app in sentry.io -->
-        <dsn>___PUBLIC_DSN___</dsn>
-        <!-- Add data like request headers and IP for users, see https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/ for more info -->
-        <sendDefaultPii>true</sendDefaultPii>
-    </options>
-</appender>
+```properties {filename:sentry.properties}
+dsn=___PUBLIC_DSN___
+# Use Data Collection defaults but don't collect automatic user information.
+# https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/
+data-collection.user-info=false
+# Configure other data categories here.
 ```
 
-If the DSN is not present in the `logback.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+You can also provide the DSN through the `sentry.dsn` system property or the `SENTRY_DSN` environment variable. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
 </OnboardingOption>
 
 ### Minimum Log Level
@@ -108,12 +100,6 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
 <OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-    <options>
-        <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
-        <dsn>___PUBLIC_DSN___</dsn>
-        <!-- Add data like request headers and IP for users, see https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/ for more info -->
-        <sendDefaultPii>true</sendDefaultPii>
-    </options>
     <!-- Optionally change minimum Event level. Default for Events is ERROR -->
     <minimumEventLevel>WARN</minimumEventLevel>
     <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
@@ -140,3 +126,20 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
 </appender>
 ```
 </OnboardingOption>
+
+### Encoded Messages
+
+A Logback encoder can mask or remove sensitive values before Sentry receives a log entry. When you configure an encoder on `SentryAppender`, Sentry sends the encoded message and omits the original message template and parameters by default.
+
+Set `includeUnencodedMessage` to `true` when you also need the original template and parameters:
+
+```xml {filename:logback.xml}
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <encoder>
+        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+    <includeUnencodedMessage>true</includeUnencodedMessage>
+</appender>
+```
+
+Original templates and parameters can contain sensitive data. Prefer this scoped appender option to `sendDefaultPii`; the legacy `sendDefaultPii=true` behavior remains supported for compatibility.

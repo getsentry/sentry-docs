@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useEffect, useState} from 'react';
 import {Platform} from 'sentry-docs/types';
+import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {mainSections} from '../navigationData';
 
@@ -23,6 +24,9 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
 
   // Update href after hydration to check localStorage
   useEffect(() => {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
     const storedPlatform = localStorage.getItem('active-platform');
     if (storedPlatform && platforms.length > 0) {
       const platform = platforms.find(p => p.key === storedPlatform);
@@ -42,6 +46,9 @@ export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
 
   // Click handler as fallback for SDKs link
   const handleSdkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isLocalStorageAvailable()) {
+      return;
+    }
     const storedPlatform = localStorage.getItem('active-platform');
     if (storedPlatform && platforms && platforms.length > 0) {
       // First check if it's a platform key

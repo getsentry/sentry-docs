@@ -125,6 +125,16 @@ export function ApiPage({api}: Props) {
   };
   return (
     <DocPage frontMatter={frontMatter} notoc fullWidth>
+      {api.experimental && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs font-medium px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+            Experimental
+          </span>
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            This API is under active development and may change.
+          </span>
+        </div>
+      )}
       <div className="flex">
         <div className="w-full">
           <div className="api-block">

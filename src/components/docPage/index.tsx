@@ -9,6 +9,7 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {getSdkPageHeading} from 'sentry-docs/sdkPageHeading';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -22,6 +23,7 @@ import {CodeContextProvider} from '../codeContext';
 import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DevelopDocsHeader} from '../developDocsHeader';
 import {DocFeedback} from '../docFeedback';
+import {FeatureBadge} from '../featureBadge';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
@@ -70,6 +72,7 @@ export async function DocPage({
   const unversionedPath = getUnversionedPath(path, false);
 
   const leafNode = nodeForPath(rootNode, unversionedPath);
+  const heading = getSdkPageHeading(rootNode, path, frontMatter);
 
   return (
     <div className={`tw-app${hasToc ? ' has-toc' : ''}`}>
@@ -112,7 +115,16 @@ export async function DocPage({
             </div>
             <div>
               <hgroup>
-                <h1>{frontMatter.title}</h1>
+                <h1>
+                  {path[0] === 'platforms' && path.length >= 2 ? (
+                    <span data-md-heading="">{heading}</span>
+                  ) : (
+                    heading
+                  )}
+                  {frontMatter.new && <FeatureBadge type="new" />}
+                  {frontMatter.beta && <FeatureBadge type="beta" />}
+                  {frontMatter.early_access && <FeatureBadge type="early_access" />}
+                </h1>
                 <h2>{frontMatter.description}</h2>
               </hgroup>
               {/* This exact id is important for Algolia indexing */}

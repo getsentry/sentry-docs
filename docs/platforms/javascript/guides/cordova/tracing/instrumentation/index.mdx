@@ -1,0 +1,137 @@
+---
+title: Instrumentation
+description: "Learn how to configure spans to capture trace data on any action in your app."
+sidebar_order: 40
+---
+
+<Alert>
+
+To capture transactions and spans customized to your organization's needs, you must first <PlatformLink to="/tracing/">set up tracing.</PlatformLink>
+
+</Alert>
+
+To add custom performance data to your application, you need to add custom instrumentation in the form of spans. Spans are a way to measure the time it takes for a specific action to occur. For example, you can create a span to measure the time it takes for a function to execute.
+
+You can find a list of all tracing APIs in the <PlatformLink to="/apis/#tracing">Tracing API</PlatformLink> section.
+
+To get started, import the SDK.
+
+<PlatformContent includePath="enriching-events/import" />
+
+There are three key functions for creating spans:
+
+- [startSpan](#starting-an-active-span-startspan): Creates a new span that is active, and which will end automatically. You'll likely want to use this function.
+- [startSpanManual](#starting-an-active-span-with-manual-end-startspanmanual): Creates a new span that is active, which has to be ended manually.
+- [startInactiveSpan](#starting-inactive-spans-startinactivespan): Creates a new span that is inactive, which has to be ended manually.
+
+## Active vs. Inactive Spans
+
+When a new span is started, it will automatically be started as a child of the currently active span, if there is one. This means that if a span is started as an **active span**, any spans that are created inside of the callback where the span is active will be children of that span. Additionally, errors will be tied to the currently active span, if there is one.
+
+In contrast, **inactive spans** will never have children automatically associated with them. This is useful if you do not care about capturing child activity.
+
+A key constraint for active spans is that they can only be made active inside of a callback. This constraint exists because otherwise it becomes impossible to associate spans with the correct parent span when working with asynchronous code.
+
+In places where you are not able to execute your code in a callback (for example, when working with hooks or similar) you have to work with inactive spans.
+
+## Span Starting Options
+
+The following options can be used for all span starting functions:
+
+| Option             | Type                        | Description                                                                                                                                                                                                                          |
+| ------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`             | `string`                    | The name of the span.                                                                                                                                                                                                                |
+| `op`               | `string`                    | The operation of the span.                                                                                                                                                                                                           |
+| `startTime`        | `number`                    | The start time of the span.                                                                                                                                                                                                          |
+| `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                                                                                                                                                                                    |
+| `scope`            | `Scope`                     | The scope to start the span on. By default, the current scope is used.                                                                                                                                                               |
+| `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.                                                                                                                                                                          |
+| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI. |
+
+Only `name` is required, all other options are optional.
+
+## Starting an Active Span (`startSpan`)
+
+For most scenarios, we recommend to start active spans with `Sentry.startSpan()`. This will start a new span that is active in the provided callback, and will automatically end the span when the callback is done. The callback can be synchronous or asynchronous (a promise). In the case of an asynchronous callback, the span will be ended when the promise is resolved or rejected. If the provided callback throws an error or rejects a promise, the span will be marked as failed.
+
+<PlatformContent includePath="performance/start-span" />
+
+## Starting an Active Span with Manual End (`startSpanManual`)
+
+Sometimes, you do not want the span to be ended automatically when the callback is done. In this case, you can use `Sentry.startSpanManual()`. This will start a new span that is active in the provided callback, but will not be automatically ended when the callback is done. You have to manually end the span by calling `span.end()`.
+
+<PlatformContent includePath="performance/start-span-manual" />
+
+## Starting Inactive Spans (`startInactiveSpan`)
+
+To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
+
+<PlatformContent includePath="performance/start-inactive-span" />
+
+## Improving Span Data
+
+### Adding Span Attributes
+
+You can capture span attributes along with your spans. Span attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types. You can specify attributes when starting a span:
+
+```javascript
+Sentry.startSpan(
+  {
+    attributes: {
+      attr1: "value1",
+      attr2: 42,
+      attr3: true,
+    },
+  },
+  () => {
+    // Do something
+  }
+);
+```
+
+Or you can also add attributes to an existing span:
+
+```javascript
+Sentry.startSpan({ name: "My Span" }, (span) => {
+  span.setAttribute("attr1", "value1");
+  // Or set multiple attributes at once:
+  span.setAttributes({
+    attr2: 42,
+    attr3: true,
+  });
+});
+```
+
+### Adding Span Operations ("op")
+
+Spans can have an operation associated with them, which help Sentry identify additional context about the span. For example, database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations, and filters for spans with known operations.
+
+Sentry maintains a [list of well-known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
+
+<PlatformContent includePath="performance/span-operations" />
+
+### Updating the Span Name
+
+You can update the name of a span at any time:
+
+```javascript
+Sentry.startSpan({ name: "Initial Name" }, (span) => {
+  span.updateName("New Name");
+});
+```
+
+### Updating the Span Status
+
+You can manually update the status of a span to indicate whether it succeeded or failed:
+
+```javascript
+Sentry.startSpan({ name: "My Span" }, (span) => {
+  try {
+    doSomething();
+    span.setStatus("ok");
+  } catch (error) {
+    span.setStatus("internal_error");
+    throw error;
+  }
+});
+```

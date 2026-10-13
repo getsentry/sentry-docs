@@ -1,0 +1,21 @@
+---
+id: trace-propagation-targets-case
+title: "`tracePropagationTargets` matching is now case-insensitive"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 50
+---
+
+String and regular expression matching for `tracePropagationTargets` no longer depends on casing. In browsers this was especially surprising, because the URL is normalized with `new URL()` before matching, which lower-cases the origin. A target such as `'myApi.com'` could therefore never match a request to `https://myApi.com`.
+
+```js
+Sentry.init({
+  // In a browser, neither of these matched `https://myApi.com` in v10. In v11 both do.
+  tracePropagationTargets: ["myApi.com", /^https:\/\/myApi\.com/],
+});
+```
+
+If you relied on case-sensitive matching to tell two targets apart, narrow the target with a more specific path. The `g` and `y` flags are ignored now, because they made matching stateful and a target like `/myApi\.com/g` matched only every other request.

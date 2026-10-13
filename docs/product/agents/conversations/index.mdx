@@ -17,9 +17,9 @@ keywords:
   - gen_ai.input.messages
 ---
 
-Sentry's Conversations view lets you observe the interactions users have had with your chat-based AI assistants. It provides a user-like view into past conversations, showing the full exchange of messages and tool calls so you can understand exactly what happened during each session.
+The Conversations tab lets you observe the interactions users have had with your chat-based AI assistants. It provides a user-like view into past conversations, showing the full exchange of messages and tool calls so you can understand exactly what happened during each session.
 
-You can find it in [**Explore > Agents**](https://sentry.io/orgredirect/organizations/:orgslug/explore/agents/) in the Sentry sidebar.
+You can find it in [**Explore → Agents**](https://sentry.io/orgredirect/organizations/:orgslug/explore/agents/) in the Sentry sidebar.
 
 ## Prerequisites
 
@@ -39,7 +39,7 @@ Some SDK integrations (such as OpenAI Agents SDK for Python and OpenAI SDK for N
 
 - [JavaScript/Node](/platforms/javascript/guides/node/agent-tracing/#tracking-conversations)
 - [Cloudflare](/platforms/javascript/guides/cloudflare/agent-tracing/#tracking-conversations)
-- [Cloudflare Agents SDK](/platforms/javascript/guides/cloudflare/features/agents-sdk/)
+- [Cloudflare Agents SDK](/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/)
 - [Python](/platforms/python/agent-tracing/#tracking-conversations)
 - [Laravel](/platforms/php/guides/laravel/agent-tracing/#conversations)
 
@@ -80,7 +80,7 @@ Sentry displays the first available user value in this order: `email`, `username
 
 ## Conversation Titles
 
-Sentry generates a short title for each conversation so you can scan the list in **Explore > Agents**. Titles come from the **first user message** in the conversation — the earliest span that carries both a conversation ID and extractable user input.
+Sentry generates a short title for each conversation so you can scan the list in **Explore → Agents**. Titles come from the **first user message** in the conversation — the earliest span that carries both a conversation ID and extractable user input.
 
 If no title has been generated yet, the list shows the first user message text instead. If Sentry cannot find any user messages in the conversation, it shows **Untitled conversation**.
 
@@ -88,7 +88,7 @@ If no title has been generated yet, the list shows the first user message text i
 
 1. **`gen_ai.conversation.id`** on your AI spans (see [Conversation ID](#conversation-id)).
 
-2. **Input messages that follow the OpenTelemetry GenAI conventions.** Sentry reads `gen_ai.input.messages` (and the deprecated `gen_ai.request.messages` attribute) and takes the **first message with `role: "user"`**. System, assistant, and tool messages are skipped.
+2. **Input messages that follow the OpenTelemetry GenAI conventions.** Sentry reads `gen_ai.input.messages` and takes the **first message with `role: "user"`**. System, assistant, and tool messages are skipped.
 
    Prefer the OTEL message shape — for example `{role, parts}` with a `"user"` role:
 
@@ -107,11 +107,11 @@ If no title has been generated yet, the list shows the first user message text i
 
 SDK integrations that already emit OTEL-shaped `gen_ai.*` spans typically meet these requirements once conversation IDs and input collection are enabled. For manual instrumentation, set the attributes on your agent or AI client spans — see the [span attribute reference](/platforms/javascript/guides/node/agent-tracing/manual-instrumentation/).
 
-## Conversations List
+## Conversations Tab
 
-The [Conversations](https://sentry.io/orgredirect/organizations/:orgslug/explore/agents/) page shows the most recent conversations that match your filters.
+The [Conversations tab](https://sentry.io/orgredirect/organizations/:orgslug/explore/agents/) shows the most recent conversations that match your filters.
 
-![Conversations List](./img/agent-conversations.png)
+![Conversations tab](./img/agent-conversations.png)
 
 Each conversation in the list includes:
 
@@ -139,7 +139,40 @@ The header summarizes the conversation's project, user, tools, LLM calls, errors
 
 Use the two tabs to inspect the conversation:
 
-- **Transcript** shows user messages, assistant responses, tool calls, collapsible thinking or reasoning rows, and embedding operations in chronological order. Failed tool calls use error styling so they stand out. Select an assistant response or tool call to inspect its input, output, attributes, duration, and status. Use **Copy Transcript** to copy the conversation as Markdown.
+- **Transcript** shows user messages, assistant responses, tool calls, evaluations, collapsible thinking or reasoning rows, and embedding operations in chronological order. Failed tool calls use error styling so they stand out. Select any row to inspect its input, output, attributes, duration, and status. Use **Copy Transcript** to copy the conversation as Markdown.
 - **Timeline** shows the AI spans in execution order, including spans that don't have content to display in the transcript. Select a span to open the same input, output, and attribute details.
 
 The error count links to the conversation's failed spans, while **Trace** or **Traces** links connect the conversation to the surrounding distributed trace data.
+
+## Decision Spans
+
+Some conversations include decision spans: LLM-as-judge checks that grade generated content against a set of questions, such as scoring a model's reply for accuracy or classifying a support message by department. Models like TypeSafe Jev produce these spans.
+
+Sentry recognizes a decision by its `gen_ai.operation.name` attribute (`decide`). Decisions share the `ai_client` operation type with ordinary LLM calls, so this attribute is what tells them apart.
+
+### In the Transcript and Timeline
+
+In the **Transcript**, a decision appears as a row like a tool call, showing the evaluator, a one-line result (for example `wants_refund: Yes, department: billing, urgency: high (1.96)`), and its duration. In the **Timeline**, the same one-line result shows as the span's secondary text. **Copy Transcript** includes these results in the Markdown.
+
+![Decision in the conversation transcript](./img/evaluation-transcript-row.png)
+
+### Decision Detail
+
+Select a decision — from the transcript, the timeline, or the trace view — to open its span detail. Unlike an LLM call, a decision stores the evaluated content, its questions, and its answers rather than chat messages, so the detail is laid out around those:
+
+- **Input** shows the evaluated text, followed by one card per question with its instructions, type, and allowed answers. A `score` question lists its scale (for example `0 · low`, `1 · medium`, `2 · high`); a `choice` question lists each option with its description.
+- **Output** shows one card per answer with a short result, and, where the evaluator reports them, a probability bar per option or score value and a confidence percentage. Answers come in a few types: `predicate` and `boolean` (Yes/No), `score` (a value, named after the question's scale), and `choice` (the selected option).
+
+Both tabs have a **Pretty/Raw** toggle. Questions or answers that don't match the expected format are shown as their raw value and tagged **Unrecognized**.
+
+<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', columnGap: '16px', alignItems: 'start'}}>
+
+![Decision span detail, Input tab](./img/evaluation-span-detail-input.png)
+
+![Decision span detail, Output tab](./img/evaluation-span-detail-output.png)
+
+</div>
+
+### Setup
+
+Decision spans come from your SDK instrumentation. If you call an evaluator through a supported integration (for example the `@typesafe-ai/sdk` package or the Vercel AI SDK), these spans are created automatically. To record them by hand, see the Decision Span section of the manual instrumentation guide for [JavaScript](/platforms/javascript/guides/node/agent-tracing/manual-instrumentation/#decision-span) or [Python](/platforms/python/agent-tracing/manual-instrumentation/#decision-span).

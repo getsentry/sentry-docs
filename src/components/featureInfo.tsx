@@ -165,7 +165,8 @@ export function FeatureInfo({features, type}: FeatureInfoProps) {
               <a href={feature.link}>
                 <strong>{feature.title}</strong>
               </a>
-              {key === 'issues' && ' (always enabled)'}: {feature.learnMore}
+              {(key === 'issues' || key === 'metrics') && ' (always enabled)'}:{' '}
+              {feature.learnMore}
             </li>
           );
         }

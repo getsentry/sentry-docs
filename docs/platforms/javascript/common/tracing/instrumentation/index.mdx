@@ -82,7 +82,7 @@ The following options can be used for all span starting functions:
 | `attributes`       | `Record<string, Primitive>` | Attributes to attach to the span.                                                                                                                                                                                                    |
 | `parentSpan`       | `Span`                      | If set, make the span a child of the specified span. Otherwise, the span will be a child of the currently active span.                                                                                                               |
 | `onlyIfParent`     | `boolean`                   | If true, ignore the span if there is no active parent span.                                                                                                                                                                          |
-| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI. Not available in <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>. Use `parentSpan: null` instead to ensure this span shows up as service span. |
+| `forceTransaction` | `boolean`                   | If true, ensure this span shows up as transaction in the Sentry UI. Not available in <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>. Use `parentSpan: null` instead to ensure this span shows up as service span. |
 
 Only `name` is required, all other options are optional.
 
@@ -160,68 +160,61 @@ This option is also available for `startSpan` and `startSpanManual`.
 We expose some helpful utilities that can help you with custom instrumentation.
 See <PlatformLink to="/apis/#tracing-utilities">Tracing Utility APIs</PlatformLink> for more information.
 
-<PlatformSection notSupported={['javascript.cordova']}>
 ## Distributed Tracing
 
-See <PlatformLink to="/tracing/trace-propagation/custom-instrumentation/">Custom Trace Propagation</PlatformLink> for details on how to manually set up distributed tracing.
-
-</PlatformSection>
+See <PlatformLink to="/tracing/trace-propagation/custom-instrumentation/">custom instrumentation</PlatformLink> for details on how to manually set up distributed tracing.
 
 ## Improving Span Data
 
 ### Adding Span Attributes
 
-You can capture span attributes along with your spans. Span attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types. You can specify attributes when starting a span:
+Span attributes describe an operation in a trace: which provider handled a request, which fallback ran, or what outcome it produced. When investigating a slow checkout, for example, you can compare charge spans by `payment.provider` and open an outlier trace to see what happened. The span already records its duration, so you don't need a separate duration attribute.
+
+Add attributes to the span for the operation they describe. If automatic instrumentation doesn't capture an important step, [create a span](#starting-an-active-span-startspan) around the work rather than starting an empty span just to hold attributes. Span attributes can be `string`, `number`, `boolean`, or arrays containing only one of these types. Set attributes when starting a span:
 
 ```javascript
-Sentry.startSpan(
+await Sentry.startSpan(
   {
+    name: "Charge payment provider",
+    op: "payment.charge",
     attributes: {
-      attr1: "value1",
-      attr2: 42,
-      attr3: true,
+      "payment.provider": provider.name,
     },
   },
-  () => {
-    // Do something
+  async (span) => {
+    const result = await provider.charge(order);
+    span.setAttribute("payment.retry_count", result.retryCount);
+    span.setAttribute("payment.outcome", result.outcome);
+    return result;
   }
 );
 ```
 
-Or you can also add attributes to an existing span:
+You can also add attributes to an existing span, for example to identify which search strategy an automatically instrumented request used:
 
 ```javascript
 const span = Sentry.getActiveSpan();
 if (span) {
-  span.setAttribute("attr1", "value1");
-  // Or set multiple attributes at once:
+  span.setAttribute("search.strategy", "prefix");
   span.setAttributes({
-    attr2: 42,
-    attr3: true,
+    "search.fallback_used": true,
+    "search.index": "products_v2",
   });
 }
 ```
 
+Choose consistent, descriptive names and values you can filter or group by. Avoid sensitive values such as raw search terms and payment details. In [Trace Explorer](/product/trace-explorer/), filter on `span.op:payment.charge`, compare `span.duration` by `payment.provider`, and open a slow sample to check for retries or other bottlenecks in the trace.
+
+Attributes are part of sampled traces. For standalone counters, gauges, or distributions that track every occurrence, such as failed checkout counts or queue depth, use [Application Metrics](/product/metrics/) instead.
+For attributes that should also appear on logs and metrics, see <PlatformLink to="/enriching-events/attributes/">Attributes</PlatformLink> for scope-level APIs.
+
 ### Adding attributes to all spans
 
 To add an attribute to all spans, use the `beforeSendSpan` callback.
-Note that the property names differ between transaction mode (the default) and <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>:
+In <PlatformLink to="/tracing/streamed-spans/" fallbackPlatform="javascript">stream mode</PlatformLink>, the callback receives span attributes in `span.attributes`.
+If you opt into transaction mode with `traceLifecycle: 'static'`, wrap the callback with `Sentry.withStaticSpan()` and use `span.data` instead:
 
-```javascript {tabTitle:Transaction Mode (Default)}
-Sentry.init({
-  // dsn, ...
-  beforeSendSpan(span) {
-    span.data = {
-      ...span.data,
-      "environment.region": "us-west-2",
-    };
-
-    return span;
-  },
-});
-```
-
-```javascript {tabTitle:Stream Mode}
+```javascript {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 Sentry.init({
   // dsn, ...
   beforeSendSpan(span) {
@@ -232,6 +225,21 @@ Sentry.init({
 
     return span;
   },
+});
+```
+
+```javascript {tabTitle:Transaction Mode}
+Sentry.init({
+  // dsn, ...
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    span.data = {
+      ...span.data,
+      "environment.region": "us-west-2",
+    };
+
+    return span;
+  }),
 });
 ```
 
@@ -256,12 +264,9 @@ if (span) {
 }
 ```
 
-Prior to v8.39.0, you had to use `span.updateName('New Name')`, which had some limitations in `@sentry/node` and SDKs depending on it (for example, `@sentry/nextjs`):
+Automatically instrumented spans use attributes such as `http.request.method` and `db.system.name` to derive their names. These names are low-cardinality. Raw URL paths, full query statements, and other request-specific details stay in attributes instead of the span name.
 
-- Spans with `http.method` or `http.request.method` attributes would automatically have their name set to the method + the URL path.
-- Spans with `db.system` attributes would automatically have their name set to the system + the statement.
-
-Using `Sentry.updateSpanName()` ensures that the name is updated correctly and no longer overwritten in these cases.
+Use `Sentry.updateSpanName()` to override the automatically generated name. Choose a name that groups similar operations, and store request-specific details in span attributes.
 
 If you use `@sentry/browser`, `@sentry/react`, and so on in browser environments, `span.updateName()` and `Sentry.updateSpanName()` will function identically, so you can use either one of them.
 

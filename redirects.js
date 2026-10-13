@@ -295,6 +295,38 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/processing/batch-processor/',
   },
   {
+    source: '/sdk/telemetry/spans/filtering/',
+    destination: '/sdk/telemetry/spans/#spec-filtering',
+  },
+  {
+    source: '/sdk/telemetry/spans/implementation/',
+    destination: '/sdk/telemetry/spans/#implementation-guidelines',
+  },
+  {
+    source: '/sdk/telemetry/spans/sampling/',
+    destination: '/sdk/telemetry/spans/#spec-sampling',
+  },
+  {
+    source: '/sdk/telemetry/spans/scrubbing-data/',
+    destination: '/sdk/telemetry/spans/#spec-data-scrubbing',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-api/',
+    destination: '/sdk/telemetry/spans/#public-api',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-buffer/',
+    destination: '/sdk/telemetry/spans/#spec-span-buffer',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-protocol/',
+    destination: '/sdk/telemetry/spans/#wire-format',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-trace-propagation/',
+    destination: '/sdk/telemetry/spans/#spec-trace-propagation',
+  },
+  {
     source: '/sdk/telemetry/telemetry-buffer/',
     destination: '/sdk/foundations/processing/telemetry-processor/',
   },
@@ -444,7 +476,8 @@ const developerDocsRedirects = [
   },
   {
     source: '/backend/cross-region-replication/',
-    destination: '/application-architecture/multi-region-deployment/cross-region-replication/',
+    destination:
+      '/application-architecture/multi-region-deployment/cross-region-replication/',
   },
   {
     source: '/backend/cross-region-rpc/',
@@ -588,8 +621,33 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/integration/',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
+  },
+
+  // Guides → Get Started restructure
+  {
+    source: '/guides/',
+    destination: '/get-started/guides/',
+  },
+  {
+    source: '/guides/:path*',
+    destination: '/get-started/guides/:path*',
+  },
+
+  {
     source: '/api/guides/oauth/',
     destination: '/api/auth/',
+  },
+  {
+    source: '/api/guides/',
+    destination: '/api/',
   },
   {
     source: '/product/codecov/:path*',
@@ -868,6 +926,10 @@ const userDocsRedirects = [
     destination: '/integrations/source-code-mgmt/github/',
   },
   {
+    source: '/integrations/source-code-mgmt/github-enterprise/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
     source: '/integrations/gitlab/',
     destination: '/integrations/source-code-mgmt/gitlab/',
   },
@@ -881,6 +943,22 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/cursor/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fixa/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fixa/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -956,6 +1034,82 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/aws-lambda/install/cjs-npm__v9.x/',
   },
   {
+    // Previous Nuxt setup method (--import)
+    source: '/platforms/javascript/guides/nuxt/install/cli-import/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // Previous Nuxt setup method (top-level import)
+    source: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // Previous Nuxt setup method (dynamic import)
+    source: '/platforms/javascript/guides/nuxt/install/dynamic-import/',
+    destination: '/platforms/javascript/guides/nuxt/install/',
+  },
+  {
+    // The Nuxt SDK links to this path in its Cloudflare build warning
+    source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+  },
+  {
+    source: '/platforms/javascript/guides/connect/',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/connect/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/node/install/lightweight/',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/express/install/lightweight/',
+    destination:
+      '/platforms/javascript/guides/express/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/fastify/install/lightweight/',
+    destination:
+      '/platforms/javascript/guides/fastify/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/hapi/install/lightweight/',
+    destination:
+      '/platforms/javascript/guides/hapi/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/hono/install/lightweight/',
+    destination:
+      '/platforms/javascript/guides/hono/configuration/integrations/opentelemetry/',
+  },
+  {
+    source: '/platforms/javascript/guides/koa/install/lightweight/',
+    destination:
+      '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/esm/',
+    destination: '/platforms/javascript/guides/:guide/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
+    destination: '/platforms/javascript/guides/:guide/',
+  },
+  {
+    source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',
+    destination: '/platforms/javascript/guides/nestjs/',
+  },
+  {
+    source: '/platforms/javascript/guides/nestjs/install/',
+    destination: '/platforms/javascript/guides/nestjs/',
+  },
+  {
     source: '/platforms/javascript/guides/react-router/features/instrumentation-api/',
     destination: '/platforms/javascript/guides/react-router/manual-setup/',
   },
@@ -989,19 +1143,15 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/kawachai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/kosuke/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1029,7 +1179,23 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ando/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1046,6 +1212,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/shiprail/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/shipfox/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1069,6 +1239,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1089,11 +1263,19 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/superplane/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/bugzero/',
     destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/clip-by-arito/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1125,6 +1307,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1149,10 +1335,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/synthreo/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1172,6 +1354,14 @@ const userDocsRedirects = [
     source: '/organization/integrations/superlog-responder/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1184,19 +1374,15 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/integrations/kawachai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/kosuke/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1224,7 +1410,23 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ando/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/arg0-app/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1241,6 +1443,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/shiprail/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/shipfox/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1264,6 +1470,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1284,11 +1494,19 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/superplane/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/bugzero/',
     destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/integrations/choji/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/clip-by-arito/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1320,6 +1538,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1344,10 +1566,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/synthreo/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1365,6 +1583,14 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog-responder/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/motir/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1427,7 +1653,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/sentry-basics/integrate-frontend/initialize-sentry-sdk/',
-    destination: '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
+    destination:
+      '/product/sentry-basics/getting-started-tutorial/initialize-sentry-sdk-frontend/',
   },
   {
     source: '/product/sentry-basics/integrate-frontend/generate-first-error/',
@@ -1435,7 +1662,8 @@ const userDocsRedirects = [
   },
   {
     source: '/product/sentry-basics/integrate-frontend/upload-source-maps/',
-    destination: '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
+    destination:
+      '/product/sentry-basics/getting-started-tutorial/enable-readable-stack-traces/',
   },
   {
     source: '/product/sentry-basics/integrate-frontend/configure-scms/',
@@ -1725,6 +1953,29 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/:guide/sourcemaps/hosting-publicly/',
     destination:
       '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly',
+  },
+  // The Ionic Capacitor source maps page only exists for the Capacitor guide.
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
   },
   {
     source:
@@ -2077,14 +2328,16 @@ const userDocsRedirects = [
     destination: '/platforms/react-native/guides/expo/',
   },
   {
+    source: '/platforms/react-native/manual-setup/expo.md',
+    destination: '/platforms/react-native/guides/expo.md',
+  },
+  {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
-    destination:
-      '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/eas-build-hooks/',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/expo-updates/',
-    destination:
-      '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
+    destination: '/platforms/react-native/guides/expo/manual-setup/expo/expo-updates/',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/gradle/',
@@ -2114,6 +2367,10 @@ const userDocsRedirects = [
       '/platforms/react-native/guides/expo/tracing/instrumentation/expo-resources/',
   },
   {
+    source: '/platforms/react-native/guides/:guide/configuration/integrations/:path*',
+    destination: '/platforms/react-native/guides/:guide/integrations/:path*',
+  },
+  {
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
@@ -2131,7 +2388,7 @@ const userDocsRedirects = [
     source: '/ai/sentry-cli/',
     destination: 'https://cli.sentry.dev',
   },
-   // Redirects for Insights → Product Agents migration
+  // Redirects for Insights → Product Agents migration
   {
     source: '/product/insights/llm-monitoring/',
     destination: '/product/agents/',
@@ -2262,62 +2519,364 @@ const userDocsRedirects = [
     source: '/product/insights/:path*',
     destination: '/product/dashboards/sentry-dashboards/',
   },
-  // Mastra lives under Agent Tracing alongside the other AI library pages.
-  // Map older names directly to avoid redirect chains.
+  // Cloudflare setup pages moved from Features to Installation Methods.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/vite-plugin.md',
+    destination: '/platforms/javascript/guides/cloudflare/install/vite-plugin.md',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/vite-plugin/:path*',
+    destination: '/platforms/javascript/guides/cloudflare/install/vite-plugin/:path*',
+  },
+  // The nodejs_compat entrypoint was removed in v11; the guide covers the single entry.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/nodejs-compat.md',
+    destination: '/platforms/javascript/guides/cloudflare.md',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/nodejs-compat/:path*',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  // instrumentD1WithSentry was removed in v11; withSentry() instruments D1 bindings automatically.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/d1.md',
+    destination: '/platforms/javascript/guides/cloudflare/features/bindings.md',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/d1/:path*',
+    destination: '/platforms/javascript/guides/cloudflare/features/bindings/',
+  },
+  // honoIntegration was removed in v11 in favor of the @sentry/hono SDK.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/configuration/integrations/hono/:path*',
+    destination: '/platforms/javascript/guides/hono/',
+  },
+  // Cloudflare AI pages moved from Features to Agent Tracing.
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/agents-sdk.md',
+    destination: '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk.md',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/agents-sdk/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/workers-ai.md',
+    destination: '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/features/workers-ai/:path*',
+    destination:
+      '/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/:path*',
+  },
+  // Flue moved from Agent Tracing to its own guide when the SDK-based setup
+  // replaced the `flue add tooling sentry` blueprint.
+  // Map older names directly to the guide to avoid redirect chains. The
+  // Cloudflare page is listed first so its readers keep landing on it.
+  {
+    source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  // The pre-rename names (ai-agent-monitoring, ai-agent-tracing) need their own
+  // rules: the generic rename redirects rewrite them onto agent-tracing/flue
+  // paths, which the rules above redirect again — a 2-hop chain.
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/flue.md',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/flue/:path*',
+    destination: '/platforms/javascript/guides/flue/',
+  },
+  // Mastra lifted from the Agent Tracing integration page to a standalone guide.
+  // Map older names directly to the guide to avoid redirect chains.
+  {
+    source: '/platforms/javascript/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
   {
     source: '/platforms/javascript/configuration/integrations/mastra.md',
-    destination: '/platforms/javascript/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/configuration/integrations/mastra/:path*',
-    destination: '/platforms/javascript/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
+    source: '/platforms/javascript/guides/:guide/configuration/integrations/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/configuration/integrations/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/mastra.md',
-    destination: '/platforms/javascript/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/mastra/:path*',
-    destination: '/platforms/javascript/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra.md',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+    source: '/platforms/javascript/guides/:guide/ai-agent-monitoring/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra.md',
-    destination: '/platforms/javascript/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/mastra/:path*',
-    destination: '/platforms/javascript/agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
   },
   {
     source: '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra.md',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/mastra.md',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
+    destination: '/platforms/javascript/guides/mastra/',
+  },
+  // Eve lifted from the Agent Tracing integration page to a standalone guide
+  {
+    source: '/platforms/javascript/agent-tracing/eve.md',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/eve/:path*',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/eve.md',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/eve/:path*',
+    destination: '/platforms/javascript/guides/eve/',
+  },
+  // AI provider setup pages moved from agent-tracing to configuration/integrations
+  {
+    source: '/platforms/javascript/agent-tracing/openai.md',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/openai.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/openai/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/openai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/openai.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/openai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/openai/:path*',
+    destination: '/platforms/javascript/guides/:guide/configuration/integrations/openai/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/anthropic.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/anthropic.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/anthropic/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/anthropic/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/anthropic.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anthropic.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/anthropic/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anthropic/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/google-genai.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/google-genai.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/google-genai/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/google-genai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/google-genai.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/google-genai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/google-genai/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langchain.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langchain.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langchain/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langchain/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langchain.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langchain.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langchain/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langchain/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langgraph.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langgraph.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/langgraph/:path*',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/langgraph/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langgraph.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langgraph.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/langgraph/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/langgraph/',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/vercelai.md',
+    destination:
+      '/platforms/javascript/guides/node/configuration/integrations/vercelai.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/vercelai/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/vercelai/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/vercelai.md',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/vercelai.md',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing/vercelai/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/vercelai/',
+  },
+  // Browser and mobile Agent Tracing pages now point to the Node.js guides.
+  {
+    source: '/platforms/javascript/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source:
-      '/platforms/javascript/guides/:guide/ai-agent-tracing/mastra/:path*',
-    destination:
-      '/platforms/javascript/guides/:guide/agent-tracing/mastra/:path*',
+      '/platforms/javascript/guides/:guide(angular|electron|ember|gatsby|react|solid|svelte|vue)/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|electron|ember|gatsby|react|solid|svelte|vue)/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/react-native/agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   // Agent Tracing moved to top-level feature
   // Python AI library pages moved from integrations to agent-tracing
@@ -2393,59 +2952,29 @@ const userDocsRedirects = [
     source: '/platforms/python/integrations/pydantic-ai/:path*',
     destination: '/platforms/python/agent-tracing/pydantic-ai/:path*',
   },
-  // AI library setup pages moved from configuration/integrations to agent-tracing
+  // InboundFilters integration was renamed to EventFilters in SDK v11
   {
-    source: '/platforms/javascript/configuration/integrations/vercelai/',
-    destination: '/platforms/javascript/agent-tracing/vercelai/',
+    source: '/platforms/javascript/configuration/integrations/inboundfilters/',
+    destination: '/platforms/javascript/configuration/integrations/eventfilters/',
   },
   {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/vercelai/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/vercelai/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/openai/',
-    destination: '/platforms/javascript/agent-tracing/openai/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/openai/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/openai/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/anthropic/',
-    destination: '/platforms/javascript/agent-tracing/anthropic/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/anthropic/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/anthropic/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/google-genai/',
-    destination: '/platforms/javascript/agent-tracing/google-genai/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/google-genai/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/google-genai/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/langchain/',
-    destination: '/platforms/javascript/agent-tracing/langchain/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/langchain/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/langchain/',
-  },
-  {
-    source: '/platforms/javascript/configuration/integrations/langgraph/',
-    destination: '/platforms/javascript/agent-tracing/langgraph/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/integrations/langgraph/',
-    destination: '/platforms/javascript/guides/:guide/agent-tracing/langgraph/',
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/inboundfilters/',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/eventfilters/',
   },
   // agent-tracing-browser merged into agent-tracing
   {
+    source: '/platforms/javascript/agent-tracing-browser/',
+    destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
     source: '/platforms/javascript/agent-tracing-browser/:path*',
     destination: '/platforms/javascript/agent-tracing/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/agent-tracing-browser/',
+    destination: '/platforms/javascript/guides/:guide/agent-tracing/',
   },
   {
     source: '/platforms/javascript/guides/:guide/agent-tracing-browser/:path*',
@@ -2463,7 +2992,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/ai-agents-module/:path*',
-    destination: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source:
@@ -2561,7 +3090,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/:path*',
-    destination: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring-browser/',
@@ -2585,11 +3114,23 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/react-native/ai-agent-monitoring/',
-    destination: '/platforms/react-native/agent-tracing/',
+    destination: '/platforms/javascript/guides/node/agent-tracing/',
   },
   {
     source: '/platforms/react-native/ai-agent-monitoring/:path*',
-    destination: '/platforms/react-native/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-monitoring.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
@@ -2606,7 +3147,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/ai-agent-tracing/:path*',
-    destination: '/platforms/javascript/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
     source: '/platforms/javascript/ai-agent-tracing-browser/',
@@ -2630,11 +3171,23 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/react-native/ai-agent-tracing/',
-    destination: '/platforms/react-native/agent-tracing/',
+    destination: '/platforms/javascript/guides/node/agent-tracing/',
   },
   {
     source: '/platforms/react-native/ai-agent-tracing/:path*',
-    destination: '/platforms/react-native/agent-tracing/:path*',
+    destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
+  },
+  {
+    source: '/platforms/react-native/ai-agent-tracing.md',
+    destination: '/platforms/javascript/guides/node/agent-tracing.md',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing/',
+  },
+  {
+    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
+    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',
@@ -2718,12 +3271,67 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
+    source: '/product/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
   {
+    source: '/concepts/key-terms/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
+  },
+  {
     source: '/organization/integrations/shortcut/',
     destination: '/integrations/issue-tracking/shortcut/',
+  },
+  // Former span metrics pages now live in SDK instrumentation guides.
+  {
+    source: '/platforms/javascript/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/examples/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/python/metrics/',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
   },
   // Redirects for JavaScript tracing docs
   {
@@ -2732,17 +3340,18 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source: '/platforms/javascript/profiling/browser-profiling/',
@@ -2777,11 +3386,6 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/profiling/',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
-  },
-  {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
   },
@@ -2795,6 +3399,12 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
     destination:
       '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anr/event-loop-block/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/event-loop-block/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
@@ -2837,6 +3447,16 @@ const userDocsRedirects = [
     source:
       '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
     destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/troubleshooting/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
   },
   {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
@@ -3114,11 +3734,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/alerts/create-alerts/',
-    destination: '/product/monitors-and-alerts/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/create-alerts/',
   },
   {
     source: '/product/alerts/create-alerts/issue-alert-config/',
-    destination: '/product/monitors-and-alerts/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/create-alerts/',
   },
   {
     source: '/product/alerts/create-alerts/metric-alert-config/',
@@ -3126,7 +3746,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/alerts/create-alerts/routing-alerts/',
-    destination: '/product/monitors-and-alerts/alerts/',
+    destination: '/product/monitors-and-alerts/alerts/create-alerts/',
   },
   {
     source: '/product/alerts/create-alerts/uptime-alert-config/',

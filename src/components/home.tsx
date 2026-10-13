@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {type ReactNode} from 'react';
+import {Fragment, type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import Cursor from 'sentry-docs/icons/cursor';
@@ -15,6 +15,8 @@ import {Header} from './header';
 import styles from './home.module.scss';
 import {HomeAiSetupCard} from './homeAiSetupCard';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
+import {PreferredPlatformLink} from './preferredPlatformLink';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export async function Home() {
@@ -156,6 +158,47 @@ export async function Home() {
               icon={<Cursor width={20} height={20} aria-hidden />}
             />
           </div>
+          <p className="mt-8 mb-4">
+            Start{' '}
+            <Link href="/product/agents/" className={styles.seeAllLink}>
+              debugging your agents
+            </Link>{' '}
+            with one of these agent integrations.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <AgentQuickLink
+              href="/platforms/javascript/guides/mastra/"
+              title="Mastra"
+              desc="Export Mastra AI tracing to Sentry."
+              icon={<PlatformIcon platform="mastra" />}
+            />
+            <AgentQuickLink
+              href="/platforms/javascript/guides/eve/"
+              title="Eve"
+              desc="Send Eve agent traces, conversations, and errors to Sentry."
+              icon={<PlatformIcon platform="eve" />}
+            />
+            <AgentQuickLink
+              href="/platforms/javascript/guides/flue/"
+              title="Flue"
+              desc="Send Flue traces, logs, and errors to Sentry."
+              icon={<PlatformIcon platform="flue" />}
+            />
+            <AgentQuickLink
+              to="/configuration/integrations/vercelai/"
+              defaultPlatform="javascript.node"
+              title="Vercel AI"
+              desc="Instrument the Vercel AI SDK."
+              icon={<PlatformIcon platform="vercel" />}
+            />
+            <AgentQuickLink
+              to="/configuration/integrations/openai/"
+              defaultPlatform="javascript.node"
+              title="OpenAI"
+              desc="Instrument the OpenAI SDK."
+              icon={<PlatformIcon platform="openai" />}
+            />
+          </div>
         </section>
 
         <section className="max-w-screen-lg mx-auto px-4 sm:px-8 pb-16">
@@ -249,6 +292,56 @@ function QuickLink({
       </div>
       <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
     </Link>
+  );
+}
+
+type AgentQuickLinkProps = {
+  desc: string;
+  icon: ReactNode;
+  title: string;
+} & (
+  | {
+      /** Direct link, for integrations documented on a single page (e.g. standalone guides). */
+      href: string;
+      to?: never;
+    }
+  | {
+      /** Platform-relative path, resolved through `/platform-redirect/`. */
+      to: string;
+      /** Platform to use when the user hasn't picked one yet. */
+      defaultPlatform?: string;
+      href?: never;
+    }
+);
+
+function AgentQuickLink(props: AgentQuickLinkProps) {
+  const className = `${styles.quickLink} no-underline`;
+  const content = (
+    <Fragment>
+      <div className={styles.quickLinkTitle}>
+        {props.icon}
+        {props.title}
+      </div>
+      <div className="text-sm text-[var(--gray-11)] leading-snug">{props.desc}</div>
+    </Fragment>
+  );
+
+  if (props.href !== undefined) {
+    return (
+      <Link href={props.href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <PreferredPlatformLink
+      to={props.to}
+      defaultPlatform={props.defaultPlatform}
+      className={className}
+    >
+      {content}
+    </PreferredPlatformLink>
   );
 }
 

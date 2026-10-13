@@ -1,5 +1,5 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
-import {withSentryConfig} from '@sentry/nextjs';
+import {withSentryConfig} from '@sentry/nextjs/config';
 
 import {redirects} from './redirects.js';
 import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
@@ -150,6 +150,11 @@ const nextConfig = {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',
     },
+    {
+      source: '/api/aws-lambda-layers/:runtime/:sdkVersion',
+      destination:
+        'https://release-registry.services.sentry.io/aws-lambda-layers/:runtime/:sdkVersion',
+    },
   ],
   sassOptions: {
     silenceDeprecations: ['legacy-js-api'],
@@ -183,10 +188,9 @@ module.exports = withSentryConfig(nextConfig, {
     reactComponentAnnotation: {
       enabled: true,
     },
-    unstable_sentryWebpackPluginOptions: {
-      applicationKey: 'sentry-docs',
-    },
   },
+
+  applicationKey: 'sentry-docs',
 
   _experimental: {
     thirdPartyOriginStackFrames: true,
