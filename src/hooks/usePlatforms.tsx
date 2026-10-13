@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {Platform} from 'sentry-docs/types';
 
 const PLATFORMS_URL = '/platforms.json';
@@ -28,14 +28,24 @@ export function loadPlatforms(): Promise<Platform[]> {
   return platformsPromise;
 }
 
+type PlatformsState = {
+  /** `undefined` until the list has loaded. */
+  platforms: Platform[] | undefined;
+  /** Retries loading the list after it failed. */
+  retry: () => void;
+  status: 'loading' | 'loaded' | 'error';
+};
+
 /**
- * Returns the list of all platforms and guides, or `undefined` while it is loading.
+ * Returns the list of all platforms and guides.
  *
  * The list is loaded in the background once the browser is idle, so it is usually
  * available by the time someone opens a platform picker.
  */
-export function usePlatforms(): Platform[] | undefined {
+export function usePlatforms(): PlatformsState {
   const [platforms, setPlatforms] = useState<Platform[]>();
+  const [status, setStatus] = useState<PlatformsState['status']>('loading');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,13 +54,23 @@ export function usePlatforms(): Platform[] | undefined {
         .then(result => {
           if (!cancelled) {
             setPlatforms(result);
+            setStatus('loaded');
           }
         })
         .catch(() => {
-          // Leave the list empty; consumers fall back to their defaults.
+          if (!cancelled) {
+            setStatus('error');
+          }
         });
     };
 
+    // Retries load right away; the initial load waits until the browser is idle.
+    if (attempt > 0) {
+      load();
+      return () => {
+        cancelled = true;
+      };
+    }
     if (typeof window.requestIdleCallback === 'function') {
       const id = window.requestIdleCallback(load, {timeout: 2000});
       return () => {
@@ -63,7 +83,12 @@ export function usePlatforms(): Platform[] | undefined {
       cancelled = true;
       clearTimeout(id);
     };
+  }, [attempt]);
+
+  const retry = useCallback(() => {
+    setStatus('loading');
+    setAttempt(a => a + 1);
   }, []);
 
-  return platforms;
+  return {platforms, status, retry};
 }

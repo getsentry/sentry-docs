@@ -34,16 +34,19 @@ export async function Sidebar({path, versions}: SidebarProps) {
 
   // Only show the platform selector and sidebar for SDKs/platforms section
   if (path[0] === 'platforms') {
-    // The full platform list is loaded on the client. The selector only needs the
-    // current platform or guide to render the trigger until then; a platform's
-    // own guide entry is kept as it is selected when `platformTitle` is set.
-    const selectedPlatform =
-      currentGuide ??
-      (currentPlatform && {
-        ...currentPlatform,
-        guides: currentPlatform.guides.filter(g => g.key === currentPlatform.key),
-        integrations: [],
-      });
+    // The full platform list is loaded on the client. Until then, the selector
+    // only gets the current platform with the current guide (or the platform's
+    // own guide entry, which is selected when `platformTitle` is set).
+    const currentKey = (currentGuide ?? currentPlatform)?.key;
+    const initialPlatforms = currentPlatform
+      ? [
+          {
+            ...currentPlatform,
+            guides: currentPlatform.guides.filter(g => g.key === currentKey),
+            integrations: [],
+          },
+        ]
+      : [];
 
     return (
       <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
@@ -53,7 +56,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
           <MobileSidebarNav />
           <div className="platform-selector px-3">
             <div className="mb-3">
-              <PlatformSelector currentPlatform={selectedPlatform} />
+              <PlatformSelector
+                currentPlatform={currentGuide ?? initialPlatforms[0]}
+                initialPlatforms={initialPlatforms}
+              />
             </div>
             {versions && versions.length >= 1 && (
               <div className="mb-3">

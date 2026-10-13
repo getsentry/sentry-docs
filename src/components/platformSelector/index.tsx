@@ -1,6 +1,11 @@
 'use client';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
-import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
+import {
+  CaretRightIcon,
+  CaretSortIcon,
+  MagnifyingGlassIcon,
+  UpdateIcon,
+} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
 import {usePathname} from 'next/navigation';
@@ -23,31 +28,39 @@ import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 import {resolveSamePageUrl} from './samePageUrl';
 import styles from './style.module.scss';
 
+const NO_PLATFORMS: Platform[] = [];
+
 /**
- * Until the full list has loaded, only the current platform or guide is known.
- * Radix Select needs the selected item to be rendered to display it in the trigger.
+ * Shown below the list while the full list of platforms is loading or failed to load.
  */
-function getFallbackPlatforms(currentPlatform?: Platform | PlatformGuide): Platform[] {
-  if (!currentPlatform) {
-    return [];
+function PlatformsListStatus({
+  status,
+  onRetry,
+}: {
+  onRetry: () => void;
+  status: 'loading' | 'error';
+}) {
+  if (status === 'loading') {
+    return (
+      <div className={styles['list-status']} role="status">
+        <UpdateIcon className="animate-spin" aria-hidden />
+        Loading platforms…
+      </div>
+    );
   }
-  if (currentPlatform.type === 'platform') {
-    return [currentPlatform];
-  }
-  return [
-    {
-      key: currentPlatform.platform,
-      name: currentPlatform.platform,
-      type: 'platform',
-      url: `/platforms/${currentPlatform.platform}/`,
-      guides: [currentPlatform],
-      integrations: [],
-    },
-  ];
+  return (
+    <div className={styles['list-status']} role="alert">
+      Couldn't load platforms.
+      <button type="button" className={styles['retry-button']} onClick={onRetry}>
+        Retry
+      </button>
+    </div>
+  );
 }
 
 export function PlatformSelector({
   currentPlatform,
+  initialPlatforms = NO_PLATFORMS,
   alwaysOpen = false,
   listOnly = false,
   dropdownStyle = false,
@@ -55,12 +68,21 @@ export function PlatformSelector({
   alwaysOpen?: boolean;
   currentPlatform?: Platform | PlatformGuide;
   dropdownStyle?: boolean;
+  /**
+   * Rendered until the full list has loaded. Must contain the current platform or
+   * guide, as Radix Select needs the selected item to display it in the trigger.
+   */
+  initialPlatforms?: Platform[];
   listOnly?: boolean;
 }) {
-  const loadedPlatforms = usePlatforms();
+  const {
+    platforms: loadedPlatforms,
+    status: platformsStatus,
+    retry: retryPlatforms,
+  } = usePlatforms();
   const platforms = useMemo(
-    () => loadedPlatforms ?? getFallbackPlatforms(currentPlatform),
-    [loadedPlatforms, currentPlatform]
+    () => loadedPlatforms ?? initialPlatforms,
+    [loadedPlatforms, initialPlatforms]
   );
 
   // humanize the title for a more natural sorting
@@ -146,13 +168,27 @@ export function PlatformSelector({
       if (isLocalStorageAvailable()) {
         localStorage.setItem('active-platform', platform_.key);
       }
-      // Go to the same page for the selected platform if it exists.
-      // Use hard navigation for faster page load
+      // Go to the same page for the selected platform if it exists. Finding it
+      // can take a moment, so show that we're navigating in the meantime.
+      setIsNavigating(true);
       resolveSamePageUrl(platform_, pathname ?? '').then(url => {
+        // Use hard navigation for faster page load
         window.location.href = url;
       });
     }
   };
+
+  const [isNavigating, setIsNavigating] = useState(false);
+  useEffect(() => {
+    // Reset when coming back to this page from the back/forward cache
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsNavigating(false);
+      }
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
 
   const activeElementRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -265,6 +301,9 @@ export function PlatformSelector({
               listOnly
             />
           ))}
+          {platformsStatus !== 'loaded' && (
+            <PlatformsListStatus status={platformsStatus} onRetry={retryPlatforms} />
+          )}
         </div>
       </div>
     );
@@ -277,6 +316,7 @@ export function PlatformSelector({
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
+        disabled={isNavigating}
       >
         <ComboboxProvider
           open={open}
@@ -285,10 +325,18 @@ export function PlatformSelector({
           setValue={v => startTransition(() => setSearchValue(v))}
         >
           {!alwaysOpen && (
-            <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
+            <RadixSelect.Trigger
+              aria-label="Platform"
+              aria-busy={isNavigating}
+              className={styles.select}
+            >
               <RadixSelect.Value placeholder="Choose your SDK" />
               <RadixSelect.Icon className={styles['select-icon']}>
-                <CaretSortIcon />
+                {isNavigating ? (
+                  <UpdateIcon className="animate-spin" />
+                ) : (
+                  <CaretSortIcon />
+                )}
               </RadixSelect.Icon>
             </RadixSelect.Trigger>
           )}
@@ -359,6 +407,9 @@ export function PlatformSelector({
                 );
               })}
             </ComboboxList>
+            {platformsStatus !== 'loaded' && (
+              <PlatformsListStatus status={platformsStatus} onRetry={retryPlatforms} />
+            )}
           </RadixSelect.Content>
         </ComboboxProvider>
       </RadixSelect.Root>

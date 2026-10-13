@@ -52,7 +52,7 @@ function useDropdownPosition(triggerRef, open) {
 const NO_PLATFORMS: Platform[] = [];
 
 export default function TopNavClient() {
-  const platforms = usePlatforms() ?? NO_PLATFORMS;
+  const platforms = usePlatforms().platforms ?? NO_PLATFORMS;
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [platformDropdownByClick, setPlatformDropdownByClick] = useState(false);
   const platformBtnRef = useRef<HTMLButtonElement>(null);

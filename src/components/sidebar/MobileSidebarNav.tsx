@@ -13,7 +13,7 @@ import {mainSections} from '../navigationData';
 const NO_PLATFORMS: Platform[] = [];
 
 export function MobileSidebarNav() {
-  const platforms = usePlatforms() ?? NO_PLATFORMS;
+  const platforms = usePlatforms().platforms ?? NO_PLATFORMS;
   const pathname = usePathname();
 
   const isActive = (href: string) => pathname?.startsWith(href);
