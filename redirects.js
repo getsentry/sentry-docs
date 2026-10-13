@@ -1036,22 +1036,22 @@ const userDocsRedirects = [
   {
     // Previous Nuxt setup method (--import)
     source: '/platforms/javascript/guides/nuxt/install/cli-import/',
-    destination: '/platforms/javascript/guides/nuxt/install/',
+    destination: '/platforms/javascript/guides/node/nuxt/install/',
   },
   {
     // Previous Nuxt setup method (top-level import)
     source: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
-    destination: '/platforms/javascript/guides/nuxt/install/',
+    destination: '/platforms/javascript/guides/node/nuxt/install/',
   },
   {
     // Previous Nuxt setup method (dynamic import)
     source: '/platforms/javascript/guides/nuxt/install/dynamic-import/',
-    destination: '/platforms/javascript/guides/nuxt/install/',
+    destination: '/platforms/javascript/guides/node/nuxt/install/',
   },
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/cloudflare/nuxt/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -1115,7 +1115,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
-    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+    destination: '/platforms/javascript/guides/node/nextjs/sourcemaps/',
   },
   {
     source: '/organization/integrations/vercel/',
@@ -3566,7 +3566,7 @@ const userDocsRedirects = [
   // Next.js usage -> capturing-errors rename
   {
     source: '/platforms/javascript/guides/nextjs/usage/',
-    destination: '/platforms/javascript/guides/nextjs/capturing-errors/',
+    destination: '/platforms/javascript/guides/node/nextjs/capturing-errors/',
   },
   {
     source: '/platforms/javascript/guides/javascript/:path*',
@@ -3753,6 +3753,44 @@ const userDocsRedirects = [
   {
     source: '/product/alerts/:path*',
     destination: '/product/monitors-and-alerts/alerts/',
+  },
+  // Next.js and Nuxt are nested guides of their runtime. Keep these last, so that
+  // the redirects of single Next.js and Nuxt pages above match first.
+  {
+    source: '/platforms/javascript/guides/nuxt/install/top-level-import/',
+    destination: '/platforms/javascript/guides/node/nuxt/install/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/configuration/integrations/rrweb/',
+    destination: '/platforms/javascript/session-replay/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/manual/',
+    destination: '/platforms/javascript/guides/node/nextjs/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/cloudflare/nextjs/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/:guide(nextjs|nuxt)/',
+    destination: '/platforms/javascript/guides/cloudflare/:guide/',
+  },
+  {
+    source: '/platforms/javascript/guides/nuxt__v:version/:path*',
+    destination: '/platforms/javascript/guides/node/nuxt__v:version/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/nuxt/:page(.*__v[^/]+)',
+    destination: '/platforms/javascript/guides/node/nuxt/:page',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(nextjs|nuxt)/',
+    destination: '/platforms/javascript/guides/node/:guide/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(nextjs|nuxt)/:path+',
+    destination: '/platforms/javascript/guides/node/:guide/:path+/',
   },
 ];
 
