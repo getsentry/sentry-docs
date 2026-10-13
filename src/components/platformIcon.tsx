@@ -145,6 +145,7 @@ import TokioSVG from 'platformicons/svg/tokio.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
 import TracingSVG from 'platformicons/svg/tracing.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
+import TypeSafeSVG from 'platformicons/svg/typesafe-ai.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
 import UnoSVG from 'platformicons/svg/uno.svg';
 import UnrealSVG from 'platformicons/svg/unreal.svg';
@@ -303,6 +304,7 @@ import TokioSVGLarge from 'platformicons/svg_80x80/tokio.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
 import TracingSVGLarge from 'platformicons/svg_80x80/tracing.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
+import TypeSafeSVGLarge from 'platformicons/svg_80x80/typesafe-ai.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
 import UnoSVGLarge from 'platformicons/svg_80x80/uno.svg';
 import UnrealSVGLarge from 'platformicons/svg_80x80/unreal.svg';
@@ -321,6 +323,7 @@ import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 import EveSVG from 'sentry-docs/icons/eve.svg';
 import ExpoSVG from 'sentry-docs/icons/expo.svg';
 import FlueSVG from 'sentry-docs/icons/flue.svg';
+import PiDurableSVG from 'sentry-docs/icons/pi-durable.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -764,6 +767,10 @@ const formatToSVG = {
     sm: PerlSVG,
     lg: PerlSVGLarge,
   },
+  'pi-durable': {
+    sm: PiDurableSVG,
+    lg: PiDurableSVG,
+  },
   php: {
     sm: PhpSVG,
     lg: PhpSVGLarge,
@@ -929,6 +936,10 @@ const formatToSVG = {
     sm: TrytonSVG,
     lg: TrytonSVGLarge,
   },
+  'typesafe-ai': {
+    sm: TypeSafeSVG,
+    lg: TypeSafeSVGLarge,
+  },
   unity: {
     sm: UnitySVG,
     lg: UnitySVGLarge,
@@ -1020,7 +1031,9 @@ export const PLATFORM_TO_ICON = {
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
   'go-fiber': 'fiber',
+  'go-fiberv3': 'fiber',
   'go-gin': 'gin',
+  'go-grpc': 'grpc',
   'go-iris': 'iris',
   'go-negroni': 'go',
   'go-zerolog': 'go',
@@ -1064,6 +1077,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-hono': 'hono',
   'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
+  'javascript-flue': 'flue',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
   'javascript-mastra': 'mastra',
@@ -1072,6 +1086,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nuxt': 'nuxt',
   'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
+  'javascript-pi-durable': 'pi-durable',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',
   'javascript-remix': 'remix',
@@ -1098,6 +1113,7 @@ export const PLATFORM_TO_ICON = {
   'nintendo-switch': 'nintendo-switch',
   openai: 'openai',
   perl: 'perl',
+  'pi-durable': 'pi-durable',
   php: 'php',
   'php-laravel': 'laravel',
   'php-monolog': 'php',
@@ -1181,6 +1197,7 @@ export const PLATFORM_TO_ICON = {
   sql: 'sql',
   sqlserver: 'sqlserver',
   swift: 'swift',
+  'typesafe-ai': 'typesafe-ai',
   unity: 'unity',
   // This will be deprecated in favor of 'unrealengine'
   ue4: 'unreal',

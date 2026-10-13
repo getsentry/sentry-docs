@@ -134,7 +134,7 @@ export const DocMetrics = {
   /**
    * Track copy page dropdown interactions
    * @param pathname - Current page path
-   * @param action - 'open' | 'view_markdown' | 'open_chatgpt' | 'open_claude'
+   * @param action - 'open' | 'view_markdown' | 'open_chatgpt' | 'open_claude' | 'open_cursor'
    */
   copyPageDropdown: (pathname: string, action: string) => {
     Sentry.metrics.count('docs.copy_page_dropdown', 1, {
