@@ -1,6 +1,6 @@
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 
-import {DynamicNav, toTree} from './dynamicNav';
+import {DynamicNav, EntityTree, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
@@ -22,11 +22,33 @@ const AGENT_TRACING_ALIAS_PATH_OVERRIDES: Record<string, Record<string, string>>
 
 const UNALIASED_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
 
-export function PlatformSidebar({
-  rootNode,
-  platformName,
-  guideName,
-}: PlatformSidebarProps) {
+/**
+ * Building the tree walks the whole platform subtree (including every guide),
+ * which is expensive for large platforms. The result only depends on the
+ * platform and guide, so cache it per root node instead of rebuilding it for
+ * every page.
+ */
+const sidebarTreeCache = new WeakMap<DocNode, Map<string, EntityTree[]>>();
+
+function getPlatformSidebarTree(
+  rootNode: DocNode,
+  platformNode: DocNode,
+  platformName: string,
+  guideName: string | undefined,
+  pathRoot: string
+): EntityTree[] {
+  let treesForRoot = sidebarTreeCache.get(rootNode);
+  if (!treesForRoot) {
+    treesForRoot = new Map();
+    sidebarTreeCache.set(rootNode, treesForRoot);
+  }
+
+  const cacheKey = `${platformName}:${guideName ?? ''}`;
+  const cached = treesForRoot.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const docNodeToPlatformSidebarNode = (n: DocNode) => {
     if (n.frontmatter.draft) {
       return undefined;
@@ -50,20 +72,7 @@ export function PlatformSidebar({
     };
   };
 
-  const platformNode = nodeForPath(rootNode, ['platforms', platformName]);
-  if (!platformNode) {
-    return null;
-  }
-  const platform = getPlatform(rootNode, platformName);
-  if (!platform) {
-    return null;
-  }
   const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
-  const guide = guideName && getGuide(rootNode, platformName, guideName);
-
-  const pathRoot = guide
-    ? `platforms/${platformName}/guides/${guideName}`
-    : `platforms/${platformName}`;
 
   // Mirror Agent Tracing pages elsewhere in the sidebar as link-only entries.
   // Most are integrations; guide-specific overrides can place pages in a more
@@ -98,6 +107,36 @@ export function PlatformSidebar({
         }));
 
   const tree = toTree([...nodes, ...agentTracingAliases].filter(n => !!n.context));
+  treesForRoot.set(cacheKey, tree);
+  return tree;
+}
+
+export function PlatformSidebar({
+  rootNode,
+  platformName,
+  guideName,
+}: PlatformSidebarProps) {
+  const platformNode = nodeForPath(rootNode, ['platforms', platformName]);
+  if (!platformNode) {
+    return null;
+  }
+  const platform = getPlatform(rootNode, platformName);
+  if (!platform) {
+    return null;
+  }
+  const guide = guideName && getGuide(rootNode, platformName, guideName);
+
+  const pathRoot = guide
+    ? `platforms/${platformName}/guides/${guideName}`
+    : `platforms/${platformName}`;
+
+  const tree = getPlatformSidebarTree(
+    rootNode,
+    platformNode,
+    platformName,
+    guideName,
+    pathRoot
+  );
 
   // Use "Getting Started" for Next.js, default title for other platforms
   const isNextJs = platformName === 'javascript' && guideName === 'nextjs';
