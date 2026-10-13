@@ -21,6 +21,15 @@ import {isLocalStorageAvailable, uniqByReference} from 'sentry-docs/utils';
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 import styles from './style.module.scss';
 
+// Nested guides share their `key` with the same framework in other runtimes
+const itemKey = (item: {key: string; id?: string}) => item.id ?? item.key;
+
+const containsItem = (platform: Platform, key?: string) =>
+  platform.key === key ||
+  platform.guides.some(
+    g => itemKey(g) === key || g.nestedGuides?.some(n => itemKey(n) === key)
+  );
+
 export function PlatformSelector({
   platforms,
   currentPlatform,
@@ -53,11 +62,17 @@ export function PlatformSelector({
         )
         .map(platform => [
           platform,
-          ...platform.guides.map(guide => ({
-            ...guide,
-            // add a reference to the parent platform instead of its key
-            platform,
-          })),
+          ...platform.guides.flatMap(guide => [
+            {
+              ...guide,
+              // add a reference to the parent platform instead of its key
+              platform,
+            },
+            ...(guide.nestedGuides ?? []).map(nestedGuide => ({
+              ...nestedGuide,
+              platform,
+            })),
+          ]),
           ...platform.integrations.map(integration => ({
             ...integration,
             platform,
@@ -81,7 +96,7 @@ export function PlatformSelector({
     });
   };
 
-  const currentPlatformKey = currentPlatform?.key;
+  const currentPlatformKey = currentPlatform && itemKey(currentPlatform);
   const pathname = usePathname();
 
   // Not auto-opened on /platforms/: Radix Select locks body scroll while open.
@@ -101,7 +116,7 @@ export function PlatformSelector({
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
     const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey
+      lang => itemKey(lang) === currentPlatformKey
     );
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
@@ -109,13 +124,34 @@ export function PlatformSelector({
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
+  // A guide stays in the list when one of its nested guides matches the search
+  const matchedGuides = (platform: Platform) => {
+    const matchIndex = (guide: PlatformGuide) =>
+      matches.findIndex(m => itemKey(m) === itemKey(guide));
+    const firstMatchIndex = (guide: PlatformGuide) =>
+      Math.min(
+        ...[guide, ...(guide.nestedGuides ?? [])].map(matchIndex).filter(i => i !== -1)
+      );
+    return platform.guides
+      .map(guide => ({
+        ...guide,
+        nestedGuides: (guide.nestedGuides ?? []).filter(n => matchIndex(n) !== -1),
+      }))
+      .filter(
+        guide =>
+          guide.nestedGuides.length > 0 ||
+          matches.some(m => itemKey(m) === itemKey(guide) && m.type === 'guide')
+      )
+      .sort((a, b) => firstMatchIndex(a) - firstMatchIndex(b));
+  };
+
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(
-      platform => platform.key === platformKey.replace('-redirect', '')
+      platform => itemKey(platform) === platformKey.replace('-redirect', '')
     );
     if (platform_) {
       if (isLocalStorageAvailable()) {
-        localStorage.setItem('active-platform', platform_.key);
+        localStorage.setItem('active-platform', itemKey(platform_));
       }
       // Use hard navigation for faster page load
       window.location.href = platform_.url;
@@ -138,7 +174,7 @@ export function PlatformSelector({
   const [hasMounted, setHasMounted] = useState(false);
   const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
   const storedPlatform = platformsAndGuides.find(
-    platform => platform.key === storedPlatformKey
+    platform => itemKey(platform) === storedPlatformKey
   );
   useLayoutEffect(() => {
     setHasMounted(true);
@@ -202,13 +238,7 @@ export function PlatformSelector({
               key={platform.key}
               platform={{
                 ...platform,
-                guides: platform.guides
-                  .filter(g => matches.some(m => m.key === g.key && m.type === 'guide'))
-                  .sort((a, b) => {
-                    const indexA = matches.findIndex(m => m.key === a.key);
-                    const indexB = matches.findIndex(m => m.key === b.key);
-                    return indexA - indexB;
-                  }),
+                guides: matchedGuides(platform),
                 integrations: platform.integrations.filter(i =>
                   matches.some(m => m.key === i.key)
                 ),
@@ -216,16 +246,11 @@ export function PlatformSelector({
                   searchValue !== '' ||
                   expandedPlatforms.has(platform.key) ||
                   platform.key === currentPlatformKey ||
-                  platform.key === storedPlatformKey ||
-                  platform.guides.some(
-                    g => g.key === currentPlatformKey || g.key === storedPlatformKey
-                  ),
+                  containsItem(platform, currentPlatformKey) ||
+                  containsItem(platform, storedPlatformKey ?? undefined),
               }}
               activeItemRef={
-                platform.key === currentPlatformKey ||
-                platform.guides.some(g => g.key === currentPlatformKey)
-                  ? activeElementRef
-                  : null
+                containsItem(platform, currentPlatformKey) ? activeElementRef : null
               }
               activeItemKey={currentPlatformKey}
               onPlatformExpand={onToggleExpand}
@@ -292,15 +317,7 @@ export function PlatformSelector({
                     key={platform.key}
                     platform={{
                       ...platform,
-                      guides: platform.guides
-                        .filter(g =>
-                          matches.some(m => m.key === g.key && m.type === 'guide')
-                        )
-                        .sort((a, b) => {
-                          const indexA = matches.findIndex(m => m.key === a.key);
-                          const indexB = matches.findIndex(m => m.key === b.key);
-                          return indexA - indexB;
-                        }),
+                      guides: matchedGuides(platform),
                       integrations: platform.integrations.filter(i =>
                         matches.some(m => m.key === i.key)
                       ),
@@ -308,16 +325,11 @@ export function PlatformSelector({
                         searchValue !== '' ||
                         expandedPlatforms.has(platform.key) ||
                         platform.key === currentPlatformKey ||
-                        platform.key === storedPlatformKey ||
-                        platform.guides.some(
-                          g => g.key === currentPlatformKey || g.key === storedPlatformKey
-                        ),
+                        containsItem(platform, currentPlatformKey) ||
+                        containsItem(platform, storedPlatformKey ?? undefined),
                     }}
                     activeItemRef={
-                      platform.key === currentPlatformKey ||
-                      platform.guides.some(g => g.key === currentPlatformKey)
-                        ? activeElementRef
-                        : null
+                      containsItem(platform, currentPlatformKey) ? activeElementRef : null
                     }
                     activeItemKey={currentPlatformKey}
                     onPlatformExpand={onToggleExpand}
@@ -426,12 +438,18 @@ function PlatformItem({
           )}
         </div>
         {guides.map(guide => (
-          <GuideItem
-            key={guide.key}
-            guide={guide}
-            dropdownStyle={dropdownStyle}
-            listOnly
-          />
+          <Fragment key={itemKey(guide)}>
+            <GuideItem guide={guide} dropdownStyle={dropdownStyle} listOnly />
+            {nestedGuidesOf(guide).map(nestedGuide => (
+              <GuideItem
+                key={itemKey(nestedGuide)}
+                guide={{...nestedGuide, isLastGuide: false}}
+                parentTitle={guide.title}
+                dropdownStyle={dropdownStyle}
+                listOnly
+              />
+            ))}
+          </Fragment>
         ))}
       </Fragment>
     );
@@ -470,10 +488,7 @@ function PlatformItem({
             {showCaret(platform) && (
               <button
                 className={styles['expand-button']}
-                disabled={
-                  activeItemKey === platform.key ||
-                  platform.guides.some(g => g.key === activeItemKey)
-                }
+                disabled={containsItem(platform, activeItemKey)}
                 onClick={() => {
                   onExpand?.(platform.key);
                 }}
@@ -485,19 +500,40 @@ function PlatformItem({
           </Fragment>
         </RadixSelect.Label>
       </RadixSelect.Group>
-      {guides.map(guide => {
-        return <GuideItem key={guide.key} guide={guide} dropdownStyle={dropdownStyle} />;
-      })}
+      {guides.map(guide => (
+        <Fragment key={itemKey(guide)}>
+          <GuideItem guide={guide} dropdownStyle={dropdownStyle} />
+          {nestedGuidesOf(guide).map(nestedGuide => (
+            <GuideItem
+              key={itemKey(nestedGuide)}
+              guide={{...nestedGuide, isLastGuide: false}}
+              parentTitle={guide.title}
+              dropdownStyle={dropdownStyle}
+            />
+          ))}
+        </Fragment>
+      ))}
     </Fragment>
   );
 }
+
+const nestedGuidesOf = (guide: PlatformGuide | PlatformIntegration) =>
+  guide.type === 'guide' ? (guide.nestedGuides ?? []) : [];
 
 type GuideItemProps = {
   guide: (PlatformGuide | PlatformIntegration) & {isLastGuide: boolean};
   dropdownStyle?: boolean;
   listOnly?: boolean;
+  /** The title of the guide that contains this nested guide, for example `Node.js` */
+  parentTitle?: string;
 };
-function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemProps) {
+function GuideItem({
+  guide,
+  dropdownStyle = false,
+  listOnly = false,
+  parentTitle,
+}: GuideItemProps) {
+  const isNestedGuide = !!parentTitle;
   if (listOnly) {
     return (
       <div
@@ -507,9 +543,10 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
             : styles.item
         }
         data-guide
+        data-nested-guide={isNestedGuide}
         data-last-guide={guide.type === 'guide' && guide.isLastGuide}
         style={{
-          marginLeft: '1.5rem',
+          marginLeft: isNestedGuide ? '3rem' : '1.5rem',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -540,8 +577,8 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
   }
   return (
     <RadixSelect.Item
-      key={guide.key}
-      value={guide.key}
+      key={itemKey(guide)}
+      value={itemKey(guide)}
       asChild
       className={
         dropdownStyle
@@ -549,6 +586,7 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
           : styles.item
       }
       data-guide
+      data-nested-guide={isNestedGuide}
       data-last-guide={guide.type === 'guide' && guide.isLastGuide}
     >
       <ComboboxItem>
@@ -564,6 +602,9 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
               without breaking words in weird places
             */}
             {(guide.title ?? guide.name ?? guide.key).replace(/\./g, '\u200B.')}
+            {isNestedGuide && (
+              <span className={styles['nested-guide-parent']}>({parentTitle})</span>
+            )}
           </span>
         </RadixSelect.ItemText>
       </ComboboxItem>

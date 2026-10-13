@@ -28,7 +28,12 @@ import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
-import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
+import {
+  getInheritedGuidePages,
+  listGuides,
+  readGuideConfig,
+  shouldInheritCommonContent,
+} from './guideConfig';
 import remarkDefList from './mdx-deflist';
 import {DocMetrics} from './metrics';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
@@ -324,6 +329,7 @@ export async function getAllFilesFrontMatter(
   docsPath = path.join(root, 'docs')
 ): Promise<FrontMatter[]> {
   const files = await getAllFilesRecursively(docsPath);
+  const existingFiles = new Set(files);
   const allFrontMatter: FrontMatter[] = [];
   const limit = pLimit(FILE_CONCURRENCY_LIMIT);
 
@@ -438,13 +444,19 @@ export async function getAllFilesFrontMatter(
       continue;
     }
 
-    for await (const guide of await opendir(guidesPath)) {
-      if (guide.isFile()) {
-        continue;
-      }
-      const guideName = guide.name;
+    for (const guide of await listGuides(guidesPath)) {
+      const guideFrontmatter = guide.config;
 
-      const guideFrontmatter = await readGuideConfig(path.join(guidesPath, guideName));
+      const inheritedPages = getInheritedGuidePages(existingFiles, guidesPath, guide);
+      for (const {sourceFile, targetFile} of inheritedPages) {
+        const sourcePath = path.join('docs', sourceFile.slice(docsPath.length + 1));
+        allFrontMatter.push({
+          ...(allFrontMatter.find(fm => fm.sourcePath === sourcePath) as FrontMatter),
+          slug: formatSlug(targetFile.slice(docsPath.length + 1)),
+          sourcePath,
+        });
+      }
+      const inheritedFiles = new Set(inheritedPages.map(page => page.targetFile));
 
       // Standalone framework guides opt out of platform common/ inheritance.
       if (!shouldInheritCommonContent(guideFrontmatter)) {
@@ -458,7 +470,7 @@ export async function getAllFilesFrontMatter(
               !isSupported(
                 f.frontmatter,
                 platformName,
-                guideName,
+                guide.name,
                 guideFrontmatter.categories
               )
             ) {
@@ -470,9 +482,12 @@ export async function getAllFilesFrontMatter(
               'platforms',
               platformName,
               'guides',
-              guideName,
+              guide.dir,
               subpath
             );
+            if (inheritedFiles.has(path.join(docsPath, slug))) {
+              return;
+            }
             try {
               await access(path.join(docsPath, slug));
               return;
@@ -550,27 +565,61 @@ export async function getSourcePathsBySlug(
       )
     ).every(r => r.status === 'rejected')
   ) {
-    // Try the common folder, unless this guide opted out of inheritance.
     const slugParts = slug.split('/');
-    const guideSkipsCommon =
-      slugParts.length >= 5 &&
-      slugParts[1] === 'platforms' &&
-      slugParts[3] === 'guides' &&
-      !shouldInheritCommonContent(
-        await readGuideConfig(
-          path.join(pathRoot, ...slugParts.slice(0, 4), stripVersion(slugParts[4]))
-        )
+    const isGuidePath =
+      slugParts.length >= 5 && slugParts[1] === 'platforms' && slugParts[3] === 'guides';
+    let guideConfig: Awaited<ReturnType<typeof readGuideConfig>> = {};
+    let guidePartsLength = 5;
+    if (isGuidePath) {
+      const guidePath = path.join(
+        pathRoot,
+        ...slugParts.slice(0, 4),
+        stripVersion(slugParts[4])
       );
+      const nestedGuideConfig =
+        slugParts.length >= 6
+          ? await readGuideConfig(path.join(guidePath, stripVersion(slugParts[5])))
+          : {};
+      if (nestedGuideConfig.nestedGuide) {
+        guideConfig = nestedGuideConfig;
+        guidePartsLength = 6;
+      } else {
+        guideConfig = await readGuideConfig(guidePath);
+      }
+    }
+    const pageParts = slugParts.slice(guidePartsLength);
 
-    if (!guideSkipsCommon) {
+    // Try the guide this guide inherits pages from.
+    let foundInheritedPage = false;
+    if (guideConfig.inheritPagesFrom) {
+      const inheritedSlug = path.join(
+        pathRoot,
+        ...slugParts.slice(0, 4),
+        guideConfig.inheritPagesFrom,
+        ...pageParts
+      );
+      const inheritedPaths = [
+        `${inheritedSlug}.mdx`,
+        path.join(inheritedSlug, 'index.mdx'),
+        `${inheritedSlug}.md`,
+        path.join(inheritedSlug, 'index.md'),
+      ];
+      foundInheritedPage = (
+        await Promise.allSettled(inheritedPaths.map(p => access(p)))
+      ).some(r => r.status === 'fulfilled');
+      if (foundInheritedPage) {
+        [mdxPath, mdxIndexPath, mdPath, mdIndexPath] = inheritedPaths;
+      }
+    }
+
+    // Try the common folder, unless this guide opted out of inheritance.
+    const guideSkipsCommon = isGuidePath && !shouldInheritCommonContent(guideConfig);
+
+    if (!foundInheritedPage && !guideSkipsCommon) {
       const commonPath = path.join(slugParts.slice(0, 3).join('/'), 'common');
       let commonFilePath: string | undefined;
-      if (
-        slugParts.length >= 5 &&
-        slugParts[1] === 'platforms' &&
-        slugParts[3] === 'guides'
-      ) {
-        commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
+      if (isGuidePath) {
+        commonFilePath = path.join(commonPath, pageParts.join('/'));
       } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
         commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
         versionedMdxIndexPath = getVersionedIndexPath(pathRoot, commonFilePath, '.mdx');

@@ -3,10 +3,11 @@ import {
   getCurrentGuide,
   getCurrentPlatform,
   getDocsRootNode,
+  getGuidePathLength,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {Platform} from 'sentry-docs/types';
+import {Platform, PlatformGuide} from 'sentry-docs/types';
 
 import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
 import {PlatformSelector} from '../platformSelector';
@@ -54,7 +55,15 @@ export async function Sidebar({path, versions}: SidebarProps) {
       : extractPlatforms(rootNode).map(platform => {
           // take the :path in /platforms/:platformName/:path
           // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
-          const currentPathParts = path.slice(currentGuide ? 4 : 2);
+          const currentPathParts = path.slice(getGuidePathLength(rootNode, path) ?? 2);
+
+          const withPageForCurrentPath = (guide: PlatformGuide): PlatformGuide => {
+            const page = nodeForPath(rootNode, [
+              ...guide.url.split('/').filter(Boolean),
+              ...currentPathParts,
+            ]);
+            return page && !page.missing ? {...guide, url: '/' + page.path + '/'} : guide;
+          };
 
           const platformPageForCurrentPath =
             nodeForPath(rootNode, ['platforms', platform.name, ...currentPathParts]) ||
@@ -79,12 +88,14 @@ export async function Sidebar({path, versions}: SidebarProps) {
                 guide.name,
                 ...currentPathParts,
               ]);
+              const nestedGuides = guide.nestedGuides?.map(withPageForCurrentPath);
               return guidePageForCurrentPath && !guidePageForCurrentPath.missing
                 ? {
                     ...guide,
                     url: '/' + guidePageForCurrentPath.path + '/',
+                    nestedGuides,
                   }
-                : guide;
+                : {...guide, nestedGuides};
             }),
           };
         });

@@ -75,6 +75,11 @@ export function PlatformSidebar({
   const agentTracingNode =
     integrationsPath && nodeForPath(rootNode, [...pathRoot.split('/'), 'agent-tracing']);
 
+  // Nested guides have their own sidebar
+  const nestedGuidePaths = (nodeForPath(rootNode, pathRoot)?.children ?? [])
+    .filter(child => child.frontmatter.nestedGuide)
+    .map(child => `/${child.path}/`);
+
   const agentTracingAliases = !agentTracingNode
     ? []
     : agentTracingNode.children
@@ -100,7 +105,7 @@ export function PlatformSidebar({
   const tree = toTree([...nodes, ...agentTracingAliases].filter(n => !!n.context));
 
   // Use "Getting Started" for Next.js, default title for other platforms
-  const isNextJs = platformName === 'javascript' && guideName === 'nextjs';
+  const isNextJs = !!guide && guide.key === 'javascript.nextjs';
   const sidebarTitle = isNextJs
     ? 'Getting Started'
     : `Sentry for ${(guide || platform).title}`;
@@ -111,7 +116,7 @@ export function PlatformSidebar({
         root={pathRoot}
         tree={tree}
         title={sidebarTitle}
-        exclude={[`/${pathRoot}/guides/`]}
+        exclude={[`/${pathRoot}/guides/`, ...nestedGuidePaths]}
       />
     </ul>
   );

@@ -1,6 +1,11 @@
 import fs from 'fs';
 import {cache, useMemo} from 'react';
-import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
+import {
+  getCurrentGuide,
+  getDocsRootNode,
+  getGuidePathLength,
+  getPlatform,
+} from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
@@ -53,7 +58,7 @@ function MDXLayoutRenderer({mdxSource: source, ...rest}) {
 }
 
 export async function PlatformContent({includePath, platform, noGuides}: Props) {
-  const {path} = serverContext();
+  const {path, rootNode: contextRootNode} = serverContext();
 
   if (!platform) {
     if (path.length < 2 || path[0] !== 'platforms') {
@@ -63,8 +68,9 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   }
 
   let guide: string | undefined;
-  if (!noGuides && path.length >= 4 && path[2] === 'guides') {
-    guide = `${platform}.${path[3]}`;
+  const guidePathLength = getGuidePathLength(contextRootNode, path);
+  if (!noGuides && guidePathLength) {
+    guide = `${platform}.${path[guidePathLength - 1]}`;
   }
 
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>> | undefined;

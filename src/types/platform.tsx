@@ -67,6 +67,20 @@ export interface PlatformGuide extends Omit<
    * is javascript and "node" should be a guide that can be inherited from.
    */
   fallbackGuide?: string;
+  /**
+   * Unique identifier of a nested guide that inherits its pages from another nested
+   * guide, for example `javascript.cloudflare.nextjs`. Both guides share their
+   * `key` (`javascript.nextjs`), which selects includes and `supported` lists.
+   */
+  id?: string;
+  /**
+   * The guides nested in this guide, for example Next.js in the Node.js guide
+   */
+  nestedGuides?: PlatformGuide[];
+  /**
+   * The key of the guide that contains this nested guide, for example `javascript.node`
+   */
+  parentGuide?: string;
 }
 
 export interface PlatformIntegration extends Omit<PlatformGuide, 'type'> {
@@ -119,6 +133,11 @@ export interface PlatformConfig {
    */
   inheritCommonContent?: boolean;
   /**
+   * The folder of another guide, relative to `guides/` (for example `node/nextjs`).
+   * This guide renders each page of that guide for which it has no own file.
+   */
+  inheritPagesFrom?: string;
+  /**
    * The icon to use for this platform. This is the name of the icon as defined
    */
   icon?: string;
@@ -128,6 +147,12 @@ export interface PlatformConfig {
   keywords?: string[];
   /** The name of the programming language that should be used for formatting the SDK API docs. */
   language?: string;
+  /**
+   * When `true` on the `index.mdx` of a folder inside a guide (for example
+   * `guides/node/nextjs/`), the folder is a guide of its own, nested in the
+   * parent guide. Its key uses the folder name (`javascript.nextjs`).
+   */
+  nestedGuide?: boolean;
   /**
    * The title of the platform as it should be displayed in the sidebar.
    * In most cases, you do not need to define this, as the title is used.

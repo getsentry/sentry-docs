@@ -7,10 +7,24 @@ export async function PlatformFilter() {
   // this regex deals with names like .NET that would otherwise be sorted at the top
   const leadingNonAlphaRegex = /^[^\w]/;
   // sort the platforms alphabetically
-  const sortedPlatforms = extractPlatforms(rootNode).sort((a, b) =>
-    (a.title ?? a.name)
-      .replace(leadingNonAlphaRegex, '')
-      .localeCompare((b.title ?? b.name).replace(leadingNonAlphaRegex, ''))
-  );
+  const sortedPlatforms = extractPlatforms(rootNode)
+    .map(platform => ({
+      ...platform,
+      // Nested guides show next to their parent, for example "Next.js (Node.js)"
+      guides: platform.guides.flatMap(guide => [
+        guide,
+        ...(guide.nestedGuides ?? []).map(nestedGuide => ({
+          ...nestedGuide,
+          key: nestedGuide.id ?? nestedGuide.key,
+          icon: nestedGuide.key,
+          title: `${nestedGuide.title} (${guide.title})`,
+        })),
+      ]),
+    }))
+    .sort((a, b) =>
+      (a.title ?? a.name)
+        .replace(leadingNonAlphaRegex, '')
+        .localeCompare((b.title ?? b.name).replace(leadingNonAlphaRegex, ''))
+    );
   return <PlatformFilterClient platforms={sortedPlatforms} />;
 }

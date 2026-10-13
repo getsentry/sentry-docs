@@ -1,5 +1,5 @@
 import {Fragment} from 'react';
-import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
+import {getDocsRootNode, getGuidePathLength, nodeForPath} from 'sentry-docs/docTree';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebar} from './platformSidebar';
@@ -45,7 +45,10 @@ export async function SidebarNavigation({path}: {path: string[]}) {
   // SDKs/Platforms
   if (path[0] === 'platforms') {
     const platformName = path[1];
-    const guideName = path[3];
+    const guidePathLength = getGuidePathLength(rootNode, path);
+    const guideName = guidePathLength
+      ? path.slice(3, guidePathLength).join('/')
+      : path[3];
     // Sidebar already renders the separator before SidebarMoreLinks.
     return (
       <Fragment>
