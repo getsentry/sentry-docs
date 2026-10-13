@@ -4,7 +4,14 @@ sidebar_order: 13
 description: "This feature, once enabled, automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry"
 ---
 
-Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry. The error event will contain the `request` and `response` data, such as `url`, `status_code`, and so on. Depending on your HTTP request setup, it can happen that the stacktrace of these events doesn't pinpoint the exact location of the HTTP request in your code. If that's the case, you can look at the HTTP request info of the issue, which contains things like URL and HTTP headers.
+Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry. Depending on your HTTP request setup, the stack trace may not pinpoint the exact location of the HTTP request in your code. Use the captured request and response data to investigate the failure.
+
+The error event includes:
+
+- Request data in `request`: the URL, HTTP method, query string, URL fragment, headers, and `body_size` when bytes were sent.
+- Response data in `contexts.response`: the HTTP status code, headers, and `body_size` when bytes were received.
+
+The SDK removes known sensitive headers from the captured data. It does not attach the request or response body contents; `body_size` records a byte count, not the body itself. For more about filtering captured data, see <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink>.
 
 Since 8.0.0, this feature has been enabled by default. To disable it:
 
