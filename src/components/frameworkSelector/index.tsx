@@ -1,7 +1,8 @@
 'use client';
 
-import {ChevronDownIcon} from '@radix-ui/react-icons';
+import {ArrowRightIcon, ChevronDownIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
+import {useRouter} from 'next/navigation';
 import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from 'react';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 
@@ -34,6 +35,8 @@ import {
 } from './frameworks';
 
 const DEFAULT_VALUE = 'none';
+const GUIDE_VALUE_PREFIX = 'guide:';
+const groupLabelClassName = 'px-2 pt-2 pb-1 text-xs font-medium text-[var(--gray-11)]';
 
 type FrameworkContextValue = {
   framework: Framework | null;
@@ -69,12 +72,14 @@ export function FrameworkSelector({
   runtime,
   platform = 'javascript',
 }: {
-  children: ReactNode;
   runtime: string;
+  children?: ReactNode;
   platform?: string;
 }) {
+  const router = useRouter();
   const runtimeConfig = RUNTIMES[runtime];
   const frameworks = useMemo(() => runtimeConfig?.frameworks ?? [], [runtimeConfig]);
+  const frameworkGuides = runtimeConfig?.frameworkGuides ?? [];
   const [framework, setFramework] = useState<Framework | null>(null);
 
   // The page is statically rendered, so the query param can only be read after mount.
@@ -83,6 +88,10 @@ export function FrameworkSelector({
   }, [frameworks]);
 
   const handleChange = (value: string) => {
+    if (value.startsWith(GUIDE_VALUE_PREFIX)) {
+      router.push(value.slice(GUIDE_VALUE_PREFIX.length));
+      return;
+    }
     const selected = frameworks.find(f => f.key === value) ?? null;
     setFramework(selected);
     writeFrameworkToUrl(selected);
@@ -117,18 +126,42 @@ export function FrameworkSelector({
             <RadixSelect.Content
               position="popper"
               aria-label="Frameworks"
-              className={styles.popover}
+              className={`${styles.popover} max-h-[var(--radix-select-content-available-height)] overflow-y-auto`}
             >
               <RadixSelect.Item value={DEFAULT_VALUE} className={styles.item}>
                 <RadixSelect.ItemText>
                   None (plain {runtimeConfig?.title ?? runtime})
                 </RadixSelect.ItemText>
               </RadixSelect.Item>
-              {frameworks.map(f => (
-                <RadixSelect.Item key={f.key} value={f.key} className={styles.item}>
-                  <RadixSelect.ItemText>{f.title}</RadixSelect.ItemText>
-                </RadixSelect.Item>
-              ))}
+              {frameworks.length > 0 && (
+                <RadixSelect.Group>
+                  <RadixSelect.Label className={groupLabelClassName}>
+                    Set up with this guide
+                  </RadixSelect.Label>
+                  {frameworks.map(f => (
+                    <RadixSelect.Item key={f.key} value={f.key} className={styles.item}>
+                      <RadixSelect.ItemText>{f.title}</RadixSelect.ItemText>
+                    </RadixSelect.Item>
+                  ))}
+                </RadixSelect.Group>
+              )}
+              {frameworkGuides.length > 0 && (
+                <RadixSelect.Group>
+                  <RadixSelect.Label className={groupLabelClassName}>
+                    Set up with its own guide
+                  </RadixSelect.Label>
+                  {frameworkGuides.map(g => (
+                    <RadixSelect.Item
+                      key={g.url}
+                      value={`${GUIDE_VALUE_PREFIX}${g.url}`}
+                      className={styles.item}
+                    >
+                      <RadixSelect.ItemText>{g.title}</RadixSelect.ItemText>
+                      <ArrowRightIcon className="ml-auto" />
+                    </RadixSelect.Item>
+                  ))}
+                </RadixSelect.Group>
+              )}
             </RadixSelect.Content>
           </RadixSelect.Root>
         </div>
