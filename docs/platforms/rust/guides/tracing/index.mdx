@@ -1,6 +1,6 @@
 ---
 title: tokio-rs/tracing
-description: "Learn about monitoring your Rust application with Sentry's tokio-rs/tracing integration."
+description: "Learn how to set up Sentry in your Rust application and capture your first events with the tokio-rs/tracing integration."
 ---
 
 The Sentry SDK offers an integration for tokio's [tracing](https://github.com/tokio-rs/tracing) ecosystem that supports:
@@ -11,48 +11,49 @@ The Sentry SDK offers an integration for tokio's [tracing](https://github.com/to
 
 ## Install
 
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "logs"]}
-/>
-
-To add Sentry with the `tracing` integration to your Rust project, add the necessary dependencies to your `Cargo.toml`:
+Add Sentry and the `tracing` dependencies to your `Cargo.toml`. The `tracing` feature enables the Sentry tracing integration.
 
 ```toml {filename:Cargo.toml}
 [dependencies]
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = [
-  "tracing"
-] }
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["tracing"] }
 tokio = { version = "1.45.0", features = ["full"] }
 ```
 
 ## Configure
 
-Initialize the Sentry SDK and register the Sentry layer to start sending `tracing` events and spans to Sentry:
+**Error Monitoring** starts working as soon as you call `sentry::init()`. **Logs** are supported in Rust SDK 0.42.0 and later and enabled by default. **Application Metrics** are available in Rust SDK 0.48.0 and later; both are covered in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+Initialize Sentry before starting the async runtime, then register the Sentry tracing layer with `tracing_subscriber`.
 
 <Alert level="warning">
 
-Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. Initialize the Sentry client before starting the async runtime, as shown below.
 
 </Alert>
 
-```rust
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>.
+
+Don't need a feature? Remove its options from the snippet.
+
+```rust {filename:main.rs}
 use tracing_subscriber::prelude::*;
 
-fn main() {
-    // Initialize Sentry
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _guard = sentry::init(
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
             .maybe_release(sentry::release_name!())
-            # ___PRODUCT_OPTION_START___ performance
-            // Capture all traces and spans. Set to a lower value in production
-            .traces_sample_rate(1.0)
-            # ___PRODUCT_OPTION_END___ performance
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
+            .traces_sample_rate(1.0),
     );
 
-    // Register the Sentry tracing layer
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
         .with(sentry::integrations::tracing::layer())
@@ -62,59 +63,82 @@ fn main() {
         .enable_all()
         .build()?
         .block_on(async {
-            // Futures should to be bound to a Hub
-            // Learn more at https://docs.rs/sentry-core/latest/sentry_core/#parallelism-concurrency-and-async
+            // Bind async work to the current Sentry Hub.
             fail().bind_hub(sentry::Hub::current()).await;
         });
+
+    Ok(())
 }
 
-# ___PRODUCT_OPTION_START___ performance
-#[tracing::instrument] // Captures a root span (transaction) around this function execution
-# ___PRODUCT_OPTION_END___ performance
+#[tracing::instrument]
 async fn fail() {
-    tracing::debug!("Doing work"); // Adds a breadrcumb
-    # ___PRODUCT_OPTION_START___ performance
-    let _span = tracing::info_span("Child span").entered(); // Captures a child span
-    # ___PRODUCT_OPTION_END___ performance
+    tracing::debug!("Doing work");
+    let _span = tracing::info_span!("Child span").entered();
     tracing::error!("Everything is on fire!");
 }
 ```
 
-By default, error-level events from `tracing` are captured as Sentry events, while events at or above info level are added to the current scope as breadcrumbs.
+By default, error-level events from `tracing` are captured as Sentry events, and events at or above info level are added to the current scope as breadcrumbs. Events at or above info level are also captured as Sentry logs unless logs are disabled when initializing the SDK.
 
-Additionally, the SDK captures [logs](https://docs.sentry.io/product/logs/) for `tracing` events at the info level or above, unless logs were disabled when initializing the SDK.
+### Customize Tracing Event Capture
 
-This behavior can be customized by applying a custom `event_filter` when creating the layer.
-The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `tracing` feature flag.
+You can customize how `tracing` events are sent by setting an `event_filter` on the Sentry layer. This example shows the default filter used with the `tracing` feature:
 
 ```rust
 use sentry::integrations::tracing::EventFilter;
 
 let sentry_layer =
-    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-        // Capture error and warn level events as both logs and events in Sentry
+    sentry::integrations::tracing::layer().event_filter(|metadata| match *metadata.level() {
+        // Capture error and warn events as both logs and events.
         tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
-        // Ignore trace level events, as they're too verbose
+        // Ignore trace events because they're too verbose.
         tracing::Level::TRACE => EventFilter::Ignore,
-        // Capture everything else as both a breadcrumb and a log
+        // Capture other events as both breadcrumbs and logs.
         _ => EventFilter::Breadcrumb | EventFilter::Log,
     });
 ```
 
-## Verify
+## Send Logs
 
-<Alert>
+The Sentry tracing layer sends `tracing` events at info level and above as logs by default. Use the <PlatformLink to="/logs/#tracing-integration">`tracing` integration</PlatformLink> to add log fields as searchable attributes. The Rust SDK also supports the <PlatformLink to="/logs/#log-integration">`log` integration</PlatformLink> with the `log` feature enabled on `sentry`.
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and configuration options.
 
-</Alert>
+```rust
+tracing::info!(order_id = "order-123", "Order processed");
+tracing::error!(reason = "invalid email", "Validation failed");
+```
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
+## Send Application Metrics <FeatureBadge type="new" />
 
-If you're using tracing (the Sentry feature), you can view the recorded traces and spans by selecting Explore, and then Traces in the sidebar.
+Use `sentry::metrics` to send counters, gauges, and distributions. Metrics require Rust SDK 0.48.0 or later and are enabled by default in the `sentry` crate.
 
-If you're using logs, you can view the recorded logs by selecting Explore, and then Logs in the sidebar.
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```rust
+use sentry::metrics;
+
+metrics::counter("checkout.failed", 1).capture();
+metrics::gauge("active_connections", 42).capture();
+metrics::distribution("api_latency", 187.0).capture();
+```
+
+## Verify Your Setup
+
+Send an error-level event to confirm that Sentry captures an event:
+
+```rust
+tracing::error!("Sentry test event");
+```
+
+### View Captured Data in Sentry
+
+To view the recorded event, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find it. You can view traces in **Explore** > **Traces**, and captured logs in **Explore** > **Logs**.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Rust application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to [manually capture errors](/platforms/rust/usage/).
+- Instrument more operations with [custom tracing](/platforms/rust/tracing/instrumentation/custom-instrumentation/).
