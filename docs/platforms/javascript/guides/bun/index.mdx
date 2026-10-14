@@ -1,6 +1,6 @@
 ---
 title: Bun
-description: Learn how to manually set up Sentry in your Bun app and capture your first errors.
+description: Learn how to manually set up Sentry in your Bun app and capture your first events.
 sdk: sentry.javascript.bun
 categories:
   - server
@@ -12,14 +12,6 @@ categories:
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
-
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "logs" ]}
-/>
-
-<Include name="quick-start-features-expandable" />
 
 ### Install the SDK
 
@@ -42,6 +34,11 @@ bun add @sentry/bun
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+<Include name="quick-start-features-expandable" />
+
 ### Initialize the Sentry SDK
 
 <SplitLayout>
@@ -50,6 +47,12 @@ bun add @sentry/bun
 
 Sentry should be initialized as early in your app as possible.
 Create a file named `instrument.js` in the root directory of your project and add the following code:
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -60,16 +63,10 @@ import * as Sentry from "@sentry/bun";
 // Ensure to call this before importing any other modules!
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Add Performance Monitoring by setting tracesSampleRate
-  // Set tracesSampleRate to 1.0 to capture 100% of transactions
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
@@ -128,86 +125,89 @@ bun --preload ./instrument.js dist/app.js
 </SplitSection>
 </SplitLayout>
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
-## Verify Your Setup
-
-Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
-
-### Issues
+## Send Logs
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-First, let's verify that Sentry captures errors and creates issues in your Sentry project. Add the following code snippet to your main application file, which will call an undefined function, triggering an error that Sentry will capture:
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can pass attributes to search or filter by later.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for logging methods and message formatting.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.logger.info("User example action completed");
+
+Sentry.logger.warn("Slow operation detected", { operation: "data_fetch", duration: 3500 });
+
+Sentry.logger.error("Validation failed", { form_field: "email", reason: "Invalid email" });
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.metrics` to send counters, gauges, and distributions from your application to Sentry. You can pass attributes to search or filter by later.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for metric types and configuration options.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.metrics.count("checkout.failed", 1);
+
+Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+
+Sentry.metrics.distribution("api_latency", 187, {
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders" },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add an intentional error to your main application file:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```javascript
 setTimeout(() => {
-  try {
-    foo();
-  } catch (e) {
-    Sentry.captureException(e);
-  }
-}, 99);
+  throw new Error("Sentry Test Error");
+}, 0);
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-Sentry.startSpan(
-  {
-    op: "test",
-    name: "My First Test Transaction",
-  },
-  () => {
-    setTimeout(() => {
-      try {
-        foo();
-      } catch (e) {
-        Sentry.captureException(e);
-      }
-    }, 99);
-  }
-);
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -217,16 +217,10 @@ Finally, head over to your project on [Sentry.io](https://sentry.io/) to view th
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Bun application, which should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics.
-Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Bun application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Extend Sentry to your frontend using one of our [frontend SDKs](/)
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
