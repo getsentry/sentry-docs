@@ -6,7 +6,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '99caeab3605e5bb91ff19dfea89e6bb5bf0033c2';
+const SENTRY_API_SCHEMA_SHA = '5bda6efe4604a24652d8358e2c8c646c00e208a3';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -88,9 +88,12 @@ export type APICategory = {
   description?: string;
 };
 
+// Slashes become separators: an endpoint slug must be one URL segment, because the
+// API route only matches /api/<category>/<endpoint>/.
 function slugify(s: string): string {
   return s
-    .replace(/[^a-zA-Z0-9/ ]/g, '')
+    .replace(/\//g, ' ')
+    .replace(/[^a-zA-Z0-9 ]/g, '')
     .trim()
     .replace(/\s/g, '-')
     .toLowerCase();
