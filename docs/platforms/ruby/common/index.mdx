@@ -8,38 +8,43 @@
 
 ## Install
 
-<PlatformSection supported={["ruby", "ruby.rails"]}>
-
-Installing the Sentry SDK enables core features such as **Error Monitoring**, **Logs**, and **Application Metrics** by default. We'll show you how to send logs and metrics in [Verify Your Setup](#verify-your-setup).
-
-</PlatformSection>
-
-<PlatformSection notSupported={["ruby","ruby.rails"]}>
-
-Installing the Sentry SDK enables core features such as **Error Monitoring** and **Application Metrics** by default. We'll show you how to send metrics in [Verify Your Setup](#verify-your-setup).
-
-</PlatformSection>
-
-Choose additional features you want to configure, and this guide will show you how to get set up:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
 
 <PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you call `Sentry.init`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**.
+
+<Include name="quick-start-features-expandable" />
+
 ### Initialize the Sentry SDK
-Configuration should happen as early as possible in your application's lifecycle.
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Configure the SDK as early as possible in your application's lifecycle.
+
+The snippet also turns on:
+
+- Breadcrumbs from Sentry and HTTP logs: via <PlatformLink to="/configuration/options/#breadcrumbs_logger">`breadcrumbs_logger`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink> (requires the `stackprof` gem added in the Install step)
+
+Don't need a feature? Remove its options from the snippet and, for Profiling, its `stackprof` dependency.
+
+</SplitSectionText>
+<SplitSectionCode>
 
 <PlatformContent includePath="getting-started-config" />
 
-### Control the Data You Send to Sentry (Optional)
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+### Control the Data You Send to Sentry
 
 <SplitLayout>
 <SplitSection>
@@ -68,11 +73,89 @@ end
 </SplitSection>
 </SplitLayout>
 
+## Send Logs
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. Add attributes to make logs easier to search and filter.
+
+If you use Ruby's standard-library `Logger`, enable the `:logger` patch to send its logs to Sentry automatically. See the <PlatformLink to="/integrations/logging/">Ruby Logger integration</PlatformLink> for setup instructions.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+Sentry.logger.info("User logged in", user_id: 42)
+Sentry.logger.warn("Slow operation detected", operation: "data_fetch")
+Sentry.logger.error("Payment failed", order_id: "or_2342")
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.metrics` to send counters, gauges, and distributions from your app. Add attributes to search and filter metrics later.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+Sentry.metrics.count("checkout.failed", value: 1)
+
+Sentry.metrics.gauge(
+  "queue.depth",
+  42,
+  attributes: { queue: "payments" }
+)
+
+Sentry.metrics.distribution(
+  "api_latency",
+  187,
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders" }
+)
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+
 ## Verify Your Setup
 
-Let's test your setup and confirm that data reaches your Sentry project.
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-<PlatformContent includePath="getting-started-verify" />
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Trigger and capture a test error in your application:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```ruby
+begin
+  1 / 0
+rescue ZeroDivisionError => exception
+  Sentry.capture_exception(exception)
+end
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ### View Captured Data in Sentry
 
@@ -82,13 +165,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics.
-Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Ruby application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
+- <PlatformLink to="/tracing/">Set Up Tracing</PlatformLink> to learn more about tracing and sampling
+- <PlatformLink to="/profiling/">Set Up Profiling</PlatformLink> to learn how to collect and analyze profiles
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
