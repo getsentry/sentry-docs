@@ -67,12 +67,15 @@ export default async function Page(props: {
     // Check which guides have the content
     const supportedGuides: typeof platformEntry.guides = [];
     if (platformEntry.guides) {
-      for (const guide of platformEntry.guides) {
+      const guidesAndNestedGuides = platformEntry.guides.flatMap(guide => [
+        guide,
+        ...(guide.nestedGuides ?? []),
+      ]);
+      for (const guide of guidesAndNestedGuides) {
         const guideNode = nodeForPath(rootNode, [
-          'platforms',
-          platformEntry.key,
-          'guides',
-          guide.name,
+          ...(guide.parentGuide
+            ? guide.url.split('/').filter(Boolean)
+            : ['platforms', platformEntry.key, 'guides', guide.name]),
           ...pathname.split('/').filter(Boolean),
         ]);
 
@@ -112,9 +115,12 @@ export default async function Page(props: {
       // Add guide entries as nested items (only if main platform exists)
       // or as top-level items (if only guides have content)
       for (const guide of filteredGuides) {
+        const parentGuide = platformEntry.guides.find(g => g.key === guide.parentGuide);
         platformOrGuideList.push({
-          key: `${platformEntry.key}.${guide.name}`,
-          title: guide.title ?? guide.name ?? '',
+          key: guide.id ?? `${platformEntry.key}.${guide.name}`,
+          title: parentGuide
+            ? `${guide.title} (${parentGuide.title})`
+            : (guide.title ?? guide.name ?? ''),
           url: guide.url ?? '', // Always use the guide-specific URL
           icon: `${platformEntry.key}-${guide.name}`,
           shouldBeNested: !!mainPlatformNode, // Only nest if parent exists

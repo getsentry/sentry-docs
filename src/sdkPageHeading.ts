@@ -1,4 +1,4 @@
-import {DocNode, nodeForPath} from './docTree';
+import {DocNode, getGuidePathLength, nodeForPath} from './docTree';
 import {FrontMatter} from './types';
 import {getVersion, stripVersion} from './versioning';
 
@@ -22,14 +22,12 @@ const SECTION_CONTEXT_TITLES = new Set([
   'Integrations',
 ]);
 
-function contextPath(path: string): string | undefined {
+function contextPath(root: DocNode, path: string): string | undefined {
   const parts = path.split('/');
   if (parts[0] !== 'platforms' || parts.length < 2) {
     return undefined;
   }
-  return parts[2] === 'guides' && parts.length >= 4
-    ? parts.slice(0, 4).join('/')
-    : parts.slice(0, 2).join('/');
+  return parts.slice(0, getGuidePathLength(root, parts) ?? 2).join('/');
 }
 
 function contextName(node: DocNode): string {
@@ -71,7 +69,7 @@ export function getSdkPageHeading(
   frontMatter: Pick<FrontMatter, 'title' | 'h1_title'>
 ): string {
   const pathname = path.join('/');
-  const context = contextPath(stripVersion(pathname));
+  const context = contextPath(root, stripVersion(pathname));
   if (!context) {
     return frontMatter.title;
   }

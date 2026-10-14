@@ -7,7 +7,12 @@ import {limitFunction} from 'p-limit';
 
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
-import {readGuideConfig, shouldInheritCommonContent} from './guideConfig';
+import {
+  getInheritedGuidePages,
+  GuideEntry,
+  listGuides,
+  shouldInheritCommonContent,
+} from './guideConfig';
 import {FrontMatter, PlatformCategory, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {VERSION_INDICATOR} from './versioning';
@@ -177,6 +182,8 @@ export async function getDocsFrontMatterFromDirectory(
     }
   });
 
+  const frontmatterBySourcePath = new Map(allFrontMatter.map(fm => [fm.sourcePath, fm]));
+
   // Process each platform
   for (const platformName of platformNames) {
     const platformFrontmatter = platformConfigs.get(platformName) || {};
@@ -246,39 +253,28 @@ export async function getDocsFrontMatterFromDirectory(
     // Add common files for each guide under this platform
     const guidesPath = path.join(docsPath, 'platforms', platformName, 'guides');
 
-    // Collect all guide names upfront by fully consuming the async iterator
-    let guideNames: string[] = [];
+    let guides: GuideEntry[];
     try {
-      const guidesDir = await opendir(guidesPath);
-      for await (const guide of guidesDir) {
-        if (!guide.isFile()) {
-          guideNames.push(guide.name);
-        }
-      }
+      guides = await listGuides(guidesPath);
     } catch {
       // No guides directory for this platform, skip
       continue;
     }
 
-    // Batch read all guide config files in parallel
-    const guideConfigResults = await Promise.all(
-      guideNames.map(async guideName => {
-        const guidePath = path.join(guidesPath, guideName);
-        return {
-          guideName,
-          config: await readGuideConfig(guidePath),
-        };
-      })
-    );
-
-    // Create a map of guide configs
-    const guideConfigs = new Map(
-      guideConfigResults.map(({guideName, config}) => [guideName, config] as const)
-    );
-
     // Process each guide
-    for (const guideName of guideNames) {
-      const guideFrontmatter = guideConfigs.get(guideName) || {};
+    for (const guide of guides) {
+      const guideFrontmatter = guide.config;
+
+      const inheritedPages = getInheritedGuidePages(existingFilesSet, guidesPath, guide);
+      for (const {sourceFile, targetFile} of inheritedPages) {
+        const sourcePath = path.join('docs', sourceFile.slice(docsPath.length + 1));
+        allFrontMatter.push({
+          ...(frontmatterBySourcePath.get(sourcePath) as FrontMatter),
+          slug: formatSlug(targetFile.slice(docsPath.length + 1)),
+          sourcePath,
+        });
+      }
+      const inheritedFiles = new Set(inheritedPages.map(page => page.targetFile));
 
       // Standalone framework guides opt out of platform common/ inheritance.
       // Defaults to true when omitted (normal SDK guides).
@@ -294,7 +290,7 @@ export async function getDocsFrontMatterFromDirectory(
                 !isSupported(
                   commonFile.frontmatter,
                   platformName,
-                  guideName,
+                  guide.name,
                   guideFrontmatter.categories
                 )
               ) {
@@ -306,11 +302,14 @@ export async function getDocsFrontMatterFromDirectory(
                 'platforms',
                 platformName,
                 'guides',
-                guideName,
+                guide.dir,
                 subpath
               );
               // Check if file exists using pre-computed Set
-              if (existingFilesSet.has(path.join(docsPath, slug))) {
+              if (
+                existingFilesSet.has(path.join(docsPath, slug)) ||
+                inheritedFiles.has(path.join(docsPath, slug))
+              ) {
                 return;
               }
 

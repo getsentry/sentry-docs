@@ -466,10 +466,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
   },
   {
-    from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
-    to: '/platforms/javascript/guides/nuxt/install/',
-  },
-  {
     from: '/account/early-adopter-features/discord/',
     to: '/integrations/notification-incidents/discord/',
   },
@@ -1367,10 +1363,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/gatsby/configuration/integrations/rrweb/',
-    to: '/platforms/javascript/session-replay/',
-  },
-  {
-    from: '/platforms/javascript/guides/nextjs/configuration/integrations/rrweb/',
     to: '/platforms/javascript/session-replay/',
   },
   {
@@ -3514,10 +3506,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/legacy-sdk/integrations/',
     to: '/platforms/javascript/legacy-sdk/',
-  },
-  {
-    from: '/platforms/javascript/guides/nextjs/manual/',
-    to: '/platforms/javascript/guides/nextjs/',
   },
   {
     from: '/platforms/javascript/guides/react/components/errorboundary/',

@@ -1,0 +1,215 @@
+<SplitLayout>
+
+<SplitSection>
+<SplitSectionText>
+
+### SDK Initialization
+
+Next.js runs code in different environments. The wizard creates separate initialization files for each:
+
+- **Client** (`instrumentation-client.ts`) — Runs in the browser
+- **Server** (`sentry.server.config.ts`) — Runs in Node.js
+- **Edge** (`sentry.edge.config.ts`) — Runs in edge runtimes
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+  integrations: [
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+  ],
+});
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+<Alert level="info" title="Adjust sample rates for production">
+
+The example above samples 100% of traces in development and 10% in production. Monitor your [usage stats](https://sentry.io/orgredirect/organizations/:orgslug/settings/stats/?dataCategory=spans) and adjust `tracesSampleRate` based on your traffic volume. Learn more about <PlatformLink to="/sampling/">sampling configuration</PlatformLink>.
+
+</Alert>
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Server-Side Registration
+
+The `instrumentation.ts` file registers your server and edge configurations with Next.js.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+
+export const onRequestError = Sentry.captureRequestError;
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Next.js Configuration
+
+Your `next.config.ts` is wrapped with `withSentryConfig` to enable source map uploads, tunneling (to avoid ad-blockers), and other build-time features.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```typescript {filename:next.config.ts}
+import { withSentryConfig } from "@sentry/nextjs/config";
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Upload source maps for readable stack traces
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Route Sentry requests through your server (avoids ad-blockers)
+  tunnelRoute: "/sentry-tunnel",
+
+  silent: !process.env.CI,
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Error Handling
+
+The wizard creates `app/global-error.tsx` to capture React rendering errors in your App Router application.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```tsx {filename:app/global-error.tsx}
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
+export default function GlobalError({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        <h1>Something went wrong!</h1>
+      </body>
+    </html>
+  );
+}
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Source Maps
+
+The wizard creates `.env.sentry-build-plugin` with your auth token for source map uploads. This file is automatically added to `.gitignore`.
+
+For CI/CD, set the `SENTRY_AUTH_TOKEN` environment variable in your build system.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```bash {tabTitle:Local Development} {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=sntrys_eyJ...
+```
+
+```bash {tabTitle:CI/CD}
+# Set as environment variable in your CI/CD system
+SENTRY_AUTH_TOKEN=sntrys_eyJ...
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+<SplitSection>
+<SplitSectionText>
+
+### Example Page
+
+The wizard creates `/sentry-example-page` with a button that triggers a test error. Use this to verify your setup.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```
+app/
+├── sentry-example-page/
+│   └── page.tsx       # Test page with error button
+└── api/
+    └── sentry-example-api/
+        └── route.ts   # Test API route
+```
+
+</SplitSectionCode>
+</SplitSection>
+
+</SplitLayout>

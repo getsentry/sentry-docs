@@ -211,11 +211,7 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
 export const getNextNode = (node: DocNode): DocNode | undefined => {
   const firstChild = getFirstVisibleDescendant(node);
   // Check for children first
-  if (
-    firstChild &&
-    !isRootPlatformPath(firstChild.path) &&
-    !isRootGuidePath(firstChild.path)
-  ) {
+  if (firstChild && !isGuideOrPlatformRoot(firstChild)) {
     return firstChild;
   }
 
@@ -224,7 +220,7 @@ export const getNextNode = (node: DocNode): DocNode | undefined => {
   while (currentNode?.parent) {
     const nextSibling = getNextSiblingNode(currentNode);
     if (nextSibling) {
-      if (isRootPlatformPath(nextSibling.path) || isRootGuidePath(nextSibling.path)) {
+      if (isGuideOrPlatformRoot(nextSibling)) {
         return undefined;
       }
       return nextSibling;
@@ -242,7 +238,7 @@ export const getNextNode = (node: DocNode): DocNode | undefined => {
  */
 export const getPreviousNode = (node: DocNode): DocNode | undefined | 'root' => {
   // in this special case, calculating the root node is unnecessary so we return a string instead
-  if (isRootPlatformPath(node.path) || isRootGuidePath(node.path)) {
+  if (isGuideOrPlatformRoot(node)) {
     return 'root';
   }
 
@@ -336,11 +332,13 @@ const getLastVisibleDescendant = (node: DocNode): DocNode | undefined => {
   return undefined;
 };
 
+// Nested guides are left out, so that previous and next links stay in their guide.
 const filterVisibleSiblings = (s: DocNode) =>
   !s.missing &&
   (s.frontmatter.sidebar_title || s.frontmatter.title) &&
   !s.frontmatter.sidebar_hidden &&
   !s.frontmatter.draft &&
+  !s.frontmatter.nestedGuide &&
   s.path &&
   !isVersioned(s.path);
 
@@ -367,10 +365,13 @@ function nodeToPlatform(n: DocNode): Platform {
   };
 }
 
-function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
+function nodeToGuide(platform: string, n: DocNode, parent?: DocNode): PlatformGuide {
   const key = `${platform}.${n.slug}`;
   return {
     key,
+    ...(parent && {parentGuide: `${platform}.${parent.slug}`}),
+    ...(parent &&
+      n.frontmatter.inheritPagesFrom && {id: `${platform}.${parent.slug}.${n.slug}`}),
     name: n.slug,
     type: 'guide',
     url: '/' + n.path + '/',
@@ -394,6 +395,41 @@ export const isRootGuidePath = (path: string) => {
   );
 };
 
+const isNestedGuideNode = (n?: DocNode): n is DocNode =>
+  !!n && !n.missing && !!n.frontmatter.nestedGuide;
+
+const isGuideOrPlatformRoot = (n: DocNode) =>
+  isRootPlatformPath(n.path) || isRootGuidePath(n.path) || isNestedGuideNode(n);
+
+function getNestedGuideNode(rootNode: DocNode, path: string[]): DocNode | undefined {
+  if (path.length < 5 || path[0] !== 'platforms' || path[2] !== 'guides') {
+    return undefined;
+  }
+  const node = nodeForPath(rootNode, [
+    'platforms',
+    path[1],
+    'guides',
+    stripVersion(path[3]),
+    stripVersion(path[4]),
+  ]);
+  return isNestedGuideNode(node) ? node : undefined;
+}
+
+/**
+ * The number of path segments from `platforms` to the guide folder, for example
+ * 4 for `platforms/javascript/guides/node` and 5 for the nested guide
+ * `platforms/javascript/guides/node/nextjs`. `undefined` outside of guides.
+ */
+export function getGuidePathLength(
+  rootNode: DocNode,
+  path: string[]
+): number | undefined {
+  if (path.length < 4 || path[0] !== 'platforms' || path[2] !== 'guides') {
+    return undefined;
+  }
+  return getNestedGuideNode(rootNode, path) ? 5 : 4;
+}
+
 export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
   const platformNode = nodeForPath(rootNode, ['platforms', name]);
   if (!platformNode) {
@@ -416,6 +452,11 @@ export function getCurrentGuide(
   rootNode: DocNode,
   path: string[]
 ): PlatformGuide | undefined {
+  const nestedGuideNode = getNestedGuideNode(rootNode, path);
+  if (nestedGuideNode) {
+    return nodeToGuide(path[1], nestedGuideNode, nestedGuideNode.parent);
+  }
+
   if (path.length >= 4 && path[2] === 'guides') {
     return getGuide(rootNode, path[1], path[3].split(VERSION_INDICATOR)[0]);
   }
@@ -432,12 +473,16 @@ export function getCurrentPlatformOrGuide(
   }
 
   if (path.length >= 4 && path[2] === 'guides') {
-    return getGuide(rootNode, path[1], stripVersion(path[3]));
+    return getCurrentGuide(rootNode, path);
   }
 
   return getPlatform(rootNode, stripVersion(path[1]));
 }
 
+/**
+ * @param guide The guide folder relative to `guides/`, for example `node` or the
+ * nested guide `node/nextjs`.
+ */
 export function getGuide(
   rootNode: DocNode,
   platform: string,
@@ -447,7 +492,11 @@ export function getGuide(
   if (!guideNode) {
     return undefined;
   }
-  return nodeToGuide(platform, guideNode);
+  return nodeToGuide(
+    platform,
+    guideNode,
+    isNestedGuideNode(guideNode) ? guideNode.parent : undefined
+  );
 }
 
 export function extractPlatforms(rootNode: DocNode): Platform[] {
@@ -477,7 +526,15 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
 
   const childGuides = guidesNode.children
     .filter(({path}) => !isVersioned(path))
-    .map(n => nodeToGuide(platformNode.slug, n));
+    .map(n => {
+      const nestedGuides = n.children
+        .filter(child => isNestedGuideNode(child) && !isVersioned(child.path))
+        .map(child => nodeToGuide(platformNode.slug, child, n));
+      return {
+        ...nodeToGuide(platformNode.slug, n),
+        ...(nestedGuides.length > 0 && {nestedGuides}),
+      };
+    });
 
   return defaultGuide ? [defaultGuide, ...childGuides] : childGuides;
 }
