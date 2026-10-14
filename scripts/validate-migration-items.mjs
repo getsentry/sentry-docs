@@ -10,7 +10,7 @@
  * fails on invalid frontmatter. Run `pnpm migration-items` (JavaScript) or
  * `pnpm migration-items flutter-v10` for the phase, severity and category counts.
  */
-import {readdirSync, readFileSync} from 'fs';
+import {existsSync, readdirSync, readFileSync} from 'fs';
 import path from 'path';
 import {pathToFileURL} from 'url';
 
@@ -36,13 +36,36 @@ export const CATEGORIES = [
 export const SEVERITIES = ['action-required', 'behavior-change', 'informational'];
 export const PLATFORM_CATEGORIES = ['browser', 'server', 'serverless', 'all'];
 
+/** Guide slugs: the folders in `guidesDir`, plus folders nested in a guide with `nestedGuide: true`. */
+function listGuides(guidesDir) {
+  const guides = new Set();
+  for (const guide of readdirSync(guidesDir, {withFileTypes: true})) {
+    if (!guide.isDirectory()) {
+      continue;
+    }
+    guides.add(guide.name);
+    const guideDir = path.join(guidesDir, guide.name);
+    for (const sub of readdirSync(guideDir, {withFileTypes: true})) {
+      const index = path.join(guideDir, sub.name, 'index.mdx');
+      if (
+        sub.isDirectory() &&
+        existsSync(index) &&
+        matter(readFileSync(index, 'utf8')).data.nestedGuide
+      ) {
+        guides.add(sub.name);
+      }
+    }
+  }
+  return guides;
+}
+
 /** Reads and validates every item. Returns `{items, errors}`. */
 export function loadItems(root = process.cwd(), collection = 'javascript-v11') {
   if (!Object.hasOwn(COLLECTIONS, collection)) {
     throw new Error(`Unknown migration collection "${collection}"`);
   }
   const dir = path.join(root, 'includes/migration', collection);
-  const guides = new Set(readdirSync(path.join(root, COLLECTIONS[collection])));
+  const guides = listGuides(path.join(root, COLLECTIONS[collection]));
   const files = readdirSync(dir).filter(f => f.endsWith('.mdx'));
 
   const errors = [];
