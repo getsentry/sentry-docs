@@ -1,0 +1,51 @@
+### Keeping DWARF in Your Build
+
+In a traditional Unix-style toolchain, `-g` at compile time is enough: the linker
+combines the DWARF sections from the object files into its output. WASM toolchains add
+a step after compilation that decides what ships, so debug information can sit in the
+intermediate artifacts and still be missing from the module you upload.
+
+#### Emscripten
+
+`emcc` takes the usual clang flags to emit DWARF into object files, but strips most of
+it at link time unless a debug flag is passed there as well:
+
+```bash
+# Compile: DWARF lands in the object files
+emcc -g -c app.c -o app.o
+
+# Link: without -g here, emcc strips it back out
+emcc -g app.o -o app.wasm
+```
+
+A single `emcc` call that compiles and links at once covers both phases.
+
+#### Rust and wasm-bindgen
+
+`rustc` and `wasm-ld` produce a module with DWARF in its `.debug_*` sections, but
+`wasm-bindgen` runs after linking and drops most of it while rewriting the module for
+JavaScript interop. Keep it explicitly:
+
+```toml
+# Cargo.toml
+[profile.release]
+debug = 2
+
+[package.metadata.wasm-pack.profile.release.wasm-bindgen]
+dwarf-debug-info = true
+```
+
+If you invoke `wasm-bindgen` yourself instead of going through `wasm-pack`, pass
+`--keep-debug` instead.
+
+#### Verifying the Output
+
+Check the companion before uploading it. The output should list a `debug` tag:
+
+```bash
+wasm-split app.wasm -d app.debug.wasm --strip
+sentry-cli debug-files check app.debug.wasm
+```
+
+See [Checking Debug Information Files](/cli/dif/#checking-files) for the full output
+format.
