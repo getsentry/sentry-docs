@@ -19,6 +19,7 @@ import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {FeatureBadge} from './components/featureBadge';
+import {FrameworkSelector} from './components/frameworkSelector';
 import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
@@ -105,6 +106,7 @@ export function mdxComponents(
     DefinitionList,
     Expandable,
     FeatureBadge,
+    FrameworkSelector,
     GuideGrid,
     IntegrationGrid,
     IntegrationListItem,
