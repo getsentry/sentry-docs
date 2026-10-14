@@ -333,23 +333,19 @@ For CORS configuration and manual trace propagation (WebSockets, etc.), see <Pla
 
 ### High trace volume
 
-If you're sending too many traces, lower your sample rate or use `tracesSampler` for dynamic sampling based on route.
+If you're sending too many traces, lower the production value of `tracesSampleRate`.
 
-See <PlatformLink to="/tracing/configure-sampling/">Configure Sampling</PlatformLink> for more options.
+Health check requests don't need SDK configuration: Sentry's [health check inbound filter](/concepts/data-management/filtering/#transactions-coming-from-health-check) drops them, and it's on by default for new projects.
+
+For different sample rates per route, use `tracesSampler` and return `inheritOrSampleWith(rate)`, so incoming trace decisions are kept. See <PlatformLink to="/tracing/configure-sampling/">Configure Sampling</PlatformLink>.
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```typescript
 Sentry.init({
-  tracesSampler: ({ name }) => {
-    // Sample 5% of health checks
-    if (name.includes("health")) return 0.05;
-    // Sample 50% of API routes
-    if (name.includes("/api/")) return 0.5;
-    // Default 10%
-    return 0.1;
-  },
+  // 100% of traces in development, 5% in production
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.05,
 });
 ```
 
