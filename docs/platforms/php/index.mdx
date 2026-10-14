@@ -3,7 +3,7 @@ title: PHP
 sdk: sentry.php
 caseStyle: snake_case
 supportLevel: production
-description: Learn how to set up Sentry in your PHP application.
+description: Learn how to set up Sentry in your PHP application and capture your first events.
 categories:
   - server
 og_image: /og-images/platforms-php.png
@@ -18,18 +18,6 @@ og_image: /og-images/platforms-php.png
 - You need to be using Composer
 - Read one of these other guides if you use <PlatformLink to="/guides/laravel/">Laravel</PlatformLink> or <PlatformLink to="/guides/symfony/">Symfony</PlatformLink>
 
-## Features
-
-<p className="mb-5">
-  Select which Sentry features you'd like to install in addition to Error
-  Monitoring to get the corresponding installation and configuration
-  instructions below.
-</p>
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs"]}
-/>
-
 ## Install
 
 Install the Sentry SDK using [Composer](https://getcomposer.org/):
@@ -38,62 +26,106 @@ Install the Sentry SDK using [Composer](https://getcomposer.org/):
 composer require sentry/sentry
 ```
 
-<OnboardingOption optionId="profiling">
+## Configure
 
-To use Profiling, you'll also need to install the Excimer extension via PECL:
+**Error Monitoring** starts working as soon as you call `\Sentry\init()`. **Logs** (PHP SDK 4.12.0 and above) and **Application Metrics** (PHP SDK 4.19.0 and above) need no extra configuration, and you'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**. PHP also supports **User Feedback** through a browser-based crash-report modal; see <PlatformLink to="/user-feedback/">Set Up User Feedback</PlatformLink>.
+
+To capture errors that occur during startup, initialize the Sentry PHP SDK as early as possible in your application's lifecycle.
+
+```php
+\Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  // Send request headers, cookies, and IP address.
+  'send_default_pii' => true,
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  'traces_sample_rate' => 1.0,
+
+  // Enables Profiling.
+  // Profiles are sampled relative to traces_sample_rate.
+  'profiles_sample_rate' => 1.0,
+]);
+```
+
+The snippet also turns on:
+
+- Request headers, cookies, and IP address: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
+
+### Install Excimer for Profiling
+
+Profiling requires the Excimer PHP extension. Install it with PECL:
 
 ```bash
 pecl install excimer
 ```
 
-The Excimer PHP extension supports PHP 7.2 and up. Excimer requires Linux or macOS and doesn't support Windows. For additional ways to install Excimer, [see docs](/platforms/php/profiling/#installation).
+Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
 
-</OnboardingOption>
-
-## Configure
-
-To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
-
-```php
-\Sentry\init([
-  'dsn' => '___PUBLIC_DSN___',
-  // Add request headers, cookies and IP address,
-  // see https://docs.sentry.io/platforms/php/data-management/data-collected/ for more info
-  'send_default_pii' => true,
-  // ___PRODUCT_OPTION_START___ performance
-  // Specify a fixed sample rate
-  'traces_sample_rate' => 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ profiling
-  // Set a sampling rate for profiling - this is relative to traces_sample_rate
-  'profiles_sample_rate' => 1.0,
-  // ___PRODUCT_OPTION_END___ profiling
-]);
-```
+### Capture Stack Trace Arguments
 
 <Alert level="warning">
-  In order to receive stack trace arguments in your errors, make sure to set
-  `zend.exception_ignore_args: Off` in your php.ini
+  To receive stack trace arguments in your errors, set `zend.exception_ignore_args: Off` in your `php.ini`.
 </Alert>
 
-## Verify
+### Set Up Sentry Through Forge
 
-In PHP you can either capture a caught exception or capture the last error with captureLastError.
-
-```php
-try {
-  $this->functionFailsForSure();
-} catch (\Throwable $exception) {
-  \Sentry\captureException($exception);
-}
-```
-
-## Set up Sentry through Forge
-
-If you're using Laravel's Forge platform to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry).
+If you use Laravel Forge to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry).
 
 ![Sentry and Forge](./img/forge-sentry.png)
 
+## Send Logs
+
+Use `\Sentry\logger()` to send logs at different levels. The `enable_logs` option is deprecated and has no effect, so you don't need to set it. Logs are usually flushed at the end of a request or job. For scripts and long-running CLI tasks, flush pending logs before exit or periodically.
+
+If you already use Monolog, its <PlatformLink to="/integrations/monolog/#logs">Sentry LogsHandler</PlatformLink> can send messages to Sentry.
+
+```php
+\Sentry\logger()->info('Checkout completed');
+\Sentry\logger()->flush();
+```
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. Metrics are enabled by default after you initialize the SDK; no metrics option is required. Flush collected metrics before the process exits.
+
+```php
+\Sentry\traceMetrics()->count('checkout.failed', 1);
+\Sentry\traceMetrics()->flush();
+```
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+## Verify Your Setup
+
+Temporarily add an uncaught exception to a route or test script and run it to confirm that Sentry captures it:
+
+```php
+throw new \RuntimeException('Sentry test exception');
+```
+
+### View Captured Data in Sentry
+
+After a few moments, open your project in [Sentry](https://sentry.io/) and check the Issues page for the test error.
+
 ## Next Steps
 
+At this point, you should have integrated Sentry into your PHP application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/usage/">Learn how to manually capture errors</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
