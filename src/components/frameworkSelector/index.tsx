@@ -97,7 +97,7 @@ export function FrameworkSelector({
     <FrameworkContext.Provider value={contextValue}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 my-4">
         <label htmlFor="framework-selector" className="font-medium">
-          Framework
+          Server library
         </label>
         <div className="sm:w-72">
           <RadixSelect.Root
@@ -106,7 +106,7 @@ export function FrameworkSelector({
           >
             <RadixSelect.Trigger
               id="framework-selector"
-              aria-label="Framework"
+              aria-label="Server library"
               className={styles.select}
             >
               <RadixSelect.Value />
@@ -116,7 +116,7 @@ export function FrameworkSelector({
             </RadixSelect.Trigger>
             <RadixSelect.Content
               position="popper"
-              aria-label="Frameworks"
+              aria-label="Server libraries"
               className={styles.popover}
             >
               <RadixSelect.Item value={DEFAULT_VALUE} className={styles.item}>
