@@ -1,0 +1,48 @@
+---
+title: Migrate from Sentry 8.x to 9.0.0
+description: "Learn how to migrate from Sentry Android SDK 8.x to 9.0.0."
+sidebar_order: 8890
+---
+
+Version 9 removes the global Logs and Metrics enable options. Manual telemetry APIs now work whenever the SDK is enabled, while automatic Timber and Logcat capture require their own explicit opt-in.
+
+## Manual Logs and Metrics
+
+Calls to `Sentry.logger()` and `Sentry.metrics()` no longer require a global enable option. Remove calls to:
+
+- `options.getLogs().setEnabled(...)`
+- `options.getMetrics().setEnabled(...)`
+
+The `beforeSendLog` and `beforeSendMetric` callbacks remain available for filtering or modifying telemetry.
+
+## Android Manifest Options
+
+Remove these manifest entries:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.logs.enabled" android:value="true" />
+<meta-data android:name="io.sentry.metrics.enabled" android:value="false" />
+```
+
+To capture logs from an automatic Android integration, use its integration-specific option instead:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.timber.log-capture.enabled" android:value="true" />
+<meta-data android:name="io.sentry.logcat.log-capture.enabled" android:value="true" />
+```
+
+The equivalent `SentryAndroidOptions` properties are `timberLogCaptureEnabled` and `logcatLogCaptureEnabled`. Both default to `false`.
+
+## Timber Constructor Changes
+
+Manual `SentryTimberIntegration` and `SentryTimberTree` construction now requires a `logsEnabled` argument. Pass `false` to keep automatic Sentry Logs capture disabled:
+
+```kotlin {tabTitle:Kotlin}
+SentryTimberIntegration(logsEnabled = false)
+```
+
+```java {tabTitle:Java}
+new SentryTimberIntegration(false);
+```
+
+Pass `true` only when Timber records should also be sent as Sentry Logs.
