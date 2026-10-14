@@ -1,6 +1,6 @@
 ---
 title: Electron
-description: "Learn how to manually set up Sentry in your Electron app and capture your first errors."
+description: "Learn how to manually set up Sentry in your Electron app and capture your first events."
 sdk: sentry.javascript.electron
 categories:
   - desktop
@@ -41,16 +41,8 @@ pnpm add @sentry/electron
 
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback"
-  ]}
-/>
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 
 <Include name="quick-start-features-expandable" />
 
@@ -62,7 +54,15 @@ You should initialize the SDK in both the `main` process and every `renderer` pr
 <SplitSection>
 <SplitSectionText>
 
-Initialize the SDK in your Electron `main` process as early as possible:
+Initialize the SDK in your Electron `main` process as early as possible.
+
+The main and renderer snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 </SplitSectionText>
 <SplitSectionCode>
@@ -72,16 +72,15 @@ import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  integrations: [Sentry.startupTracingIntegration()],
-  // ___PRODUCT_OPTION_END___ performance
+  integrations: [
+    // Enables startup tracing in the main process
+    Sentry.startupTracingIntegration(),
+  ],
 });
 ```
 
@@ -105,37 +104,24 @@ import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
     Sentry.browserTracingIntegration(),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
@@ -242,119 +228,95 @@ init(
 </SplitSection>
 </SplitLayout>
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
+## Send Logs
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting options.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.logger.info("User example action completed");
+
+Sentry.logger.warn("Slow operation detected", {
+  operation: "data_fetch",
+  duration: 3500,
+});
+
+Sentry.logger.error("Validation failed", {
+  form_field: "email",
+  reason: "Invalid email",
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
+## Send Application Metrics <FeatureBadge type="new" />
+
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. You can add searchable attributes to each metric.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```javascript
+Sentry.metrics.count("checkout.failed", 1);
+
+Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+
+Sentry.metrics.distribution("api_latency", 187, {
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders" },
+});
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 ## Verify Your Setup
 
-Let's test your setup and confirm that Sentry is working correctly.
-
-### Issues
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-**Main process error**
-
-Add an event listener that throws an error in your main process:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-import { app } from "electron";
-import * as Sentry from "@sentry/electron/main";
-
-app.on("ready", () => {
-  throw new Error("Sentry test error in main process");
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-**Renderer process error**
-
-Add a test button in one of your HTML pages:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```html {filename: index.html}
-<button id="testError">Break the world</button>
-
-<script src="renderer.js"></script>
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-Then, in your renderer, add the following:
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Finally, start your app and trigger two errors that Sentry will capture: one from the
-  main process and one from the renderer.
-</OnboardingOption>
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-document.getElementById("testError").addEventListener("click", () => {
-  throw new Error("Sentry test error in renderer process");
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test tracing in your renderer, start a trace to measure the time it takes to execute your code.
-
-Then, start your app and trigger two errors that Sentry will capture: one from the main process and one from the renderer. It will also start a trace with the defined name.
+Add a test button to one of your renderer pages. Clicking it throws an error that Sentry captures:
 
 </SplitSectionText>
 <SplitSectionCode>
 
 ```javascript
 document.getElementById("testError").addEventListener("click", () => {
-  Sentry.startSpan({ op: "test", name: "Renderer test span" }, () => {
-    throw new Error("Sentry test error in renderer process");
-  });
+  throw new Error("Sentry Test Error");
 });
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -364,15 +326,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Electron application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Electron application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Make use of <PlatformLink to="/features/">Electron-specific features</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/features/">Explore Electron-specific features</PlatformLink>
+- <PlatformLink to="/logs/">Learn more about Logs</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
