@@ -2,7 +2,7 @@
 
 import {promises as fs} from 'fs';
 
-import {DeRefedOpenAPI} from './open-api/types';
+import {DeRefedOpenAPI, Parameter} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
@@ -31,13 +31,16 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
 
 export type APIParameter = {
   description: string;
+  experimental: boolean;
   name: string;
   required: boolean;
   schema: {
     type: string;
+    enum?: string[];
     format?: string;
     items?: {
       type: string;
+      enum?: string[];
     };
   };
 };
@@ -98,10 +101,32 @@ function slugify(s: string): string {
 
 const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
 
-// Sentry prepends this notice to the description of every experimental operation, so
-// that consumers with no badge of their own still warn the reader. We render a badge,
-// so strip it rather than saying the same thing twice.
+// Sentry prepends this notice to the description of every experimental operation and
+// parameter, so that consumers with no badge of their own still warn the reader. We
+// render a badge, so strip it rather than saying the same thing twice.
 const EXPERIMENTAL_NOTICE_REGEX = /^\*\*Experimental:\*\*[^\n]*\n+/;
+
+type ExperimentalExtension = {
+  description?: string;
+  'x-sentry-experimental'?: boolean;
+};
+
+// `extensions={"x-sentry-experimental": True}` on an OpenAPI parameter or body
+// property lands as a sibling vendor extension. Keep the flag, and drop the
+// matching description prefix when the schema includes one.
+export function toDocumentedParameter<T extends ExperimentalExtension>(
+  param: T
+): T & {experimental: boolean} {
+  const experimental = param['x-sentry-experimental'] === true;
+  if (!experimental || !param.description) {
+    return {...param, experimental};
+  }
+  return {
+    ...param,
+    experimental,
+    description: param.description.replace(EXPERIMENTAL_NOTICE_REGEX, ''),
+  };
+}
 
 function isDeprecatedOperationId(operationId: string | undefined): boolean {
   return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
@@ -164,12 +189,8 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           descriptionMarkdown: isExperimental
             ? apiData.description?.replace(EXPERIMENTAL_NOTICE_REGEX, '')
             : apiData.description,
-          pathParameters: (apiData.parameters || []).filter(
-            p => p.in === 'path'
-          ) as APIParameter[],
-          queryParameters: (apiData.parameters || []).filter(
-            p => p.in === 'query'
-          ) as APIParameter[],
+          pathParameters: documentedParameters(apiData.parameters, 'path'),
+          queryParameters: documentedParameters(apiData.parameters, 'query'),
           requestBodyContent: {
             example:
               apiData.requestBody?.content &&
@@ -208,6 +229,25 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
   return categories;
 }
 
+function documentedParameters(
+  parameters: Parameter[] | undefined,
+  location: 'path' | 'query'
+): APIParameter[] {
+  return (parameters || [])
+    .filter(param => param.in === location)
+    .map(param => {
+      const documented = toDocumentedParameter(param);
+      return {
+        name: documented.name,
+        description: documented.description,
+        required: documented.required,
+        experimental: documented.experimental,
+        // OpenAPI item schemas are an open record; the page only reads type and enum.
+        schema: documented.schema as APIParameter['schema'],
+      };
+    });
+}
+
 function getBodyParameters(apiData: APIData): APIParameter[] {
   const content = apiData.requestBody?.content;
   const contentType = content && Object.values(content)[0];
@@ -218,16 +258,19 @@ function getBodyParameters(apiData: APIData): APIParameter[] {
 
   const required: string[] = contentType?.schema?.required || [];
 
-  return Object.entries(properties).map(([name, props]: [string, any]) => ({
-    name,
-    description: props.description,
-    required: required.includes(name),
-    schema: {
-      type: props.type,
-      format: '',
-      items: props.items,
-    },
-  }));
+  return Object.entries(properties).map(([name, props]: [string, any]) =>
+    toDocumentedParameter({
+      name,
+      description: props.description,
+      required: required.includes(name),
+      'x-sentry-experimental': props['x-sentry-experimental'],
+      schema: {
+        type: props.type,
+        format: '',
+        items: props.items,
+      },
+    })
+  );
 }
 
 function getBodyContentType(apiData: APIData): string | undefined {
