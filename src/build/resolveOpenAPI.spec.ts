@@ -6,18 +6,17 @@ const EXPERIMENTAL_NOTICE =
   '**Experimental:** This parameter is under active development and may change.\n\n';
 
 describe('toDocumentedParameter', () => {
-  test('marks a parameter experimental and drops the duplicated notice', () => {
+  test('marks a parameter experimental and keeps the notice in the description', () => {
+    const description = `${EXPERIMENTAL_NOTICE}Optional fields to expand. Pass \`context\` to include attribute metadata.`;
     const parameter = toDocumentedParameter({
       name: 'expand',
-      description: `${EXPERIMENTAL_NOTICE}Optional fields to expand. Pass \`context\` to include attribute metadata.`,
+      description,
       required: false,
       'x-sentry-experimental': true,
     });
 
     expect(parameter.experimental).toBe(true);
-    expect(parameter.description).toBe(
-      'Optional fields to expand. Pass `context` to include attribute metadata.'
-    );
+    expect(parameter.description).toBe(description);
   });
 
   test('keeps the description when the extension is set without a notice', () => {

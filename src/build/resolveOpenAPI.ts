@@ -101,9 +101,10 @@ function slugify(s: string): string {
 
 const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
 
-// Sentry prepends this notice to the description of every experimental operation and
-// parameter, so that consumers with no badge of their own still warn the reader. We
-// render a badge, so strip it rather than saying the same thing twice.
+// Sentry prepends this notice to the description of every experimental operation, so
+// that consumers with no badge of their own still warn the reader. We render a badge
+// and the same sentence beside it, so strip the prefix rather than saying it twice.
+// Parameter notices stay in the description: the parameter badge does not repeat them.
 const EXPERIMENTAL_NOTICE_REGEX = /^\*\*Experimental:\*\*[^\n]*\n+/;
 
 type ExperimentalExtension = {
@@ -112,19 +113,13 @@ type ExperimentalExtension = {
 };
 
 // `extensions={"x-sentry-experimental": True}` on an OpenAPI parameter or body
-// property lands as a sibling vendor extension. Keep the flag, and drop the
-// matching description prefix when the schema includes one.
+// property lands as a sibling vendor extension.
 export function toDocumentedParameter<T extends ExperimentalExtension>(
   param: T
 ): T & {experimental: boolean} {
-  const experimental = param['x-sentry-experimental'] === true;
-  if (!experimental || !param.description) {
-    return {...param, experimental};
-  }
   return {
     ...param,
-    experimental,
-    description: param.description.replace(EXPERIMENTAL_NOTICE_REGEX, ''),
+    experimental: param['x-sentry-experimental'] === true,
   };
 }
 
