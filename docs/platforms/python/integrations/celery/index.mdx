@@ -1,6 +1,6 @@
 ---
 title: Celery
-description: "Learn how to set up Sentry in your Celery app, capture your first errors and traces, and view them in Sentry."
+description: "Learn how to set up Sentry in your Celery app, capture your first events and traces, and view them in Sentry."
 ---
 
 <Include name="python-stream-mode-general-callout.mdx" />
@@ -22,17 +22,21 @@ You need:
 
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
-/>
+**Error Monitoring** starts working as soon as you call `sentry_sdk.init()`. **Logs** and **Application Metrics** need no extra configuration when using `sentry_sdk.logger` and `sentry_sdk.metrics`, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-). Standard-library `logging` and Loguru records require configuring their logging integrations.
+This guide also enables **Tracing** and **Profiling**.
 
 <Include name="quick-start-features-expandable" />
 
 ### Initialize the Sentry SDK
 
 Configuration should happen as **early as possible** in your application's lifecycle.
+
+The init snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profile_session_sample_rate">`profile_session_sample_rate`</PlatformLink> and <PlatformLink to="/configuration/options/#profile_lifecycle">`profile_lifecycle`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippets.
 
 If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
 
@@ -51,9 +55,6 @@ When using Celery without Django, you'll need to initialize the Sentry SDK in bo
 ```python {filename:tasks.py}
 from celery import Celery, signals
 import sentry_sdk
-# ___PRODUCT_OPTION_START___ metrics
-from sentry_sdk import metrics
-# ___PRODUCT_OPTION_END___ metrics
 
 # Initializing Celery
 app = Celery("tasks", broker="...")
@@ -64,21 +65,16 @@ def init_sentry(**_kwargs):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         # Add request headers and IP for users,
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
-        # ___PRODUCT_OPTION_START___ performance
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
+        # Enables Tracing.
+        # Set to 1.0 to capture 100% of spans for tracing.
+        # We recommend reducing this value in production.
         traces_sample_rate=1.0,
-        # ___PRODUCT_OPTION_END___ performance
-        # ___PRODUCT_OPTION_START___ profiling
-        # To collect profiles for all profile sessions,
-        # set `profile_session_sample_rate` to 1.0.
+        # Enables Profiling.
+        # Set to 1.0 to profile 100% of sessions.
         profile_session_sample_rate=1.0,
-        # Profiles will be automatically collected while
-        # there is an active span.
+        # Profiles are collected while at least one span is active.
         profile_lifecycle="trace",
-        # ___PRODUCT_OPTION_END___ profiling
     )
 
 # Task definitions go here
@@ -94,30 +90,22 @@ The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#
 ```python {filename:main.py}
 from tasks import add
 import sentry_sdk
-# ___PRODUCT_OPTION_START___ metrics
-from sentry_sdk import metrics
-# ___PRODUCT_OPTION_END___ metrics
 
 def main():
     # Initializing Sentry SDK in our process
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         # Add data like request headers and IP for users, if applicable;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
-        # ___PRODUCT_OPTION_START___ performance
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
+        # Enables Tracing.
+        # Set to 1.0 to capture 100% of spans for tracing.
+        # We recommend reducing this value in production.
         traces_sample_rate=1.0,
-        # ___PRODUCT_OPTION_END___ performance
-        # ___PRODUCT_OPTION_START___ profiling
-        # To collect profiles for all profile sessions,
-        # set `profile_session_sample_rate` to 1.0.
+        # Enables Profiling.
+        # Set to 1.0 to profile 100% of sessions.
         profile_session_sample_rate=1.0,
-        # Profiles will be automatically collected while
-        # there is an active span.
+        # Profiles are collected while at least one span is active.
         profile_lifecycle="trace",
-        # ___PRODUCT_OPTION_END___ profiling
     )
 
     # Enqueueing a task to be processed by Celery
@@ -141,7 +129,6 @@ Sentry automatically captures errors and exceptions raised in your Celery tasks 
 
 To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
 
-<OnboardingOption optionId="performance">
 ### Instrumenting Your App
 
 The Sentry SDK automatically creates spans for your Celery tasks, and propagates the trace from the code that enqueues a task to the worker that runs it.
@@ -211,63 +198,79 @@ The fix for the custom headers propagation issue was introduced to the Celery pr
 
 </Alert>
 
-</OnboardingOption>
-
-## Verify Your Setup
-
-Let's test your setup and confirm that data reaches your Sentry project.
-
-### Issues
+## Send Logs
 
 <SplitLayout>
 <SplitSection>
 <SplitSectionText>
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
+Use `sentry_sdk.logger` to send structured logs at different levels. You can include searchable attributes with each message.
+
+To capture records from Python's standard-library `logging` module or Loguru, configure `capture_sentry_logs=True` on the corresponding integration. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
 
 </SplitSectionText>
 <SplitSectionCode>
 
-```python {filename:tasks.py}
-from celery import Celery, signals
+```python
 import sentry_sdk
 
-app = Celery("tasks", broker="...")
-
-@signals.celeryd_init.connect
-def init_sentry(**_kwargs):
-    sentry_sdk.init(...)  # same as above
-
-@app.task
-def debug_sentry():
-    1/0
+sentry_sdk.logger.info("Order processed {order_id}", order_id="order-123")
+sentry_sdk.logger.warning("Rate limit reached", attributes={"endpoint": "/api/orders"})
 ```
 
 </SplitSectionCode>
 </SplitSection>
 </SplitLayout>
 
-Trigger the error by calling `debug_sentry.delay()`.
+## Send Application Metrics <FeatureBadge type="new" />
 
-To confirm that your SDK is initialized on worker start, pass `debug=True` to `sentry_sdk.init()`. This will add extra output to your Celery logs when the SDK is initialized. If you see the output during worker startup, and not just after a task has started, then it's working correctly.
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
 
-<OnboardingOption optionId="performance">
+Use `sentry_sdk.metrics` to send counters, gauges, and distributions from your app. Metrics are enabled by default after you initialize the SDK.
 
-<Include name="tracing/python-quick-start-verify-tracing-splitlayout.mdx" />
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
 
-</OnboardingOption>
+</SplitSectionText>
+<SplitSectionCode>
 
-<OnboardingOption optionId="logs">
+```python
+import sentry_sdk
 
-<Include name="logs/python-quick-start-verify-logs-splitlayout.mdx" />
+sentry_sdk.metrics.count("checkout.failed", 1)
+sentry_sdk.metrics.gauge("active_connections", 42)
+sentry_sdk.metrics.distribution("api_latency", 187, unit="millisecond")
+```
 
-</OnboardingOption>
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
-<OnboardingOption optionId="metrics">
+## Verify Your Setup
 
-<Include name="metrics/python-quick-start-verify-metrics-splitlayout.mdx" />
+Let's test your setup and confirm that data reaches your Sentry project.
 
-</OnboardingOption>
+<SplitLayout>
+<SplitSection>
+<SplitSectionText>
+
+Add a task that raises an exception, then call `debug_sentry.delay()` from a running Celery worker:
+
+</SplitSectionText>
+<SplitSectionCode>
+
+```python
+@app.task
+def debug_sentry():
+    1 / 0
+```
+
+</SplitSectionCode>
+</SplitSection>
+</SplitLayout>
 
 ### View Captured Data in Sentry
 
@@ -310,11 +313,7 @@ If this is set to `False`:
 - errors in Celery tasks won't be matched to the triggering function.
 - your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
 
-<OnboardingOption optionId="performance">
-
 See [Distributed Traces](#distributed-traces) to learn how to get more fine-grained control over distributed tracing in Celery tasks.
-
-</OnboardingOption>
 
 </SdkOption>
 
@@ -338,7 +337,11 @@ See <PlatformLink to="/integrations/celery/crons/">Celery Beat Auto Discovery</P
 
 ## Next Steps
 
-<PlatformContent includePath="getting-started-next-steps" />
+At this point, you should have integrated Sentry into your Celery application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
