@@ -44,7 +44,7 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 
 ## Configure
 
-The integration doesn't initialize the SDK. Initialize Sentry first with `SentrySdk.Init`, then add the integration with `AddSentry()`:
+Initialize Sentry first with `SentrySdk.Init`, then add the integration with `AddSentry()`:
 
 ```csharp {tabTitle:Generic host}
 using Microsoft.Extensions.Hosting;
@@ -76,15 +76,14 @@ var logger = loggerFactory.CreateLogger<Program>();
 
 Set other [SDK options](/platforms/dotnet/guides/extensions-logging/configuration/options/) in `SentrySdk.Init` too. Disposing the object it returns sends any pending events before your app exits.
 
-If you use a host integration such as [ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) or [MAUI](/platforms/dotnet/guides/maui/), skip this setup. Its `UseSentry` initializes Sentry and adds the logging integration for you.
+If you use a host integration such as [ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) or [MAUI](/platforms/dotnet/guides/maui/), skip this setup. Instead, use the `UseSentry` extension for that integration, which will initialize Sentry and the logging integration for you.
 
 <Alert title="Changed in Version 7.0.0">
 
-In earlier versions, `AddSentry` initialized the SDK itself. On those versions, set the DSN in `AddSentry(options => ...)` instead of calling `SentrySdk.Init`.
+Prior to version 7.0.0 `AddSentry` could also initialize the SDK itself. On those versions, set the DSN in `AddSentry(options => ...)` instead of calling `SentrySdk.Init`.
 
 </Alert>
 
-The integration drops log entries while Sentry isn't initialized. If a DSN can be found anyway, for example in the `SENTRY_DSN` environment variable, the integration also writes a warning to standard error the first time it drops an entry that would have been sent as an event. To fix it, initialize Sentry at startup as shown above.
 
 ### Logging Configuration
 
