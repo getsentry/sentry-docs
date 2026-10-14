@@ -1,11 +1,10 @@
 # SplitLayout Component
 
-A two-column layout component designed for getting started guides that places explanatory text on the left and code samples on the right.
+A layout component for getting started guides that pairs explanatory text with a code sample. Sections render in a single column: the text comes first, followed by its code sample.
 
 ## Features
 
-- **Responsive Design**: Automatically stacks on mobile (under 1024px)
-- **Sticky Code**: Code samples stick to viewport on desktop for easy reference while scrolling
+- **Single Column**: Text and code stack vertically at every viewport width
 - **Clean Separation**: Clear visual separation between explanation and implementation
 - **Flexible Content**: Support for any MDX content in both sections
 
@@ -20,12 +19,12 @@ A two-column layout component designed for getting started guides that places ex
   <SplitSection>
     <SplitSectionText>
       ### Your Heading Explanatory text goes here. You can use any markdown: -
-      Lists - **Bold text** - Links This content appears on the left side.
+      Lists - **Bold text** - Links This content appears first.
     </SplitSectionText>
 
     <SplitSectionCode>
       ```javascript // Your code sample goes here const example = "This appears
-      on the right"; ```
+      below the text"; ```
     </SplitSectionCode>
 
   </SplitSection>
@@ -68,25 +67,20 @@ You can stack multiple split sections within one layout:
 
 - **`<SplitLayout>`**: Container for one or more split sections
 - **`<SplitSection>`**: Individual split section wrapper
-- **`<SplitSectionText>`**: Left side text content (use this, not `<SplitSection.Text>`)
-- **`<SplitSectionCode>`**: Right side code samples (use this, not `<SplitSection.Code>`)
+- **`<SplitSectionText>`**: Text content, rendered first (use this, not `<SplitSection.Text>`)
+- **`<SplitSectionCode>`**: Code samples, rendered below the text (use this, not `<SplitSection.Code>`)
 
 ## Styling
 
-The component uses CSS Grid for layout and is fully responsive:
-
-- **Desktop (>1024px)**: Two columns (50/50 split)
-- **Mobile (≤1024px)**: Single column (stacked)
-
-The code section uses `position: sticky` on desktop to keep code visible while scrolling through long explanations.
+The component uses a single-column CSS Grid at every viewport width. Each section's text is followed by its code sample.
 
 ## Best Practices
 
-1. **Keep explanations concise**: The left column is limited in width, so focus on key points
+1. **Keep explanations concise**: Text sits directly above its code, so focus on key points
 2. **Use headings**: Start each Text section with a heading (h3 or h4)
 3. **Code relevance**: Ensure code samples directly relate to the adjacent text
 4. **Progressive complexity**: Order sections from simple to complex
-5. **Mobile consideration**: Remember content stacks on mobile, so ensure reading flow makes sense
+5. **Reading flow**: Content always stacks, so make sure each text section leads naturally into its code
 
 ## Examples in Use
 

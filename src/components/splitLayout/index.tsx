@@ -3,8 +3,8 @@
 /**
  * Component: SplitLayout / SplitSection
  *
- * Creates a two-column layout with text content on the left and code samples on the right.
- * Ideal for getting started guides where you want to explain concepts alongside code examples.
+ * Pairs explanatory text with a code sample. Sections render in a single column:
+ * the text comes first, followed by its code sample.
  *
  * Usage in MDX:
  * <SplitLayout>
@@ -24,8 +24,8 @@
  * Props:
  * - SplitLayout: Container for one or more split sections
  * - SplitSection: Individual split section wrapper
- * - SplitSectionText: Left side text content
- * - SplitSectionCode: Right side code samples
+ * - SplitSectionText: Text content (rendered first)
+ * - SplitSectionCode: Code samples (rendered below the text)
  *
  * Note: While SplitSection.Text and SplitSection.Code are available as properties
  * for TypeScript convenience, MDX requires using the direct component names.
