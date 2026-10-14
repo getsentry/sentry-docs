@@ -20,7 +20,7 @@ The default value to report a log entry as an event to Sentry is `Error`.
 
 This means that out of the box, any `LogError` call will create an `Event` which will include breadcrumbs for all prior log messages of level `Information`, `Warning`, `Error` and `Critical`.
 
-Additionally, when enabled, log messages are sent to Sentry as [Structured Logs](logs/). You can control which logs are captured using the [Serilog MinimumLogLevel](https://github.com/serilog/serilog/wiki/Configuration-Basics#minimum-level).
+Log messages are also sent to Sentry as [Structured Logs](logs/). You can control which logs are captured using the [Serilog MinimumLogLevel](https://github.com/serilog/serilog/wiki/Configuration-Basics#minimum-level).
 
 ## Install
 
@@ -44,9 +44,20 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 
 ## Configure
 
-You can configure the Sentry Serilog sink as follows:
+Initialize Sentry first, with `SentrySdk.Init` or a host integration such as [ASP.NET Core](/platforms/dotnet/guides/aspnetcore/), then add the sink:
 
 ```csharp
+using Sentry.Serilog;
+using Serilog;
+using Serilog.Events;
+
+SentrySdk.Init(options =>
+{
+  options.Dsn = "___PUBLIC_DSN___";
+  // Adds properties from the Serilog LogContext to Sentry events
+  options.UseSerilog();
+});
+
 Log.Logger = new LoggerConfiguration()
   .WriteTo.Sentry(o =>
   {
@@ -57,6 +68,8 @@ Log.Logger = new LoggerConfiguration()
   })
   .CreateLogger();
 ```
+
+You can also configure the sink in `appsettings.json`:
 
 ```json {filename:appsettings.json}
 {
@@ -78,36 +91,13 @@ Log.Logger = new LoggerConfiguration()
 }
 ```
 
-It's also possible to initialize the SDK through the Serilog integration. This is useful when the Serilog is the only integration being used in your application. To initialize the Sentry SDK through the Serilog integration, provide it with the DSN:
+The sink drops log events while Sentry isn't initialized. If a DSN can be found anyway, for example in the `SENTRY_DSN` environment variable, the sink also writes a warning to standard error the first time it drops an event. To fix it, initialize Sentry at startup as shown above.
 
+### Serilog Properties on Events
 
-```csharp
-Log.Logger = new LoggerConfiguration()
-  .WriteTo.Sentry(o => o.Dsn = "___PUBLIC_DSN___")
-  .CreateLogger();
-```
+`UseSerilog()` copies the properties in Serilog's `LogContext` onto Sentry events as tags. If you initialize Sentry through a host integration, call it on that integration's options, for example in `UseSentry(options => options.UseSerilog())`.
 
-```json {filename:appsettings.json}
-{
-  "Serilog": {
-    "Using": [ "Sentry.Serilog" ],
-    "WriteTo": [
-      {
-        "Name": "Sentry",
-        "Args": {
-          "dsn": "___PUBLIC_DSN___"
-        }
-      }
-    ]
-  }
-}
-```
-
-<Alert>
-
-The SDK only needs to be initialized once. If a `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this integration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as `null` instructs the integration not to initialize the SDK and unless another integration initializes it or you call `SentrySdk.Init`, the SDK will stay disabled.
-
-</Alert>
+If you don't call it, the sink does this for you once it's running, so only events captured before then miss the properties.
 
 ### Options
 
@@ -118,10 +108,6 @@ A `LogLevel` which indicates the minimum level a log message has to be included 
 #### MinimumEventLevel
 
 A `LogLevel` which indicates the minimum level a log message has to be sent to Sentry as an event. By default this value is `Error`.
-
-#### InitializeSdk
-
-Whether or not this integration should initialize the SDK. If you intend to call `SentrySdk.Init` yourself you should set this flag to `false`.
 
 #### RestrictedToMinimumLevel
 

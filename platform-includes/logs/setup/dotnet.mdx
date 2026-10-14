@@ -1,6 +1,6 @@
-Logs sent through the `SentrySdk.Logger` APIs are always sent, so they don't need any extra configuration. To send logs captured by logging integrations, initialize the SDK with the `EnableLogs` option set to `true`.
+Logs sent through the `SentrySdk.Logger` APIs are always sent, so they don't need any extra configuration.
 
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.nlog", "dotnet.log4net"]}>
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.nlog", "dotnet.log4net"]}>
 
 ```csharp
 SentrySdk.Init(options =>
@@ -9,40 +9,32 @@ SentrySdk.Init(options =>
 });
 ```
 
-You don't need a logs-specific option to use the `SentrySdk.Logger` APIs. Set `EnableLogs = true` only if you also send logs through a logging integration.
+The Serilog, NLog, log4net, and `Microsoft.Extensions.Logging` integrations also send logs without a logs-specific option.
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, these integrations only sent logs when `EnableLogs` was `true`.
+
+</Alert>
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.maui"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.maui"]}>
+
+To also send the entries your app writes through `ILogger`, set `EnableLogs` to `true`:
 
 ```csharp {tabTitle:Builder}
 .UseSentry(options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
-    // Enable logs to be sent to Sentry
-    options.EnableLogs = true;
-});
-```
-
-
-This enables the `Microsoft.Extensions.Logging` integration. The `SentrySdk.Logger` APIs don't depend on `EnableLogs`.
-
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.extensions-logging"]}>
-
-```csharp {tabTitle:Factory}
-.AddSentry(options =>
-{
-    options.Dsn = "___PUBLIC_DSN___";
-    // Enable logs to be sent to Sentry
+    // Send ILogger entries to Sentry as logs
     options.EnableLogs = true;
 });
 ```
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.aspnetcore", "dotnet.extensions-logging"]}>
+<PlatformSection supported={["dotnet.aspnetcore"]}>
 
 ```json {tabTitle:Configuration} {filename:appsettings.json}
 {
@@ -55,53 +47,90 @@ This enables the `Microsoft.Extensions.Logging` integration. The `SentrySdk.Logg
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.serilog"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.maui"]}>
 
-```csharp
-.WriteTo.Sentry(options =>
-{
-    options.Dsn = "___PUBLIC_DSN___";
-    // Enable logs to be sent to Sentry
-    options.EnableLogs = true;
-});
-```
-
+If you also register Serilog, NLog, or log4net as an `ILogger` provider (for example with `builder.Logging.AddSerilog()`), leave `EnableLogs` off. That framework's Sentry integration already sends those entries as logs, so `EnableLogs` would send each one twice.
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.nlog"]}>
+<PlatformSection supported={["dotnet.azure-functions-worker", "dotnet.extensions-logging"]}>
 
-```csharp
-LogManager.Configuration = new LoggingConfiguration();
-LogManager.Configuration
-    .AddSentry(options =>
-    {
-        options.Dsn = "___PUBLIC_DSN___";
-        // Enable logs to be sent to Sentry
-        options.EnableLogs = true;
-    });
-```
-
-If the SDK is initialized elsewhere (for example, through ASP.NET Core), enable `EnableLogs` on those options instead. The NLog target then captures logs without initializing the SDK itself.
-
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.log4net"]}>
-
-`EnableLogs` isn't exposed as a log4net appender setting, so initialize the SDK with `SentrySdk.Init` and leave the DSN out of your log4net appender configuration.
+Initialize the SDK with `SentrySdk.Init`, then add Sentry to your logging builder. Entries your app writes through `ILogger` are then sent as logs, without a logs-specific option.
 
 ```csharp
 SentrySdk.Init(options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
-    // Enable logs to be sent to Sentry
-    options.EnableLogs = true;
+});
+
+builder.Logging.AddSentry();
+```
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, `AddSentry` initialized the SDK itself and only sent logs when `EnableLogs` was `true`. On those versions, set the DSN and `EnableLogs` in `AddSentry(options => ...)` instead of calling `SentrySdk.Init`.
+
+</Alert>
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.serilog"]}>
+
+Initialize the SDK, then add the Sentry sink. The sink sends logs as soon as you add it.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Sentry()
+    .CreateLogger();
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.nlog"]}>
+
+Initialize the SDK, then add the Sentry target, in code or in your `NLog.config`. The target sends logs as soon as you add it.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+
+var config = new LoggingConfiguration();
+config.AddSentry();
+LogManager.Configuration = config;
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.log4net"]}>
+
+Initialize the SDK. The `SentryAppender` in your log4net configuration then sends logs.
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
 });
 ```
 
-The `SentryAppender` configured in your log4net configuration then captures logs without initializing the SDK itself. If the SDK is initialized elsewhere (for example, through ASP.NET Core), enable `EnableLogs` on those options instead.
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.serilog", "dotnet.nlog", "dotnet.log4net"]}>
+
+If the SDK is initialized elsewhere, for example through ASP.NET Core, skip `SentrySdk.Init`. If you also register this framework as an `ILogger` provider (for example with `AddSerilog()`, `AddNLog()`, or `AddLog4Net()`), leave `EnableLogs` off in the options you pass to `UseSentry`. This integration already sends those entries as logs, so `EnableLogs` would send each one twice.
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, this integration only sent logs when `EnableLogs` was set to `true` on the options used to initialize the SDK.
+
+</Alert>
 
 </PlatformSection>
 
 It does _not_ capture the `Console.WriteLine()` standard output stream.
-
