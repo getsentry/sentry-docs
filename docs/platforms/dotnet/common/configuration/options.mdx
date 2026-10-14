@@ -371,18 +371,19 @@ HTTP status codes that shouldn't be traced. When an incoming request results in 
 Each entry is either a single status code or an inclusive range, as an `int` or an `HttpStatusCode`:
 
 ```csharp
-options.TraceIgnoreStatusCodes = new List<HttpStatusCodeRange> { 404, (500, 599) };
+options.TraceIgnoreStatusCodes = new List<HttpStatusCodeRange> { (401, 404), 429 };
 ```
 
-This also applies to ASP.NET Core apps traced with OpenTelemetry through `UseOpenTelemetry`, but not to spans sent with `UseOtlp`.
+This also applies to ASP.NET Core apps traced with OpenTelemetry through <PlatformLink to="/tracing/instrumentation/opentelemetry/">`UseOpenTelemetry`</PlatformLink>. With the <PlatformLink to="/tracing/instrumentation/opentelemetry-otlp/">OTLP exporter</PlatformLink> (`UseOtlp`), spans go straight to Sentry and this option has no effect.
 
-Starting with version 7.0.0, the default is `301`, `305–399`, and `401–404`, so requests that end with those status codes are no longer traced. `302` and `303` are left out because apps commonly use them to redirect after a successful form post. To trace requests with any status code, clear the list:
+Starting with version 7.0.0, the default is `301`, `305–399`, and `401–404`, so requests that end with those status codes are no longer traced. `302` and `303` are left out because apps commonly use them to redirect after a successful form post, and `304` because it's the normal response to a cache check. To trace requests with any status code, clear the list:
 
 ```csharp
 options.TraceIgnoreStatusCodes.Clear();
 ```
 
-In ASP.NET Core, you can also set this option in the `Sentry` section of `appsettings.json`, for example `"TraceIgnoreStatusCodes": [404]`. The configured list replaces the default and only takes single status codes, not ranges. Note that an empty array in configuration bindings doesn't clear the default, because .NET configuration binds `[]` as `null`. As a workaround, you can use `[0]` instead. No response has status code 0, so every request is traced.
+In ASP.NET Core, you can also set this option in the `Sentry` section of `appsettings.json`. The configured list replaces the default and only takes single status codes, not ranges:
+
 
 </SdkOption>
 
