@@ -126,7 +126,9 @@ sentry_sdk.init(
 )
 ```
 
-Passing a `data_collection` dictionary opts you into its defaults, which are more permissive than `send_default_pii=False`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (user identity, request bodies, generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+Passing a `data_collection` dictionary opts you into its defaults, which are more permissive than `send_default_pii=False`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (user identity, request bodies, generative AI content) and filters values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+`data_collection` and [`event_scrubber`](#event_scrubber) are mutually exclusive. If you set `data_collection`, the SDK ignores `event_scrubber` and emits a warning. Use the `data_collection` filtering options to control which values are sent instead.
 
 If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
 
@@ -136,9 +138,9 @@ For the full reference of available keys and their defaults, see <PlatformLink t
 
 <SdkOption name="event_scrubber" type='sentry_sdk.scrubber.EventScrubber' defaultValue='None'>
 
-Scrubs the event payload for sensitive information such as cookies, sessions, and passwords from a `denylist`. It can additionally be used to scrub from another `pii_denylist` if `send_default_pii` is disabled. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
+Scrubs the event payload for sensitive information such as cookies, sessions, and passwords from a `denylist`. It can additionally be used to scrub from another `pii_denylist` if `send_default_pii` is disabled. See how to [configure the scrubber here](../../data-management/sensitive-data/#event_scrubber).
 
-Only runs if `data_collection` is not defined. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
+`event_scrubber` and [`data_collection`](#data_collection) are mutually exclusive. The event scrubber only runs if `data_collection` isn't set. If you set `data_collection`, the SDK ignores `event_scrubber` (including a custom one) and emits a warning. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for how to filter values with `data_collection`.
 
 </SdkOption>
 
