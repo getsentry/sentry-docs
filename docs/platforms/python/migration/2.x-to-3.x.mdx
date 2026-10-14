@@ -75,7 +75,7 @@ The `send_default_pii` option was removed. Use the more fine-grained <PlatformLi
 
 <Alert level="warning">
 
-The `data_collection` defaults are more permissive than `send_default_pii=False`. Out of the box, the SDK now collects user information, HTTP request and response bodies, generative AI inputs and outputs, and more headers and cookies. Values whose keys match a built-in denylist (`auth`, `token`, `password`, and similar) are always scrubbed.
+The `data_collection` defaults are more permissive than `send_default_pii=False`. Out of the box, the SDK now collects user information, HTTP request and response bodies, generative AI inputs and outputs, and more headers and cookies. Header, cookie, and query parameter values whose keys match a built-in denylist (`auth`, `token`, `password`, and similar) are scrubbed, but **local variables in stack frames are no longer scrubbed by default** (see [Scrubbing Local Variables](#scrubbing-local-variables)).
 
 </Alert>
 
@@ -101,6 +101,7 @@ sentry_sdk.init(
         "mcp": {"inputs": False, "outputs": False},
         "database_query_data": False,
         "queues": False,
+        "stack_frame_variables": {"mode": "denylist"},
         "http_headers": {
             "request": {
                 "mode": "denylist",
@@ -123,6 +124,27 @@ Several integration-specific options that controlled data collection were remove
 
 - The `include_prompts` option of the generative AI integrations (OpenAI, Anthropic, LangChain, and others). Use `data_collection`'s `gen_ai` setting instead.
 - The `record_params` option of the `AsyncPGIntegration` and `AioMySQLIntegration`, and the experimental `record_sql_params` option. Use `data_collection`'s `database_query_data` setting instead.
+
+### Scrubbing Local Variables
+
+The `event_scrubber` option and the `sentry_sdk.scrubber` module (`EventScrubber`, `DEFAULT_DENYLIST`, `DEFAULT_PII_DENYLIST`) were removed. Use `data_collection` to control which data is collected, and `before_send` for any custom scrubbing.
+
+Previously, the event scrubber removed sensitive values from local variables in stack frames. This no longer happens by default. To filter out variables with sensitive names (like `password` or `token`), set `stack_frame_variables` to denylist mode. To scrub additional variables, list them in `terms`. They're applied on top of the built-in denylist:
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+-   event_scrubber=EventScrubber(denylist=["my_secret"]),
++   data_collection={
++       "stack_frame_variables": {
++           "mode": "denylist",
++           "terms": ["my_secret"],
++       },
++   },
+)
+```
 
 See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for an overview of all data categories.
 
