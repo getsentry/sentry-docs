@@ -84,11 +84,13 @@ const result = await classifier.invoke(
 console.log(result.choices.department.choice);
 ```
 
-Each `invoke()` call creates a `gen_ai.evaluate` span named `evaluate <model>`, with the model, provider, latency, and token usage. Inside an agent, the span also records the agent name. If the evaluation fails, the span is marked as failed. When recording is enabled, Sentry captures the `state` and `questions` sent to Jev as input messages and `answers` as output messages, including probabilities returned by the model. LangChain messages in the input are recorded as transcript lines, the same way the classifier sends them.
+Each `invoke()` call creates a `gen_ai.decide` span named `decide <model>`, with the model, provider, latency, and token usage. Inside an agent, the span also records the agent name. If the evaluation fails, the span is marked as failed. When recording is enabled, Sentry captures the `state` and `questions` sent to Jev as input messages and `answers` as output messages, including probabilities returned by the model. LangChain messages in the input are recorded as transcript lines, the same way the classifier sends them.
+
+SDK versions before `11.7.0` create these spans with the op `gen_ai.evaluate` and the name `evaluate <model>`. If you filter on `gen_ai.evaluate` in queries, alerts, or dashboards, change it to `gen_ai.decide`.
 
 Evaluation inputs and outputs follow the same [`recordInputs`](#recordinputs) and [`recordOutputs`](#recordoutputs) options as other LangChain calls. Disable these options if evaluation state or answers contain sensitive data.
 
-If you call Jev through `TypeSafeClient.systemOne()` or Vercel AI SDK's `experimental_evaluate()` instead, see the <PlatformLink to="/configuration/integrations/typesafe/">TypeSafe</PlatformLink> or <PlatformLink to="/configuration/integrations/vercelai/#trace-jev-evaluations">Vercel AI</PlatformLink> integration.
+If you call Jev through `TypeSafeClient.systemOne()` or Vercel AI SDK's `experimental_decide()` instead, see the <PlatformLink to="/configuration/integrations/typesafe/">TypeSafe</PlatformLink> or <PlatformLink to="/configuration/integrations/vercelai/#trace-jev-decisions">Vercel AI</PlatformLink> integration.
 
 ## Supported Versions
 
