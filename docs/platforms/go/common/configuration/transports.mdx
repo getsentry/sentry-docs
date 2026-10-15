@@ -4,47 +4,68 @@ sidebar_order: 4
 description: "Transports let you change the way in which events are delivered to Sentry by the Go SDK."
 ---
 
-Transports let you change the way in which events are delivered to Sentry.
+Transports deliver envelopes prepared by the SDK. An envelope can contain an error, transaction, check-in, a batch of logs or metrics, attachments, or client reports.
 
-The Sentry Go SDK itself, provides two built-in transports. `HTTPTransport`, which is non-blocking and is used by default. And `HTTPSyncTransport` which is blocking. Each transport, provide slightly different configuration options.
+The SDK uses `HTTPTransport` by default. Choose `HTTPSyncTransport` when errors must be sent before capture returns, such as in a serverless function.
 
-## Usage
-
-To configure transport, provide an instance of `sentry.Transport` interface to `ClientOptions`
-
-
-```go
-sentrySyncTransport := sentry.NewHTTPSyncTransport()
-sentrySyncTransport.Timeout = time.Second * 3
-
-sentry.Init(sentry.ClientOptions{
-    Dsn: "___PUBLIC_DSN___",
-    Transport: sentrySyncTransport,
-})
-```
-
-Each transport, provide it's own factory function. `NewHTTPTransport` and `NewHTTPSyncTransport` respectively.
-
-## Options
+Upgrading a transport from 0.x? See <PlatformLink to="/migration/v0-to-v1/#updating-transports">the transport migration steps</PlatformLink>.
 
 ## HTTPTransport
 
+Configure the queue size and timeout before initializing the client:
+
 ```go
-// HTTPTransport is a default implementation of `Transport` interface used by `Client`.
-type HTTPTransport struct {
-	// Size of the transport buffer. Defaults to 30.
-	BufferSize int
-	// HTTP Client request timeout. Defaults to 30 seconds.
-	Timeout time.Duration
-}
+transport := sentry.NewHTTPTransport()
+transport.BufferSize = 1000
+transport.Timeout = 30 * time.Second
+
+sentry.Init(sentry.ClientOptions{
+	Dsn:       "___PUBLIC_DSN___",
+	Transport: transport,
+})
 ```
+
+`BufferSize` defaults to 1,000 envelopes and `Timeout` to 30 seconds. The SDK also uses category buffers, so `BufferSize` does not limit all buffered telemetry. Capture returns before network delivery. Call `sentry.Flush` before shutdown.
 
 ## HTTPSyncTransport
 
+Use synchronous delivery when a runtime may suspend background work as soon as an invocation returns:
+
 ```go
-// HTTPSyncTransport is an implementation of `Transport` interface which blocks after each captured event.
-type HTTPSyncTransport struct {
-	// HTTP Client request timeout. Defaults to 30 seconds.
-	Timeout time.Duration
+transport := sentry.NewHTTPSyncTransport()
+transport.Timeout = 3 * time.Second
+
+sentry.Init(sentry.ClientOptions{
+	Dsn:       "___PUBLIC_DSN___",
+	Transport: transport,
+})
+```
+
+Errors, transactions, and check-ins are sent synchronously. Logs and metrics remain batched: flush before returning from a serverless invocation. The default timeout is 30 seconds. `Close()` cancels in-flight requests and rejects later sends, so flush before closing.
+
+## Custom Transports
+
+Implement `sentry.Transport` using envelope types from `github.com/getsentry/sentry-go/protocol`:
+
+```go
+type Transport interface {
+	Configure(options sentry.ClientOptions)
+	SendEnvelope(ctx context.Context, envelope *protocol.Envelope) error
+	FlushWithContext(ctx context.Context) bool
+	Close()
 }
 ```
+
+Use `envelope.WriteTo(writer)` or `envelope.Serialize()` to encode the envelope. Preserve all item types when forwarding it. Enrich or filter events in `BeforeSend`, `BeforeSendTransaction`, `BeforeSendLog`, `BeforeSendMetric`, or event processors before serialization.
+
+Return an error only when rejecting an envelope; return `sentry.ErrTransportQueueFull` when the queue is full. A nil error means accepted, not guaranteed delivery. Implementations must be safe for concurrent use and return promptly when the supplied context is canceled.
+
+For tests, use `&sentry.MockTransport{}` and inspect `Events()` after flushing. Events are decoded from envelopes, so context and extra values have JSON types. Logs and metrics appear as one event per batch.
+
+## Flushing and HTTP Configuration
+
+Flush through `sentry.Flush`, `client.Flush`, or `sentry.FlushWithContext(ctx)` so pending log and metric batches are included. Calling `client.Transport.FlushWithContext(ctx)` only drains its delivery queue. The package-level `sentry.FlushWithContext` selects the client from the supplied context and bounds flushing by its deadline.
+
+Configure HTTP clients, round trippers, proxies, and certificates through <PlatformLink to="/configuration/options/#transport-options">ClientOptions</PlatformLink>.
+
+Flush before calling `Close`.
