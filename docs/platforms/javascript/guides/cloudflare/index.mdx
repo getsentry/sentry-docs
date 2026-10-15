@@ -36,20 +36,9 @@ If you're using any of the listed frameworks, follow their specific setup instru
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the Sentry SDK to your application:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 <PlatformContent includePath="getting-started-install" />
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Configure
 
@@ -68,18 +57,11 @@ Not using Vite? See the <PlatformLink to="/install/wrangler/">Wrangler setup</Pl
 
 ### Add the Vite Plugin
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add the Sentry plugin to your existing `vite.config.ts`, next to `cloudflare()`. Both of its behaviors are on by default.
 
 `autoInstrumentation` wraps your Worker entry, and any Durable Object, Workflow or Agents SDK class in your wrangler config, at build time, so you don't have to call `Sentry.withSentry()` yourself. `buildTimeInstrumentation` instruments bundled dependencies such as database clients, which is the only way to trace them in the Workers runtime, where the SDK can't patch them at runtime.
 
 To see its options, which packages it instruments, and how to opt out of either behavior, see <PlatformLink to="/install/vite-plugin/">Vite Plugin</PlatformLink>.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:vite.config.ts} {diff}
  import { cloudflare } from "@cloudflare/vite-plugin";
@@ -94,10 +76,6 @@ To see its options, which packages it instruments, and how to opt out of either 
  });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 Run `vite build` before `wrangler deploy`, and use `vite dev` in place of `wrangler dev` for local development.
 
 ### Wrangler Configuration
@@ -109,10 +87,6 @@ Run `vite build` before `wrangler deploy`, and use `vite dev` in place of `wrang
 
 ### Add Your Sentry Options
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Create an `instrument.server.ts` file next to your Worker entry, the file that `main` points at in your wrangler config. If `main` is `src/index.ts`, the file belongs at `src/instrument.server.ts`, not at the project root.
 
 The name is fixed. The plugin looks for `instrument.server` with a `.ts`, `.mts`, `.js`, `.mjs` or `.cjs` extension, and passes its default export to `withSentry`. Use `defineCloudflareOptions` to get the options type-checked.
@@ -122,9 +96,6 @@ The snippet also turns on:
 - Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 
 Don't need a feature? Remove its integration and options from the snippet.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:src/instrument.server.ts}
 import { defineCloudflareOptions } from "@sentry/cloudflare";
@@ -138,10 +109,6 @@ export default defineCloudflareOptions((env) => ({
   tracesSampleRate: 1.0,
 }));
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Expandable title="Prefer to configure Sentry with bindings?">
 
@@ -168,16 +135,9 @@ This is expected behavior in the Cloudflare Workers environment and affects all 
 
 ## Send Logs
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. Cloudflare Workers also support the <PlatformLink to="/logs/#console-integration">console logging integration</PlatformLink> to capture existing `console.log` calls.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for logging methods and message formatting.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 import * as Sentry from "@sentry/cloudflare";
@@ -189,22 +149,11 @@ Sentry.logger.warn("Slow operation detected", { operation: "data_fetch", duratio
 Sentry.logger.error("Validation failed", { form_field: "email", reason: "Invalid email" });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Send Application Metrics <FeatureBadge type="new" />
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your application to Sentry. You can pass attributes to search or filter by later.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for metric types and configuration options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.metrics.count("checkout.failed", 1);
@@ -217,22 +166,11 @@ Sentry.metrics.distribution("api_latency", 187, {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add a route to your Worker that throws an error:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 export default {
@@ -247,10 +185,6 @@ export default {
   },
 };
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### View Captured Data in Sentry
 

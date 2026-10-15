@@ -15,22 +15,11 @@ categories:
 
 ### Install the SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use the Bun package manager to add the Sentry SDK to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:Bun}
 bun add @sentry/bun
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Configure
 
@@ -41,10 +30,6 @@ This guide also enables **Tracing**.
 
 ### Initialize the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Sentry should be initialized as early in your app as possible.
 Create a file named `instrument.js` in the root directory of your project and add the following code:
 
@@ -53,9 +38,6 @@ The snippet also turns on:
 - Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 
 Don't need a feature? Remove its integration and options from the snippet.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript {filename: instrument.js}
 import * as Sentry from "@sentry/bun";
@@ -70,22 +52,11 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Build With the Sentry Plugin (Recommended)
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 We recommend building with the Sentry plugin, because it adds spans from your dependencies, such as database drivers, AI SDKs, and web frameworks like Express, Koa and Hapi. Bun has no runtime hook Sentry can use to instrument those packages, so the plugin rewrites them as `bun build` bundles them.
 
 Add `sentryBunPlugin` from `@sentry/bun/plugin` to your `Bun.build()` call, then run the output the same way, with `--preload`. Errors, the spans you create yourself, and `Bun.serve`, `node:http` and `fetch` spans work either way.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:build.ts}
 import { sentryBunPlugin } from "@sentry/bun/plugin";
@@ -98,20 +69,9 @@ await Bun.build({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Apply Instrumentation to Your App
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Preload your instrumentation file with the [`--preload`](https://bun.com/docs/runtime#param-preload) flag. This is what guarantees that `Sentry.init()` runs before any other module is loaded.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:From source}
 bun --preload ./instrument.js app.js
@@ -120,10 +80,6 @@ bun --preload ./instrument.js app.js
 ```bash {tabTitle:Built output}
 bun --preload ./instrument.js dist/app.js
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Add Readable Stack Traces With Source Maps
 
@@ -135,16 +91,9 @@ bun --preload ./instrument.js dist/app.js
 
 ## Send Logs
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can pass attributes to search or filter by later.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for logging methods and message formatting.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.logger.info("User example action completed");
@@ -154,22 +103,11 @@ Sentry.logger.warn("Slow operation detected", { operation: "data_fetch", duratio
 Sentry.logger.error("Validation failed", { form_field: "email", reason: "Invalid email" });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Send Application Metrics <FeatureBadge type="new" />
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your application to Sentry. You can pass attributes to search or filter by later.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for metric types and configuration options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.metrics.count("checkout.failed", 1);
@@ -182,32 +120,17 @@ Sentry.metrics.distribution("api_latency", 187, {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add an intentional error to your main application file:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 setTimeout(() => {
   throw new Error("Sentry Test Error");
 }, 0);
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### View Captured Data in Sentry
 

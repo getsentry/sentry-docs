@@ -28,14 +28,7 @@ You need:
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the Sentry SDK to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/nitro --save
@@ -49,10 +42,6 @@ yarn add @sentry/nitro
 pnpm add @sentry/nitro
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure
 
 **Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
@@ -64,14 +53,7 @@ The Nitro SDK is configured in two places: a build-time wrapper that registers a
 
 ### Configure the Nitro Build
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Wrap your Nitro config with `withSentryConfig` so the Sentry module is registered during the build. Provide your auth token, organization, and project slugs so that source maps are automatically uploaded during production builds.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename: nitro.config.ts}
 import { defineNitroConfig } from "nitro/config";
@@ -89,16 +71,7 @@ export default withSentryConfig(config, {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 If you use Nitro as a Vite plugin, wrap the options you pass to `nitro()` instead:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename: vite.config.ts}
 import { defineConfig } from "vite";
@@ -124,32 +97,15 @@ export default defineConfig({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Add your auth token to your environment:
 
 <OrgAuthTokenNote />
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Initialize the Sentry SDK
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Create an `instrument.mjs` file in your project root:
 
@@ -158,9 +114,6 @@ The snippet also turns on:
 - Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 
 Don't need a feature? Remove its options from the snippet.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript {filename: instrument.mjs}
 import * as Sentry from "@sentry/nitro";
@@ -174,24 +127,13 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Source Maps
 
 By default, `withSentryConfig` generates hidden source maps, uploads them to Sentry, and deletes the `.map` files after the build. This gives you readable stack traces in Sentry without shipping source maps to production. If you already set `sourcemap` in your Nitro config, the SDK respects your setting.
 
 ### Run Your Application
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Load the instrumentation file with Node's `--import` flag before any Nitro command. This works for `nitro dev`, `nitro preview`, and your production start script:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```json {filename: package.json}
 {
@@ -202,10 +144,6 @@ Load the instrumentation file with Node's `--import` flag before any Nitro comma
   }
 }
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Control the Data You Send to Sentry
 
@@ -260,18 +198,11 @@ The SDK is a wrapper around `@sentry/node` and re-exports its full API. All Node
 
 ## Send Logs
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. Logs are enabled by default in JavaScript SDK `10.71.0` and later; earlier versions require `enableLogs: true` in `Sentry.init()`.
 
 If you already use `console`, Pino, Winston, or Consola, you can send those logs with the <PlatformLink to="/logs/#console-integration">console</PlatformLink>, <PlatformLink to="/logs/#pino-integration">Pino</PlatformLink>, <PlatformLink to="/logs/#winston-integration">Winston</PlatformLink>, or <PlatformLink to="/logs/#consola-integration">Consola</PlatformLink> integrations.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.logger.info("User example action completed");
@@ -287,22 +218,11 @@ Sentry.logger.error("Validation failed", {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Send Application Metrics <FeatureBadge type="new" />
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. Metrics are supported in JavaScript SDK `10.25.0` and later and need no extra configuration beyond SDK initialization.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.metrics.count("checkout.failed", 1);
@@ -314,10 +234,6 @@ Sentry.metrics.distribution("api_latency", 187, {
   attributes: { endpoint: "/api/orders" },
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Verify Your Setup
 

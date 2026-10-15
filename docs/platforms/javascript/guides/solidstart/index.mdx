@@ -26,14 +26,7 @@ This SDK is currently in **beta**. Beta features are still in progress and may h
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the Sentry SDK to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/solidstart --save
@@ -46,10 +39,6 @@ yarn add @sentry/solidstart
 ```bash {tabTitle:pnpm}
 pnpm add @sentry/solidstart
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Configure
 
@@ -68,10 +57,6 @@ The examples in this guide will use TypeScript with a `src` folder structure. Ma
 
 ### Configure Client-Side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Import and initialize the Sentry SDK in your `/src/entry-client.tsx` file. If you use Solid Router, add its tracing integration as shown below and wrap your router in the next step.
 
 The snippet also turns on:
@@ -81,9 +66,6 @@ The snippet also turns on:
 - User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
 
 Don't need a feature? Remove its integration and options from the snippet.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```jsx {filename:src/entry-client.tsx}
 import * as Sentry from "@sentry/solidstart";
@@ -119,20 +101,9 @@ Sentry.init({
 mount(() => <StartClient />, document.getElementById("app"));
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Server-Side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Initialize Sentry on the server. On SolidStart 2, do this in a Nitro startup plugin, which runs once when the server starts. On SolidStart 1, create an `instrument.server.ts` file in your `src` folder.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:SolidStart 2} {filename:server/plugins/sentry.ts} {mdExpandTabs}
 import * as Sentry from "@sentry/solidstart";
@@ -165,22 +136,11 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Server Instrumentation
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 The Sentry SDK provides [middleware lifecycle](https://docs.solidjs.com/solid-start/advanced/middleware) handlers that enhance the data collected by Sentry on the server side, enabling distributed tracing between the client and server.
 
 Create or update your `src/middleware.ts` file and add the `sentryBeforeResponseMiddleware` handler:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:src/middleware.ts} {6}
 import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
@@ -194,15 +154,7 @@ export default createMiddleware({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 Add the Sentry plugin to your build config and register the middleware you just created. On SolidStart 2, add `sentrySolidStart` to `vite.config.ts`. On SolidStart 1, wrap your `app.config.ts` with `withSentry` so that the instrumentation file gets included in your build output.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:SolidStart 2} {filename:vite.config.ts} {mdExpandTabs}
 import { sentrySolidStart } from "@sentry/solidstart/vite";
@@ -240,20 +192,9 @@ export default defineConfig(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Solid Router
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you're using Solid Router and the Sentry `solidRouterBrowserTracingIntegration` integration, wrap your Solid Router with `withSentryRouterRouting` to enable Sentry to collect navigation spans:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app.tsx} {5,9,11}
 import { Router } from "@solidjs/router";
@@ -271,15 +212,7 @@ export default function App() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Run Your Application
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 On SolidStart 2, the Vite plugin instruments your dependencies at build time, so the server needs no preload flag. Build with `vite build` and start the output directly.
 
@@ -294,9 +227,6 @@ On SolidStart 1, run your build command to generate the `instrument.server.mjs` 
 </Alert>
 
 If you're not able to use the `--import` flag on SolidStart 1, check the alternative <PlatformLink to="/install/">installation methods</PlatformLink>.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 For example, update your scripts in `package.json`:
 
@@ -318,37 +248,15 @@ For example, update your scripts in `package.json`:
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Capture Solid Errors
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 To automatically report exceptions from inside a component tree to Sentry, wrap Solid's `ErrorBoundary` with Sentry's helper function:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 <PlatformContent includePath="getting-started-capture-errors" />
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Add Readable Stack Traces With Source Maps
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug to the Sentry plugin in your build config:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:SolidStart 2} {filename:vite.config.ts} {mdExpandTabs}
 import { sentrySolidStart } from "@sentry/solidstart/vite";
@@ -389,15 +297,7 @@ export default defineConfig(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <OrgAuthTokenNote />
 
@@ -405,26 +305,13 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Alternatively, you can create a `.env.sentry-build-plugin` file:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {filename:.env.sentry-build-plugin}
 SENTRY_ORG="___ORG_SLUG___"
 SENTRY_PROJECT="___PROJECT_SLUG___"
 SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
@@ -434,18 +321,11 @@ SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
 
 ## Send Logs
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
 If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.logger.info("User example action completed");
@@ -461,21 +341,11 @@ Sentry.logger.error("Validation failed", {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 ## Send Application Metrics <FeatureBadge type="new" />
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. You can add searchable attributes to each metric.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.metrics.count("checkout.failed", 1);
@@ -488,23 +358,13 @@ Sentry.metrics.distribution("api_latency", 187, {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add a test button to an existing page. Clicking it throws an error that Sentry captures:
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```jsx
 <button
@@ -516,10 +376,6 @@ Add a test button to an existing page. Clicking it throws an error that Sentry c
   Test Sentry Error
 </button>
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### View Captured Data in Sentry
 

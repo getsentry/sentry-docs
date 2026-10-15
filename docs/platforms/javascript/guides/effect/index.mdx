@@ -26,14 +26,7 @@ This guide will show you how to integrate Sentry into your [Effect](https://effe
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the Sentry SDK to your application.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/effect --save
@@ -47,10 +40,6 @@ yarn add @sentry/effect
 pnpm add @sentry/effect
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure
 
 **Error Monitoring** starts working as soon as you provide `Sentry.effectLayer()`. **Logs** and **Application Metrics** need no extra SDK configuration. To forward Effect-native logs and metrics, use the Sentry Effect logger and metrics layers shown in this guide. You'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
@@ -61,10 +50,6 @@ This guide also enables **Tracing**.
 The SDK provides an `effectLayer` that initializes Sentry. You can compose it with additional Effect layers to enable tracing, logging, and metrics. The `effectLayer`, `SentryEffectTracer`, `SentryEffectLogger`, and `SentryEffectMetricsLayer` exports are the same for Effect v3 and v4. The only difference between versions is how you compose layers for tracing and logging, which is covered in the snippets below.
 
 ### Effect v3
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 <AvailableSince version="10.44.0" />
 
@@ -80,9 +65,6 @@ The snippets also turn on:
 - Application Metrics: via `SentryEffectMetricsLayer`
 
 Don't need a feature? Remove its layer and options from the snippet.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle: Server} {filename: main.ts}
 import * as Sentry from "@sentry/effect";
@@ -140,24 +122,13 @@ const SentryLive = Layer.mergeAll(
 const MainLive = YourAppLayer.pipe(Layer.provide(SentryLive));
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Effect v4
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 <AvailableSince version="10.50.0" />
 
 Effect v4 changes how you install the default `Tracer` and `Logger` services. Use `Layer.succeed(Tracer.Tracer, …)` plus `Logger.layer([…])`.
 
 With SDK version 10.75.0 or higher, `effectLayer` also registers a Sentry `ErrorReporter`. Sentry then captures the failures that Effect reports, for example a route handler of Effect's HTTP server that fails. Learn more in <PlatformLink to="/usage/#effect-v4">Capturing Errors</PlatformLink>.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle: Server} {filename: main.ts}
 import * as Sentry from "@sentry/effect";
@@ -217,10 +188,6 @@ const SentryLive = Layer.mergeAll(
 const MainLive = YourAppLayer.pipe(Layer.provide(SentryLive));
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
@@ -231,16 +198,9 @@ const MainLive = YourAppLayer.pipe(Layer.provide(SentryLive));
 
 ## Send Logs
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 The Effect logger layer forwards `Effect.log` messages to Sentry. The v3 and v4 layer setup is included in the configuration snippets above.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for logging methods and message formatting.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 import { Effect } from "effect";
@@ -253,22 +213,11 @@ const program = Effect.gen(function* () {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Send Application Metrics <FeatureBadge type="new" />
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your application to Sentry. You can pass attributes to search or filter by later.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for metric types and configuration options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.metrics.count("checkout.failed", 1);
@@ -281,22 +230,11 @@ Sentry.metrics.distribution("api_latency", 187, {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run an Effect that fails using the layer that includes `Sentry.effectLayer()`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 import { Effect } from "effect";
@@ -305,10 +243,6 @@ const program = Effect.fail(new Error("Sentry Test Error"));
 
 // Run with your layer that includes Sentry.effectLayer().
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### View Captured Data in Sentry
 
