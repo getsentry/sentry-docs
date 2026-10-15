@@ -25,11 +25,11 @@ go get github.com/getsentry/sentry-go/zap
 
 `sentryzap` provides a `Core` implementation that integrates with zap's logging pipeline. It accepts a struct of `sentryzap.Option` that allows you to configure how logs are captured and sent to Sentry. The options are:
 
-| Field | Type | Description | Default |
-|-------|------|-------------|---------|
-| `Level` | `[]zapcore.Level` | Zap levels to capture and send to Sentry as log entries | All levels (Debug through Fatal) |
-| `AddCaller` | `bool` | Include caller info (file, line, function) in logs | `false` |
-| `FlushTimeout` | `time.Duration` | How long to wait when syncing/flushing logs | 5 seconds |
+| Field          | Type              | Description                                             | Default                          |
+| -------------- | ----------------- | ------------------------------------------------------- | -------------------------------- |
+| `Level`        | `[]zapcore.Level` | Zap levels to capture and send to Sentry as log entries | All levels (Debug through Fatal) |
+| `AddCaller`    | `bool`            | Include caller info (file, line, function) in logs      | `false`                          |
+| `FlushTimeout` | `time.Duration`   | How long to wait when syncing/flushing logs             | 5 seconds                        |
 
 ## Verify
 
@@ -135,4 +135,14 @@ scopedLogger.Info("Processing started")
 scopedLogger.Info("Processing completed")
 ```
 
-<Include name="logs/go-ctx-usage-alert.mdx"/>
+<Include name="logs/go-ctx-usage-alert.mdx" />
+
+## Selecting an Operation Context
+
+Pass `sentryzap.Context(ctx)` to `logger.With(...)` or to a single log call:
+
+```go
+logger.Info("Handling request", sentryzap.Context(ctx))
+```
+
+The per-call context overrides the core's context for that entry.
