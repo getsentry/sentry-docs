@@ -22,19 +22,29 @@ If you'd rather configure source map uploading with webpack manually, follow the
 
 ## Manual Setup
 
+<PlatformSection notSupported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
 Install the Sentry webpack plugin:
 
 ```bash {tabTitle:npm}
-npm install @sentry/webpack-plugin --save-dev
+npm install @sentry/bundler-plugins --save-dev
 ```
 
 ```bash {tabTitle:yarn}
-yarn add @sentry/webpack-plugin --dev
+yarn add @sentry/bundler-plugins --dev
 ```
 
 ```bash {tabTitle:pnpm}
-pnpm add @sentry/webpack-plugin --save-dev
+pnpm add @sentry/bundler-plugins --save-dev
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
+The Sentry webpack plugin is part of `@sentry/node`. You don't need to install another package.
+
+</PlatformSection>
 
 ### Configuration
 
@@ -45,7 +55,7 @@ Alternatively, you can also use a [Personal Token](https://sentry.io/orgredirect
 Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file (don't forget to add it to your `.gitignore` file, as this is sensitive data) in the working directory when building your project.
 We recommend you add the auth token to your CI/CD environment as an environment variable.
 
-Learn more about configuring the plugin in our [Sentry webpack plugin documentation](https://www.npmjs.com/package/@sentry/webpack-plugin).
+Learn more about configuring the plugin in our <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/">Sentry webpack plugin documentation</PlatformLink>.
 
 <OrgAuthTokenNote />
 
@@ -57,8 +67,10 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 And the following webpack config:
 
+<PlatformSection notSupported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
 ```javascript {filename:webpack.config.js}
-const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+const { sentryWebpackPlugin } = require("@sentry/bundler-plugins/webpack");
 
 module.exports = {
   // ... other config above ...
@@ -82,12 +94,41 @@ module.exports = {
 
 </PlatformSection>
 
+<PlatformSection supported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
+```javascript {filename:webpack.config.js}
+const { sentryWebpackPlugin } = require("@sentry/node/webpack");
+
+module.exports = {
+  // ... other config above ...
+
+  devtool: "hidden-source-map", // Source map generation must be turned on ("hidden-source-map", "source-map", etc.)
+  plugins: [
+    sentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      sourcemaps: {
+        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
+        // Set the appropriate glob pattern for your output folder - some glob examples below:
+        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
+      }
+    }),
+  ],
+};
+```
+
+</PlatformSection>
+
+</PlatformSection>
+
 <PlatformSection supported={["javascript.gatsby"]}>
 
 Add the following to your `gatsby-node.js` file:
 
 ```javascript {filename:gatsby-node.js}
-const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+const { sentryWebpackPlugin } = require("@sentry/bundler-plugins/webpack");
 
 exports.onCreateWebpackConfig = ({ actions }) => {
   actions.setWebpackConfig({
@@ -113,8 +154,8 @@ exports.onCreateWebpackConfig = ({ actions }) => {
 <Alert level="warning">
   Generating source maps **may expose them to the public**, potentially causing your
   source code to be leaked. You can prevent this by configuring your server to
-  deny access to `.js.map` files, or by using [Sentry Webpack Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/webpack-plugin#sourcemapsfilestodeleteafterupload)
+  deny access to `.js.map` files, or by using <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload">Sentry Webpack Plugin's
+  `sourcemaps.filesToDeleteAfterUpload`</PlatformLink>
   option to delete source maps after they've been uploaded to Sentry.
 </Alert>
 
