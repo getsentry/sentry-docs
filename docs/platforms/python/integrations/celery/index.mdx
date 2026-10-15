@@ -141,10 +141,6 @@ Distributed tracing extends the trace from the code running your Celery task to 
 
 You can disable this globally with the `propagate_traces` option, documented in the [options](#options) below. If you set `propagate_traces` to `False`, all Celery tasks will start their own trace.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you want to have more fine-grained control over trace distribution, you can override the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
 
 <Alert>
@@ -152,9 +148,6 @@ If you want to have more fine-grained control over trace distribution, you can o
 The `CeleryIntegration` does not utilize the `traces_sample_rate` config option for deciding if a trace should be propagated into a Celery task.
 
 </Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -186,10 +179,6 @@ my_task_b.apply_async(
 # Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Alert level="warning" title="Note on distributed tracing for Celery versions 4.x">
 
 Sentry uses custom message headers for distributed tracing. For Celery versions 4.x, with [message protocol version 1](https://docs.celeryq.dev/en/stable/internals/protocol.html#version-1), this functionality is broken, and Celery fails to propagate custom headers to the worker. Protocol version 2, the default since Celery 4.0, is not affected.
@@ -200,18 +189,11 @@ The fix for the custom headers propagation issue was introduced to the Celery pr
 
 ## Send Logs
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `sentry_sdk.logger` to send structured logs at different levels. You can include searchable attributes with each message.
 
 To capture records from Python's standard-library `logging` module or Loguru, configure `capture_sentry_logs=True` on the corresponding integration. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -220,22 +202,11 @@ sentry_sdk.logger.info("Order processed {order_id}", order_id="order-123")
 sentry_sdk.logger.warning("Rate limit reached", attributes={"endpoint": "/api/orders"})
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Send Application Metrics <FeatureBadge type="new" />
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Use `sentry_sdk.metrics` to send counters, gauges, and distributions from your app. Metrics are enabled by default after you initialize the SDK.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -245,32 +216,17 @@ sentry_sdk.metrics.gauge("active_connections", 42)
 sentry_sdk.metrics.distribution("api_latency", 187, unit="millisecond")
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Verify Your Setup
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add a task that raises an exception, then call `debug_sentry.delay()` from a running Celery worker:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 @app.task
 def debug_sentry():
     1 / 0
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### View Captured Data in Sentry
 
