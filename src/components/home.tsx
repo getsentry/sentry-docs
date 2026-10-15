@@ -157,7 +157,27 @@ export function Home() {
             </Link>{' '}
             with one of these agent integrations.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <AgentQuickLink
+              href="/concepts/otlp/direct/claude-platform/"
+              title="Anthropic"
+              desc="Trace Claude agents and the Messages API. No code needed."
+              icon={<PlatformIcon platform="anthropic" />}
+            />
+            <AgentQuickLink
+              to="/configuration/integrations/openai/"
+              defaultPlatform="javascript.node"
+              title="OpenAI"
+              desc="Instrument the OpenAI SDK."
+              icon={<PlatformIcon platform="openai" />}
+            />
+            <AgentQuickLink
+              to="/configuration/integrations/vercelai/"
+              defaultPlatform="javascript.node"
+              title="Vercel AI"
+              desc="Instrument the Vercel AI SDK."
+              icon={<PlatformIcon platform="vercel" />}
+            />
             <AgentQuickLink
               href="/platforms/javascript/guides/mastra/"
               title="Mastra"
@@ -175,20 +195,6 @@ export function Home() {
               title="Flue"
               desc="Send Flue traces, logs, and errors to Sentry."
               icon={<PlatformIcon platform="flue" />}
-            />
-            <AgentQuickLink
-              to="/configuration/integrations/vercelai/"
-              defaultPlatform="javascript.node"
-              title="Vercel AI"
-              desc="Instrument the Vercel AI SDK."
-              icon={<PlatformIcon platform="vercel" />}
-            />
-            <AgentQuickLink
-              to="/configuration/integrations/openai/"
-              defaultPlatform="javascript.node"
-              title="OpenAI"
-              desc="Instrument the OpenAI SDK."
-              icon={<PlatformIcon platform="openai" />}
             />
           </div>
         </section>
