@@ -66,21 +66,35 @@ To use another installation method, see <PlatformLink to="/install/">the install
 
 <PlatformSection supported={["apple.watchos"]}>
 
-watchOS doesn't support crash detection. Use the snippet in [Verify Your Setup](#verify-your-setup) to capture handled errors.
+On watchOS, Error Monitoring captures handled errors; crash detection isn't available. Use the snippet in [Verify Your Setup](#verify-your-setup) to capture a handled error.
 
 </PlatformSection>
 
-<PlatformSection notSupported={["apple.watchos"]}>
+<PlatformSection supported={["apple.ios"]}>
 
-This guide also enables **Tracing** on iOS, macOS, tvOS, and visionOS. The snippets enable **Profiling** on iOS and macOS, **Session Replay** on iOS, and **Logs** on iOS, macOS, tvOS, and visionOS. Logs require an explicit option; Application Metrics are enabled by default and don't need extra configuration. See [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-) to use them.
+This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **Logs**. Logs require an explicit option; see [Send Logs](#send-logs).
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.macos"]}>
+
+This guide also enables **Tracing**, **Profiling**, and **Logs**. Logs require an explicit option; see [Send Logs](#send-logs).
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.tvos", "apple.visionos"]}>
+
+This guide also enables **Tracing** and **Logs**. Logs require an explicit option; see [Send Logs](#send-logs).
 
 </PlatformSection>
 
 <PlatformSection supported={["apple.watchos"]}>
 
-Application Metrics are enabled by default. watchOS doesn't support Tracing, Profiling, Session Replay, or Logs.
+This guide also enables **Tracing**. Logs capturing isn't available on watchOS; see the <PlatformLink to="/features/">watchOS feature limitations</PlatformLink>.
 
 </PlatformSection>
+
+**Application Metrics** are enabled by default and don't need extra configuration. See [Send Application Metrics](#send-application-metrics-) to use them.
 
 The snippets set `sendDefaultPii` to include IP addresses. Remove that option if you don't want to send this data. Remove other options for features you don't need.
 
@@ -273,7 +287,7 @@ func application(_ application: UIApplication,
 
 ### Initialize the SDK
 
-Initialize the SDK in your `WKExtensionDelegate.applicationDidFinishLaunching` method. watchOS doesn't support crash detection, most performance monitoring features, Profiling, Session Replay, or Logs.
+Initialize the SDK in your `WKExtensionDelegate.applicationDidFinishLaunching` method. This snippet enables Tracing.
 
 ```swift
 import Sentry
@@ -283,6 +297,9 @@ func applicationDidFinishLaunching() {
         options.dsn = "___PUBLIC_DSN___"
         options.debug = true
         options.sendDefaultPii = true
+
+        // Enable Tracing. Reduce this value in production.
+        options.tracesSampleRate = 1.0
     }
 }
 ```
