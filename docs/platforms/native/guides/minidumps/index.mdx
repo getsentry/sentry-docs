@@ -12,10 +12,7 @@ This page describes **standalone** usage of Minidumps with Sentry. We strongly e
 
 </Alert>
 
-In order to receive symbolicated stack traces, you have to upload debug
-information to Sentry. For more information, see [Debug Information Files](/platforms/native/guides/minidumps/data-management/debug-files/).
-
-## What is a Minidump?
+<Expandable title="What is a Minidump?" permalink>
 
 Minidumps are files containing the most important memory regions of a crashed
 process. When the process crashes, the minidump is written to the user's disk
@@ -34,16 +31,14 @@ and can later be uploaded to Sentry. A minidump typically includes:
   assertion message is also included in the dump.
 - Meta data about the CPU architecture and the user’s operating system.
 
+</Expandable>
+
 <Include name="minidump-data-privacy" />
 
-In addition to this information, you can add further metadata specific to
-Sentry, which can help in organizing and analyzing issues. For more information,
-see [Passing Additional Data](#passing-additional-data).
-
-## Creating and Uploading Minidumps
+## Install
 
 Depending on your operating system and programming language, there are various
-alternatives to create minidumps and upload them to Sentry. See the following
+libraries that create minidumps when your application crashes. See the following
 resources for libraries that support generating minidump crash reports:
 
 - [Native SDK](/platforms/native/)
@@ -52,23 +47,34 @@ resources for libraries that support generating minidump crash reports:
 - [Windows Error Reporting (WER)](/platforms/native/advanced-usage/windows-error-reporting/)
 - [Rust SDK](/platforms/rust/native-crash-reporting/)
 
+## Configure
+
+Sentry supports **Error Monitoring** for uploaded minidumps: it processes each minidump into a native crash report and keeps any files you upload with it as attachments. Tracing, Logs, and Application Metrics aren't available with standalone minidump uploads. Use the [Native SDK](/platforms/native/) if you need them.
+
+### Upload Minidumps to Sentry
+
 If you have already integrated a library that generates minidumps and would just
 like to upload them to Sentry, you need to configure the _Minidump Endpoint
 URL_, which can be found at _Project Settings > [Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/)_. This
 endpoint expects a `POST` request with the minidump in the
-`upload_file_minidump` field:
+`upload_file_minidump` field.
+
+The snippet also sets:
+
+- Release: via the `sentry[release]` field, which associates crashes with a [release](/product/releases/)
+- Environment: via the `sentry[environment]` field
+
+Don't need a field? Remove it from the snippet.
 
 ```bash
 curl -X POST \
   '___MINIDUMP_URL___' \
-  -F upload_file_minidump=@mini.dmp
+  -F upload_file_minidump=@mini.dmp \
+  -F 'sentry[release]=my-project-name@2.3.12' \
+  -F 'sentry[environment]=production'
 ```
 
-To send additional information, add more form fields to this request. For a full
-description of fields accepted by Sentry, see [Passing Additional
-Data](#passing-additional-data).
-
-## Passing Additional Data
+### Passing Additional Data
 
 You can add more information to crash reports by merely adding more fields to
 the upload HTTP request. All these fields will be collected in the “Extra Data”
@@ -104,9 +110,13 @@ curl -X POST \
 For the full list of supported values, see [_Event Payloads_](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/) and linked
 documents.
 
-If your minidump's size exceeds the [limits](#size-limits) in the next section, you can compress it using `gzip`, `zstd`, `bzip2` or `xz` and refer the `upload_file_minidump` to the compressed file instead of the plain minidump.
+If your minidump exceeds the [size limits](#size-limits), you can compress it using `gzip`, `zstd`, `bzip2` or `xz` and refer the `upload_file_minidump` to the compressed file instead of the plain minidump.
 
-## Size Limits
+### Add Attachments
+
+<PlatformContent includePath="enriching-events/add-attachment" />
+
+### Size Limits
 
 Event ingestion imposes limits on the size and number of fields in multipart
 uploads. These limits are subject to future change and defined currently as:
@@ -117,7 +127,28 @@ uploads. These limits are subject to future change and defined currently as:
 - _200MB_ for each file individually
 - _1MB_ for event payloads
 
-## Store Minidumps as Attachments
+### Store Minidumps as Attachments
 
 <Include name="store-minidumps-as-attachments-intro" />
 <Include name="store-minidumps-as-attachments-configuration" />
+
+### Add Readable Stack Traces With Debug Information Files
+
+In order to receive symbolicated stack traces, you have to upload debug
+information to Sentry. For more information, see [Debug Information Files](/platforms/native/guides/minidumps/data-management/debug-files/).
+
+## Verify Your Setup
+
+Upload a minidump from a crash of your application with the command from [Upload Minidumps to Sentry](#upload-minidumps-to-sentry). Sentry responds with the ID of the new event.
+
+### View Captured Data in Sentry
+
+To view and resolve the recorded crash, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue, then click its title to see the details and mark it as resolved.
+
+## Next Steps
+
+At this point, you should be uploading minidumps to Sentry. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn about the [event payload fields](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/) you can send in the `sentry` form field
+- Switch to the [Native SDK](/platforms/native/) for richer crash reports, tracing, logs, and metrics
