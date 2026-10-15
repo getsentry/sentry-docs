@@ -423,3 +423,28 @@ Leave this enabled if you want to reduce connection setup overhead for frequent 
 A number between `0` and `1`, controlling the percentage chance a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Setting this to a non null value will enable profiling.
 
 </SdkOption>
+
+<SdkOption name="profiler_factory" type='function (\Sentry\Options $options): \Sentry\Profiling\ProfilerInterface' defaultValue="null">
+
+Switches out the profiler the SDK creates for each transaction selected for profiling. Use it when concurrent requests share one PHP process and each profile should only contain its own request's samples.
+
+The callback receives the client's `\Sentry\Options` and must return a new `\Sentry\Profiling\ProfilerInterface` instance each time it's called.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sample_rate' => 1.0,
+    'profiles_sample_rate' => 0.1,
+    'profiler_factory' => static function (\Sentry\Options $options): \Sentry\Profiling\ProfilerInterface {
+        return new \App\Monitoring\RequestProfiler($options);
+    },
+]);
+```
+
+The SDK calls `start()` when profiling begins and `stop()` when the transaction finishes, then reads `getProfile()`, which returns a `\Sentry\Profiling\Profile` or `null` if no profile is available.
+
+Set the profile's Unix start timestamp with `setStartTimeStamp()` and its collected samples with `setExcimerLog()`. Sample timestamps are offsets in seconds from that start time.
+
+When this option is `null`, the SDK uses its default Excimer profiler.
+
+</SdkOption>
