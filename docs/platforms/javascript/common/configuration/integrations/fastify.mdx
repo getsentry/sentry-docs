@@ -19,6 +19,47 @@ Sentry.init({
 });
 ```
 
+## Options
+
+### `shouldHandleError`
+
+A function that decides whether an error is captured. By default, errors with a 5xx status code (and errors with a 2xx status code or lower) are captured, and errors with a 3xx or 4xx status code aren't.
+
+```typescript
+declare function shouldHandleError(
+  error: Error,
+  request: FastifyRequest,
+  reply: FastifyReply
+): boolean;
+```
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.fastifyIntegration({
+      shouldHandleError(error, request, reply) {
+        return reply.statusCode >= 500;
+      },
+    }),
+  ],
+});
+```
+
+If you use TypeScript, cast the request and reply to get full type safety:
+
+```typescript
+import type { FastifyRequest, FastifyReply } from "fastify";
+
+Sentry.fastifyIntegration({
+  shouldHandleError(error, minimalRequest, minimalReply) {
+    const request = minimalRequest as FastifyRequest;
+    const reply = minimalReply as FastifyReply;
+    return reply.statusCode >= 500;
+  },
+});
+```
+
 ## Supported Versions
 
 - `fastify`: `^3.21.0 || ^4.0.0`
