@@ -1,6 +1,6 @@
 ---
 title: Unreal Engine
-description: "Learn how to set up Sentry's Unreal Engine SDK for error monitoring and performance tracking."
+description: "Learn how to set up Sentry's Unreal Engine SDK and capture your first events."
 caseStyle: PascalCase
 supportLevel: production
 sdk: sentry.unreal
@@ -12,30 +12,7 @@ categories:
 og_image: /og-images/platforms-unreal.png
 ---
 
-Unreal Engine SDK builds on top of other Sentry SDKs and extends them with Unreal Engine specific features. It gives developers helpful hints for where and why an error or performance issue might have occurred.
-
-**Features:**
-
-- Native support for automatic crash error tracking for
-  - Windows (UE 5.2+) and Linux by using the [Native SDK](/platforms/native/) to support C and C++ with minidumps
-  - macOS by using the [macOS SDK](/platforms/apple/guides/macos/) to support Objective-C, Swift, C and C++
-  - iOS by using the [iOS SDK](/platforms/apple/guides/ios/) to support Objective-C, Swift, C and C++
-  - Android by using the [Android SDK](/platforms/android/) to support Java, Kotlin, C and C++
-- [Crash Reporter](/platforms/unreal/configuration/crash-reporter/) support
-  - [Sentry Crash Reporter](/platforms/unreal/configuration/crash-reporter/sentry-crash-reporter/) - standalone app for collecting user feedback after a crash
-  - Compatibility with the default [Crash Reporter Client](/platforms/unreal/configuration/crash-reporter/crash-reporter-client/) provided along with Unreal Engine
-- [PlayStation](/platforms/playstation/), [Xbox](/platforms/xbox/) and [Nintendo Switch](/platforms/nintendo-switch/) support
-- [Release health](/platforms/unreal/configuration/releases/) to keep track of crash free users and sessions
-- [Session Replay](/platforms/unreal/session-replay/) (experimental) to capture gameplay video of the moments before a crash
-- [Structured Logging](/platforms/unreal/logs/) to capture and send log messages with additional context
-- [Metrics](/platforms/unreal/metrics/) to track counters, gauges, and distributions
-- [Offline Caching](/platforms/unreal/configuration/options/#EnableOfflineCaching) stores event data to disk in case the device is not online
-
-<Alert level="warning">
-
-To automatically capture crashes on Windows with UE 5.1 or older, you have to configure the [Crash Reporter Client](/platforms/unreal/configuration/crash-reporter/crash-reporter-client/). Starting from UE 5.2, the provided API allows you to switch between default (CRC) and third-party (Sentry) crash-handling solutions, so the CRC configuration step isn't required. The two are mutually exclusive and can't be used simultaneously.
-
-</Alert>
+The Unreal Engine SDK builds on top of other Sentry SDKs and extends them with Unreal Engine-specific features. It gives developers helpful hints for where and why an error or performance issue might have occurred.
 
 On this page, we get you up and running with Sentry's SDK.
 
@@ -76,12 +53,38 @@ On arm64 architecture, Linux is supported with UE 5.0+ and Windows with UE 5.2+.
 
 ## Configure
 
-The minimum configuration required is the [DSN](/concepts/key-terms/dsn-explainer/) of your project:
+**Error Monitoring**, including automatic crash capture, starts working as soon as the SDK initializes with your [DSN](/concepts/key-terms/dsn-explainer/). **Release Health** session tracking is on by default. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 
-```json {tabTitle: Public DSN}
-{
-  "public-dsn": "___PUBLIC_DSN___"
-}
+This guide also enables **Tracing**. The Unreal Engine SDK also supports **Session Replay** (experimental) to capture gameplay video of the moments before a crash, and **User Feedback**; see <PlatformLink to="/session-replay/">Set Up Session Replay</PlatformLink> and <PlatformLink to="/user-feedback/">Set Up User Feedback</PlatformLink>.
+
+Configure the SDK in the editor under **Project Settings > Plugins > Sentry**. The editor saves these settings to your project's `Config/DefaultEngine.ini` file, so you can also add them there directly.
+
+![Sentry settings window](./img/unreal_window.png)
+
+The snippet also turns on:
+
+- Tracing: via **Enable tracing** (`EnableTracing`) and <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>. Tracing captures the transactions you create with <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink>.
+- User IP address and device name collection: via <PlatformLink to="/configuration/options/#SendDefaultPii">`SendDefaultPii`</PlatformLink>. Review the data your game sends before enabling this in production.
+- Screenshots on crash and ensure events (not supported on Android): via <PlatformLink to="/configuration/options/#AttachScreenshot">`AttachScreenshot`</PlatformLink>. Only enable this if your game doesn't render sensitive data on screen.
+
+Don't need a feature? Remove its options from the snippet.
+
+```ini {filename:Config/DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+; Required: set your Sentry project identifier (DSN)
+Dsn="___PUBLIC_DSN___"
+
+; Enables Tracing.
+; Set to 1.0 to capture 100% of transactions for tracing.
+; We recommend reducing this value in production.
+EnableTracing=True
+TracesSampleRate=1.0
+
+; Adds data like the user's IP address and device name.
+SendDefaultPii=True
+
+; Attaches a screenshot to crash and ensure events.
+AttachScreenshot=True
 ```
 
 <Alert>
@@ -90,18 +93,91 @@ If you are logged in, you can also go to your [project settings](https://sentry.
 
 </Alert>
 
-Sentry can be configured using the Sentry configuration window.
-The window can be accessed by going to editor's menu: **Project Settings > Plugins > Sentry**.
+### Initialize the SDK
 
-![Sentry settings window](./img/unreal_window.png)
+By default, the SDK is automatically initialized on application startup. Alternatively, the **Initialize SDK automatically** option can be disabled and in this case, explicit SDK initialization is required.
 
-By default, the SDK is automatically initialized on application startup. Alternatively, the `Initialize SDK automatically` option can be disabled and in this case, explicit SDK initialization is required.
+To override SDK settings at runtime, use the `InitializeWithSettings` method of the `SentrySubsystem` class. See <PlatformLink to="/configuration/options/">Options</PlatformLink> for all available settings.
 
-To override SDK settings at runtime, use the `InitializeWithSettings` method of the `SentrySubsystem` class.
+```cpp
+#include "SentrySubsystem.h"
 
-## Verify
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-This snippet includes message capturing, so you can test that everything is working as soon as you set it up:
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->Dsn = TEXT("___PUBLIC_DSN___");
+    Settings->EnableTracing = true;
+    Settings->TracesSampleRate = 1.0f;
+    Settings->SendDefaultPii = true;
+    Settings->AttachScreenshot = true;
+}));
+```
+
+### Set Up Crash Reporting
+
+The SDK automatically captures crashes on:
+
+- Windows (UE 5.2+) and Linux by using the [Native SDK](/platforms/native/) to support C and C++ with minidumps
+- macOS by using the [macOS SDK](/platforms/apple/guides/macos/) to support Objective-C, Swift, C and C++
+- iOS by using the [iOS SDK](/platforms/apple/guides/ios/) to support Objective-C, Swift, C and C++
+- Android by using the [Android SDK](/platforms/android/) to support Java, Kotlin, C and C++
+
+To automatically capture crashes on Windows with UE 5.1 or older, you have to configure the [Crash Reporter Client](/platforms/unreal/configuration/crash-reporter/crash-reporter-client/). Starting from UE 5.2, the provided API allows you to switch between default (CRC) and third-party (Sentry) crash-handling solutions, so the CRC configuration step isn't required. The two are mutually exclusive and can't be used simultaneously.
+
+To collect feedback from players after a crash, use the [Sentry Crash Reporter](/platforms/unreal/configuration/crash-reporter/sentry-crash-reporter/), a standalone app supported on Windows and Linux. For PlayStation, Xbox, and Nintendo Switch, see [Game Consoles](/platforms/unreal/game-consoles/).
+
+### Upload Debug Symbols
+
+Sentry requires [debug information files](/platforms/unreal/data-management/debug-files/) to symbolicate crashes. The automated debug symbols upload is disabled by default. To turn it on, go to **Project Settings > Plugins > Sentry**, enable **Upload debug symbols automatically**, and enter your [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/), Organization Slug, and Project Name.
+
+See [Debug Symbols Uploading](/platforms/unreal/configuration/debug-symbols/) for environment variable configuration, manual upload with `sentry-cli`, and macOS and iOS setup.
+
+### Store Minidumps as Attachments
+
+By default, Sentry only uses minidump files to create events and immediately drops them, because [minidumps](/platforms/native/guides/minidumps/#what-is-a-minidump) may contain sensitive information about the target system. To keep them, enable _Store Minidumps As Attachments_ in your [organization](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) or [project settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) under **Security & Privacy**. This feature is supported on Windows, Linux, and Android.
+
+See [Store Minidumps as Attachments](/platforms/unreal/data-management/store-minidumps-as-attachments/) for retention and per-issue limits.
+
+## Send Logs
+
+Use the logging methods on the Sentry subsystem to send logs at different levels, such as `LogInfo`, `LogWarning`, or `LogError`. You can pass an optional category to organize your logs. Logs require Unreal Engine SDK version `1.2.0` or later and are enabled by default starting with version `1.11.0`.
+
+To also forward Unreal Engine's native `UE_LOG` calls, enable the severity levels you want to send in the <PlatformLink to="/logs/#setup">Logs setup</PlatformLink>.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods, attributes, and configuration options.
+
+```cpp
+#include "SentrySubsystem.h"
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->LogInfo(TEXT("User completed tutorial"));
+SentrySubsystem->LogWarning(TEXT("Failed to load texture asset"), TEXT("AssetLoading"));
+SentrySubsystem->LogError(TEXT("Database connection failed"), TEXT("Database"));
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use the Sentry subsystem to send counters, gauges, and distributions from your game to Sentry. Metrics require Unreal Engine SDK version `1.7.0` or later and are enabled by default starting with version `1.11.0`.
+
+The SDK can also collect frame time, GC pause, game stats, and network metrics automatically. Enable them under **Project Settings > Plugins > Sentry > Metrics > Performance**, as described in <PlatformLink to="/metrics/#automatic-metrics">Automatic Metrics</PlatformLink>.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```cpp
+#include "SentrySubsystem.h"
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->AddCount(TEXT("api.requests"), 1);
+SentrySubsystem->AddGauge(TEXT("active_connections"), 42, USentryUnitHelper::MakeSentryUnit(ESentryUnit::None));
+SentrySubsystem->AddDistribution(TEXT("response.time"), 150.5f, USentryUnitHelper::MakeSentryUnit(ESentryUnit::Millisecond));
+```
+
+## Verify Your Setup
+
+Capture a test message to confirm that Sentry is receiving data from your project:
 
 ```cpp
 #include "SentrySubsystem.h"
@@ -114,26 +190,22 @@ void Verify()
 }
 ```
 
-The same result can be achieved by calling corresponding function in blueprint:
+The same result can be achieved by calling the corresponding function in Blueprint:
 
 ![Sentry capture message BP](./img/unreal_bp_message.png)
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
-
-## Store Minidumps as Attachments
-
-<Include name="store-minidumps-as-attachments-intro" />
-
-<Alert>☝ This feature is supported on Windows, Linux, and Android.</Alert>
-
-<Include name="store-minidumps-as-attachments-configuration" />
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue, then click its title to see detailed information and mark it as resolved.
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Unreal Engine project. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to <PlatformLink to="/usage/">manually capture errors and messages</PlatformLink>
+- Instrument more operations with <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink>
+- <PlatformLink to="/session-replay/">Set up Session Replay</PlatformLink>
+  (experimental) to capture gameplay video of the moments before a crash
+- <PlatformLink to="/user-feedback/">Collect User Feedback</PlatformLink> from
+  your players
