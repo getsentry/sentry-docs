@@ -1,0 +1,212 @@
+---
+title: Transports
+sidebar_order: 70
+description: "Learn how to replace or wrap the transport the Sentry PHP SDK uses to send events."
+---
+
+The transport is the part of the SDK that delivers events to Sentry. By default, the SDK sends every event synchronously over HTTP to the [DSN](/concepts/key-terms/dsn-explainer/) you configured. You can replace the transport to, for example, write events to a file in tests, hand them to a queue, or wrap the default transport to add logging or metrics.
+
+A transport receives every event the SDK sends, not only errors: transactions, check-ins, logs, metrics, and client reports go through it too.
+
+## The Transport Interface
+
+A custom transport implements `Sentry\Transport\TransportInterface`, which has two methods:
+
+```php
+namespace Sentry\Transport;
+
+use Sentry\Event;
+
+interface TransportInterface
+{
+    public function send(Event $event): Result;
+
+    public function close(?int $timeout = null): Result;
+}
+```
+
+- `send()` is called once for every event the client captures, after the SDK has processed it. For example, an error event reaches the transport after `before_send` has run.
+- `close()` is called when the client is flushed, for example when you call `\Sentry\flush()`. A transport that buffers events must send them here, so make sure the client gets flushed, for instance at the end of a long-running job.
+
+Both methods return a `Sentry\Transport\Result`, built from a `Sentry\Transport\ResultStatus` and, optionally, the event:
+
+```php
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
+
+new Result(ResultStatus::success(), $event);
+```
+
+The available statuses are `success()`, `failed()`, `skipped()`, `rateLimit()`, `invalid()`, `contentTooLarge()`, and `unknown()`.
+
+<Alert level="warning">
+
+Return the event in the `Result` when it was sent. Capture methods such as `\Sentry\captureException()` return the event's ID only if the transport hands the event back. If `send()` returns a `Result` without an event, the capture methods return `null`, even if the status is `success()`.
+
+</Alert>
+
+The client catches exceptions thrown from `send()` and logs them, so a failing transport doesn't break your application. You should still return a `failed()` result instead of throwing where you can.
+
+## Writing a Custom Transport
+
+This transport writes a summary of each event to a file as a line of JSON instead of sending it to Sentry:
+
+```php
+use Sentry\Event;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
+use Sentry\Transport\TransportInterface;
+
+final class FileTransport implements TransportInterface
+{
+    public function __construct(private string $path)
+    {
+    }
+
+    public function send(Event $event): Result
+    {
+        $line = json_encode([
+            'event_id' => (string) $event->getId(),
+            'type' => (string) $event->getType(),
+            'message' => $event->getMessage(),
+            'exceptions' => array_map(
+                static fn ($exception) => $exception->getType() . ': ' . $exception->getValue(),
+                $event->getExceptions()
+            ),
+        ]);
+
+        if (file_put_contents($this->path, $line . PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
+            return new Result(ResultStatus::failed());
+        }
+
+        // Return the event so that capture methods return its ID.
+        return new Result(ResultStatus::success(), $event);
+    }
+
+    public function close(?int $timeout = null): Result
+    {
+        return new Result(ResultStatus::success());
+    }
+}
+```
+
+The default HTTP transport skips events when no DSN is set. A custom transport replaces that check, so it receives events whether or not you set a `dsn`.
+
+## Registering the Transport
+
+<PlatformSection notSupported={["php.laravel", "php.symfony"]}>
+
+Pass an instance of your transport with the `transport` option:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'transport' => new FileTransport(__DIR__ . '/sentry-events.log'),
+]);
+```
+
+You can also set it on the client builder with `setTransport()` and bind the client yourself:
+
+```php
+$clientBuilder = \Sentry\ClientBuilder::create([
+    'dsn' => '___PUBLIC_DSN___',
+]);
+$clientBuilder->setTransport(new FileTransport(__DIR__ . '/sentry-events.log'));
+
+\Sentry\SentrySdk::getCurrentHub()->bindClient($clientBuilder->getClient());
+```
+
+If both are set, the transport passed to `setTransport()` wins over the `transport` option.
+
+</PlatformSection>
+
+<PlatformSection supported={["php.laravel"]}>
+
+Extend the `Sentry\ClientBuilder` binding and call `setTransport()`. Place this snippet in the `register` method of a service provider, such as your `AppServiceProvider`:
+
+```php
+use Sentry\ClientBuilder;
+
+$this->app->extend(ClientBuilder::class, function (ClientBuilder $clientBuilder) {
+    $clientBuilder->setTransport(new FileTransport(storage_path('logs/sentry-events.log')));
+
+    return $clientBuilder;
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["php.symfony"]}>
+
+Register your transport as a service and pass its ID to the `transport` option. This example assumes the class above is defined as `App\Sentry\FileTransport`:
+
+```yaml {filename:config/services.yaml}
+services:
+  App\Sentry\FileTransport:
+    arguments:
+      $path: "%kernel.logs_dir%/sentry-events.log"
+```
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  options:
+    transport: 'App\Sentry\FileTransport'
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["php.laravel", "php.symfony"]}>
+
+## Wrapping the Default Transport
+
+To keep sending events to Sentry while adding your own behavior, wrap the default transport instead of replacing it. `ClientBuilder::getTransport()` returns the default HTTP transport when no custom one is set:
+
+```php
+use Psr\Log\LoggerInterface;
+use Sentry\Event;
+use Sentry\Transport\Result;
+use Sentry\Transport\TransportInterface;
+
+final class LoggingTransport implements TransportInterface
+{
+    public function __construct(
+        private TransportInterface $transport,
+        private LoggerInterface $logger,
+    ) {
+    }
+
+    public function send(Event $event): Result
+    {
+        $result = $this->transport->send($event);
+
+        $this->logger->info('Sentry event {id} sent with status {status}.', [
+            'id' => (string) $event->getId(),
+            'status' => (string) $result->getStatus(),
+        ]);
+
+        return $result;
+    }
+
+    public function close(?int $timeout = null): Result
+    {
+        return $this->transport->close($timeout);
+    }
+}
+
+$clientBuilder = \Sentry\ClientBuilder::create([
+    'dsn' => '___PUBLIC_DSN___',
+]);
+$clientBuilder->setTransport(
+    new LoggingTransport($clientBuilder->getTransport(), $logger)
+);
+
+\Sentry\SentrySdk::getCurrentHub()->bindClient($clientBuilder->getClient());
+```
+
+Return the wrapped transport's `Result` unchanged, so the event ID still reaches the caller. Use `getTransport()` rather than instantiating `Sentry\Transport\HttpTransport` yourself, because that class is internal and its constructor may change.
+
+</PlatformSection>
+
+## Customizing HTTP Delivery
+
+If you only need to change how requests are made, such as adding a proxy, changing timeouts, or using a different HTTP library, you don't need a custom transport. Use the <PlatformLink to="/configuration/options/#transport-options">transport options</PlatformLink> instead, including `http_client` to provide your own `Sentry\HttpClient\HttpClientInterface` implementation.
