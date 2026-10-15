@@ -21,7 +21,7 @@ export function SpecMeta({version, status}: SpecMetaProps) {
             {status}
           </span>
           <a
-            href="/sdk/getting-started/standards/spec-lifecycle"
+            href="/sdk/getting-started/standards/spec-lifecycle/"
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Learn about spec statuses"
             title="Learn about spec statuses"

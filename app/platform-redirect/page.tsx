@@ -30,6 +30,7 @@ export default async function Page(props: {
 
   const pathname = sanitizeNext(next);
   const isTracingAutomatedInstrumentation =
+    // trailing-slash-ignore: compared with the slash stripped, not linked to.
     pathname.replace(/\/$/, '') === '/tracing/instrumentation/automatic-instrumentation';
   const rootNode = await getDocsRootNode();
   const defaultTitle = 'Platform Specific Content';
