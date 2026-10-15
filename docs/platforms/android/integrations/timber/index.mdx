@@ -8,7 +8,7 @@ description: "Learn more about the Sentry Timber integration for the Android SDK
 
 <Alert level="warning" title="Did you mean logs instead?">
 
-This integration captures Timber logs as breadcrumbs and error events (great for error context!). But if you need to search and query your logs across your entire application, use <PlatformLink to="/logs/">Sentry Logs</PlatformLink> instead. Timber logs at or above the `minLogsLevel` are automatically sent as Sentry Logs when enabled. See the <PlatformLink to="/integrations/timber/#support-with-sentry-logs">Support With Sentry Logs</PlatformLink> section below.
+This integration captures Timber logs as breadcrumbs and error events (great for error context!). But if you need to search and query your logs across your entire application, use <PlatformLink to="/logs/">Sentry Logs</PlatformLink> instead. Timber logs at or above the `minLogsLevel` are sent as Sentry Logs when Timber log capture is enabled. See the <PlatformLink to="/integrations/timber/#support-with-sentry-logs">Support With Sentry Logs</PlatformLink> section below.
 
 </Alert>
 
@@ -74,6 +74,8 @@ implementation 'io.sentry:sentry-android-timber:{{@inject packages.version('sent
 Configuration should happen as early as possible in your application's lifecycle.
 
 ```kotlin
+import io.sentry.SentryLevel
+import io.sentry.SentryLogLevel
 import io.sentry.android.core.SentryAndroid
 import io.sentry.android.timber.SentryTimberIntegration
 import timber.log.Timber
@@ -90,7 +92,8 @@ SentryAndroid.init(this) { options ->
       SentryTimberIntegration(
         minEventLevel = SentryLevel.ERROR,
         minBreadcrumbLevel = SentryLevel.INFO,
-        minLogsLevel = SentryLogLevel.INFO
+        minLogsLevel = SentryLogLevel.INFO,
+        logsEnabled = false
       )
     )
   } else {
@@ -100,9 +103,11 @@ SentryAndroid.init(this) { options ->
 ```
 
 ```java
+import io.sentry.SentryLevel;
+import io.sentry.SentryLogLevel;
 import io.sentry.android.core.SentryAndroid;
 import io.sentry.android.timber.SentryTimberIntegration;
-import timber.log.Timber
+import timber.log.Timber;
 // import BuildConfig
 
 SentryAndroid.init(this, options -> {
@@ -116,7 +121,8 @@ SentryAndroid.init(this, options -> {
          new SentryTimberIntegration(
              SentryLevel.ERROR,
              SentryLevel.INFO,
-             SentryLogLevel.INFO
+             SentryLogLevel.INFO,
+             false
          )
      );
    } else {
@@ -181,4 +187,50 @@ Sentry Logs for Timber are supported in Sentry Android SDK version `8.17.0` and 
 
 </Alert>
 
-Timber logs at or above the `minLogsLevel` captured by Sentry are automatically sent as <PlatformLink to="/logs/">Sentry Logs</PlatformLink>, if enabled.
+Automatic Sentry Logs capture from Timber is disabled by default.
+
+For the auto-installed Timber integration, enable capture in `AndroidManifest.xml`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.timber.log-capture.enabled" android:value="true" />
+</application>
+```
+
+Or enable it when initializing the SDK:
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setTimberLogCaptureEnabled(true);
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.timberLogCaptureEnabled = true
+}
+```
+
+When manually adding `SentryTimberIntegration`, pass `true` as its `logsEnabled` argument instead:
+
+```kotlin {tabTitle:Kotlin}
+SentryTimberIntegration(
+  minEventLevel = SentryLevel.ERROR,
+  minBreadcrumbLevel = SentryLevel.INFO,
+  minLogsLevel = SentryLogLevel.INFO,
+  logsEnabled = true
+)
+```
+
+```java {tabTitle:Java}
+new SentryTimberIntegration(
+    SentryLevel.ERROR,
+    SentryLevel.INFO,
+    SentryLogLevel.INFO,
+    true
+);
+```
