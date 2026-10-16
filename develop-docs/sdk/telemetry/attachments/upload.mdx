@@ -37,7 +37,7 @@ This allows the client to upload attachments that are much larger than what the 
 
 1. Parse response headers necessary for proceeding:
 
-    1. `Upload-Granularity`  (bytes) - Every `PATCH` request made to location below must be a multiple of this number (except for the final request).
+    1. `Upload-Chunk-Granularity`  (bytes) - Every `PATCH` request made to location below must be a multiple of this number (except for the final request).
     1. `Upload-Min-Chunk-Size` (bytes) - Every `PATCH` request made to location below must be at least this large (except for the final request).
     1. `Upload-Max-Chunk-Size`  (bytes) - No `PATCH` request made to location below may be larger than this. If the file is larger than the maximum chunk size, split it into multiple requests (see `Upload-Offset` below).
     1. `Location` (URL) - The target of subsequent `PATCH` requests.
@@ -48,7 +48,7 @@ This allows the client to upload attachments that are much larger than what the 
     HTTP/1.1 201 Created
     Tus-Resumable: 1.0.0
     Tus-Extension: creation
-    Upload-Granularity: 256
+    Upload-Chunk-Granularity: 256
     Upload-Min-Chunk-Size: 1048576
     Upload-Max-Chunk-Size: 1073741824
     Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
@@ -116,4 +116,4 @@ This allows the client to upload attachments that are much larger than what the 
 
 ## Compression
 
-The byte sizes in the headers refer to the request body _before_ compression, that is, before applying `Content-Encoding`. This applies to `Upload-Granularity`, `Upload-Min-Chunk-Size`, `Upload-Max-Chunk-Size` and `Upload-Offset`. The server interprets `Content-Encoding` on a `PATCH` request as a self-contained transport optimization that only concerns the current request in isolation, not the full upload.
+The byte sizes in the headers refer to the request body _before_ compression, that is, before applying `Content-Encoding`. This applies to `Upload-Chunk-Granularity`, `Upload-Min-Chunk-Size`, `Upload-Max-Chunk-Size` and `Upload-Offset`. The server interprets `Content-Encoding` on a `PATCH` request as a self-contained transport optimization that only concerns the current request in isolation, not the full upload.
