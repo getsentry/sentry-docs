@@ -21,7 +21,7 @@ To monitor errors and performance in web views, choose the appropriate Sentry Ja
 
 <Alert>
 
-`sentryWebViewProps` is available from React Native SDK version `8.30.0`.
+`sentryWebViewProps` is available from React Native SDK version `8.32.0`.
 
 </Alert>
 
@@ -46,13 +46,33 @@ For the connection to take effect:
 
 <Alert level="warning">
 
-`allowedHosts` is checked inside the WebView page as defense-in-depth for honest cross-host navigation — it is **not a strict security boundary**, since a hostile page sharing the WebView could bypass an in-page check. The injected trace context carries no secrets or PII by default; don't put sensitive data in `baggage` for WebViews that may load untrusted pages.
+Only list hosts whose content you trust in `allowedHosts`. The trace context is injected into every matching page, so an allow-listed page that runs untrusted JavaScript can read it back and feed misleading or polluted data into the connected trace. This risk is bounded by `allowedHosts` — don't allow-list pages that render untrusted or third-party content.
+
+`allowedHosts` is also checked inside the WebView page as defense-in-depth for honest cross-host navigation, but it is **not a strict security boundary**, since a hostile page sharing the WebView could bypass an in-page check.
+
+The injected trace context carries no secrets or PII by default: the root span name (`sentry-transaction`), which can contain parameterized URLs, is stripped from `baggage` before it is injected. Still, don't put sensitive data in `baggage` for WebViews that may load untrusted pages.
 
 </Alert>
 
 <Alert level="info">
 
 If you provide your own `onMessage` handler, spread `sentryWebViewProps` **first** and set `onMessage` after it. The helper returns a no-op `onMessage`, which is required for injected JavaScript to run on Android.
+
+If you provide your own `injectedJavaScriptBeforeContentLoaded`, concatenate it with the one returned by `sentryWebViewProps` rather than overriding it. The prop is a single string, so setting your own after the spread replaces Sentry's injection and silently disables trace linking (and setting it before drops yours):
+
+```jsx
+const { injectedJavaScriptBeforeContentLoaded, onMessage } = sentryWebViewProps({
+  allowedHosts: ["example.com"],
+});
+
+<WebView
+  source={{ uri: "https://example.com" }}
+  onMessage={onMessage}
+  injectedJavaScriptBeforeContentLoaded={
+    myScript + "\n" + injectedJavaScriptBeforeContentLoaded
+  }
+/>;
+```
 
 </Alert>
 
