@@ -349,46 +349,7 @@ Attachment placeholders use item type `"attachment"` with content type `"applica
 
 SDKs **MUST** send placeholders in the same envelope as the event the file is attached to.
 
-**Workflow:**
-
-1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint:
-   1. Create the upload:
-
-      ```shell
-      curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
-        --header "Tus-Resumable: 1.0.0" \
-        --header "Upload-Length: ${FILE_SIZE}" \
-        --header "Upload-Metadata: sentry $(echo -n '{"attachment_type":"event.attachment"}' | base64)"
-      ```
-
-      The `Upload-Metadata` header follows the [TUS metadata format](https://tus.io/protocols/resumable-upload#upload-metadata). Sentry recognizes a single key, `sentry`, the value of which **MUST** be the Base64 encoding of a UTF-8 JSON object describing the attachment:
-
-      ```json
-      {
-        "attachment_type": "event.attachment"
-      }
-      ```
-
-      | Field             | Type   | Required     | Description                                                        |
-      | ----------------- | ------ | ------------ | ------------------------------------------------------------------ |
-      | `attachment_type` | String | **REQUIRED** | One of the values listed in [Attachment Types](#attachment-types). |
-
-   1. Get the location response header:
-      ```
-      HTTP/1.1 201 Created
-      Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
-      Tus-Resumable: 1.0.0
-      ```
-   1. Upload the file:
-      ```shell
-      curl -X PATCH https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/ \
-        --header "Tus-Resumable: 1.0.0" \
-        --header "Content-Type: application/offset+octet-stream" \
-        --header "Upload-Offset: 0" \
-        --data @myfile.log
-      ```
-
-1. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
+See [Resumable Uploads](/sdk/telemetry/attachments/upload/) for a detailed guide on how to obtain an attachment placeholder.
 
 </SpecSection>
 
