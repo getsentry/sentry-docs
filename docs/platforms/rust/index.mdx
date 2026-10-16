@@ -31,26 +31,44 @@ sentry = "{{@inject packages.version('sentry.rust') }}"
 
 ## Configure
 
-The most convenient way to use this library is the `sentry::init` function, which starts a Sentry client with a default set of integrations, and binds it to the current Hub.
+**Error Monitoring** starts working as soon as you call `sentry::init()`. **Logs** are supported in Rust SDK 0.42.0 and later and enabled by default. **Application Metrics** are available in Rust SDK 0.48.0 and later; both are covered in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing**.
 
-The `sentry::init` function returns a guard that when dropped, will flush Events that weren't yet sent to Sentry. It has a two-second deadline, so application shutdown may be slightly delayed as a result. Be sure to keep the guard or you won't be able to send events.
+Call `sentry::init()` as early as possible in your `main` function. It starts a Sentry client with a default set of integrations, such as panic reporting, and binds it to the current Hub.
+
+`sentry::init()` returns a guard that flushes events that haven't been sent yet when it's dropped. The flush has a two-second deadline, so application shutdown may be slightly delayed. Keep the guard alive for as long as your app runs, or the SDK won't be able to send events.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>.
+- User IP and HTTP header collection: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>. Review the data your app sends before enabling this in production.
+
+Don't need a feature? Remove its options from the snippet.
 
 ```rust {filename:main.rs}
-let _guard = sentry::init(
-    sentry::ClientOptions::new()
-        .dsn("___PUBLIC_DSN___")
-        .maybe_release(sentry::release_name!())
-        // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-        // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-        .send_default_pii(true),
-);
+fn main() {
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("___PUBLIC_DSN___")
+            .maybe_release(sentry::release_name!())
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
+            .traces_sample_rate(1.0)
+            // Capture user IPs and potentially sensitive headers when using HTTP server integrations.
+            // See https://docs.sentry.io/platforms/rust/data-management/data-collected/ for more info.
+            .send_default_pii(true),
+    );
+
+    // implementation of main
+}
 ```
 
 **Important:** Remember your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, you can find it by going to: Settings -> Projects -> [Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/) in sentry.io.
 
 ### Async Main Function
 
-In a multithreaded application, spawned threads should inherit the Hub from the main thread. In order for that to happen, the Sentry client must be initialized before starting an async runtime or spawning threads. This means you'll have to avoid using macros such as `#[tokio::main]` or `#[actix_web::main]`, because they start the runtime first. So rather than doing this:
+In a multithreaded application, spawned threads should inherit the Hub from the main thread. For that to happen, initialize the Sentry client before starting an async runtime or spawning threads. This means you'll have to avoid macros such as `#[tokio::main]` or `#[actix_web::main]`, because they start the runtime first. So rather than doing this:
 
 ```rust {filename:main.rs}
 // WRONG
@@ -59,10 +77,7 @@ async fn main() {
     let _guard = sentry::init(
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
-            .maybe_release(sentry::release_name!())
-            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-            .send_default_pii(true),
+            .maybe_release(sentry::release_name!()),
     );
 
     // implementation of main
@@ -77,10 +92,7 @@ fn main() {
     let _guard = sentry::init(
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
-            .maybe_release(sentry::release_name!())
-            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-            .send_default_pii(true),
+            .maybe_release(sentry::release_name!()),
     );
 
     tokio::runtime::Builder::new_multi_thread()
@@ -93,33 +105,9 @@ fn main() {
 }
 ```
 
-## Verify Setup
+### Integrations
 
-The quickest way to verify Sentry in your Rust application is to cause a panic:
-
-```rust {filename:main.rs}
-fn main() {
-    let _guard = sentry::init(
-        sentry::ClientOptions::new()
-            .dsn("___PUBLIC_DSN___")
-            .maybe_release(sentry::release_name!())
-            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
-            .send_default_pii(true),
-    );
-
-    // Sentry will capture this
-    panic!("Everything is on fire!");
-}
-```
-
-## Integrations
-
-_Integrations_ extend the functionality of the SDK for some common frameworks
-and libraries.
-
-A list of integrations and their feature flags can be found
-[in the integration API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
+_Integrations_ extend the functionality of the SDK for some common frameworks and libraries. A list of integrations and their feature flags can be found [in the integration API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
 
 <Alert>
 
@@ -131,13 +119,50 @@ Conflicts could lead to UI warning messages in Sentry, as it can be interpreted 
 
 </Alert>
 
-## More Information
+## Send Logs
 
-- [API Docs](https://docs.rs/sentry)
-- [Crates.io page](https://crates.io/crates/sentry)
-- [Bug Tracker](https://github.com/getsentry/sentry-rust/issues)
-- [GitHub Project](https://github.com/getsentry/sentry-rust)
+Use Sentry's `logger_*` macros to send logs at different levels. Logs are supported in Rust SDK 0.42.0 and later and enabled by default unless you compile the SDK without default features. In that case, enable the `logs` feature on `sentry`. For logging through the `tracing` or `log` crates, see the <PlatformLink to="/logs/#tracing-integration">`tracing` integration</PlatformLink> and <PlatformLink to="/logs/#log-integration">`log` integration</PlatformLink> guides.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and configuration options.
+
+```rust
+use sentry::logger_info;
+
+logger_info!("Order processed");
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `sentry::metrics` to send counters, gauges, and distributions. Metrics require Rust SDK 0.48.0 or later and are enabled by default in the `sentry` crate.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```rust
+use sentry::metrics;
+
+metrics::counter("checkout.failed", 1).capture();
+metrics::gauge("active_connections", 42).capture();
+metrics::distribution("api_latency", 187.0).capture();
+```
+
+## Verify Your Setup
+
+The quickest way to verify Sentry in your Rust application is to cause a panic after initializing the SDK:
+
+```rust {filename:main.rs}
+// Sentry will capture this
+panic!("Everything is on fire!");
+```
+
+### View Captured Data in Sentry
+
+To view and resolve the recorded panic, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Rust application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to [manually capture errors](/platforms/rust/usage/).
+- Instrument more operations with [custom tracing](/platforms/rust/tracing/instrumentation/custom-instrumentation/).
+- Browse the [API docs](https://docs.rs/sentry), the [crates.io page](https://crates.io/crates/sentry), and the [GitHub project](https://github.com/getsentry/sentry-rust). Report bugs in the [issue tracker](https://github.com/getsentry/sentry-rust/issues).
