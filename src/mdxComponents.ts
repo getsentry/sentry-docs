@@ -1,5 +1,3 @@
-import type {ReactNode} from 'react';
-
 import {AgentMigrationCallout} from './components/agentMigrationCallout';
 import {AgentSetupCallout} from './components/agentSetupCallout';
 import {Alert} from './components/alert';
@@ -69,15 +67,6 @@ import {TutorialProgress} from './components/tutorialProgress';
 import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
-// TEMPORARY: the SplitLayout component was removed, but the quick start
-// template PRs (#19980-#19983) still have to remove its wrappers from 38
-// files. Until they merge, render the old wrapper tags as plain pass-throughs
-// so those pages build in a single column. Remove this shim once no MDX file
-// uses `<SplitLayout>` or `<SplitSection*>` anymore.
-function SplitLayoutPassthrough({children}: {children?: ReactNode}) {
-  return children ?? null;
-}
-
 export function mdxComponents(
   dynamicComponents: any = {},
   wrapper: any = ({children}) => children
@@ -142,10 +131,6 @@ export function mdxComponents(
     SpecMeta,
     SpecRfcAlert,
     SpecSection,
-    SplitLayout: SplitLayoutPassthrough,
-    SplitSection: SplitLayoutPassthrough,
-    SplitSectionText: SplitLayoutPassthrough,
-    SplitSectionCode: SplitLayoutPassthrough,
     StatusBadge,
     StepComponent,
     StepConnector,
