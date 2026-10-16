@@ -20,7 +20,7 @@ The default value to report a log entry as an event to Sentry is `Error`.
 
 This means that out of the box, any `LogError` call will create an `Event` which will include breadcrumbs for all prior log messages of level `Information`, `Warning`, `Error` and `Critical`.
 
-Additionally, when enabled, log messages are sent to Sentry as [Structured Logs](logs/). Filtering to control the minimum log level to capture should be done [via `Microsoft.Extensions.Logging` configuration](https://learn.microsoft.com/dotnet/core/extensions/logging/overview?tabs=command-line#how-filtering-rules-are-applied).
+Log messages are also sent to Sentry as [Structured Logs](logs/). Filtering to control the minimum log level to capture should be done [via `Microsoft.Extensions.Logging` configuration](https://learn.microsoft.com/dotnet/core/extensions/logging/overview?tabs=command-line#how-filtering-rules-are-applied).
 
 ## Install
 
@@ -44,102 +44,72 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 
 ## Configure
 
-There are two ways to add this integration into your project. In both cases it means calling an extension method. The places where it's available are:
+Initialize Sentry first with `SentrySdk.Init`, then add the integration with `AddSentry()`:
 
-- `ILoggingBuilder`
-- `ILoggerFactory`
+```csharp {tabTitle:Generic host}
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-The `ILoggingBuilder` extension is useful when using a `WebHostBuilder` or a `HostBuilder`, also known as _Generic host_. This extension method is used by the ASP.NET Core integration under the hood to automatically.
+var builder = Host.CreateApplicationBuilder(args);
 
-The extension to `ILoggerFactory` is a convenient way when only the `LoggerFactory` is being used, without any framework integration.
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
 
-In both cases the method call is:
+builder.Logging.AddSentry();
 
-**AddSentry()**
-
-### Example configuration
-
-#### Through `ILoggingBuilder`
-
-```csharp
-public static Task Main()
-    => new HostBuilder()
-        .ConfigureHostConfiguration(c =>
-        {
-            c.SetBasePath(Directory.GetCurrentDirectory());
-            c.AddJsonFile("appsettings.json", optional: false);
-        })
-        .ConfigureLogging((c, l) =>
-        {
-            l.AddConfiguration(c.Configuration);
-            // Adding Sentry integration to Microsoft.Extensions.Logging
-            l.AddSentry();
-        })
-        .Build();
+await builder.Build().RunAsync();
 ```
 
-In this example, a _generic host_ is being built and the MEL integration with Sentry added through `ConfigureLogging`. The example also demonstrates how to bind the `appsettings.json` configuration to make the values available to the Sentry integration.
+```csharp {tabTitle:LoggerFactory}
+using Microsoft.Extensions.Logging;
 
-With this approach, options like `Dsn`, `SendDefaultPii`, `MinimumBreadcrumbLevel`, to name a few, can be set in `appsettings.json`.
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
 
-Example using `appsettings.json`:
+using var loggerFactory = LoggerFactory.Create(builder => builder.AddSentry());
+var logger = loggerFactory.CreateLogger<Program>();
+```
+
+Set other [SDK options](/platforms/dotnet/guides/extensions-logging/configuration/options/) in `SentrySdk.Init` too. Disposing the object it returns sends any pending events before your app exits.
+
+If you use a host integration such as [ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) or [MAUI](/platforms/dotnet/guides/maui/), skip this setup. Instead, use the `UseSentry` extension for that integration, which will initialize Sentry and the logging integration for you.
+
+<Alert title="Changed in Version 7.0.0">
+
+Prior to version 7.0.0 `AddSentry` could also initialize the SDK itself. On those versions, set the DSN in `AddSentry(options => ...)` instead of calling `SentrySdk.Init`.
+
+</Alert>
 
 
-```json
+### Logging Configuration
+
+In a generic host app, the integration reads its settings from the `Logging:Sentry` section of your configuration, such as `appsettings.json`:
+
+```json {filename:appsettings.json}
 {
   "Logging": {
-    "LogLevel": {
-      "Default": "Debug",
-      "Microsoft": "Warning"
+    "Sentry": {
+      "LogLevel": {
+        "Default": "Information"
+      },
+      "MinimumBreadcrumbLevel": "Debug",
+      "MinimumEventLevel": "Warning"
     }
-  },
-  "Sentry": {
-    "Dsn": "___PUBLIC_DSN___",
-    "SendDefaultPii": true,
-    "MinimumBreadcrumbLevel": "Debug",
-    "MinimumEventLevel": "Warning",
-    "MaxBreadcrumbs": 50
   }
 }
 ```
 
-Above we set the application wide minimum log level to `Debug` and we configure a minimum log level for Microsoft specific logs to `Warning`. Sentry specific settings are set under the `Sentry` property. Options are documented below.
+`LogLevel` controls which entries are sent as [structured logs](logs/). `MinimumBreadcrumbLevel` and `MinimumEventLevel` are described under [Options](#options).
 
-#### Through `ILoggerFactory`
-
-
-```csharp
-using (var loggerFactory = new LoggerFactory()
-            .AddConsole(LogLevel.Trace)
-            .AddSentry(o => o.Dsn = "___PUBLIC_DSN___"))
-{
-    var logger = loggerFactory.CreateLogger<Program>();
-}
-```
-
-This approach doesn't include any of the framework's configuration system. Since the DSN is being provided via parameter, the SDK will be initialized.
-
-More settings can be passed via the callback configuring the `SentryOptions`.
-
-## Options and Initialization
-
-In cases where `AddSentry` is called without arguments, it's worth noting that an overload exists where `SentryOptions` can be configured just like if `SentrySdk.Init` had been called.
-
-<Alert>
-
-The SDK needs to be initialized only once. If the `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this configuration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as an _empty string_ will disable the SDK.
-
-</Alert>
-
-For example:
-
-```csharp
-using (var loggerFactory = new LoggerFactory()
-            .AddSentry(o => o.InitializeSdk = false))
-{ }
-```
+The section only accepts these keys. Any other key, such as `Dsn`, makes the app fail at startup, so set SDK options in `SentrySdk.Init`.
 
 ### Options
+
+Set these in `AddSentry(options => ...)`. You can also set the two levels in the `Logging:Sentry` configuration section.
 
 #### MinimumBreadcrumbLevel
 
@@ -149,13 +119,19 @@ A `LogLevel` which indicates the minimum level a log message has to be included 
 
 A `LogLevel` which indicates the minimum level a log message has to be sent to Sentry as an event. By default this value is `Error`.
 
-#### InitializeSdk
+#### Log Entry Filters
 
-Whether or not this integration should initialize the SDK. If you intend to call `SentrySdk.Init` yourself, you should set this flag to `false`.
+Filters run before a log entry is processed. They get the entry's `Microsoft.Extensions.Logging` data, so you can drop the entry before it becomes a `Breadcrumb` or an `Event`. Return `true` to drop it:
 
-#### Filters
+```csharp
+using Sentry.Extensions.Logging;
 
-A list of filters which are invoked before processing log messages. This allows you to inspect the details of the log entry before they become a `Breadcrumb` or an `Event` with full access to the `Microsoft.Extensions.Logging` data.
+builder.Logging.AddSentry(options =>
+{
+    options.AddLogEntryFilter((category, level, eventId, exception) =>
+        level < LogLevel.Critical && exception is DivideByZeroException);
+});
+```
 
 <Alert title="Note">
 
@@ -167,7 +143,7 @@ These filters only apply to breadcrumbs and events. They don't control which log
 
 A list of filters which are invoked before processing any log message to filter out undesired tags.
 
-For example, to remove all tags starting with `PROC_`, add a tag filter to your `SentryOptions` when initializing the SDK.
+`TagFilters` is an SDK option, so set it in `SentrySdk.Init`. For example, to remove all tags starting with `PROC_`:
 
 ```csharp
 options.TagFilters.Add("PROC_");
