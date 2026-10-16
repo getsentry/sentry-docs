@@ -43,7 +43,7 @@ export default function NotFound() {
       {isDeveloperDocs ? (
         <DevelopDocsHeader pathname="/" searchPlatforms={[]} />
       ) : (
-        <Header pathname="/" searchPlatforms={[]} noSearch platforms={[]} />
+        <Header pathname="/" searchPlatforms={[]} noSearch />
       )}
       <main id="main" className="px-8 pt-28">
         <h1 className="font-medium text-3xl mb-4">Page Not Found</h1>
