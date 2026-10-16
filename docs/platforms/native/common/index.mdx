@@ -14,24 +14,76 @@ Sentry captures data by using an SDK within your application’s runtime.
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you call `sentry_init()`, capturing native crashes and the events you send manually. **Logs** and **Application Metrics** are enabled by default in current SDK versions, and you'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing** and **Release Health**. To collect **User Feedback**, use the [User Feedback API](/platforms/native/user-feedback/).
+
 Configuration should happen as early as possible in your application's lifecycle.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>. You create transactions and spans with <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink>.
+- Release Health: via <PlatformLink to="/configuration/options/#release">`release`</PlatformLink>. The SDK starts a session on `sentry_init()` and ends it on `sentry_close()`.
+- SDK debug output: via <PlatformLink to="/configuration/options/#debug">`debug`</PlatformLink>. Turn this off in production.
+
+Don't need a feature? Remove its options from the snippet.
 
 <PlatformContent includePath="getting-started-config" />
 
-## Verify
+<PlatformSection supported={["native.qt"]}>
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+### Capture Qt Log Messages
+
+When you build the SDK with `SENTRY_INTEGRATION_QT=YES`, the Qt integration registers itself during `sentry_init()`. It records messages from `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, and `qFatal()` as breadcrumbs, and still forwards them to any message handler you installed before.
+
+</PlatformSection>
+
+### Add Readable Stack Traces With Debug Information Files
+
+To see symbolicated stack traces for native crashes, upload your application's debug information files to Sentry. See <PlatformLink to="/data-management/debug-files/upload/">Uploading Debug Information Files</PlatformLink> for how to do this with `sentry-cli`.
+
+## Send Logs
+
+Use the `sentry_log_*()` functions to send logs at different levels: `trace`, `debug`, `info`, `warn`, `error`, and `fatal`. The message is a printf-style format string.
+
+Logs require Native SDK 0.11.1 or later and are enabled by default since 0.13.9. On SDK 0.11.1 to 0.13.8, turn them on with `sentry_options_set_enable_logs(options, 1)` before calling `sentry_init()`. SDK 0.17.0 removed that option, so don't add it on current versions.
+
+See [Set Up Logs](/platforms/native/logs/) for attributes, `before_send_log`, and logging user-provided text safely.
+
+```c
+sentry_log_info("A simple log message");
+sentry_log_error("A %s log message", "formatted");
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use the `sentry_metrics_*()` functions to send counters, gauges, and distributions. You can pass attributes to search or filter by later, or `sentry_value_new_null()` when you don't need any.
+
+Application Metrics require Native SDK 0.12.6 or later and are enabled by default since 0.13.5. On SDK 0.12.6 to 0.13.4, turn them on with `sentry_options_set_enable_metrics(options, 1)` before calling `sentry_init()`. SDK 0.17.0 removed that option, so don't add it on current versions.
+
+See [Set Up Metrics](/platforms/native/metrics/) for all available metric types, units, and configuration options.
+
+```c
+sentry_metrics_count("checkout.failed", 1, sentry_value_new_null());
+
+sentry_metrics_gauge("active_connections", 42, NULL, sentry_value_new_null());
+
+sentry_metrics_distribution("api_latency", 187.0, SENTRY_UNIT_MILLISECOND,
+    sentry_value_new_null());
+```
+
+## Verify Your Setup
 
 <PlatformContent includePath="getting-started-verify" />
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded event, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue, then click its title to see the details and mark it as resolved.
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to <PlatformLink to="/usage/">manually capture errors and messages</PlatformLink>
+- Choose a [crash-handling backend](/platforms/native/configuration/backends/) for your target platforms
+- Detect unresponsive apps with [App Hangs](/platforms/native/app-hangs/) (experimental)
