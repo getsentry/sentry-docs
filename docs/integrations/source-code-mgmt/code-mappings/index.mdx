@@ -6,79 +6,79 @@ description: >-
   stack trace linking, suspect commits, SCM source context, and Code Owners.
 ---
 
-A code mapping tells Sentry how to turn a file path from a stack frame into a path in one of your repositories. For example, a mapping can turn `src/main.py` in a stack trace into `flask/src/main.py` in your repository.
+Code mappings enable Sentry to turn a file path from a stack frame into a path in one of your repos.
 
-Code mappings power these features:
+Code mappings power the following features:
 
-- **Stack trace linking**: Open the file from a stack frame in your source code provider. The integration pages for [GitHub](/integrations/source-code-mgmt/github/#stack-trace-linking), [GitLab](/integrations/source-code-mgmt/gitlab/#stack-trace-linking), [Bitbucket](/integrations/source-code-mgmt/bitbucket/#stack-trace-linking), [Azure DevOps](/integrations/source-code-mgmt/azure-devops/#stack-trace-linking), [Perforce](/integrations/source-code-mgmt/perforce/#stack-trace-linking), and [Cursor Origin](/integrations/source-code-mgmt/cursor-origin/#stack-trace-linking) describe provider-specific behavior.
-- **[Suspect commits](/product/issues/suspect-commits/)**: Find the commit that most recently changed the code in a stack trace.
-- **[SCM source context](/integrations/source-code-mgmt/source-context/)**: Fetch the lines around a frame from your repository when the event doesn't include them.
-- **[Code Owners](/product/issues/ownership-rules/#code-owners)**: Import a CODEOWNERS file and match its paths to stack trace paths.
+- **Stack trace linking**: Open the file from a stack frame in your source code provider. See the integration docs for [GitHub](/integrations/source-code-mgmt/github/#stack-trace-linking), [GitLab](/integrations/source-code-mgmt/gitlab/#stack-trace-linking), [Bitbucket](/integrations/source-code-mgmt/bitbucket/#stack-trace-linking), [Azure DevOps](/integrations/source-code-mgmt/azure-devops/#stack-trace-linking), [Perforce](/integrations/source-code-mgmt/perforce/#stack-trace-linking), and [Cursor Origin](/integrations/source-code-mgmt/cursor-origin/#stack-trace-linking) for provider-specific instructions.
+- **[Suspect commits](/product/issues/suspect-commits/)**: Find the most recent code change in a stack trace.
+- **[SCM source context](/integrations/source-code-mgmt/source-context/)**: Fetch the lines around a frame from your repo when the event doesn't include them.
+- **[Code Owners](/product/issues/ownership-rules/#code-owners)**: Import a CODEOWNERS file and sync it to stack trace paths.
 
-Before you add a code mapping, install a [source code management integration](/integrations/source-code-mgmt/) and add the repository you want to map. This page covers path configuration only. Installation, commit tracking, and resolving issues via commit are covered on each integration's page.
+To get started with code mappings, install a [source code management integration](/integrations/source-code-mgmt/) and add the repo you want to map. This page covers path configuration only; installation, commit tracking, and resolving issues via commit are discussed in detail on each integration's page.
 
 ## Where to Configure Code Mappings
 
-A code mapping connects one Sentry project to one repository, with one or more paths. You can create a connection from either the project or the repository. Both open the same modal.
+A code mapping connects a Sentry project to a single repo, with one or more paths. You can create a connection from either the project or the repo; both open the same modal.
 
-- **From a project**: Go to your project's [**General Settings**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/), find **Connected Repositories**, and click **Connect repository**. The project is already selected.
+- **From a project**: Go to your project's [**General Settings**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/), find **Connected Repositories**, and click on **Connect repository**. The project will already be selected.
 
   {/* TODO: Screenshot of the Connected Repositories panel in Project General Settings: panel title, Connect repository button, and a couple of repo rows. No open menu. Save to ./img/ */}
 
-- **From a repository**: Go to [**Settings > Repositories**](https://sentry.io/orgredirect/organizations/:orgslug/settings/repos/) and click **+** on the repository's row. The repository is already selected. To change an existing connection, click the project's chip on the repository's row.
+- **From a repo**: Go to [**Settings > Repositories**](https://sentry.io/orgredirect/organizations/:orgslug/settings/repos/) and click **+** on the repo's row. The repo will already be selected. To change an existing connection, click the project's chip on the repo's row.
 
   {/* TODO: Screenshot of Settings > Repositories showing a repo row, its project chips, and the + control. Save to ./img/ */}
 
-To map more than one path between the same project and repository, click **Add another path** in the modal. When you save, Sentry applies every path in the connection at once.
+To map more than one path between the same project and repo, click on **Add another path**. When you save, Sentry will apply every path in the connection at once.
 
-If a project uses code from more than one repository, create a separate connection for each repository.
+If a project uses code from more than one repo, create a separate connection for each one.
 
 ## Path Fields
 
 Each path in a connection has three fields:
 
-- **Branch**: The branch Sentry uses when the event isn't associated with a release commit. If you've set up [commit tracking](/product/releases/associate-commits/), Sentry uses the release's commit instead.
-- **Stack trace prefix**: The beginning of the file path as it appears in your stack trace. This field was previously named **Stack Trace Root**.
-- **Repository prefix**: The path that replaces the stack trace prefix when Sentry looks up the file in your repository. This field was previously named **Source Code Root**.
+- **Branch**: The branch Sentry uses when the event isn't associated with a release commit. If you've set up [commit tracking](/product/releases/associate-commits/), Sentry will use the release's commit instead.
+- **Stack trace prefix**: The beginning of the file path as it appears in your stack trace. Previously this field was named **Stack Trace Root**.
+- **Repository prefix**: The path that replaces the stack trace prefix when Sentry looks up the file in your repo. Previously this field was named **Source Code Root**.
 
 {/* TODO: Screenshot of the connect modal with a repository selected and one path filled in: Branch, Stack trace prefix, Repository prefix, and Preview. Save to ./img/ */}
 
-An empty **Stack trace prefix** matches every file in the stack trace. If a project has more than one path, set a specific prefix for each one so Sentry knows which path applies to which files.
+An empty **Stack trace prefix** will match every file in the stack trace. If a project has more than one path, set a specific prefix for each so that Sentry knows which path applies to which files.
 
 ## Find Your Prefixes
 
 <Alert>
 
-These steps apply to platforms that use file paths in stack traces. Platforms that use package names need extra steps. See [Platform-Specific Paths](#platform-specific-paths).
+These steps only apply to platforms that use file paths in stack traces. Platforms that use package names require extra steps. See [Platform-Specific Paths](#platform-specific-paths).
 
 </Alert>
 
-Open a stack trace you want to map and find an **In App** frame. In App frames have a label on the right side of the frame. The filename is the first text on the left side of the frame header. In this example, it's `src/main.py`.
+Open a stack trace you want to map, then find an **In App** frame. In App frames have a label on the right side of the frame. The filename is the first text on the left side of the frame header. For this example, the filename is `src/main.py`.
 
 <Include name="common-imgs/code-mappings-stacktrace" />
 
-Stack traces from some native platforms look different. Hover over the filename to see the absolute path.
+Stack traces from some native platforms may look different. Hover over the filename to see the absolute path.
 
 ![Where to find the file path in a native stack trace](./img/code-mappings-stacktrace-native.png)
 
-If you're not sure which path to use, click `{}` in the event header to open the event JSON, and find the frame's `filename` or `abs_path`.
+If you're unsure of which path to use, click `{}` in the event header to open the event JSON and find the frame's `filename` or `abs_path`.
 
 <Include name="common-imgs/code-mappings-event-json" />
 
-Next, find the same file in your repository. In this example, the path is `flask/src/main.py`. Leave out the repository name (`empower`).
+Next, find the same file in your repo. In this example, the path is `flask/src/main.py`. Leave out the repo name (`empower`).
 
 <Include name="common-imgs/code-mappings-source-file" />
 
-Compare the two paths. Here, `src/` in the stack trace matches `flask/src/` in the repository, so set:
+Compare the two paths. Here, `src/` in the stack trace matches `flask/src/` in the repo, so set:
 
 - **Stack trace prefix**: `src/`
 - **Repository prefix**: `flask/src/`
 
 Sentry then replaces `src/` with `flask/src/` at the start of every matching stack trace path when it looks up the file.
 
-## Edit a Code Mapping
+## How to Edit a Code Mapping
 
-To edit a connection, open it from either entry point. The modal opens with the project and repository locked and the existing paths filled in. You can change paths, add paths, and save.
+To edit a connection, you can access it from either entry point. The modal opens with the project and repo locked and the existing paths all filled in. From here, you can change paths, add paths, and save your changes.
 
 If a path is used by a [Code Owners](/product/issues/ownership-rules/#code-owners) import, you can't change its prefixes until you remove that Code Owners import.
 
@@ -88,7 +88,7 @@ If your organization has the [GitHub integration](/integrations/source-code-mgmt
 
 ## Bulk Upload
 
-To create many code mappings at once, upload them with [Sentry CLI](/cli/code-mappings/). The CLI's JSON format uses `stackRoot` for the stack trace prefix and `sourceRoot` for the repository prefix.
+To create several code mappings in one go, upload them with the [Sentry CLI](/cli/code-mappings/). The CLI's JSON format uses `stackRoot` for the stack trace prefix and `sourceRoot` for the repository prefix.
 
 ## Platform-Specific Paths
 
