@@ -1,12 +1,18 @@
 ---
 title: Nx CLI
-description: "Upload your source maps using the Nx CLI and the Sentry webpack plugin."
+description: "Upload your Angular source maps using Nx with Sentry CLI or a Sentry bundler plugin."
 sidebar_order: 0
 supported:
   - javascript.angular
 ---
 
-If you're using [`@nx/angular`](https://nx.dev/packages/angular), you can use the Nx CLI together with one of our bundler plugins (such as Webpack or esbuild) to automatically upload source maps to Sentry when building your app (with `nx build`, for example).
+If you're using [`@nx/angular`](https://nx.dev/packages/angular), choose an upload method for your executor. Application and esbuild builds can use Sentry CLI without changing the executor. If your executor supports bundler plugins, you can use a Sentry plugin to upload source maps when running `nx build`.
+
+<Include name="angular-native-debug-ids.mdx" />
+
+## Upload With a Bundler Plugin
+
+The following steps configure a Sentry webpack or esbuild plugin. They don't apply to the upload-only workflow above.
 
 Due to `@nx/angular`'s architecture, you'll first need to configure an executor that allows registering bundler plugins.
 In the end, you'll be able to automatically upload source maps whenever you're creating a production build of your app.
@@ -17,7 +23,7 @@ Configure your app to upload source maps in three steps.
 
 Before you register the Sentry bundler plugin, first ensure that you can register plugins (such as webpack or esbuild plugins) with your current executor (or Angular builder).
 Typically, this is possible if you have access to a `webpack.config.js` or a similar configuration file.
-If this already is the case, skip to [step 2](#2-register-the-sentry-webpack-plugin).
+If this already is the case, skip to [step 2](#2-register-the-sentry-bundler-plugin).
 
 If you can't register a plugin, you'll need to change the executor in your `project.json` to a custom executor that allows you to register it (such as [`@nx/angular:webpack-browser`](https://nx.dev/nx-api/angular/executors/webpack-browser) or [`@nx/angular:browser-esbuild`](https://nx.dev/nx-api/angular/executors/browser-esbuild)).
 
@@ -100,17 +106,21 @@ module.exports = {
       sourcemaps: {
         // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
         // Set the appropriate glob pattern for your output folder - some glob examples below:
-        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
-      }
+        filesToDeleteAfterUpload: [
+          "./**/*.map",
+          ".*/**/public/**/*.map",
+          "./dist/**/client/**/*.map",
+        ],
+      },
     }),
   ],
 };
 ```
 
 <Alert level="warning">
-  Generating source maps **may expose them to the public**, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to
-  deny access to `.js.map` files, or by using [Sentry Webpack Plugin's
+  Generating source maps **may expose them to the public**, potentially causing
+  your source code to be leaked. You can prevent this by configuring your server
+  to deny access to `.js.map` files, or by using [Sentry Webpack Plugin's
   `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/webpack-plugin#sourcemapsfilestodeleteafterupload)
   option to delete source maps after they've been uploaded to Sentry.
 </Alert>
@@ -158,9 +168,9 @@ Then, follow the [official Nx documentation](https://nx.dev/nx-api/angular/execu
 ```
 
 <Alert level="warning">
-  Generating source maps **may expose them to the public**, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to
-  deny access to `.js.map` files, or by using [Sentry Esbuild Plugin's
+  Generating source maps **may expose them to the public**, potentially causing
+  your source code to be leaked. You can prevent this by configuring your server
+  to deny access to `.js.map` files, or by using [Sentry Esbuild Plugin's
   `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/esbuild-plugin#sourcemapsfilestodeleteafterupload)
   option to delete source maps after they've been uploaded to Sentry.
 </Alert>
