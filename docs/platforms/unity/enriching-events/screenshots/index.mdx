@@ -31,14 +31,42 @@ Since the Unity SDK internally consists of multiple SDKs, the mechanism with whi
 
 ### C# errors
 
-To keep the cost of an error low, the SDK doesn't capture the screen when the error happens. Instead, it periodically captures the screen at the end of a frame and attaches the most recent capture to the event. How often that happens is controlled by <PlatformIdentifier name="ScreenshotCaptureInterval" />, which also is how old an attached screenshot can be at most.
+The SDK takes the screenshot at the end of the frame the error happened in, so it shows the fully rendered frame. Events captured in quick succession, for example several errors within the same frame, share a screenshot. Events captured on background threads get a screenshot as well.
 
-The screenshot is sent in the same envelope as the event it belongs to. If the event gets dropped, for example because of sampling or rate limiting, its screenshot gets dropped along with it. Compressing the screenshot is deferred until the SDK writes the event to disk or sends it, which happens on a background thread.
+To keep the cost of an error low, the main thread only schedules the capture on the GPU. Reading the screenshot back from the GPU happens [asynchronously](https://docs.unity3d.com/ScriptReference/Rendering.AsyncGPUReadback.html) where the device supports it, and compressing it is deferred until the SDK writes the event to disk or sends it, which happens on a background thread.
 
-Events captured on a background thread get a screenshot as well, with two exceptions where screenshots are limited to events captured on the main thread:
+The screenshot is sent in the same envelope as the event it belongs to. If the event gets dropped, for example because of sampling or rate limiting, its screenshot gets dropped along with it.
 
-- On devices that don't support [asynchronous GPU readback](https://docs.unity3d.com/ScriptReference/SystemInfo-supportsAsyncGPUReadback.html).
-- When <PlatformIdentifier name="SetBeforeSendScreenshot" /> is set, since it operates on a `Texture2D`.
+The resolution is controlled by <PlatformIdentifier name="ScreenshotQuality" />, which defaults to `low`. Higher resolutions make the frame the screenshot gets taken in more expensive to render, which can make it miss its display refresh on mobile devices.
+
+### Modifying or Discarding Screenshots
+
+<PlatformIdentifier name="SetBeforeCaptureScreenshot" /> decides whether an event gets a screenshot. To edit a screenshot before it's sent, for example to black out sensitive areas, use <PlatformIdentifier name="SetBeforeSendScreenshotPixels" />. It receives the screenshot's raw pixels on a background thread right before they get compressed:
+
+```csharp
+options.SetBeforeSendScreenshotPixels((pixels, sentryEvent) =>
+{
+    // RGBA32, four bytes per pixel, with the bottom row first.
+    // Blacks out the bottom tenth of the screen.
+    var data = pixels.Data;
+    var end = pixels.Width * (pixels.Height / 10) * 4;
+    for (var i = 0; i < end; i++)
+    {
+        data[i] = 0;
+    }
+
+    // Return false to discard the screenshot instead
+    return true;
+});
+```
+
+The callback runs once per screenshot. Events that share a screenshot also share the result.
+
+<Alert level="warning">
+
+<PlatformIdentifier name="SetBeforeSendScreenshot" /> is deprecated. Since it hands out the screenshot as a `Texture2D`, the callback and compressing the screenshot run on the main thread, which stalls your game.
+
+</Alert>
 
 <Alert>
 
