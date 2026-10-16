@@ -10,8 +10,6 @@ categories:
   - console
 ---
 
-<PlatformContent includePath="getting-started-primer" />
-
 On this page, we get you up and running with Sentry's PowerShell SDK. The PowerShell Sentry SDK is tested to work with:
 
 - PowerShell 7.4+ on Windows, macOS, and Linux
@@ -21,26 +19,74 @@ The PowerShell SDK is based on the Sentry .NET SDK. You can refer to the [.NET S
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
+Install the PowerShell SDK from the PowerShell Gallery using [PowerShellGet](https://learn.microsoft.com/en-us/powershell/gallery/powershellget/install-powershellget):
 
-<PlatformContent includePath="getting-started-install" />
+```powershell
+Install-Module -Name Sentry -Scope CurrentUser -Repository PSGallery -Force
+```
 
 ## Configure
 
-Configuration should happen as early as possible in your application's lifecycle.
+**Error Monitoring** starts working as soon as you call `Start-Sentry`. This guide also enables **Tracing** and **Release Health**.
 
-<PlatformContent includePath="getting-started-config" />
+Call `Start-Sentry` as early as possible in your script, before the code you want to monitor runs.
 
-## Verify
+The snippet also turns on:
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>. The PowerShell SDK doesn't create transactions automatically, so start them with `Start-SentryTransaction`, as shown in <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink>.
+- Release Health: via <PlatformLink to="/configuration/releases/#sessions">`AutoSessionTracking`</PlatformLink>, which starts a session when your script starts and ends it when your script exits.
+- Collection of potentially personally identifiable information (PII), such as the machine name: via <PlatformLink to="/configuration/options/#SendDefaultPii">`SendDefaultPii`</PlatformLink>. Review the data your script sends before enabling this in production.
 
-<PlatformContent includePath="getting-started-verify" />
+Don't need a feature? Remove its options from the snippet.
 
-<Alert>
+```powershell
+# You may need to import the module if you've just installed it.
+Import-Module Sentry
+
+Start-Sentry {
+    # You can set it in the SENTRY_DSN environment variable, or you can set it in code here.
+    $_.Dsn = '___PUBLIC_DSN___'
+
+    # Enables Tracing.
+    # Set to 1.0 to capture 100% of transactions for tracing.
+    # We recommend reducing this value in production.
+    $_.TracesSampleRate = 1.0
+
+    # Enables Release Health by sending session data.
+    $_.AutoSessionTracking = $true
+
+    # If you'd like to include data that potentially includes PII, such as Machine Name
+    $_.SendDefaultPii = $true
+}
+```
+
+## Verify Your Setup
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
+
+```powershell
+try
+{
+    throw 'Test error'
+}
+catch
+{
+    $_ | Out-Sentry
+}
+```
 
 Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
 
-</Alert>
+### View Captured Data in Sentry
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue.
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your PowerShell script. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to [manually capture errors](/platforms/powershell/usage/).
+- Instrument more operations with [custom tracing](/platforms/powershell/tracing/instrumentation/custom-instrumentation/).
+- Add more context to your events with [breadcrumbs, tags, and attachments](/platforms/powershell/enriching-events/).
+- Browse the [PowerShell Gallery page](https://www.powershellgallery.com/packages/Sentry/) and the [GitHub project](https://github.com/getsentry/sentry-powershell). Report bugs in the [issue tracker](https://github.com/getsentry/sentry-powershell/issues).
