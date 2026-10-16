@@ -580,25 +580,37 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 <PlatformSection supported={['javascript.cloudflare']}>
 
-<SdkOption name="rpcTracePropagationBindings" type='Array<string | RegExp>' availableSince='10.72.0'>
+<SdkOption name="cacheClient" type="boolean" defaultValue="true">
+
+Reuses the SDK client across invocations within the same [isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/#isolates). The cached client keeps the options from its first initialization. Set this to `false` if you experience any issues (this is the same behavior as in v10).
+
+</SdkOption>
+
+<SdkOption name="durableObjectSqlSpanAllowlist" type='Array<string | RegExp>' defaultValue='[]'>
+
+The SDK skips SQL query spans for Durable Object tables whose names start with `cf_` or `pi_`. Add table names to this list to enable spans for those tables. Strings match exact table names; regular expressions match patterns.
+
+</SdkOption>
+
+<SdkOption name="durableObjectStorageSpanAllowlist" type='Array<string | RegExp>' defaultValue='[]'>
+
+The SDK skips storage operation spans for Durable Object keys whose names start with `cf_` or `__ps_`. Add keys to this list to enable spans for those keys. Strings match exact keys; regular expressions match patterns.
+
+</SdkOption>
+
+<SdkOption name="rpcTracePropagationBindings" type='Array<string | RegExp>' defaultValue='[]' availableSince='10.72.0'>
 
 Controls which bindings on `env` receive tracing data over [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) to Durable Objects and other Workers. RPC has no headers, so the SDK appends the trace context as a trailing argument that an instrumented receiver strips again before your method runs.
 
 String entries must match a binding name exactly, so `"DB"` matches `"DB"` but not  `"MY_DB"`. Use a regular expression for pattern matching.
 
-Setting this option, with any value, also lets the Worker continue a trace that arrives on an incoming RPC call. So a Worker that both calls and receives needs only this one option. Setting an empty array, the Worker is a receiver that propagates nothing, and an entry for a binding the Worker never calls is ignored. Because unused entries are harmless, one list can serve every Worker and Durable Object in a deployment.
+This option controls outgoing RPC trace propagation, which is disabled by default. Add bindings to enable it for those receivers. Sentry-instrumented receivers automatically continue incoming traces without configuring this option.
+
+The Sentry Cloudflare Vite plugin automatically adds bindings targeting receivers it instruments in the same worker. Any bindings you configure are added to that list.
 
 Only list bindings whose receiver runs Sentry. Anywhere else the trailing argument survives as a real parameter, which changes what your method was called with. See <PlatformLink to="/tracing/distributed-tracing/#rpc-trace-propagation">RPC Trace Propagation</PlatformLink>.
 
 Propagation over `stub.fetch()` and service binding `fetch()` uses HTTP headers, so `tracePropagationTargets` covers it instead.
-
-</SdkOption>
-
-<SdkOption name="enableRpcTracePropagation" type='boolean' defaultValue='false' availableSince='10.49.0'>
-
-**Deprecated:** Use `rpcTracePropagationBindings` instead, which names the bindings you call rather than propagating to all of them. This option will be removed in the next major version.
-
-Propagates trace context over every RPC call on `env`, including bindings whose receiver doesn't run Sentry and therefore never strips the trailing argument again.
 
 </SdkOption>
 
@@ -785,6 +797,34 @@ Sentry.init({
 
 </SdkOption>
 
+<PlatformSection notSupported={["javascript.electron", "javascript.deno", "javascript.nextjs", "javascript.sveltekit"]}>
+
+<SdkOption name="enableOpenTelemetrySetup" type='boolean' defaultValue='false' categorySupported={["server", "serverless"]}>
+
+Controls whether the SDK sets up an OpenTelemetry tracer provider to capture spans created with `@opentelemetry/api`. Set this option to `true` to enable it.
+
+Keep this option set to `false` if you manage your own OpenTelemetry tracer provider.
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+  This option is not available through `@sentry/cloudflare/request`.
+</PlatformSection>
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno", "javascript.nextjs", "javascript.sveltekit"]}>
+
+<SdkOption name="enableOpenTelemetrySetup" type='boolean' defaultValue='true' categorySupported={["server", "serverless"]}>
+
+Controls whether the SDK sets up an OpenTelemetry tracer provider to capture spans created with `@opentelemetry/api`.
+
+Set this option to `false` if you manage your own OpenTelemetry tracer provider.
+
+</SdkOption>
+
+</PlatformSection>
+
 <PlatformSection supported={["javascript.electron"]}>
 
 <SdkOption name="enableOpenTelemetrySetup" type='boolean' defaultValue='false' availableSince='8.0.0'>
@@ -794,6 +834,16 @@ Sentry.init({
 By default, the SDK does not set up OpenTelemetry and ignores spans created with the OpenTelemetry API. Set this option to `true` to register the Sentry OpenTelemetry tracer provider, so that the SDK sends spans created with `@opentelemetry/api` to Sentry.
 
 Do not set this option if you use your own OpenTelemetry setup. Instead, add `Sentry.openTelemetryIntegration()` to link Sentry events to your OpenTelemetry spans.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.node"]}>
+
+<SdkOption name="enableRuntimeChannelInjection" type="boolean" defaultValue="true" availableSince="11.0.0">
+
+Controls whether the SDK installs runtime hooks that instrument supported dependencies as they load. Set this to `false` if all required instrumentation is handled at build time.
 
 </SdkOption>
 
