@@ -17,6 +17,7 @@ export type Parameter = {
     type: string;
     items?: {[key: string]: unknown};
   };
+  'x-sentry-experimental'?: boolean;
 };
 
 type Markdown = {
