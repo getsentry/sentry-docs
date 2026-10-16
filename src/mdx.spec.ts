@@ -45,6 +45,11 @@ describe('mdx', () => {
         getVersionedIndexPath('/', 'docs/platforms/javascript__v7/common', '.mdx')
       ).toBe('/docs/platforms/javascript/common/index__v7.mdx');
     });
+    test('handles windows backslashes in pathRoot and slug', () => {
+      expect(getVersionedIndexPath('C:\\dev\\sentry-docs', 'guide__v2', '.mdx')).toBe(
+        'C:/dev/sentry-docs/guide/index__v2.mdx'
+      );
+    });
   });
 
   describe('getVersionsFromDoc', () => {
