@@ -926,6 +926,10 @@ const userDocsRedirects = [
     destination: '/integrations/source-code-mgmt/github/',
   },
   {
+    source: '/integrations/source-code-mgmt/github-enterprise/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
     source: '/integrations/gitlab/',
     destination: '/integrations/source-code-mgmt/gitlab/',
   },
@@ -1139,14 +1143,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1183,11 +1179,19 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/aether/',
     destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/organization/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1235,6 +1239,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1267,6 +1275,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/clip-by-arito/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1295,6 +1307,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1316,10 +1332,6 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/superlog/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/synthreo/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1362,14 +1374,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1406,11 +1410,19 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/aether/',
     destination: '/integrations/third-party-integrations/',
   },
   {
     source: '/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1458,6 +1470,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1490,6 +1506,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/clip-by-arito/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1518,6 +1538,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1539,10 +1563,6 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/superlog/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/synthreo/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1933,6 +1953,29 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/:guide/sourcemaps/hosting-publicly/',
     destination:
       '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly',
+  },
+  // The Ionic Capacitor source maps page only exists for the Capacitor guide.
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
   },
   {
     source:
@@ -3228,12 +3271,67 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
+    source: '/product/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
   {
+    source: '/concepts/key-terms/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
+  },
+  {
     source: '/organization/integrations/shortcut/',
     destination: '/integrations/issue-tracking/shortcut/',
+  },
+  // Former span metrics pages now live in SDK instrumentation guides.
+  {
+    source: '/platforms/javascript/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/examples/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/python/metrics/',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
   },
   // Redirects for JavaScript tracing docs
   {
@@ -3242,17 +3340,18 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source: '/platforms/javascript/profiling/browser-profiling/',
@@ -3287,11 +3386,6 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/profiling/',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
-  },
-  {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
   },
@@ -3305,6 +3399,12 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
     destination:
       '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anr/event-loop-block/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/event-loop-block/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
@@ -3347,6 +3447,16 @@ const userDocsRedirects = [
     source:
       '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
     destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/troubleshooting/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
   },
   {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
