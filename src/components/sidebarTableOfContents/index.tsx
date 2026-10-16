@@ -127,6 +127,9 @@ export function SidebarTableOfContents() {
       return () => {};
     }
 
+    if (typeof MutationObserver === 'undefined') {
+      return () => {};
+    }
     const observer = new MutationObserver(() => {
       const newTocItems = getTocItems(main);
 
@@ -158,6 +161,9 @@ export function SidebarTableOfContents() {
   useEffect(() => {
     const innerHeight = window.innerHeight;
     if (!tocItems.length || !innerHeight) {
+      return () => {};
+    }
+    if (typeof IntersectionObserver === 'undefined') {
       return () => {};
     }
     // account for the header height

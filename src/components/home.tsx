@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {type ReactNode} from 'react';
+import {Fragment, type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
-import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import Cursor from 'sentry-docs/icons/cursor';
 import GitHub from 'sentry-docs/icons/github';
 import Jira from 'sentry-docs/icons/jira';
@@ -19,17 +18,10 @@ import {PlatformIcon} from './platformIcon';
 import {PreferredPlatformLink} from './preferredPlatformLink';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
-export async function Home() {
-  const rootNode = await getDocsRootNode();
-  const platforms = extractPlatforms(rootNode);
+export function Home() {
   return (
     <div className="tw-app">
-      <Header
-        pathname="/"
-        searchPlatforms={[]}
-        useStoredSearchPlatforms={false}
-        platforms={platforms}
-      />
+      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
       <main id="main">
         <div className="mt-[var(--header-height)]">
           <Banner />
@@ -167,31 +159,33 @@ export async function Home() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <AgentQuickLink
-              to="/agent-tracing/mastra/"
+              href="/platforms/javascript/guides/mastra/"
               title="Mastra"
               desc="Export Mastra AI tracing to Sentry."
               icon={<PlatformIcon platform="mastra" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/eve/"
+              href="/platforms/javascript/guides/eve/"
               title="Eve"
               desc="Send Eve agent traces, conversations, and errors to Sentry."
               icon={<PlatformIcon platform="eve" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/flue/"
+              href="/platforms/javascript/guides/flue/"
               title="Flue"
               desc="Send Flue traces, logs, and errors to Sentry."
               icon={<PlatformIcon platform="flue" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/vercelai/"
+              to="/configuration/integrations/vercelai/"
+              defaultPlatform="javascript.node"
               title="Vercel AI"
               desc="Instrument the Vercel AI SDK."
               icon={<PlatformIcon platform="vercel" />}
             />
             <AgentQuickLink
-              to="/agent-tracing/openai/"
+              to="/configuration/integrations/openai/"
+              defaultPlatform="javascript.node"
               title="OpenAI"
               desc="Instrument the OpenAI SDK."
               icon={<PlatformIcon platform="openai" />}
@@ -293,24 +287,52 @@ function QuickLink({
   );
 }
 
-function AgentQuickLink({
-  to,
-  title,
-  desc,
-  icon,
-}: {
+type AgentQuickLinkProps = {
   desc: string;
   icon: ReactNode;
   title: string;
-  to: string;
-}) {
-  return (
-    <PreferredPlatformLink to={to} className={`${styles.quickLink} no-underline`}>
+} & (
+  | {
+      /** Direct link, for integrations documented on a single page (e.g. standalone guides). */
+      href: string;
+      to?: never;
+    }
+  | {
+      /** Platform-relative path, resolved through `/platform-redirect/`. */
+      to: string;
+      /** Platform to use when the user hasn't picked one yet. */
+      defaultPlatform?: string;
+      href?: never;
+    }
+);
+
+function AgentQuickLink(props: AgentQuickLinkProps) {
+  const className = `${styles.quickLink} no-underline`;
+  const content = (
+    <Fragment>
       <div className={styles.quickLinkTitle}>
-        {icon}
-        {title}
+        {props.icon}
+        {props.title}
       </div>
-      <div className="text-sm text-[var(--gray-11)] leading-snug">{desc}</div>
+      <div className="text-sm text-[var(--gray-11)] leading-snug">{props.desc}</div>
+    </Fragment>
+  );
+
+  if (props.href !== undefined) {
+    return (
+      <Link href={props.href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <PreferredPlatformLink
+      to={props.to}
+      defaultPlatform={props.defaultPlatform}
+      className={className}
+    >
+      {content}
     </PreferredPlatformLink>
   );
 }

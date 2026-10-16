@@ -12,7 +12,7 @@ og_image: /og-images/product-issues-ownership-rules.png
 Sentry lets you define the "ownership" of an issue so it can automatically assign issues and route alerts to the right people. There are two ways to define ownership:
 
 - **Ownership rules** - Custom rules you define per project that match issues based on file paths, URLs, modules, or event tags.
-- **Code owners** - Import your [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) or [GitLab](https://docs.gitlab.com/ee/user/project/code_owners.html) CODEOWNERS file to assign issues based on file paths in the event stack trace.
+- **Code owners** - Import a CODEOWNERS file from a [supported source code integration](#supported-integrations) to assign issues based on file paths in the event stack trace.
 
 Ownership rules take precedence over code owners when Sentry assigns issues.
 
@@ -78,11 +78,25 @@ During import, select the code mapping Sentry should apply to the CODEOWNERS fil
 
 If the project has multiple code mappings for the same repository, import the CODEOWNERS file once for each mapping you need. When you update a selected code mapping, Sentry rebuilds the CODEOWNERS rules tied to it.
 
+### Supported Integrations
+
+Sentry supports importing CODEOWNERS files from these source code integrations:
+
+- [Azure DevOps](/integrations/source-code-mgmt/azure-devops/)
+- [Bitbucket](/integrations/source-code-mgmt/bitbucket/)
+- [Bitbucket Server](/integrations/source-code-mgmt/bitbucket/#bitbucket-server)
+- [Cursor Origin](/integrations/source-code-mgmt/cursor-origin/#code-owners)
+- [GitHub](/integrations/source-code-mgmt/github/)
+- [GitHub Enterprise](/integrations/source-code-mgmt/github/#installing-github-enterprise)
+- [GitLab](/integrations/source-code-mgmt/gitlab/)
+
+For Azure DevOps, Bitbucket, and Bitbucket Server, use Sentry user email addresses as owners in your CODEOWNERS file. External username and team mappings aren't supported for these integrations.
+
 ### Setting Up Code Owners
 
 1. Set up [code mappings](/integrations/source-code-mgmt/github/#stack-trace-linking) for your project.
 2. Import your CODEOWNERS file from your project's [Ownership Rules](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/ownership/) settings and select the code mapping to apply.
-3. Configure [external team/user mappings](#external-teamuser-mappings) to map your source control identities to Sentry users and teams.
+3. If your CODEOWNERS file uses usernames or team names, configure [external team/user mappings](#external-teamuser-mappings) to map your source control identities to Sentry users and teams. Email addresses are matched directly to users in your Sentry organization.
 
 ### Supported Syntax
 
@@ -92,9 +106,9 @@ Sentry does not support [GitLab CODEOWNERS syntax](https://docs.gitlab.com/user/
 
 ### External Team/User Mappings
 
-You need to map identities from your source control provider to Sentry users and teams so that CODEOWNERS rules can be resolved. Sentry automatically ignores rules that are missing team/user mappings.
+For GitHub, GitHub Enterprise, GitLab, and Cursor Origin, map usernames and team names from your source control provider to Sentry users and teams so that CODEOWNERS rules can be resolved. Sentry automatically ignores rules that are missing team/user mappings.
 
-Create these mappings by navigating to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) **> GitHub/GitLab > [Configuration] > Team Mappings/User Mappings**. Suggestions will come from any CODEOWNERS files on projects for the organization.
+To create these mappings, go to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/), select your source code integration, and open **Configuration > Team Mappings/User Mappings**. Suggestions will come from any CODEOWNERS files on projects for the organization.
 
 ![External team mappings for GitHub/Gitlab](./img/external_team_mappings.png)
 

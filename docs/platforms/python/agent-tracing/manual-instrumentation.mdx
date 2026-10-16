@@ -261,6 +261,136 @@ Marking failed tools with an error status populates the Tool Errors widget.
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
 
+## Decision Span
+
+This span represents a decision on generated content against a set of questions, such as grading a model's reply for accuracy or tone. Models like <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Jev</PlatformLink> produce these spans.
+
+Sentry identifies a decision by `gen_ai.operation.name: "decide"`. Decisions share the `ai_client` operation type with ordinary LLM calls, so the operation name is what sets them apart.
+
+```python
+import json
+import sentry_sdk
+
+questions = {
+    "resolves_issue": {
+        "type": "boolean",
+        "instructions": "Does the reply resolve the customer's issue?",
+    },
+    "accuracy": {
+        "type": "score",
+        "instructions": "Does the reply correctly answer the user's question?",
+        # For a score question, criteria is an ordered list; the index is the score.
+        "criteria": ["incorrect", "partially correct", "correct"],
+    },
+    "tone": {
+        "type": "choice",
+        "instructions": "Classify the tone of the reply.",
+        # For a choice question, criteria maps each label to its description.
+        "criteria": {
+            "friendly": "Warm and helpful",
+            "neutral": "Plain and factual",
+            "rude": "Dismissive or hostile",
+        },
+    },
+}
+
+evaluation_input = [
+    {
+        "type": "evaluation",
+        "state": "Your refund has been processed and will arrive in 3-5 days.",
+        "questions": questions,
+    }
+]
+
+with sentry_sdk.start_span(
+    op="gen_ai.decide",
+    name="decide typesafe/jev-1.13",
+    attributes={
+        "gen_ai.operation.name": "decide",
+        "gen_ai.request.model": "typesafe/jev-1.13",
+        "gen_ai.provider.name": "typesafe",
+        "gen_ai.agent.name": "Support Agent",  # when this evaluation runs under an agent
+        "gen_ai.input.messages": json.dumps(evaluation_input),
+    },
+) as span:
+    result = your_evaluator.evaluate(state=evaluation_input[0]["state"], questions=questions)
+
+    span.set_data("gen_ai.response.model", result.model)  # e.g. "typesafe/jev-1.13-20260917"
+    span.set_data("gen_ai.output.messages", json.dumps([
+        {
+            "type": "evaluation",
+            "answers": {
+                "resolves_issue": {"type": "boolean", "probability": 0.98},
+                "accuracy": {"type": "score", "score": 2, "confidence": 0.91},
+                "tone": {
+                    "type": "choice",
+                    "choice": "friendly",
+                    "probabilities": {"friendly": 0.87, "neutral": 0.1, "rude": 0.03},
+                    "confidence": 0.87,
+                },
+            },
+        }
+    ]))
+    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
+```
+
+The input is a single `{"type": "evaluation", "state": ..., "questions": ...}` object. `state` is the text being evaluated, and each entry in `questions` describes one question. The output is a single `{"type": "evaluation", "answers": ...}` object keyed by those same question names. Answers come in a few types (`boolean`, `noul`, `score`, and `choice`), each with its own fields. See the attributes below for the full shape.
+
+Pass the raw provider model string in `gen_ai.request.model` (and `gen_ai.response.model`) so Sentry can resolve the model icon and any [model costs](/product/agents/costs/).
+
+<Alert>
+
+If you call Jev through the <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Python SDK</PlatformLink>, these spans are created automatically, so you don't need to instrument them by hand.
+
+</Alert>
+
+<Expandable title="Decision span attributes">
+  <Include name="tracing/ai-agents-module/evaluation-span" />
+</Expandable>
+
+## Memory Span
+
+This span represents a read from, write to, or management operation against an agent's persistent memory store, such as retrieving relevant memories before a model call or saving new ones after it.
+
+Sentry identifies a memory operation by the `gen_ai.memory.client` span op. The specific action goes in `gen_ai.operation.name`, and the span `name` matches it.
+
+```python
+import json
+import sentry_sdk
+
+query = "user dietary preferences"
+
+with sentry_sdk.start_span(
+    op="gen_ai.memory.client",
+    name="search_memory",
+    attributes={
+        "gen_ai.operation.name": "search_memory",
+        "gen_ai.memory.store.id": "user-preferences-store",
+        "gen_ai.agent.name": "Support Agent",  # when the operation runs under an agent
+        "gen_ai.memory.query.text": query,  # opt-in; may contain sensitive data
+    },
+) as span:
+    records = memory_store.search(query)
+
+    span.set_data("gen_ai.memory.record.count", len(records))
+    # opt-in; may contain sensitive data
+    span.set_data("gen_ai.memory.records", json.dumps([
+        {"id": record.id, "content": record.content, "score": record.score}
+        for record in records
+    ]))
+```
+
+Set `gen_ai.operation.name` to the action: `search_memory` to retrieve records, `create_memory` / `update_memory` / `upsert_memory` to write them, `delete_memory` to remove them, and `create_memory_store` / `delete_memory_store` to manage the store itself.
+
+`gen_ai.memory.query.text` applies only to `search_memory`. When an operation targets a single record, set `gen_ai.memory.record.id`; on `delete_memory`, omitting it can mean every record in the store is removed. `gen_ai.memory.record.count` is the number of records returned, written, or deleted.
+
+`gen_ai.memory.query.text` and `gen_ai.memory.records` can carry user data and PII, so they are opt-in. Omit them, or gate them yourself, when you don't want that content in Sentry.
+
+<Expandable title="Memory span attributes">
+  <Include name="tracing/ai-agents-module/memory-span" />
+</Expandable>
+
 ## Streaming Responses
 
 When the model streams tokens, keep the span open until the stream finishes (including when you yield chunks to the client). Set response attributes when you have the final usage and text:
