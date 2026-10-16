@@ -49,14 +49,31 @@ By default, tracing support is added to the following `ai` functions:
 
 - `generateText()`
 - `streamText()`
-- `generateObject()`
-- `streamObject()`
+- `generateObject()` — on AI SDK v6 and below
+- `streamObject()` — on AI SDK v6 and below
 - `embed()`
 - `embedMany()`
 - `rerank()`
 - `experimental_decide()` — requires Sentry SDK `11.7.0` or higher and AI SDK `7.0.128` or higher
 
 Plus `generate()` and `stream()` on [`ToolLoopAgent`](https://ai-sdk.dev/docs/agents/overview#toolloopagent-class).
+
+<Alert>
+
+On AI SDK v7, `generateObject()` and `streamObject()` don't produce spans. The AI SDK deprecated both in v6 and doesn't emit telemetry events for them in v7. Use `generateText()` or `streamText()` with an `output` setting instead, which Sentry traces like any other call. The [AI SDK migration guide](https://ai-sdk.dev/docs/migration-guides/migration-guide-6-0) covers the change.
+
+```javascript
+import { generateText, Output } from "ai";
+import { z } from "zod";
+
+const { output } = await generateText({
+  model,
+  output: Output.object({ schema: z.object({ name: z.string() }) }),
+  prompt: "Return a city name",
+});
+```
+
+</Alert>
 
 ## Trace Jev Decisions
 
