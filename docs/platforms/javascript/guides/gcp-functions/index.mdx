@@ -1,6 +1,6 @@
 ---
 title: Google Cloud Functions
-description: "Learn how to manually set up Sentry in your Google Cloud Functions and capture your first errors."
+description: "Learn how to manually set up Sentry in your Google Cloud Functions and capture your first events."
 sdk: sentry.javascript.google-cloud-serverless
 fallbackGuide: javascript.node
 categories:
@@ -26,157 +26,156 @@ categories:
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Run the command for your preferred package manager to add the Sentry SDK to your application:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 <PlatformContent includePath="getting-started-install" />
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Configure
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**.
+
+<Include name="quick-start-features-expandable" />
 
 Make sure to initialize Sentry at the top of your function code and wrap each function with the appropriate helper. Select the tab that matches the kind of function you're using (HTTP, Background, or CloudEvent):
 
-</SplitSectionText>
-<SplitSectionCode>
+The snippet also turns on:
 
-<PlatformContent includePath="getting-started-config" />
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink>, <PlatformLink to="/configuration/options/#profileLifecycle">`profileLifecycle`</PlatformLink>, and the profiling integration
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+Don't need a feature? Remove its integration and options from the snippet.
 
-### Add Readable Stack Traces With Source Maps (Optional)
+```javascript {tabTitle:Http functions} {mdExpandTabs}
+const Sentry = require("@sentry/google-cloud-serverless");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enables Profiling
+    nodeProfilingIntegration(),
+  ],
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+  // Enables Profiling for every session.
+  profileSessionSampleRate: 1.0,
+  profileLifecycle: "trace",
+});
+
+exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
+  throw new Error("oh, hello there!");
+});
+```
+
+```javascript {tabTitle:Background functions}
+const Sentry = require("@sentry/google-cloud-serverless");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enables Profiling
+    nodeProfilingIntegration(),
+  ],
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+  profileSessionSampleRate: 1.0,
+  profileLifecycle: "trace",
+});
+
+exports.helloEvents = Sentry.wrapEventFunction((data, context, callback) => {
+  throw new Error("oh, hello there!");
+});
+```
+
+```javascript {tabTitle:CloudEvent functions}
+const Sentry = require("@sentry/google-cloud-serverless");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enables Profiling
+    nodeProfilingIntegration(),
+  ],
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+  profileSessionSampleRate: 1.0,
+  profileLifecycle: "trace",
+});
+
+exports.helloEvents = Sentry.wrapCloudEventFunction((context, callback) => {
+  throw new Error("oh, hello there!");
+});
+```
+
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. Logs are enabled by default in JavaScript SDK `10.71.0` and later; earlier versions require `enableLogs: true` in `Sentry.init()`.
+
+If you already use `console`, Pino, Winston, or Consola, you can send those logs with the <PlatformLink to="/logs/#console-integration">console</PlatformLink>, <PlatformLink to="/logs/#pino-integration">Pino</PlatformLink>, <PlatformLink to="/logs/#winston-integration">Winston</PlatformLink>, or <PlatformLink to="/logs/#consola-integration">Consola</PlatformLink> integrations.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```javascript
+Sentry.logger.info("User example action completed");
+
+Sentry.logger.warn("Slow operation detected", {
+  operation: "data_fetch",
+  duration: 3500,
+});
+
+Sentry.logger.error("Validation failed", {
+  form_field: "email",
+  reason: "Invalid email",
+});
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. Metrics are supported in JavaScript SDK `10.25.0` and later and need no extra configuration beyond SDK initialization.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```javascript
+Sentry.metrics.count("checkout.failed", 1);
+
+Sentry.metrics.gauge("time_since_refresh", 4, { unit: "hour" });
+
+Sentry.metrics.distribution("api_latency", 187, {
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders" },
+});
+```
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add an intentional error to a wrapped function, then invoke it to verify that Sentry captures the error:
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Let's verify that Sentry captures errors and creates issues in your Sentry project. Add an intentional error in your function:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {tabTitle:Http functions} {mdExpandTabs}
+```javascript
 exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
-  throw new Error("Sentry Test Error - This is intentional!");
+  throw new Error("Sentry Test Error");
 });
 ```
-
-```javascript {tabTitle:Background functions}
-exports.helloBackground = Sentry.wrapEventFunction(
-  (data, context, callback) => {
-    throw new Error("Sentry Test Error - This is intentional!");
-  }
-);
-```
-
-```javascript {tabTitle:CloudEvent functions}
-exports.helloEvents = Sentry.wrapCloudEventFunction((context, callback) => {
-  throw new Error("Sentry Test Error - This is intentional!");
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-### Tracing
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test tracing, wrap your code in a span:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {tabTitle:Http functions} {mdExpandTabs}
-exports.helloHttp = Sentry.wrapHttpFunction(async (req, res) => {
-  await Sentry.startSpan(
-    { op: "test", name: "My First Test Transaction" },
-    async () => {
-      // Simulate some work
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  );
-
-  res.status(200).send("Success!");
-});
-```
-
-```javascript {tabTitle:Background functions}
-exports.helloBackground = Sentry.wrapEventFunction(async (data, context) => {
-  await Sentry.startSpan(
-    { op: "test", name: "My First Test Transaction" },
-    async () => {
-      // Simulate some work
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  );
-});
-```
-
-```javascript {tabTitle:CloudEvent functions}
-exports.helloEvent = Sentry.wrapCloudEventFunction(async (context) => {
-  await Sentry.startSpan(
-    { op: "test", name: "My First Test Transaction" },
-    async () => {
-      // Simulate some work
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  );
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -186,14 +185,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Google Cloud Platform functions, which should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Google Cloud Functions application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/tracing/">Explore Tracing</PlatformLink> to learn how to inspect application performance
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
