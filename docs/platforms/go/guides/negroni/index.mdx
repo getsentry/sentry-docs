@@ -57,7 +57,7 @@ app.Use(sentrynegroni.New(sentrynegroni.Options{
 app := negroni.Classic()
 
 app.Use(sentrynegroni.New(sentrynegroni.Options{
-// specify options here...
+	// specify options here...
 }))
 
 // Set up routes
@@ -65,8 +65,8 @@ mux := http.NewServeMux()
 
 mux.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 	// capturing an error intentionally to simulate usage
-	sentry.CaptureMessage("It works!")
-	
+	sentry.CaptureMessage(r.Context(), "It works!")
+
 	fmt.Fprintf(rw, "Hello world!")
 })
 
@@ -78,13 +78,9 @@ http.ListenAndServe(":3000", app)
 
 ## Usage
 
-`sentrynegroni` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
-You can access it by using the `sentry.GetHubFromContext()` method on the request itself in any of your proceeding middleware and routes.
-And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException`, or any other calls, as it keeps the separation of data between the requests.
+`sentrynegroni` forks a scope for each request. Use `r.Context()` to get the request's Go context.
 
-<PlatformContent includePath="tracing/automatic-instrumentation/middleware-note" />
-
-**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentrynegroni`!**
+<Include name="go/request-scope-usage" />
 
 ```go
 app := negroni.Classic()
@@ -94,24 +90,23 @@ app.Use(sentrynegroni.New(sentrynegroni.Options{
 }))
 
 app.Use(negroni.HandlerFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	hub := sentry.GetHubFromContext(r.Context())
-	hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+	if scope := sentry.ScopeFromContext(r.Context()); scope != nil {
+		scope.SetTag("someRandomTag", "maybeYouNeedIt")
+	}
 	next(rw, r)
 }))
 
 mux := http.NewServeMux()
 
 mux.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
-	hub.WithScope(func(scope *sentry.Scope) {
-		scope.SetAttributes(attribute.String("unwantedQuery", "someQueryDataMaybe"))
-		hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-	})
+	captureCtx, scope := sentry.WithScope(r.Context())
+	scope.SetContext("query", sentry.Context{"unwanted": "someQueryDataMaybe"})
+	sentry.CaptureMessage(captureCtx, "User provided unwanted query string, but we recovered just fine")
 	rw.WriteHeader(http.StatusOK)
 })
 
 mux.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
-	// sentrynagroni handler will catch it just fine. Also, because we attached "someRandomTag"
+	// sentrynegroni handler will catch it just fine. Also, because we attached "someRandomTag"
 	// in the middleware before, it will be sent through as well
 	panic("y tho")
 })

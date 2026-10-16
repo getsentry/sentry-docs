@@ -38,30 +38,36 @@ go get github.com/getsentry/sentry-go/slog
 
 ## Verify
 
-This example sends selected records as structured logs.
+This example sends `INFO`, `WARN`, and `ERROR` records as structured logs. Capture an error event separately with `sentry.CaptureException(ctx, err)` when needed.
 
 ```go
 package main
 
 import (
-    "context"
-    "log/slog"
+	"context"
+	"log/slog"
+	"time"
 
-    sentryslog "github.com/getsentry/sentry-go/slog"
+	"github.com/getsentry/sentry-go"
+	sentryslog "github.com/getsentry/sentry-go/slog"
 )
 
 func main() {
-    ctx := context.Background()
-    handler := sentryslog.Option{
-        LogLevel:   []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError},
-        AddSource:  true,
-    }.NewSentryHandler(ctx)
+	if err := sentry.Init(sentry.ClientOptions{Dsn: "___PUBLIC_DSN___"}); err != nil {
+		panic(err)
+	}
+	defer sentry.Flush(2 * time.Second)
+	ctx, _ := sentry.WithScope(context.Background())
+	handler := sentryslog.Option{
+		LogLevel:  []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError},
+		AddSource: true,
+	}.NewSentryHandler(ctx)
 
-    logger := slog.New(handler)
+	logger := slog.New(handler)
 
-    logger.Info("Application started", "service", "image-processor")
-    logger.Warn("Cache miss", "key", "thumbnail:123")
-    logger.Error("Image processing failed", "image_id", "img_123")
+	logger.InfoContext(ctx, "Application started", "service", "image-processor")
+	logger.WarnContext(ctx, "Cache miss", "key", "thumbnail:123")
+	logger.ErrorContext(ctx, "Image processing failed", "image_id", "img_123")
 }
 ```
 
@@ -73,25 +79,33 @@ If you also want to keep writing logs somewhere else, Go 1.26+ includes `slog.Ne
 package main
 
 import (
-    "context"
-    "log/slog"
-    "os"
+	"context"
+	"log/slog"
+	"os"
+	"time"
 
-    sentryslog "github.com/getsentry/sentry-go/slog"
+	"github.com/getsentry/sentry-go"
+	sentryslog "github.com/getsentry/sentry-go/slog"
 )
 
 func main() {
-    ctx := context.Background()
+	if err := sentry.Init(sentry.ClientOptions{Dsn: "___PUBLIC_DSN___"}); err != nil {
+		panic(err)
+	}
+	defer sentry.Flush(2 * time.Second)
+	ctx, _ := sentry.WithScope(context.Background())
 
-    sentryHandler := sentryslog.Option{
-        LogLevel: []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError},
-    }.NewSentryHandler(ctx)
+	sentryHandler := sentryslog.Option{
+		LogLevel: []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError},
+	}.NewSentryHandler(ctx)
 
-    textHandler := slog.NewTextHandler(os.Stdout, nil)
+	textHandler := slog.NewTextHandler(os.Stdout, nil)
 
-    logger := slog.New(slog.NewMultiHandler(sentryHandler, textHandler))
-    logger.Info("Application started", "service", "image-processor")
+	logger := slog.New(slog.NewMultiHandler(sentryHandler, textHandler))
+	logger.InfoContext(ctx, "Application started", "service", "image-processor")
 }
 ```
 
 <Include name="logs/go-ctx-usage-alert.mdx" />
+
+`AttrFromContext` functions receive the context supplied to the log call. Use `InfoContext`, `ErrorContext`, or another context-aware method when extractors need request values; ordinary `Info` and `Error` calls do not inherit those values from the handler's construction context.
