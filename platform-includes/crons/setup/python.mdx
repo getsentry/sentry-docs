@@ -2,6 +2,43 @@
 
 If you're using **Celery Beat** to run your periodic tasks, have a look at our [Celery Beat Auto Discovery documentation](/platforms/python/integrations/celery/crons/).
 
+### arq
+
+<Alert>
+
+Crons monitoring for arq ships in the next release of `sentry-sdk`.
+
+</Alert>
+
+If you're using [arq](/platforms/python/integrations/arq/), set `monitor_cron_jobs=True` to capture check-ins for the cron jobs in your worker's `cron_jobs`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.arq import ArqIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        ArqIntegration(
+            monitor_cron_jobs=True,
+            # optional: regular expressions for cron jobs to skip
+            exclude_cron_jobs=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+from arq import cron
+
+class WorkerSettings:
+    cron_jobs = [
+        cron(send_report, hour=9, minute=0),
+    ]
+```
+
+The monitor slug is the cron job's `name`, without arq's `cron:` prefix, so the example above reports to `send_report`. Sentry creates the monitor from the job's `month`, `day`, `weekday`, `hour`, and `minute` in the worker's `timezone`. For schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), jobs that set both `day` and `weekday`, and time zones with a fixed offset that isn't a whole number of hours, the SDK sends check-ins without a monitor config, and you need to create the monitor in Sentry with the same slug.
+
 ## Job Monitoring
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
