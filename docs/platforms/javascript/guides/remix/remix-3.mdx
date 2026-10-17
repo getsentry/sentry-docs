@@ -16,14 +16,7 @@ Remix 3 has no build step: the asset server compiles browser modules per request
 
 ## Install
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Install the SDK. It requires Remix 3.0.0 or later and Node 20.19 or later.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/remix
@@ -37,22 +30,11 @@ yarn add @sentry/remix
 pnpm add @sentry/remix
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure the Server
 
 ### Start With the Sentry Entry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Start the app with `--import @sentry/remix/v3/node` instead of `--import remix/node-tsx`. The Sentry entry registers the module hook before your app's modules are imported, then loads `remix/node-tsx` for you.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```json {filename:package.json}
 {
@@ -62,22 +44,11 @@ Start the app with `--import @sentry/remix/v3/node` instead of `--import remix/n
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Initialize the SDK
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Call `init()` in your server entry.
 
 Each request gets a span named after the matched route pattern. Errors thrown in route handlers, middleware and the request listener are reported. Requests the client aborted are not, and neither are thrown responses with a status from 300 to 499. Pass `shouldHandleError` to `remixV3Integration()` to change that.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```ts {filename:server.ts}
 import * as Sentry from "@sentry/remix/v3";
@@ -97,24 +68,13 @@ http
   .listen(3000);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure the Browser
 
 ### Allow the SDK in the Asset Server
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add `@sentry/remix` to `allowPackages` so the asset server can serve the SDK to the browser.
 
 There is no build step to inline environment variables, so use `define` to get the DSN into browser modules. The asset server substitutes these values when it compiles a module.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```ts {filename:app/assets.ts}
 import { createAssetServer } from "remix/assets";
@@ -132,22 +92,11 @@ export const assets = createAssetServer({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Initialize the SDK
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Call `init()` in your browser entry, before `run()`.
 
 Page loads and navigations get a span each. Errors thrown while a component renders are reported; the Remix runtime does not rethrow those, so nothing else would see them.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```ts {filename:app/entry.ts}
 import * as Sentry from "@sentry/remix/v3/client";
@@ -167,30 +116,15 @@ export const app = run({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Upload Source Maps
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Browser modules served by the asset server carry debug IDs, so stack traces are symbolicated once the source maps are uploaded. Remix 3 has no build output to upload, so the SDK ships a command that compiles the browser module graph through your asset server and uploads it.
 
 Run it from your deploy pipeline, with the same code and configuration the server runs. The debug IDs are hashed from the compiled source, so what is uploaded matches what the running server serves.
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```bash
 node --import @sentry/remix/v3/node ./node_modules/.bin/sentry-remix-v3-upload-sourcemaps --entry app/entry.ts --project ___PROJECT_SLUG___
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 The command reads `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` from the environment, and proposes the release from your git history. A project is required: pass `--project` or set `SENTRY_PROJECT`. Pass `--org` or `--release` to set those yourself.
 
