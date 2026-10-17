@@ -46,6 +46,47 @@ Pass `nil` as the last argument to use the default monitor settings. Specs Sentr
 
 With the default `time.Local` location, the timezone comes from `$TZ` or `/etc/localtime`. If that isn't an IANA name, such as `America/New_York`, only check-ins are sent, so set the schedule in Sentry or use `cron.WithLocation`.
 
+### asynq
+
+If you schedule periodic tasks with [asynq](https://github.com/hibiken/asynq), install the package:
+
+```bash
+go get github.com/getsentry/sentry-go/asynq
+```
+
+On the scheduler, wrap your `PeriodicTaskConfigProvider` with `sentryasynq.NewConfigProvider` to monitor every periodic task. Each task type becomes a monitor slug, and the task's cronspec and the scheduler's location become the monitor schedule and timezone. On the workers, add `sentryasynq.Middleware`, which sends the check-ins around each periodic task:
+
+```go
+import (
+	"time"
+
+	"github.com/hibiken/asynq"
+	sentryasynq "github.com/getsentry/sentry-go/asynq"
+)
+
+// Scheduler
+mgr, err := asynq.NewPeriodicTaskManager(asynq.PeriodicTaskManagerOpts{
+	RedisConnOpt: redis,
+	PeriodicTaskConfigProvider: sentryasynq.NewConfigProvider(provider, sentryasynq.Options{
+		// Same as asynq.SchedulerOpts.Location. Defaults to UTC.
+		Location: time.UTC,
+		Exclude:  []string{"<task-type>"},
+	}),
+})
+
+// Workers
+mux := asynq.NewServeMux()
+mux.Use(sentryasynq.Middleware)
+```
+
+With a plain `asynq.Scheduler`, mark each task with `sentryasynq.WithMonitor` before registering it:
+
+```go
+scheduler.Register("0 * * * *", sentryasynq.WithMonitor(task, "<monitor-slug>", "0 * * * *", sentryasynq.Options{}))
+```
+
+`Exclude` skips task types by exact name, and `ExcludePatterns` by regular expression. Periodic tasks that share a task type aren't monitored by `NewConfigProvider`, so give them their own slugs with `sentryasynq.WithMonitor`. Pass task options to `Register` instead of `asynq.NewTask`, since a task created with options can't be marked. Schedules that can't be expressed in the Crons schedule format (for example, a task that runs every 10 seconds) send check-ins without creating the monitor. The asynq integration ships in the next release of `sentry-go`.
+
 ### Manual Check-Ins
 
 To send check-ins yourself, call `sentry.CaptureCheckIn` at the start and end of your job. Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
