@@ -75,6 +75,39 @@ def send_report():
 
 The monitor slug is the task's name, which defaults to the function name. Sentry creates the monitor from the task's `crontab()` schedule in UTC. For periodic tasks with a custom schedule function, crontabs that set both `day` and `day_of_week`, and Huey instances created with `utc=False`, the SDK sends check-ins without a monitor config, and you need to create the monitor in Sentry with the same slug.
 
+### RQ
+
+<Alert>
+
+Crons monitoring for RQ ships in the next release of `sentry-sdk`.
+
+</Alert>
+
+If you're using [RQ](/platforms/python/integrations/rq/) with [rq-scheduler](https://github.com/rq/rq-scheduler), set `monitor_cron_jobs=True` in your workers to capture check-ins for recurring jobs:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.rq import RqIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        RqIntegration(
+            monitor_cron_jobs=True,
+            # optional: regular expressions for jobs to skip
+            exclude_cron_jobs=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+scheduler.cron("0 9 * * *", func=send_report, id="send-report")
+scheduler.schedule(datetime.now(timezone.utc), sync_accounts, interval=600, id="sync-accounts")
+```
+
+The monitor slug is the job's `id`. Without an `id`, rq-scheduler generates a new one each time the job is scheduled, so the SDK uses the function's import path instead. Sentry creates the monitor from `cron()` jobs and from `schedule()` jobs whose `interval` is a whole number of minutes. rq-scheduler runs cron strings in the system's local time, so they're only sent when the worker's time zone is UTC. For other time zones, schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), and jobs with `repeat`, the SDK sends check-ins without a monitor config, and you need to create the monitor in Sentry with the same slug. One-off jobs from `enqueue_at` and `enqueue_in` aren't monitored.
+
 ## Job Monitoring
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
