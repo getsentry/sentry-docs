@@ -160,3 +160,25 @@ schedule.scheduleJob(
 The monitor slug is the job name. Jobs without a name, and jobs that run once at a `Date`, aren't monitored. `excludeJobs` skips jobs whose name matches a string exactly or a regular expression.
 
 For cron strings, each check-in sends the schedule and time zone (your server's time zone if `tz` isn't set). Recurrence rules, and schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), check in without a monitor config, so create those monitors in Sentry first.
+
+### Graphile Worker
+
+Requires SDK version `11.5.0` or higher and `graphile-worker` version `0.16.0` or higher.
+
+Use `Sentry.graphileWorkerIntegration` to monitor the jobs that the [`graphile-worker`](https://www.npmjs.com/package/graphile-worker) crontab schedules:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.graphileWorkerIntegration({
+      monitorCronJobs: true,
+      excludeCronJobs: ["cleanup", /^dev_/], // Optional.
+    }),
+  ],
+});
+```
+
+The monitor slug is the crontab item's identifier: its `id` option, or the task name if there's no `id`. `excludeCronJobs` skips items whose identifier matches a string exactly or a regular expression. Jobs are monitored by a process that runs the crontab, which `run()` does by default.
+
+Check-ins are sent without a schedule, so create the monitors in Sentry first.
