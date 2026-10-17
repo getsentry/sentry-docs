@@ -45,6 +45,36 @@ cronWithCheckIn.schedule(
 );
 ```
 
+#### Monitor All Named Tasks
+
+Requires SDK version `11.5.0` or higher.
+
+Instead of wrapping `node-cron`, you can add `nodeCronIntegration` to monitor every task that has a `name`, without changing how you import `node-cron`:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.nodeCronIntegration({
+      excludeJobs: ["cleanup-temp-files", /^debug-/], // Optional.
+    }),
+  ],
+});
+```
+
+```JavaScript
+import cron from "node-cron";
+
+cron.schedule("0 9 * * 1-5", sendReport, {
+  name: "daily-report",
+  timezone: "Europe/Vienna",
+});
+```
+
+The monitor slug is the task's `name`. Tasks without a `name` aren't monitored. `excludeJobs` skips tasks whose name matches a string exactly or a regular expression.
+
+Each check-in sends the task's schedule and time zone (your server's time zone if `timezone` isn't set). Schedules that can't be expressed in the Crons schedule format (for example, a task that runs every 10 seconds) check in without a monitor config, so create those monitors in Sentry first.
+
 ### Node Schedule
 
 Requires SDK version `7.93.0` or higher.
