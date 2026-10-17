@@ -56,3 +56,27 @@ The monitor is created, and billed, on the first run. Each check-in overwrites t
 A six-field expression is sent without its seconds field if that field is a single number, such as `0 30 9 * * *`. Presets such as `@daily` and `@weekly` are sent too. Sub-minute schedules, `Date` values, `utcOffset`, month numbers (use names such as `MAY`; steps such as `*/3` work), a `*/n` or full-range day field (such as `1-31`) combined with the other day field, and time zones that aren't IANA names send no monitor config, including any other options you pass. In those cases, pass a full monitor config to `@SentryCron` or create the monitor in Sentry first.
 
 To send check-ins without a monitor config, pass `{ fromCronDecorator: false }`.
+
+### Monitor All `@Cron` Methods
+
+<AvailableSince version="11.5.0" />
+
+To monitor every `@Cron` method without adding `@SentryCron` to each one, enable `monitorCronJobs` on the Nest integration:
+
+```typescript {filename:instrument.ts}
+import * as Sentry from "@sentry/nestjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.nestIntegration({
+      monitorCronJobs: true,
+      excludeCronJobs: ["cleanup-temp-files", /^Debug/], // Optional.
+    }),
+  ],
+});
+```
+
+The monitor slug is the `name` option of `@Cron`, or `ClassName.methodName` if there's no `name`. Set a `name` if your build minifies class names, so the slug doesn't change between deploys. `excludeCronJobs` skips jobs whose slug matches a string exactly or a regular expression.
+
+Each check-in sends the schedule and time zone of `@Cron`, as described above. Schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds) check in without a monitor config, so create those monitors in Sentry first. `@Cron` with a `Date` runs once and isn't monitored. Methods that also have `@SentryCron` keep the slug and options you pass to it.
