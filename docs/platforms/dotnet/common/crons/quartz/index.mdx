@@ -60,10 +60,10 @@ scheduler.ListenerManager.AddJobListener(new SentryJobListener());
 
 ## Choose Which Jobs to Monitor
 
-Add the `SentryCronMonitorSlug` attribute to each job class you want to monitor. Jobs without it aren't monitored, unless you [monitor all jobs](#monitor-all-jobs).
+Add the `SentryMonitorSlug` attribute to each job class you want to monitor. Jobs without it aren't monitored, unless you [monitor all jobs](#monitor-all-jobs).
 
 ```csharp
-[SentryCronMonitorSlug]
+[SentryMonitorSlug]
 public class PricingUpdateJob : IJob
 {
     // ...
@@ -78,7 +78,7 @@ The SDK doesn't capture the exceptions jobs throw. Quartz.NET logs them as error
 
 To monitor every scheduled job without adding the attribute to each class, set `MonitorAllJobs`. Jobs started by a cron trigger or a repeating simple trigger are then monitored. Runs started by a trigger that fires once, such as `TriggerJob`, and jobs built without `WithIdentity` aren't.
 
-To skip some jobs, add them to `ExcludedJobs`. A string matches a job whose name or full key (`group.name`) is equal to it, and a `Regex` matches a job whose name or full key it matches. Jobs with `[SentryCronMonitorSlug]` are monitored even when they match.
+To skip some jobs, add them to `ExcludedJobs`. A string matches a job whose name or full key (`group.name`) is equal to it, and a `Regex` matches a job whose name or full key it matches. Jobs with `[SentryMonitorSlug]` are monitored even when they match.
 
 ```csharp {tabTitle:Quartz.NET 4.x}
 q.AddSentry(options =>
@@ -102,7 +102,7 @@ These jobs use the slug of their job key, described below.
 To choose the slug, pass it to the attribute:
 
 ```csharp
-[SentryCronMonitorSlug("update-pricing")]
+[SentryMonitorSlug("update-pricing")]
 public class PricingUpdateJob : IJob
 ```
 
@@ -110,12 +110,12 @@ Without one, the slug is the job's key, `group.name`, or only the name for jobs 
 
 A job built without `WithIdentity` gets a new random name each time it's created, so the SDK uses the name of the job's class instead, such as `pricingupdatejob`, and logs a warning. Give the job an identity or a slug to keep its monitor the same. The SDK also logs a warning when two jobs use the same slug.
 
-To use a different slug for one job or trigger, set `SentryCronMonitorSlugAttribute.JobDataKey` in its data map:
+To use a different slug for one job or trigger, set `SentryMonitorSlugAttribute.JobDataKey` in its data map:
 
 ```csharp
 var job = JobBuilder.Create<PricingUpdateJob>()
     .WithIdentity("PricingUpdate", "billing")
-    .UsingJobData(SentryCronMonitorSlugAttribute.JobDataKey, "update-pricing")
+    .UsingJobData(SentryMonitorSlugAttribute.JobDataKey, "update-pricing")
     .Build();
 ```
 
@@ -131,7 +131,7 @@ Other triggers, triggers with a calendar, and time zones without an IANA ID (Win
 Sentry sets the monitor's schedule and time zone from every check-in that includes them, so changes you make to those two settings in Sentry are overwritten. Other monitor settings are kept. To stop sending the schedule for one job, set `SendMonitorConfig` on its attribute:
 
 ```csharp
-[SentryCronMonitorSlug(SendMonitorConfig = false)]
+[SentryMonitorSlug(SendMonitorConfig = false)]
 public class PricingUpdateJob : IJob
 ```
 
@@ -145,7 +145,7 @@ q.AddSentry(options => options.SendMonitorConfig = false);
 q.AddJobListener(_ => new SentryJobListener(new SentryQuartzOptions { SendMonitorConfig = false }));
 ```
 
-If you delete a monitor while its job still has `[SentryCronMonitorSlug]`, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute.
+If you delete a monitor while its job still has `[SentryMonitorSlug]`, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute.
 
 ## Monitor Settings
 
