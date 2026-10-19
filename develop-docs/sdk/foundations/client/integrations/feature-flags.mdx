@@ -11,7 +11,17 @@ spec_depends_on:
 spec_changelog:
   - version: 2.0.0
     date: 2026-10-19
-    summary: 'Migrated to Writing SDK Specs. Requirements now describe only externally observable behavior, exposing `add_feature_flag` is "SHOULD" instead of "MUST", and API names can follow platform conventions.'
+    summary: >-
+      Migrated to Writing SDK Specs. Requirements now describe only externally observable behavior, and API names can follow platform conventions.
+      Changed requirements: Feature Flag Context schema is "MUST" (was "should");
+      span attributes "MUST" use the flag.evaluation.<flag name> key (was "follow the existing span attribute schema");
+      attaching evaluations to error events and spans, the 100-flag and 10-flag limits, and fork behavior are "SHOULD" (were plain statements or "should");
+      exposing add_feature_flag is "SHOULD" (was "MUST");
+      accepting a string name and boolean result is "SHOULD" (was "MUST");
+      non-boolean results "MUST NOT" be recorded (was "MUST be rejected");
+      clear_feature_flags removes evaluations from events captured with the scope (was "stored on the current scope");
+      flag provider integrations "SHOULD" record every evaluation made through the provider (was "should hook into a third-party SDK").
+      Removed: evaluations being stored on the scope, and the comparison to set_tag.
   - version: 1.0.2
     date: 2026-07-07
     summary: Added `clear_feature_flags` scope API
@@ -57,7 +67,7 @@ When a scope is forked, events captured with the new scope **SHOULD** include th
 
 ### The `add_feature_flag` API
 
-SDKs **SHOULD** expose a public `add_feature_flag` function, or a platform-idiomatic equivalent such as `addFeatureFlag`, that records an evaluation on the current scope, the same way `set_tag` records a tag.
+SDKs **SHOULD** expose a public `add_feature_flag` function, or a platform-idiomatic equivalent such as `addFeatureFlag`, that records an evaluation on the current scope.
 
 The function **SHOULD** accept a string flag name and a boolean result. It **MUST NOT** record an evaluation whose result is not a boolean.
 
@@ -78,12 +88,6 @@ SDKs **MAY** expose a public `clear_feature_flags` function on the scope, or a p
 A flag provider integration **SHOULD** record every evaluation made through the flag provider on the current scope, as if `add_feature_flag` had been called with the flag name and result.
 
 </SpecSection>
-
-## Implementation Guidance
-
-_This section is non-normative._
-
-Most flag providers offer evaluation hooks or listeners, such as OpenFeature hooks. Integrations typically register one and call `add_feature_flag` from it, so scope and span tracking live in one place.
 
 ## Changelog
 
