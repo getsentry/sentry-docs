@@ -24,3 +24,4 @@ When you finish, briefly report:
 - Which guidelines version you followed.
 - Whether the page is legacy or conforming, and whether you set `spec_guidelines`.
 - Any pre-existing violations you found (or "none found").
+- For a migration: every requirement you added, removed, or whose level or meaning changed, so a reviewer can check each one.
