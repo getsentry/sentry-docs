@@ -1,13 +1,19 @@
 ---
 title: GraphQL
-description: Guidelines for GraphQL client integrations — error capture, performance instrumentation, breadcrumbs, and server/client differences.
+description: Requirements for GraphQL client and server integrations, covering error capture, request and response data, spans, and breadcrumbs.
 spec_id: sdk/foundations/client/integrations/graphql
-spec_version: 1.0.0
+spec_version: 2.0.0
 spec_status: stable
+spec_guidelines: writing-specs@0.1
 spec_depends_on:
   - id: sdk/foundations/client/integrations
     version: ">=1.0.0"
+  - id: sdk/foundations/client/integrations/http-client
+    version: ">=1.0.0"
 spec_changelog:
+  - version: 2.0.0
+    date: 2026-10-19
+    summary: 'Migrated to Writing SDK Specs. Requirements now describe only externally observable behavior, `request.api_target` is "MUST", the event `fingerprint` key is fixed, and breadcrumb `type` and `category` values moved to Implementation Guidance.'
   - version: 1.0.0
     date: 2025-02-24
     summary: Initial spec, extracted from expected features
@@ -18,175 +24,154 @@ sidebar_order: 2
 
 <SpecMeta />
 
-## Overview
+GraphQL integrations instrument GraphQL clients and servers, so users can see which GraphQL operation caused an error, a span, or a breadcrumb. GraphQL servers report errors in the response body, often with a successful HTTP status code, so HTTP instrumentation alone misses them.
 
-GraphQL client integrations should match the guidelines for [HTTP Client Integrations](/sdk/foundations/client/integrations/http-client/) with differences described below.
+## Scope
 
----
+This spec applies to SDK integrations that instrument a GraphQL client library or a GraphQL server library. Providing these integrations is optional.
 
-## Behavior
+## Definitions
 
-<SpecSection id="graphql-client-errors" status="stable" since="1.0.0">
+- **Client integration**: an integration that instruments GraphQL requests sent by the application.
+- **Server integration**: an integration that instruments GraphQL operations executed by the application.
+- **Operation**: a single GraphQL query, mutation, or subscription. It has an **operation type** (`query`, `mutation`, or `subscription`) and can have an **operation name** and an **operation ID**.
+- **Request payload**: the GraphQL request as defined by [GraphQL over HTTP](https://graphql.github.io/graphql-over-http/draft/#sec-Request), an object with `query` and, optionally, `operationName`, `variables`, and `extensions`.
+- **Response payload**: the GraphQL response as defined by the [GraphQL spec](https://spec.graphql.org/October2021/#sec-Response-Format), an object with `data`, `errors`, or both.
+- **GraphQL error**: an entry in the `errors` array of a response payload.
 
-### GraphQL Client Error Capture
+## Requirements
 
-The `failedRequestStatusCodes` parameter does not exist because GraphQL errors are not HTTP errors, so that the request can be errored even though the HTTP status code of the response is successful.
+<SpecSection id="graphql-http-client" status="stable" since="2.0.0">
 
-Instead, the error has to be captured if the GraphQL response contains an `errors` array. This can be done by regexing the response body, e.g.:
+### HTTP Client Behavior
 
-```kotlin
-val regex = "(?i)\"errors\"\\s*:\\s*\\[".toRegex()
+A client integration that sends requests over HTTP **SHOULD** behave as specified in [HTTP Client](/sdk/foundations/client/integrations/http-client/), except where this spec differs.
 
-// [body] is the stringified GraphQL response body
-if (regex.containsMatchIn(body)) {
-    // captures the error
-}
-```
+</SpecSection>
 
-Additional fields for breadcrumbs:
+<SpecSection id="graphql-event-data" status="stable" since="2.0.0">
 
-- data (all fields are optional but recommended):
-  - `operation_name` - The GraphQL operation name
-  - `operation_type` - The GraphQL operation type, i.e: `query`, `mutation`, `subscription`
-  - `operation_id` - The GraphQL operation ID
+### Request and Response Data
 
-Required fields for the Request interface:
+These requirements apply to all data a client or server integration attaches.
+
+An event whose `request.data` contains a request payload **MUST** set `request.api_target` to `"graphql"`.
+
+When an event includes request data, `request.data` **SHOULD** be the request payload as a JSON object. When an event includes response data, `contexts.response.data` **SHOULD** be the response payload as a JSON object.
 
 ```json
 {
   "request": {
     "api_target": "graphql",
     "data": {
-      "foo": "bar"
+      "query": "query GetUser($id: ID!) { user(id: $id) { name } }",
+      "operationName": "GetUser",
+      "variables": { "id": "1" }
     }
-  }
-}
-```
-
-The `data` field is a JSON object that contains the GraphQL request payload.
-
-Required fields for the Response interface:
-
-```json
-{
+  },
   "contexts": {
     "response": {
+      "type": "response",
+      "status_code": 200,
       "data": {
-        "foo": "bar"
+        "data": { "user": null },
+        "errors": [{ "message": "User not found", "path": ["user"] }]
       }
     }
   }
 }
 ```
 
-The `data` field is a JSON object that contains the GraphQL response payload. Attaching request and response bodies should be guarded by `sendDefaultPii` and/or another flag to opt-in (e.g. `captureFailedRequests`).
+An integration **MUST NOT** attach `request.data` or `contexts.response.data` unless the user's settings allow the SDK to send request or response bodies. It **MUST NOT** set the `graphql.document` span attribute unless the user's settings allow the SDK to collect GraphQL documents. These settings are `sendDefaultPii` or, where supported, the `httpBodies` and `graphQL` options of [Data Collection](/sdk/foundations/client/data-collection/).
 
-Required fields for the Event interface:
+Reading a request or response body **MUST NOT** prevent the application from reading it.
 
-The `fingerprints` field should be set to `["$operationName", "$operationType", "$statusCode"]`.
+</SpecSection>
+
+<SpecSection id="graphql-client-errors" status="stable" since="2.0.0">
+
+### Client Error Capture
+
+When failed request capture is enabled (`captureFailedRequests` in HTTP Client), a client integration **SHOULD** capture an error event for each response whose response payload contains a GraphQL error and whose URL matches `failedRequestTargets`. It **SHOULD** do so even when the HTTP status code is not in `failedRequestStatusCodes`.
+
+The event's `fingerprint` **SHOULD** be the operation name, the operation type, and the HTTP status code, in that order, so that errors are grouped per operation:
 
 ```json
 {
-  "fingerprints": ["$operationName", "$operationType", "$statusCode"]
+  "fingerprint": ["GetUser", "query", "200"]
 }
 ```
 
 </SpecSection>
 
-<SpecSection id="graphql-performance-server" status="stable" since="1.0.0">
+<SpecSection id="graphql-performance-server" status="stable" since="2.0.0">
 
-### GraphQL Performance — Server
+### Server Instrumentation
 
-The GraphQL Performance integration should match the guidelines for [GraphQL Client Error Capture](#graphql-client-errors) with a few differences:
+**Errors.** When an exception raised by application code, such as a resolver, causes a GraphQL error, a server integration **SHOULD** capture an error event for it. The event **SHOULD** include the request payload and the response payload, subject to [Request and Response Data](#graphql-event-data).
 
-The transaction's name should be set with the GraphQL operation name, if possible, otherwise fallback to something unique that makes sense, e.g. the canonical name of the actual/generated class.
+**Spans.** When tracing is enabled, a server integration **SHOULD** record a span for each operation it executes. The span:
 
-The transaction's description should be set with the GraphQL operation name, operation type (`query`, `mutation` or `subscription`) and status code, if possible.
+- **SHOULD** use an op in the `graphql` category of [Span Operations](/sdk/telemetry/traces/span-operations/), such as `graphql.query`.
+- **SHOULD** have a name that contains the operation type, and **MAY** add the operation name, such as `query GetUser`.
+- **SHOULD** have the `graphql.operation.type` and, if known, `graphql.operation.name` attributes defined by the [OpenTelemetry GraphQL semantic conventions](https://opentelemetry.io/docs/specs/semconv/graphql/graphql-spans/).
+- **MAY** have the `graphql.document` attribute, subject to [Request and Response Data](#graphql-event-data).
 
-The `request.api_target` should be set with `graphql`.
+When the operation name is known, the transaction that contains the operation **SHOULD** include the operation name in its name.
 
-The `request.data` should be set with the raw GraphQL request payload, if possible. This should be guarded by an opt-in flag, e.g. `sendDefaultPii`.
-
-The `contexts.response.data` should be set with the raw GraphQL response payload, only if there were `errors`. This should be guarded by an opt-in flag, e.g. `sendDefaultPii` and `maxResponseBodySize`.
-
-Some frameworks may use a `Stream` object for the response, in this case, the object can't be consumed twice, so the SDK should try check and clone the object, if possible.
-
-Spans should be created for [resolvers](https://www.apollographql.com/docs/apollo-server/data/resolvers/), if possible. These are sometimes also called [data fetchers](https://www.graphql-java.com/documentation/data-fetching/).
-
-Spans should be created for [data loaders](https://graphql.org/learn/best-practices/#server-side-batching-caching/), if possible.
-
-The operation type should follow the [Span Operation Conventions](/sdk/telemetry/traces/span-operations/).
-
-Extra (`data`) attributes for transactions and/or spans, there are [Span Data](/sdk/telemetry/traces/span-data-conventions/) and [OTel GraphQL](https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/instrumentation/graphql/) conventions.
-
-Instrumenting APM for GraphQL will depend on the instrumented GraphQL library, if there are available hooks for it, the SDK should use them, otherwise, the SDK could try to monkeypatch the library or instrument the transport layer using heuristics, for example, if the URL ends with `graphql`, if there are HTTP Headers, etc.
-
-If there are hooks available and the transport layer is also instrumented (e.g. Apollo Interceptors for GraphQL and Spring), the SDK should give preference to the layer that has more information and avoid creating duplicate transactions/spans, or merge the information, if possible.
-
-Spring GraphQL has its own [observation package](https://github.com/spring-projects/spring-graphql/tree/main/spring-graphql/src/main/java/org/springframework/graphql/observation).
-
-GraphQL Java has its own [instrumentation package](https://github.com/graphql-java/graphql-java/tree/master/src/main/java/graphql/execution/instrumentation).
-
-Apollo GraphQL has its own [tracing extensions](https://github.com/apollographql/apollo-tracing#response-format), in this case it'd even be possible to create synthetic transactions and spans out of the tracing extension.
-
-Changes in the product may be necessary, e.g. if `request.api_target` is set to `graphql`, the `request.data` and `contexts.response.data` should do syntax highlighting.
-
-Performance issues can be created for GraphQL transactions and spans, for example, N+1, query complexity, etc.
+A server integration **MAY** also record child spans for resolvers (also called [data fetchers](https://www.graphql-java.com/documentation/data-fetching/)) and for [data loaders](https://github.com/graphql/dataloader).
 
 </SpecSection>
 
-<SpecSection id="graphql-performance-client" status="stable" since="1.0.0">
+<SpecSection id="graphql-performance-client" status="stable" since="2.0.0">
 
-### GraphQL Performance — Client
+### Client Spans
 
-GraphQL Performance for Clients is very similar to the implementation for Servers, the difference is that you'll create a `span` instead of a `transaction`.
+When tracing is enabled, the span that a client integration records for a request, or the HTTP client span it enriches, **SHOULD**:
 
-Spans don't contain the `request` and `response` interfaces, but set the span description similarly to the transaction description.
+- Have a name that contains the operation type and, if known, the operation name.
+- Have the `graphql.operation.type` and, if known, `graphql.operation.name` attributes defined by the [OpenTelemetry GraphQL semantic conventions](https://opentelemetry.io/docs/specs/semconv/graphql/graphql-spans/).
+
+When both a client integration and an HTTP client integration instrument the same request, the SDK **SHOULD NOT** record more than one span for it.
 
 </SpecSection>
 
-<SpecSection id="graphql-breadcrumbs" status="stable" since="1.0.0">
+<SpecSection id="graphql-breadcrumbs" status="stable" since="2.0.0">
 
 ### Breadcrumbs
 
-Breadcrumbs should be added for each GraphQL operation (resolvers, data loaders, etc), if possible.
+Client and server integrations **SHOULD** record a breadcrumb for each operation. When known, its `data` **SHOULD** include:
 
-The Breadcrumb `type` should be `graphql` and the `category` should be the operation type, otherwise `graphql.operation` if not available.
+- `operation_name`: the operation name
+- `operation_type`: the operation type
+- `operation_id`: the operation ID
 
-Additional fields for breadcrumbs:
-
-- data (all fields are optional but recommended):
-  - `operation_name` - The GraphQL operation name
-  - `operation_type` - The GraphQL operation type, i.e: `query`, `mutation`, `subscription`
-  - `operation_id` - The GraphQL operation ID
-
-Avoid setting the `query` String as part of the `data` field since the event can be dropped due to size limit.
-
-In case more additional fields are needed, the `data` field can be used to add more context, e.g. `graphql.path`, `graphql.field`, `graphql.type`, etc.
-
-The `category` can also be adapted to its own type, e.g. `graphql.resolver`, `graphql.data_loader`, etc.
-
-For resolvers or data fetchers a breadcrumb could have the following fields:
-- `type` = `graphql`
-- `category` = `graphql.fetcher`
-- `path` - Path in the query, e.g. `project/status`
-- `field` - Field being fetched, e.g. `status`
-- `type` - Type being fetched, e.g. `String`
-- `object_type` - Object type being fetched, e.g. `Project`
-
-For data loaders a breadcrumb could have the following fields:
-- `type` = `graphql`
-- `category` = `graphql.data_loader`
-- `keys` - Keys that should be loaded by the data loader
-- `key_type` - Type of the key
-- `value_type` - Type of the value
-- `name` - Name of the data loader
-
-If there are hooks available and the transport layer is also instrumented (e.g. Apollo Interceptors for GraphQL and Spring), the SDK should give preference to the layer that has more information and avoid creating duplicate breadcrumbs, or merge the information, if possible.
+When both a client integration and an HTTP client integration instrument the same request, the SDK **SHOULD NOT** record more than one breadcrumb for it.
 
 </SpecSection>
 
----
+## Implementation Guidance
+
+_This section is non-normative._
+
+**Why `api_target` matters.** When data scrubbing is enabled for a project, Relay replaces the values of `variables` in `request.data` with `[Filtered]` and scrubs the matching values in `contexts.response.data`. It only does this when `request.api_target` is `"graphql"` and both fields are JSON objects. Otherwise, GraphQL variables reach Sentry unscrubbed.
+
+**Detecting GraphQL errors.** The Java Apollo integration checks the response body for an `errors` array with a regex, without parsing it:
+
+```kotlin
+val regex = "(?i)\"errors\"\\s*:\\s*\\[".toRegex()
+
+// [body] is the stringified GraphQL response body
+if (regex.containsMatchIn(body)) {
+    // capture the error
+}
+```
+
+Some frameworks expose the response as a stream that can only be read once. Integrations peek at or clone such streams before reading them, so the application still receives the full body.
+
+**Choosing where to hook in.** Integrations typically use the hooks the GraphQL library provides, such as GraphQL Java's [`Instrumentation`](https://github.com/graphql-java/graphql-java/tree/master/src/main/java/graphql/execution/instrumentation) or Apollo interceptors. Where there are none, SDKs patch the library or, as a last resort, detect GraphQL requests in the transport layer, for example by URL path or request body shape. When both the GraphQL library and the HTTP transport are instrumented, the JavaScript `graphqlClientIntegration` adds GraphQL data to the existing HTTP span and breadcrumb instead of recording new ones.
+
+**Breadcrumb types and categories.** The Java GraphQL server integration and the .NET GraphQL client set breadcrumb `type` to `graphql` and `category` to the operation type, or to `graphql.operation` when the type is unknown. The Java SDK also records breadcrumbs for resolvers, with category `graphql.fetcher` and `path`, `field`, `type`, and `object_type` in `data`, and for data loaders, with category `graphql.data_loader` and `keys`, `key_type`, `value_type`, and `name` in `data`. GraphQL documents can be large enough to push an event over the size limit, which is why these SDKs leave them out of breadcrumb `data`.
 
 ## Changelog
 
