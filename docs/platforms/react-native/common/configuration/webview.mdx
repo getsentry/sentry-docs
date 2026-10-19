@@ -44,6 +44,12 @@ For the connection to take effect:
 - The web page must run a Sentry [Browser SDK](/platforms/javascript/) with tracing enabled (the `browserTracingIntegration`). It continues the trace from the injected `sentry-trace` and `baggage` `<meta>` tags automatically — no additional configuration is needed on the web page.
 - `allowedHosts` declares the hosts you trust to load in this WebView. A page is matched when its hostname equals an entry or is a subdomain of it (for example, `"example.com"` matches both `example.com` and `app.example.com`). Matching is case-insensitive, and the trace context is only written on matching pages.
 
+<Alert level="info">
+
+On iOS the trace tags are written before any page script runs. On **Android**, `react-native-webview` injects them asynchronously as the page starts, so they can land slightly after the page's first synchronous `<head>` scripts. Load and initialize `@sentry/browser` the usual way — from a `<script>` tag, a bundle, or an `async`/deferred init — so it reads the tags after they're present. A `@sentry/browser` initialized synchronously inline at the very top of `<head>` may run before the tags exist on Android and start a new trace instead of continuing (the WebView simply gets its own trace; nothing else is affected).
+
+</Alert>
+
 <Alert level="warning">
 
 Only list hosts whose content you trust in `allowedHosts`. The trace context is injected into every matching page, so an allow-listed page that runs untrusted JavaScript can read it back and feed misleading or polluted data into the connected trace. This risk is bounded by `allowedHosts` — don't allow-list pages that render untrusted or third-party content.
