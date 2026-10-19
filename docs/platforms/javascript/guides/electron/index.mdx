@@ -36,18 +36,15 @@ This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 <Include name="quick-start-features-expandable" />
 
 You should initialize the SDK in both the `main` process and every `renderer` process you spawn.
+Don't need a feature? Remove its integration and options from the respective snippet.
 
 ### Configure the Main Process
 
 Initialize the SDK in your Electron `main` process as early as possible.
 
-The main and renderer snippets also turn on:
+The main process snippets also turns on:
 
-- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
-- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
-- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
-
-Don't need a feature? Remove its integration and options from the snippet.
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `startupTracingIntegration()`
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
@@ -70,13 +67,22 @@ Sentry.init({
 
 Initialize the SDK in your Electron renderer processes as early as possible. All renderer events are sent through the main process so passing `dsn`, `release` or `environment` to renderer `init` will have no effect.
 
+The renderer process snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `browserTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
   integrations: [
+    // enables automatic instrumentation
     Sentry.browserTracingIntegration(),
+    // enables Session Replay
     Sentry.replayIntegration(),
+    // enables User Feedback
     Sentry.feedbackIntegration({
       // Additional integration configuration goes in here
       colorScheme: "system",
@@ -164,7 +170,10 @@ init(
 
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
-If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting options.
 
@@ -223,7 +232,6 @@ At this point, you should have integrated Sentry into your Electron application.
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - <PlatformLink to="/features/">Explore Electron-specific features</PlatformLink>
-- <PlatformLink to="/logs/">Learn more about Logs</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
