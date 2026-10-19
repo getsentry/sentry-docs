@@ -28,6 +28,7 @@ You need:
 
 - [Sentry CLI](/cli/installation/) 3.2.1 or later
 - [`jq`](https://jqlang.org/) to prepare the symbol map for each upload
+- Bash 3.2 or later to run the upload script
 - Self-hosted Sentry 25.8.0 or later, if you're not using sentry.io
 
 ### Generate the Symbol Map
@@ -48,54 +49,126 @@ The symbol map has to be uploaded once for each debug file it belongs to:
 - **Android**: each `app.android-*.symbols` file in your `--split-debug-info` directory (for example, `build/symbols/app.android-arm64.symbols`)
 - **iOS**: the `App` binary inside `App.framework.dSYM` (for example, `App.framework.dSYM/Contents/Resources/DWARF/App` under `build/ios`)
 
+Use the map and debug files from the same build. Keep artifacts from different builds, flavors, and platforms in separate directories: the script cannot detect a map paired with the wrong build.
+
 ### Upload the Symbol Map
 
 <Alert level="warning">
 
-Sentry ignores uploads with the same content as a file that's already been uploaded, even if you pair it with a different debug file. If you upload the same symbol map for several debug files, only the first one is linked. The function below fixes this by adding the debug file's ID to the start of a copy of the map before each upload. This doesn't change how the map is applied.
+Sentry ignores uploads with the same content as a file that's already been uploaded, even if you pair it with a different debug file. If you upload the same symbol map for several debug files, only the first one is linked. The script below fixes this by adding the debug file's ID to the start of a copy of the map before each upload. This doesn't change how the map is applied.
 
 </Alert>
 
-First, define a function that uploads the symbol map for one debug file:
+Set your authentication token, organization, and project:
 
 ```bash
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+```
 
-SYMBOL_MAP=build/app/obfuscation.map.json
+For self-hosted Sentry, also set your server URL:
+
+```bash
+export SENTRY_URL=https://sentry.example.com/
+```
+
+Save the following as `upload-symbol-maps.sh`. It validates the map before uploading, stops on the first failure, and returns a nonzero exit status if it finds no matching debug files. Missing optional iOS build directories are allowed; other discovery errors stop the script.
+
+```bash {filename:upload-symbol-maps.sh}
+#!/usr/bin/env bash
+set -o pipefail
+
+fail() { printf '%s\n' "$*" >&2; return 1; }
 
 upload_dart_symbol_map() {
-  local debug_file="$1"
-  local debug_id
-  debug_id=$(sentry-cli debug-files check --json "$debug_file" | jq -r '.variants[0].debug_id // empty')
-  if [ -z "$debug_id" ]; then
-    echo "No debug ID found in $debug_file" >&2
-    return 1
-  fi
-  mkdir -p "build/dart-symbol-maps/$debug_id"
-  jq -c --arg id "$debug_id" '["SENTRY_DEBUG_ID_MARKER", $id] + .' "$SYMBOL_MAP" \
-    > "build/dart-symbol-maps/$debug_id/obfuscation.map.json"
+  local debug_file="$1" debug_info debug_id prepared_map
+  debug_info=$(sentry-cli debug-files check --json "$debug_file") || return 1
+  debug_id=$(jq -er '
+    [.variants[].debug_id] |
+    if length > 0 and all(.[];
+      type == "string" and
+      test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(-[0-9a-fA-F]+)?$") and
+      . != "00000000-0000-0000-0000-000000000000")
+    then unique | if length == 1 then .[0] else error("Expected exactly one debug ID") end
+    else error("Missing or invalid debug ID") end
+  ' <<< "$debug_info") || return 1
+
+  mkdir -p "$MAP_OUTPUT_DIR/$debug_id" || return 1
+  prepared_map="$MAP_OUTPUT_DIR/$debug_id/obfuscation.map.json"
+  [ ! "$prepared_map" -ef "$SYMBOL_MAP" ] || {
+    fail 'The prepared map must not overwrite the source map'; return 1;
+  }
+  jq -c --arg id "$debug_id" '
+    (if .[0] == "SENTRY_DEBUG_ID_MARKER" then .[2:] else . end) |
+    ["SENTRY_DEBUG_ID_MARKER", $id] + .
+  ' "$SYMBOL_MAP" > "$prepared_map" || return 1
+
   sentry-cli dart-symbol-map upload \
-    --org ___ORG_SLUG___ \
-    --project ___PROJECT_SLUG___ \
-    "build/dart-symbol-maps/$debug_id/obfuscation.map.json" \
-    "$debug_file"
+    --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" \
+    "$prepared_map" "$debug_file" || return 1
 }
-```
 
-Then run it for each debug file of the platform you built:
+main() {
+  local platform="${1:-}" root debug_file
+  case "$platform" in android|ios) shift ;; *) fail 'Usage: bash upload-symbol-maps.sh android|ios [artifact roots...]'; return 1 ;; esac
+  command -v sentry-cli >/dev/null || { fail 'sentry-cli is required'; return 1; }
+  command -v jq >/dev/null || { fail 'jq is required'; return 1; }
+  [ -n "${SENTRY_ORG:-}" ] && [ -n "${SENTRY_PROJECT:-}" ] || {
+    fail 'Set SENTRY_ORG and SENTRY_PROJECT'; return 1;
+  }
+  SYMBOL_MAP=${SYMBOL_MAP:-build/app/obfuscation.map.json}
+  MAP_OUTPUT_DIR=${MAP_OUTPUT_DIR:-build/dart-symbol-maps}
+  jq -e 'type == "array" and length % 2 == 0 and all(.[]; type == "string")' \
+    "$SYMBOL_MAP" >/dev/null || { fail "Invalid or missing symbol map: $SYMBOL_MAP"; return 1; }
 
-```bash {tabTitle: Android}
-for DEBUG_FILE in build/symbols/app.android-*.symbols; do
-  upload_dart_symbol_map "$DEBUG_FILE"
-done
-```
-
-```bash {tabTitle: iOS}
-find build/ios ios/build -path '*App.framework.dSYM/Contents/Resources/DWARF/App' 2>/dev/null |
-  while read -r DEBUG_FILE; do
-    upload_dart_symbol_map "$DEBUG_FILE"
+  if [ "$#" -eq 0 ]; then
+    case "$platform" in
+      android) set -- build/symbols ;;
+      ios) set -- build/ios ios/build ;;
+    esac
+  fi
+  file_list=$(mktemp) || return 1
+  trap 'rm -f "$file_list"' EXIT
+  for root in "$@"; do
+    # A default optional build root can be absent. Other discovery errors fail.
+    [ -e "$root" ] || continue
+    [ -d "$root" ] || { fail "Not a directory: $root"; return 1; }
+    case "$platform" in
+      android) find "$root" -type f -name 'app.android-*.symbols' -print0 >> "$file_list" || return 1 ;;
+      ios) find "$root" -type f -path '*/App.framework.dSYM/Contents/Resources/DWARF/App' -print0 >> "$file_list" || return 1 ;;
+    esac
   done
+  [ -s "$file_list" ] || { fail 'No matching debug files found'; return 1; }
+  while IFS= read -r -d '' debug_file; do
+    upload_dart_symbol_map "$debug_file" || return 1
+  done < "$file_list"
+}
+
+main "$@"
 ```
+
+Run the script for the platform you built. These commands search the default artifact directories:
+
+```bash {tabTitle:Android}
+bash upload-symbol-maps.sh android
+```
+
+```bash {tabTitle:iOS}
+bash upload-symbol-maps.sh ios
+```
+
+For custom artifact locations, pass the directories to search after the platform name. Set `SYMBOL_MAP` if you saved the map at a different path:
+
+```bash
+# Android with a custom split-debug-info directory
+SYMBOL_MAP="path/to/obfuscation.map.json" bash upload-symbol-maps.sh android "path/to/symbols"
+
+# iOS with a downloaded or moved dSYM directory
+SYMBOL_MAP="path/to/obfuscation.map.json" bash upload-symbol-maps.sh ios "path/to/dSYMs"
+```
+
+The script searches each directory recursively and writes a separate map copy for each debug ID under `build/dart-symbol-maps`. It preserves the original map, including when you rerun it.
 
 The upload fails if:
 
