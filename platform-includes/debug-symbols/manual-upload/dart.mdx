@@ -20,9 +20,9 @@ If you're using a version of `sentry_flutter` earlier than 5.1, native symbolica
 
 ## Dart Symbol Map (Obfuscated Issue Titles)
 
-When you build with `--obfuscate`, Dart type names in issue titles are obfuscated (for example, `xyz` instead of `MyCustomException`). Upload the Dart symbol map so Sentry can show the original names in issue titles. This applies to Android and iOS builds.
+When you build with `--obfuscate`, Dart type names are obfuscated (for example, `xyz` instead of `MyCustomException`). Upload the Dart symbol map so Sentry can restore the original names in exception types, which issue titles are based on, and in `Instance of '…'` values in exception messages. This applies to Android and iOS builds.
 
-The symbol map only affects issue titles. To get readable stack traces, you still need to upload your debug files as described above.
+The symbol map doesn't symbolicate stack traces. To get readable stack traces, you still need to upload your debug files as described above.
 
 You need:
 
@@ -32,9 +32,11 @@ You need:
 
 ### Generate the Symbol Map
 
-Add `--extra-gen-snapshot-options=--save-obfuscation-map=<path>` to your build command:
+Add `--extra-gen-snapshot-options=--save-obfuscation-map=<path>` to your build command. The directory for the map has to exist before you build, otherwise the map isn't written:
 
 ```bash
+mkdir -p build/app
+
 # Replace <target> with the mobile target you're building for, for example apk, appbundle, ios, or ipa
 flutter build <target> --obfuscate --split-debug-info=build/symbols --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
 ```
@@ -44,36 +46,55 @@ flutter build <target> --obfuscate --split-debug-info=build/symbols --extra-gen-
 The symbol map has to be uploaded once for each debug file it belongs to:
 
 - **Android**: each `app.android-*.symbols` file in your `--split-debug-info` directory (for example, `build/symbols/app.android-arm64.symbols`)
-- **iOS**: the `App` binary inside `App.framework.dSYM`. You can find it with:
-
-  ```bash
-  find build/ios ios/build -path '*App.framework.dSYM/Contents/Resources/DWARF/App' 2>/dev/null
-  ```
+- **iOS**: the `App` binary inside `App.framework.dSYM` (for example, `App.framework.dSYM/Contents/Resources/DWARF/App` under `build/ios`)
 
 ### Upload the Symbol Map
 
 <Alert level="warning">
 
-Sentry ignores uploads with the same content as a file that's already been uploaded, even if you pair it with a different debug file. If you upload the same symbol map for several debug files, only the first one is linked. The script below fixes this by adding the debug file's ID to the start of a copy of the map before each upload. This doesn't change how the map is applied.
+Sentry ignores uploads with the same content as a file that's already been uploaded, even if you pair it with a different debug file. If you upload the same symbol map for several debug files, only the first one is linked. The function below fixes this by adding the debug file's ID to the start of a copy of the map before each upload. This doesn't change how the map is applied.
 
 </Alert>
+
+First, define a function that uploads the symbol map for one debug file:
 
 ```bash
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 SYMBOL_MAP=build/app/obfuscation.map.json
 
-for DEBUG_FILE in build/symbols/app.android-*.symbols; do # add the iOS App binary here when building for iOS
-  DEBUG_ID=$(sentry-cli debug-files check --json "$DEBUG_FILE" | jq -r '.variants[0].debug_id')
-  mkdir -p "build/dart-symbol-maps/$DEBUG_ID"
-  jq -c --arg id "$DEBUG_ID" '["SENTRY_DEBUG_ID_MARKER", $id] + .' "$SYMBOL_MAP" \
-    > "build/dart-symbol-maps/$DEBUG_ID/obfuscation.map.json"
+upload_dart_symbol_map() {
+  local debug_file="$1"
+  local debug_id
+  debug_id=$(sentry-cli debug-files check --json "$debug_file" | jq -r '.variants[0].debug_id // empty')
+  if [ -z "$debug_id" ]; then
+    echo "No debug ID found in $debug_file" >&2
+    return 1
+  fi
+  mkdir -p "build/dart-symbol-maps/$debug_id"
+  jq -c --arg id "$debug_id" '["SENTRY_DEBUG_ID_MARKER", $id] + .' "$SYMBOL_MAP" \
+    > "build/dart-symbol-maps/$debug_id/obfuscation.map.json"
   sentry-cli dart-symbol-map upload \
     --org ___ORG_SLUG___ \
     --project ___PROJECT_SLUG___ \
-    "build/dart-symbol-maps/$DEBUG_ID/obfuscation.map.json" \
-    "$DEBUG_FILE"
+    "build/dart-symbol-maps/$debug_id/obfuscation.map.json" \
+    "$debug_file"
+}
+```
+
+Then run it for each debug file of the platform you built:
+
+```bash {tabTitle: Android}
+for DEBUG_FILE in build/symbols/app.android-*.symbols; do
+  upload_dart_symbol_map "$DEBUG_FILE"
 done
+```
+
+```bash {tabTitle: iOS}
+find build/ios ios/build -path '*App.framework.dSYM/Contents/Resources/DWARF/App' 2>/dev/null |
+  while read -r DEBUG_FILE; do
+    upload_dart_symbol_map "$DEBUG_FILE"
+  done
 ```
 
 The upload fails if:
