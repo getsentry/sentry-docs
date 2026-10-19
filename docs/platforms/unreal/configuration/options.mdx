@@ -10,7 +10,7 @@ sidebar_order: 1
 
 <TableOfContents ignoreIds={["available-options"]} />
 
-## Core Options
+## Core
 
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
@@ -24,9 +24,15 @@ Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utiliz
 
 </SdkOption>
 
-<SdkOption name="Debug" type="bool" defaultValue="false">
+<SdkOption name="Debug" type="bool" defaultValue="true">
 
-Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. This option is turned on by default. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+
+</SdkOption>
+
+<SdkOption name="DebugLevel" type="enum" defaultValue="Debug">
+
+The minimum level of SDK diagnostic messages to print when <PlatformIdentifier name="Debug" /> is enabled. Possible values are `Debug`, `Info`, `Warning`, `Error` and `Fatal`.
 
 </SdkOption>
 
@@ -55,6 +61,92 @@ Sets the distribution of the application. Distributions are used to disambiguate
 <SdkOption name="SampleRate" type="float" defaultValue="1.0">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+
+</SdkOption>
+
+<SdkOption name="EditorDsn" type="string">
+
+The DSN used when the SDK runs in the editor. Use it to send events from the editor to a different Sentry project than your packaged game. If it's empty, the editor uses <PlatformIdentifier name="Dsn" />.
+
+</SdkOption>
+
+<SdkOption name="EnableBuildConfigurations" type="struct" defaultNote="all fields default to true">
+
+Controls for which build configurations the SDK initializes. This is a struct containing a boolean field for each configuration: `bEnableDebug`, `bEnableDebugGame`, `bEnableDevelopment`, `bEnableTest`, and `bEnableShipping`.
+
+These fields also control for which builds debug symbols are uploaded. See <PlatformLink to="/configuration/debug-symbols/">Debug Symbols</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="EnableBuildTargets" type="struct" defaultNote="all fields default to true">
+
+Controls for which build target types the SDK initializes. This is a struct containing a boolean field for each target type: `bEnableGame`, `bEnableClient`, `bEnableServer`, `bEnableEditor`, and `bEnableProgram`.
+
+These fields also control for which builds debug symbols are uploaded. See <PlatformLink to="/configuration/debug-symbols/">Debug Symbols</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="EnableForPromotedBuildsOnly" type="bool" defaultValue="false">
+
+When enabled, the SDK initializes only in promoted builds of the engine (`FApp::GetEngineIsPromotedBuild()`).
+
+</SdkOption>
+
+## Crash Handling
+
+<SdkOption name="UseNativeBackend" type="bool" defaultValue="false">
+
+When enabled, the SDK uses the experimental native backend for crash reporting instead of the default backend (Crashpad on Windows/Linux, sentry-cocoa on macOS). This option requires a rebuild after changing.
+
+See <PlatformLink to="/configuration/native-backend/">Native Backend</PlatformLink> for details and additional configuration options.
+
+<Alert level="warning">
+
+This feature is experimental and under active development. Supported on Windows, Linux, and macOS.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="CrashpadWaitForUpload" type="bool" defaultValue="false">
+
+When enabled, application shutdown is delayed until the upload of the crash report is complete. This is useful for deployment in `Docker` environment (Linux and Windows containers) where the life cycle of all processes is bound by the root process (typically the application being monitored).
+
+This option is turned off by default.
+
+<Alert>
+
+This feature is supported only for Crashpad backend on Windows and Linux. This option has no effect when <PlatformIdentifier name="UseNativeBackend" /> is enabled.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="AndroidCrashBackend" type="enum" defaultValue="TombstoneMergedWithNdk">
+
+Selects how native crashes are captured on Android:
+
+- `NdkSignalHandler` - only the sentry-native NDK signal handler
+- `TombstoneOnly` - only Android tombstones
+- `TombstoneMergedWithNdk` - the NDK signal handler, with additional context from tombstones merged in (recommended)
+
+</SdkOption>
+
+## Enriching Events
+
+<SdkOption name="AttachStacktrace" type="bool" defaultValue="true">
+
+When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
+
+This option is turned on by default.
+
+Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+<Alert>
+
+On Android, only crash events contain the full callstack. Non-fatal events captured manually won't include the native C++ portion of the stack trace.
+
+</Alert>
 
 </SdkOption>
 
@@ -88,35 +180,17 @@ Configures whether to automatically add breadcrumbs for log messages at specific
 
 </SdkOption>
 
-<SdkOption name="AttachStacktrace" type="bool" defaultValue="false">
+<SdkOption name="AttachGameLog" type="bool" defaultValue="false">
 
-When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
-
-This option is turned off by default.
-
-Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
-
-<Alert>
-
-On Android, only crash events contain the full callstack. Non-fatal events captured manually won't include the native C++ portion of the stack trace.
-
-</Alert>
-
-</SdkOption>
-
-<SdkOption name="SendDefaultPii" type="bool" defaultValue="false">
-
-If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
-
-<Alert>
-
-If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
-
-</Alert>
+When enabled, game log file is automatically attached to all events captured if the current build configuration allows logging.
 
 This option is turned off by default.
 
-If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+<Alert>
+
+The game log attached to crash events may be truncated. Crash reports can be sent to Sentry right away, while Unreal Engine is still writing the last bits of information to the log file.
+
+</Alert>
 
 </SdkOption>
 
@@ -135,41 +209,13 @@ Attaching screenshots to crash events is currently not supported on Android.
 
 <SdkOption name="EnableOutOfProcessScreenshots" type="bool" defaultValue="false">
 
-When enabled, crash screenshots on Windows are captured out-of-process by the native SDK using OS-level APIs instead of the default in-process Unreal Engine renderer. This is more reliable during crashes since it doesn't depend on the rendering pipeline being functional. Requires `AttachScreenshot` to be enabled.
+When enabled, crash screenshots on Windows and Xbox are captured out-of-process by the native SDK using OS-level APIs instead of the default in-process Unreal Engine renderer. This is more reliable during crashes since it doesn't depend on the rendering pipeline being functional. Requires `AttachScreenshot` to be enabled.
 
 Learn more in the <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 <Alert title="Experimental">
 
-This feature is currently experimental and only supported on Windows.
-
-</Alert>
-
-</SdkOption>
-
-<SdkOption name="AttachGameLog" type="bool" defaultValue="false">
-
-When enabled, game log file is automatically attached to all events captured if the current build configuration allows logging.
-
-This option is turned off by default.
-
-<Alert>
-
-The game log attached to crash events may be truncated. Crash reports can be sent to Sentry right away, while Unreal Engine is still writing the last bits of information to the log file.
-
-</Alert>
-
-</SdkOption>
-
-<SdkOption name="EnableLargeAttachments" type="bool" defaultValue="false">
-
-When enabled, attachments above an internal size threshold are uploaded out-of-band via a separate request before the event is sent, instead of being embedded in the envelope. This lets attachments exceed the inline envelope size limits. When disabled, oversized attachments are rejected by Sentry.
-
-Learn more in the <PlatformLink to="/enriching-events/attachments/#large-attachments">Attachments documentation</PlatformLink>.
-
-<Alert>
-
-Currently supported on Windows, Linux, Mac (with native backend) and consoles.
+This feature is currently experimental and only supported on Windows and Xbox development kits.
 
 </Alert>
 
@@ -195,43 +241,52 @@ On Windows, capturing GPU crashes requires [modifying the Unreal Engine source c
 
 </SdkOption>
 
-<SdkOption name="UseNativeBackend" type="bool" defaultValue="false">
+<SdkOption name="EnableLargeAttachments" type="bool" defaultValue="false">
 
-When enabled, the SDK uses the experimental native backend for crash reporting instead of the default backend (Crashpad on Windows/Linux, sentry-cocoa on macOS). This option requires a rebuild after changing.
+When enabled, attachments above an internal size threshold are uploaded out-of-band via a separate request before the event is sent, instead of being embedded in the envelope. This lets attachments exceed the inline envelope size limits. When disabled, oversized attachments are rejected by Sentry.
 
-See <PlatformLink to="/configuration/native-backend/">Native Backend</PlatformLink> for details and additional configuration options.
+Learn more in the <PlatformLink to="/enriching-events/attachments/#large-attachments">Attachments documentation</PlatformLink>.
 
-<Alert level="warning">
+<Alert>
 
-This feature is experimental and under active development. Supported on Windows, Linux, and macOS.
+Currently supported on Windows, Linux, Mac (with native backend) and consoles.
 
 </Alert>
 
 </SdkOption>
 
-<SdkOption name="CrashpadWaitForUpload" type="bool" defaultValue="false">
+<SdkOption name="TagsPromotion" type="struct" defaultNote="all fields default to true">
 
-When enabled, application shutdown is delayed until the upload of the crash report is complete. This is useful for deployment in `Docker` environment (Linux and Windows containers) where the life cycle of all processes is bound by the root process (typically the application being monitored).
+Configures which engine values are added to events as tags. This is a struct containing boolean fields:
 
-This option is turned off by default.
+- `bPromoteBuildConfiguration` - the build configuration
+- `bPromoteTargetType` - the build target type
+- `bPromoteEngineMode` - the engine mode
+- `bPromoteIsGame` - whether the app runs as a game
+- `bPromoteIsStandalone` - whether the app runs standalone
+- `bPromoteIsUnattended` - whether the app runs unattended
+
+</SdkOption>
+
+<SdkOption name="InAppInclude" type="array">
+
+A list of string prefixes of module or package names that belong to the app. Frames that match are marked as in-app in stack traces.
 
 <Alert>
 
-This feature is supported only for Crashpad backend on Windows and Linux (default for the `github` plugin package). This option has no effect when <PlatformIdentifier name="UseNativeBackend" /> is enabled.
+This option is supported on Android, iOS, and macOS with the default Cocoa backend.
 
 </Alert>
 
 </SdkOption>
 
-<SdkOption name="EnableExternalCrashReporter" type="bool" defaultValue="false">
+<SdkOption name="InAppExclude" type="array">
 
-When enabled, a standalone crash reporter dialog is shown to the user after a crash, allowing them to review crash details and provide feedback before the report is submitted to Sentry.
-
-See <PlatformLink to="/configuration/crash-reporter/sentry-crash-reporter/">Sentry Crash Reporter</PlatformLink> for setup details and customization options.
+A list of string prefixes of package names that don't belong to the app. Frames that match are not marked as in-app in stack traces.
 
 <Alert>
 
-This feature is supported on Windows and Linux only.
+This option is supported on Android only.
 
 </Alert>
 
@@ -275,8 +330,6 @@ This feature is available on Windows, Linux, macOS, and Android. On macOS it req
 
 </SdkOption>
 
-## App Not Responding
-
 <SdkOption name="EnableAppNotRespondingTracking" type="bool" defaultValue="true">
 
 Enables mobile app-not-responding detection. On iOS and macOS with the default Cocoa backend, this configures Cocoa app hang detection. On macOS with the native backend, use <PlatformIdentifier name="EnableHangTracking" /> and <PlatformIdentifier name="UseNativeHangTracking" /> instead. On Android, it configures JVM ANR detection.
@@ -292,6 +345,48 @@ Sets how long the main thread can remain unresponsive before the SDK captures an
 Only takes effect when <PlatformIdentifier name="EnableAppNotRespondingTracking" /> is enabled.
 
 </SdkOption>
+
+## Release Health
+
+<SdkOption name="EnableAutoSessionTracking" type="bool" defaultValue="true">
+
+When enabled, the SDK automatically starts a session when it's initialized. Sessions are used to calculate crash-free rates in [Release Health](/product/releases/health/).
+
+</SdkOption>
+
+<SdkOption name="SessionTimeout" type="int" defaultValue="30000" defaultNote="milliseconds">
+
+Time interval in milliseconds after which the session ends if the app stays in the background.
+
+<Alert>
+
+This option is supported on Android, iOS, and macOS with the default Cocoa backend.
+
+</Alert>
+
+</SdkOption>
+
+## Tracing
+
+<SdkOption name="TracesSampleRate" type="float">
+
+A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="TracesSampler" /> must be defined to enable tracing.
+
+</SdkOption>
+
+<SdkOption name="TracesSampler" type="function">
+
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="TracesSampleRate" /> must be defined to enable tracing.
+
+</SdkOption>
+
+## Logs
+
+Options for forwarding Unreal Engine log messages to Sentry are described in <PlatformLink to="/logs/">Logs</PlatformLink>.
+
+## Metrics
+
+Options for automatically collected performance metrics are described in <PlatformLink to="/metrics/">Metrics</PlatformLink>.
 
 ## Hooks
 
@@ -332,6 +427,56 @@ Currently, breadcrumb hints are supported only on Android, macOS, and iOS.
 
 </SdkOption>
 
+## Privacy & PII
+
+<SdkOption name="SendDefaultPii" type="bool" defaultValue="false">
+
+If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
+
+<Alert>
+
+If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
+
+</Alert>
+
+This option is turned off by default.
+
+If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</SdkOption>
+
+<SdkOption name="bRequireUserConsent" type="bool" defaultValue="false">
+
+When enabled, the SDK doesn't send any data to Sentry until the user gives consent. Call `GiveUserConsent` or `RevokeUserConsent` on the Sentry subsystem to change it.
+
+<Alert>
+
+This option is supported on Windows, Linux, macOS with the native backend, and consoles.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="bDefaultUserConsentGiven" type="bool" defaultValue="true">
+
+The consent value used before `GiveUserConsent` or `RevokeUserConsent` is called. Only takes effect when <PlatformIdentifier name="bRequireUserConsent" /> is enabled.
+
+</SdkOption>
+
+## Transport
+
+<SdkOption name="ProxyUrl" type="string">
+
+The URL of an HTTP proxy through which the SDK sends requests to Sentry, for example `http://proxy.local:3128`. In the plugin settings, enable the checkbox next to the field to use the proxy.
+
+</SdkOption>
+
+<SdkOption name="ShutdownTimeout" type="int" defaultValue="5000" defaultNote="milliseconds">
+
+Maximum time in milliseconds to wait on shutdown for queued envelopes, such as in-flight uploads, to be sent. Increase it if large crash reports don't reach Sentry before the app exits.
+
+</SdkOption>
+
 ## Offline Caching
 
 <SdkOption name="EnableOfflineCaching" type="bool" defaultValue="false">
@@ -346,7 +491,7 @@ This feature is available on Windows, Linux, and Xbox only. On Android and Apple
 
 </SdkOption>
 
-<SdkOption name="CacheMaxItems" type="int" defaultValue="0">
+<SdkOption name="CacheMaxItems" type="int" defaultValue="30">
 
 Maximum number of items in the cache directory. On startup, oldest entries are removed until the count is within this limit. Set to `0` for no limit.
 
@@ -364,16 +509,41 @@ Maximum age in seconds for cache entries. On startup, entries exceeding this age
 
 </SdkOption>
 
-## Tracing Options
+<SdkOption name="DatabaseLocation" type="enum" defaultValue="ProjectUserDirectory">
 
-<SdkOption name="TracesSampleRate" type="float">
+Location where the SDK stores its internal files, such as crash reports before upload and the offline cache:
 
-A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="TracesSampler" /> must be defined to enable tracing.
+- `ProjectDirectory` - the root directory of the project (`FPaths::ProjectDir()`)
+- `ProjectUserDirectory` - the directory for user-specific game files (`FPaths::ProjectUserDir()`)
+
+<Alert>
+
+This option is supported on Windows, Linux, macOS with the native backend, and consoles.
+
+</Alert>
 
 </SdkOption>
 
-<SdkOption name="TracesSampler" type="function">
+## Session Replay
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="TracesSampleRate" /> must be defined to enable tracing.
+Options for recording a video clip before a crash are described in <PlatformLink to="/session-replay/">Session Replay</PlatformLink>.
+
+## Debug Symbols
+
+Options for uploading debug symbols when packaging the game are described in <PlatformLink to="/configuration/debug-symbols/">Debug Symbols</PlatformLink>.
+
+## Crash Reporter
+
+<SdkOption name="EnableExternalCrashReporter" type="bool" defaultValue="false">
+
+When enabled, a standalone crash reporter dialog is shown to the user after a crash, allowing them to review crash details and provide feedback before the report is submitted to Sentry.
+
+See <PlatformLink to="/configuration/crash-reporter/sentry-crash-reporter/">Sentry Crash Reporter</PlatformLink> for setup details and customization options.
+
+<Alert>
+
+This feature is supported on Windows, Linux, and macOS with the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>.
+
+</Alert>
 
 </SdkOption>
