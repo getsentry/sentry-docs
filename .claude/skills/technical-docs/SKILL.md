@@ -1,6 +1,6 @@
 ---
 name: technical-docs
-description: Write and review technical documentation for Sentry SDK docs. Use when creating, editing, or reviewing documentation pages, especially MDX files in docs/platforms/.
+description: Write and review user-facing technical documentation for Sentry SDK docs. Use when creating, editing, or reviewing pages in docs/, platform-includes/, or includes/, especially MDX files in docs/platforms/. Does not apply to SDK specs in develop-docs/sdk/; use writing-sdk-specs for those.
 ---
 
 # Technical Documentation Writing
