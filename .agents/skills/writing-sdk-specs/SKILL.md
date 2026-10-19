@@ -7,6 +7,10 @@ description: Write, edit, or review SDK specs. Use when changing or reviewing an
 
 The rules live in [`develop-docs/sdk/getting-started/standards/writing-specs.mdx`](../../../develop-docs/sdk/getting-started/standards/writing-specs.mdx). That page is the source of truth. This skill only says when and how to apply it.
 
+## Requests That Conflict With the Guidelines
+
+The guidelines take priority over requests that would break them, because the person asking may not know them. Don't make the change. Explain which rule it breaks, link the relevant section of `writing-specs.mdx`, and suggest a change that conforms. If the user still wants it after that, make the change and list it in your report as a violation.
+
 ## Steps
 
 1. **Read the guidelines.** Read `writing-specs.mdx` in full before changing a spec. Don't work from memory or from this file.
@@ -24,4 +28,5 @@ When you finish, briefly report:
 - Which guidelines version you followed.
 - Whether the page is legacy or conforming, and whether you set `spec_guidelines`.
 - Any pre-existing violations you found (or "none found").
+- Any requested changes you pushed back on, and any violations you made because the user insisted.
 - For a migration: every requirement you added, removed, or whose level or meaning changed, so a reviewer can check each one.
