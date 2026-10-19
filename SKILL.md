@@ -32,5 +32,6 @@ Source repo: https://github.com/getsentry/sentry-for-ai
 | Brand Guidelines | `.agents/skills/brand-guidelines/` | Audit content against Sentry brand voice |
 | Docs Review | `.claude/skills/docs-review/SKILL.md` | Sentry documentation style guide |
 | Technical Docs | `.claude/skills/technical-docs/SKILL.md` | Writing SDK and technical documentation |
+| Writing SDK Specs | `.claude/skills/writing-sdk-specs/SKILL.md` | Writing and reviewing SDK specs in `develop-docs/sdk/` |
 | Commit | `.agents/skills/commit/SKILL.md` | Sentry conventional commit format |
 | Create Branch | `.agents/skills/create-branch/SKILL.md` | Branch naming conventions |
