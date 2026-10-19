@@ -100,7 +100,7 @@ When writing requirements in `develop-docs/`:
 - **ALWAYS** run `/brand-guidelines` to audit any user-facing content before committing. See `.agents/skills/brand-guidelines/SKILL.md`
 - Use `docs-review` skill for Sentry style and voice review. See `.claude/skills/docs-review/SKILL.md`
 - Use `technical-docs` skill when writing or reviewing SDK documentation. See `.claude/skills/technical-docs/SKILL.md`
-- Use `writing-sdk-specs` skill when writing, editing, or reviewing SDK specs (pages in `develop-docs/sdk/` with `spec_id` frontmatter). See `.agents/skills/writing-sdk-specs/SKILL.md`
+- Use `writing-sdk-specs` skill when writing, editing, or reviewing SDK specs (pages in `develop-docs/sdk/` with `spec_id` frontmatter, except those with `spec_kind: process`). See `.agents/skills/writing-sdk-specs/SKILL.md`
 
 ## LLM-Friendly MD Exports
 
