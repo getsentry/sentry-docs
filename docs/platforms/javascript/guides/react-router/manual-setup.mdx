@@ -31,14 +31,7 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the SDK package to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <OnboardingOption optionId="profiling">
 
@@ -71,43 +64,21 @@ pnpm add @sentry/react-router
 
 </OnboardingOption>
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure
 
 ### Expose Entry Point Files
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Before configuring Sentry, you need to make React Router's entry files (`entry.client.tsx` and `entry.server.tsx`) visible in your project. Run this command to expose them:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash
 npx react-router reveal
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Client-Side Sentry
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Initialize Sentry in your `entry.client.tsx` file.
 
 The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename: entry.client.tsx}
 +import * as Sentry from "@sentry/react-router";
@@ -170,10 +141,6 @@ startTransition(() => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Server-Side Sentry
 
 <Expandable level="warning" title="Limited Node support for OpenTelemetry auto-instrumentation" permalink>
@@ -189,14 +156,7 @@ On unsupported Node versions, you'll only lose auto-instrumentation for lower-le
 
 </Expandable>
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 First, create a file called `instrument.server.mjs` in the root of your project to initialize Sentry:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```js {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
@@ -229,18 +189,9 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions, and export `instrumentations` to enable automatic tracing.
 
 Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
 +import * as Sentry from '@sentry/react-router';
@@ -267,10 +218,6 @@ Exporting `instrumentations` uses React Router's [instrumentation API](https://r
 
 // ... rest of your server entry
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Expandable title="Does your app use Content Security Policy nonces?">
 
@@ -423,14 +370,7 @@ export function handleError(
 
 #### Load Instrumentation on Startup
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 React Router runs in ESM mode, which means you need to load the Sentry instrumentation file before the application starts. Update your `package.json` scripts:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```json {filename: package.json}
 "scripts": {
@@ -439,22 +379,11 @@ React Router runs in ESM mode, which means you need to load the Sentry instrumen
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <PlatformContent includePath="node-options-windows" />
 
 **Deploying to Vercel, Netlify, and similar platforms**
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, import the instrumentation file directly at the top of your `entry.server.tsx`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
 +import '../instrument.server';
@@ -463,10 +392,6 @@ If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, im
  import { renderToPipeableStream } from 'react-dom/server';
  // ... rest of your imports
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Alert title="Incomplete Auto-instrumentation" level="warning">
 
@@ -478,14 +403,7 @@ When you import the instrumentation file directly instead of using the `--import
 
 The stack traces in your Sentry errors probably won't look like your actual code without unminifying them. To fix this, upload your source maps to Sentry.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
@@ -509,16 +427,7 @@ export default defineConfig(config => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <OrgAuthTokenNote />
 
@@ -526,20 +435,9 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename: react-router.config.ts} {diff}
 import type { Config } from "@react-router/dev/config";
@@ -555,10 +453,6 @@ export default {
 } satisfies Config;
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
@@ -573,10 +467,6 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 
 ### Issues
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To verify that Sentry captures errors and creates issues in your Sentry project, throw an error in a loader.
 
 <OnboardingOption optionId="performance" hideForThisOption>
@@ -584,9 +474,6 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 </OnboardingOption>
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename: error.tsx}
 import type { Route } from "./+types/example-page";
@@ -600,23 +487,12 @@ export default function ExamplePage() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <OnboardingOption optionId="performance">
 ### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code.
 
 Then, open the route in your browser. You should start a trace and trigger an error.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename: error.tsx}
 import * as Sentry from "@sentry/react-router";
@@ -638,10 +514,6 @@ export default function ExamplePage() {
   return <div>Loading this page will throw an error</div>;
 }
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 </OnboardingOption>
 

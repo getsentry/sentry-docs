@@ -53,14 +53,7 @@ You need:
 
 ## Enable Stream Mode
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Opt in by adding the `trace_lifecycle` option when initializing the SDK:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -73,10 +66,6 @@ sentry_sdk.init(
 )
 
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 To revert to transaction mode, remove the `trace_lifecycle` option or set it to `"static"` (the default).
 
@@ -98,14 +87,7 @@ Each flush sends only the spans accumulated since the last flush, grouped into e
 
 ### Start a Span
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `sentry_sdk.traces.start_span()` to create a span that ends automatically when the `with` block exits:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -115,15 +97,7 @@ with sentry_sdk.traces.start_span(name="my-operation") as span:
     do_work()
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 Child spans created inside an active span are automatically associated with the parent:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -136,16 +110,8 @@ with sentry_sdk.traces.start_span(name="parent-operation"):
         step_two()
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 A span is automatically promoted to a service span (the equivalent of a transaction) if no other parent is currently active.
 If you want to force a new service span, regardless of whether it has a parent span, set `parent_span=None`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -154,15 +120,7 @@ with sentry_sdk.traces.start_span(name="task-name", parent_span=None) as span:
     do_work()
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 You can also use the `@trace` decorator to instrument a function. It accepts optional `name`, `attributes`, and `active` arguments:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 from sentry_sdk.traces import trace
@@ -171,10 +129,6 @@ from sentry_sdk.traces import trace
 def checkout():
     ...
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 For more details on span creation, see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink>.
 
@@ -188,14 +142,7 @@ Sentry automatically sets several standard attributes on spans. To avoid acciden
 
 </Alert>
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 You can set attributes when starting a span:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -212,16 +159,7 @@ with sentry_sdk.traces.start_span(
     process_order()
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Or add them to an already running span:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -237,10 +175,6 @@ with sentry_sdk.traces.start_span(name="handle-request") as span:
     })
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 Find more examples in our <PlatformLink to="/tracing/span-metrics/">Sending Span Metrics</PlatformLink> documentation.
 
 ## Breadcrumbs
@@ -252,15 +186,8 @@ They remain attached to errors, so you don't need to change how you record them.
 
 ### Continue a Trace
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 When your service receives a request from an upstream service that includes Sentry trace headers, use `sentry_sdk.traces.continue_trace()` to connect your spans to the existing distributed trace.
 Unlike the legacy `sentry_sdk.continue_trace()`, the new version is not a context manager. Instead, it sets the propagation context and the next span picks it up automatically.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -275,20 +202,9 @@ with sentry_sdk.traces.start_span(name="handle request"):
     ...
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Start a New Trace
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you need to start a completely new trace unconnected to the current one, use `sentry_sdk.traces.new_trace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -303,24 +219,13 @@ with sentry_sdk.traces.start_span(name="span in trace 2"):
     ...
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 See <PlatformLink to="/tracing/distributed-tracing/custom-trace-propagation/">custom instrumentation</PlatformLink> for more information on distributed tracing.
 
 ## Extended Configuration (Optional)
 
 ### Filter Spans
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To modify or redact span data before it's sent, use the `before_send_span` option:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -343,10 +248,6 @@ sentry_sdk.init(
 )
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Alert level="warning">
 
 `before_send_span` can only modify span data — you cannot use it to drop spans (use [`ignore_spans`](#drop-spans) instead).
@@ -355,14 +256,7 @@ sentry_sdk.init(
 
 ### Drop Spans
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To prevent specific spans from being created, use the `ignore_spans` option. Rules are evaluated at span start, so only the span name and attributes set at creation time are taken into account. Rules can be strings, compiled regexes, or dictionaries with name and/or attributes conditions:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import re
@@ -394,10 +288,6 @@ sentry_sdk.init(
     ],
 )
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 If a matching span is a service span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the nearest ancestor.
 
