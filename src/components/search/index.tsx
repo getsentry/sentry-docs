@@ -439,9 +439,10 @@ export function Search({
               type="button"
               aria-label="Ask AI"
               onClick={() => {
-                setInputFocus(false);
-                onAskAi?.();
-                requestAnimationFrame(() => openAskAi());
+                openAskAi({}, () => {
+                  setInputFocus(false);
+                  onAskAi?.();
+                });
               }}
             >
               <MagicIcon />
@@ -461,10 +462,10 @@ export function Search({
               id="ai-list-entry"
               className={styles['sgs-ai-button']}
               onClick={() => {
-                setInputFocus(false);
-                onAskAi?.();
-                // Release the parent overlay's scroll lock before opening Ask AI.
-                requestAnimationFrame(() => openAskAi({query, submit: true}));
+                openAskAi({query, submit: true}, () => {
+                  setInputFocus(false);
+                  onAskAi?.();
+                });
               }}
             >
               <MagicIcon className="size-6 text-[var(--sgs-color-hit-highlight)] flex-shrink-0" />

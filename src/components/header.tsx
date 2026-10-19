@@ -279,10 +279,11 @@ export function Header({
               className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
               onClick={() => {
-                setMobileSearchOpen(false);
-                setHomeMobileNavOpen(false);
-                closeSidebar();
-                requestAnimationFrame(() => openAskAi());
+                openAskAi({}, () => {
+                  setMobileSearchOpen(false);
+                  setHomeMobileNavOpen(false);
+                  closeSidebar();
+                });
               }}
             >
               <MagicIcon className="size-4" />

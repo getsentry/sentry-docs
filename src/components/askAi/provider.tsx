@@ -5,7 +5,8 @@ import {createContext, useCallback, useContext, useRef, useState} from 'react';
 
 const AskAiDialog = dynamic(() => import('./dialog'), {ssr: false});
 export type OpenAskAiOptions = {query?: string; submit?: boolean};
-const AskAiContext = createContext<(options?: OpenAskAiOptions) => void>(() => {});
+type OpenAskAi = (options?: OpenAskAiOptions, beforeOpen?: () => void) => void;
+const AskAiContext = createContext<OpenAskAi>(() => {});
 
 export function useAskAi() {
   return useContext(AskAiContext);
@@ -28,15 +29,28 @@ export function AskAiProvider({
   );
   const trigger = useRef<HTMLElement | null>(null);
   const open = useCallback(
-    (options: OpenAskAiOptions = {}) => {
-      if (provider === 'kapa') {
-        window.Kapa?.open(options);
-        return;
+    (options: OpenAskAiOptions = {}, beforeOpen?: () => void) => {
+      const kapa = window.Kapa;
+      // Keep search available until the lazy-loaded fallback can accept the request.
+      if (provider === 'kapa' && !kapa?.open) return;
+
+      const show = () => {
+        if (provider === 'kapa') {
+          kapa!.open(options);
+          return;
+        }
+        trigger.current =
+          document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        setRequest(previous => ({id: (previous?.id || 0) + 1, options}));
+        setOpened(true);
+      };
+      if (beforeOpen) {
+        beforeOpen();
+        // Release the parent overlay's scroll lock before opening either provider.
+        requestAnimationFrame(show);
+      } else {
+        show();
       }
-      trigger.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      setRequest(previous => ({id: (previous?.id || 0) + 1, options}));
-      setOpened(true);
     },
     [provider]
   );
