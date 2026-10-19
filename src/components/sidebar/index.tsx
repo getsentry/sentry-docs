@@ -1,12 +1,5 @@
-import {
-  extractPlatforms,
-  getCurrentGuide,
-  getCurrentPlatform,
-  getDocsRootNode,
-  nodeForPath,
-} from 'sentry-docs/docTree';
+import {getCurrentGuide, getCurrentPlatform, getDocsRootNode} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {Platform} from 'sentry-docs/types';
 
 import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
 import {PlatformSelector} from '../platformSelector';
@@ -36,70 +29,36 @@ export async function Sidebar({path, versions}: SidebarProps) {
     );
   }
 
-  // Extract basic platforms list for SDK link redirection (used by MobileSidebarNav)
-  const basicPlatforms: Platform[] = !rootNode
-    ? []
-    : extractPlatforms(rootNode).map(platform => ({
-        ...platform,
-        guides: platform.guides,
-      }));
-
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
 
   // Only show the platform selector and sidebar for SDKs/platforms section
   if (path[0] === 'platforms') {
-    const platforms: Platform[] = !rootNode
-      ? []
-      : extractPlatforms(rootNode).map(platform => {
-          // take the :path in /platforms/:platformName/:path
-          // or /platforms/:platformName/guides/:guideName/:path when we're in a guide
-          const currentPathParts = path.slice(currentGuide ? 4 : 2);
-
-          const platformPageForCurrentPath =
-            nodeForPath(rootNode, ['platforms', platform.name, ...currentPathParts]) ||
-            // try to go one page higher, example: go to /usage/ from /usage/something
-            nodeForPath(rootNode, [
-              'platforms',
-              platform.name,
-              ...currentPathParts.slice(0, -1),
-            ]);
-
-          return {
-            ...platform,
-            url:
-              platformPageForCurrentPath && !platformPageForCurrentPath.missing
-                ? '/' + platformPageForCurrentPath.path + '/'
-                : platform.url,
-            guides: platform.guides.map(guide => {
-              const guidePageForCurrentPath = nodeForPath(rootNode, [
-                'platforms',
-                platform.name,
-                'guides',
-                guide.name,
-                ...currentPathParts,
-              ]);
-              return guidePageForCurrentPath && !guidePageForCurrentPath.missing
-                ? {
-                    ...guide,
-                    url: '/' + guidePageForCurrentPath.path + '/',
-                  }
-                : guide;
-            }),
-          };
-        });
+    // The full platform list is loaded on the client. Until then, the selector
+    // only gets the current platform with the current guide (or the platform's
+    // own guide entry, which is selected when `platformTitle` is set).
+    const currentKey = (currentGuide ?? currentPlatform)?.key;
+    const initialPlatforms = currentPlatform
+      ? [
+          {
+            ...currentPlatform,
+            guides: currentPlatform.guides.filter(g => g.key === currentKey),
+            integrations: [],
+          },
+        ]
+      : [];
 
     return (
       <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
         <input type="checkbox" id={sidebarToggleId} className="hidden" />
         <style>{':root { --sidebar-width: 300px; }'}</style>
         <div className="flex flex-col items-stretch h-full min-h-0">
-          <MobileSidebarNav platforms={basicPlatforms} />
+          <MobileSidebarNav />
           <div className="platform-selector px-3">
             <div className="mb-3">
               <PlatformSelector
-                platforms={platforms}
-                currentPlatform={currentGuide || currentPlatform}
+                currentPlatform={currentGuide ?? initialPlatforms[0]}
+                initialPlatforms={initialPlatforms}
               />
             </div>
             {versions && versions.length >= 1 && (
@@ -127,7 +86,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
       <CloseSidebarOnNavigation sidebarToggleId={sidebarToggleId} />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="flex flex-col items-stretch h-full min-h-0">
-        <MobileSidebarNav platforms={basicPlatforms} />
+        <MobileSidebarNav />
         <div className={`${styles['sidebar-main']} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />

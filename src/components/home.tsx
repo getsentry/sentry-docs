@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {Fragment, type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
-import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import Cursor from 'sentry-docs/icons/cursor';
 import GitHub from 'sentry-docs/icons/github';
 import Jira from 'sentry-docs/icons/jira';
@@ -19,17 +18,10 @@ import {PlatformIcon} from './platformIcon';
 import {PreferredPlatformLink} from './preferredPlatformLink';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
-export async function Home() {
-  const rootNode = await getDocsRootNode();
-  const platforms = extractPlatforms(rootNode);
+export function Home() {
   return (
     <div className="tw-app">
-      <Header
-        pathname="/"
-        searchPlatforms={[]}
-        useStoredSearchPlatforms={false}
-        platforms={platforms}
-      />
+      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
       <main id="main">
         <div className="mt-[var(--header-height)]">
           <Banner />
