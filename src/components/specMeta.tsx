@@ -5,9 +5,11 @@ import {SPEC_STATUS_BADGE, type SpecStatus} from './specConstants';
 type SpecMetaProps = {
   status: SpecStatus;
   version: string;
+  /** Value of the `spec_guidelines` frontmatter field, e.g. `writing-specs@0.1`. */
+  guidelines?: string;
 };
 
-export function SpecMeta({version, status}: SpecMetaProps) {
+export function SpecMeta({version, status, guidelines}: SpecMetaProps) {
   const badgeClass = SPEC_STATUS_BADGE[status];
 
   return (
@@ -42,6 +44,17 @@ export function SpecMeta({version, status}: SpecMetaProps) {
           </a>
         </div>
       </div>
+      {!guidelines && (
+        <p className="mt-3 mb-0 text-gray-600 dark:text-gray-400">
+          This spec predates the{' '}
+          <a href="/sdk/getting-started/standards/writing-specs/#legacy-specs">
+            spec writing guidelines
+          </a>{' '}
+          and does not follow them yet. Requirements on behavior that is not externally
+          observable are not mandatory, but SDKs should preserve the observable behavior
+          that results from them.
+        </p>
+      )}
     </div>
   );
 }
