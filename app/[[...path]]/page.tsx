@@ -79,6 +79,7 @@ function mdxComponentsForFrontMatter(frontMatter: Record<string, unknown>) {
       guidelines: frontMatter.spec_guidelines
         ? String(frontMatter.spec_guidelines)
         : undefined,
+      kind: frontMatter.spec_kind ? String(frontMatter.spec_kind) : undefined,
     };
     specOverrides.SpecMeta = function () {
       return <SpecMeta {...boundProps} />;

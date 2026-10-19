@@ -7,10 +7,15 @@ type SpecMetaProps = {
   version: string;
   /** Value of the `spec_guidelines` frontmatter field, e.g. `writing-specs@0.1`. */
   guidelines?: string;
+  /** Value of the `spec_kind` frontmatter field. `process` specs are not subject to the guidelines. */
+  kind?: string;
 };
 
-export function SpecMeta({version, status, guidelines}: SpecMetaProps) {
+const WRITING_SPECS_PATH = '/sdk/getting-started/standards/writing-specs/';
+
+export function SpecMeta({version, status, guidelines, kind}: SpecMetaProps) {
   const badgeClass = SPEC_STATUS_BADGE[status];
+  const isProcessSpec = kind === 'process';
 
   return (
     <div className="not-prose mb-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
@@ -43,14 +48,25 @@ export function SpecMeta({version, status, guidelines}: SpecMetaProps) {
             (changelog)
           </a>
         </div>
+        {guidelines && (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500">Guidelines</span>
+            <a
+              href={WRITING_SPECS_PATH}
+              title="This spec follows this version of the Writing SDK Specs guidelines"
+            >
+              <code className="rounded bg-gray-200 px-1.5 py-0.5 text-xs font-medium dark:bg-gray-700">
+                {guidelines}
+              </code>
+            </a>
+          </div>
+        )}
       </div>
-      {!guidelines && (
+      {!guidelines && !isProcessSpec && (
         <p className="mt-3 mb-0 text-gray-600 dark:text-gray-400">
           This spec predates the{' '}
-          <a href="/sdk/getting-started/standards/writing-specs/#legacy-specs">
-            spec writing guidelines
-          </a>{' '}
-          and does not follow them yet. Requirements on behavior that is not externally
+          <a href={`${WRITING_SPECS_PATH}#legacy-specs`}>spec writing guidelines</a> and
+          does not follow them yet. Requirements on behavior that is not externally
           observable are not mandatory, but SDKs should preserve the observable behavior
           that results from them.
         </p>
