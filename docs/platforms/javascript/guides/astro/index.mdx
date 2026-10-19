@@ -28,7 +28,7 @@ This SDK currently only works on Node runtimes, such as Node adapter or Vercel w
 
 ### Install the Sentry SDK
 
-Run the Astro integration wizard to add Sentry to your project, then install the Profiling package:
+Install the Sentry integration using the `astro` CLI, then install the Profiling package using your preferred package manager:
 
 ```bash {tabTitle:npm}
 npx astro add @sentry/astro
@@ -54,7 +54,8 @@ This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **Us
 
 ### Initialize the SDK
 
-The Astro integration wizard configures the SDK in your project. The snippets below show the manual configuration for the client and server. Set the client DSN in `sentry.client.config.ts` and the server DSN in `sentry.server.config.ts`.
+To configure Sentry on your app's client-side and server-side, create a `sentry.client.config.(ts|js)` and `sentry.server.config.(ts|js)` file in the root of your project.
+Use the tabs in the code box below to view the client and server configuration snippets.
 
 The snippets also turn on:
 
@@ -63,14 +64,15 @@ The snippets also turn on:
 - Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
 - User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
 
-Don't need a feature? Remove its integration and options from the snippet.
+Don't need a feature? Remove its integration and options from the snippets.
 
-```typescript {filename:sentry.client.config.ts}
+```typescript {tabTitle:Client config}{filename:sentry.client.config.ts}
 import * as Sentry from "@sentry/astro";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
+    // enables automatic instrumentation
     Sentry.browserTracingIntegration(),
     // enables Session Replay
     Sentry.replayIntegration(),
@@ -91,12 +93,13 @@ Sentry.init({
 });
 ```
 
-```typescript {filename:sentry.server.config.ts}
+```typescript {tabTitle:Server config}{filename:sentry.server.config.ts}
 import * as Sentry from "@sentry/astro";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // enables Node Profiling
   integrations: [nodeProfilingIntegration()],
 
   // Enables Tracing.
@@ -105,6 +108,8 @@ Sentry.init({
   tracesSampleRate: 1.0,
 
   // Enables Profiling.
+  // Set to 1.0 to enable profiling for 100% of sessions.
+  // We recommend reducing this value in production.
   profileSessionSampleRate: 1.0,
 });
 ```
@@ -161,6 +166,9 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
 If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting options.
 
@@ -181,6 +189,7 @@ Sentry.logger.error("Validation failed", {
 ## Send Application Metrics <FeatureBadge type="new" />
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. You can add searchable attributes to each metric.
+You can also automatically collect Node.js health metrics with <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink>.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
 
