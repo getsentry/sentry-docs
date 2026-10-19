@@ -120,10 +120,10 @@ This table lists some of the errors you might encounter while uploading.
 
 | Status                  | Error Text                                                                               | Solution                                                                                                                      |
 | ----------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 400 Bad Request         | `Missing X-Decoded-Content-Length header`                                                | Specify the size of the request body before applying `Content-Length`.                                                        |
+| 400 Bad Request         | `Missing X-Decoded-Content-Length header`                                                | Specify the size of the request body before compression.                                                        |
 | 400 Bad Request         | `non-final chunk {chunk_length} is smaller than upload granularity {upload_granularity}` | Use chunks of at least `Upload-Min-Chunk-Size` bytes, in multiples of `Upload-Chunk-Granularity`, except for the final chunk. |
 | 409 Conflict            | `upload offset mismatch (server holds {offset} bytes)`                                   | Make a `HEAD` request to obtain the server's current state.                                                                   |
-| 413 Payload Too Large   | `Chunk of {chunk_length} bytes exceeds the remaining {remaining} bytes`                  | The initial `Upload-Length` was wrong.                                                                                        |
+| 413 Payload Too Large   | `Chunk of {chunk_length} bytes exceeds the remaining {remaining} bytes`                  | You are trying to upload more than you initially declared with `Upload-Length`. Cap the file or look for bugs in the counting logic. |
 | 413 Payload Too Large   | `length limit exceeded`                                                                  | The request's `Content-Length` exceeds the server's request body size limit. Send smaller chunks.                             |
 | 413 Payload Too Large   | _empty response_                                                                         | Split your file into smaller chunks.                                                                                          |
 | 501 Not Implemented     | `upload error: resumable upload declined`                                                | Send the attachment in an envelope instead, or drop it if it is too large.                                                    |
@@ -132,4 +132,4 @@ This table lists some of the errors you might encounter while uploading.
 
 ## Compression
 
-The byte sizes in the headers refer to the request body _before_ compression, that is, before applying `Content-Encoding`. This applies to `Upload-Chunk-Granularity`, `Upload-Min-Chunk-Size`, `Upload-Max-Chunk-Size` and `Upload-Offset`. The server interprets `Content-Encoding` on a `PATCH` request as a self-contained transport optimization that only concerns the current request in isolation, not the full upload.
+The byte sizes in the headers refer to the request body _before_ compression, that is, before applying any form of `Content-Encoding`. This applies to `Upload-Chunk-Granularity`, `Upload-Min-Chunk-Size`, `Upload-Max-Chunk-Size` and `Upload-Offset`. The server interprets `Content-Encoding` on a `PATCH` request as a self-contained transport optimization that only concerns the current request in isolation, not the full upload.
