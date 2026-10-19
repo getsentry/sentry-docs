@@ -11,7 +11,7 @@ spec_depends_on:
 spec_changelog:
   - version: 2.0.0
     date: 2026-10-19
-    summary: 'Migrated to Writing SDK Specs. Requirements now describe only externally observable behavior. Using the `processEvent` hook (was "MUST"), caching the module list, and choosing or combining discovery mechanisms are no longer required. The reported modules "SHOULD" instead reflect the libraries and versions actually in use. Attaching modules to events is "SHOULD" instead of "MUST"; their format stays "MUST".'
+    summary: 'Migrated to Writing SDK Specs. Requirements now describe only externally observable behavior. Using the `processEvent` hook (was "MUST"), caching the module list, and choosing or combining discovery mechanisms are no longer required. The reported modules "SHOULD" instead list every installed or loaded module with the version in use. Attaching modules to events is "SHOULD" instead of "MUST"; their format stays "MUST". The "MAY" for omitting modules now covers only events that are not error events, instead of any event type where modules are less useful.'
   - version: 1.0.0
     date: 2026-03-04
     summary: Initial spec, extracted from expected features
@@ -28,6 +28,10 @@ The Modules integration attaches the libraries an application uses, and their ve
 
 This spec applies to SDKs that implement the Modules integration.
 
+## Definitions
+
+- **Module**: a library or package the application can use, such as a Python distribution or an npm package.
+
 ## Requirements
 
 <SpecSection id="event-enrichment" status="stable" since="2.0.0">
@@ -36,7 +40,7 @@ This spec applies to SDKs that implement the Modules integration.
 
 SDKs **SHOULD** enable the integration by default.
 
-The integration **SHOULD** attach modules to events. Attached modules **MUST** be in the event's [`modules` field](/sdk/foundations/envelopes/event-payloads/#optional-attributes), as a map from module name to version string.
+The integration **SHOULD** attach modules to every event, except where [Event Type Filtering](#event-type-filtering) allows it to omit them. Attached modules **MUST** be in the event's [`modules` field](/sdk/foundations/envelopes/event-payloads/#optional-attributes), as a map from module name to version string.
 
 </SpecSection>
 
@@ -44,7 +48,7 @@ The integration **SHOULD** attach modules to events. Attached modules **MUST** b
 
 ### Module Sources
 
-The `modules` field **SHOULD** list the libraries installed in or loaded by the application, each with the version actually in use.
+The `modules` field **SHOULD** list every module installed in the application's environment or loaded by the application, each with the version the application uses.
 
 </SpecSection>
 
@@ -52,7 +56,7 @@ The `modules` field **SHOULD** list the libraries installed in or loaded by the 
 
 ### Event Type Filtering
 
-SDKs **MAY** omit modules from event types where they are less useful, such as transactions, to reduce payload size.
+SDKs **MAY** omit modules from events that are not error events, such as transactions, to reduce payload size.
 
 </SpecSection>
 
