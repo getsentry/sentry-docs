@@ -12,10 +12,6 @@ Sentry Logs let you send structured log data from your Next.js application. Unli
 
 ## Setup
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### Enable Logging
 
 Logs are enabled by default across all three runtime files. Initialize the SDK as usual, then use `Sentry.logger` to send logs.
@@ -25,9 +21,6 @@ Logs work across all Next.js runtimes:
 - **Client** — Browser-side logging
 - **Server** — Node.js server-side logging
 - **Edge** — Edge runtime logging
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
 import * as Sentry from "@sentry/nextjs";
@@ -53,15 +46,7 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Send Logs
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### Log Levels
 
@@ -76,9 +61,6 @@ Use the appropriate level for each message:
 | `error` | Failures that need attention     |
 | `fatal` | Critical failures, system down   |
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```typescript
 import * as Sentry from "@sentry/nextjs";
 
@@ -91,24 +73,13 @@ Sentry.logger.error("Payment failed", { reason: "card_declined" });
 Sentry.logger.fatal("Database unavailable", { host: "primary" });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Add Context
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### Attributes
 
 Pass structured data as the second argument. These attributes become queryable columns in Sentry.
 
 Use the `fmt` helper for parameterized messages — values are extracted as searchable attributes.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 // Pass attributes directly
@@ -122,12 +93,6 @@ Sentry.logger.info("User signed up", {
 Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Shared Attributes
 
 <AvailableSince version="10.61.0" />
@@ -135,9 +100,6 @@ Sentry.logger.info(Sentry.logger.fmt`User ${userId} purchased ${productName}`);
 Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all logs (as well as your metrics). They work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but accept `string`, `number`, and `boolean` values. To target a specific scope, use the scope APIs.
 
 See <PlatformLink to="/enriching-events/scopes/#different-kinds-of-scopes">Different Kinds of Scopes</PlatformLink> to learn more.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 // Applied to all logs and metrics
@@ -160,28 +122,17 @@ Sentry.withScope((scope) => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Best Practices
 
 <PlatformContent includePath="logs/best-practices" />
 
 ## Integrations
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### Console
 
 Capture `console.log`, `console.warn`, and `console.error` calls as structured logs.
 
 The integration parses multiple arguments as searchable attributes.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 Sentry.init({
@@ -199,20 +150,11 @@ console.log("User action:", userId, success);
 // -> message.parameter.1: success
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Pino
 
 Send logs from the [Pino](https://github.com/pinojs/pino) logging library to Sentry.
 
 Requires SDK version `10.18.0` or higher.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 Sentry.init({
@@ -223,20 +165,11 @@ Sentry.init({
 
 See <PlatformLink to="/configuration/integrations/pino/">Pino integration docs</PlatformLink> for configuration options.
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Consola
 
 Send logs from the [Consola](https://github.com/unjs/consola) logging library to Sentry.
 
 Requires SDK version `10.12.0` or higher.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 import { consola } from "consola";
@@ -248,20 +181,11 @@ const sentryReporter = Sentry.createConsolaReporter({
 consola.addReporter(sentryReporter);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Winston
 
 Send logs from the [Winston](https://github.com/winstonjs/winston) logging library to Sentry.
 
 Requires SDK version `9.13.0` or higher.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 import winston from "winston";
@@ -276,11 +200,6 @@ const logger = winston.createLogger({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-</SplitLayout>
-
 ### Upcoming Integrations
 
 - [Node Bunyan](https://github.com/getsentry/sentry-javascript/issues/16474)
@@ -288,10 +207,6 @@ const logger = winston.createLogger({
 [Request an integration](https://github.com/getsentry/sentry-javascript/issues/new/choose)
 
 ## Filter Logs
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### beforeSendLog
 
@@ -302,9 +217,6 @@ Use this to:
 - Remove sensitive data
 - Filter noisy logs
 - Add computed attributes
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:instrumentation-client.ts}
 Sentry.init({
@@ -325,10 +237,6 @@ Sentry.init({
   },
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Default Attributes
 
