@@ -79,14 +79,20 @@ Save the following as `upload-symbol-maps.sh`. For each debug file, it writes a 
 #!/usr/bin/env bash
 set -eo pipefail
 
-symbol_map=${1:?Usage: bash upload-symbol-maps.sh <symbol-map> <debug-file>...}
+if [ $# -lt 2 ]; then
+  echo "Usage: bash upload-symbol-maps.sh <symbol-map> <debug-file>... (no debug files given)" >&2
+  exit 1
+fi
+symbol_map=$1
 shift
 mkdir -p build/dart-symbol-maps
 
 for debug_file in "$@"; do
   debug_id=$(sentry-cli debug-files check --json "$debug_file" | jq -r '.variants[0].debug_id')
   prepared_map="build/dart-symbol-maps/$debug_id.json"
-  jq -c --arg id "$debug_id" '["SENTRY_DEBUG_ID_MARKER", $id] + .' "$symbol_map" > "$prepared_map"
+  jq -c --arg id "$debug_id" \
+    'if type == "array" then ["SENTRY_DEBUG_ID_MARKER", $id] + . else error("symbol map must be a JSON array") end' \
+    "$symbol_map" > "$prepared_map"
   sentry-cli dart-symbol-map upload "$prepared_map" "$debug_file"
 done
 ```
@@ -98,8 +104,8 @@ bash upload-symbol-maps.sh build/app/obfuscation.map.json build/symbols/app.andr
 ```
 
 ```bash {tabTitle:iOS}
-find build/ios -path '*/App.framework.dSYM/Contents/Resources/DWARF/App' \
-  -exec bash upload-symbol-maps.sh build/app/obfuscation.map.json {} +
+dsyms=$(find build/ios -path '*/App.framework.dSYM/Contents/Resources/DWARF/App') &&
+  bash upload-symbol-maps.sh build/app/obfuscation.map.json $dsyms
 ```
 
 The upload fails if:
