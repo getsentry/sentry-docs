@@ -2,14 +2,19 @@
 title: Spans
 description: Span creation, sampling, filtering, buffering, and wire format for the span-first tracing model.
 spec_id: sdk/telemetry/spans
-spec_version: 1.1.0
+spec_version: 1.2.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
   - id: sdk/foundations/trace-propagation
     version: ">=1.0.0"
+  - id: sdk/foundations/trace-propagation/dynamic-sampling-context
+    version: ">=1.4.0"
 spec_changelog:
+  - version: 1.2.0
+    date: 2026-10-19
+    summary: Require DSC spec 1.4.0 so span envelopes always have a trace envelope header, even for incoming traces without baggage
   - version: 1.1.0
     date: 2026-10-08
     summary: Added client reports section listing discard reasons for spans and clarifying that the quantity is the number of discarded spans
@@ -477,6 +482,8 @@ SDKs **SHOULD** materialize and freeze the DSC as late as possible:
 - The buffer **SHOULD** enqueue spans but only create the final envelope at **flush time**.
 - At flush time, the buffer **SHOULD** materialize and freeze the DSC on the segment span if not already done. That way, the `trace` envelope header (e.g. the transaction name in the DSC) reflects the latest data.
 
+This also applies when the SDK continued an incoming trace that had no DSC (a `sentry-trace` header without `baggage`). See [Incoming Trace Without DSC](/sdk/foundations/trace-propagation/dynamic-sampling-context/#incoming-trace-without-dsc).
+
 </SpecSection>
 
 <SpecSection id="client-reports" status="candidate" since="1.1.0">
@@ -613,6 +620,8 @@ The envelope header **MUST** contain the same properties as previously with tran
 ```
 
 Unlike transactions, envelope headers for spans **REQUIRE** [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/). See also [Envelope Headers](/sdk/foundations/envelopes/#headers).
+
+To guarantee a DSC for every span envelope, SDKs implementing span streaming **MUST** follow version 1.4.0 or later of the DSC spec. In particular, if the SDK continues an incoming trace that has a `sentry-trace` header but no DSC, it **MUST** create the DSC from its own segment span instead of freezing an empty one. See [Incoming Trace Without DSC](/sdk/foundations/trace-propagation/dynamic-sampling-context/#incoming-trace-without-dsc).
 
 ### Span v2 Envelope Item Header
 
