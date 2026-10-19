@@ -1,6 +1,6 @@
 ---
 title: Data Scrubbing
-description: Rules that decide which sensitive data the SDK removes, which sensitive data Relay removes, and how SDKs parameterize data.
+description: Rules that decide which sensitive data the SDK scrubs, which sensitive data server-side scrubbing removes, and how SDKs parameterize data.
 spec_id: sdk/foundations/data-scrubbing
 spec_version: 1.0.0
 spec_status: candidate
@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 1.0.0
     date: 2026-10-12
-    summary: Initial spec. Define not collecting, parameterization, and scrubbing, and split the scrubbing work between SDKs and Relay.
+    summary: Initial spec. Define not collecting, parameterization, and scrubbing, and split the work between client-side and server-side scrubbing.
 sidebar_order: 6
 ---
 
@@ -20,16 +20,16 @@ sidebar_order: 6
 
 ## Overview
 
-This spec defines which sensitive data the SDK removes and which sensitive data Relay removes. It also defines parameterization. Parameterization and scrubbing can use the same operations, but they have different purposes.
+This spec defines which sensitive data the SDK scrubs (client-side scrubbing) and which sensitive data Sentry scrubs after it receives the data (server-side scrubbing). It also defines parameterization. Parameterization and scrubbing can use the same operations, but they have different purposes.
 
-The SDK knows where it collects a value, so it can remove a known-sensitive value before it sends it. Relay can parse payloads and apply content rules without adding work to the application. The rules below give each side the work that it can do best.
+The SDK knows where it collects a value, so it can scrub a known-sensitive value before it sends it. Server-side scrubbing can parse payloads and apply content rules without adding work to the application. The rules below give each side the work that it can do best.
 
 Related specs:
 
 - [Data Collection](/sdk/foundations/client/data-collection/) defines the `dataCollection` options, the sensitive denylist, and the rules for headers, cookies, URLs, and bodies.
 - [Structuring Data](/sdk/telemetry/traces/structuring-data/) defines span name formats.
 - [Queries Module](/sdk/telemetry/traces/modules/queries/#query-parameterization) defines how SDKs parameterize database queries.
-- [Server-Side Data Scrubbing](https://docs.sentry.io/security-legal-pii/scrubbing/server-side-scrubbing/) describes the rules that Relay applies.
+- [Server-Side Data Scrubbing](https://docs.sentry.io/security-legal-pii/scrubbing/server-side-scrubbing/) describes the server-side rules and the settings that control them.
 
 ## Concepts
 
@@ -39,7 +39,9 @@ Related specs:
 
 - **Not collecting**: The SDK does not read the data. A `dataCollection` option controls this for each data category.
 - **Parameterization**: The SDK replaces the variable parts of a value with placeholders, for example `SELECT * FROM users WHERE id = ?` or `/users/:id`. The result has low cardinality, so Sentry can group and search by it.
-- **Scrubbing**: The SDK or Relay replaces a sensitive value with `"[Filtered]"`. The structure and the key names stay the same.
+- **Scrubbing**: A sensitive value is replaced. The structure and the key names stay the same. The SDK uses `"[Filtered]"` as the replacement. The default server-side rules also use `"[Filtered]"`, but users can configure other replacements.
+- **Client-side scrubbing**: The SDK scrubs the data before it sends the data.
+- **Server-side scrubbing**: Sentry scrubs the data after it receives the data. The project and organization settings decide which rules apply.
 
 </SpecSection>
 
@@ -55,9 +57,9 @@ For example, the SDK can parse a SQL query to replace its literals with `?`. The
 
 </SpecSection>
 
-<SpecSection id="known-sensitive-data" status="candidate" since="1.0.0">
+<SpecSection id="client-side-scrubbing" status="candidate" since="1.0.0">
 
-### Known-Sensitive Data in the SDK
+### Client-Side Scrubbing
 
 The SDK can identify some sensitive values at the collection point. A key name, a header, a cookie, a query parameter, or the source location tells the SDK that the value is sensitive. The SDK **MUST NOT** send these values.
 
@@ -79,33 +81,31 @@ The SDK can identify some sensitive values at the collection point. A key name, 
 
 </SpecSection>
 
-<SpecSection id="heuristic-scrubbing" status="candidate" since="1.0.0">
+<SpecSection id="server-side-scrubbing" status="candidate" since="1.0.0">
 
-### Heuristic Scrubbing in Relay
+### Server-Side Scrubbing
 
-Relay scrubs sensitive data that only content rules can find, for example credit card numbers or bearer tokens. Relay also scrubs unstructured payloads, for example a request body or a database query.
+Server-side scrubbing finds sensitive data that only content rules can find, for example credit card numbers or bearer tokens. It also scrubs unstructured payloads, for example a request body or a database query.
 
 - The SDK **SHOULD NOT** parse a payload only to scrub it.
 - The SDK **SHOULD NOT** apply content rules to find sensitive values.
+- If the data already has a structure, the SDK **SHOULD** keep the structure when it sends the data. For example, the SDK sends the key-value pairs that it already has, and not one string that contains all pairs. Server-side scrubbing and trimming then apply to each value.
 - If [Sentry Conventions](https://getsentry.github.io/sentry-conventions/) defines an attribute for the data, the SDK **MUST** send the data in that attribute.
 - An attribute that can contain sensitive data **MUST** have `apply_scrubbing` set to `auto` or `manual` in Sentry Conventions. See the [Sentry Conventions contribution guidelines](https://github.com/getsentry/sentry-conventions/blob/main/CONTRIBUTING.md).
 
-Relay applies its default rules to attributes with `apply_scrubbing` set to `auto`. Relay applies only the rules that target an attribute by name to attributes with `manual`. Relay does not scrub attributes with `never`.
+Server-side scrubbing applies the default rules to attributes with `apply_scrubbing` set to `auto`. It applies only the rules that target an attribute by name to attributes with `manual`.
+It does not scrub attributes with `never`.
 
-As of 2026-10-12, Relay does not parse payloads in span attributes. Relay applies its rules to the whole attribute value:
-
-- If the value contains a sensitive word, such as `password`, `secret`, or `auth`, Relay replaces the whole value with `"[Filtered]"`.
-- Relay replaces other matches, such as credit card numbers, in place.
-- Relay does not remove literals from `db.query.text`. Relay adds a parameterized copy in `sentry.normalized_db_query` for grouping.
-- By default, Relay does not scrub email addresses or IP addresses.
+As of 2026-10-12, server-side scrubbing does not parse payloads in span attributes, for example a cookie string or a JSON body. It applies its rules to the whole attribute value.
+The project and organization settings decide which rules apply. See [Server-Side Data Scrubbing](https://docs.sentry.io/security-legal-pii/scrubbing/server-side-scrubbing/).
 
 </SpecSection>
 
 <SpecSection id="unscrubbable-fields" status="candidate" since="1.0.0">
 
-### Fields That Relay Cannot Scrub
+### Fields Without Server-Side Scrubbing
 
-Relay does not scrub some fields, for example the span name and the metric name. These fields **MUST NOT** contain data that needs server-side scrubbing. For these fields, the SDK uses a parameterized form or a low-cardinality fallback. The [Queries Module](/sdk/telemetry/traces/modules/queries/#query-parameterization) defines the fallback for database spans.
+Server-side scrubbing does not apply to some fields, for example the span name and the metric name. These fields **MUST NOT** contain data that needs server-side scrubbing. For these fields, the SDK uses a parameterized form or a low-cardinality fallback. The [Queries Module](/sdk/telemetry/traces/modules/queries/#query-parameterization) defines the fallback for database spans.
 
 This rule does not cover the URL path in HTTP span names yet. [Structuring Data](/sdk/telemetry/traces/structuring-data/) defines that format.
 

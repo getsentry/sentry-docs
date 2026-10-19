@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 0.16.0
     date: 2026-10-12
-    summary: "Attach text bodies unchanged. SDKs no longer parse bodies to scrub them. Relay scrubs the body."
+    summary: "Attach text bodies unchanged. SDKs no longer parse bodies to scrub them. Server-side scrubbing applies to the body."
   - version: 0.15.0
     date: 2026-09-29
     summary: "Attach cookie headers as one string-array span attribute (`name=value` elements) instead of one attribute per cookie name. Filter nameless cookie segments and unparseable cookie strings."
@@ -75,7 +75,7 @@ The new `dataCollection` configuration collects rich context for debugging by de
 
 Related specs:
 
-- [Data Scrubbing](/sdk/foundations/data-scrubbing/) — which data the SDK scrubs, which data Relay scrubs, and parameterization
+- [Data Scrubbing](/sdk/foundations/data-scrubbing/) — which data the SDK scrubs, which data server-side scrubbing removes, and parameterization
 - [Variable Size](/sdk/foundations/envelopes/event-payloads/#variable-size) — size limits for variable-size data
 - [Client](/sdk/foundations/client/) — client lifecycle and event pipeline
 - [Configuration](/sdk/foundations/client/configuration/) — top-level init options including `send_default_pii` (deprecated in favor of this spec)
@@ -280,7 +280,7 @@ Unfiltered, raw cookie header values **MUST NOT** be sent. When in doubt, treat 
 
 When bodies are collected via the `httpBodies` option (enabled by default; see [Body Type Collection](#body-type-collection)):
 
-- **Text bodies:** SDKs **SHOULD** attach the body unchanged. SDKs **SHOULD NOT** parse the body to scrub it. Relay scrubs the body (see [Heuristic Scrubbing in Relay](/sdk/foundations/data-scrubbing/#heuristic-scrubbing)).
+- **Text bodies:** SDKs **SHOULD** attach the body unchanged. SDKs **SHOULD NOT** parse the body to scrub it. Server-side scrubbing applies to the body (see [Server-Side Scrubbing](/sdk/foundations/data-scrubbing/#server-side-scrubbing)).
 - **Bodies that the framework already parsed:** SDKs **MAY** apply the denylist to the keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`.
 
 No built-in option scrubs **keys**; users who need to hide header or cookie names **MUST** use `beforeSend` (or equivalent).
@@ -540,7 +540,7 @@ SDKs **MUST** support configuring body collection for specific body types. The o
 Valid body type values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`.
 
 Body collection **MAY** not support allow/deny filtering. Unlike cookies or headers, body content has no predictable key structure for the SDK to filter at collection time.
-The entire body is either collected or not. For how SDKs and Relay scrub a collected body, see [Request and Response Bodies](#request-and-response-bodies). Body data can still be redacted in `beforeSend` or event processors if needed.
+The entire body is either collected or not. For how the SDK and server-side scrubbing handle a collected body, see [Request and Response Bodies](#request-and-response-bodies). Body data can still be redacted in `beforeSend` or event processors if needed.
 
 <Expandable title="Language-specific type examples for body collection">
 
