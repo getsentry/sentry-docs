@@ -49,6 +49,8 @@ A pair `(anchor_wall, anchor_mono)` captured at the same instant: one wall-clock
 timestamp = anchor_wall + (mono_now − anchor_mono)
 ```
 
+The two clocks can report in different units across platforms (seconds, milliseconds, or nanoseconds); convert both readings to a common unit before combining them.
+
 ---
 
 ## Behavior
@@ -57,8 +59,8 @@ timestamp = anchor_wall + (mono_now − anchor_mono)
 
 ### Anchoring
 
-- When the SDK starts a [segment span](/sdk/telemetry/spans/#concepts) — the topmost span within a service boundary — it **MUST** capture an anchor, reading the wall clock and the monotonic clock as close together as possible.
-- The segment span's `start_timestamp` **MUST** be `anchor_wall`.
+- When the SDK starts a [segment span](/sdk/telemetry/spans/#concepts) — the topmost span within a service boundary — it **MUST** capture an anchor, reading the wall clock and the monotonic clock as close together as possible. This monotonic reading is `anchor_mono`, the segment span's start reading.
+- Unless the user provided a start timestamp (see [User-Provided Timestamps](#user-provided-timestamps)), the segment span's `start_timestamp` **MUST** be `anchor_wall` — the anchor formula at `mono = anchor_mono`.
 - Every span in the same segment **MUST** use the segment span's anchor. Child spans **MUST NOT** read the wall clock to compute their timestamps.
 - A span that continues a trace from an incoming request or another process (its parent is a remote span) is itself a segment span and **MUST** capture its own anchor.
 - SDKs **MUST** use a monotonic clock that keeps counting while the device sleeps if and only if the platform provides one. Where the platform does not, SDKs **MUST NOT** account for sleep by other means (for example, inferring it from wall-clock drift).
@@ -69,7 +71,7 @@ timestamp = anchor_wall + (mono_now − anchor_mono)
 
 ### Timestamps and Durations
 
-- For every span in the segment, unless it uses a [user-provided timestamp](#user-provided-timestamps), the SDK **MUST** compute its `start_timestamp` and `end_timestamp` as `anchor_wall + (mono − anchor_mono)`, using monotonic readings taken when the span starts and ends.
+- For every span in the segment, unless it uses a [user-provided timestamp](#user-provided-timestamps), the SDK **MUST** compute its `start_timestamp` and `end_timestamp` as `anchor_wall + (mono − anchor_mono)`, using monotonic readings taken when the span starts and ends, and convert the result to Unix seconds for the payload.
 - A duration computed this way (`end_timestamp − start_timestamp`) **MUST** equal the elapsed monotonic time, so it can never be negative. Durations built from user-provided timestamps carry no such guarantee; see [User-Provided Timestamps](#user-provided-timestamps).
 
 </SpecSection>
