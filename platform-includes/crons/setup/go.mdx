@@ -95,10 +95,11 @@ If you schedule jobs with [gocron v2](https://github.com/go-co-op/gocron) (v2.22
 go get github.com/getsentry/sentry-go/gocron
 ```
 
-Pass `sentrygocron.NewSchedulerMonitor` to `gocron.WithSchedulerMonitor` to monitor every job. Each job name becomes a monitor slug, and cron and duration jobs use their schedule and the scheduler's location as the monitor schedule and timezone:
+Pass `sentrygocron.NewSchedulerMonitor` to `gocron.WithSchedulerMonitor` to monitor every job. Each job name becomes a monitor slug, and cron and duration jobs use their schedule and the scheduler's location as the monitor schedule and timezone. Check-ins go to the client carried by the context, or the global client:
 
 ```go
 import (
+	"context"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -107,7 +108,7 @@ import (
 
 s, err := gocron.NewScheduler(
 	gocron.WithLocation(time.UTC),
-	gocron.WithSchedulerMonitor(sentrygocron.NewSchedulerMonitor(sentrygocron.Options{
+	gocron.WithSchedulerMonitor(sentrygocron.NewSchedulerMonitor(context.Background(), sentrygocron.Options{
 		// Same as gocron.WithLocation. Defaults to time.Local.
 		Location: time.UTC,
 		Exclude:  []string{"<job-name>"},
