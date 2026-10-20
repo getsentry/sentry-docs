@@ -20,6 +20,18 @@ The monitor slug is the schedule name and a name for the message, for example `d
 
 `RedispatchMessage` isn't monitored; the message it redispatches is monitored when a worker consumes it. Retried messages, cancelled runs, and messages of anonymous classes don't send check-ins.
 
+To skip some recurring messages, list them under `excluded_messages`. An entry matches the message class, the command name or full command of a scheduled console command, the `@service::method` of a scheduled service, or the monitor slug. Entries wrapped in slashes are regular expressions.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    scheduler:
+        enabled: true
+        excluded_messages:
+            - App\Message\CleanupMessage
+            - 'app:sync-search-index'
+            - '/^reports-/'
+```
+
 To monitor other jobs, send check-ins with the PHP SDK as shown below.
 
 <PlatformContent includePath="crons/setup" noGuides />
