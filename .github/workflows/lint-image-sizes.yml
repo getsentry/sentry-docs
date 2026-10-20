@@ -1,0 +1,74 @@
+name: Lint Image Sizes
+
+# Fails when a PR adds or modifies an image larger than MAX_IMAGE_KB.
+# Only files changed by the PR are checked, so existing images are never blamed.
+# GIFs are intentionally excluded for now.
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '**/*.png'
+      - '**/*.PNG'
+      - '**/*.jpg'
+      - '**/*.JPG'
+      - '**/*.jpeg'
+      - '**/*.JPEG'
+      - '**/*.webp'
+      - '**/*.avif'
+      - '**/*.svg'
+      - '.github/workflows/lint-image-sizes.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint-image-sizes:
+    name: Check image sizes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      MAX_IMAGE_KB: 300
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The PR merge commit and its first parent (the base branch tip) are
+          # enough to diff exactly what this PR changes.
+          fetch-depth: 2
+
+      - name: Check changed images
+        run: |
+          max_bytes=$((MAX_IMAGE_KB * 1024))
+          checked=0
+          too_large=()
+
+          # NUL-delimited so paths with spaces or odd characters are safe.
+          while IFS= read -r -d '' path; do
+            if ! [[ "${path,,}" =~ \.(png|jpe?g|webp|avif|svg)$ ]]; then
+              continue
+            fi
+            checked=$((checked + 1))
+            size=$(git cat-file -s "HEAD:$path")
+            if (( size > max_bytes )); then
+              kb=$(( (size + 1023) / 1024 ))
+              too_large+=("$path ($kb KB)")
+              echo "::error file=$path::Image is $kb KB, over the $MAX_IMAGE_KB KB limit. Compress it (for example with https://squoosh.app or https://tinypng.com) or resize it."
+            fi
+          done < <(git diff -z --name-only --diff-filter=AMR HEAD^1 HEAD)
+
+          echo "Checked $checked changed image(s) against a $MAX_IMAGE_KB KB limit."
+
+          if (( ${#too_large[@]} > 0 )); then
+            {
+              echo "## Images over $MAX_IMAGE_KB KB"
+              echo
+              echo "Compress or resize these images before merging. GIFs are not checked."
+              echo
+              printf -- '- `%s`\n' "${too_large[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
