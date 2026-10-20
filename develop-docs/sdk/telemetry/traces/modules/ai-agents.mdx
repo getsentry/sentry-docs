@@ -138,7 +138,7 @@ Describes a decision on generated content against a set of questions, such as gr
 
 ### Decision Input Messages
 
-`gen_ai.input.messages` holds a one-element array: `[{"type": "evaluation", "state", "questions"}]`. Copy `state` and the questions as the caller passed them. If the provider uses a different layout, convert it to this layout (see [Mapping Provider Payloads](#mapping-provider-payloads)). `<name>` is the question key.
+`gen_ai.input.messages` holds a one-element array: `[{"type": "evaluation", "state", "questions"}]`. Copy `state` and the questions as the caller passed them. If the provider uses a different layout, convert it to this layout. `<name>` is the question key.
 
 | Field                           | Type                   | Required                 | Description                                                                                                                                                             | Example                                                 |
 | :------------------------------ | :--------------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------ |
@@ -168,14 +168,6 @@ Describes a decision on generated content against a set of questions, such as gr
 | `answers.<name>.confidence`    | number | No                            | Only for `choice` and `score`. The confidence of the answer.                                          | `0.28`                                 |
 
 Omit optional fields when the provider doesn't report them. A field with the wrong type makes that question or answer unreadable, and Sentry shows it raw.
-
-### Mapping Provider Payloads
-
-TypeSafe Jev, Cloudflare Clef, and Mastra use the layout above, so copy their `state`, `questions`, and `answers` as they are. Other providers need these changes:
-
-- **OpenAI** (`client.decisions.create`): `input` becomes `state`. `questions` and `answers` are arrays, so key each item by its `name` and remove `name` (use the array index as the key when an item has no name). For `choice` questions, `choices: [{value, description}]` becomes `criteria: {<value>: <description or "">}`. For `score` questions, `levels: [{label, description}]` becomes `criteria: [<label>, ...]`, and the level descriptions go in `descriptions`. For answers, `probabilities: [{value, probability}]` becomes `{<value>: <probability>}`, and the `label` of each score option goes in `legend`.
-- **Vercel AI** (`experimental_decide`): the TypeSafe provider moves `confidence` into `providerMetadata.typesafe.confidence[<name>]`. Put it back on the answer when the answer has no `confidence`.
-- **Cloudflare Workers AI**: the binding can wrap the response in `{state, result}`. Read the answers from `result` in that case.
 
 ## Extraction Span
 
