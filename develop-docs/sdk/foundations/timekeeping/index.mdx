@@ -1,0 +1,146 @@
+---
+title: Timekeeping
+description: How SDKs combine wall clocks and monotonic clocks to produce span timestamps and durations.
+spec_id: sdk/foundations/timekeeping
+spec_version: 0.1.0
+spec_status: draft
+spec_depends_on:
+  - id: sdk/telemetry/spans
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 0.1.0
+    date: 2026-10-20
+    summary: Initial draft — anchor model for span timestamps, duration rules, platform notes
+sidebar_order: 30
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Span payloads carry absolute `start_timestamp` and `end_timestamp` values in Unix seconds, and Sentry derives the duration as `end_timestamp − start_timestamp`. If an SDK reads a wall clock for both values, any wall-clock adjustment between them (NTP corrections, the user changing the time, time zone or daylight saving bugs in the clock source) corrupts the duration. That can make a duration negative, push a child span outside its parent, or inflate it by hours.
+
+This spec defines how SDKs combine a wall clock (for absolute position in time) with a monotonic clock (for elapsed time), so that durations stay correct while timestamps remain comparable across services.
+
+Related specs:
+
+- [Spans](/sdk/telemetry/spans/): span payload and timestamp format
+- [Envelopes](/sdk/foundations/envelopes/): `sent_at` header used for server-side clock drift correction
+
+## Requirements Language
+
+The key words "**MUST**", "**MUST NOT**", "**REQUIRED**", "**SHALL**", "**SHALL NOT**", "**SHOULD**", "**SHOULD NOT**", "**RECOMMENDED**", "**NOT RECOMMENDED**", "**MAY**", and "**OPTIONAL**" in this document are to be interpreted as described in BCP 14 [[RFC2119](#normative-references)] [[RFC8174](#normative-references)] when, and only when, they appear in all capitals, as shown here.
+
+The [Concepts](#concepts) and [Platform Notes](#platform-notes) sections are informative and contain no requirements.
+
+---
+
+## Concepts
+
+### Wall Clock
+
+A clock that reports the current time of day as Unix time (for example `Date.now()`, `System.currentTimeMillis()`, `Date()`). It can jump forward or backward at any time.
+
+### Monotonic Clock
+
+A clock that only moves forward at a steady rate and has no relation to the time of day (for example `performance.now()`, `SystemClock.elapsedRealtimeNanos()`, `clock_gettime_nsec_np(CLOCK_UPTIME_RAW)`). Its readings are only meaningful as differences.
+
+### Anchor
+
+A pair `(anchor_wall, anchor_mono)` captured at the same instant: one wall-clock reading and one monotonic-clock reading. An anchor converts any later monotonic reading into a wall-clock timestamp:
+
+```
+timestamp = anchor_wall + (mono_now − anchor_mono)
+```
+
+---
+
+## Behavior
+
+<SpecSection id="anchoring" status="draft" since="0.1.0">
+
+### Anchoring
+
+- When a span starts without a local parent (a local root, or segment span), the SDK **MUST** capture an anchor, reading the wall clock and the monotonic clock as close together as possible.
+- The root span's `start_timestamp` **MUST** be `anchor_wall`.
+- Every span in the same local span tree **MUST** use the root's anchor. Child spans **MUST NOT** read the wall clock to compute their timestamps.
+- A span that continues a trace from an incoming request or another process (a remote parent) is a local root and **MUST** capture its own anchor.
+- SDKs **MUST** compute anchored timestamps with a monotonic clock that keeps counting while the device sleeps, where the platform provides one. See [Platform Notes](#platform-notes) for examples.
+
+</SpecSection>
+
+<SpecSection id="timestamps-and-durations" status="draft" since="0.1.0">
+
+### Timestamps and Durations
+
+- For every span in an anchored tree, the SDK **MUST** compute `start_timestamp` and `end_timestamp` as `anchor_wall + (mono − anchor_mono)` using monotonic readings taken when the span starts and ends.
+- A span's duration (`end_timestamp − start_timestamp`) **MUST** therefore equal the elapsed monotonic time, so it can never be negative.
+
+</SpecSection>
+
+<SpecSection id="user-provided-timestamps" status="draft" since="0.1.0">
+
+### User-Provided Timestamps
+
+Public APIs such as `startSpan({ startTime })` and `span.end(timestamp)` accept wall-clock timestamps.
+
+- SDKs **MUST** use a user-provided timestamp as given and **MUST NOT** adjust it with the anchor.
+- If a user-provided end timestamp is earlier than the span's start timestamp, the SDK **SHOULD** clamp the end timestamp to the start timestamp. Logging a debug message when this happens helps users find the faulty call.
+- A span started with a user-provided start timestamp and no local parent **SHOULD** still capture an anchor from the current clock readings, and its children **MUST** use that anchor.
+
+</SpecSection>
+
+<SpecSection id="cross-runtime-span-trees" status="draft" since="0.1.0">
+
+### Span Trees Across Runtimes
+
+Hybrid SDKs (for example React Native, Flutter, Capacitor, and Unity) run a JavaScript, Dart, or C# layer on top of a native SDK, and each layer has its own clocks.
+
+- When a local span tree crosses from one layer to another, SDKs **SHOULD** pass the root's anchor across the bridge instead of capturing a new anchor in each layer.
+
+</SpecSection>
+
+---
+
+## Platform Notes
+
+These notes are informative. They describe platform clocks that satisfy the requirements above and pitfalls known for each platform.
+
+### JavaScript (Browser and Node.js)
+
+- Monotonic clock: `performance.now()`, relative to `performance.timeOrigin`. In Node.js, `process.hrtime.bigint()` is also suitable.
+- `performance.timeOrigin + performance.now()` can drift from `Date.now()`, for example after the tab is backgrounded or the machine sleeps. Comparing the two at anchor time, and using `Date.now()` for `anchor_wall` when they differ significantly, keeps timestamps aligned with wall time. The JavaScript SDK currently corrects the time origin when the two differ by more than one second.
+- How `performance.now()` behaves while the machine sleeps varies by browser and OS.
+
+### Android
+
+- `SystemClock.elapsedRealtimeNanos()` keeps counting during deep sleep.
+- `SystemClock.uptimeMillis()` and `System.nanoTime()` stop counting during deep sleep.
+- App start: `Process.getStartElapsedRealtime()` and `Process.getStartUptimeMillis()` (API 24+) report the process start time in their respective clock domains.
+
+### Apple Platforms (iOS, macOS, tvOS, watchOS, visionOS)
+
+- `clock_gettime_nsec_np(CLOCK_UPTIME_RAW)` and `mach_absolute_time()` stop counting while the device sleeps.
+- `clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)` and `mach_continuous_time()` keep counting while the device sleeps.
+- App start: the process start time is available from `sysctl` (`kinfo_proc.kp_proc.p_starttime`). It's a wall-clock value, so SDKs need to convert it before using it with an anchor.
+
+### Hybrid SDKs
+
+- Layers that run in the same process can often read the same OS clock. For example, on Android the Dart VM's monotonic clock reads `CLOCK_MONOTONIC`, the same clock behind `SystemClock.uptimeMillis()`. Through a synchronous call (JNI or FFI), the Dart layer can read the native SDK's anchor and monotonic clock directly, with no conversion between clock domains.
+- A bridge that only supports asynchronous messages can't capture an anchor pair at a single instant across layers. In that case, the native layer can compute wall-clock timestamps from its own anchor and pass those across the bridge instead.
+
+---
+
+## References
+
+### Normative References
+
+- **[RFC2119]** Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997, [https://www.rfc-editor.org/info/rfc2119](https://www.rfc-editor.org/info/rfc2119).
+- **[RFC8174]** Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, May 2017, [https://www.rfc-editor.org/info/rfc8174](https://www.rfc-editor.org/info/rfc8174).
+- [Spans](/sdk/telemetry/spans/)
+
+### Informative References
+
+- [Envelopes](/sdk/foundations/envelopes/)
