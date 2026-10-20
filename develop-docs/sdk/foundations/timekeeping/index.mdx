@@ -57,10 +57,10 @@ timestamp = anchor_wall + (mono_now − anchor_mono)
 
 ### Anchoring
 
-- When a span starts without a local parent (a local root, or segment span), the SDK **MUST** capture an anchor, reading the wall clock and the monotonic clock as close together as possible.
-- The root span's `start_timestamp` **MUST** be `anchor_wall`.
-- Every span in the same local span tree **MUST** use the root's anchor. Child spans **MUST NOT** read the wall clock to compute their timestamps.
-- A span that continues a trace from an incoming request or another process (a remote parent) is a local root and **MUST** capture its own anchor.
+- When the SDK starts a [segment span](/sdk/telemetry/spans/#concepts) — the topmost span within a service boundary — it **MUST** capture an anchor, reading the wall clock and the monotonic clock as close together as possible.
+- The segment span's `start_timestamp` **MUST** be `anchor_wall`.
+- Every span in the same segment **MUST** use the segment span's anchor. Child spans **MUST NOT** read the wall clock to compute their timestamps.
+- A span that continues a trace from an incoming request or another process (its parent is a remote span) is itself a segment span and **MUST** capture its own anchor.
 - SDKs **MUST** use a monotonic clock that keeps counting while the device sleeps if and only if the platform provides one. Where the platform does not, SDKs **MUST NOT** account for sleep by other means (for example, inferring it from wall-clock drift).
 
 </SpecSection>
@@ -69,8 +69,8 @@ timestamp = anchor_wall + (mono_now − anchor_mono)
 
 ### Timestamps and Durations
 
-- For every span in an anchored tree, the SDK **MUST** compute `start_timestamp` and `end_timestamp` as `anchor_wall + (mono − anchor_mono)` using monotonic readings taken when the span starts and ends.
-- A span's duration (`end_timestamp − start_timestamp`) **MUST** therefore equal the elapsed monotonic time, so it can never be negative.
+- For every span in the segment, unless it uses a [user-provided timestamp](#user-provided-timestamps), the SDK **MUST** compute its `start_timestamp` and `end_timestamp` as `anchor_wall + (mono − anchor_mono)`, using monotonic readings taken when the span starts and ends.
+- A duration computed this way (`end_timestamp − start_timestamp`) **MUST** equal the elapsed monotonic time, so it can never be negative. Durations built from user-provided timestamps carry no such guarantee; see [User-Provided Timestamps](#user-provided-timestamps).
 
 </SpecSection>
 
@@ -82,7 +82,7 @@ Public APIs such as `startSpan({ startTime })` and `span.end(timestamp)` accept 
 
 - SDKs **MUST** use a user-provided timestamp as given and **MUST NOT** adjust it with the anchor.
 - If a user-provided end timestamp is earlier than the span's start timestamp, the SDK **SHOULD** clamp the end timestamp to the start timestamp. Logging a debug message when this happens helps users find the faulty call.
-- A span started with a user-provided start timestamp and no local parent **SHOULD** still capture an anchor from the current clock readings, and its children **MUST** use that anchor.
+- A segment span started with a user-provided start timestamp **SHOULD** still capture an anchor from the current clock readings, and its children **MUST** use that anchor.
 
 </SpecSection>
 
@@ -92,6 +92,6 @@ Public APIs such as `startSpan({ startTime })` and `span.end(timestamp)` accept 
 
 Hybrid SDKs (for example React Native, Flutter, Capacitor, and Unity) run a JavaScript, Dart, or C# layer on top of a native SDK, and each layer has its own clocks.
 
-- When a local span tree crosses from one layer to another, SDKs **SHOULD** pass the root's anchor across the bridge instead of capturing a new anchor in each layer.
+- When a segment's spans cross from one layer to another, SDKs **SHOULD** pass the segment span's anchor across the bridge instead of capturing a new anchor in each layer.
 
 </SpecSection>
