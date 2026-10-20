@@ -28,117 +28,14 @@ If you're using React Router in data or declarative mode, follow the instruction
 
 <PlatformContent includePath="sentry-init/install-command" />
 
+<Include name="quick-start-features-expandable" />
+
 <PlatformContent includePath="sentry-init/how-it-works" />
 
 <PlatformContent includePath="sentry-init/framework-wizard" />
 
-### Install Profiling
 
-The manual server configuration below enables Profiling. Install its package with your package manager:
-
-```bash {tabTitle:npm}
-npm install @sentry/profiling-node
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/profiling-node
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/profiling-node
-```
-
-## Configure
-
-**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
-This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **User Feedback**.
-
-<Include name="quick-start-features-expandable" />
-
-If you prefer to configure Sentry manually, here are the configuration files the wizard would create:
-
-### Client-Side Configuration
-
-The wizard creates a client configuration file that initializes the Sentry SDK in your browser. This manual example includes your DSN and enables the supported browser features.
-
-The snippet also turns on:
-
-- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `reactRouterTracingIntegration()`
-- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
-- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
-
-Don't need a feature? Remove its integration and options from the snippet.
-
-```tsx {tabTitle:Client} {filename:entry.client.tsx}
-import * as Sentry from "@sentry/react-router";
-import { startTransition, StrictMode } from "react";
-import { hydrateRoot } from "react-dom/client";
-import { HydratedRouter } from "react-router/dom";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    Sentry.reactRouterTracingIntegration(),
-    // enables Session Replay
-    Sentry.replayIntegration(),
-    // enables User Feedback
-    Sentry.feedbackIntegration({ colorScheme: "system" }),
-  ],
-
-  // Enables Tracing.
-  // Set to 1.0 to capture 100% of spans for tracing.
-  // We recommend reducing this value in production.
-  tracesSampleRate: 1.0,
-  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
-
-  // Capture replays for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  // Requires Sentry.replayIntegration()
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-});
-
-startTransition(() => {
-  hydrateRoot(
-    document,
-    <StrictMode>
-      <HydratedRouter />
-    </StrictMode>
-  );
-});
-```
-
-### Server-Side Configuration
-
-The wizard also creates a server configuration file for the Node.js runtime. Profiling requires `@sentry/profiling-node`.
-
-The server snippet also turns on:
-
-- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
-- Profiling: via `nodeProfilingIntegration()` and <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink>
-
-Don't need a feature? Remove its integration and options from the snippet.
-
-```js {tabTitle:Server} {filename:instrument.server.mjs}
-import * as Sentry from "@sentry/react-router";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  integrations: [nodeProfilingIntegration()],
-
-  // Enables Tracing.
-  // Set to 1.0 to capture 100% of spans for tracing.
-  // We recommend reducing this value in production.
-  tracesSampleRate: 1.0,
-
-  // Enables Profiling.
-  profileSessionSampleRate: 1.0,
-});
-```
-
-### Control the Data You Send to Sentry
+## Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
@@ -147,6 +44,9 @@ Sentry.init({
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
 If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting options.
 
@@ -167,6 +67,7 @@ Sentry.logger.error("Validation failed", {
 ## Send Application Metrics <FeatureBadge type="new" />
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. You can add searchable attributes to each metric.
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
 
@@ -184,8 +85,6 @@ Sentry.metrics.distribution("api_latency", 187, {
 ## Verify Your Setup
 
 The `sentry init` command checks the integration files it creates or modifies before it finishes. To confirm runtime events are reaching Sentry, add a test button to your app and click it:
-
-Clicking this button throws an error that Sentry captures:
 
 ```tsx
 <button

@@ -154,6 +154,10 @@ Add the `sentry()` middleware as early as possible in your Hono app.
 
 Before continuing, make sure you've completed the runtime-specific steps above: **Cloudflare Workers** users need to enable Node.js compatibility, and **Node.js** users need to create the instrument file. Since Node.js initializes Sentry in that file, the middleware doesn't take any options.
 
+For Cloudflare Workers, Bun, and Deno, the snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
 ```typescript {tabTitle:Cloudflare Workers} {filename:index.ts} {mdExpandTabs}
 import { Hono } from "hono";
 import { sentry } from "@sentry/hono/cloudflare";
@@ -269,9 +273,11 @@ To control which errors are captured, use the <PlatformLink to="/features/error-
 
 ## Send Logs
 
-Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. Logs are enabled by default in JavaScript SDK `10.71.0` and later; earlier versions require `enableLogs: true` in `Sentry.init()`.
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
-If you're using Node.js and already log with `console`, Pino, Winston, or Consola, you can send those logs with the <PlatformLink to="/logs/#console-integration">console</PlatformLink>, <PlatformLink to="/logs/#pino-integration">Pino</PlatformLink>, <PlatformLink to="/logs/#winston-integration">Winston</PlatformLink>, or <PlatformLink to="/logs/#consola-integration">Consola</PlatformLink> integrations.
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- Node.js and Bun: <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls, <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>, and <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+- Deno and Cloudflare Workers: <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
 
@@ -283,7 +289,12 @@ Sentry.logger.error("Validation failed", { form_field: "email", reason: "Invalid
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. Metrics are supported in JavaScript SDK `10.25.0` and later and need no extra configuration beyond SDK initialization.
+Use `Sentry.metrics` to send counters, gauges, and distributions from your application to Sentry. You can pass attributes to search or filter by later.
+
+You can also collect runtime health metrics automatically with the following integrations:
+- Node.js: <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink>
+- Bun: <PlatformLink to="/configuration/integrations/bunruntimemetrics/">`bunRuntimeMetricsIntegration`</PlatformLink>
+- Deno: <PlatformLink to="/configuration/integrations/denoruntimemetrics/">`denoRuntimeMetricsIntegration`</PlatformLink>
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
 

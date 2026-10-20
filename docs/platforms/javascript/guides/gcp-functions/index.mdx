@@ -39,7 +39,7 @@ This guide also enables **Tracing** and **Profiling**.
 
 <Include name="quick-start-features-expandable" />
 
-Make sure to initialize Sentry at the top of your function code and wrap each function with the appropriate helper. Select the tab that matches the kind of function you're using (HTTP, Background, or CloudEvent):
+Make sure to initialize Sentry at the top of your function code and wrap each function with the appropriate helper.
 
 The snippet also turns on:
 
@@ -47,6 +47,8 @@ The snippet also turns on:
 - Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink>, <PlatformLink to="/configuration/options/#profileLifecycle">`profileLifecycle`</PlatformLink>, and the profiling integration
 
 Don't need a feature? Remove its integration and options from the snippet.
+
+Select the tab that matches the kind of function you're using (HTTP, Background, or CloudEvent):
 
 ```javascript {tabTitle:Http functions} {mdExpandTabs}
 const Sentry = require("@sentry/google-cloud-serverless");
@@ -86,6 +88,7 @@ Sentry.init({
   // Set to 1.0 to capture 100% of spans for tracing.
   // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
+  // Enables Profiling for every session.
   profileSessionSampleRate: 1.0,
   profileLifecycle: "trace",
 });
@@ -109,6 +112,7 @@ Sentry.init({
   // Set to 1.0 to capture 100% of spans for tracing.
   // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
+  // Enables Profiling for every session.
   profileSessionSampleRate: 1.0,
   profileLifecycle: "trace",
 });
@@ -128,9 +132,12 @@ exports.helloEvents = Sentry.wrapCloudEventFunction((context, callback) => {
 
 ## Send Logs
 
-Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. Logs are enabled by default in JavaScript SDK `10.71.0` and later; earlier versions require `enableLogs: true` in `Sentry.init()`.
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
-If you already use `console`, Pino, Winston, or Consola, you can send those logs with the <PlatformLink to="/logs/#console-integration">console</PlatformLink>, <PlatformLink to="/logs/#pino-integration">Pino</PlatformLink>, <PlatformLink to="/logs/#winston-integration">Winston</PlatformLink>, or <PlatformLink to="/logs/#consola-integration">Consola</PlatformLink> integrations.
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
 
@@ -150,7 +157,8 @@ Sentry.logger.error("Validation failed", {
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. Metrics are supported in JavaScript SDK `10.25.0` and later and need no extra configuration beyond SDK initialization.
+Use `Sentry.metrics` to send counters, gauges, and distributions from your application to Sentry. You can pass attributes to search or filter by later.
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
 
