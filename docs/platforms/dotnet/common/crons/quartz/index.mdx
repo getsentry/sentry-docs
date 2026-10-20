@@ -60,23 +60,13 @@ scheduler.ListenerManager.AddJobListener(new SentryJobListener());
 
 ## Choose Which Jobs to Monitor
 
-Add the `SentryMonitorSlug` attribute to each job class you want to monitor. Jobs without it aren't monitored, unless you [monitor all jobs](#monitor-all-jobs).
-
-```csharp
-[SentryMonitorSlug]
-public class PricingUpdateJob : IJob
-{
-    // ...
-}
-```
-
-The SDK captures a check-in with `CheckInStatus.InProgress` when a job starts. When the job finishes, it updates the check-in to `CheckInStatus.Ok`, or to `CheckInStatus.Error` if the job threw an exception or was cancelled, along with how long the job ran.
+For each monitored job, the SDK captures a check-in with `CheckInStatus.InProgress` when the job starts. When the job finishes, it updates the check-in to `CheckInStatus.Ok`, or to `CheckInStatus.Error` if the job threw an exception or was cancelled, along with how long the job ran.
 
 The SDK doesn't capture the exceptions jobs throw. Quartz.NET logs them as errors, and Sentry's logging integration captures that log entry, for example when you use `Sentry.AspNetCore` or `Sentry.Extensions.Logging`.
 
 ### Monitor All Jobs
 
-To monitor every scheduled job without adding the attribute to each class, set `MonitorAllJobs`. Jobs started by a cron trigger or a repeating simple trigger are then monitored. Runs started by a trigger that fires once, such as `TriggerJob`, and jobs built without `WithIdentity` aren't.
+We recommend monitoring every scheduled job. Set `MonitorAllJobs`, and jobs started by a cron trigger or a repeating simple trigger are monitored without adding an attribute to each class. Runs started by a trigger that fires once, such as `TriggerJob`, and jobs built without `WithIdentity` aren't.
 
 To skip some jobs, add them to `ExcludedJobs`. A string matches a job whose name or full key (`group.name`) is equal to it, and a `Regex` matches a job whose name or full key it matches. Jobs with `[SentryMonitorSlug]` are monitored even when they match.
 
@@ -96,6 +86,20 @@ q.AddJobListener(_ => new SentryJobListener(options));
 ```
 
 These jobs use the slug of their job key, described below.
+
+### Monitor Specific Jobs
+
+To monitor only some jobs, add the `SentryMonitorSlug` attribute to each job class you want to monitor. Without `MonitorAllJobs`, jobs without it aren't monitored.
+
+```csharp
+[SentryMonitorSlug]
+public class PricingUpdateJob : IJob
+{
+    // ...
+}
+```
+
+With `MonitorAllJobs` on, a job with the attribute still sends one check-in per run, using the attribute's slug and settings.
 
 ## Monitor Slugs
 
