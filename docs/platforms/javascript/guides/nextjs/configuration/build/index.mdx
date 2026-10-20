@@ -217,7 +217,7 @@ This option can be set to:
 
 <Expandable level="warning" title="If your middleware blocks requests without a session">
 
-Your middleware (`proxy.ts` or `middleware.ts`) also runs for tunnel requests. Exclude the tunnel route in its `matcher`. This needs a fixed string, because `true` creates a new path for each build:
+Your middleware (`proxy.ts` or `middleware.ts`) also runs for tunnel requests. On v10, the SDK skips your middleware only in rewrite mode with Webpack. Exclude the tunnel route in its `matcher`. This needs a fixed string, because `true` creates a new path for each build:
 
 ```typescript {filename:proxy.ts}
 export const config = {
@@ -234,7 +234,7 @@ The tunnel route works in one of two modes:
 - **Rewrite mode** (default): A Next.js rewrite proxies each request to Sentry with all its request headers. Works only with Sentry SaaS DSNs.
 - **Handler mode**: A route handler in your app forwards only the request body to Sentry. Works with any DSN.
 
-Starting with version `11.9.0`, the browser sends tunnel requests in rewrite mode [with `credentials: "omit"`](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials).
+Starting with versions `10.78.0` (v10) and `11.9.0` (v11), the browser sends tunnel requests in rewrite mode [with `credentials: "omit"`](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials).
 If a layer in front of your app requires credentials (for example, Vercel Deployment Protection or HTTP Basic authentication), it rejects these requests. Use handler mode in this case.
 You can also set `credentials: "same-origin"`, but rewrite mode then forwards the credentials to Sentry:
 
@@ -249,7 +249,7 @@ Sentry.init({
 
 **Handler mode**
 
-<AvailableSince version="11.9.0" />
+<AvailableSince version="10.78.0 (v10) and v11.9.0 (v11)" />
 
 Keep `tunnelRoute` and add this file. If your app uses a `src` directory, add it at `src/app/sentry-tunnel/route.ts`:
 
@@ -279,6 +279,7 @@ export const { POST } = createSentryTunnelRoute({
 
 - Handler mode works only with the App Router.
 - The SDK doesn't find the file in a route group, such as `app/(group)/sentry-tunnel/`.
+- With `"moduleResolution": "node"` in `tsconfig.json`, the type check fails with `Cannot find module '@sentry/nextjs/tunnel'`. Set `moduleResolution` to `bundler`, `node16`, or `nodenext`.
 - Each event request runs the route handler. On serverless hosts, this is one function invocation for each request.
 
 </Expandable>
