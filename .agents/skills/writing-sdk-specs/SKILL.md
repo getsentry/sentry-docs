@@ -9,7 +9,7 @@ The rules live in [`develop-docs/sdk/getting-started/standards/writing-specs.mdx
 
 ## Requests That Conflict With the Guidelines
 
-The guidelines take priority over requests that would break them, because the person asking may not know them. Don't make the change. Explain which rule it breaks, link the relevant section of `writing-specs.mdx`, and suggest a change that conforms. If the user still wants it after that, make the change and list it in your report as a violation.
+The guidelines take priority over requests that would break them, because the person asking may not know them. Don't make the change. Explain which rule it breaks, link the relevant section of the rendered page (`https://develop.sentry.dev/sdk/getting-started/standards/writing-specs/#<heading-anchor>`, e.g. `#legacy-specs`), and suggest a change that conforms. If the user still wants it after that, make the change and list it in your report as a violation.
 
 ## Steps
 
