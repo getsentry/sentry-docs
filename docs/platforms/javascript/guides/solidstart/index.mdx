@@ -61,7 +61,7 @@ Import and initialize the Sentry SDK in your `/src/entry-client.tsx` file. If yo
 
 The snippet also turns on:
 
-- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and the Solid Router instrumentation in the next steps
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `solidRouterBrowserTracingIntegration()` if you're using Solid Router
 - Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
 - User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
 
@@ -77,9 +77,11 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     // add solidRouterBrowserTracingIntegration if you're using Solid Router
+    // enables automatic instrumentation
     solidRouterBrowserTracingIntegration(),
-    // Replay may only be enabled for the client-side
+    // enables Session Replay
     Sentry.replayIntegration(),
+    // enables User Feedback
     Sentry.feedbackIntegration({
       // Additional integration configuration goes in here
       colorScheme: "system",
@@ -105,6 +107,10 @@ mount(() => <StartClient />, document.getElementById("app"));
 
 Initialize Sentry on the server. On SolidStart 2, do this in a Nitro startup plugin, which runs once when the server starts. On SolidStart 1, create an `instrument.server.ts` file in your `src` folder.
 
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
 ```typescript {tabTitle:SolidStart 2} {filename:server/plugins/sentry.ts} {mdExpandTabs}
 import * as Sentry from "@sentry/solidstart";
 import { definePlugin } from "nitro";
@@ -114,9 +120,7 @@ export default definePlugin(() => {
     dsn: "___PUBLIC_DSN___",
 
     // Enables Tracing.
-
     // Set to 1.0 to capture 100% of spans for tracing.
-
     // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
   });
@@ -324,6 +328,9 @@ SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
 Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can add searchable attributes to each log.
 
 If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting options.
 
@@ -344,8 +351,10 @@ Sentry.logger.error("Validation failed", {
 ## Send Application Metrics <FeatureBadge type="new" />
 
 Use `Sentry.metrics` to send counters, gauges, and distributions from your app to Sentry. You can add searchable attributes to each metric.
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
 
 ```javascript
 Sentry.metrics.count("checkout.failed", 1);
