@@ -13,7 +13,7 @@ spec_depends_on:
 spec_changelog:
   - version: 4.0.0
     date: 2026-10-20
-    summary: "Migrated to Writing SDK Specs 0.1. Changed requirements: removed the `otel_log` format, which Relay no longer accepts; replaced the MUST on the processing pipeline order with a MUST that `beforeSendLog` runs after the SDK attaches attributes; removed the SHOULD to implement Tracing without Performance first; lowered `sentry.replay_id` from MUST to SHOULD, matching Replay Association; replaced the SHOULD to minimize default attributes with a SHOULD NOT on undefined default attributes, and removed the SHOULD on adding new default attributes; made the `sendDefaultPii` guard on user attributes a MUST NOT; replaced the MUST to implement the `log_item` data category with a MUST NOT on sending rate-limited logs; changed the implicit rule that logger methods accept a template and parameters to a SHOULD; removed requirements that duplicate others (releasing logs without buffering, tracking client outcomes, client report quantity, the SHOULDs to associate logs with traces and replays); removed the MAYs on gating integration functionality and running logger methods on another thread."
+    summary: "Migrated to Writing SDK Specs 0.1. Changed requirements: removed the `otel_log` format, which Relay no longer accepts; replaced the MUST on the processing pipeline order with a MUST that `beforeSendLog` runs after the SDK attaches attributes; removed the SHOULD to implement Tracing without Performance first; lowered `sentry.replay_id` from MUST to SHOULD, matching Replay Association; lowered the MUST NOT on `sentry.origin` for direct API calls to SHOULD NOT; lowered the MUSTs on the `logger` module and on the scope and client `captureLog` method to SHOULD, and the MUST NOT on per-level scope and client methods to SHOULD NOT; lowered the MUST to buffer logs to a SHOULD to send them in batches; replaced the MUST on a 1000-log buffer limit with a SHOULD to limit logs waiting to be sent, moving 1000 to Implementation Guidance; restated the telemetry buffer forwarding SHOULD as sending unsent logs on flush, close, and graceful shutdown; replaced the SHOULD to minimize default attributes with a SHOULD NOT on undefined default attributes, and removed the SHOULD on adding new default attributes; made the `sendDefaultPii` guard on user attributes a MUST NOT; replaced the MUST to implement the `log_item` data category with a MUST NOT on sending rate-limited logs; changed the implicit rule that logger methods accept a template and parameters to a SHOULD; removed requirements that duplicate others (releasing logs without buffering, tracking client outcomes, client report quantity, the SHOULDs to associate logs with traces and replays); removed the MAYs on gating integration functionality and running logger methods on another thread."
   - version: 3.1.0
     date: 2026-10-08
     summary: Listed client report discard reasons for logs and clarified that the quantity is the number of discarded logs
@@ -180,11 +180,11 @@ Logs are billed by size. Apart from attributes set by the user, SDKs **SHOULD NO
 
 </SpecSection>
 
-<SpecSection id="sdk-integration-origin" status="stable" since="1.9.0">
+<SpecSection id="sdk-integration-origin" status="stable" since="4.0.0">
 
 ### SDK Integration Origin
 
-SDKs **MUST NOT** set `sentry.origin` on logs the user captures by calling a Sentry logging API. This deviates from [Trace Origin](/sdk/telemetry/traces/trace-origin/) to keep logs small.
+SDKs **SHOULD NOT** set `sentry.origin` on logs the user captures by calling a Sentry logging API. This deviates from [Trace Origin](/sdk/telemetry/traces/trace-origin/) to keep logs small.
 
 On auto-emitted logs, SDKs **SHOULD** set `sentry.origin` as specified in Trace Origin, using:
 
@@ -288,11 +288,11 @@ SDKs **MUST** call `beforeSendLog` with each log only after attaching all attrib
 
 ### Buffering
 
-SDKs **MUST** buffer logs and send them in batches, not in one envelope per log. SDKs **SHOULD** send buffered logs in the [telemetry buffer data forwarding scenarios](/sdk/foundations/processing/telemetry-processor/#data-forwarding-scenarios).
+SDKs **SHOULD** send logs in batches, not in one envelope per log. SDKs **MUST NOT** send more than 100 logs in one envelope (since 1.15.0).
 
-SDKs **MUST NOT** send more than 100 logs in one envelope (since 1.15.0).
+SDKs **SHOULD** send all logs they haven't sent yet when the user flushes or closes the SDK and when the application shuts down gracefully, as in the [telemetry buffer data forwarding scenarios](/sdk/foundations/processing/telemetry-processor/#data-forwarding-scenarios).
 
-SDKs **MUST NOT** buffer more than 1000 logs at a time and **MUST** drop logs captured while the buffer is full (since 1.12.0).
+SDKs **SHOULD** limit the number of logs waiting to be sent, and drop logs captured while that limit is reached.
 
 </SpecSection>
 
@@ -313,7 +313,7 @@ When SDKs discard logs, they **MUST** record [client report](/sdk/telemetry/clie
 SDKs **MUST** record a client report in at least these cases:
 
 - `before_send`: `beforeSendLog` returned `null`.
-- `buffer_overflow`: the log was dropped because the buffer was [full](#buffering).
+- `buffer_overflow`: the log was dropped because the [limit on logs waiting to be sent](#buffering) was reached.
 - `ratelimit_backoff`: the log was dropped because the `log_item` category is [rate limited](#data-category-and-rate-limiting).
 - `send_error`, `internal_sdk_error`, `network_error`: sending the envelope containing the log failed, as specified in [Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording).
 
@@ -357,11 +357,11 @@ SDKs **SHOULD NOT** provide an API whose sole purpose is to disable all logs.
 
 ### Logger Module
 
-SDKs **MUST** provide a `logger` module or namespace with one method per severity level, such as `Sentry.logger.info`. SDKs **SHOULD** adapt the method names and signatures to their platform's conventions.
+SDKs **SHOULD** provide a `logger` module or namespace with one method per severity level, such as `Sentry.logger.info`. SDKs **SHOULD** adapt the method names and signatures to their platform's conventions.
 
 The methods **SHOULD** accept a message template and parameters, producing a parameterized log. They **MAY** also accept attributes.
 
-Scopes and clients **MUST** provide a generic method for capturing a log, such as `captureLog`, and **MUST NOT** provide one method per severity level.
+Scopes and clients **SHOULD** provide a generic method for capturing a log, such as `captureLog`, and **SHOULD NOT** provide one method per severity level.
 
 </SpecSection>
 
@@ -375,7 +375,7 @@ SDKs **MUST** send logs in the order they were captured.
 
 ## Implementation Guidance
 
-**Flushing.** A simple strategy that satisfies [Buffering](#buffering) is to flush when the buffer holds 100 logs or 5 seconds have passed.
+**Buffering.** A simple strategy that satisfies [Buffering](#buffering) is to flush when the buffer holds 100 logs or 5 seconds have passed, and to hold at most 1000 logs.
 
 **Background processing.** Logger methods return nothing, so SDKs can defer work such as template formatting and `beforeSendLog` to a background thread or queue. Doing so risks losing logs captured just before a crash, which matters most for mobile SDKs.
 
