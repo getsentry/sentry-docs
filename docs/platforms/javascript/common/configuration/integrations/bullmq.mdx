@@ -1,0 +1,98 @@
+---
+title: BullMQ
+description: "Adds tracing and metrics for BullMQ."
+supportedCategories:
+  - server
+notSupported:
+  - javascript.elysia
+  - javascript.deno
+  - javascript.cloudflare
+---
+
+<AvailableSince version="11.9.0" />
+
+_Import name: `Sentry.BullMQTelemetry`_
+
+`BullMQTelemetry` adds tracing for [BullMQ](https://bullmq.io/) queues and workers, and can send BullMQ's job metrics to Sentry. It implements BullMQ's [telemetry interface](https://docs.bullmq.io/guide/telemetry), so you do not add it to `integrations` in `Sentry.init()`. Instead, pass it to the `telemetry` option of each `Queue`, `Worker`, and `FlowProducer`:
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { Queue, Worker } from "bullmq";
+
+const connection = { host: "127.0.0.1", port: 6379 };
+const telemetry = new Sentry.BullMQTelemetry();
+
+const queue = new Queue("emails", { connection, telemetry });
+
+const worker = new Worker(
+  "emails",
+  async (job) => {
+    // Process the job
+  },
+  { connection, telemetry }
+);
+```
+
+## Options
+
+### `enableMetrics`
+
+_Type: `boolean`_
+
+Sends BullMQ's job metrics to Sentry. Defaults to `false`. Requires `bullmq` `5.69.0` or higher.
+
+```javascript
+const telemetry = new Sentry.BullMQTelemetry({ enableMetrics: true });
+```
+
+## Spans
+
+- Adding jobs (`add`, `addBulk`, `addFlow`, and `addBulkFlows`) creates `queue.publish` spans.
+- Processing a job creates a `queue.process` span. Each job starts a new trace, with a span link of the type `message_origin` to the `queue.publish` span that added the job. The link is only added when the queue that added the job also has `telemetry` set.
+- Other BullMQ operations create `queue` spans, but only when a span is active.
+
+The `queue.publish` and `queue.process` spans populate the [Queues dashboard](/product/dashboards/sentry-dashboards/backend/queues/).
+
+### Span Attributes
+
+The SDK sends these BullMQ attributes with a `messaging.*` attribute key from the conventions:
+
+| BullMQ attribute           | Sentry attribute                                        |
+| -------------------------- | ------------------------------------------------------- |
+| `bullmq.queue.name`        | `messaging.destination.name`                            |
+| `bullmq.queue.operation`   | `messaging.operation.name`                              |
+| `bullmq.job.id`            | `messaging.message.id`                                  |
+| `bullmq.job.attempts.made` | `messaging.message.retry.count` (attempts made minus 1) |
+| `bullmq.job.bulk.count`    | `messaging.batch.message_count`                         |
+| `bullmq.worker.id`         | `messaging.client.id`                                   |
+| `bullmq.job.status`        | `messaging.bullmq.job.state` (before BullMQ 5.81.2)     |
+
+All other BullMQ attributes get the prefix `messaging.`. For example, `bullmq.job.name` becomes `messaging.bullmq.job.name`. Where BullMQ separates the words of one name with dots, the SDK uses snake_case instead. For example, `bullmq.worker.force.close` becomes `messaging.bullmq.worker.force_close`.
+
+The SDK does not send these attributes:
+
+- `bullmq.job.options`, `bullmq.job.progress`, `bullmq.queue.options`, and `bullmq.worker.options`, because BullMQ sets them to JSON strings.
+- `bullmq.job.finished.timestamp`, because BullMQ deprecated it for `bullmq.job.attempt_finished_timestamp`.
+
+## Errors
+
+When a job fails, the SDK captures an error with the failure message. This also applies to failed attempts that BullMQ retries. BullMQ gives only the message to the telemetry interface, so the stack trace of the error does not show where in the job the error occurred.
+
+## Metrics
+
+With `enableMetrics: true`, the SDK sends these <PlatformLink to="/metrics/">metrics</PlatformLink>:
+
+| Metric                                   | Type         | Unit   | Description                                                                                                                                                    |
+| ---------------------------------------- | ------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `messaging.bullmq.jobs.completed`        | counter      | none   | Jobs that completed                                                                                                                                            |
+| `messaging.bullmq.jobs.failed`           | counter      | none   | Jobs that failed and are not retried                                                                                                                           |
+| `messaging.bullmq.jobs.retried`          | counter      | none   | Failed jobs that are retried without a delay                                                                                                                   |
+| `messaging.bullmq.jobs.delayed`          | counter      | none   | Jobs that moved to the delayed state, for a retry with a backoff delay or through `job.moveToDelayed()`                                                        |
+| `messaging.bullmq.jobs.waiting`          | counter      | none   | Jobs that `job.moveToWait()` moved back to the wait state                                                                                                      |
+| `messaging.bullmq.jobs.waiting_children` | counter      | none   | Jobs that moved to the waiting-children state to wait for their child jobs                                                                                     |
+| `messaging.process.duration`             | distribution | second | Time from the start of processing until the job left the active state, with `messaging.system` set to `bullmq` and `messaging.operation.name` set to `process` |
+| `messaging.bullmq.queue.jobs`            | gauge        | none   | Jobs in a queue in one job state, sent when you call `queue.recordJobCountsMetric()`                                                                           |
+
+## Supported Versions
+
+- `bullmq`: `>=5.22.0`
