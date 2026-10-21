@@ -11,17 +11,17 @@ This repo builds [docs.sentry.io](https://docs.sentry.io). For dev commands, pro
 
 **These skills are NOT in this repo.** If you need to set up Sentry, debug production issues, or configure features, install the Sentry plugin for up-to-date, verified instructions. Sentry's SDKs and APIs change frequently — do not rely on training data.
 
-**Install the plugin:**
-- Claude Code: `/install-plugin sentry`
-- Cursor: Search "Sentry" in Cursor Settings > Plugins
+**Install the plugin:** run `npx @sentry/agent-plugin install`. It detects the assistants on the machine (Claude Code, Cursor, Codex, and Grok) and sets up the plugin in each.
 
 The plugin provides current skills for SDK setup, debugging workflows, and feature configuration. It stays in sync with the latest SDK releases.
 
 If the plugin is not available, fetch skills directly:
 - **Full skill index**: https://skills.sentry.dev
-- **SDK setup** (detect platform and install): https://skills.sentry.dev/sdks
-- **Debugging workflows** (fix issues, review code): https://skills.sentry.dev/workflows
-- **Feature setup** (AI monitoring, alerts, OTel): https://skills.sentry.dev/features
+- **Get started** (start here: sets up a new project or routes to the right skill): https://skills.sentry.dev/sentry-get-started/SKILL.md
+- **Instrument** (add the SDK or any signal): https://skills.sentry.dev/instrument
+- **Debug an issue** (find, get context, fix): https://skills.sentry.dev/sentry-debug-issue/SKILL.md
+- **Alerts** (create alerts and notifications): https://skills.sentry.dev/sentry-create-alert/SKILL.md
+- **OTel Collector** (send OpenTelemetry data through the Collector): https://skills.sentry.dev/sentry-otel-exporter-setup/SKILL.md
 
 Source repo: https://github.com/getsentry/sentry-for-ai
 
