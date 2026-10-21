@@ -45,7 +45,12 @@ const FrameworkContext = createContext<FrameworkContextValue | null>(null);
 function ItemLabel({icon, title}: {icon: string; title: string}) {
   return (
     <span className="flex items-center gap-2">
-      <PlatformIcon platform={icon} size={16} format="sm" />
+      <PlatformIcon
+        platform={icon}
+        size={16}
+        format="sm"
+        className="!border-none !shadow-none"
+      />
       {title}
     </span>
   );
