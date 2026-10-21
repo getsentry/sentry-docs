@@ -1,11 +1,51 @@
 ---
 title: Express
-description: "Learn how to manually set up Sentry in your Express app and capture your first events."
+description: "Learn how to set up Sentry in your Express app on Node.js, Bun, or Deno."
 sdk: sentry.javascript.node
 fallbackGuide: javascript.node
+inheritCommonContent: false
 categories:
   - server
   - server-only
 ---
 
-<PlatformContent includePath="getting-started-node" />
+[Express](https://expressjs.com/) doesn't need its own Sentry SDK. Set up Sentry for the runtime your app runs on, and the SDK instruments Express automatically: `expressIntegration` captures errors from your routes and middleware, and creates spans for incoming requests when tracing is enabled.
+
+## Set Up Sentry for Your Runtime
+
+- <LinkWithPlatformIcon
+    platform="javascript.node"
+    label="Node.js"
+    url="/platforms/javascript/guides/node/?framework=express"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.bun"
+    label="Bun"
+    url="/platforms/javascript/guides/bun/?framework=express"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.deno"
+    label="Deno"
+    url="/platforms/javascript/guides/deno/?framework=express"
+  />
+
+## Customize Error Capturing
+
+Errors with a 3xx or 4xx status code are skipped, since they're usually expected redirects or client errors. To change which errors are captured, pass a `shouldHandleError` callback to `expressIntegration()`:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.expressIntegration({
+      shouldHandleError(error) {
+        const status = Number(error.status ?? error.statusCode ?? 500);
+        // Capture 401/403 in addition to the default 5xx errors
+        return status === 401 || status === 403 || status >= 500;
+      },
+    }),
+  ],
+});
+```
+
+If you capture errors yourself in your own error-handling middleware, set `shouldHandleError: false` to avoid duplicate events.
