@@ -16,10 +16,10 @@ Your selection determines your data storage location only. Sentry will continue 
 
 The table below shows the location where your data will be stored at rest, based on your selection.
 
-| **Data Storage Location**     | **Region** | **Physical Location**  |
-| ----------------------------- | ---------- | ---------------------- |
-| United States of America (US) | US         | Iowa, USA              |
-| European Union (EU)           | EU         | Frankfurt, Germany     |
+| **Data Storage Location**     | **Region** | **Physical Location** |
+| ----------------------------- | ---------- | --------------------- |
+| United States of America (US) | US         | Iowa, USA             |
+| European Union (EU)           | EU         | Frankfurt, Germany    |
 
 ## What Types of Data Are Stored Where
 
@@ -89,6 +89,25 @@ For [data stored in the US](#data-stored-in-us), your API domain should be `sent
 ### SaaS
 
 At this time, your data storage location can’t be changed if you have an existing SaaS organization. The only way to switch it is by creating a new organization.
+
+Sentry doesn't move data or configuration between SaaS organizations, so you'll set up the new organization yourself. Historical data, such as issues, events, replays, and source maps, stays in your existing organization.
+
+To switch organizations with minimal disruption:
+
+1. **Take inventory.** List the projects, teams, members, alerts, dashboards, integrations, and auth tokens in your current organization so you know what to recreate.
+2. **Create the new organization.** Select the new data storage location when you [create the organization](https://sentry.io/organizations/new/).
+3. **Recreate your setup.** In the new organization:
+   - Create [teams and projects](/organization/getting-started/), and invite [members](/organization/membership/). Existing Sentry user accounts can join the new organization without signing up again.
+   - Configure [SSO](/organization/authentication/sso/), if you use it.
+   - Install and configure [integrations](/integrations/).
+   - Recreate [alerts and monitors](/product/monitors-and-alerts/) and [dashboards](/product/dashboards/).
+   - Create new [auth tokens](/account/auth-tokens/) for CI and other tooling.
+
+   You can script parts of this setup with the [Sentry API](/api/).
+
+4. **Update your apps and tooling.** Each project in the new organization has a new [DSN](/concepts/key-terms/dsn-explainer/). Update the DSN in every SDK configuration, and update auth tokens, organization slugs, and [API domains](#using-data-storage-location-apis) in CI, release, and source map upload tooling.
+5. **Verify the new organization.** Confirm that events arrive in each project, alerts notify the right people, and releases and source maps upload correctly.
+6. **Retire the old organization.** Keep it while you still need its historical data. When you no longer need it, cancel its subscription and delete it from its organization settings. Because each organization has its own subscription, review [your plan](/pricing/) for the new organization.
 
 ### Self-hosted
 
