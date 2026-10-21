@@ -1056,12 +1056,16 @@ const userDocsRedirects = [
   // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
   {
     source:
-      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|nextjs|nuxt|remix|sveltekit)/',
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
     destination: '/platforms/javascript/guides/:framework/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
     destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/',
+    destination: '/platforms/javascript/guides/remix/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
