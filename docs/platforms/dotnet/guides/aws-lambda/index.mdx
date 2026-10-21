@@ -21,7 +21,7 @@ You can combine this integration with a logging library like `log4net`, `NLog`, 
 
 ## Configure
 
-**Error Monitoring** starts working as soon as you initialize the SDK. **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Application Metrics](#send-application-metrics-).
+**Error Monitoring** starts working as soon as you initialize the SDK. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 
 This guide also enables **Tracing**.
 
@@ -34,6 +34,7 @@ All `ASP.NET Core` configurations are valid here. But one configuration in parti
 The snippet also turns on:
 
 - Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+- Logs: via <PlatformLink to="/logs/#enablelogs">`EnableLogs`</PlatformLink>
 
 Don't need a feature? Remove its options from the snippet.
 
@@ -47,6 +48,7 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
             .UseSentry(options =>
             {
                 options.Dsn = "___PUBLIC_DSN___";
+                options.EnableLogs = true;
                 // When configuring for the first time, to see what the SDK is doing:
                 options.Debug = true;
                 // Adds request URL and headers, IP and name for users, etc.
@@ -65,6 +67,31 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
 
 Check out the [Sentry ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) documentation for the complete set of options.
 
+## Send Logs
+
+Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in your Sentry initialization.
+
+See [Microsoft.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) for setup details.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+public sealed class OrderService
+{
+    private readonly ILogger<OrderService> _logger;
+
+    public OrderService(ILogger<OrderService> logger) => _logger = logger;
+
+    public void Process()
+    {
+        _logger.LogInformation("Order processed {OrderId}", "order-123");
+        _logger.LogWarning("Rate limit reached for {Endpoint}", "/api/orders");
+    }
+}
+```
+
 ## Send Application Metrics <FeatureBadge type="new" />
 
 Metrics are enabled by default in Sentry .NET SDK 6.1.0 and later. Use `SentrySdk.Metrics` to send counters, gauges, and distributions from your app.
@@ -73,11 +100,11 @@ See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available
 
 ```csharp
 SentrySdk.Metrics.EmitCounter("button_click", 5,
-    [new KeyValuePair<string, object>("browser", "Firefox")]);
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
 SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
-    [new KeyValuePair<string, object>("page", "/home")]);
+    new Dictionary<string, object> { ["page"] = "/home" });
 SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
-    [new KeyValuePair<string, object>("endpoint", "/api/orders")]);
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
 ```
 
 ## Verify Your Setup

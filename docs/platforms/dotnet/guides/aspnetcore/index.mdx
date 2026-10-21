@@ -31,7 +31,7 @@ This guide also enables **Tracing**.
 
 The simplest way to initialize Sentry in ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-7.0).
 
-When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information. The SDK provides this as extension methods to support ASP.NET Core `2.X`, `3.X`, and `5.X` and later:
+Call `UseSentry` with your DSN and the options you want. The SDK provides this as extension methods to support ASP.NET Core `2.X`, `3.X`, and `5.X` and later.
 
 The snippet also turns on:
 
@@ -44,6 +44,7 @@ Don't need a feature? Remove its options from the snippet.
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseSentry(options =>
 {
+    options.Dsn = "___PUBLIC_DSN___";
     options.EnableLogs = true;
     // Enables Tracing.
     // Set to 1.0 to capture 100% of spans for tracing.
@@ -59,6 +60,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         {
             webBuilder.UseSentry(options =>
             {
+                options.Dsn = "___PUBLIC_DSN___";
                 options.EnableLogs = true;
                 // Enables Tracing.
                 // Set to 1.0 to capture 100% of spans for tracing.
@@ -73,6 +75,7 @@ public static IWebHost BuildWebHost(string[] args) =>
     WebHost.CreateDefaultBuilder(args)
         .UseSentry(options =>
         {
+            options.Dsn = "___PUBLIC_DSN___";
             options.EnableLogs = true;
             // Enables Tracing.
             // Set to 1.0 to capture 100% of spans for tracing.
@@ -100,13 +103,10 @@ An example of some of the options that can be configured via `appsettings.json`:
     "MinimumEventLevel": "Warning",
     "AttachStackTrace": true,
     "Debug": true,
-    "DiagnosticLevel": "Error",
-    "TracesSampleRate": 1.0,
-    "EnableLogs": true
+    "DiagnosticLevel": "Error"
   }
 }
 ```
-Setting `TracesSampleRate` to `1.0` captures 100% of spans. We recommend reducing this value in production. See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> for further information.
 
 ### Environment variables
 
@@ -129,7 +129,6 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 ```csharp
 .UseSentry(options =>
 {
-    options.EnableLogs = true;
     options.SendDefaultPii = true; // Adds request URL and headers, IP and name for users, etc.
     // Enables Tracing.
     // Set to 1.0 to capture 100% of spans for tracing.
@@ -146,7 +145,6 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 
 ```fsharp
 .UseSentry (fun options ->
-    options.EnableLogs <- true
     options.SendDefaultPii <- true // Adds request URL and headers, IP and name for users, etc.
     // Enables Tracing.
     // Set to 1.0 to capture 100% of spans for tracing.
@@ -317,11 +315,11 @@ See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available
 
 ```csharp
 SentrySdk.Metrics.EmitCounter("button_click", 5,
-    [new KeyValuePair<string, object>("browser", "Firefox")]);
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
 SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
-    [new KeyValuePair<string, object>("page", "/home")]);
+    new Dictionary<string, object> { ["page"] = "/home" });
 SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
-    [new KeyValuePair<string, object>("endpoint", "/api/orders")]);
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
 ```
 
 ## Verify Your Setup
