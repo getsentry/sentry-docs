@@ -1,54 +1,60 @@
----
-title: Next.js on Cloudflare
-description: "Learn how to configure Sentry for your Next.js application deployed on Cloudflare Workers."
----
-
-The Sentry Next.js SDK supports Next.js applications deployed on Cloudflare Workers, but requires additional configuration to run in this environment.
-
 ## Prerequisites
 
-Before you begin, make sure you have:
+You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- A [Cloudflare Workers project](https://dash.cloudflare.com/workers/overview)
-- A Next.js application configured for Cloudflare Workers with [OpenNext](https://opennext.js.org/cloudflare)
-- The Sentry SDK [installed and configured](/platforms/javascript/guides/nextjs/) in your Next.js application
+- A Next.js application that runs on Cloudflare Workers with the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare)
 
 <Alert level="info">
   If you haven't deployed a Next.js app to Cloudflare Workers before, follow
   Cloudflare's [Next.js deployment
   guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
-  to get started.
+  first.
 </Alert>
+
+<StepComponent>
+
+## Install
+
+Run the Sentry wizard to automatically configure Sentry in your Next.js application:
+
+```bash
+npx @sentry/wizard@latest -i nextjs
+```
+
+The wizard will prompt you to select features. Choose the ones you want to enable:
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    { id: "performance", checked: true },
+    "session-replay",
+  ]}
+/>
+
+Prefer to set things up yourself? Check out the [Manual Setup](/platforms/javascript/guides/nextjs/manual-setup/) guide.
+
+## What the Wizard Created
+
+The wizard configured Sentry for all Next.js runtime environments and created files to test your setup. On Cloudflare Workers, you set the server options in the Worker entry, as the [Wrap the Worker Entry](#wrap-the-worker-entry) step shows.
+
+<PlatformContent
+  includePath="getting-started-wizard-files"
+  platform="javascript.nextjs"
+/>
 
 ## Configure Wrangler
 
-Once you've set up Sentry in your Next.js application following the [installation guide](/platforms/javascript/guides/nextjs/), you'll need to configure [Wrangler](https://developers.cloudflare.com/workers/wrangler/) with the required compatibility settings.
+The SDK uses Node.js APIs that the Workers runtime only provides with the `nodejs_compat` [compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/). Set the [compatibility date](https://developers.cloudflare.com/workers/configuration/compatibility-dates/) to `2025-08-16` or later, which adds the `https.request` API that the SDK uses to send data:
 
-First, add the `nodejs_compat` [compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/) to configure the Cloudflare Workers runtime to provide the Node.js APIs required by the Sentry SDK.
-
-```json {tabTitle:wrangler.jsonc}
-{
-  "compatibility_flags": ["nodejs_compat"]
-}
-```
-
-```toml {tabTitle:wrangler.toml}
-compatibility_flags = ["nodejs_compat"]
-```
-
-Then, set the [compatibility date](https://developers.cloudflare.com/workers/configuration/compatibility-dates/) to `2025-08-16` or later. This is required to introduce `https.request` to the Cloudflare Workers runtime, which the Sentry SDK needs to send data.
-
-Your final configuration should look like this:
-
-```json {tabTitle:wrangler.jsonc}
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
   "compatibility_flags": ["nodejs_compat"],
-  "compatibility_date": "2025-08-16"
+  "compatibility_date": "2025-08-16",
 }
 ```
 
-```toml {tabTitle:wrangler.toml}
+```toml {tabTitle:Toml} {filename:wrangler.toml}
 compatibility_flags = ["nodejs_compat"]
 compatibility_date = "2025-08-16"
 ```
@@ -87,13 +93,13 @@ export default Sentry.withSentry(
 
 Then, point `main` in your Wrangler configuration to this file:
 
-```json {tabTitle:wrangler.jsonc}
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
-  "main": "./worker.ts"
+  "main": "./worker.ts",
 }
 ```
 
-```toml {tabTitle:wrangler.toml}
+```toml {tabTitle:Toml} {filename:wrangler.toml}
 main = "./worker.ts"
 ```
 
@@ -114,6 +120,43 @@ The SDK takes the release from the first of these sources that has a value:
 
 On Node.js, the build release comes before `SENTRY_RELEASE`.
 
-## Deploy
+## Control the Data You Send to Sentry (Optional)
 
-Build and deploy your Next.js application to Cloudflare Workers. You should start seeing error events, traces, and logs appear in Sentry.
+<PlatformContent
+  includePath="getting-started-data-collection"
+  platform="javascript"
+/>
+
+## Verify Your Setup
+
+<PlatformContent
+  includePath="getting-started-browser-sandbox-warning"
+  platform="javascript"
+/>
+
+The example page tests all your enabled features with a single action:
+
+1. Build your app and run it in the Workers runtime on your machine:
+
+```bash
+npx opennextjs-cloudflare build && npx opennextjs-cloudflare preview
+```
+
+2. Open `/sentry-example-page` on the URL that the preview command prints
+
+3. Click **"Throw Sample Error"**
+
+<PlatformContent
+  includePath="getting-started-check-data"
+  platform="javascript.nextjs"
+/>
+
+## Next Steps
+
+You've successfully integrated Sentry into your Next.js application on Cloudflare Workers! Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
+- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration options
+
+</StepComponent>
