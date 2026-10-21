@@ -1,0 +1,94 @@
+---
+id: move-sdk-settings-out-of-the-serilog-sink
+title: "Move SDK Settings Out of the Serilog Sink"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 60
+---
+
+The Serilog sink no longer initializes Sentry, and `SentrySerilogOptions` no longer derives from `SentryOptions`. Initialize Sentry first, call `UseSerilog()` on its options, and keep only the sink's own settings in `WriteTo.Sentry`.
+
+SDK settings on the sink options, such as `Dsn`, `Environment`, `Release`, `AttachStacktrace` or `InitializeSdk`, fail to compile with error CS1061. In 6.x, the sink took them all:
+
+```csharp {filename:Program.cs}
+using Serilog;
+using Serilog.Events;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Sentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+        options.Environment = "staging";
+        options.MinimumEventLevel = LogEventLevel.Error;
+        options.MinimumBreadcrumbLevel = LogEventLevel.Information;
+    })
+    .CreateLogger();
+```
+
+In 7.x, move the SDK settings to `SentrySdk.Init`. The sink keeps only its own settings, which are `MinimumEventLevel`, `MinimumBreadcrumbLevel`, `RestrictedToMinimumLevel`, `LevelSwitch`, `FormatProvider` and `TextFormatter`:
+
+```csharp {filename:Program.cs}
+using Sentry.Serilog;
+using Serilog;
+using Serilog.Events;
+
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Environment = "staging";
+    options.UseSerilog();
+});
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Sentry(options =>
+    {
+        options.MinimumEventLevel = LogEventLevel.Error;
+        options.MinimumBreadcrumbLevel = LogEventLevel.Information;
+    })
+    .CreateLogger();
+```
+
+In ASP.NET Core and other apps that call `UseSentry`, call `options.UseSerilog()` in the `UseSentry` options instead.
+
+`UseSerilog()` replaces `ApplySerilogScopeToEvents()`. It adds properties from Serilog's `LogContext` to Sentry events. The sink also does this the first time it writes, so the call only matters for events captured before then. `UseSerilog()` is in the `Sentry.Serilog` namespace and returns `void`, so it can't be chained like `ApplySerilogScopeToEvents()`.
+
+If you configure the sink in `appsettings.json`, remove `dsn` and every other SDK setting from its `Args`. A `dsn` argument fails when Serilog reads the configuration, with a `NotSupportedException` that explains the change. Serilog ignores other SDK arguments, such as `environment`, without a message. In 6.x, the sink arguments included the SDK settings:
+
+```json {filename:appsettings.json}
+{
+  "Serilog": {
+    "WriteTo": [
+      {
+        "Name": "Sentry",
+        "Args": {
+          "dsn": "___PUBLIC_DSN___",
+          "environment": "staging",
+          "minimumEventLevel": "Error"
+        }
+      }
+    ]
+  }
+}
+```
+
+In 7.x, keep only the sink settings, and initialize Sentry in code or with `UseSentry`:
+
+```json {filename:appsettings.json}
+{
+  "Serilog": {
+    "WriteTo": [
+      {
+        "Name": "Sentry",
+        "Args": {
+          "minimumEventLevel": "Error"
+        }
+      }
+    ]
+  }
+}
+```
+
+The `enableLogs` argument is gone too, because the sink now sends logs once you add it. See [Logging Integrations Send Logs](#logging-integrations-send-logs). `Log.CloseAndFlush()` no longer closes Sentry. See [Logging Frameworks No Longer Close Sentry](#logging-frameworks-no-longer-close-sentry).

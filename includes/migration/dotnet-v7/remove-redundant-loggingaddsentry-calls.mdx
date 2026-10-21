@@ -1,0 +1,54 @@
+---
+id: remove-redundant-loggingaddsentry-calls
+title: "Remove Redundant Logging.AddSentry Calls"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 50
+---
+
+In an app that calls `UseSentry`, `Logging.AddSentry()` now does nothing, and options passed to it in code no longer apply. Move those options to `UseSentry` and remove the call.
+
+In 6.x, an app with both calls captured each error, breadcrumb and log twice. In 7.x, the `ILogger` integration that `UseSentry` adds captures them once, with the options of `UseSentry`. With `Debug` on, the SDK logs a warning that the `Logging.AddSentry()` call can be removed.
+
+In 6.x, the app passed the logging options to `Logging.AddSentry`:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+builder.Logging.AddSentry(options => options.MinimumBreadcrumbLevel = LogLevel.Debug);
+```
+
+In 7.x, set them on the options of `UseSentry`:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.MinimumBreadcrumbLevel = LogLevel.Debug;
+});
+```
+
+Blazor WebAssembly apps often called `Logging.AddSentry` with `InitializeSdk = false`. That line now fails to compile with error CS0619. In 6.x, the setup looked like this:
+
+```csharp {filename:Program.cs}
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+builder.Logging.AddSentry(options => options.InitializeSdk = false);
+```
+
+In 7.x, remove the `Logging.AddSentry` line:
+
+```csharp {filename:Program.cs}
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+```
+
+The log levels under `Logging:Sentry` keep working, because `UseSentry` reads that section too.
