@@ -13,7 +13,7 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 ## Getting Started
 
-Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is off by default — set `send_default_pii=True` to capture it (or configure `include_prompts` per integration), or use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>.
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is off by default — use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to capture it. Alternatively, set `send_default_pii=True` (and configure `include_prompts` per integration). `send_default_pii` will be removed in the next major version of the SDK.
 
 ```python
 import sentry_sdk
@@ -73,7 +73,21 @@ Any of `id`, `email`, or `username` is sufficient — the Conversations tab disp
 
 ### Privacy Controls
 
-LLM inputs and outputs are treated as PII and are **off** by default. Set `send_default_pii=True` to capture them. To keep other PII on but turn AI content off, set `include_prompts=False` on the integration:
+LLM inputs and outputs are treated as PII and are **off** by default. To capture them, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default and `include_prompts` is ignored:
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    data_collection={
+        # Record LLM inputs, but not outputs
+        "gen_ai": {"inputs": True, "outputs": False},
+    },
+)
+```
+
+Alternatively, set `send_default_pii=True` to capture them. To keep other PII on but turn AI content off, set `include_prompts=False` on the integration. `send_default_pii` will be removed in the next major version of the SDK.
 
 ```python
 import sentry_sdk
@@ -85,20 +99,6 @@ sentry_sdk.init(
     integrations=[
         OpenAIIntegration(include_prompts=False),
     ],
-)
-```
-
-Alternatively, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default and `include_prompts` is ignored:
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    data_collection={
-        # Record LLM inputs, but not outputs
-        "gen_ai": {"inputs": True, "outputs": False},
-    },
 )
 ```
 
