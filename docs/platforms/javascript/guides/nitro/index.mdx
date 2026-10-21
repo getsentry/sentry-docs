@@ -1,6 +1,6 @@
 ---
 title: Nitro
-description: Learn how to set up Sentry in your Nitro app to capture errors and monitor performance.
+description: Learn how to set up Sentry in your Nitro app, capture your first events, and monitor performance.
 sdk: sentry.javascript.nitro
 fallbackGuide: javascript.node
 categories:
@@ -20,19 +20,11 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - A Nitro application (`3.0.260415-beta` or newer)
-- Node.js 20.19.0+
+- Node.js `20.19.0+`
 
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
-
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance" ]}
-/>
-
-<Include name="quick-start-features-expandable" />
 
 ### Install the Sentry SDK
 
@@ -50,7 +42,16 @@ yarn add @sentry/nitro
 pnpm add @sentry/nitro
 ```
 
+<Alert>
+The SDK is a wrapper around `@sentry/node` and re-exports its full API. All Node.js instrumentation from `@sentry/node` (HTTP clients, databases, etc.) works out of the box, and the Nitro-specific tracing channels add parameterized routes and middleware spans on top.
+</Alert>
+
 ## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#4](#send-logs) and [#5](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+<Include name="quick-start-features-expandable" />
 
 The Nitro SDK is configured in two places: a build-time wrapper that registers a Nitro module, and a runtime file that initializes the SDK before your server starts.
 
@@ -112,20 +113,21 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 Create an `instrument.mjs` file in your project root:
 
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
+
 ```javascript {filename: instrument.mjs}
 import * as Sentry from "@sentry/nitro";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/nitro/configuration/options/#tracesSampleRate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
@@ -147,67 +149,11 @@ Load the instrumentation file with Node's `--import` flag before any Nitro comma
 }
 ```
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
-## Verify Your Setup
-
-Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
-
-### Issues
-
-Add a test route that throws an error, then open `/debug-sentry` in your browser (or `curl` it) to trigger the error:
-
-```javascript {filename: server/routes/debug-sentry.ts}
-import { defineHandler } from "nitro/h3";
-
-export default defineHandler(() => {
-  throw new Error("My first Sentry error!");
-});
-```
-
-<OnboardingOption optionId="performance">
-
-### Tracing
-
-To verify tracing, add a handler that starts a manual span:
-
-```javascript {filename: server/routes/debug-sentry.ts}
-import { defineHandler } from "nitro/h3";
-import * as Sentry from "@sentry/nitro";
-
-export default defineHandler(async () => {
-  await Sentry.startSpan(
-    {
-      op: "test",
-      name: "My First Test Transaction",
-    },
-    async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      throw new Error("My first Sentry error!");
-    }
-  );
-});
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
-
-### View Captured Data in Sentry
-
-Finally, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
-
-<Include name="quick-start-locate-data-expandable" />
-
-## Features
+## Automatic Instrumentation
 
 ### Automatic Error Capturing
 
@@ -250,16 +196,49 @@ export default defineHandler(() => {
 });
 ```
 
-## Runtime Behavior
 
-The SDK is a wrapper around `@sentry/node` and re-exports its full API. All Node.js instrumentation from `@sentry/node` (HTTP clients, databases, etc.) works out of the box, and the Nitro-specific tracing channels add parameterized routes and middleware spans on top.
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add a test route that throws an error, then open `/debug-sentry` in your browser to trigger the error:
+
+```javascript {filename: server/routes/debug-sentry.ts}
+import { defineHandler } from "nitro/h3";
+
+export default defineHandler(() => {
+  throw new Error("Sentry Test Error");
+});
+```
+
+### View Captured Data in Sentry
+
+Finally, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Nitro application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/tracing/">Explore Tracing</PlatformLink> to learn how to inspect application performance
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

@@ -1,6 +1,6 @@
 ---
 title: Azure Functions
-description: Learn how to manually set up Sentry in your Azure Functions and capture your first errors.
+description: Learn how to manually set up Sentry in your Azure Functions and capture your first events.
 sdk: sentry.javascript.node
 fallbackGuide: javascript.node
 categories:
@@ -15,14 +15,6 @@ categories:
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
 
 Run the command for your preferred package manager to add `@sentry/node` as a runtime dependency to your application:
@@ -31,37 +23,36 @@ Run the command for your preferred package manager to add `@sentry/node` as a ru
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**.
+
+<Include name="quick-start-features-expandable" />
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/integrations/nodeprofiling/">`nodeProfilingIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
 Make sure to initialize Sentry at the top of your function file before importing any other modules:
 
 ```javascript {tabTitle:async}
 const Sentry = require("@sentry/node");
-// ___PRODUCT_OPTION_START___ profiling
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
-
-// ___PRODUCT_OPTION_END___ profiling
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // ___PRODUCT_OPTION_START___ profiling
-
   integrations: [nodeProfilingIntegration()],
-  // ___PRODUCT_OPTION_END___ profiling
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Add Performance Monitoring by setting tracesSampleRate
-  // Set tracesSampleRate to 1.0 to capture 100% of transactions
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ profiling
 
-  // Enable profiling for a percentage of sessions
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  // Enables Profiling.
+  // Set to 1.0 to profile every session.
+  // We recommend reducing this value in production.
   profileSessionSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ profiling
 });
 
 // your function code
@@ -92,79 +83,47 @@ module.exports = async function (context, req) {
 };
 ```
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
-## Step 4: Verify Your Setup
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
-
-Let's verify that Sentry captures errors and creates issues in your Sentry project. Add an intentional error in your function:
+Add an intentional error in your function and flush the event before the function execution ends:
 
 ```javascript {tabTitle:async}
 const Sentry = require("@sentry/node");
 
 module.exports = async function (context, req) {
   try {
-    // This function does not exist, triggering an error
-    await notExistFunction();
-  } catch (e) {
-    Sentry.withScope((scope) => {
-      scope.setSDKProcessingMetadata({ request: req });
-      Sentry.captureException(e);
-    });
+    throw new Error("Sentry Test Error");
+  } catch (error) {
+    Sentry.captureException(error);
+    await Sentry.flush(2000);
   }
-
-  // Wait for the event to be sent before the function execution ends
-  await Sentry.flush(2000);
-
-  context.res = {
-    status: 500,
-    body: "Test error sent to Sentry.",
-  };
 };
 ```
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-To test tracing, update your function to include a custom span:
-
-```javascript {tabTitle:async}
-const Sentry = require("@sentry/node");
-
-module.exports = async function (context, req) {
-  await Sentry.startSpan({ name: "My Custom Span", op: "task" }, async () => {
-    // Simulate some work
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  });
-
-  // Wait for the event to be sent before the function execution ends
-  await Sentry.flush(2000);
-
-  context.res = {
-    status: 200,
-    body: "Hello world!",
-  };
-};
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -174,14 +133,10 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Azure Function and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Azure Functions application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Get familiar with [Sentry's product features](/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 - Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
