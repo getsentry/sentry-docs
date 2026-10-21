@@ -18,6 +18,7 @@ import {
   OnboardingSteps,
   updateElementsVisibilityForOptions,
 } from '../onboarding';
+import {PlatformIcon} from '../platformIcon';
 import {SmartLink} from '../smartLink';
 import styles from '../versionSelector/style.module.scss';
 import {
@@ -40,6 +41,15 @@ type FrameworkContextValue = {
 };
 
 const FrameworkContext = createContext<FrameworkContextValue | null>(null);
+
+function ItemLabel({icon, title}: {icon: string; title: string}) {
+  return (
+    <span className="flex items-center gap-2">
+      <PlatformIcon platform={icon} size={16} format="sm" />
+      {title}
+    </span>
+  );
+}
 
 function readFrameworkFromUrl(frameworks: Framework[]): Framework | null {
   const key = new URLSearchParams(window.location.search).get(FRAMEWORK_QUERY_PARAM);
@@ -124,7 +134,10 @@ export function FrameworkSelector({
             >
               <RadixSelect.Item value={DEFAULT_VALUE} className={styles.item}>
                 <RadixSelect.ItemText>
-                  None (plain {runtimeConfig?.title ?? runtime})
+                  <ItemLabel
+                    icon={`${platform}-${runtime}`}
+                    title={`None (plain ${runtimeConfig?.title ?? runtime})`}
+                  />
                 </RadixSelect.ItemText>
               </RadixSelect.Item>
               {frameworks.length > 0 && (
@@ -134,7 +147,9 @@ export function FrameworkSelector({
                   </RadixSelect.Label>
                   {frameworks.map(f => (
                     <RadixSelect.Item key={f.key} value={f.key} className={styles.item}>
-                      <RadixSelect.ItemText>{f.title}</RadixSelect.ItemText>
+                      <RadixSelect.ItemText>
+                        <ItemLabel icon={`${platform}-${f.key}`} title={f.title} />
+                      </RadixSelect.ItemText>
                     </RadixSelect.Item>
                   ))}
                 </RadixSelect.Group>
@@ -150,7 +165,9 @@ export function FrameworkSelector({
                       value={`${GUIDE_VALUE_PREFIX}${g.url}`}
                       className={styles.item}
                     >
-                      <RadixSelect.ItemText>{g.title}</RadixSelect.ItemText>
+                      <RadixSelect.ItemText>
+                        <ItemLabel icon={g.icon} title={g.title} />
+                      </RadixSelect.ItemText>
                       <ArrowRightIcon className="ml-auto" />
                     </RadixSelect.Item>
                   ))}
