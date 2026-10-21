@@ -213,9 +213,9 @@ A background revalidation (for example, stale-while-revalidate) starts its own t
 
 ### `message_origin`
 
-When a consumer processes a message from a queue, the producer that published the message ran in an earlier trace, often in another process and with a different sampling decision.
-If the consumer starts its own trace instead of continuing the producer's trace, then without a link, the consumer trace has no way to find the code that published the message.
-One producer trace can also publish messages for many consumers.
+When a consumer processes a message, the work often runs long after the producer published it, in another process, and with a different sampling decision.
+A parent/child relationship does not fit well: a delayed or retried job keeps the producer trace open for a long time, one publish span can fan out to many consumers, and a batch can contain messages from unrelated traces, so it has no single correct parent.
+If the consumer starts its own trace, then without a link, the consumer trace has no way to find the code that published the message.
 
 A `message_origin` link connects the span that processes a message (for example, a `queue.process` span) to the span that published it (for example, a `queue.publish` span). "Origin" here means the producer span, not the consumer.
 
