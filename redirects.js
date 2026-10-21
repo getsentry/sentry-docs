@@ -1051,7 +1051,16 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/nuxt/cloudflare/',
+  },
+  // The Cloudflare quick starts of Next.js and Nuxt moved from the Cloudflare guide into the framework guides.
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/:framework(nextjs|nuxt)/',
+    destination: '/platforms/javascript/guides/:framework/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
