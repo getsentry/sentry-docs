@@ -88,7 +88,7 @@ export const RUNTIMES: Record<string, Runtime> = {
     title: 'Cloudflare Workers',
     frameworks: [],
     frameworkGuides: [
-      guide('Astro', 'cloudflare/frameworks/astro', 'javascript-astro'),
+      guide('Astro', 'astro/cloudflare'),
       guide('Hono', 'cloudflare/frameworks/hono', 'javascript-hono'),
       guide(
         'Hydrogen',
@@ -97,13 +97,9 @@ export const RUNTIMES: Record<string, Runtime> = {
       ),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
-      guide('Remix', 'cloudflare/frameworks/remix', 'javascript-remix'),
-      guide('SvelteKit', 'cloudflare/frameworks/sveltekit', 'javascript-sveltekit'),
-      guide(
-        'TanStack Start',
-        'cloudflare/frameworks/tanstack-start',
-        'javascript-tanstackstart-react'
-      ),
+      guide('Remix', 'remix/cloudflare'),
+      guide('SvelteKit', 'sveltekit/cloudflare'),
+      guide('TanStack Start', 'tanstackstart-react/cloudflare'),
     ],
     includePaths: [],
   },
