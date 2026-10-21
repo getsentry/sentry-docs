@@ -62,10 +62,24 @@ by default.
 
 To capture request bodies:
 
-- Initialize the SDK with the
-  [send_default_pii](/platforms/python/configuration/options/#send-default-pii)
-  option set to `True`.
 - Make sure the integration for the web framework you're using is enabled.
+- Initialize the SDK with the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key's `document` setting controls whether the GraphQL
+  request body is attached. If you set `http_bodies`, it must include
+  `incoming_request` so that your web framework integration captures the body
+  in the first place.
+
+```python
+sentry_sdk.init(
+    # same options as above
+    data_collection={
+        "graphql": {"document": True},
+    },
+)
+```
+
+Both are enabled by default when you pass a `data_collection` dictionary. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
+
+Alternatively, you can initialize the SDK with the <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink> option set to `True`, though `send_default_pii` will be removed in version 3.0 of the SDK:
 
 ```python
 sentry_sdk.init(
@@ -81,7 +95,8 @@ sentry_sdk.init(
 Since `send_default_pii` is a global SDK option, setting it to `True` affects all
 integrations, not just Graphene. Please make sure to take care of
 [scrubbing sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option.
+from events before enabling this option. With `data_collection`, you can enable
+only the categories you need instead.
 
 </Alert>
 
