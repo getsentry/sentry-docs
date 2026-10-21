@@ -2,12 +2,15 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.25.0
+spec_version: 1.26.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.26.0
+    date: 2026-10-21
+    summary: Downgraded log and metric byte outcomes from MUST to SHOULD; SDKs MAY omit them if calculating item size of a dropped item has a performance impact
   - version: 1.25.0
     date: 2026-10-08
     summary: Clarified that discarded envelopes are counted per contained item, not as a quantity of 1
@@ -216,10 +219,10 @@ SDKs **MAY** retry sending the envelope when a network error occurs (connection 
 When SDKs discard an envelope, they **MUST** record a client report entry for every telemetry item contained in the envelope, not just one entry per envelope or per envelope item. The `quantity` for each data category **MUST** be the number of items of that category in the envelope:
 
 - For `log`, `trace_metric`, and `span` envelope items, which batch multiple items into one envelope item, the quantity is the number of entries in the envelope item's `items` array, not 1. These are recorded under the `log_item`, `trace_metric`, and `span` data categories respectively.
-- For logs and metrics, SDKs **MUST** also record the respective [`log_byte`](#log-byte-outcomes) and [`trace_metric_byte`](#metric-byte-outcomes) entries.
+- For logs and metrics, SDKs **SHOULD** also record the respective [`log_byte`](#log-byte-outcomes) and [`trace_metric_byte`](#metric-byte-outcomes) entries, unless they omit byte outcomes for performance reasons.
 - For transactions, SDKs **MUST** also record the [span outcomes](#span-outcomes).
 
-For example, if an envelope containing a `log` item with 100 logs fails to send with an `HTTP 500` response, the SDK records a `send_error` entry with category `log_item` and quantity `100`, plus a `send_error` entry with category `log_byte` and the approximate byte size of these logs.
+For example, if an envelope containing a `log` item with 100 logs fails to send with an `HTTP 500` response, the SDK records a `send_error` entry with category `log_item` and quantity `100`, plus, if it records byte outcomes, a `send_error` entry with category `log_byte` and the approximate byte size of these logs.
 
 </SpecSection>
 
@@ -237,7 +240,7 @@ If certain spans are dropped in `beforeSendTransaction`, an event processor, etc
 
 ### Log Byte Outcomes
 
-When a log is dropped, SDKs **MUST** record an additional `log_byte` category entry containing the byte size of the log. This provides visibility into the volume of log data being discarded, complementing the item count reported under the `log_item` category.
+When a log is dropped, SDKs **SHOULD** record an additional `log_byte` category entry containing the byte size of the log, if calculating or estimating the log size has only a negligible performance impact. If calculating or estimating the log size has a performance impact, SDKs **MAY** omit `log_byte` entries. This provides visibility into the volume of log data being discarded, complementing the item count reported under the `log_item` category.
 
 Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped log produces two entries in the map: one incrementing the `log_item` count by 1, and one incrementing the `log_byte` count by the log's byte size.
 
@@ -249,7 +252,7 @@ The byte size does not need to be exact. SDKs **MAY** use an approximation, such
 
 ### Metric Byte Outcomes
 
-When a metric is dropped, SDKs **MUST** record an additional `trace_metric_byte` category entry containing the byte size of the metric. This provides visibility into the volume of metric data being discarded, complementing the item count reported under the `trace_metric` category.
+When a metric is dropped, SDKs **SHOULD** record an additional `trace_metric_byte` category entry containing the byte size of the metric, if calculating or estimating the metric size has only a negligible performance impact. If calculating or estimating the metric size has a performance impact, SDKs **MAY** omit `trace_metric_byte` entries. This provides visibility into the volume of metric data being discarded, complementing the item count reported under the `trace_metric` category.
 
 Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped metric produces two entries in the map: one incrementing the `trace_metric` count by 1, and one incrementing the `trace_metric_byte` count by the metric's byte size.
 

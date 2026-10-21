@@ -2,7 +2,7 @@
 title: Metrics
 description: Counter, gauge, and distribution metrics sent as batched trace_metric envelope items.
 spec_id: sdk/telemetry/metrics
-spec_version: 3.1.0
+spec_version: 3.2.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 3.2.0
+    date: 2026-10-21
+    summary: Downgraded trace_metric_byte client reports from MUST to SHOULD; SDKs MAY omit them if calculating metric size has a performance impact
   - version: 3.1.0
     date: 2026-10-08
     summary: Listed client report discard reasons for metrics and clarified that the quantity is the number of discarded metrics
@@ -269,7 +272,9 @@ These rules exist because auto-emitted metrics can cause a high volume of teleme
 
 ### Client Reports
 
-SDKs **MUST** report count (`trace_metric`) and size in bytes (`trace_metric_byte`) of discarded metrics. An approximation of metric size is sufficient (e.g., by counting as if serialized).
+SDKs **MUST** report the count (`trace_metric`) of discarded metrics.
+
+SDKs **SHOULD** also report the size in bytes (`trace_metric_byte`) of discarded metrics if calculating or estimating the metric size has only a negligible performance impact. If calculating or estimating the metric size has a performance impact, SDKs **MAY** omit `trace_metric_byte` outcomes. An approximation of metric size is sufficient (e.g., by counting as if serialized).
 
 SDKs **MUST** record a [client report](/sdk/telemetry/client-reports/) in at least the following cases:
 
