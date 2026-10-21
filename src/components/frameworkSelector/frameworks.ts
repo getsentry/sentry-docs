@@ -11,11 +11,22 @@ const HAPI: Framework = {key: 'hapi', title: 'Hapi'};
 
 /** A framework with its own Sentry SDK. The selector opens its guide instead of swapping snippets. */
 export type FrameworkGuide = {
+  /** Platform icon key, e.g. `javascript-astro`. */
+  icon: string;
   title: string;
   url: string;
 };
 
-const guide = (title: string, slug: string): FrameworkGuide => ({
+/**
+ * `slug` is the page path below `/platforms/javascript/guides/`. The icon defaults to the
+ * one of the guide in the first segment of `slug`.
+ */
+const guide = (
+  title: string,
+  slug: string,
+  icon = `javascript-${slug.split('/')[0]}`
+): FrameworkGuide => ({
+  icon,
   title,
   url: `/platforms/javascript/guides/${slug}/`,
 });
@@ -77,14 +88,22 @@ export const RUNTIMES: Record<string, Runtime> = {
     title: 'Cloudflare Workers',
     frameworks: [],
     frameworkGuides: [
-      guide('Astro', 'cloudflare/frameworks/astro'),
-      guide('Hono', 'cloudflare/frameworks/hono'),
-      guide('Hydrogen', 'cloudflare/frameworks/hydrogen-react-router'),
+      guide('Astro', 'cloudflare/frameworks/astro', 'javascript-astro'),
+      guide('Hono', 'cloudflare/frameworks/hono', 'javascript-hono'),
+      guide(
+        'Hydrogen',
+        'cloudflare/frameworks/hydrogen-react-router',
+        'javascript-hydrogen'
+      ),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
-      guide('Remix', 'cloudflare/frameworks/remix'),
-      guide('SvelteKit', 'cloudflare/frameworks/sveltekit'),
-      guide('TanStack Start', 'cloudflare/frameworks/tanstack-start'),
+      guide('Remix', 'cloudflare/frameworks/remix', 'javascript-remix'),
+      guide('SvelteKit', 'cloudflare/frameworks/sveltekit', 'javascript-sveltekit'),
+      guide(
+        'TanStack Start',
+        'cloudflare/frameworks/tanstack-start',
+        'javascript-tanstackstart-react'
+      ),
     ],
     includePaths: [],
   },
