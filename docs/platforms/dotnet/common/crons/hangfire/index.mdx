@@ -29,17 +29,18 @@ For each monitored job, the SDK will automatically capture a check-in with `Chec
 
 ## Monitor All Recurring Jobs
 
-We recommend monitoring every recurring job. From the next SDK release, you can do this without adding the `SentryMonitorSlug` attribute to each one. Turn on `MonitorAllRecurringJobs`, and list any recurring job IDs you don't want to monitor in `ExcludedRecurringJobs`:
+We recommend monitoring every recurring job. From the next SDK release, you can do this without adding the `SentryMonitorSlug` attribute to each one. Turn on `MonitorAllRecurringJobs`, and add any recurring jobs you don't want to monitor to `ExcludedRecurringJobs`, by ID or with a regular expression:
 
 ```csharp
 GlobalConfiguration.Configuration.UseSentry(options =>
 {
     options.MonitorAllRecurringJobs = true;
     options.ExcludedRecurringJobs.Add("cache-warmup");
+    options.ExcludedRecurringJobs.Add(new Regex("^cleanup-", RegexOptions.IgnoreCase));
 });
 ```
 
-The monitor slug is the recurring job ID in lowercase, with each run of characters other than letters, digits, and `_` replaced by a single `-`, and cut to 50 characters. For example, the recurring job `Reports.Nightly Run` reports to the monitor `reports-nightly-run`. Jobs with the `SentryMonitorSlug` attribute keep their slug and are monitored even if their ID is excluded.
+The monitor slug is the recurring job ID, normalized the same way Sentry normalizes monitor slugs: lowercased, accents removed, spaces and dashes replaced by a single `-`, other characters dropped, and cut to 50 characters. For example, the recurring job `Reports: Nightly Run` reports to the monitor `reports-nightly-run`. Jobs with the `SentryMonitorSlug` attribute keep their slug and are monitored even if their ID is excluded.
 
 The schedule is sent as described in [Send the Recurring Job Schedule](#send-the-recurring-job-schedule). If two recurring jobs end up with the same monitor slug and different schedules, their check-ins are sent without a schedule. Jobs that aren't recurring, such as `BackgroundJob.Enqueue`, still need the attribute.
 
