@@ -16,12 +16,9 @@ Initialize your OpenTelemetry provider before calling `Sentry.init()`.
 
 Add an OTLP exporter to your existing provider. Install `@opentelemetry/exporter-trace-otlp-http` if you do not already use it. `Sentry.getOtlpTracesEndpoint()` supplies the endpoint URL and authentication headers for your DSN.
 
-Pick the example that matches your OpenTelemetry JS version. Keep your existing sampler, propagator, context manager, and instrumentation; do not register a second provider.
+Keep your existing sampler, propagator, context manager, and instrumentation; do not register a second provider.
 
-- **OpenTelemetry JS v3** (`@opentelemetry/sdk-node` 0.300 or later) replaces `@opentelemetry/sdk-trace-base` and `@opentelemetry/sdk-trace-node` with `@opentelemetry/sdk-trace`, and `BatchSpanProcessor` takes an options object with an `exporter` field. It requires Node.js 22.15 or later. The example uses `NodeSDK`, since v3 no longer ships `NodeTracerProvider`.
-- **OpenTelemetry JS v2** works with `NodeTracerProvider` or `NodeSDK`. If you use `NodeSDK`, add the same span processor to its `spanProcessors` option.
-
-```javascript {tabTitle:OpenTelemetry JS v3} {filename: instrument.mjs}
+```javascript {filename: instrument.mjs}
 import * as Sentry from "___SDK_PACKAGE___";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { NodeSDK } from "@opentelemetry/sdk-node";
@@ -52,39 +49,9 @@ Sentry.init({
 });
 ```
 
-```javascript {tabTitle:OpenTelemetry JS v2} {filename: instrument.mjs}
-import * as Sentry from "___SDK_PACKAGE___";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-
-const dsn = "___PUBLIC_DSN___";
-const endpoint = Sentry.getOtlpTracesEndpoint(dsn);
-
-if (!endpoint) {
-  throw new Error("Could not parse the Sentry DSN");
-}
-
-const provider = new NodeTracerProvider({
-  spanProcessors: [
-    new BatchSpanProcessor(new OTLPTraceExporter(endpoint)),
-    // Keep any other span processors you already use.
-  ],
-});
-
-provider.register();
-
-Sentry.init({
-  dsn,
-  enableOpenTelemetrySetup: false,
-  // Leave tracesSampleRate and tracesSampler unset. OpenTelemetry owns tracing.
-  integrations: [Sentry.openTelemetryIntegration()],
-});
-```
-
 ## Use Sentry for Error Monitoring Only
 
-If your traces go elsewhere, keep your existing OpenTelemetry exporter and omit the Sentry OTLP exporter from the examples above. The `Sentry.init()` configuration stays the same. `openTelemetryIntegration()` links Sentry errors to the active OpenTelemetry trace without sending spans to Sentry.
+If your traces go elsewhere, keep your existing OpenTelemetry exporter and omit the Sentry OTLP exporter from the example above. The `Sentry.init()` configuration stays the same. `openTelemetryIntegration()` links Sentry errors to the active OpenTelemetry trace without sending spans to Sentry.
 
 ## Configure Sampling
 
