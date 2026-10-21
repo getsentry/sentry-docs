@@ -11,7 +11,7 @@ The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instr
 
 This page describes the minimum span structure and attributes Sentry needs, then covers richer data such as messages, streaming metrics, and custom costs.
 
-For conversations and privacy (`set_conversation_id`, `set_user`, `send_default_pii`), see the <PlatformLink to="/agent-tracing/">Agent Tracing guide</PlatformLink>.
+For conversations and privacy (`set_conversation_id`, `set_user`, `data_collection`), see the <PlatformLink to="/agent-tracing/">Agent Tracing guide</PlatformLink>.
 
 ## Span Hierarchy
 
@@ -46,7 +46,7 @@ To group turns into a [Conversation](/product/agents/conversations/), call `set_
 
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
-Prompt, response, and tool content are treated as PII. They are only captured when `send_default_pii=True` (or per-integration `include_prompts`). See <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
+Prompt, response, and tool content can contain PII. The SDK doesn't filter attributes you set manually, so the `data_collection` and `send_default_pii` options don't affect them. Decide what to record before you set these attributes. To learn how automatic integrations handle this data, see <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
 
 ## AI Request Span
 
@@ -261,11 +261,11 @@ Marking failed tools with an error status populates the Tool Errors widget.
   <Include name="tracing/ai-agents-module/execute-tool-span" />
 </Expandable>
 
-## Evaluation Span
+## Decision Span
 
-This span represents an evaluation of generated content against a set of questions, such as grading a model's reply for accuracy or tone. Models like <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Jev</PlatformLink> produce these spans.
+This span represents a decision on generated content against a set of questions, such as grading a model's reply for accuracy or tone. Models like <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Jev</PlatformLink> produce these spans.
 
-Sentry identifies an evaluation by `gen_ai.operation.name: "evaluate"`. Evaluations share the `ai_client` operation type with ordinary LLM calls, so the operation name is what sets them apart.
+Sentry identifies a decision by `gen_ai.operation.name: "decide"`. Decisions share the `ai_client` operation type with ordinary LLM calls, so the operation name is what sets them apart.
 
 ```python
 import json
@@ -303,10 +303,10 @@ evaluation_input = [
 ]
 
 with sentry_sdk.start_span(
-    op="gen_ai.evaluate",
-    name="evaluate typesafe/jev-1.13",
+    op="gen_ai.decide",
+    name="decide typesafe/jev-1.13",
     attributes={
-        "gen_ai.operation.name": "evaluate",
+        "gen_ai.operation.name": "decide",
         "gen_ai.request.model": "typesafe/jev-1.13",
         "gen_ai.provider.name": "typesafe",
         "gen_ai.agent.name": "Support Agent",  # when this evaluation runs under an agent
@@ -345,8 +345,50 @@ If you call Jev through the <PlatformLink to="/agent-tracing/typesafe/">TypeSafe
 
 </Alert>
 
-<Expandable title="Evaluation span attributes">
+<Expandable title="Decision span attributes">
   <Include name="tracing/ai-agents-module/evaluation-span" />
+</Expandable>
+
+## Memory Span
+
+This span represents a read from, write to, or management operation against an agent's persistent memory store, such as retrieving relevant memories before a model call or saving new ones after it.
+
+Sentry identifies a memory operation by the `gen_ai.memory.client` span op. The specific action goes in `gen_ai.operation.name`, and the span `name` matches it.
+
+```python
+import json
+import sentry_sdk
+
+query = "user dietary preferences"
+
+with sentry_sdk.start_span(
+    op="gen_ai.memory.client",
+    name="search_memory",
+    attributes={
+        "gen_ai.operation.name": "search_memory",
+        "gen_ai.memory.store.id": "user-preferences-store",
+        "gen_ai.agent.name": "Support Agent",  # when the operation runs under an agent
+        "gen_ai.memory.query.text": query,  # opt-in; may contain sensitive data
+    },
+) as span:
+    records = memory_store.search(query)
+
+    span.set_data("gen_ai.memory.record.count", len(records))
+    # opt-in; may contain sensitive data
+    span.set_data("gen_ai.memory.records", json.dumps([
+        {"id": record.id, "content": record.content, "score": record.score}
+        for record in records
+    ]))
+```
+
+Set `gen_ai.operation.name` to the action: `search_memory` to retrieve records, `create_memory` / `update_memory` / `upsert_memory` to write them, `delete_memory` to remove them, and `create_memory_store` / `delete_memory_store` to manage the store itself.
+
+`gen_ai.memory.query.text` applies only to `search_memory`. When an operation targets a single record, set `gen_ai.memory.record.id`; on `delete_memory`, omitting it can mean every record in the store is removed. `gen_ai.memory.record.count` is the number of records returned, written, or deleted.
+
+`gen_ai.memory.query.text` and `gen_ai.memory.records` can carry user data and PII, so they are opt-in. Omit them, or gate them yourself, when you don't want that content in Sentry.
+
+<Expandable title="Memory span attributes">
+  <Include name="tracing/ai-agents-module/memory-span" />
 </Expandable>
 
 ## Streaming Responses

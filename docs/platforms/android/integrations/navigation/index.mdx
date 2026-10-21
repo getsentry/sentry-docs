@@ -10,24 +10,36 @@ categories:
 
 The `sentry-android-navigation` and `sentry-android-navigation3` libraries provide support for Sentry's Android navigation instrumentation. Use them to automatically add breadcrumbs, track screen names, and start navigation transactions whenever users navigate around your app.
 
-This page covers both:
+This page covers:
 
-- **Navigation 2** (`androidx.navigation`) via `SentryNavigationListener`
-- **Navigation 3** (`androidx.navigation3`) via `SentryNavEffect`
+- **[Navigation 2](https://developer.android.com/guide/navigation/)** (`androidx.navigation`) for classic Views and Jetpack Compose via `SentryNavigationListener`
+- **[Navigation 3](https://developer.android.com/guide/navigation/navigation-3)** (`androidx.navigation3`) for Jetpack Compose via `SentryNavEffect`
 
-If you're still using `NavController`, follow the Navigation 2 setup below. If you've moved to `NavDisplay`, skip to [Navigation 3](#navigation-3).
+If you're using `NavController`, follow the Navigation 2 setup below. If you're using `NavDisplay`, skip to [Navigation 3](#navigation-3).
 
 ## Navigation 2
 
-<Alert>
+`SentryNavigationListener` for Navigation 2 integrations lets you observe destination changes reported by your `NavController`. Upon every destination change the listener:
 
-If you're using Navigation 2 with Jetpack Compose, see <PlatformLink to="/configuration/integrations/jetpack-compose/#jetpack-compose-navigation">Jetpack Compose Navigation</PlatformLink> instead.
+- starts a new navigation transaction and binds it to the current [Sentry scope](https://docs.sentry.io/platforms/android/enriching-events/scopes/)<sup>†</sup>
+- emits a breadcrumb
+- updates the currently tracked screen name
 
-</Alert>
+`SentryNavigationListener` can be used with:
 
-### Install
+- [Classic Views](#classic-views)
+- [Jetpack Compose](#jetpack-compose)
 
-Sentry captures data by adding a `NavController.OnDestinationChangedListener`. To add the Navigation integration, install the [Android SDK](/platforms/android/), then add the `sentry-android-navigation` dependency using Gradle:
+<small>
+  † A new navigation transaction will *not* be bound if another unfinished
+  transaction is already bound to the current scope.
+</small>
+
+### Classic Views
+
+#### Install
+
+Install the [Android SDK](/platforms/android/), then add the `sentry-android-navigation` dependency using Gradle:
 
 ```groovy {filename:build.gradle}
 implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
@@ -39,9 +51,9 @@ implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java
 implementation("io.sentry:sentry-android-navigation:{{@inject packages.version('sentry.java.android.navigation', '6.2.0') }}")
 ```
 
-### Configure
+#### Configure
 
-Configuration should happen in the respective lifecycle callbacks, once you retrieve your `NavController` instance:
+Registration of the `SentryNavigationListener` should happen in the appropriate lifecycle callbacks of the entity that owns your `NavController`:
 
 ```kotlin
 import androidx.navigation.NavController
@@ -88,11 +100,9 @@ protected void onPause() {
 }
 ```
 
-By default, the navigation transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idleTimeout) and all of its child spans are finished. You can customize the timeout to your needs.
+#### Verify
 
-### Verify
-
-The snippet below includes a sample `Fragment` with a couple of navigation events and captures an intentional message, so you can test that everything is working as soon as you set it up:
+The snippet below includes a sample `Fragment` with example navigation events. It captures an intentional message, so you can test that everything is working as soon as you set it up:
 
 ```kotlin
 import android.os.Bundle
@@ -139,14 +149,206 @@ class HomeFragment : Fragment() {
 }
 ```
 
-### Customize the Recorded Breadcrumb/Transaction
+### Jetpack Compose
 
-By default, the Navigation integration captures route arguments as additional data on breadcrumbs and transactions. In case the arguments contain any PII data, you can strip it out by way of `BeforeBreadcrumbCallback` and `EventProcessor` respectively. To do that, [manually initialize](/platforms/android/manual-setup/#configuration-via-sentryoptions) the SDK and add the following snippet:
+#### Auto-Installation with the Sentry Android Gradle Plugin
+
+If you're using the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), it will automatically register `SentryNavigationListener` with any `NavHostController`s you create via [`rememberNavController`](https://developer.android.com/reference/kotlin/androidx/navigation/compose/rememberNavController.composable).
+
+<Alert>
+
+Be sure not to call Sentry's `withSentryObservableEffect` method (discussed [below](#configure-1)) on a `NavHostController` that the Sentry Android Gradle Plugin already auto-instruments. Doing so can register multiple `SentryNavigationListener`s and produce duplicate navigation data.
+
+</Alert>
+
+##### Install
+
+Add the Sentry Android Gradle plugin in your `build.gradle` file:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
 
 ```kotlin
-import io.sentry.EventProcessor
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}"
+}
+```
+
+<Alert>
+
+Learn more about the Sentry Android Gradle plugin in our [Gradle](/platforms/android/configuration/gradle/) documentation. Details about auto-installation can be found in the [Auto Instrumentation](/platforms/android/configuration/gradle/#tracing-auto-instrumentation) section.
+
+</Alert>
+
+##### Disable
+
+If you want to disable the plugin's automatic Compose instrumentation, including Navigation 2 instrumentation, add the following to your `build.gradle` file:
+
+```groovy
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature) - InstrumentationFeature.COMPOSE
+  }
+}
+```
+
+```kotlin
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java) - InstrumentationFeature.COMPOSE)
+  }
+}
+```
+
+#### Manual Installation
+
+##### Install
+
+Sentry captures data via a `NavHostController.withSentryObservableEffect` extension function that registers a `SentryNavigationListener` under the hood. To use it, install the Android SDK, then add the `sentry-compose-android` dependency in Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}'
+implementation 'io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.compose.android', '6.2.0') }}'
+```
+
+```kotlin
+implementation("io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '6.2.0') }}")
+implementation("io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.compose.android', '6.2.0') }}")
+```
+
+##### Configure
+
+Configuration should happen in the `@Composable` function that owns your `NavHost`:
+
+```kotlin
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import io.sentry.compose.withSentryObservableEffect
+
+val navController = rememberNavController().withSentryObservableEffect(
+  enableNavigationBreadcrumbs = true, // enabled by default
+  enableNavigationTracing = true  // enabled by default
+)
+
+NavHost(
+  navController = navController
+) {
+  ...
+}
+```
+
+#### Verify
+
+This snippet includes a sample `Activity` with example navigation events between composables. It captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import io.sentry.Sentry
+import io.sentry.compose.withSentryObservableEffect
+
+class ComposeActivity : ComponentActivity() {
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    setContent {
+      val navController = rememberNavController().withSentryObservableEffect()
+      SampleNavigation(navController)
+    }
+  }
+}
+
+@Composable
+fun SampleNavigation(navController: NavHostController) {
+  NavHost(
+    navController = navController,
+    startDestination = "first"
+  ) {
+    composable("first") {
+      First(
+        navigateToSecond = { navController.navigate("second") }
+      )
+    }
+    composable("second") {
+      Second()
+    }
+  }
+}
+
+@Composable
+fun First(
+  navigateToSecond: () -> Unit
+) {
+  Column(
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.fillMaxSize()
+  ) {
+    Button(
+      onClick = { navigateToSecond() },
+      modifier = Modifier.padding(top = 32.dp)
+    ) {
+      Text("Navigate to Second")
+    }
+    Button(
+      onClick = { Sentry.captureMessage("Some message from Compose.") },
+      modifier = Modifier.padding(top = 32.dp)
+    ) {
+      Text("Message from Compose")
+    }
+  }
+}
+
+@Composable
+fun Second() {
+  Column(
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.fillMaxSize()
+  ) {
+    Text("Second Screen")
+  }
+}
+```
+
+### Scrub Sensitive Info from the Recorded Breadcrumb/Transaction
+
+`SentryNavigationListener` captures route arguments as additional data on breadcrumbs and transactions. If the arguments contain PII, you can strip them out with `BeforeBreadcrumbCallback` and `BeforeSendTransactionCallback`.<sup>†</sup>
+
+To do so, [manually initialize](/platforms/android/manual-setup/#configuration-via-sentryoptions) the SDK and add the following snippet:
+
+```kotlin
 import io.sentry.android.core.SentryAndroid
 import io.sentry.SentryOptions.BeforeBreadcrumbCallback
+import io.sentry.SentryOptions.BeforeSendTransactionCallback
 import io.sentry.android.navigation.SentryNavigationListener
 
 SentryAndroid.init(this) { options ->
@@ -157,16 +359,24 @@ SentryAndroid.init(this) { options ->
     }
     breadcrumb
   }
-  options.addEventProcessor(object : EventProcessor {
-    override fun process(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
-      if (SentryNavigationListener.NAVIGATION_OP == transaction.contexts.trace.operation) {
-        transaction.removeExtra("arguments")
-      }
-      return transaction
+
+  options.beforeSendTransaction = BeforeSendTransactionCallback { transaction, _ ->
+    val trace = transaction.contexts.trace
+    if (SentryNavigationListener.NAVIGATION_OP == trace?.operation) {
+      trace.setData("arguments", null)
     }
-  })
+    transaction
+  }
 }
 ```
+
+<small>
+  † The snippet above removes route arguments, but it doesn't scrub route names.
+  Define routes with stable names and placeholders, such as `profile/{user_id}`,
+  and pass only sanitized values as arguments. Avoid putting PII directly in
+  route names, as they can appear in breadcrumb `from` and `to` fields,
+  transaction names, and screen names.
+</small>
 
 ## Navigation 3
 
@@ -178,20 +388,23 @@ See the [Limitations](#limitations) section below for additional restrictions.
 
 </Alert>
 
-Android's [Navigation 3 library](https://developer.android.com/guide/navigation/navigation-3) expects apps to manage their own back stack and to push and pop entries in order to navigate. Apps pass their back stack to a `NavDisplay` and define corresponding composables. `NavDisplay` renders those composables to screen as the back stack entries change.
+Android's [Navigation 3 library](https://developer.android.com/guide/navigation/navigation-3) expects apps to manage their own back stack and to push and pop entries in order to navigate. `SentryNavEffect` instruments the back stack passed to your `NavDisplay`. By default, every time the top of the back stack changes, `SentryNavEffect` will:
 
-`SentryNavEffect` instruments the back stack passed to `NavDisplay`. By default, every time the top of the back stack changes, `SentryNavEffect` will:
-
-- start a new navigation transaction (and finish any prior navigation transaction)
+- start a new navigation transaction and binds it to the current [Sentry scope](https://docs.sentry.io/platforms/android/enriching-events/scopes/)<sup>†</sup>
 - emit a breadcrumb
 - update the currently tracked screen name
-- record the latest 10 entries from the back stack as event context
+- record the latest 5 entries from the back stack as event context
 
 See [Customize Nav3 Options](#customize-nav3-options) to learn how to modify those defaults.
 
+<small>
+  † A new navigation transaction will *not* be started if another unfinished
+  transaction is already bound to the current scope.
+</small>
+
 ### Install
 
-Install the Android SDK and add Sentry's Navigation 3 library:
+Install the Android SDK and add the `sentry-android-navigation3` library:
 
 ```groovy {filename:build.gradle}
 dependencies {
@@ -221,11 +434,11 @@ import kotlinx.serialization.Serializable
 @Composable
 fun AppNavigation() {
   // Create your back stack like usual.
-  val backStack = rememberNavBackStack(Route.Home)
+  val backStack = rememberNavBackStack(Home)
 
   // Place SentryNavEffect in the same composable as your NavDisplay and call the
   // effect first. Provide a BackStackEntryMapper with the values you want to
-  // show up in Sentry. Be sure to omit PII and other sensitive info.
+  // show up in Sentry. Omit PII and other sensitive info.
   SentryNavEffect(
     backStack = backStack,
     backStackEntryMapper = { entry ->
@@ -256,10 +469,9 @@ Values returned from `BackStackEntryMapper` are **not** scrubbed by the Sentry S
 
 </Alert>
 
-
 <Alert>
 
- Multiple, simultaneously active `SentryNavEffect` instances writing to the same [Sentry scope](https://docs.sentry.io/platforms/android/enriching-events/scopes/) are ***not*** supported. Violating this restriction can result in duplicated or interleaved data and undefined transaction behavior.
+Multiple, simultaneously active `SentryNavEffect` instances writing to the same [Sentry scope](https://docs.sentry.io/platforms/android/enriching-events/scopes/) are **_not_** supported. Violating this restriction can result in duplicated or interleaved data and undefined transaction behavior.
 
 </Alert>
 
@@ -404,11 +616,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("Home")
-data class Home(userName: String) : NavKey
+data class Home(val userName: String) : NavKey
 
 @Serializable
 @SerialName("ProductDetail")
-data class ProductDetail(userName: String, productId: String) : NavKey
+data class ProductDetail(val userName: String, val productId: String) : NavKey
 
 val backStackItemMapper = BackStackEntryMapper<NavKey> { entry ->
   when (entry) {
@@ -424,9 +636,17 @@ val backStackItemMapper = BackStackEntryMapper<NavKey> { entry ->
 
 ### Limitations
 
-`SentryNavEffect` treats the top entry in your back stack as the current screen. That works well for most Nav3 setups, but it means that `SentryNavEffect` does ***not***:
+`SentryNavEffect` treats the top entry in your back stack as the current screen. That works well for most Nav3 setups, but it means that `SentryNavEffect` does **_not_**:
 
 - understand the concept of Nav3 [Scenes](https://developer.android.com/guide/navigation/navigation-3/scenes) or multi-pane layouts
 - track multiple back stacks
 - permit multiple, simultaneously active `SentryNavEffect` instances
 - make special accommodations for [predictive back](https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture) gestures (e.g., spans produced by predictively rendered composables may appear under the current destination's transaction)
+
+## Navigation 2 and Navigation 3 Interoperability
+
+Navigation 2 and Navigation 3 can coexist in the same app. Their Sentry integrations observe navigation independently, but both write to the same Sentry scope by default.
+
+If both integrations observe the same navigation flow – for instance, a Nav2 destination hosts a Nav3 flow – Sentry can receive duplicate breadcrumbs or conflicting screen names and transactions. Choose one integration to report each flow, or configure the integrations so they don't report the same data to the same scope.
+
+If you're using the Sentry Android Gradle Plugin, be sure to account for automatically enabled Navigation 2 instrumentation when deciding which integration should report a flow.

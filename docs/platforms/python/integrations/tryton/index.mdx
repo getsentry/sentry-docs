@@ -29,9 +29,10 @@ from sentry_sdk.integrations.trytond import TrytondWSGIIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Add data like request headers and IP for users, if applicable;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "user_info": True,
+    },
     # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
@@ -80,13 +81,17 @@ def _(app, request, e):
 
 - All uncaught exceptions not inherited from Tryton exceptions are reported.
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you configure which categories to collect with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> or set `send_default_pii` to `True`. `send_default_pii` will be removed in version 3.0 of the SDK.
 
 Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
 ## Supported Versions
 
-- Tryton: 4.6+
-- Python: 3.6+
+- Tryton:
+  - 4.6+ (SDK &lt;3.0)
+  - 5.4+ (SDK 3.0+)
+- Python:
+  - 3.6+ (SDK &lt;3.0)
+  - 3.7+ (SDK 3.0+)
 
 <Include name="python-use-older-sdk-for-legacy-support.mdx" />

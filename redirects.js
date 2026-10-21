@@ -2174,14 +2174,6 @@ const userDocsRedirects = [
     destination: '/product/logs/:path*',
   },
   {
-    source: '/product/explore',
-    destination: '/product/trace-explorer/',
-  },
-  {
-    source: '/product/explore/',
-    destination: '/product/trace-explorer/',
-  },
-  {
     source: '/platforms/javascript/best-practices/browser-extensions/',
     destination: '/platforms/javascript/best-practices/shared-environments/',
   },
@@ -3399,6 +3391,12 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
     destination:
       '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anr/event-loop-block/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/event-loop-block/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',

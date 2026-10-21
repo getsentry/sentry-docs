@@ -282,6 +282,29 @@ By the time <PlatformIdentifier name="SetBeforeSendTransaction" /> is executed, 
 
 </SdkOption>
 
+<PlatformSection supported={["dotnet.apple", "dotnet.maui"]}>
+
+<SdkOption name="OnCrashedLastRun" type="function">
+
+Only available on iOS and Mac Catalyst.
+
+This function is called when the previous run of the app ended in a crash, so you can respond on the next launch, for example by asking the user for feedback. Watchdog terminations and fatal app hangs count as crashes here when those trackers are enabled. It's called at most once, shortly after the SDK is initialized, with the crash event that's being sent to Sentry. Changes to that event aren't sent.
+
+The function isn't called if the crash event is dropped, for example by <PlatformIdentifier name="SampleRate" />, <PlatformIdentifier name="SetBeforeSend" />, or [`Native.SuppressSignalAborts`](/platforms/dotnet/guides/apple/configuration/native-options/#Native.SuppressSignalAborts). Crashes aren't recorded while a debugger is attached, so test it without one. The function may run on a background thread.
+
+```csharp
+#if IOS || MACCATALYST
+options.OnCrashedLastRun = crashEvent =>
+{
+    Console.WriteLine($"The app crashed during its last run. Event ID: {crashEvent.EventId}");
+};
+#endif
+```
+
+</SdkOption>
+
+</PlatformSection>
+
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
@@ -361,6 +384,33 @@ A number between `0` and `1`, controlling the percentage chance a given transact
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="TracesSampleRate" /> must be defined to enable tracing.
 
 </SdkOption>
+
+<PlatformSection supported={["dotnet.aspnet", "dotnet.aspnetcore", "dotnet.blazor-server", "dotnet.aws-lambda", "dotnet.google-cloud-functions"]}>
+
+<SdkOption name="TraceIgnoreStatusCodes" type="array" defaultValue="[]" defaultNote="changes in 7.0.0" availableSince="6.4.0">
+
+HTTP status codes that shouldn't be traced. When an incoming request results in one of these status codes, the SDK doesn't send its transaction to Sentry. Outgoing `HttpClient` requests aren't affected.
+
+Each entry is either a single status code or an inclusive range, as an `int` or an `HttpStatusCode`:
+
+```csharp
+options.TraceIgnoreStatusCodes = new List<HttpStatusCodeRange> { (401, 404), 429 };
+```
+
+This also applies to ASP.NET Core apps traced with OpenTelemetry through <PlatformLink to="/tracing/instrumentation/opentelemetry/">`UseOpenTelemetry`</PlatformLink>. With the <PlatformLink to="/tracing/instrumentation/opentelemetry-otlp/">OTLP exporter</PlatformLink> (`UseOtlp`), spans go straight to Sentry and this option has no effect.
+
+Starting with version 7.0.0, the default is `301`, `305–399`, and `401–404`, so requests that end with those status codes are no longer traced. `302` and `303` are left out because apps commonly use them to redirect after a successful form post, and `304` because it's the normal response to a cache check. To trace requests with any status code, clear the list:
+
+```csharp
+options.TraceIgnoreStatusCodes.Clear();
+```
+
+In ASP.NET Core, you can also set this option in the `Sentry` section of `appsettings.json`. The configured list replaces the default and only takes single status codes, not ranges:
+
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="DisableSentryHttpMessageHandler" type="bool" defaultValue="false">
 

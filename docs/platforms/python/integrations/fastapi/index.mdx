@@ -12,7 +12,9 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - Your application up and running
-- FastAPI `0.79.0+`
+- FastAPI:
+  - `0.79.0+` (SDK &lt;3.0)
+  - `0.85.0+` (SDK 3.0+)
 - Python `3.7+`
 
 <StepConnector selector="h2" showNumbers={true}>
@@ -41,23 +43,12 @@ If you have the `fastapi` package in your dependencies, the Sentry FastAPI integ
 
 </Alert>
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Import and initialize the SDK in your app's entry point:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <PlatformContent
   includePath="getting-started-config"
   platform="python.splitlayout"
 />
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 To further customize your setup, review the [Options section](#options) below.
 
@@ -68,7 +59,7 @@ You can also expect the following for your FastAPI project:
 
 - By default, all exceptions leading to an Internal Server Error are captured and reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
 - Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
-- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you configure which categories to collect with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> or set `send_default_pii` to `True`. `send_default_pii` will be removed in version 3.0 of the SDK.
 
 To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
 
@@ -93,14 +84,7 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 ### Issues
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 from fastapi import FastAPI
@@ -113,10 +97,6 @@ app = FastAPI()
 async def trigger_error():
     division_by_zero = 1 / 0
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <OnboardingOption optionId="performance">
 
@@ -182,17 +162,10 @@ You can pass the following keyword arguments to `StarletteIntegration()` and `Fa
 How to name transactions that show up in Sentry tracing.
 The default is `"url"`.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 In the code example, the transaction name will be:
 
 - `"/catalog/product/{product_id}"` if you set `transaction_style="url"`
 - `"product_detail"` if you set `transaction_style="endpoint"`
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
   import sentry_sdk
@@ -217,10 +190,6 @@ In the code example, the transaction name will be:
   async def product_detail(product_id):
       return {...}
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 </SdkOption>
 
