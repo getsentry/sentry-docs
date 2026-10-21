@@ -614,6 +614,32 @@ Propagation over `stub.fetch()` and service binding `fetch()` uses HTTP headers,
 
 </SdkOption>
 
+<SdkOption name="isStreamingResponse" type='(response: Response, request: Request) => boolean | undefined' availableSince='11.9.0'>
+
+Decides whether the response of a `fetch` handler is still streaming after the handler returns. For streamed responses, the SDK keeps the `http.server` span open until the whole body is sent, so spans created while the body streams stay inside the request.
+
+- `true`: The SDK passes the body through a `TransformStream` and ends the span once the body is sent.
+- `false`: The SDK ends the span when the handler returns and sends the response unchanged.
+- `undefined`: The SDK decides. Server-Sent Events, NDJSON, and `application/stream+json` responses count as streamed, and so do `text/plain` and `text/x-component` (React Server Components) responses without a `Content-Length` header.
+
+HTML responses don't count as streamed by default, because a buffered HTML response has no `Content-Length` header either. If you render pages with streaming SSR, return `true` for them:
+
+```typescript {filename:instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  isStreamingResponse: (response) =>
+    response.headers.get("content-type")?.startsWith("text/html")
+      ? true
+      : undefined,
+}));
+```
+
+The function must be synchronous and must not read the response body. Base the decision on the status, the headers, or the request URL. If the function throws, the SDK falls back to its default detection.
+
+</SdkOption>
+
 </PlatformSection>
 
 <SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false' categorySupported={["server", "serverless"]}>
