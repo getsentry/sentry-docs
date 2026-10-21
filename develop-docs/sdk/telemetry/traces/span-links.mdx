@@ -217,6 +217,10 @@ When a consumer processes a message, the work often runs long after the producer
 A parent/child relationship does not fit well: a delayed or retried job keeps the producer trace open for a long time, one publish span can fan out to many consumers, and a batch can contain messages from unrelated traces, so it has no single correct parent.
 If the consumer starts its own trace, then without a link, the consumer trace has no way to find the code that published the message.
 
+The [Queues module](/sdk/telemetry/traces/modules/queues/#distributed-tracing) continues the producer trace in the consumer where it can.
+For the cases above, start a new trace in the consumer and add a `message_origin` link instead.
+If the consumer continues the producer trace, do not add the link, because it would point into the same trace.
+
 A `message_origin` link connects the span that processes a message (for example, a `queue.process` span) to the span that published it (for example, a `queue.publish` span). "Origin" here means the producer span, not the consumer.
 
 Add the link to the span that processes the message:
