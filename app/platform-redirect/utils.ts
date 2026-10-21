@@ -1,3 +1,25 @@
+import {DocNode, nodeForPath} from 'sentry-docs/docTree';
+
+/**
+ * Returns the `fallbackGuide` key (e.g. `javascript.node`) of a guide that is a single
+ * landing page (`inheritCommonContent: false`), such as `javascript.express`. The pages
+ * that such a guide does not have are in its fallback guide.
+ */
+export function landingPageFallbackGuide(
+  rootNode: DocNode,
+  key: string
+): string | undefined {
+  const [platform, guide] = key.split('.');
+  if (!guide) {
+    return undefined;
+  }
+  const guideNode = nodeForPath(rootNode, ['platforms', platform, 'guides', guide]);
+  if (guideNode?.frontmatter.inheritCommonContent !== false) {
+    return undefined;
+  }
+  return guideNode.frontmatter.fallbackGuide;
+}
+
 // Parse base only — never part of the return value, and only compared against itself
 const PARSE_BASE = 'https://sanitize.invalid';
 
