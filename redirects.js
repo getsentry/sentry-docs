@@ -1053,10 +1053,15 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
     destination: '/platforms/javascript/guides/nuxt/cloudflare/',
   },
-  // The Cloudflare quick starts of Next.js and Nuxt moved from the Cloudflare guide into the framework guides.
+  // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
   {
-    source: '/platforms/javascript/guides/cloudflare/frameworks/:framework(nextjs|nuxt)/',
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|nextjs|nuxt|remix|sveltekit)/',
     destination: '/platforms/javascript/guides/:framework/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
+    destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
