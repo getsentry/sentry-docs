@@ -1,20 +1,18 @@
 ---
 title: axum
-description: "Learn about monitoring your axum application with Sentry."
+description: "Learn how to set up Sentry in your Axum application and capture your first events."
 ---
 
-The Sentry SDK offers a middleware for the [axum](https://github.com/tokio-rs/axum) framework that supports:
+The Sentry SDK offers middleware for the [axum](https://github.com/tokio-rs/axum) framework that supports:
 
 - Reporting errors and panics with the correct request correlation.
 - Starting a [transaction](/concepts/key-terms/tracing/) for each request-response cycle.
 
-The integration actually supports any crate based on [tower](https://github.com/tower-rs/tower), not just `axum`.
+The integration also supports any crate based on [tower](https://github.com/tower-rs/tower), not just `axum`.
 
 ## Install
 
-<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
-
-To add Sentry with the `axum` integration to your Rust project, add a new dependency to your `Cargo.toml`:
+Add Sentry with the `axum` integration to your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
 [dependencies]
@@ -26,16 +24,23 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 ## Configure
 
-Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
-Then, initialize `axum` with the Sentry middleware.
+**Error Monitoring** starts working as soon as you call `sentry::init()`. **Logs** are supported in Rust SDK 0.42.0 and later and enabled by default. **Application Metrics** are available in Rust SDK 0.48.0 and later; both are covered in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing**.
 
-This snippet sets up a service that always panics, so you can test that everything is working as soon as you set it up.
+Initialize Sentry before starting the async runtime, then add the Sentry middleware to your Axum app. The example route panics so you can verify the setup in the next step.
 
 <Alert level="warning">
 
-Macros like `#[tokio::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+Macros like `#[tokio::main]` are not supported. Initialize the Sentry client before starting the async runtime, as shown below.
 
 </Alert>
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink> and `SentryHttpLayer::enable_transaction()`.
+- User IP and HTTP header collection: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>. Review the data your app sends before enabling this in production.
+
+Don't need a feature? Remove its options from the snippet.
 
 ```rust {filename:main.rs}
 use axum::{body::Body, http::Request, routing::get, Router};
@@ -43,8 +48,8 @@ use sentry::integrations::tower::{NewSentryLayer, SentryHttpLayer};
 use std::io;
 use tower::ServiceBuilder;
 
-async fn failing() -> () {
-    panic!("Everything is on fire!")
+async fn failing() {
+    panic!("Everything is on fire!");
 }
 
 fn main() -> io::Result<()> {
@@ -52,22 +57,18 @@ fn main() -> io::Result<()> {
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
             .maybe_release(sentry::release_name!())
-            # ___PRODUCT_OPTION_START___ performance
-            // Capture all traces and spans. Set to a lower value in production
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
             .traces_sample_rate(1.0)
-            # ___PRODUCT_OPTION_END___ performance
-            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+            // Capture user IPs and potentially sensitive headers for HTTP server integrations.
             .send_default_pii(true),
     );
 
     let app = Router::new().route("/", get(failing)).layer(
         ServiceBuilder::new()
-            .layer(NewSentryLayer::<Request<Body>>::new_from_top()) // Bind a new Hub per request, to ensure correct error <> request correlation
-            # ___PRODUCT_OPTION_START___ performance
-            .layer(SentryHttpLayer::new().enable_transaction()), // Start a transaction (Sentry root span) for each request
-            // If you're binding the layers directly on the `Router`, bind them in the opposite order, otherwise you might run into a memory leak
-            # ___PRODUCT_OPTION_END___ performance
+            .layer(NewSentryLayer::<Request<Body>>::new_from_top())
+            .layer(SentryHttpLayer::new().enable_transaction()),
     );
 
     tokio::runtime::Builder::new_multi_thread()
@@ -86,22 +87,53 @@ fn main() -> io::Result<()> {
 }
 ```
 
-## Verify
+### Instrument Axum
 
-Send a request to the application. The panic will be captured by Sentry.
+`NewSentryLayer` binds a Hub to each request so Sentry can associate errors with the correct request. `SentryHttpLayer::enable_transaction()` starts a transaction for each request.
+
+If you bind the layers directly to the `Router`, apply them in the opposite order to avoid a memory leak.
+
+## Send Logs
+
+Use Sentry's `logger_*` macros to send logs at different levels. Logs are supported in Rust SDK 0.42.0 and later and enabled by default unless you compile the SDK without default features. For logging through the `tracing` or `log` crates, see the <PlatformLink to="/logs/#tracing-integration">`tracing` integration</PlatformLink> and <PlatformLink to="/logs/#log-integration">`log` integration</PlatformLink> guides.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and configuration options.
+
+```rust
+use sentry::logger_info;
+
+logger_info!("Order processed");
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `sentry::metrics` to send counters, gauges, and distributions. Metrics require Rust SDK 0.48.0 or later and are enabled by default in the `sentry` crate.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```rust
+use sentry::metrics;
+
+metrics::counter("checkout.failed", 1).capture();
+metrics::gauge("active_connections", 42).capture();
+```
+
+## Verify Your Setup
+
+Send a request to the application. The route panics, and Sentry captures the error.
 
 ```bash
 curl http://localhost:3001/
 ```
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded panic, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded panic, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Axum application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to [manually capture errors](/platforms/rust/usage/).
+- Instrument more operations with [custom tracing](/platforms/rust/tracing/instrumentation/custom-instrumentation/).
