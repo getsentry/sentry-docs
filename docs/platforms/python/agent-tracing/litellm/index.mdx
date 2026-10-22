@@ -35,9 +35,10 @@ sentry_sdk.init(
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
     integrations=[
         LiteLLMIntegration(),
     ],
@@ -56,7 +57,10 @@ import litellm
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
     integrations=[
         LiteLLMIntegration(),
     ],
@@ -82,7 +86,19 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - The supported functions are currently `completion` and `embedding` (both sync and async).
 
-- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. To include the data, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default and `include_prompts` is ignored:
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      data_collection={
+          # Record LLM inputs, but not outputs
+          "gen_ai": {"inputs": True, "outputs": False},
+      },
+  )
+  ```
+
+  Alternatively, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below. `send_default_pii` will be removed in version 3.0 of the SDK.
 
 ## Options
 
@@ -109,7 +125,9 @@ You can pass the following keyword arguments to `LiteLLMIntegration()`:
 
 - `include_prompts`:
 
-  Whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+  Whether LLM inputs and outputs should be sent to Sentry. If you use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, this option is ignored. Use the `gen_ai` key instead.
+
+  Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`. `send_default_pii` will be removed in version 3.0 of the SDK.
 
   The default is `True`.
 

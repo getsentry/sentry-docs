@@ -1,6 +1,6 @@
 ---
 title: Hono
-description: "Learn how to set up Sentry in your Hono app and capture your first errors."
+description: "Learn how to set up Sentry in your Hono app and capture your first events."
 sdk: sentry.javascript.hono
 fallbackGuide: javascript.node
 categories:
@@ -26,24 +26,9 @@ The community middleware `@hono/sentry` has been deprecated in favor of `@sentry
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Install the `@sentry/hono` package:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/hono
@@ -57,20 +42,9 @@ yarn add @sentry/hono
 pnpm add @sentry/hono
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Install the Peer Dependency for Your Runtime
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 The SDK needs a runtime-specific peer dependency. Install the one that matches your environment and keep its version in sync with `@sentry/hono`. You won't import it directly, but it must be present in your project.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:Cloudflare Workers} {mdExpandTabs}
 npm install @sentry/cloudflare
@@ -88,22 +62,9 @@ npm install @sentry/bun
 deno add npm:@sentry/deno
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="profiling">
-
 ### Install the Profiling Package (Node.js Only)
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Profiling is only available for the Node.js runtime. Install the `@sentry/profiling-node` package:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/profiling-node --save
@@ -117,24 +78,16 @@ yarn add @sentry/profiling-node
 pnpm add @sentry/profiling-node
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
 ## Configure
+
+**Error Monitoring** starts working as soon as you configure the `sentry()` middleware or call `Sentry.init()` for Node.js. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**. Profiling is available only when you use the Node.js runtime.
+
+<Include name="quick-start-features-expandable" />
 
 <Expandable title="Cloudflare Workers: Enable Node.js Compatibility">
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you're deploying to Cloudflare Workers, set the `nodejs_compat` compatibility flag. The SDK needs `AsyncLocalStorage`, which requires this flag.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
@@ -146,70 +99,44 @@ If you're deploying to Cloudflare Workers, set the `nodejs_compat` compatibility
 compatibility_flags = ["nodejs_compat"]
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 </Expandable>
 
 <Expandable title="Node.js: Initialize Sentry Before Your App">
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Node.js requires Sentry to initialize before your application loads so it can instrument third-party libraries (like database clients). Create a separate initialization file:
 
-</SplitSectionText>
-<SplitSectionCode>
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink>, <PlatformLink to="/configuration/options/#profileLifecycle">`profileLifecycle`</PlatformLink>, and `nodeProfilingIntegration()`
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```typescript {filename:instrument.mjs}
 // IMPORTANT: import from `@sentry/hono/node`, not `@sentry/node`
 import * as Sentry from "@sentry/hono/node";
-// ___PRODUCT_OPTION_START___ profiling
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
-// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // ___PRODUCT_OPTION_START___ profiling
+  integrations: [
+    // enables Profiling
+    nodeProfilingIntegration(),
+  ],
 
-  integrations: [nodeProfilingIntegration()],
-  // ___PRODUCT_OPTION_END___ profiling
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of spans for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#tracesSampleRate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ profiling
 
-  // Enable profiling for a percentage of sessions
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  // Enables Profiling for every session.
   profileSessionSampleRate: 1.0,
-  // Profile automatically while there's an active sampled span
   profileLifecycle: "trace",
-  // ___PRODUCT_OPTION_END___ profiling
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Load this file with the `--import` flag when starting your app. You can also set this as an environment variable instead:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:CLI Option}
 node --import ./instrument.mjs app.js
@@ -219,24 +146,17 @@ node --import ./instrument.mjs app.js
 NODE_OPTIONS="--import ./instrument.mjs"
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 </Expandable>
 
 ### Add the Sentry Middleware
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Add the `sentry()` middleware as early as possible in your Hono app.
 
 Before continuing, make sure you've completed the runtime-specific steps above: **Cloudflare Workers** users need to enable Node.js compatibility, and **Node.js** users need to create the instrument file. Since Node.js initializes Sentry in that file, the middleware doesn't take any options.
 
-</SplitSectionText>
-<SplitSectionCode>
+For Cloudflare Workers, Bun, and Deno, the snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 
 ```typescript {tabTitle:Cloudflare Workers} {filename:index.ts} {mdExpandTabs}
 import { Hono } from "hono";
@@ -248,12 +168,10 @@ app.use(
   sentry(app, {
     dsn: "___PUBLIC_DSN___",
 
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of spans for tracing.
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   })
 );
 
@@ -286,12 +204,10 @@ app.use(
   sentry(app, {
     dsn: "___PUBLIC_DSN___",
 
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of spans for tracing.
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   })
 );
 
@@ -310,12 +226,10 @@ app.use(
   sentry(app, {
     dsn: "___PUBLIC_DSN___",
 
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of spans for tracing.
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   })
 );
 
@@ -324,20 +238,9 @@ app.use(
 Deno.serve(app.fetch);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Expandable title="Cloudflare Workers: Accessing env from Worker Bindings">
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To access environment variables from your Cloudflare Worker bindings (for example, to store the DSN as a secret), pass a callback instead of a plain options object. The function receives the Worker `env`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:index.ts}
 import { Hono } from "hono";
@@ -352,10 +255,6 @@ app.use(sentry(app, (env) => ({ dsn: env.SENTRY_DSN })));
 export default app;
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 </Expandable>
 
 ### Report Unhandled Exceptions
@@ -364,17 +263,42 @@ By default, Sentry captures exceptions from Hono's `onError` handler, excluding 
 
 To control which errors are captured, use the <PlatformLink to="/features/error-handler/">`shouldHandleError`</PlatformLink> option.
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- Node.js and Bun: <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls, <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>, and <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+- Deno and Cloudflare Workers: <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+You can also collect runtime health metrics automatically with the following integrations:
+- Node.js: <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink>
+- Bun: [`bunRuntimeMetricsIntegration`](/platforms/javascript/guides/bun/configuration/integrations/bunruntimemetrics/)
+- Deno: [`denoRuntimeMetricsIntegration`](/platforms/javascript/guides/deno/configuration/integrations/denoruntimemetrics/)
+
 ## Verify Your Setup
 
-<PlatformContent includePath="getting-started-verify" />
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add a test route to your Hono app that throws an error, then request `/debug-sentry` to trigger it:
+
+```typescript
+app.get("/debug-sentry", () => {
+  throw new Error("Sentry Test Error");
+});
+```
 
 ### View Captured Data in Sentry
 
@@ -384,15 +308,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have Sentry integrated into your Hono application and already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics:
+At this point, you should have integrated Sentry into your Hono application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 - Explore <PlatformLink to="/features/">Hono-specific features</PlatformLink> like custom error filtering
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

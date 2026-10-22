@@ -1,7 +1,7 @@
 ---
 title: "Manual Setup"
 sidebar_order: 1
-description: "Learn how to manually set up Sentry in your React Router app (v7.15+) and capture your first errors."
+description: "Learn how to manually set up Sentry in your React Router app (v7.15+) and capture your first events."
 ---
 
 <PlatformContent includePath="sentry-init/manual-setup-callout" />
@@ -12,35 +12,7 @@ description: "Learn how to manually set up Sentry in your React Router app (v7.1
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-    {
-      id: "profiling",
-      checked: false,
-    }
-  ]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
-### Install the Sentry SDK
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the SDK package to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-<OnboardingOption optionId="profiling">
 
 ```bash {tabTitle:npm}
 npm install @sentry/react-router @sentry/profiling-node
@@ -54,111 +26,74 @@ yarn add @sentry/react-router @sentry/profiling-node
 pnpm add @sentry/react-router @sentry/profiling-node
 ```
 
-</OnboardingOption>
-
-<OnboardingOption optionId="profiling" hideForThisOption>
-  ```bash {tabTitle:npm}
-  npm install @sentry/react-router
-  ```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/react-router
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/react-router
-```
-
-</OnboardingOption>
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure
+
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable" />
 
 ### Expose Entry Point Files
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Before configuring Sentry, you need to make React Router's entry files (`entry.client.tsx` and `entry.server.tsx`) visible in your project. Run this command to expose them:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash
 npx react-router reveal
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Client-Side Sentry
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Initialize Sentry in your `entry.client.tsx` file.
 
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `reactRouterTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
 The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
 
-</SplitSectionText>
-<SplitSectionCode>
+```tsx {filename: entry.client.tsx}
+import * as Sentry from "@sentry/react-router";
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
 
-```tsx {diff} {filename: entry.client.tsx}
-+import * as Sentry from "@sentry/react-router";
- import { startTransition, StrictMode } from "react";
- import { hydrateRoot } from "react-dom/client";
- import { HydratedRouter } from "react-router/dom";
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
 
-+Sentry.init({
-+  dsn: "___PUBLIC_DSN___",
-+
-+  integrations: [
-+    // ___PRODUCT_OPTION_START___ performance
-+    // Registers and configures the Tracing integration,
-+    // which automatically instruments your application to monitor its
-+    // performance, including custom React Router routing instrumentation
-+    Sentry.reactRouterTracingIntegration(),
-+    // ___PRODUCT_OPTION_END___ performance
-+    // ___PRODUCT_OPTION_START___ session-replay
-+    // Registers the Replay integration,
-+    // which automatically captures Session Replays
-+    Sentry.replayIntegration(),
-+    // ___PRODUCT_OPTION_END___ session-replay
-+    // ___PRODUCT_OPTION_START___ user-feedback
-+    Sentry.feedbackIntegration({
-+      // Additional SDK configuration goes in here, for example:
-+      colorScheme: "system",
-+    }),
-+    // ___PRODUCT_OPTION_END___ user-feedback
-+  ],
-+  // ___PRODUCT_OPTION_START___ performance
-+
-+  // Set tracesSampleRate to 1.0 to capture 100%
-+  // of transactions for tracing.
-+  // We recommend adjusting this value in production
-+  // Learn more at
-+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#traces-sample-rate
-+  tracesSampleRate: 1.0,
-+
-+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
-+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
-+  // ___PRODUCT_OPTION_END___ performance
-+  // ___PRODUCT_OPTION_START___ session-replay
-+
-+  // Capture Replay for 10% of all sessions,
-+  // plus 100% of sessions with an error
-+  // Learn more at
-+  // https://docs.sentry.io/platforms/javascript/guides/react-router/session-replay/configuration/#general-integration-configuration
-+  replaysSessionSampleRate: 0.1,
-+  replaysOnErrorSampleRate: 1.0,
-+  // ___PRODUCT_OPTION_END___ session-replay
-+});
+  integrations: [
+    // Registers and configures the Tracing integration,
+    // which automatically instruments your application to monitor its
+    // performance, including custom React Router routing instrumentation
+    Sentry.reactRouterTracingIntegration(),
+    // Registers the Replay integration,
+    // which automatically captures Session Replays
+    Sentry.replayIntegration(),
+    // Registers the User Feedback integration
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
 
 startTransition(() => {
   hydrateRoot(
@@ -169,10 +104,6 @@ startTransition(() => {
   );
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Configure Server-Side Sentry
 
@@ -189,58 +120,36 @@ On unsupported Node versions, you'll only lose auto-instrumentation for lower-le
 
 </Expandable>
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+First, create a file called `instrument.server.mjs` in the root of your project to initialize Sentry.
 
-First, create a file called `instrument.server.mjs` in the root of your project to initialize Sentry:
+The snippet also turns on:
 
-</SplitSectionText>
-<SplitSectionCode>
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via `nodeProfilingIntegration()` and <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```js {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
-// ___PRODUCT_OPTION_START___ profiling
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
-// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
-  // ___PRODUCT_OPTION_START___ profiling
-
-  // Add our Profiling integration
+  // Enables Profiling
   integrations: [nodeProfilingIntegration()],
-  // ___PRODUCT_OPTION_END___ profiling
-  // ___PRODUCT_OPTION_START___ performance
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#tracesSampleRate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ profiling
-  // Enable profiling for a percentage of sessions
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#profileSessionSampleRate
+  // Enables Profiling for all sessions.
+  // We recommend reducing this value in production.
   profileSessionSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ profiling
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
 
 Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions, and export `instrumentations` to enable automatic tracing.
 
 Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
 +import * as Sentry from '@sentry/react-router';
@@ -267,10 +176,6 @@ Exporting `instrumentations` uses React Router's [instrumentation API](https://r
 
 // ... rest of your server entry
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Expandable title="Does your app use Content Security Policy nonces?">
 
@@ -423,14 +328,7 @@ export function handleError(
 
 #### Load Instrumentation on Startup
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 React Router runs in ESM mode, which means you need to load the Sentry instrumentation file before the application starts. Update your `package.json` scripts:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```json {filename: package.json}
 "scripts": {
@@ -439,22 +337,11 @@ React Router runs in ESM mode, which means you need to load the Sentry instrumen
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <PlatformContent includePath="node-options-windows" />
 
 **Deploying to Vercel, Netlify, and similar platforms**
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, import the instrumentation file directly at the top of your `entry.server.tsx`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename: entry.server.tsx}
 +import '../instrument.server';
@@ -464,28 +351,17 @@ If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, im
  // ... rest of your imports
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Alert title="Incomplete Auto-instrumentation" level="warning">
 
 When you import the instrumentation file directly instead of using the `--import` flag, automatic instrumentation will be incomplete. You'll miss automatically captured spans and traces for some server-side operations. Only use this approach when the `NODE_OPTIONS` method isn't available.
 
 </Alert>
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 The stack traces in your Sentry errors probably won't look like your actual code without unminifying them. To fix this, upload your source maps to Sentry.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
@@ -509,16 +385,7 @@ export default defineConfig(config => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <OrgAuthTokenNote />
 
@@ -526,20 +393,9 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename: react-router.config.ts} {diff}
 import type { Config } from "@react-router/dev/config";
@@ -555,103 +411,41 @@ export default {
 } satisfies Config;
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Avoid Ad Blockers With Tunneling (Optional)
-
-<PlatformContent includePath="getting-started-tunneling" />
-
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
 ## Verify Your Setup
 
-Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+The `sentry init` command checks the integration files it creates or modifies before it finishes. To confirm runtime events are reaching Sentry, add a test button to your app and click it:
 
-### Issues
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To verify that Sentry captures errors and creates issues in your Sentry project, throw an error in a loader.
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Then, open the route in your browser and you should trigger an error.
-</OnboardingOption>
+```tsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Test Sentry Error
+</button>
+```
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```tsx {filename: error.tsx}
-import type { Route } from "./+types/example-page";
-
-export async function loader() {
-  throw new Error("My first Sentry error!");
-}
-
-export default function ExamplePage() {
-  return <div>Loading this page will throw an error</div>;
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code.
-
-Then, open the route in your browser. You should start a trace and trigger an error.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```tsx {filename: error.tsx}
-import * as Sentry from "@sentry/react-router";
-import type { Route } from "./+types/example-page";
-
-export async function loader() {
-  return Sentry.startSpan(
-    {
-      op: "test",
-      name: "My First Test Transaction",
-    },
-    () => {
-      throw new Error("My first Sentry error!");
-    }
-  );
-}
-
-export default function ExamplePage() {
-  return <div>Loading this page will throw an error</div>;
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -661,15 +455,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your React Router Framework application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics.
-Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your React Router Framework application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

@@ -157,7 +157,7 @@ export function Home() {
             </Link>{' '}
             with one of these agent integrations.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 auto-rows-fr gap-4">
             <AgentQuickLink
               href="/platforms/javascript/guides/mastra/"
               title="Mastra"
@@ -175,6 +175,12 @@ export function Home() {
               title="Flue"
               desc="Send Flue traces, logs, and errors to Sentry."
               icon={<PlatformIcon platform="flue" />}
+            />
+            <AgentQuickLink
+              href="/platforms/javascript/guides/pi-durable/"
+              title="Pi Durable"
+              desc="Send Pi Durable agent runs, tool calls, and errors to Sentry."
+              icon={<PlatformIcon platform="pi-durable" />}
             />
             <AgentQuickLink
               to="/configuration/integrations/vercelai/"
