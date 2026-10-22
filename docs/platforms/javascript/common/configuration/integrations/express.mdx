@@ -15,8 +15,6 @@ This integration is enabled by default. If you'd like to modify your default int
 
 The `expressIntegration` captures errors thrown in your Express route handlers and middleware, and creates spans for your Express middleware, routers, and request handlers. It also names your transactions after the matched route, such as `GET /users/:id`.
 
-Errors are captured when they are thrown, before any of your own error-handling middleware runs, so you don't need to call `setupExpressErrorHandler` anymore.
-
 For the integration to work, Sentry has to instrument Express before your app loads it. Run your app with the `--import` flag or use one of the other [installation methods](/platforms/javascript/guides/node/install/).
 
 ```JavaScript
@@ -25,31 +23,19 @@ Sentry.init({
 });
 ```
 
+<PlatformContent
+  includePath="getting-started-capture-errors"
+  platform="javascript.express"
+  noGuides
+/>
+
 ## Options
 
 ### `shouldHandleError`
 
 _Type: `((error: Error) => boolean) | false`_
 
-Decides whether an error thrown from a route handler or middleware is sent to Sentry.
-
-By default, errors with a 5xx status code and errors without a status code are sent. Errors with a 3xx or 4xx status code are not. The status code is read from the error's `status`, `statusCode`, `status_code`, or `output.statusCode` property.
-
-For example, to also capture 4xx errors:
-
-```javascript
-Sentry.init({
-  integrations: [
-    Sentry.expressIntegration({
-      shouldHandleError(error) {
-        return Number(error.statusCode ?? 500) >= 400;
-      },
-    }),
-  ],
-});
-```
-
-Set this option to `false` to turn off automatic error capturing. You can then capture errors yourself with `Sentry.captureException` in your own error-handling middleware.
+Decides whether an error thrown from a route handler or middleware is sent to Sentry. Set it to `false` to turn off automatic error capturing. See [Report Unhandled Exceptions](#report-unhandled-exceptions) above for the default behavior and an example.
 
 ### `ignoreLayers`
 
