@@ -1,85 +1,48 @@
 ---
 title: How Cron Monitoring Works
 sidebar_order: 1
-description: "Learn how Sentry matches check-ins to job runs, calculates expected check-in times, detects missed and timed-out runs, and which limits and defaults apply to cron monitors."
+description: "Learn how Sentry uses check-ins to detect missed, failed, and timed-out cron jobs, and which limits and defaults apply to cron monitors."
 ---
 
-A cron monitor tracks one recurring job. Your job sends check-ins to Sentry, and Sentry compares them with the monitor's schedule to decide whether each run was on time and whether it succeeded. This page covers the rules Sentry applies, so you can configure monitors that match how your jobs actually run.
+A cron monitor tracks one recurring job. Your job sends check-ins to Sentry, and Sentry compares them with the monitor's schedule to decide whether each run happened on time and succeeded.
 
-## Check-Ins and Statuses
+## Check-Ins
 
-A check-in is a status report for a single job run. You can send check-ins with an [SDK](/product/monitors-and-alerts/monitors/crons/getting-started/), the [Sentry CLI](/cli/crons/), or [HTTP](/product/monitors-and-alerts/monitors/crons/getting-started/http/). Your job sends one of these statuses:
+A check-in reports the status of a single job run. Send one when the job starts (`in_progress`) and one when it finishes (`ok` or `error`). Use an [SDK](/product/monitors-and-alerts/monitors/crons/getting-started/), the [Sentry CLI](/cli/crons/), or [HTTP](/product/monitors-and-alerts/monitors/crons/getting-started/http/).
 
-| Status        | Meaning                                                                        |
-| ------------- | ------------------------------------------------------------------------------ |
-| `in_progress` | The run started. Optional, but Sentry can only detect timeouts if you send it. |
-| `ok`          | The run finished successfully.                                                 |
-| `error`       | The run failed.                                                                |
+Sentry marks a run as:
 
-Sentry records these statuses on its own:
+- **Missed** if no check-in arrives within the check-in margin after the expected time.
+- **Timed out** if the job sent `in_progress` but didn't finish within the max runtime.
 
-- **Missed**: No check-in arrived by the expected time plus the check-in margin.
-- **Timed Out**: The run sent `in_progress`, but no `ok` or `error` arrived within the max runtime.
-- **Unknown**: Sentry detected a problem on its side while the run was in progress and can't tell how the run ended. Sentry doesn't create an issue for an Unknown check-in.
+If you only send a check-in when the job finishes (a heartbeat), Sentry still detects missed and failed runs, but it can't detect runs that hang.
 
-A job that sends `in_progress` and then `ok` or `error` gets full coverage. A job that only sends `ok` or `error` (a heartbeat) is still checked for missed and failed runs, but Sentry can't tell when a run hangs.
+**Send the same `check_in_id` with both check-ins for a run.** This tells Sentry which run a closing check-in belongs to, so overlapping or late runs aren't mixed up. SDK monitor helpers and `sentry-cli monitors run` do this for you. For HTTP, generate a UUID for each run.
 
-## Matching Check-Ins to a Run
+## Schedules
 
-**Send the same `check_in_id` with every check-in for a run.** This tells Sentry which run a closing check-in belongs to:
+- **Crontab schedules** (for example, `0 * * * *`): Sentry expects a check-in each time the expression matches, in the monitor's timezone (UTC by default).
+- **Interval schedules** (for example, every 2 hours): Sentry expects the next check-in one interval after the last one it received.
 
-- **With an ID**: Sentry updates that exact check-in. If the closing check-in arrives after the run timed out, Sentry still records the run's duration.
-- **Without an ID**: Sentry closes the most recent in-progress check-in for that monitor environment. If none is open, it records a separate check-in. Overlapping runs, retries, or a closing check-in sent after a timeout can end up attached to the wrong run or recorded separately.
-
-SDK monitor helpers, such as Python's `monitor` decorator or JavaScript's `Sentry.withMonitor()`, and `sentry-cli monitors run` send the ID for you. If you send check-ins yourself, reuse the ID that the SDK returns from the opening check-in. For HTTP, generate a UUID for each run.
-
-## Expected Check-In Times
-
-After each check-in, Sentry calculates when it expects the next one:
-
-- **Crontab schedules** (for example, `0 * * * *`): The next time the expression matches, in the monitor's timezone. The default timezone is UTC.
-- **Interval schedules** (for example, every 2 hours): One interval after the most recent check-in Sentry received, including closing check-ins. The expected time moves with your job, so a long run pushes the next expected time later.
-
-If your scheduler starts jobs at fixed clock times, use a crontab schedule, even for simple intervals. With an interval schedule, a job that takes 20 minutes and starts every hour on the hour will show up as early.
-
-If no check-in arrives within the check-in margin after the expected time, Sentry records a missed check-in. The missed check-in is timestamped at the expected time, not at the time Sentry detected it. Sentry then calculates the next expected time from there.
-
-## Timing
-
-- Sentry timestamps each check-in with the time it received it. Check-ins don't carry a timestamp from your job, so network delays and buffering on your side count toward lateness and duration.
-- If you send a `duration`, Sentry uses it. Otherwise, Sentry calculates the duration as the time between receiving the opening and closing check-ins.
-- Missed and timeout detection runs on a clock that advances as Sentry processes check-ins, not on wall-clock time. If Sentry's processing falls behind, detection waits for it to catch up instead of marking on-time runs as missed. Delays earlier in Sentry's ingestion can still affect a check-in's status, and the [Recent Check-Ins](/product/monitors-and-alerts/monitors/crons/job-monitoring/#recent-check-ins) table flags those check-ins.
+If your scheduler starts the job at fixed clock times, use a crontab schedule, even for simple intervals.
 
 ## Issues and Recovery
 
-Missed, failed, and timed-out check-ins count as failures. Sentry opens an issue once the number of failures in a row reaches the monitor's **failure tolerance** (`failure_issue_threshold`). It resolves the issue after the number of successful check-ins in a row reaches the **recovery tolerance** (`recovery_threshold`). Both default to `1`.
-
-To get notified about these issues, connect an [Alert](/product/monitors-and-alerts/alerts/) to the monitor.
+Missed, failed, and timed-out runs count as failures. Sentry opens an issue once the monitor reaches its **failure tolerance** of failures in a row, and resolves it after its **recovery tolerance** of successful check-ins in a row. Both default to `1`. To get notified, connect an [Alert](/product/monitors-and-alerts/alerts/) to the monitor.
 
 ## Environments
 
-Each check-in belongs to an environment, which defaults to `production`. Every environment of a monitor shares the same schedule and configuration, but it has its own status, check-ins, and issues.
-
-Once an environment has sent a check-in, Sentry expects check-ins on schedule for it. If you stop running the job in an environment, [delete the environment](/product/monitors-and-alerts/monitors/crons/job-monitoring/#muting-and-deleting-environments). Otherwise, Sentry keeps recording missed check-ins for it.
+Check-ins default to the `production` environment. Each environment shares the monitor's schedule and configuration but has its own status, check-ins, and issues. Once an environment sends a check-in, Sentry expects it on schedule, so [delete the environment](/product/monitors-and-alerts/monitors/crons/job-monitoring/#muting-and-deleting-environments) if the job stops running there.
 
 ## Limits and Defaults
 
-| Setting                            | Default      | Limit                                                                                |
-| ---------------------------------- | ------------ | ------------------------------------------------------------------------------------ |
-| Schedule (`schedule`)              | Required     | Five-field crontab, or an interval in minutes, hours, days, weeks, months, or years  |
-| Check-in margin (`checkin_margin`) | 1 minute     | 1 to 40,320 minutes (28 days)                                                        |
-| Max runtime (`max_runtime`)        | 30 minutes   | 1 to 10,080 minutes (7 days)                                                         |
-| Failure and recovery tolerance     | 1            | 1 to 720 check-ins                                                                   |
-| Timezone (`timezone`)              | UTC          | Any [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) name |
-| Monitor slug                       | —            | 50 characters                                                                        |
-| Environment name                   | `production` | 64 characters, without newlines or `/`                                               |
-| Environments per monitor           | —            | 1,000                                                                                |
-| Check-ins per monitor environment  | —            | 6 per minute                                                                         |
-| Check-in retention                 | —            | 90 days                                                                              |
-
-A few consequences of these limits:
-
-- Schedules can't run more often than once a minute, and six-field crontab expressions (with seconds) aren't supported.
-- A check-in can stay in progress for at most 7 days, including repeated `in_progress` updates. After that, Sentry rejects updates to it.
-- Sentry normalizes the monitor slug in each check-in (lowercase, with hyphens in place of spaces and special characters) and truncates it to 50 characters. Two slugs that only differ after their first 50 characters refer to the same monitor.
-- Check-ins over the rate limit are dropped. You can find dropped check-ins on the [Usage Stats](/product/stats/#usage-stats) page.
+| Setting                            | Default    | Limit                                                                                |
+| ---------------------------------- | ---------- | ------------------------------------------------------------------------------------ |
+| Schedule (`schedule`)              | Required   | Five-field crontab, or an interval. At most once a minute.                           |
+| Check-in margin (`checkin_margin`) | 1 minute   | 1 to 40,320 minutes (28 days)                                                        |
+| Max runtime (`max_runtime`)        | 30 minutes | 1 to 10,080 minutes (7 days)                                                         |
+| Failure and recovery tolerance     | 1          | 1 to 720 check-ins                                                                   |
+| Timezone (`timezone`)              | UTC        | Any [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) name |
+| Monitor slug                       | —          | 50 characters                                                                        |
+| Check-ins per monitor environment  | —          | 6 per minute. Extra check-ins are dropped.                                           |
+| Check-in retention                 | —          | 90 days                                                                              |
