@@ -1,0 +1,45 @@
+## Application and esbuild Builds
+
+To upload source maps without modifying the generated JavaScript, use Sentry CLI with release-and-URL matching. This also preserves Angular's subresource integrity hashes.
+
+Starting with [Angular CLI 22.1.0](https://github.com/angular/angular-cli/releases/tag/v22.1.0), Angular adds native Debug IDs to browser JavaScript files that have a corresponding source map. This applies to `@angular/build:application`, `@angular-devkit/build-angular:application`, and `@angular-devkit/build-angular:browser-esbuild`. In Nx, it applies to executors that use these Angular builders with Angular build packages on version 22.1.0 or later. It does not apply to webpack-based builds.
+
+Angular writes a `//# debugId=...` comment and a matching `debugId` source-map field before calculating integrity hashes. These identify the build artifacts, but do not register the IDs with the Sentry JavaScript SDK at runtime. Uploading these artifacts alone does not make Sentry events include Debug IDs.
+
+<Alert level="warning">
+
+Don't assume `sentry-cli sourcemaps inject` adds the missing runtime registration. Sentry CLI 3.8.0 skips JavaScript files that already contain a Debug ID, even if the runtime snippet is missing. Adding runtime code after Angular calculates integrity hashes would invalidate those hashes.
+
+</Alert>
+
+### Upload Without Rewriting JavaScript
+
+Use the same release name in the SDK and the upload command so Sentry can match events to the uploaded artifacts by release and URL:
+
+```javascript
+Sentry.init({
+  // Keep your existing SDK options.
+  release: "my-app@1.0.0",
+});
+```
+
+1. Enable `sourceMap.scripts` in your production build options in `angular.json` or `project.json`. Keep `sourceMap.sourcesContent` enabled to include original source context. You can also set `sourceMap.hidden` to `true` to omit source-map URLs from the JavaScript.
+2. Build your app with `ng build --configuration production` or `nx build <project> --configuration production`.
+3. [Install Sentry CLI](/cli/installation/) and [configure its organization, project, and auth token](/cli/configuration/). Keep the token in your CI environment, not in your application.
+4. Upload the browser JavaScript files and source maps without running `sourcemaps inject`:
+
+```bash
+sentry-cli sourcemaps upload --release "my-app@1.0.0" --url-prefix "~/" ./dist/my-app/browser
+```
+
+Replace the output path with your configured browser output directory. The `--url-prefix` must match the deployed JavaScript URLs. For example, use `~/assets` if a file in that directory is served at `https://example.com/assets/main.js`. Use a unique release name for each build, and upload before deploying it. If you set `dist` in the SDK, also pass the same `--dist` value when uploading.
+
+Verify the setup by triggering a new error after deployment and checking that Sentry shows the original source. This workflow uses release-and-URL matching, not Debug IDs from the event. For troubleshooting, see <PlatformLink to="/sourcemaps/troubleshooting_js/legacy-uploading-methods/">Legacy Uploading Methods</PlatformLink>.
+
+<Alert level="warning">
+
+Hidden source maps are still build output. Exclude `.map` files from deployment or configure your server to deny access to them to avoid exposing your source code.
+
+</Alert>
+
+Angular has no separate option to disable native Debug ID generation. Disabling script source maps also prevents generating these IDs, but leaves no source maps to upload to Sentry.
