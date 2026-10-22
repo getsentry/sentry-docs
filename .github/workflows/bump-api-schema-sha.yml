@@ -39,7 +39,17 @@ jobs:
 
           filepath="src/build/resolveOpenAPI.ts"
 
-          sha="$(curl -sSl -H 'Accept: application/vnd.github.VERSION.sha' 'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main')"
+          # Authenticate to avoid the low unauthenticated rate limit, and fail on
+          # HTTP errors so an error body never gets written in as the SHA.
+          sha="$(curl -sSL --fail \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H 'Accept: application/vnd.github.VERSION.sha' \
+            'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main')"
+
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Expected a 40-character commit SHA from the GitHub API, got: $sha"
+            exit 1
+          fi
           echo "Latest commit to 'getsentry/sentry-api-schema' is $sha"
 
           sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"

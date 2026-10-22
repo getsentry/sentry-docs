@@ -41,62 +41,9 @@ In [sentry.io](https://sentry.io):
 
 ### Set Up Code Mappings
 
-<Alert>
+Suspect commits need a code mapping for each project, so Sentry can match the files in your stack traces to files in your repository. To set one up, see [Code Mappings](/integrations/source-code-mgmt/code-mappings/).
 
-Sentry will automatically try to set up code mappings on JavaScript, Python, Java, PHP, Ruby, Go, C#, and Kotlin projects for organizations with the GitHub integration installed. However, you can still manually add code mappings if you choose to do so. Support for other languages and other source code integrations are planned.
-
-You can also upload code mappings in bulk using the [Sentry CLI](/cli/code-mappings/).
-
-</Alert>
-
-1. Go to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) **> [Your SCM Integration] (e.g. GitHub) > Configurations**.
-1. Click the "Configure" button.
-1. Click the "Code Mappings" tab.
-1. Set up a code mapping for each project for which you want to enable suspect commits. To create a new code mapping, click **Add Mapping**.
-1. Fill out the form, then click **Save Changes**. Each form field is described below.
-
-#### Code Mapping Form Fields
-
-- **Project** (required) - The Sentry project.
-- **Repo** (required) - The GitHub or GitLab repository associated with the Sentry project above. If you have more than one repository being used per Sentry project, you'll need multiple code mappings.
-- **Branch** (required) - The default branch of your code we fall back to if you don't have commit tracking set up.
-- **Stack Trace Root** and **Source Code Root** (optional) - See below for information on determining these values.
-
-#### Determining Stack Trace Root and Source Code Root
-
-<Alert>
-
-The following information is only valid for platforms that use traditional file paths. Platforms with package names require additional steps. For **Java**, read more on the [page on source context](/platforms/java/source-context/#setting-up-code-mappings).
-
-</Alert>
-
-First, navigate to a stack trace that you wish to map. Find an **In App** frame, which is denoted by a bubble on the right side of the frame. The filename will be shown as the first piece of text at the left-hand side of the frame header. In this example, it is `src/main.py`.
-
-<Include name="common-imgs/code-mappings-stacktrace" />
-
-For certain native platforms, the stack trace will look different. In cases like these, you can find the absolute path by hovering over the filename.
-
-![Highlighting where in the UI to find the file path for native stack traces](./img/code-mappings-stacktrace-native.png)
-
-If you aren’t sure, you can look at the event JSON by clicking on the JSON link at the top of the event details. Find the text in the frame's `filename` or `abs_path`.
-
-Next, locate the file seen in the stack trace with your source code provider (e.g. GitHub). In this example, the path is `flask/src/main.py` (`empower` is ignored since it is the name of the repo).
-
-<Include name="common-imgs/code-mappings-source-file" />
-
-Compare the file path from the stack trace with the path found in your source repository. In this example, the `src/` folder in the stack trace matches the `flask/src/` folder in the source code. Using that information, set the **Stack Trace Root** to `src/` and the **Source Code Root** to `flask/src/`. This tells Sentry to replace all file paths beginning in `src/` with `flask/src/` when searching for the source code.
-
-For best results, we recommend always providing a non-empty value for the **Stack Trace Root** when possible.
-
-<Include name="common-imgs/code-mappings-configure-modal" />
-
-The first frame in the stack trace is considered suspect when looking at them top-down. If the first frame is not in-app, the next frame is considered suspect.
-
-### UI Walkthrough
-
-Follow along with the interactive demo below to see how to integrate your GitHub account and repository.
-
-<Arcade src="https://demo.arcade.software/OlEYtzImezSBwsV8SVc8?embed" />
+When looking at the stack trace from the top down, Sentry considers the first frame suspect. If the first frame isn't in-app, Sentry considers the next frame suspect.
 
 ## How It Works
 
