@@ -1,30 +1,42 @@
 ---
 title: Job Monitoring
-sidebar_order: 1
+sidebar_order: 2
 description: "Learn how to set up monitor notifications, monitor the same job in multiple environments, and manage your monitor in the Sentry UI."
 ---
 
 Sentry's Cron Monitoring service can notify you and store a timeline of the following check-in events:
 
-- **Missed check-in:** The job didn't execute in the predicted timeframe or frequency. This can happen for various reasons, such as:
+- **Missed check-in:** The job didn't check in within the check-in margin after its expected time. This can happen for various reasons, such as:
   - The job scheduler is misconfigured, skipped, or failed to initiate your job.
-  - A timeout failure event when a job sent an initial check-in but failed to send a final check-in.
   - Network issues, such as an outbound firewall or an unstable connection.
   - An invalid request format.
+- **Timed out check-in:** The job sent an in-progress check-in but didn't send a final check-in within its max runtime.
 - **Failed check-in:** The job has reported its execution as unsuccessful.
 - **Successful check-in:** The job has reported its execution as successful.
 
-To see information about your cron monitor, select "Crons" from the sidebar menu and click on your cron monitor's name.
+To learn how Sentry decides when a check-in is expected, missed, or timed out, see [How Cron Monitoring Works](/product/monitors-and-alerts/monitors/crons/how-it-works/).
+
+To see information about your cron monitor, open [Cron Monitors](https://sentry.io/monitors/crons/) and click on your cron monitor's name.
 
 ## Cron Monitor Details
 
-This is where you'll find a daily historical bar chart showing successful, failed, and missed check-ins and a line chart of the runtime average for the job execution.
+The details page shows a timeline of check-ins for each environment, the issues the monitor has opened, and a table of recent check-ins. The sidebar shows the monitor's schedule, failure and recovery tolerance, and its next and last check-in.
 
-The "Issues" section shows the issues created from this Cron Monitor. Issues are created when a cron monitor job execution is missed or failed. If you have configured the Sentry SDK for your job, any errors thrown during the job runtime will be shown here as well.
-
-The table of recent check-ins lists previously scheduled jobs and their statuses.
+If Sentry couldn't process some of the monitor's check-ins, for example because of an invalid payload or a rate limit, a banner at the top of the page lists the errors.
 
 <Arcade src="https://demo.arcade.software/7XmPfL0l2pp6KmBUXwMc?embed" />
+
+### Recent Check-Ins
+
+Each row is one check-in, with its status, check-in ID, start and completion times, duration, and expected time. If your job uses a Sentry SDK, the **Issues** column links to errors from the same trace as the check-in.
+
+Some rows include an indicator that points to a likely configuration problem:
+
+- **Not Sent** (Started): The run didn't send an in-progress check-in. Sentry can't enforce the max runtime, and long runs may be recorded as missed.
+- **Incomplete** (Completed): The run sent an in-progress check-in but never sent a closing one. Your job may be exiting before it reports to Sentry.
+- **Late** (Completed): The closing check-in arrived after the run had already timed out. The tag shows how far past the max runtime it was.
+- **Early** (Expected At): The check-in arrived before the expected time. This usually points to a schedule that doesn't match your job, or to a missing in-progress check-in.
+- **Info icon** (Expected At): Sentry processed the check-in late because of abnormal latency on its side, so its status may be inaccurate.
 
 ## Multiple Environments
 
@@ -34,9 +46,13 @@ To monitor the same job in different environments, use a shared schedule to send
 
 To only receive failing or missed monitor notifications for a specific environment or set of environments, scope your **[Alert](/product/monitors-and-alerts/alerts/)** sources and **environments** to match the check-in you care about, and use filters (for example on tags such as `monitor.slug`) where needed. See [Select a Source](/product/monitors-and-alerts/alerts/create-alerts/#step-1-select-a-source). For how the check-in `environment` is sent, see your SDK [environment configuration](/platform-redirect/?next=/configuration/environments/).
 
-### Existing Limitations:
+### Muting and Deleting Environments
 
-- It's not currently possible to pause an individual monitor environment.
+To stop an environment from creating issues, select **Mute Environment** from its menu in the monitor's timeline. A muted environment still records check-ins. If you no longer run the job in an environment, select **Delete Environment** instead. Otherwise, Sentry keeps recording missed check-ins for it.
+
+### Existing Limitations
+
+- It's not currently possible to disable an individual monitor environment.
 
 - It's not currently possible to see an aggregate view of a monitors' status
   across all environments. Each environment will appear as its own row in the
@@ -48,12 +64,12 @@ Cron monitors can be assigned an owner as either a Team or specific Organization
 
 Monitor owners also receive notifications when a monitor becomes broken. Learn more about [broken monitor notifications](/product/monitors-and-alerts/monitors/crons/troubleshooting/#why-was-my-monitor-environment-marked-as-broken-or-automatically-muted).
 
-## Pausing Your Cron Monitor
+## Disabling Your Cron Monitor
 
-You can pause job monitoring in the header of your cron monitor. When you pause, your monitor will stop recording check-ins and will no longer notify you of any failed or missed check-ins.
+You can disable a cron monitor from its details page. A disabled monitor stops recording check-ins, no longer creates issues for failed or missed check-ins, and doesn't count toward your cron monitor quota.
 
-Note: Pausing your cron monitor won't pause the execution of your job or change the configuration of your job scheduler.
+Note: Disabling your cron monitor won't stop the execution of your job or change the configuration of your job scheduler.
 
 ### Automatic Muting
 
-If a monitor environment has been consistently broken for an extended period, Sentry may automatically mute it to reduce notification noise. Unlike pausing, muting does not stop billing. Learn more about [automatic muting and broken monitors](/product/monitors-and-alerts/monitors/crons/troubleshooting/#why-was-my-monitor-environment-marked-as-broken-or-automatically-muted).
+If a monitor environment has been consistently broken for an extended period, Sentry may automatically mute it to reduce notification noise. Unlike disabling, muting does not stop billing. Learn more about [automatic muting and broken monitors](/product/monitors-and-alerts/monitors/crons/troubleshooting/#why-was-my-monitor-environment-marked-as-broken-or-automatically-muted).
