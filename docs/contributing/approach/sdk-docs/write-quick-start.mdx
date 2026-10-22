@@ -37,17 +37,19 @@ Our Quick Start guides aim to:
 - Achieve a functional Sentry setup with visible results in a user's Sentry project
 - Serve as the basis for further customization
 
-## Structuring the config.yml File
+## Structuring the Guide Frontmatter
 
-The config.yml file provides SDK-level details, such as its title, support level, and device categories. This file resides in the `/docs/platform/<SDK_name>/` directory. An example:
+Each Quick Start guide begins with frontmatter that contains SDK-level details, such as its title, support level, and device categories. This frontmatter lives at the top of the guide's `index.mdx` file (for example, `/docs/platforms/<platform>/guides/<guide>/index.mdx`). An example:
 
-```yaml
-title: JavaScript
-caseStyle: camelCase
-supportLevel: production
-sdk: "sentry.javascript.browser"
+```mdx
+---
+title: "TanStack Start React"
+description: Learn how to set up and configure Sentry in your TanStack Start React application using the installation wizard, capture your first errors, logs and traces and view them in Sentry.
+sdk: sentry.javascript.tanstackstart-react
 categories:
+  - server
   - browser
+---
 ```
 
 ## Structure Templates
@@ -62,12 +64,12 @@ The wizard is the fastest way to set up Sentry – your guide should reflect thi
 
 We recommend you base your guide on a similar existing SDK page, such as:
 
-- [Next.js quick start guide wizard setup](/platforms/javascript/guides/nextjs/)
+- [Angular quick start guide wizard setup](/platforms/javascript/guides/angular/)
 
 **Minimal structure:**
 
 - **Title and summary**
-  - The title gets picked up automatically from the config.yml file
+  - The title gets picked up automatically from the page frontmatter
   - Describe what the developer will achieve by following this guide
 - **Prerequisites**
 - **Step 1: Install**
@@ -81,7 +83,6 @@ We recommend you base your guide on a similar existing SDK page, such as:
     - Direct developers to look at the captured errors in their Sentry project
     - Optional: Provide detailed instructions using an `<Expandable>`
 - **Next Steps**
-  - Wrap up and summarize what the developer achieved
   - Provide a list of links to recommended next topics
 
 ### Manual Setup
@@ -90,35 +91,35 @@ Use this template for your manual setup guides. Keep your instructions concise a
 
 We recommend you base your guide on a similar existing SDK page, such as:
 
-- [Next.js quick start guide manual setup](/platforms/javascript/guides/nextjs/manual-setup/)
+- [Angular quick start guide manual setup](/platforms/javascript/guides/angular/manual-setup/)
 
 **Minimal structure:**
 
 - **Title and summary**
-  - The title gets picked up automatically from the config.yml file
+  - The title gets picked up automatically from the page frontmatter
   - Describe what the developer will achieve by following this guide
 - **Prerequisites**
 - **Step 1: Install**
   - Make sure "Install" is always the first step to get developers into action quickly
-  - Include onboarding options (feature setup) here before the installation instructions (use the [`OnboardingOption`](/contributing/pages/components/#onboarding-options) component)
-    - **Important**: Use the `OnboardingOption` component to toggle the visibility of feature-specific instructions in the guide. For example, if a developer wants to set up Tracing but not Session Replay, they should not get instructions on how to configure Session Replay.
-  - Briefly explain these features; use an `Expandable` component to hide the content by default
   - Provide the primary installation method(s) for this SDK (we document alternate methods on a separate page, as in this [example](/platforms/javascript/install/))
+  - If a feature needs an extra package (for example, a profiling package), include it in the install snippet
 - **Step 2: Configure**
-  - Provide configuration examples and add comments in the code sample to limit the content you put into the surrounding prose
-  - Show how to configure Sentry and the selected features
-  - Use subsections for logical organization and splitting up long content
-- **Step 3 - Step X: SDK-specific instructions**
-  - Create steps for source maps, tunneling, or other necessary instrumentation
-  - Each major topic should be a separate step
-- **Step Y: Verify Your Setup**
-  - Provide verification code sample(s) for this SDK
-  - Adapt this section to the features of the selected onboarding option. For example, if Tracing is enabled, you need to describe how to verify it's set up correctly
+  - Start by briefly describing which features work as soon as `Sentry.init()` is called, which features the guide enables in the config, and which steps cover features that need no extra configuration (e.g., Logs, Application Metrics)
+  - Briefly describe each feature and link to its product docs; use an `Expandable` component to hide the content by default. Mark features that are always enabled
+  - **Subsection: Initialize the SDK**
+    - Provide a `sentry.init` snippet that enables all main features the SDK supports. Add comments in the code sample to limit the content you put into the surrounding prose
+    - Below the intro, list each enabled feature and the option or integration that turns it on (with a link to the option's reference docs), so developers can remove what they don't need
+  - **Subsections: SDK-specific instructions**
+    - Create subsections for source maps, tunneling, or other necessary instrumentation
+    - Each major topic gets its own subsection. If a topic is large enough to need its own page-level step, make it a separate step after Configure instead
+- **Step X: Other steps**
+  - Add any other steps that are necessary to get the developer to a functional Sentry setup. For example, if the SDK supports Logs, you may want to explain how to send them
+- **Verify Your Setup**
+  - Provide one simple test that throws an error, for example, via a route or button
   - **Subsection: View Captured Data in Sentry**
     - Direct developers to look at the captured errors in their Sentry project
     - Optional: Provide detailed instructions using an `<Expandable>`
 - **Next Steps**
-  - Wrap up and summarize what the developer achieved
   - Provide a list of links to recommended next topics
 
 ## Content Placement and Reusability
