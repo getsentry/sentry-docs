@@ -18,45 +18,37 @@ would love to talk.
 
 </Alert>
 
-## Requirements
+## Install
 
-As of now it's possible to get crash reports uploaded to Sentry if your compiler can
-output [WASM DWARF debug information](https://yurydelendik.github.io/webassembly-dwarf/)
-alongside the binary code. In addition, you need to upload your WebAssembly
-debug information files to Sentry or use a symbol server as you
-would for our other platforms.
+To get crash reports with readable stack traces, your compiler must output [WASM DWARF debug information](https://yurydelendik.github.io/webassembly-dwarf/) alongside the binary code.
 
-For this process to work, we require debug information files to be augmented by a
-`build_id` custom section. We provide a tool called [wasm-split](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split)
-that can automatically add this section if missing and splits off
-the debug information so it isn't sent to customers.
+Sentry also requires debug information files to contain a `build_id` custom section. Our [wasm-split](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split) tool adds this section if it's missing and splits off the debug information, so it isn't sent to your users. Download a prebuilt `wasm-split` binary from the [Symbolicator releases](https://github.com/getsentry/symbolicator/releases/), or build it from source with a recent Rust compiler.
 
-## Using wasm-split
+## Configure
 
-Once your compiler has produced a `.wasm` file, you can use our [wasm-split](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split)
-tool to add a `build_id` (if missing) and split the file into a debug information
-file and a final stripped `.wasm` file without debug information:
+Sentry supports **Error Monitoring** for WebAssembly: it symbolicates WebAssembly frames in crash reports using the debug information files you upload. There's no Native SDK for WebAssembly, so Tracing, Logs, and Application Metrics aren't available through this guide. In the browser, the JavaScript SDK provides them.
+
+### Add a Build ID and Split Debug Information
+
+Once your compiler has produced a `.wasm` file, use `wasm-split` to add a `build_id` (if missing) and split the file into a debug information file and a final stripped `.wasm` file without debug information:
 
 ```shell
 wasm-split /path/to/file.wasm -d /path/to/file.debug.wasm --strip
 ```
 
-This command modifies the `file.wasm` in place to add the `build_id`, then removes all
-debug information. The debug information is put in a `file.debug.wasm` which
-then needs to be uploaded to Sentry. For more information, see [Debug Information Files](/platforms/native/guides/wasm/data-management/debug-files/).
+This command modifies the `file.wasm` in place to add the `build_id`, then removes all debug information. The debug information is put in a `file.debug.wasm` file.
 
-## Crash Reporting
+### Upload Debug Information Files
 
-If you want to have crash reporting in the browser, the recommended way with Sentry is to use
-the `@sentry/wasm` package and apply its `wasmIntegration` to your `@sentry/browser` configuration.
-This is [documented in detail](/platforms/javascript/guides/wasm/) in the JavaScript platform docs.
+Upload `file.debug.wasm` to Sentry or make it available on a symbol server, as you would for other platforms. For more information, see [Debug Information Files](/platforms/native/guides/wasm/data-management/debug-files/).
 
-## Custom Crash Reports
+### Report Crashes From the Browser
 
-It's likely that if you're working with WebAssembly, you want to send custom
-crash reports; for example, if you don't execute WebAssembly in a browser, but in your
-own runtime. In that case, you can follow the general protocol documentation which
-also covers how to describe WebAssembly frames: [stack trace interface](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/stacktrace/).
+If you want crash reporting in the browser, use the `@sentry/wasm` package and add its `wasmIntegration` to your `@sentry/browser` configuration. This is [documented in detail](/platforms/javascript/guides/wasm/) in the JavaScript platform docs.
+
+### Send Custom Crash Reports
+
+If you don't run WebAssembly in a browser, but in your own runtime, you'll likely want to send custom crash reports. In that case, follow the general protocol documentation, which also covers how to describe WebAssembly frames: [stack trace interface](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/stacktrace/).
 
 Here is an example event for WebAssembly:
 
@@ -106,3 +98,19 @@ Here is an example event for WebAssembly:
   }
 }
 ```
+
+## Verify Your Setup
+
+Trigger an error in a WebAssembly function, either in the browser with `wasmIntegration` enabled or by sending a custom crash report like the example above from your runtime.
+
+### View Captured Data in Sentry
+
+To view the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue, then click its title and check that the stack trace shows symbolicated WebAssembly frames.
+
+## Next Steps
+
+At this point, you should be sending WebAssembly crash reports to Sentry. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to [set up Sentry for WebAssembly in the browser](/platforms/javascript/guides/wasm/)
+- Learn more about [Debug Information Files](/platforms/native/guides/wasm/data-management/debug-files/)
