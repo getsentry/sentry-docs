@@ -30,20 +30,9 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the Sentry SDK to your application:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 <PlatformContent includePath="getting-started-install" />
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Configure
 
@@ -58,10 +47,6 @@ When deploying TanStack Start to Cloudflare Workers, you need to wrap the server
 
 ### Create a Custom Server Entry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Create a `src/server.ts` file that wraps the TanStack Start handler with Sentry.
 
 Use `wrapFetchWithSentry` from `@sentry/tanstackstart-react` to instrument TanStack Start server functions with tracing.
@@ -71,9 +56,6 @@ Use `wrapFetchWithSentry` from `@sentry/tanstackstart-react` to instrument TanSt
 Due to type differences between TanStack Start and Cloudflare Workers, you'll need to add a `// @ts-expect-error` comment as shown in the example. This is expected and doesn't affect functionality.
 
 </Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:src/server.ts}
 import * as Sentry from "@sentry/cloudflare";
@@ -95,20 +77,9 @@ export default Sentry.withSentry(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Update Wrangler Configuration
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Update your `wrangler.jsonc` (or `wrangler.toml`) to use your custom server entry:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```json {diff} {filename:wrangler.jsonc}
  {
@@ -118,20 +89,9 @@ Update your `wrangler.jsonc` (or `wrangler.toml`) to use your custom server entr
  }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Client-Side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Initialize Sentry in your `src/router.tsx` file for client-side error tracking:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename:src/router.tsx}
 +import * as Sentry from "@sentry/tanstackstart-react";
@@ -177,15 +137,7 @@ export const getRouter = () => {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Capture Server-Side Errors
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file.
 
@@ -195,9 +147,6 @@ The Sentry middleware should be the first middleware in the arrays to ensure all
   SSR rendering exceptions are not captured by the middleware. Use
   `captureException` to manually capture those errors.
 </Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:src/start.ts}
 import {
@@ -213,10 +162,6 @@ export const startInstance = createStart(() => {
   };
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
@@ -235,14 +180,7 @@ export const startInstance = createStart(() => {
 
 ## Verify Your Setup
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To verify Sentry is capturing errors, add a test button to one of your pages:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx
 <button
@@ -254,10 +192,6 @@ To verify Sentry is capturing errors, add a test button to one of your pages:
   Break the world
 </button>
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 Run your app with `wrangler dev` (or through your Vite build with Cloudflare plugin), click the button, and check your Sentry project for the error.
 
