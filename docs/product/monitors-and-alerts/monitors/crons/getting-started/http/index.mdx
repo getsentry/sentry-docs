@@ -19,12 +19,10 @@ Optionally, you can skip the first step and [create or update (upsert) a monitor
 
 Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
 
-Generate a check-in ID for each run and send it with both check-ins, so Sentry closes the right run even when runs overlap or a closing check-in arrives late. Learn more in [How Cron Monitoring Works](/product/monitors-and-alerts/monitors/crons/how-it-works/#check-ins).
-
 ```bash {tabTitle: cURL}
 SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
 SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-CHECK_IN_ID="$(uuidgen)"
+CHECK_IN_ID="$(uuidgen)" # Use a new ID for each run
 
 # 🟡 Notify Sentry your job is running:
 curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=in_progress"
@@ -65,9 +63,9 @@ If you don't specify an environment with your check-ins the default is `producti
 
 <Alert>
 
-After a check-in occurs for a specific environment, you must continue sending
-check-ins on schedule or delete the monitor environment; otherwise, it will be
-marked as missed.
+Monitor environments are still early in development. Currently, after a check-in
+occurs for a specific environment, you must continue sending check-ins on
+schedule or delete the monitor environment; otherwise, it will be marked as missed.
 
 </Alert>
 
@@ -116,7 +114,7 @@ Content-Type: application/json
 }
 ```
 
-Monitor `monitor_config` parameters (see [Limits and Defaults](/product/monitors-and-alerts/monitors/crons/how-it-works/#limits-and-defaults) for allowed values):
+Monitor `monitor_config` parameters:
 
 `schedule_type`:
 
@@ -164,10 +162,6 @@ The `tz` where your job is running. This is usually your server's timezone, (suc
 It's important to provide a timezone for non-repeating crontab schedules, such as `0 17 * * *` (every day at 5pm).
 
 </Alert>
-
-### Overlapping Jobs
-
-A job execution that begins before the previous one has completed is called an overlapping job. For example, a job that runs every minute but takes five minutes to complete. Overlapping jobs require a unique check-in ID per run, as shown in [Check-Ins](#check-ins-recommended). Without one, a closing check-in can complete the wrong run.
 
 ## Heartbeat
 
