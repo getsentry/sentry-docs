@@ -39,6 +39,42 @@ class WorkerSettings:
 
 The monitor slug is the cron job's `name`, without arq's `cron:` prefix, so the example above reports to `send_report`. Sentry creates the monitor from the job's `month`, `day`, `weekday`, `hour`, and `minute` in the worker's `timezone`. Cron jobs aren't monitored when their schedule can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), when they set both `day` and `weekday`, or when the worker's time zone has a fixed offset that isn't a whole number of hours.
 
+### Huey
+
+<Alert>
+
+Crons monitoring for Huey ships in version `2.73.0` of `sentry-sdk`.
+
+</Alert>
+
+If you're using [Huey](/platforms/python/integrations/huey/), set `monitor_periodic_tasks=True` to capture check-ins for your periodic tasks:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.huey import HueyIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        HueyIntegration(
+            monitor_periodic_tasks=True,
+            # optional: regular expressions for periodic tasks to skip
+            exclude_periodic_tasks=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+from huey import crontab
+
+@huey.periodic_task(crontab(minute="0", hour="9"))
+def send_report():
+    ...
+```
+
+The monitor slug is the task's name, which defaults to the function name. Sentry creates the monitor from the task's `crontab()` schedule in UTC. Periodic tasks aren't monitored when they use a custom schedule function, when their crontab sets both `day` and `day_of_week`, or when the Huey instance is created with `utc=False`.
+
 ## Job Monitoring
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
