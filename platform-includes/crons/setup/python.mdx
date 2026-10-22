@@ -75,6 +75,39 @@ def send_report():
 
 The monitor slug is the task's name, which defaults to the function name. Sentry creates the monitor from the task's `crontab()` schedule in UTC. Periodic tasks aren't monitored when they use a custom schedule function, when their crontab sets both `day` and `day_of_week`, or when the Huey instance is created with `utc=False`.
 
+### RQ
+
+<Alert>
+
+Crons monitoring for RQ ships in version `2.73.0` of `sentry-sdk`.
+
+</Alert>
+
+If you're using [RQ](/platforms/python/integrations/rq/) with [rq-scheduler](https://github.com/rq/rq-scheduler), set `monitor_cron_jobs=True` in your workers to capture check-ins for recurring jobs:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.rq import RqIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        RqIntegration(
+            monitor_cron_jobs=True,
+            # optional: regular expressions for jobs to skip
+            exclude_cron_jobs=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+scheduler.cron("0 9 * * *", func=send_report, id="send-report")
+scheduler.schedule(datetime.now(timezone.utc), sync_accounts, interval=600, id="sync-accounts")
+```
+
+The monitor slug is the job's `id`. Without an `id`, rq-scheduler generates a new one each time the job is scheduled, so the SDK uses the function's import path instead. Sentry creates the monitor from `cron()` jobs and from `schedule()` jobs whose `interval` is a whole number of minutes. rq-scheduler runs cron strings in the system's local time, so `cron()` jobs are only monitored when the worker's time zone is UTC. Jobs whose schedule can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), jobs with `repeat`, and one-off jobs from `enqueue_at` and `enqueue_in` aren't monitored.
+
 ## Job Monitoring
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
