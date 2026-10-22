@@ -41,11 +41,13 @@ Each job gets a monitor, created the first time the job runs. The monitor slug i
 
 The schedule comes from the job's trigger:
 
-- `CronTrigger`: a crontab schedule in the trigger's timezone. Triggers that use seconds, years, weeks, or both `day` and `day_of_week` aren't monitored, and neither are triggers whose timezone has no IANA name (such as a fixed UTC offset).
+- `CronTrigger`: a crontab schedule in the trigger's timezone. Triggers that use seconds, years, weeks, or both `day` and `day_of_week` aren't monitored, and neither are triggers whose timezone has no IANA name. Fixed UTC offsets of whole hours are sent as `Etc/GMT` timezones; other offsets aren't monitored.
 - `IntervalTrigger`: an interval schedule. Intervals must be whole minutes.
 - `DateTrigger`: one-off jobs aren't monitored.
 
 Cron and interval triggers with an `end_date` aren't monitored.
+
+If a trigger has `jitter`, the jitter is added to the monitor's check-in margin.
 
 Runs that APScheduler skips because the job reached `max_instances` don't send check-ins.
 
