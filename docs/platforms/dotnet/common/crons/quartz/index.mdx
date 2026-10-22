@@ -60,7 +60,36 @@ scheduler.ListenerManager.AddJobListener(new SentryJobListener());
 
 ## Choose Which Jobs to Monitor
 
-Add the `SentryMonitorSlug` attribute to each job class you want to monitor. Jobs without it aren't monitored.
+For each monitored job, the SDK captures a check-in with `CheckInStatus.InProgress` when the job starts. When the job finishes, it updates the check-in to `CheckInStatus.Ok`, or to `CheckInStatus.Error` if the job threw an exception or was cancelled, along with how long the job ran.
+
+With Quartz.NET 4.x, the SDK captures each exception a job throws once, in the job's scope, so it's tagged with `quartz.job` and shares a trace with the check-in. With Quartz.NET 3.x it doesn't: Quartz.NET logs the exceptions as errors, and Sentry's logging integration captures that log entry, for example when you use `Sentry.AspNetCore` or `Sentry.Extensions.Logging`.
+
+### Monitor All Jobs
+
+We recommend monitoring every scheduled job. Set `MonitorAllJobs`, and jobs started by a cron trigger or a repeating simple trigger are monitored without adding an attribute to each class. Runs started by a trigger that fires once, such as `TriggerJob`, and jobs built without `WithIdentity` aren't.
+
+To skip some jobs, add them to `ExcludedJobs`. A string matches a job whose name or full key (`group.name`) is equal to it, and a `Regex` matches a job whose name or full key it matches. Jobs with `[SentryMonitorSlug]` are monitored even when they match.
+
+```csharp {tabTitle:Quartz.NET 4.x}
+q.AddSentry(options =>
+{
+    options.MonitorAllJobs = true;
+    options.ExcludedJobs.Add("reports.AdhocExport");
+    options.ExcludedJobs.Add(new Regex(@"^maintenance\."));
+});
+```
+
+```csharp {tabTitle:Quartz.NET 3.x}
+var options = new SentryQuartzOptions { MonitorAllJobs = true };
+options.ExcludedJobs.Add("reports.AdhocExport");
+q.AddJobListener(_ => new SentryJobListener(options));
+```
+
+These jobs use the slug of their job key, described below.
+
+### Monitor Specific Jobs
+
+To monitor only some jobs, add the `SentryMonitorSlug` attribute to each job class you want to monitor. Without `MonitorAllJobs`, jobs without it aren't monitored.
 
 ```csharp
 [SentryMonitorSlug]
@@ -70,9 +99,7 @@ public class PricingUpdateJob : IJob
 }
 ```
 
-The SDK captures a check-in with `CheckInStatus.InProgress` when a job starts. When the job finishes, it updates the check-in to `CheckInStatus.Ok`, or to `CheckInStatus.Error` if the job threw an exception or was cancelled, along with how long the job ran.
-
-With Quartz.NET 4.x, the SDK captures each exception a job throws once, in the job's scope, so it's tagged with `quartz.job` and shares a trace with the check-in. With Quartz.NET 3.x it doesn't: Quartz.NET logs the exceptions as errors, and Sentry's logging integration captures that log entry, for example when you use `Sentry.AspNetCore` or `Sentry.Extensions.Logging`.
+With `MonitorAllJobs` on, a job with the attribute still sends one check-in per run, using the attribute's slug and settings.
 
 ## Monitor Slugs
 
@@ -122,7 +149,7 @@ q.AddSentry(options => options.SendMonitorConfig = false);
 q.AddJobListener(_ => new SentryJobListener(new SentryQuartzOptions { SendMonitorConfig = false }));
 ```
 
-If you delete a monitor while its job still has `[SentryMonitorSlug]`, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute.
+If you delete a monitor while its job is still monitored, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, remove the attribute, or add the job to `ExcludedJobs`.
 
 ## Monitor Settings
 
