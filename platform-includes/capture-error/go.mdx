@@ -1,3 +1,5 @@
+<Include name="go/capture-context-note" />
+
 To capture an event in Go, you can pass any struct implementing an `error` interface to `CaptureException()`. The SDK automatically unwraps and captures all errors in the error chain, providing comprehensive error context to Sentry. The SDK also supports third-party libraries and extracts all stack traces in the chain.
 
 ## Error Unwrapping
@@ -27,7 +29,7 @@ err2 := errors.New("second error")
 joinedErr := errors.Join(err1, err2)
 
 // This will be captured as an exception group in Sentry
-sentry.CaptureException(joinedErr)
+sentry.CaptureException(ctx, joinedErr)
 ```
 
 For errors wrapped with `fmt.Errorf` or single-error chains, the SDK captures each error in the chain individually, maintaining the causal relationship.
@@ -37,6 +39,8 @@ For errors wrapped with `fmt.Errorf` or single-error chains, the SDK captures ea
 ```go
 f, err := os.Open("filename.ext")
 if err != nil {
-	sentry.CaptureException(err)
+	sentry.CaptureException(ctx, err)
+	return
 }
+defer f.Close()
 ```

@@ -32,14 +32,14 @@ If Release is not set, the SDK will try to derive a default value from environme
 
 If you distribute a compiled binary, it is recommended to set the Release value explicitly at build time. As an example, you can use:
 
-```go
+```bash
 go build -ldflags='-X main.release=VALUE'
 ```
 
 That will set the value of a predeclared variable 'release' in the 'main' package to 'VALUE'. Then, use that variable when initializing the SDK:
 
 ```go
-sentry.Init(ClientOptions{Release: release})
+sentry.Init(sentry.ClientOptions{Release: release})
 ```
 
 See https://golang.org/cmd/go/ and https://golang.org/cmd/link/ for the official documentation of -ldflags and -X, respectively.
@@ -227,13 +227,13 @@ Enables performance tracing. When enabled, the SDK will create transactions and 
 
 <SdkOption name="TracesSampleRate" type="float64" defaultValue="0.0">
 
-A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or `TracesSampler` must be defined to enable tracing.
+A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Tracing requires `EnableTracing` and either this or `TracesSampler`.
 
 </SdkOption>
 
 <SdkOption name="TracesSampler" type="TracesSampler">
 
-Used to customize the sampling of traces, overrides `TracesSampleRate`. This is a function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `TracesSampleRate` must be defined to enable tracing.
+Used to customize the sampling of traces, overrides `TracesSampleRate`. This is a function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Tracing requires `EnableTracing` and either this or `TracesSampleRate`.
 
 </SdkOption>
 
@@ -341,7 +341,7 @@ See the [Removing Default Integrations](#removing-default-integrations) section 
 
 <SdkOption name="DebugWriter" type="io.Writer">
 
-`io.Writer` implementation that should be used with the Debug mode. This allows you to redirect debug output to a custom writer instead of stdout.
+`io.Writer` implementation that should be used with the Debug mode. This allows you to redirect debug output to a custom writer instead of stderr.
 
 </SdkOption>
 
@@ -357,13 +357,13 @@ The transport to use. Defaults to `HTTPTransport`. Switches out the transport us
 
 <SdkOption name="HTTPClient" type="*http.Client">
 
-An optional pointer to `http.Client` that will be used with a default HTTPTransport. Using your own client will make HTTPTransport, HTTPProxy, HTTPSProxy and CaCerts options ignored.
+An optional pointer to `http.Client` that will be used with the built-in `HTTPTransport` or `HTTPSyncTransport`. Using your own client will make HTTPTransport, HTTPProxy, HTTPSProxy and CaCerts options ignored.
 
 </SdkOption>
 
 <SdkOption name="HTTPTransport" type="http.RoundTripper">
 
-An optional pointer to http.Transport that will be used with a default HTTPTransport. Using your own transport will make HTTPProxy, HTTPSProxy and CaCerts options ignored.
+An optional pointer to http.Transport that will be used with the built-in `HTTPTransport` or `HTTPSyncTransport`. Using your own transport will make HTTPProxy, HTTPSProxy and CaCerts options ignored.
 
 </SdkOption>
 
@@ -389,12 +389,6 @@ An optional set of SSL certificates to use. See the [Providing SSL Certificates]
 
 </SdkOption>
 
-<SdkOption name="DisableTelemetryBuffer" type="bool" defaultValue="false">
-
-When set to `true`, disables the telemetry buffer layer for prioritizing events and uses the legacy transport layer instead.
-
-</SdkOption>
-
 ### Providing SSL Certificates
 
 By default, TLS uses the host's root CA set. If you don't have `ca-certificates` (which should be your go-to way of fixing the issue of the missing certificates) and want to use `gocertifi` instead, you can provide pre-loaded cert files as one of the options to the `sentry.Init` call:
@@ -406,7 +400,7 @@ sentryClientOptions := sentry.ClientOptions{
 
 rootCAs, err := gocertifi.CACerts()
 if err != nil {
-	log.Println("Could not load CA Certificates: %v\n", err)
+	log.Printf("Could not load CA Certificates: %v", err)
 } else {
 	sentryClientOptions.CaCerts = rootCAs
 }

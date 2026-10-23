@@ -56,13 +56,7 @@ If you're **not** using a supported framework middleware, you need to create tra
 
 ```go
 http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
-	if hub == nil {
-		// Check the concurrency guide for more details: https://docs.sentry.io/platforms/go/concurrency/
-		hub = sentry.CurrentHub().Clone()
-		ctx = sentry.SetHubOnContext(ctx, hub)
-	}
+	ctx, _ := sentry.WithScope(r.Context())
 
 	options := []sentry.SpanOption{
 		// Set the OP based on values from https://develop.sentry.dev/sdk/performance/span-operations/
@@ -77,7 +71,7 @@ http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 	)
 	defer transaction.Finish()
 
-	doWork(transaction.Context());
+	doWork(transaction.Context())
 })
 ```
 
@@ -105,23 +99,22 @@ if transaction != nil {
 }
 
 span := sentry.SpanFromContext(ctx)
-span.SetData("dataAttr1", 42)
-span.SetData("dataAttr2", true)
+
+if span != nil {
+	span.SetData("dataAttr1", 42)
+	span.SetData("dataAttr2", true)
+}
 ```
 
 Or you can update existing transaction and span data by:
 
 ```go
-if d, found := transaction.Data["dataAttr1"]; found {
-  if dataAttr1, ok := d.(int); ok {
-    transaction.SetData("dataAttr1", dataAttr1.(int)+42)
-  }
+if dataAttr1, ok := transaction.Data["dataAttr1"].(int); ok {
+	transaction.SetData("dataAttr1", dataAttr1+42)
 }
 
-if d, found := span.Data["dataAttr1"]; found {
-  if dataAttr1, ok := d.(int); ok {
-    span.SetData("dataAttr1", dataAttr1.(int)+42)
-  }
+if dataAttr1, ok := span.Data["dataAttr1"].(int); ok {
+	span.SetData("dataAttr1", dataAttr1+42)
 }
 ```
 
@@ -146,3 +139,5 @@ sentry.Init(sentry.ClientOptions{
   },
 })
 ```
+
+Pass `span.Context()` to captures and nested work to associate them with that child span.

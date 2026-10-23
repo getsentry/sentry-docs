@@ -1,11 +1,8 @@
 ```go
-// If starting the first span in a transaction (no other spans in the context):
-sentry.StartSpan(context.Background(), "operation",
-	sentry.WithTransactionName("name"),
-	func(s *sentry.Span) { s.Sampled = sentry.SampledTrue },
+transaction := sentry.StartTransaction(ctx, "name",
+	sentry.WithSpanSampled(sentry.SampledTrue),
 )
-
-// If the transaction was already started, for example in an HTTP handler:
-transaction := sentry.TransactionFromContext(request.Context())
-transaction.Sampled = sentry.SampledTrue
+defer transaction.Finish()
 ```
+
+A transaction started by an integration, for example in an HTTP handler, has already been sampled when your code runs. Use a `TracesSampler` to decide for those transactions.

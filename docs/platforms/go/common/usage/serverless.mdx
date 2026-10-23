@@ -17,4 +17,4 @@ This guidance is the same for serverless and non-serverless Go deployments.
 Most (if not all) serverless solutions won't wait for network responses before closing the process.
 Because of that, we need to make sure that the event is delivered to Sentry's servers.
 
-It can be achieved twofold, using the [`sentry.Flush` method](../../configuration/draining/) or by swapping the transport to [`HTTPSyncTransport`](../../configuration/transports/#httpsynctransport).
+Call [`sentry.Flush`](../../configuration/draining/) before the invocation returns, or use [`HTTPSyncTransport`](../../configuration/transports/#httpsynctransport) for synchronous errors, transactions, and check-ins. Logs and metrics remain batched with either transport and still require flushing. If you use a custom client, flush that client with `client.Flush(timeout)`.

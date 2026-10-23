@@ -26,35 +26,31 @@ connection := my_custom_queue.Connect()
 // The message you want to send to the queue
 queue := "messages"
 message := "Hello World!"
-messageId := "abc123"
+messageID := "abc123"
 
-// Create transaction
-transaction := sentry.StartTransaction(
-    ctx,
-    "queue_producer_transaction",
-    options...,
-)
-defer transaction.Finish()
-
-// Create the span
-span := transaction.StartChild("queue.publish")
-span.Description = "queue_producer";
+// Create the span under the transaction carried by ctx
+span := sentry.StartSpan(ctx, "queue.publish", sentry.WithDescription("queue_producer"))
 defer span.Finish()
 
 // Set span data
-span.SetData("messaging.message.id", messageId)
+span.SetData("messaging.message.id", messageID)
 span.SetData("messaging.destination.name", queue)
-span.SetData("messaging.message.body.size", utf8.RuneCountInString(message))
+span.SetData("messaging.message.body.size", len(message))
 
-// Publish the message to the queue (including current time stamp)
+// Publish the message with the current timestamp and the trace headers, so
+// the consumer can continue the trace
 now := time.Now().Unix()
-connection.Publish(queue, message, now)
+headers := map[string]string{
+	sentry.SentryTraceHeader:   sentry.GetTraceparent(span.Context()),
+	sentry.SentryBaggageHeader: sentry.GetBaggage(span.Context()),
+}
+connection.Publish(queue, message, now, headers)
 ```
 
 
 ## Consumer Instrumentation
 
-To start capturing performance metrics, use the `startChild()` function to wrap your queue consumers. Your span `op` must be set to `queue.process`. Include the following span data to enrich your consumer spans with queue metrics:
+To start capturing performance metrics, use `StartChild` to wrap your queue consumers. Your span `op` must be set to `queue.process`. Include the following span data to enrich your consumer spans with queue metrics:
 
 | Data Attribute | Type | Description |
 |:--|:--|:--|
@@ -66,7 +62,7 @@ To start capturing performance metrics, use the `startChild()` function to wrap 
 
 Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Go, you can start a new one using `sentry.StartTransaction()`.
 
-Use `Sentry.StartTransaction()` to connect your consumer spans to their associated producer spans, and set the span `Status` to mark the trace of your message as success or failed.
+Pass the trace headers from the message to `sentry.StartTransaction` with `sentry.ContinueFromHeaders` to connect your consumer spans to their associated producer spans, and set the span `Status` to mark the trace of your message as success or failed. Start each message from its own scope, so unrelated messages don't share a trace.
 
 
 ```go
@@ -77,34 +73,33 @@ queue := "messages"
 message := connection.Consume(queue)
 
 // Calculate latency (optional, but valuable)
-now := time.Now()
 messageTime := time.Unix(message["timestamp"].(int64), 0)
-latency := now.Sub(messageTime)
+latency := time.Since(messageTime)
 
-// Create transaction
+// Create a transaction in its own scope that continues the producer's trace
+msgCtx, _ := sentry.WithScope(ctx)
 transaction := sentry.StartTransaction(
-    ctx, // Continue the trace from the message
-    "queue_consumer_transaction",
-    options...,
+	msgCtx,
+	"queue_consumer_transaction",
+	sentry.ContinueFromHeaders(message[sentry.SentryTraceHeader].(string), message[sentry.SentryBaggageHeader].(string)),
 )
 defer transaction.Finish()
 
 // Create the span
-span := transaction.StartSpan(ctx, "queue.process")
-span.Description = "queue_consumer";
+span := transaction.StartChild("queue.process")
+span.Description = "queue_consumer"
 defer span.Finish()
 
 // Set span data
 span.SetData("messaging.message.id", message["message_id"])
 span.SetData("messaging.destination.name", queue)
 span.SetData("messaging.message.body.size", len(message["body"].(string)))
-span.SetData("messaging.message.receive.latency", latency)
+span.SetData("messaging.message.receive.latency", latency.Milliseconds())
 span.SetData("messaging.message.retry.count", 0)
 
 // Process the message
-err = processMessage(message)
-if err != nil {
-    // In case of an error set the status to "internal_error"
-    span.Status = sentry.SpanStatusInternalError
+if err := processMessage(message); err != nil {
+	// In case of an error set the status to "internal_error"
+	span.Status = sentry.SpanStatusInternalError
 }
 ```

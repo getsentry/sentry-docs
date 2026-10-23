@@ -4,55 +4,30 @@ description: "Learn more about how to use the SDK from concurrent goroutines."
 sidebar_order: 5
 ---
 
-Concurrent Go programs use goroutines, a form of lightweight thread managed by the Go runtime. Because goroutines run concurrently, every goroutine has to keep track of its own Sentry-related data locally. Otherwise, data races can introduce subtle bugs to your programs, and the consequences vary from nothing apparent to unexpected crashes or, worse, accidentally mixing up data stored in the `Scope`. More on this in the [Scopes and Hubs](../../enriching-events/scopes/) section.
-
-The easiest way to handle this, is to create a new `Hub` for every goroutine you start, however this would require you to rebind the current `Client` and handle `Scope` yourself. That is why we provide a helper method called `Clone`. It takes care of creating a `Hub`, cloning existing `Scope` and reassigning it alongside `Client` to newly create instance.
-
-Once cloned, `Hub` is completely isolated and can be used safely inside concurrent call. However, instead of using globally exposed methods, they should be called directly on the `Hub`.
-
-Here are two examples:
-
-- a recommended deterministic call on `Hub` that is safe
+Fork a scope for each goroutine that adds operation-specific metadata. This prevents one goroutine's tags, users, or breadcrumbs from appearing on another goroutine's events.
 
 ```go
-// Example of __CORRECT__ use of scopes inside a Goroutine
-
-go func(localHub *sentry.Hub) {
-	// as goroutine argument
-	localHub.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("secretTag", "go#1")
-	})
-	localHub.CaptureMessage("Hello from Goroutine! #1")
-}(sentry.CurrentHub().Clone())
-
-go func() {
-	// or created locally
-	localHub := sentry.CurrentHub().Clone()
-	localHub.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("secretTag", "go#2")
-	})
-	localHub.CaptureMessage("Hello from Goroutine! #2")
-}()
+var wg sync.WaitGroup
+for _, job := range jobs {
+	jobCtx, scope := sentry.WithScope(ctx)
+	scope.SetTag("job", job.ID)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer sentry.Recover(jobCtx, nil)
+		if err := process(jobCtx, job); err != nil {
+			sentry.CaptureException(jobCtx, err)
+		}
+	}()
+}
+wg.Wait()
+sentry.ClientFromContext(ctx).Flush(2 * time.Second)
 ```
 
-- a discouraged non-deterministic call on `Hub` that would leak information between threads
+`WithScope` clones the parent's scope, or starts an empty scope when the parent has none. The global scope is merged in when telemetry is captured. The returned context retains the parent's client and active span.
 
-```go
-// Example of __INCORRECT__ use of scopes inside a Goroutine - DON'T USE IT!
+Scopes are safe for concurrent access, but sharing a scope also shares its metadata. Use separate scopes for unrelated operations and keep request-specific data off `GlobalScope()`.
 
-go func() {
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("secretTag", "go#1")
-	})
-	sentry.CaptureMessage("Hello from Goroutine! #1")
-}()
+Pass `span.Context()` to work associated with that span. For background work launched from Fiber or FastHTTP, obtain the Go context with the integration's `GetContext` during the request; do not retain the reused framework context. Use `context.WithoutCancel` only if the work should outlive request cancellation, and give that work its own timeout.
 
-go func() {
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("secretTag", "go#2")
-	})
-	sentry.CaptureMessage("Hello from Goroutine! #2")
-}()
-
-// at this point both events can have either `go#1` tag or `go#2` tag. We'll never know.
-```
+For scope inheritance and client selection, see <PlatformLink to="/enriching-events/scopes/">Scopes and Contexts</PlatformLink>.
