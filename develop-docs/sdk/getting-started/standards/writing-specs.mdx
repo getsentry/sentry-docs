@@ -1,0 +1,122 @@
+---
+title: Writing SDK Specs
+description: How to write SDK specs that only require externally observable behavior and use requirement keywords sparingly.
+spec_id: sdk/getting-started/standards/writing-specs
+spec_version: 0.1.0
+spec_status: draft
+spec_guidelines: writing-specs@0.1
+spec_changelog:
+  - version: 0.1.0
+    date: 2026-10-19
+    summary: Initial draft
+sidebar_order: 0
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+SDK specs define what SDKs do, not how they do it. This spec builds on [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and adds only what is specific to Sentry SDK specs.
+
+## Scope
+
+This spec applies to itself and to all specs except process specs. Its [Legacy Specs](#legacy-specs) section also applies to SDKs that implement legacy specs. Status, versioning, changelogs, and frontmatter fields are covered by [Spec Lifecycle](/sdk/getting-started/standards/spec-lifecycle/).
+
+## Definitions
+
+- **Spec**: a page under `develop-docs/sdk/` with `spec_id` frontmatter.
+- **Requirement**: a statement in a spec that uses, rather than mentions, an RFC 2119 keyword written in uppercase, such as "MUST", "SHOULD", or "MAY". Keywords have the meaning defined in RFC 2119.
+- **Non-normative content**: anything in a spec that is not a requirement.
+- **Externally observable behavior**: behavior whose conformance can be determined without inspecting the implementation's internals. For an SDK, conformance is determined using only its public API, the data it sends, its calls into user code, its effects on the host application, and its responses to inputs.
+- **Process spec**: a spec with `spec_kind: process` in its frontmatter. Process specs, such as playbooks and engineering standards, set rules for how SDK teams work rather than for how SDKs behave.
+- **Legacy spec**: a spec, other than a process spec, without `spec_guidelines` in its frontmatter.
+
+## Requirements
+
+<SpecSection id="keywords" status="draft" since="0.1.0">
+
+### Keywords
+
+Keywords **SHOULD** be bold. A keyword that is mentioned rather than used **SHOULD** be put in quotes. Non-normative content **SHOULD NOT** state obligations with lowercase "must", "should", "may", or phrases such as "needs to".
+
+</SpecSection>
+
+<SpecSection id="observable-behavior" status="draft" since="0.1.0">
+
+### Observable Behavior
+
+Requirements **MUST** only describe externally observable behavior. When a requirement is written as steps, SDKs **MAY** produce its observable result in any other way.
+
+</SpecSection>
+
+<SpecSection id="requirement-levels" status="draft" since="0.1.0">
+
+### Requirement Levels
+
+Requirements **MUST** follow [Section 6 of RFC 2119](https://www.rfc-editor.org/rfc/rfc2119#section-6):
+
+> Imperatives of the type defined in this memo must be used with care and sparingly. In particular, they MUST only be used where it is actually required for interoperation or to limit behavior which has potential for causing harm (e.g., limiting retransmisssions) For example, they must not be used to try to impose a particular method on implementors where the method is not required for interoperability.
+
+In addition, requirements **MAY** specify an SDK's public API. Such requirements **SHOULD** allow SDKs to adapt names, signatures, and types to their platform's conventions.
+
+Requirements **SHOULD** use "SHOULD" by default, and "MUST" or "MUST NOT" only where no SDK could have a valid reason to deviate. Authors **SHOULD** assume such a reason could exist unless shown otherwise.
+
+A requirement that most SDKs do not implement yet **SHOULD** be placed in a `draft` or `candidate` section (see [Spec Lifecycle](/sdk/getting-started/standards/spec-lifecycle/)), not weakened.
+
+</SpecSection>
+
+<SpecSection id="concision" status="draft" since="0.1.0">
+
+### Concision
+
+Specs **SHOULD** be as concise as possible without losing necessary detail. They **SHOULD NOT** repeat requirements or include content readers don't need, such as snippets or examples that only restate requirements.
+
+</SpecSection>
+
+<SpecSection id="clarity" status="draft" since="0.1.0">
+
+### Clarity
+
+Specs **SHOULD NOT** be vague or ambiguous, so that readers agree on what each requirement means and whether an SDK conforms to it. This can conflict with _Concision_. Specs **SHOULD** balance the two, adding words only where they remove doubt.
+
+</SpecSection>
+
+<SpecSection id="structure" status="draft" since="0.1.0">
+
+### Structure
+
+A spec **SHOULD** contain, in this order:
+
+- A short summary of the spec.
+- _Scope_: what the spec applies to, such as all SDKs or only some.
+- _Definitions_: terms with a spec-specific meaning. This section **MAY** be omitted if there are no terms which need to be defined.
+- _Requirements_: all requirements.
+- _Implementation Guidance_: patterns that are not documented elsewhere and that implementers would likely get wrong without guidance. This section is non-normative and **SHOULD NOT** be included if no such patterns need to be documented.
+- _Changelog_: as required by Spec Lifecycle.
+
+</SpecSection>
+
+<SpecSection id="legacy-specs" status="draft" since="0.1.0">
+
+### Legacy Specs
+
+A spec that conforms to this spec **SHOULD** declare it in its frontmatter with `spec_guidelines: writing-specs@<major.minor>`. A spec **MUST NOT** declare it unless the whole spec conforms.
+
+SDKs **MAY** deviate from requirements in a legacy spec on behavior that is not externally observable, but **SHOULD** preserve the externally observable behavior that results from them.
+
+</SpecSection>
+
+## Implementation Guidance
+
+**The black-box test.** Ask: "Could I check this against a mock transport and the public API, without opening the SDK's source?" If not, it isn't a requirement. Usually the observable intent can be kept:
+
+- "Use a single, centralized `ClientReports` component per client" → "Discarded events are reported in the client report of the client that discarded them."
+- "Aggregate counts in a map keyed by reason and category" → "Each client report contains at most one entry per (reason, category) pair."
+
+**The Section 6 test.** Ask: "Is this part of the public API? If not, would Sentry reject or misread data if an SDK ignored it, would SDKs fail to work together, or would users be harmed?" If none apply, it isn't a requirement. Outside the public API, consistency across SDKs alone is not a reason for a requirement.
+
+**Migrating a legacy spec.** Rewrite the observable intent as requirements and delete everything else unless it qualifies as _Implementation Guidance_ (see [Structure](#structure)). Don't add requirements, and list every requirement whose level or meaning changed in the changelog entry.
+
+## Changelog
+
+<SpecChangelog />
