@@ -1,0 +1,50 @@
+---
+id: some-requests-are-no-longer-traced
+title: "Some Requests Are No Longer Traced"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 20
+---
+
+ASP.NET Core and ASP.NET apps no longer send a transaction for an incoming request that ends in 301, 305 to 399, or 401 to 404. `TraceIgnoreStatusCodes` now contains these codes by default, so dashboards and alerts that count these transactions see fewer of them.
+
+The default leaves out 302 and 303, because ASP.NET Core apps use them to redirect after a successful form post. The setting only affects the SDK's own `http.server` transactions, including the ones the `Sentry.OpenTelemetry` span processor creates. The SDK still traces outgoing `HttpClient` requests whatever their status code. OpenTelemetry spans that the OTLP exporter sends don't go through this setting, so a 404 still shows up there.
+
+To trace every request again, clear the list:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.TracesSampleRate = 1.0;
+    options.TraceIgnoreStatusCodes.Clear();
+});
+```
+
+To ignore only some status codes, replace the list:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.TracesSampleRate = 1.0;
+    options.TraceIgnoreStatusCodes = [404, (500, 599)];
+});
+```
+
+You can also replace the list in `appsettings.json`:
+
+```json {filename:appsettings.json}
+{
+  "Sentry": {
+    "TraceIgnoreStatusCodes": [404]
+  }
+}
+```
+
+An empty array in configuration doesn't clear the list, because configuration binds `[]` as a missing value. To trace every request from configuration alone, set `[0]`. Configuration can't express ranges.

@@ -1,0 +1,75 @@
+---
+id: logging-options-only-set-log-levels
+title: "Logging Options Only Set Log Levels"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 30
+---
+
+`SentryLoggingOptions` and the `Logging:Sentry` configuration section now only set log levels. `SentryLoggingOptions` no longer derives from `SentryOptions`, so SDK settings passed to `Logging.AddSentry` fail to compile. Move them to where you initialize Sentry.
+
+In 6.x, `Logging.AddSentry` accepted every SDK option:
+
+```csharp {filename:Program.cs}
+using Microsoft.Extensions.Logging;
+
+using var loggerFactory = LoggerFactory.Create(logging =>
+    logging.AddSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+        options.MinimumEventLevel = LogLevel.Error;
+    }));
+```
+
+In 7.x, initialize Sentry first and keep only the log levels on the logging integration:
+
+```csharp {filename:Program.cs}
+using Microsoft.Extensions.Logging;
+
+using var sentry = SentrySdk.Init(options => options.Dsn = "___PUBLIC_DSN___");
+
+using var loggerFactory = LoggerFactory.Create(logging =>
+    logging.AddSentry(options => options.MinimumEventLevel = LogLevel.Error));
+```
+
+In configuration, `Logging:Sentry` accepts only `MinimumEventLevel`, `MinimumBreadcrumbLevel` and `LogLevel`. Any other key throws `NotSupportedException` at startup. This includes ASP.NET Core, Blazor WebAssembly and generic host apps, because `UseSentry` reads the log levels from `Logging:Sentry`. In 6.x, the SDK settings lived under `Logging:Sentry`:
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "Dsn": "___PUBLIC_DSN___",
+      "SendDefaultPii": true,
+      "MinimumEventLevel": "Error"
+    }
+  }
+}
+```
+
+In 7.x, move the SDK settings to the `Sentry` section, which `UseSentry` reads:
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "MinimumEventLevel": "Error"
+    }
+  },
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "SendDefaultPii": true
+  }
+}
+```
+
+`SentrySdk.Init` doesn't read the `Sentry` section. If the app initializes Sentry with `SentrySdk.Init`, set the options in code, or switch to `UseSentry` if the app has a host.
+
+Other members moved with this change:
+
+- `ConfigureScope` moved from `SentryLoggingOptions` to the options of `UseSentry`. With `SentrySdk.Init`, call `SentrySdk.ConfigureScope` after initializing.
+- `InitializeSdk` fails to compile. Remove it, since no logging integration initializes the SDK anymore.
+- The options of `UseSentry`, such as `SentryAspNetCoreOptions` and `SentryMauiOptions`, now derive from the new `SentryHostOptions` class instead of `SentryLoggingOptions`. Code that takes these options as `SentryLoggingOptions` needs to take `SentryHostOptions`.
+- `AddSentry<TOptions>()` on `IServiceCollection` now requires `TOptions` to derive from `SentryHostOptions`.

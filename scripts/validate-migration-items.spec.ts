@@ -16,7 +16,7 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {loadItems} from './validate-migration-items.mjs';
 
 describe('migration collections', () => {
-  it.each(['javascript-v11', 'flutter-v10'])('validates %s', collection => {
+  it.each(['javascript-v11', 'flutter-v10', 'dotnet-v7'])('validates %s', collection => {
     const {items, errors} = loadItems(process.cwd(), collection);
     expect(items.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
@@ -29,6 +29,18 @@ describe('migration collections', () => {
       'utf8'
     );
     const included = [...guide.matchAll(/name="migration\/flutter-v10\/([^"]+)"/g)]
+      .map(match => match[1])
+      .sort();
+    expect(included).toEqual(items.map(item => item.file.replace(/\.mdx$/, '')).sort());
+  });
+
+  it('includes every .NET checklist item exactly once in the full guide', () => {
+    const {items} = loadItems(process.cwd(), 'dotnet-v7');
+    const guide = readFileSync(
+      'docs/platforms/dotnet/common/migration/v6-to-v7/index.mdx',
+      'utf8'
+    );
+    const included = [...guide.matchAll(/name="migration\/dotnet-v7\/([^"]+)"/g)]
       .map(match => match[1])
       .sort();
     expect(included).toEqual(items.map(item => item.file.replace(/\.mdx$/, '')).sort());

@@ -1,0 +1,54 @@
+---
+id: call-usesentry-on-webapplicationbuilder
+title: "Call UseSentry on WebApplicationBuilder"
+phase: cleanup
+category: rename
+severity: informational
+frameworks: all
+platformCategory: all
+order: 10
+---
+
+ASP.NET Core apps can now call `UseSentry` on `WebApplicationBuilder` and keep chaining. `builder.WebHost.UseSentry()` still works, so this change is optional.
+
+In 6.x, `UseSentry` was only available on the web host:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+```
+
+In 7.x, call it on the builder:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+```
+
+A helper declared in the `Microsoft.Extensions.Hosting` namespace needs a static call instead. The `AddServiceDefaults` method that .NET Aspire templates generate is one example. Inside that namespace, `web.UseSentry()` binds to the generic host overload from `Sentry.Extensions.Hosting`, even for a `WebApplicationBuilder`. The app then misses request data, the middleware and the transactions for incoming requests. Call the ASP.NET Core overload as a static method:
+
+```csharp {filename:Extensions.cs}
+using Microsoft.AspNetCore.Builder;
+
+namespace Microsoft.Extensions.Hosting;
+
+public static class Extensions
+{
+    public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder)
+        where TBuilder : IHostApplicationBuilder
+    {
+        if (builder is WebApplicationBuilder web)
+        {
+            SentryWebApplicationBuilderExtensions.UseSentry(web);
+        }
+        else
+        {
+            builder.UseSentry();
+        }
+
+        return builder;
+    }
+}
+```
+
+When `UseSentry` from `Sentry.Extensions.Hosting` runs in an ASP.NET Core app, the SDK logs a warning through `ILogger` when the host starts.

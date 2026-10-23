@@ -1,0 +1,118 @@
+---
+id: move-sdk-settings-out-of-the-nlog-target
+title: "Move SDK Settings Out of the NLog Target"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 70
+---
+
+The NLog target no longer initializes Sentry. Initialize Sentry first, and remove every SDK setting from the target, including the ones NLog doesn't report. A target that keeps `environment` or `release` stops sending them without a warning.
+
+The target writes one message to standard error for `dsn`, or for `initializeSdk` set to `true`. NLog ignores the other settings below without a message. Move each one to the options of `SentrySdk.Init` or `UseSentry`:
+
+| NLog target setting in 6.x                                                           | 7.x                                             |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| `dsn`                                                                                | `options.Dsn`                                   |
+| `environment`                                                                        | `options.Environment`                           |
+| `release`                                                                            | `options.Release`                               |
+| `flushTimeoutSeconds`                                                                | `options.FlushTimeout`                          |
+| `shutdownTimeoutSeconds`                                                             | `options.ShutdownTimeout`                       |
+| `initializeSdk`                                                                      | Remove it                                       |
+| SDK settings in `<options>`, such as `sendDefaultPii`, `attachStacktrace` or `debug` | The `SentryOptions` property with the same name |
+
+NLog layouts in these settings don't carry over, because `SentryOptions` takes plain values. A release written as a layout, such as `${assembly-version:cached=true:type=File}`, needs a value you set in code. If you leave `Release` unset, the SDK uses the entry assembly's name and version, such as `MyApp@1.2.3`, which differs from what the layout produced.
+
+Target settings such as `minimumEventLevel`, `minimumBreadcrumbLevel`, `layout`, `breadcrumbLayout`, `<tag>` and `includeEventDataOnBreadcrumbs` keep working. In 6.x, the target carried the SDK settings:
+
+```xml {filename:NLog.config}
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <extensions>
+    <add assembly="Sentry.NLog" />
+  </extensions>
+  <targets>
+    <target xsi:type="Sentry" name="sentry"
+            dsn="___PUBLIC_DSN___"
+            environment="staging"
+            release="my-app@1.2.3"
+            minimumBreadcrumbLevel="Debug"
+            minimumEventLevel="Error">
+      <options sendDefaultPii="true" />
+    </target>
+  </targets>
+  <rules>
+    <logger name="*" writeTo="sentry" />
+  </rules>
+</nlog>
+```
+
+In 7.x, the target keeps only its own settings:
+
+```xml {filename:NLog.config}
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <extensions>
+    <add assembly="Sentry.NLog" />
+  </extensions>
+  <targets>
+    <target xsi:type="Sentry" name="sentry"
+            minimumBreadcrumbLevel="Debug"
+            minimumEventLevel="Error" />
+  </targets>
+  <rules>
+    <logger name="*" writeTo="sentry" />
+  </rules>
+</nlog>
+```
+
+Initialize Sentry with the SDK settings before NLog writes its first entry:
+
+```csharp {filename:Program.cs}
+using NLog;
+
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Environment = "staging";
+    options.Release = "my-app@1.2.3";
+    options.SendDefaultPii = true;
+});
+
+var logger = LogManager.GetCurrentClassLogger();
+```
+
+If you configure the target in code, `SentryNLogOptions` no longer derives from `SentryOptions`, so SDK settings fail to compile with error CS1061. In 6.x, `AddSentry` took them:
+
+```csharp {filename:Program.cs}
+using NLog;
+using NLog.Config;
+
+LogManager.Configuration = new LoggingConfiguration()
+    .AddSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+        options.Environment = "staging";
+        options.MinimumEventLevel = LogLevel.Error;
+    });
+```
+
+In 7.x, move them to `SentrySdk.Init`:
+
+```csharp {filename:Program.cs}
+using NLog;
+using NLog.Config;
+
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Environment = "staging";
+});
+
+LogManager.Configuration = new LoggingConfiguration()
+    .AddSentry(options => options.MinimumEventLevel = LogLevel.Error);
+```
+
+NLog's `enableLogs` setting is obsolete and has no effect, because the target now sends logs once you add it. See [Logging Integrations Send Logs](#logging-integrations-send-logs). The target now flushes with `SentryOptions.FlushTimeout`, which defaults to 2 seconds instead of 15. See [Logging Frameworks No Longer Close Sentry](#logging-frameworks-no-longer-close-sentry).
