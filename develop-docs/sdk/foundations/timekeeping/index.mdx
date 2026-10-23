@@ -1,0 +1,99 @@
+---
+title: Timekeeping
+description: How SDKs combine wall clocks and monotonic clocks to produce span timestamps and durations.
+spec_id: sdk/foundations/timekeeping
+spec_version: 0.1.0
+spec_status: draft
+spec_depends_on:
+  - id: sdk/telemetry/spans
+    version: ">=1.0.0"
+spec_changelog:
+  - version: 0.1.0
+    date: 2026-10-20
+    summary: Initial draft — anchor model for span timestamps, duration rules
+sidebar_order: 30
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Span payloads carry absolute `start_timestamp` and `end_timestamp` values in Unix seconds, and Sentry derives the duration as `end_timestamp − start_timestamp`. If an SDK reads a wall clock for both values, any wall-clock adjustment between them (NTP corrections, the user changing the time, time zone or daylight saving bugs in the clock source) corrupts the duration. That can make a duration negative, push a child span outside its parent, or inflate it by hours.
+
+This spec defines how SDKs combine a wall clock (for absolute position in time) with a monotonic clock (for elapsed time), so that durations stay correct while timestamps remain comparable across services.
+
+Related specs:
+
+- [Spans](/sdk/telemetry/spans/): span payload and timestamp format
+- [Envelopes](/sdk/foundations/envelopes/): `sent_at` header used for server-side clock drift correction
+
+---
+
+## Concepts
+
+### Wall Clock
+
+A clock that reports the current time of day as Unix time (for example `Date.now()`, `System.currentTimeMillis()`, `Date()`). It can jump forward or backward at any time.
+
+### Monotonic Clock
+
+A clock that only moves forward at a steady rate and has no relation to the time of day (for example `performance.now()`, `SystemClock.elapsedRealtimeNanos()`, `clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)`). Its readings are only meaningful as differences.
+
+### Anchor
+
+A pair `(anchor_wall, anchor_mono)` captured at the same instant: one wall-clock reading and one monotonic-clock reading. An anchor converts any later monotonic reading into a wall-clock timestamp:
+
+```
+timestamp = anchor_wall + (mono_now − anchor_mono)
+```
+
+The two clocks can report in different units across platforms (seconds, milliseconds, or nanoseconds); convert both readings to a common unit before combining them.
+
+---
+
+## Behavior
+
+<SpecSection id="anchoring" status="draft" since="0.1.0">
+
+### Anchoring
+
+- When the SDK starts a [segment span](/sdk/telemetry/spans/#concepts) — the topmost span within a service boundary — it **MUST** capture an anchor, reading the wall clock and the monotonic clock as close together as possible. This monotonic reading is `anchor_mono`, the segment span's start reading.
+- Unless the user provided a start timestamp (see [User-Provided Timestamps](#user-provided-timestamps)), the segment span's `start_timestamp` **MUST** be `anchor_wall` — the anchor formula at `mono = anchor_mono`.
+- Every span in the same segment **MUST** use the segment span's anchor. Child spans **MUST NOT** read the wall clock to compute their timestamps.
+- A span that continues a trace from an incoming request or another process (its parent is a remote span) is itself a segment span and **MUST** capture its own anchor.
+- SDKs **MUST** use a monotonic clock that keeps counting while the device sleeps if and only if the platform provides one. Where the platform does not, SDKs **MUST NOT** account for sleep by other means (for example, inferring it from wall-clock drift).
+
+</SpecSection>
+
+<SpecSection id="timestamps-and-durations" status="draft" since="0.1.0">
+
+### Timestamps and Durations
+
+- For every span in the segment, unless it uses a [user-provided timestamp](#user-provided-timestamps), the SDK **MUST** compute its `start_timestamp` and `end_timestamp` as `anchor_wall + (mono − anchor_mono)`, using monotonic readings taken when the span starts and ends, and convert the result to Unix seconds for the payload.
+- A duration computed this way (`end_timestamp − start_timestamp`) **MUST** equal the elapsed monotonic time, so it can never be negative. Durations built from user-provided timestamps carry no such guarantee; see [User-Provided Timestamps](#user-provided-timestamps).
+
+</SpecSection>
+
+<SpecSection id="user-provided-timestamps" status="draft" since="0.1.0">
+
+### User-Provided Timestamps
+
+Public APIs such as `startSpan({ startTime })` and `span.end(timestamp)` accept wall-clock timestamps.
+
+- SDKs **MUST** use a user-provided timestamp as given and **MUST NOT** adjust it with the anchor.
+- If a user-provided end timestamp is earlier than the span's start timestamp, the SDK **SHOULD** clamp the end timestamp to the start timestamp. Logging a debug message when this happens helps users find the faulty call.
+- A segment span started with a user-provided start timestamp **SHOULD** still capture an anchor from the current clock readings, and its children **MUST** use that anchor.
+
+</SpecSection>
+
+<SpecSection id="cross-runtime-span-trees" status="draft" since="0.1.0">
+
+### Span Trees Across Runtimes
+
+Hybrid SDKs (for example React Native, Flutter, Capacitor, and Unity) run a JavaScript, Dart, or C# layer on top of a native SDK, and each layer has its own clocks.
+
+- When a segment's spans cross from one layer to another, SDKs **SHOULD** pass the segment span's anchor across the bridge instead of capturing a new anchor in each layer.
+
+</SpecSection>
