@@ -28,14 +28,14 @@ The [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) pa
 
 ## Configure
 
-**Error Monitoring** starts working as soon as you initialize the SDK by calling `AddSentry` when configuring logging. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+**Error Monitoring** starts working as soon as you initialize the SDK with `SentrySdk.Init`. **Logs** written through `Microsoft.Extensions.Logging` are sent as soon as you call `AddSentry` when configuring logging, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 
 This guide also enables **Tracing** through OpenTelemetry. Sentry's OTLP exporter is added to the OpenTelemetry `TracerProviderBuilder`, and `UseOtlp()` tells the Sentry SDK to use OpenTelemetry for tracing.
 
 The snippet also turns on:
 
 - Tracing: via `AddSentryOtlpExporter` and `UseOtlp()`. Don't also set `TracesSampleRate`; OpenTelemetry handles tracing. See <PlatformLink to="/tracing/instrumentation/opentelemetry-otlp/">OpenTelemetry (OTLP)</PlatformLink> for sampling and trace propagation.
-- Logs: via <PlatformLink to="/logs/#enablelogs">`EnableLogs`</PlatformLink>
+- Logs: via `AddSentry` when configuring logging
 
 Don't need a feature? Remove its options from the snippet.
 
@@ -44,6 +44,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
+
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.UseOtlp(); // <-- Configure Sentry to use OpenTelemetry for tracing
+    options.Debug = true;
+});
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -56,24 +63,21 @@ var host = new HostBuilder()
                 .AddHttpClientInstrumentation(); // From OpenTelemetry.Instrumentation.Http, instruments outgoing HTTP requests
         });
     })
-    .ConfigureLogging(logging =>
-    {
-        logging.AddSentry(options =>
-        {
-            options.Dsn = "___PUBLIC_DSN___";
-            options.EnableLogs = true;
-            options.UseOtlp(); // <-- Configure Sentry to use OpenTelemetry for tracing
-            options.Debug = true;
-        });
-    })
+    .ConfigureLogging(logging => logging.AddSentry())
     .Build();
 
 await host.RunAsync();
 ```
 
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, `AddSentry` initialized the SDK itself and only sent logs when `EnableLogs` was `true`. On those versions, pass the options to `logging.AddSentry(options => ...)`, including `EnableLogs = true`, instead of calling `SentrySdk.Init`.
+
+</Alert>
+
 ## Send Logs
 
-Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in your Sentry initialization.
+Use `Microsoft.Extensions.Logging` to send structured logs from your application. The entries your app writes through `ILogger` are sent to Sentry as logs, without a logs-specific option.
 
 See [Microsoft.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) for setup details.
 
