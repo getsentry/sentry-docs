@@ -232,17 +232,20 @@ Has no effect when `enableLogs` is `false` or `logsOrigin` is `'native'`.
 
 ## Integration Configuration
 
-For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
+Configure integrations in `Sentry.init()` to add SDK functionality or change which default integrations run.
 
-<SdkOption name="integrations" type="array" />
+<SdkOption name="integrations" type="Array<Integration> | (integrations: Array<Integration>) => Array<Integration>">
 
-In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
+- **Array:** Adds integrations to the defaults. An integration with the same name as a default replaces that default. An empty array keeps the defaults.
+- **Function:** Receives the default integrations and returns the complete list to use. Keep the defaults you need in the returned array, and add any custom integrations. Returning an empty array disables all integrations.
+
+</SdkOption>
 
 <PlatformSection notSupported={["java", "dart"]}>
 
-<SdkOption name="defaultIntegrations" type="bool" defaultValue="true">
+<SdkOption name="defaultIntegrations" type="undefined | false | Array<Integration>">
 
-This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
+Leave this undefined to use the SDK's default integrations, set it to `false` to disable them, or pass an array to replace the default list. The `integrations` option is applied afterward, so explicitly added integrations still run when `defaultIntegrations` is `false`.
 
 </SdkOption>
 
