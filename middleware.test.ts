@@ -192,6 +192,17 @@ describe('production build-url redirect to canonical (Deployment Protection off)
     );
     expect(res.status).not.toBe(308);
   });
+
+  it('serves a production build URL to the evals pin header', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      new NextRequest(new URL('https://sentry-docs-abc123.vercel.app/llms.txt'), {
+        headers: {'x-sentry-evals-pin': '1'},
+      })
+    );
+    expect(res.status).not.toBe(308);
+  });
 });
 
 describe('canonical Link header on .md responses', () => {
