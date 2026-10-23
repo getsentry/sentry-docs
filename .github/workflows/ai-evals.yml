@@ -10,8 +10,9 @@
 # that isn't. Each label runs with two sets of docs and the same skills, from
 # sentry-for-ai's `main`: the head reads docs.sentry.io from the PR's Vercel preview and
 # the base from the live docs. The plan job creates one run per label and side on
-# evals.sentry.dev, and each target's job sends its results into it. A new push reruns
-# every eval label still on the PR.
+# evals.sentry.dev, and a job per test, target and side sends that test's result into
+# it, each test in a clean container and all of them at once. A new push reruns every
+# eval label still on the PR.
 #
 # The base can't be the PR's merge base, since old production deploy URLs redirect to
 # docs.sentry.io, so it's master as it is when the runs start. A head that's behind master
@@ -50,13 +51,13 @@ jobs:
     outputs:
       runs: ${{ steps.plan.outputs.runs }}
       count: ${{ steps.plan.outputs.count }}
-      jobs: ${{ steps.plan.outputs.jobs }}
       evals-sha: ${{ steps.evals.outputs.sha }}
       skills-sha: ${{ steps.skills.outputs.sha }}
       docs-url: ${{ steps.preview.outputs.url }}
       base-sha: ${{ steps.base.outputs.sha }}
       behind-by: ${{ steps.base.outputs.behind-by }}
       eval-runs: ${{ steps.create.outputs.runs }}
+      eval-jobs: ${{ steps.create.outputs.jobs }}
     steps:
       - name: Get sentry-for-ai-evals token
         id: token
@@ -229,11 +230,11 @@ jobs:
 
   eval:
     needs: plan
-    if: needs.plan.outputs.docs-url != ''
-    name: ${{ matrix.run.label }} (${{ matrix.revision }}, ${{ matrix.run.target.name }})
-    # Per PR, label, revision and target, so the jobs don't cancel each other.
+    if: needs.plan.outputs.docs-url != '' && needs.plan.outputs.eval-jobs != '[]'
+    name: ${{ matrix.job.label }} (${{ matrix.job.revision }}, ${{ matrix.job.target.name }}, ${{ matrix.job.test-name }})
+    # Per PR, label, revision, target and test, so the jobs don't cancel each other.
     concurrency:
-      group: ai-evals-${{ github.event.pull_request.number }}-${{ matrix.run.label }}-${{ matrix.revision }}-${{ matrix.run.target.name }}
+      group: ai-evals-${{ github.event.pull_request.number }}-${{ matrix.job.label }}-${{ matrix.job.revision }}-${{ matrix.job.target.name }}-${{ matrix.job.test }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -242,9 +243,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Each label's run on each target it picked.
-        run: ${{ fromJSON(needs.plan.outputs.jobs) }}
-        revision: [base, head]
+        # Each test a label selects, on each target the label picked, at each side.
+        job: ${{ fromJSON(needs.plan.outputs.eval-jobs) }}
     steps:
       - name: Get sentry-for-ai-evals token
         id: token
@@ -271,17 +271,18 @@ jobs:
           path: sentry-for-ai
           persist-credentials: false
 
-      # Sends this target's results into the run the plan job created for the label and
+      # Sends this test's result into the run the plan job created for the label and
       # side. Only the head reads the preview. No artifact-name: this repo is public.
       - uses: ./sentry-for-ai-evals/.github/actions/run-evals
         with:
-          marker: ${{ matrix.run.marker }}
-          harness: ${{ matrix.run.target.harness }}
-          model: ${{ matrix.run.target.model }}
-          revision: ${{ matrix.revision }}
+          marker: ${{ matrix.job.marker }}
+          test: ${{ matrix.job.test }}
+          harness: ${{ matrix.job.target.harness }}
+          model: ${{ matrix.job.target.model }}
+          revision: ${{ matrix.job.revision }}
           base-sha: ${{ needs.plan.outputs.base-sha }}
           sentry-for-ai-path: sentry-for-ai
-          docs-url: ${{ matrix.revision == 'head' && needs.plan.outputs.docs-url || '' }}
-          run-id: ${{ fromJSON(needs.plan.outputs.eval-runs)[format('{0}-{1}', matrix.run.label, matrix.revision)].id }}
+          docs-url: ${{ matrix.job.revision == 'head' && needs.plan.outputs.docs-url || '' }}
+          run-id: ${{ fromJSON(needs.plan.outputs.eval-runs)[format('{0}-{1}', matrix.job.label, matrix.job.revision)].id }}
           openrouter-api-key: ${{ secrets.AI_EVALS_OPENROUTER_API_KEY }}
           evals-api-key: ${{ secrets.SENTRY_EVALS_API_KEY }}
