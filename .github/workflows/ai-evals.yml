@@ -48,9 +48,7 @@ jobs:
       pull-requests: read
       statuses: read
     outputs:
-      runs: ${{ steps.plan.outputs.runs }}
-      count: ${{ steps.plan.outputs.count }}
-      evals-sha: ${{ steps.evals.outputs.sha }}
+      evals-sha: ${{ steps.evals.outputs.commit }}
       skills-sha: ${{ steps.skills.outputs.sha }}
       docs-url: ${{ steps.preview.outputs.url }}
       base-sha: ${{ steps.base.outputs.sha }}
@@ -66,7 +64,8 @@ jobs:
           repositories: sentry-for-ai-evals
           permission-contents: read
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: evals
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: getsentry/sentry-for-ai-evals
           token: ${{ steps.token.outputs.token }}
@@ -75,9 +74,6 @@ jobs:
 
       - id: plan
         uses: ./sentry-for-ai-evals/.github/actions/plan-evals
-
-      - id: evals
-        run: echo "sha=$(git -C sentry-for-ai-evals rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       # Both sides build the skills from the same commit, so only the docs differ.
       - id: skills
