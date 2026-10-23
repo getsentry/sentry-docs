@@ -111,7 +111,13 @@ Sets the distribution of the application. Distributions are used to disambiguate
 
 Sets the release. The SDK will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+If you don't set it, the SDK reads the `SENTRY_RELEASE` environment variable. If that isn't set either, the SDK uses the app package's version on Android, iOS and Mac Catalyst, and the entry assembly's version on other platforms. <PlatformLink to="/configuration/releases/#setting-a-release">Setting a Release</PlatformLink> describes the format.
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, the release from the app package took precedence over `SENTRY_RELEASE`.
+
+</Alert>
 
 </SdkOption>
 
@@ -119,9 +125,18 @@ By default the SDK will try to read this value from the `SENTRY_RELEASE` environ
 
 Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
-By default, the SDK reports `debug` when the debugger is attached. Otherwise, the default environment is `production`.
+If you don't set it in code or configuration, the SDK reads the `SENTRY_ENVIRONMENT` environment variable. If that isn't set either:
 
-Additionally, if you are running with the ASP.NET Core integration, you will also see the environment named as `staging`, if running in staging, or `development`, if running in development mode.
+- ASP.NET Core, Blazor WebAssembly, Google Cloud Functions and .NET Generic Host apps (such as worker services) use the .NET host environment. The SDK lower-cases `Production`, `Staging` and `Development` (for consistency with other Sentry SDKs), and keeps other names as they are. Set `AdjustStandardEnvironmentNameCasing` to `false` to keep the original casing.
+- Other apps, such as console, MAUI and desktop apps, report `debug` when a debugger is attached, and `production` otherwise.
+
+Setting `Scope.Environment` overrides the environment for everything captured with that scope: events, transactions, logs, metrics, sessions, check-ins and trace propagation. Set it to `null` to go back to the default.
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, `Scope.Environment` applied only to events and transactions.
+
+</Alert>
 
 </SdkOption>
 
