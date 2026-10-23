@@ -1,0 +1,275 @@
+---
+title: Migrate from 0.x to 1.x
+sidebar_order: 8998
+description: "Learn how to migrate scopes, capture APIs, and custom transports from Sentry Go SDK 0.x to 1.x."
+---
+
+Version 1 replaces hubs with context-bound scopes and changes custom transports
+to send envelopes, along with quality of life improvements. The SDK repository also maintains a [migration guide alongside the source code](https://github.com/getsentry/sentry-go/blob/master/MIGRATION.md#upgrading-to-v1).
+
+Isolation is now the default: the SDK writes only to the scope carried by the
+context you pass, so there is no hub to clone before starting a request.
+
+## Isolating Scope Data
+
+`Hub` has been removed. Pass the current `context.Context` to Sentry APIs to
+select the scope, client, and active trace for an operation. Use `WithScope` to
+isolate data for a request, job, or goroutine:
+
+```go {tabTitle:Before} {mdExpandTabs}
+hub := sentry.CurrentHub().Clone()
+hub.ConfigureScope(func(scope *sentry.Scope) {
+	scope.SetTag("job", "checkout")
+})
+hub.CaptureException(err)
+```
+
+```go {tabTitle:After}
+ctx, scope := sentry.WithScope(ctx)
+scope.SetTag("job", "checkout")
+sentry.CaptureException(ctx, err)
+```
+
+`WithScope(ctx)` clones the scope attached to `ctx`, or starts an empty scope
+when no scope is attached. Keep using the returned context for the operation.
+
+<div className="table-fit-content">
+
+| Before (0.x)                                            | After (1.x)                                                                               |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `CurrentHub().Scope()` or global `ConfigureScope(...)`  | `GlobalScope()` for application-wide data                                                 |
+| `GetHubFromContext(ctx).Scope()`                        | `ScopeFromContext(ctx)`                                                                   |
+| `HasHubOnContext(ctx)`                                  | `ScopeFromContext(ctx) != nil` to check for an attached scope                             |
+| `hub.Clone()` or callback-based `WithScope(...)`        | `ctx, scope := sentry.WithScope(ctx)`                                                     |
+| `PushScope()` and `PopScope()`                          | `scopedCtx, scope := sentry.WithScope(ctx)` for the temporary work, then keep using `ctx` |
+| `NewHub(client, scope)` and `SetHubOnContext(ctx, hub)` | `ContextWithScope(ctx, scope)` and `ContextWithClient(ctx, client)`                       |
+| `hub.Client()`                                          | `ClientFromContext(ctx)`                                                                  |
+| `hub.BindClient(client)`                                | `ctx = sentry.ContextWithClient(ctx, client)`                                             |
+| `LastEventID()` or `hub.LastEventID()`                  | `LastEventID(ctx)`                                                                        |
+| `hub.Flush(timeout)` or `hub.FlushWithContext(ctx)`     | `ClientFromContext(ctx).Flush(timeout)` or `FlushWithContext(ctx)`                        |
+
+</div>
+
+### Contexts Without a Scope
+
+A context that carries no scope, including `context.Background()`, has nowhere
+to keep state between calls. Events captured with it still receive the global
+scope's data, but:
+
+- `AddBreadcrumb(ctx, ...)` drops the breadcrumb. In 0.x, breadcrumbs were added
+  to the global hub and could leak into unrelated events.
+- `LastEventID(ctx)` returns an empty ID.
+- `ScopeFromContext(ctx)` returns `nil`.
+
+HTTP and gRPC server middleware create a scope for every request. In scripts,
+workers, and other code without middleware, create one and pass its context on:
+
+```go {tabTitle:Before} {mdExpandTabs}
+sentry.AddBreadcrumb(&sentry.Breadcrumb{Message: "loaded config"})
+sentry.CaptureException(err)
+```
+
+```go {tabTitle:After}
+ctx, _ := sentry.WithScope(context.Background())
+sentry.AddBreadcrumb(ctx, &sentry.Breadcrumb{Message: "loaded config"})
+sentry.CaptureException(ctx, err)
+```
+
+## Capturing Events
+
+Add `ctx` as the first argument to `CaptureException`, `CaptureMessage`,
+`CaptureEvent`, `CaptureCheckIn`, and `AddBreadcrumb`. Replace hub methods with
+these package-level functions. `AddBreadcrumb` requires a context that carries
+a scope; see [Contexts Without a Scope](#contexts-without-a-scope).
+
+`WithMonitor` also takes a context, and `Hub.WithMonitor` is removed:
+
+```go {tabTitle:Before} {mdExpandTabs}
+err := sentry.WithMonitor("nightly-cleanup", monitorConfig, cleanup)
+```
+
+```go {tabTitle:After}
+err := sentry.WithMonitor(ctx, "nightly-cleanup", monitorConfig, cleanup)
+```
+
+Client capture methods also take a context. The separate `hint` and `scope`
+arguments are replaced by a context and optional capture options:
+
+```go {tabTitle:Before} {mdExpandTabs}
+client.CaptureException(err, hint, scope)
+```
+
+```go {tabTitle:After}
+ctx = sentry.ContextWithScope(ctx, scope)
+client.CaptureException(ctx, err, sentry.WithEventHint(hint))
+```
+
+Use `WithEventHint(hint)` in place of `hub.CaptureEventWithHint`, and
+`WithBreadcrumbHint(hint)` for breadcrumb metadata. Use `WithLevel` to change
+the level of a single capture:
+
+```go
+sentry.CaptureMessage(ctx, "Payment delayed", sentry.WithLevel(sentry.LevelWarning))
+```
+
+`EventModifier` and the client helpers `EventFromMessage`, `EventFromException`,
+and `EventFromCheckIn` have been removed. Use the corresponding capture methods,
+scope setters, and `BeforeSend` or event processors to customize events.
+
+For panic recovery, replace `Recover()` and `RecoverWithContext(ctx)` with a
+directly deferred call:
+
+```go
+defer sentry.Recover(ctx, nil)
+```
+
+If you already called Go's `recover()`, pass its result as the second argument.
+
+## Updating Integrations and Tracing
+
+HTTP and gRPC server middleware fork a request scope, including when the incoming
+context already carries a scope. In Gin, Echo, Fiber, Fiber v3, FastHTTP, and
+Iris, `GetHubFromContext`, `SetHubOnContext`, and `GetSpanFromContext` are
+replaced by `GetContext`, which returns the request's context:
+
+<div className="table-fit-content">
+
+| Integration        | Request Context                                                  |
+| ------------------ | ---------------------------------------------------------------- |
+| net/http, Negroni  | `r.Context()`                                                    |
+| gRPC               | The handler's `ctx` argument                                     |
+| Gin                | `sentrygin.GetContext(c)`                                        |
+| Echo               | `sentryecho.GetContext(c)`                                       |
+| Fiber and Fiber v3 | `sentryfiber.GetContext(c)` from the matching integration module |
+| FastHTTP           | `sentryfasthttp.GetContext(c)`                                   |
+| Iris               | `sentryiris.GetContext(c)`                                       |
+
+</div>
+
+Once you have the Go context, the capture API is the same for each integration:
+
+```go
+// ctx is the request context from the integration above.
+sentry.ScopeFromContext(ctx).SetTag("page", "checkout")
+sentry.CaptureException(ctx, err)
+```
+
+<div className="table-fit-content">
+
+| Before (0.x)                                                  | After (1.x)                                                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `scope.GetSpan()` or an integration's `GetSpanFromContext(c)` | `sentry.SpanFromContext(ctx)` for the active span, or `sentry.TransactionFromContext(ctx)` for the root transaction |
+| `scope.SetSpan(span)`                                         | Pass `span.Context()` to subsequent calls                                                                           |
+| `ContinueTrace(hub, trace, baggage)`                          | `ContinueFromHeaders(trace, baggage)`                                                                               |
+| `ContinueFromTrace(trace)`                                    | `ContinueFromHeaders(trace, "")`                                                                                    |
+| `ContinueFromRequest(r)`                                      | Unchanged                                                                                                           |
+| `hub.GetTraceparent()`                                        | `GetTraceparent(ctx)`, the `sentry-trace` header value                                                              |
+| `hub.GetTraceparentW3C()`                                     | `GetTraceparentW3C(ctx)`, the W3C `traceparent` header value                                                        |
+| `hub.GetBaggage()`                                            | `GetBaggage(ctx)`                                                                                                   |
+
+</div>
+
+`GetTraceparent`, `GetTraceparentW3C`, and `GetBaggage` return an empty string
+when the context carries neither a scope nor a span.
+
+Starting or finishing a child span no longer changes an active span on a shared
+scope. Pass the child's context to associate captures with it:
+
+```go
+span := sentry.StartSpan(ctx, "payment.authorize")
+defer span.Finish()
+sentry.CaptureException(span.Context(), err)
+```
+
+## Updating Logs and Metrics
+
+Pass the request context to log and metric APIs as well. Replace
+`WithScopeOverride(scope)` with
+`meter.WithCtx(sentry.ContextWithScope(ctx, scope))`.
+
+### Logrus
+
+`NewLogHook` now takes a context and levels, and no longer creates a client.
+Initialize the SDK with `sentry.Init`, or create a client with `sentry.NewClient`
+and attach it to the context, before constructing the hook. `NewLogHookFromClient`
+and `Hook.SetHubProvider` are removed. To link entries to an active trace, use 
+`logger.WithContext(ctx)` for each entry:
+
+```go {tabTitle:Before} {mdExpandTabs}
+hook := sentrylogrus.NewLogHookFromClient(levels, client)
+```
+
+```go {tabTitle:After}
+ctx = sentry.ContextWithClient(ctx, client)
+hook := sentrylogrus.NewLogHook(ctx, levels)
+logger.AddHook(hook)
+logger.WithContext(ctx).Info("Job started")
+```
+
+`Hook.SetFallback` and `FallbackFunc` are removed. Logs are
+sent asynchronously, so there is no failed capture to fall back from.
+
+### Zerolog
+
+`Config` is removed. Replace both `New(Config{...})` and `NewWithHub(hub, opts)`
+with `New(ctx, opts)`. Move the former `Config.ClientOptions` to `sentry.Init`
+or `sentry.NewClient`; the writer uses the client selected by its context:
+
+```go {tabTitle:Before} {mdExpandTabs}
+writer, err := sentryzerolog.New(sentryzerolog.Config{
+	ClientOptions: clientOptions,
+	Options:       writerOptions,
+})
+```
+
+```go {tabTitle:After}
+client, err := sentry.NewClient(clientOptions)
+if err != nil {
+	return err
+}
+ctx = sentry.ContextWithClient(ctx, client)
+writer, err := sentryzerolog.New(ctx, writerOptions)
+```
+
+## Updating Transports
+
+Custom transports now receive envelopes instead of events, and the telemetry
+buffer is always used. The `ClientOptions.DisableTelemetryBuffer` option is
+removed.
+
+<div className="table-fit-content">
+
+| Before (0.x)                                                           | After (1.x)                                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `Transport.SendEvent(*sentry.Event)` / built-in `SendEventWithContext` | `Transport.SendEnvelope(context.Context, *protocol.Envelope) error` |
+| `Transport.Flush(timeout)`                                             | `Transport.FlushWithContext(ctx)`                                   |
+| `HTTPTransport.BufferSize` counts events                               | `HTTPTransport.BufferSize` counts envelopes (default 1,000)         |
+
+</div>
+
+### Custom Transports
+
+Import `github.com/getsentry/sentry-go/protocol` and replace `SendEvent` with
+`SendEnvelope`. The full transport interface is:
+
+```go
+type Transport interface {
+	Configure(options sentry.ClientOptions)
+	SendEnvelope(ctx context.Context, envelope *protocol.Envelope) error
+	FlushWithContext(ctx context.Context) bool
+	Close()
+}
+```
+
+`Flush(timeout)` is removed from transports, including the built-in ones.
+`sentry.Flush(timeout)` and `client.Flush(timeout)` are unchanged.
+
+```go {tabTitle:Before} {mdExpandTabs}
+transport.Flush(2 * time.Second)
+```
+
+```go {tabTitle:After}
+flushCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+defer cancel()
+transport.FlushWithContext(flushCtx)
+```
