@@ -1,13 +1,27 @@
 ---
 title: Feature Flags
-description: Guidelines for tracking feature flag evaluations — scope storage, span attributes, the add_feature_flag API, and third-party integrations.
+description: Requirements for tracking feature flag evaluations on error events and spans, the add_feature_flag and clear_feature_flags APIs, and flag provider integrations.
 spec_id: sdk/foundations/client/integrations/feature-flags
-spec_version: 1.0.2
+spec_version: 2.0.0
 spec_status: stable
+spec_guidelines: writing-specs@0.1
 spec_depends_on:
   - id: sdk/foundations/client/integrations
     version: ">=1.0.0"
 spec_changelog:
+  - version: 2.0.0
+    date: 2026-10-19
+    summary: >-
+      Migrated to Writing SDK Specs. Requirements now describe only externally observable behavior, and API names can follow platform conventions.
+      Changed requirements: Feature Flag Context schema is "MUST" (was "should");
+      span attributes "MUST" use the flag.evaluation.<flag name> key (was "follow the existing span attribute schema");
+      attaching evaluations to error events and spans, the 100-flag and 10-flag limits, and fork behavior are "SHOULD" (were plain statements or "should");
+      exposing add_feature_flag is "SHOULD" (was "MUST");
+      accepting a string name and boolean result is "SHOULD" (was "MUST");
+      non-boolean results "MUST NOT" be recorded (was "MUST be rejected");
+      clear_feature_flags removes evaluations from events captured with the scope (was "stored on the current scope");
+      flag provider integrations "SHOULD" record every evaluation made through the provider (was "should hook into a third-party SDK").
+      Removed: evaluations being stored on the scope, and the comparison to set_tag.
   - version: 1.0.2
     date: 2026-07-07
     summary: Added `clear_feature_flags` scope API
@@ -24,49 +38,56 @@ sidebar_order: 3
 
 <SpecMeta />
 
-## Overview
+SDKs can track feature flag evaluations and attach them to error events and spans, so users can see which flags were in effect when an error happened or a span ran.
 
-An SDK may optionally track feature flag evaluations. Feature flags can be attached to error events or to span events.
+## Scope
 
----
+This spec applies to SDKs that track feature flag evaluations. Tracking evaluations is optional.
 
-## Behavior
+## Definitions
 
-<SpecSection id="feature-flag-tracking" status="stable" since="1.0.0">
+- **Evaluation**: a flag name and the boolean result it evaluated to.
+- **Flag provider**: a third-party feature flag SDK, such as LaunchDarkly or OpenFeature.
+
+## Requirements
+
+<SpecSection id="feature-flag-tracking" status="stable" since="2.0.0">
 
 ### Tracking Feature Flag Evaluations
 
-When tracking feature flag evaluations on spans, we track the first 10 feature flags evaluated within the span's scope. Evaluations are span attributes and follow the existing span attribute schema.
+**Error events.** Evaluations recorded on a scope **SHOULD** be attached to error events captured with that scope. Attached evaluations **MUST** follow the [Feature Flag Context](/sdk/foundations/envelopes/event-payloads/contexts/#feature-flag-context) schema. An event **SHOULD** contain only the latest evaluation of each flag, and only for the 100 most recently evaluated flags.
 
-When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations. Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope. Mutations to the child's copy of the feature flags object should not be propagated to the parent. Flag evaluations within a scope are considered local to the scope and do not propagate. Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/foundations/transport/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+When a scope is forked, events captured with the new scope **SHOULD** include the evaluations recorded on the original scope before the fork. Evaluations recorded on the new scope **SHOULD NOT** appear in events captured with the original scope.
+
+**Spans.** Evaluations recorded while a span is active **SHOULD** be added to that span. An evaluation added to a span **MUST** be a span attribute with the key `flag.evaluation.<flag name>` and the result as its value, following the [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/#flags). A span **SHOULD** contain only the first 10 flags evaluated while it is active.
 
 </SpecSection>
 
-<SpecSection id="add-feature-flag" status="stable" since="1.0.0">
+<SpecSection id="add-feature-flag" status="stable" since="2.0.0">
 
 ### The `add_feature_flag` API
 
-If an SDK supports feature flags it MUST expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It MUST accept a key of type string and a value of type `boolean`. Non-boolean values MUST be rejected.
+SDKs **SHOULD** expose a public `add_feature_flag` function, or a platform-idiomatic equivalent such as `addFeatureFlag`, that records an evaluation on the current scope.
+
+The function **SHOULD** accept a string flag name and a boolean result. It **MUST NOT** record an evaluation whose result is not a boolean.
 
 </SpecSection>
 
-<SpecSection id="clear-feature-flags" status="stable" since="1.0.2">
+<SpecSection id="clear-feature-flags" status="stable" since="2.0.0">
 
 ### The `clear_feature_flags` API
 
-SDKs **MAY** expose a `clear_feature_flags` function on the scope. When called, it **MUST** remove all feature flag evaluations stored on the current scope. It **MUST NOT** affect feature flags on parent or sibling scopes.
+SDKs **MAY** expose a public `clear_feature_flags` function on the scope, or a platform-idiomatic equivalent such as `clearFeatureFlags`. When called, it **MUST** remove all evaluations recorded on that scope, so they are no longer attached to events captured with it. It **MUST NOT** affect evaluations recorded on parent or sibling scopes.
 
 </SpecSection>
 
-<SpecSection id="feature-flag-integrations" status="stable" since="1.0.0">
+<SpecSection id="feature-flag-integrations" status="stable" since="2.0.0">
 
 ### Integrations
 
-Integrations automate the work of tracking feature flag evaluations. An integration should hook into a third-party SDK and record feature flag evaluations using the current scope.
+A flag provider integration **SHOULD** record every evaluation made through the flag provider on the current scope, as if `add_feature_flag` had been called with the flag name and result.
 
 </SpecSection>
-
----
 
 ## Changelog
 
