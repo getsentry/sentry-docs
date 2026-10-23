@@ -1,0 +1,282 @@
+# Runs the getsentry/sentry-for-ai-evals suites against this PR's docs.
+#
+# Label a PR `ai-evals:<mark>` to run the tests with that pytest mark, e.g.
+# `ai-evals:products`, on each target (a harness with a model) that repo's plan-evals
+# action lists, or `ai-evals:<mark>:<models>` to run them on the targets whose
+# `<harness>:<model>` contains `<models>`, e.g. `ai-evals:products:opus-5.5`. The labels
+# are in .github/labels.yml, since sync-labels.yml deletes any label that isn't. Each label
+# runs the same skills, sentry-for-ai's `main`, with two sets of docs: the head reads
+# docs.sentry.io from the PR's Vercel preview and the base from the live docs. The plan
+# job creates one run per label and side on evals.sentry.dev, and each target's job sends
+# its results into it. A new push reruns every eval label still on the PR.
+#
+# The base can't be the PR's merge base, since old production deploy URLs redirect to
+# docs.sentry.io, so it's master as it is when the runs start. A head that's behind master
+# is missing what master gained since, and the comparison counts that as the PR's. The PR
+# comment says how far behind the head was, and updating the branch, which reruns the
+# evals, makes the comparison show only the PR.
+#
+# sentry-for-ai-evals is internal, so the jobs check it out with the readonly bot's token
+# and use its actions from that path. Fork PRs get no secrets, so they're skipped. This
+# repo is public, so the eval outputs aren't kept as artifacts; the results go to
+# evals.sentry.dev.
+
+name: AI Evals
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions: {}
+
+jobs:
+  plan:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository && (
+        (github.event.action == 'labeled' && startsWith(github.event.label.name, 'ai-evals:')) ||
+        (github.event.action == 'synchronize' && contains(join(github.event.pull_request.labels.*.name, ','), 'ai-evals:'))
+      )
+    runs-on: ubuntu-latest
+    # Mostly waiting for the preview, which is ready about 7 minutes after a push.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      deployments: read
+      pull-requests: read
+      statuses: read
+    outputs:
+      runs: ${{ steps.plan.outputs.runs }}
+      count: ${{ steps.plan.outputs.count }}
+      jobs: ${{ steps.plan.outputs.jobs }}
+      evals-sha: ${{ steps.evals.outputs.sha }}
+      skills-sha: ${{ steps.skills.outputs.sha }}
+      docs-url: ${{ steps.preview.outputs.url }}
+      base-sha: ${{ steps.base.outputs.sha }}
+      behind-by: ${{ steps.base.outputs.behind-by }}
+      eval-runs: ${{ steps.create.outputs.runs }}
+    steps:
+      - name: Get sentry-for-ai-evals token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.SENTRY_READONLY_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.SENTRY_READONLYBOT_PRIVATE_KEY }}
+          repositories: sentry-for-ai-evals
+          permission-contents: read
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: getsentry/sentry-for-ai-evals
+          token: ${{ steps.token.outputs.token }}
+          path: sentry-for-ai-evals
+          persist-credentials: false
+
+      - id: plan
+        uses: ./sentry-for-ai-evals/.github/actions/plan-evals
+
+      - id: evals
+        run: echo "sha=$(git -C sentry-for-ai-evals rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Both sides build the skills from the same commit, so only the docs differ.
+      - id: skills
+        run: |
+          ref="$(git ls-remote --exit-code https://github.com/getsentry/sentry-for-ai refs/heads/main)"
+          echo "sha=${ref%%$'\t'*}" >> "$GITHUB_OUTPUT"
+
+      # vercel[bot] sets the commit status while the preview builds and creates the
+      # deployment, whose status has the URL, once it's done. This waits before the runs
+      # are created, since evals.sentry.dev fails a run that gets no result for 30 minutes.
+      - name: Wait for the Vercel preview
+        id: preview
+        if: steps.plan.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          context="Vercel – sentry-docs"
+          environment="Preview – sentry-docs"
+          for (( i = 0; i < 40; i++ )); do
+            (( i == 0 )) || sleep 30
+            # A newer push has a run of its own, so this one stops without creating runs.
+            current="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq .head.sha)" || continue
+            if [[ "$current" != "$HEAD_SHA" ]]; then
+              echo "::notice::The PR's head is now $current, which its own run evaluates"
+              exit 0
+            fi
+            statuses="$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD_SHA/status")" || continue
+            IFS=$'\t' read -r state description < <(jq -r --arg c "$context" \
+              '.statuses[] | select(.context == $c) | [.state, .description] | @tsv' <<<"$statuses") || true
+            case "$state" in
+              failure | error)
+                echo "::error::The sentry-docs preview of $HEAD_SHA failed: $description"
+                exit 1
+                ;;
+              success)
+                ids="$(gh api -X GET "repos/$GITHUB_REPOSITORY/deployments" \
+                  -f sha="$HEAD_SHA" -f environment="$environment" --jq '.[].id')" || continue
+                url=""
+                for id in $ids; do
+                  url="$(gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" \
+                    --jq 'map(select(.state == "success"))[0].environment_url // empty')" || continue
+                  [[ -n "$url" ]] && break
+                done
+                if [[ -n "$url" ]]; then
+                  # The agent reads the .md exports, without a bypass token.
+                  if ! curl -fsS -o /dev/null "$url/index.md"; then
+                    echo "::error::The preview at $url doesn't serve index.md, so the agent couldn't read docs from it"
+                    exit 1
+                  fi
+                  echo "Preview: $url"
+                  echo "url=$url" >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+                # A PR that only changes develop-docs doesn't build sentry-docs.
+                if [[ "$description" == *"Ignored Build Step"* ]]; then
+                  echo "::error::Vercel didn't build a sentry-docs preview of $HEAD_SHA ($description). A PR that only changes develop-docs has no sentry-docs preview to evaluate."
+                  exit 1
+                fi
+                ;;
+            esac
+          done
+          echo "::error::No sentry-docs preview of $HEAD_SHA after 20 minutes"
+          exit 1
+
+      # Right before the runs start, so the base is the live docs they'll read. behind_by
+      # counts the master commits the head is missing.
+      - id: base
+        if: steps.preview.outputs.url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          compare="$(gh api "repos/$GITHUB_REPOSITORY/compare/master...$HEAD_SHA?per_page=1" \
+            --jq '"\(.base_commit.sha) \(.behind_by)"')"
+          read -r sha behind <<<"$compare"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "behind-by=$behind" >> "$GITHUB_OUTPUT"
+
+      # Each run records this repo's commits, the head and master, and evals.sentry.dev
+      # pairs base and head runs by repository, so they never pair with sentry-for-ai's.
+      - id: create
+        if: steps.preview.outputs.url != ''
+        uses: ./sentry-for-ai-evals/.github/actions/create-runs
+        with:
+          runs: ${{ steps.plan.outputs.runs }}
+          skills-sha: ${{ steps.skills.outputs.sha }}
+          base-sha: ${{ steps.base.outputs.sha }}
+          evals-api-key: ${{ secrets.SENTRY_EVALS_API_KEY }}
+
+  # Its own job, so the plan job's token can't write to the PR.
+  comment:
+    needs: plan
+    if: needs.plan.outputs.docs-url != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Two plans finishing together would otherwise both create the comment.
+    concurrency:
+      group: ai-evals-comment-${{ github.event.pull_request.number }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment on the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DOCS_URL: ${{ needs.plan.outputs.docs-url }}
+          BASE_SHA: ${{ needs.plan.outputs.base-sha }}
+          BEHIND_BY: ${{ needs.plan.outputs.behind-by }}
+          SKILLS_SHA: ${{ needs.plan.outputs.skills-sha }}
+          EVAL_RUNS: ${{ needs.plan.outputs.eval-runs }}
+        run: |
+          marker='<!-- ai-evals -->'
+          commit() { echo "[\`${2:0:7}\`](https://github.com/$1/commit/$2)"; }
+          if (( BEHIND_BY == 0 )); then
+            drift="The head is up to date with \`master\`, so the comparison shows only this PR's changes."
+          else
+            (( BEHIND_BY == 1 )) && commits=commit || commits=commits
+            drift="The head is $BEHIND_BY $commits behind \`master\`, so the preview is missing changes the live docs have, and the comparison counts their removal as part of this PR. To compare only this PR's changes, update the branch, which reruns the evals."
+          fi
+          body="$(cat <<EOF
+          $marker
+          ### AI evals
+
+          The skills from sentry-for-ai's \`main\` at $(commit getsentry/sentry-for-ai "$SKILLS_SHA") read docs.sentry.io from:
+
+          - **Head:** this PR's preview of $(commit "$GITHUB_REPOSITORY" "$HEAD_SHA"), $DOCS_URL
+          - **Base:** the live docs, \`master\` at $(commit "$GITHUB_REPOSITORY" "$BASE_SHA")
+
+          $drift
+          EOF
+          )"
+          # "<label>-<revision>" to each run's {"id", "url"}, empty without an evals key.
+          runs="$(jq -r 'to_entries[] | "- [\(.key | sub("-(?<side>base|head)$"; " (\(.side))"))](\(.value.url))"' <<<"$EVAL_RUNS")"
+          [[ -z "$runs" ]] || body+=$'\n\n'"Runs on evals.sentry.dev:"$'\n\n'"$runs"
+
+          id="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -n 1)"
+          if [[ -n "$id" ]]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -f body="$body" > /dev/null
+          fi
+
+  eval:
+    needs: plan
+    if: needs.plan.outputs.docs-url != ''
+    name: ${{ matrix.run.label }} (${{ matrix.revision }}, ${{ matrix.run.target.name }})
+    # Per PR, label, revision and target, so the jobs don't cancel each other.
+    concurrency:
+      group: ai-evals-${{ github.event.pull_request.number }}-${{ matrix.run.label }}-${{ matrix.revision }}-${{ matrix.run.target.name }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each label's run on each target it picked.
+        run: ${{ fromJSON(needs.plan.outputs.jobs) }}
+        revision: [base, head]
+    steps:
+      - name: Get sentry-for-ai-evals token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.SENTRY_READONLY_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.SENTRY_READONLYBOT_PRIVATE_KEY }}
+          repositories: sentry-for-ai-evals
+          permission-contents: read
+
+      # Side by side, so the evals don't copy sentry-for-ai into their image.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: getsentry/sentry-for-ai-evals
+          ref: ${{ needs.plan.outputs.evals-sha }}
+          token: ${{ steps.token.outputs.token }}
+          path: sentry-for-ai-evals
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: getsentry/sentry-for-ai
+          ref: ${{ needs.plan.outputs.skills-sha }}
+          path: sentry-for-ai
+          persist-credentials: false
+
+      # Sends this target's results into the run the plan job created for the label and
+      # side. Only the head reads the preview. No artifact-name: this repo is public.
+      - uses: ./sentry-for-ai-evals/.github/actions/run-evals
+        with:
+          marker: ${{ matrix.run.marker }}
+          harness: ${{ matrix.run.target.harness }}
+          model: ${{ matrix.run.target.model }}
+          revision: ${{ matrix.revision }}
+          base-sha: ${{ needs.plan.outputs.base-sha }}
+          sentry-for-ai-path: sentry-for-ai
+          docs-url: ${{ matrix.revision == 'head' && needs.plan.outputs.docs-url || '' }}
+          run-id: ${{ fromJSON(needs.plan.outputs.eval-runs)[format('{0}-{1}', matrix.run.label, matrix.revision)].id }}
+          openrouter-api-key: ${{ secrets.AI_EVALS_OPENROUTER_API_KEY }}
+          evals-api-key: ${{ secrets.SENTRY_EVALS_API_KEY }}
