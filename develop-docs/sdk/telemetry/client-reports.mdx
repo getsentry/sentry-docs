@@ -2,12 +2,15 @@
 title: Client Reports
 description: SDK self-reporting protocol for tracking discarded events and their discard reasons.
 spec_id: sdk/telemetry/client-reports
-spec_version: 1.25.0
+spec_version: 1.26.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.26.0
+    date: 2026-10-14
+    summary: Replaced the Quantity of Discarded Envelopes section with a general definition of quantity
   - version: 1.25.0
     date: 2026-10-08
     summary: Clarified that discarded envelopes are counted per contained item, not as a quantity of 1
@@ -125,6 +128,10 @@ A **discard reason** is a string that explains why a telemetry item was dropped.
 
 Data categories (e.g., `error`, `transaction`, `span`) identify the type of telemetry item that was discarded. These are the same categories used for [rate limits](/sdk/foundations/transport/rate-limiting/#definitions).
 
+### Quantity
+
+The outcome **quantity** is the number of discarded telemetry items or, for byte categories, their size in bytes. The quantity is not necessarily the same as the number of envelope items: some envelope items — such as `log`, `trace_metric`, and `span` items — contain multiple telemetry items.
+
 ---
 
 ## Behavior
@@ -206,20 +213,6 @@ When failures occur that are caused by processing in the SDK itself, SDKs **MUST
 #### Transport Errors
 
 SDKs **MAY** retry sending the envelope when a network error occurs (connection timeout, DNS resolution failure, connection reset by peer). No client report is required for retried network errors.
-
-</SpecSection>
-
-<SpecSection id="network-discarded-quantity" status="candidate" since="1.25.0">
-
-#### Quantity of Discarded Envelopes
-
-When SDKs discard an envelope, they **MUST** record a client report entry for every telemetry item contained in the envelope, not just one entry per envelope or per envelope item. The `quantity` for each data category **MUST** be the number of items of that category in the envelope:
-
-- For `log`, `trace_metric`, and `span` envelope items, which batch multiple items into one envelope item, the quantity is the number of entries in the envelope item's `items` array, not 1. These are recorded under the `log_item`, `trace_metric`, and `span` data categories respectively.
-- For logs and metrics, SDKs **MUST** also record the respective [`log_byte`](#log-byte-outcomes) and [`trace_metric_byte`](#metric-byte-outcomes) entries.
-- For transactions, SDKs **MUST** also record the [span outcomes](#span-outcomes).
-
-For example, if an envelope containing a `log` item with 100 logs fails to send with an `HTTP 500` response, the SDK records a `send_error` entry with category `log_item` and quantity `100`, plus a `send_error` entry with category `log_byte` and the approximate byte size of these logs.
 
 </SpecSection>
 
@@ -362,7 +355,7 @@ Each outcome object in `discarded_events` has:
 |-------|------|----------|-------------|
 | `reason` | String | **REQUIRED** | A discard reason that defines why events were lost (see [Discard Reasons](#discard-reasons)). |
 | `category` | String | **REQUIRED** | The [data category](/sdk/foundations/transport/rate-limiting/#definitions) for which the discard reason applies (since 1.2.0). |
-| `quantity` | Number | **REQUIRED** | The number of events which were lost. |
+| `quantity` | Number | **REQUIRED** | The outcome quantity, [as defined above](#quantity). |
 
 </SpecSection>
 
