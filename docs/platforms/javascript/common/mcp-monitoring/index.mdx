@@ -24,18 +24,20 @@ Support for `@modelcontextprotocol/server` 2.x requires Sentry JavaScript SDK ve
 
 By default, the SDK sends the inputs and outputs of your MCP tool calls, prompt retrievals, and resource reads. This gives you rich debugging context. MCP payloads can carry sensitive data, such as tokens, file paths, or private user content. Review what your server handles before you deploy to production.
 
-The <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.genAI`</PlatformLink> option controls this recording globally for both MCP and AI instrumentation:
+The <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.mcp`</PlatformLink> option controls this recording globally for all MCP servers. `inputs` covers tool call arguments, prompt arguments, and logging notification payloads. `outputs` covers tool results and prompt messages. Metadata, such as the tool name, session, and error status, is always collected:
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   dataCollection: {
-    genAI: { inputs: false, outputs: false },
+    mcp: { inputs: false, outputs: false },
   },
 });
 ```
 
-To control recording for a specific server, pass it to `wrapMcpServerWithSentry` with the `recordInputs` and `recordOutputs` options. These options override the `dataCollection.genAI` settings, and they also apply to a server the SDK has already instrumented automatically:
+The `dataCollection.mcp` option requires Sentry JavaScript SDK version `11.9.0` or newer. In earlier versions, `dataCollection.genAI` controls MCP recording together with AI instrumentation. If you don't set `mcp`, the SDK falls back to the matching `genAI` field, so existing `genAI` settings keep applying to MCP servers. When you set both, `mcp` takes precedence.
+
+To control recording for a specific server, pass it to `wrapMcpServerWithSentry` with the `recordInputs` and `recordOutputs` options. These options override the `dataCollection.mcp` settings, and they also apply to a server the SDK has already instrumented automatically:
 
 ```javascript
 const server = Sentry.wrapMcpServerWithSentry(mcpServer, {

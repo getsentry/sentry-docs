@@ -272,8 +272,6 @@ Sentry.init({
 
   The content of generative AI inputs (system instructions, prompt messages, tool definitions, and tool call arguments) and outputs (such as completion text and tool call results) might carry personal data. By default, the SDK records both inputs and outputs. Metadata like model ID and token counts is always collected.
 
-  The same setting applies to instrumented MCP servers. By default, the SDK records the inputs and outputs of tool calls, prompt retrievals, and resource reads. Use the `recordInputs` and `recordOutputs` options of `wrapMcpServerWithSentry` to control recording per server.
-
   Use the `dataCollection.genAI` option to control this. For example, opt out of recording AI message content while keeping the metadata:
 
   ```JavaScript
@@ -287,6 +285,34 @@ Sentry.init({
     },
   });
   ```
+
+  <PlatformCategorySection supported={["server"]}>
+
+  ## MCP Requests And Responses
+
+  When you instrument an MCP server, the SDK always sends metadata like the method name, the tool or prompt name, the session, and the error status.
+
+  The content of MCP requests (tool call arguments, prompt arguments, and logging notification payloads) and responses (tool results and prompt messages) might carry personal data or secrets. By default, the SDK records both.
+
+  Use the `dataCollection.mcp` option to control this. It takes precedence over `dataCollection.genAI`. If you don't set it, MCP servers follow your `genAI` settings. For example, opt out of recording MCP content while keeping the metadata:
+
+  ```JavaScript
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    dataCollection: {
+      mcp: {
+        inputs: false,
+        outputs: false,
+      },
+    },
+  });
+  ```
+
+  To control recording for a single server, use the `recordInputs` and `recordOutputs` options of <PlatformLink to="/mcp-monitoring/#configure-input-and-output-recording">`wrapMcpServerWithSentry`</PlatformLink>. They take precedence over `dataCollection.mcp`.
+
+  The `dataCollection.mcp` option requires SDK version `11.9.0` or newer. In earlier versions, `dataCollection.genAI` controls MCP content.
+
+  </PlatformCategorySection>
 </PlatformSection>
 
 <PlatformSection supported={["javascript.electron"]}>
