@@ -94,7 +94,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 <SdkOption name="AttachScreenshot" type="bool" defaultValue="false">
 
-Takes a screenshot of the application when an error happens and includes it as an attachment.
+Attaches a screenshot of the application to events when an error happens. The screenshot is sent together with the event it belongs to.
 Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
@@ -191,7 +191,17 @@ By the time <PlatformIdentifier name="SetBeforeSendTransaction" /> is executed, 
 
 <SdkOption name="SetBeforeCaptureScreenshot" type="function">
 
-A callback function that controls screenshot capture behavior. Return `false` to prevent a screenshot from being captured for a specific event. This allows for fine-grained control over when screenshots are included with error reports.
+A callback function that controls screenshot capture behavior. Return `false` to prevent a screenshot from being attached to a specific event. This allows for fine-grained control over when screenshots are included with error reports.
+
+The callback runs on the thread that captured the event, which can be a background thread. Avoid calling Unity APIs that are restricted to the main thread from within it.
+
+</SdkOption>
+
+<SdkOption name="SetBeforeSendScreenshot" type="function">
+
+A callback function that receives the screenshot as a `Texture2D` before it gets compressed, along with the event it belongs to. You can modify the texture and return it, return a different texture, or return `null` to discard the screenshot.
+
+Since it operates on a `Texture2D`, the callback and compressing the screenshot run on the main thread, which stalls your game for the duration. It runs once per screenshot. Events captured while a screenshot is still being taken share it, and the callback receives the first of them that didn't get dropped.
 
 </SdkOption>
 
