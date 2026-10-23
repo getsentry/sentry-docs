@@ -8,7 +8,6 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
 </Alert>
 
-<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <configuration>
     <!-- Configure the Console appender -->
@@ -21,11 +20,9 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
     <appender name="Sentry" class="io.sentry.logback.SentryAppender">
         <options>
-            // ___PRODUCT_OPTION_START___ logs
             <logs>
                 <enabled>true</enabled>
             </logs>
-            // ___PRODUCT_OPTION_END___ logs
         </options>
     </appender>
 
@@ -37,38 +34,15 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     </root>
 </configuration>
 ```
-</OnboardingOption>
-
-<OnboardingOption optionId="opentelemetry">
-```xml
-<configuration>
-    <!-- Configure the Console appender -->
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
-    <appender name="Sentry" class="io.sentry.logback.SentryAppender"></appender>
-
-    <!-- Enable the Console and Sentry appenders, Console is provided as an example
- of a non-Sentry logger that is set to a different logging threshold -->
-    <root level="INFO">
-        <appender-ref ref="Console" />
-        <appender-ref ref="Sentry" />
-    </root>
-</configuration>
-```
-</OnboardingOption>
-
-<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ### SDK Configuration
 
 Configure the SDK using a `sentry.properties` file:
 
 ```properties {filename:sentry.properties}
 dsn=___PUBLIC_DSN___
+traces-sample-rate=1.0
+profile-session-sample-rate=1.0
+profile-lifecycle=TRACE
 # Use Data Collection defaults but don't collect automatic user information.
 # https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/
 data-collection.user-info=false
@@ -76,18 +50,13 @@ data-collection.user-info=false
 ```
 
 You can also provide the DSN through the `sentry.dsn` system property or the `SENTRY_DSN` environment variable. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
-</OnboardingOption>
-
 ### Minimum Log Level
 
 Two log levels are used to configure this integration:
 
 1. Configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry.
 2. Configure the lowest level a message has to be to become a breadcrumb (`minimumBreadcrumbLevel`).
-<OnboardingOption optionId="logs">
 3. Configure the lowest level a message has to be to be sent as Sentry Log (`minimumLevel`).
-</OnboardingOption>
-
 <Alert>
 
 Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `logback.xml` only affects events logged by way of Logback. The settings will have no effect when calling `Sentry.captureMessage` or similar directly.
@@ -97,36 +66,16 @@ Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `logback.xml` only af
 Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries to decide what to keep as breadcrumb or sent as event. Set the `SentryAppender` log level configuration to a value lower than what is set for the `minimumBreadcrumbLevel` and `minimumEventLevel` so that `SentryAppender` receives these log messages.
 
 
-<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <appender name="Sentry" class="io.sentry.logback.SentryAppender">
     <!-- Optionally change minimum Event level. Default for Events is ERROR -->
     <minimumEventLevel>WARN</minimumEventLevel>
     <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
     <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
-    // ___PRODUCT_OPTION_START___ logs
     <!-- Optionally change minimum Log level. Default for Logs is INFO -->
     <minimumLevel>DEBUG</minimumLevel>
-    // ___PRODUCT_OPTION_END___ logs
 </appender>
 ```
-</OnboardingOption>
-
-<OnboardingOption optionId="opentelemetry">
-```xml
-<appender name="Sentry" class="io.sentry.logback.SentryAppender">
-    <!-- Optionally change minimum Event level. Default for Events is ERROR -->
-    <minimumEventLevel>WARN</minimumEventLevel>
-    <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
-    <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
-    // ___PRODUCT_OPTION_START___ logs
-    <!-- Optionally change minimum Log level. Default for Logs is INFO -->
-    <minimumLevel>DEBUG</minimumLevel>
-    // ___PRODUCT_OPTION_END___ logs
-</appender>
-```
-</OnboardingOption>
-
 ### Encoded Messages
 
 A Logback encoder can mask or remove sensitive values before Sentry receives a log entry. When you configure an encoder on `SentryAppender`, Sentry sends the encoded message and omits the original message template and parameters by default.
