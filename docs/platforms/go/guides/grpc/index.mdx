@@ -27,8 +27,9 @@ go get github.com/getsentry/sentry-go/grpc
 `sentrygrpc` accepts a struct of `ServerOptions` that allows you to configure how the server interceptors behave.
 
 ```go
-// Whether Sentry should repanic after recovery. In most cases it should be set to true,
-// so that your own recovery middleware or gRPC's default handling can respond to the client.
+// Whether Sentry should repanic after recovery. grpc-go does not recover handler
+// panics, so set it to true only when another recovery interceptor runs outside
+// sentrygrpc. Otherwise the interceptor responds with codes.Internal.
 Repanic bool
 // Whether to wait for Sentry to deliver the event before returning.
 // Useful when Repanic is true and the process may exit or restart after the panic.
@@ -42,9 +43,12 @@ Timeout time.Duration
 Attach the unary and stream interceptors when creating your gRPC server:
 
 ```go
+
 import (
+	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -55,6 +59,7 @@ import (
 func main() {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              "___PUBLIC_DSN___",
+		EnableTracing:    true,
 		TracesSampleRate: 1.0,
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
@@ -62,22 +67,18 @@ func main() {
 	defer sentry.Flush(2 * time.Second)
 
 	server := grpc.NewServer(
-		grpc.UnaryInterceptor(sentrygrpc.UnaryServerInterceptor(sentrygrpc.ServerOptions{
-			Repanic: true,
-		})),
-		grpc.StreamInterceptor(sentrygrpc.StreamServerInterceptor(sentrygrpc.ServerOptions{
-			Repanic: true,
-		})),
+		grpc.UnaryInterceptor(sentrygrpc.UnaryServerInterceptor(sentrygrpc.ServerOptions{})),
+		grpc.StreamInterceptor(sentrygrpc.StreamServerInterceptor(sentrygrpc.ServerOptions{})),
 	)
 
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		sentry.CaptureException(err)
+		sentry.CaptureException(context.Background(), err)
 		return
 	}
 
 	if err := server.Serve(listener); err != nil {
-		sentry.CaptureException(err)
+		sentry.CaptureException(context.Background(), err)
 	}
 }
 ```
@@ -87,16 +88,18 @@ The server interceptors automatically:
 - Create a transaction for each unary or streaming RPC call.
 - Recover from panics in handlers and report them to Sentry.
 - Continue distributed traces from upstream clients via `sentry-trace` and `baggage` metadata.
-- Attach an isolated `*sentry.Hub` to the handler's context.
+- Attach an isolated `*sentry.Scope` to the handler's context.
 
 ## Client-Side Usage
 
 Attach the unary and stream interceptors when creating your gRPC client:
 
 ```go
+
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -108,6 +111,7 @@ import (
 func main() {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              "___PUBLIC_DSN___",
+		EnableTracing:    true,
 		TracesSampleRate: 1.0,
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
@@ -121,7 +125,7 @@ func main() {
 		grpc.WithStreamInterceptor(sentrygrpc.StreamClientInterceptor()),
 	)
 	if err != nil {
-		sentry.CaptureException(err)
+		sentry.CaptureException(context.Background(), err)
 		return
 	}
 	defer conn.Close()
@@ -130,22 +134,19 @@ func main() {
 
 The client interceptors automatically:
 
-- Create a child span for each outgoing RPC call.
+- Create a child span for an outgoing RPC call when its context carries a Sentry parent span.
 - Inject `sentry-trace` and `baggage` headers into gRPC metadata for distributed tracing.
 - Set the span status based on the returned gRPC status code.
 
 ## Usage
 
-Both interceptors make a `*sentry.Hub` available on the request context, which you can retrieve using `sentry.GetHubFromContext()` in your handlers. Use this hub-bound API instead of the global `sentry.CaptureMessage` or `sentry.CaptureException` calls to keep data separated between concurrent requests.
+Server interceptors fork a scope for each request. Use the handler's context with Sentry APIs to keep concurrent requests isolated. Client interceptors use the context supplied to the outgoing call; pass `span.Context()` to record the RPC beneath that span.
 
 ```go
 func (s *server) YourMethod(ctx context.Context, req *pb.YourRequest) (*pb.YourResponse, error) {
-	if hub := sentry.GetHubFromContext(ctx); hub != nil {
-		hub.WithScope(func(scope *sentry.Scope) {
-			scope.SetTag("request_id", req.GetId())
-			hub.CaptureMessage("Handling request")
-		})
-	}
+	captureCtx, scope := sentry.WithScope(ctx)
+	scope.SetTag("request_id", req.GetId())
+	sentry.CaptureMessage(captureCtx, "Handling request")
 	return &pb.YourResponse{}, nil
 }
 ```
