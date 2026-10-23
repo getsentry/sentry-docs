@@ -168,6 +168,45 @@ with sentry_sdk.start_span(name="handle-request") as span:
 
 For examples, see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/#adding-span-attributes">Adding Span Attributes</PlatformLink>.
 
+### Add Span Links
+
+A span can only have one parent, but it can be related to many other spans, including spans in other traces. For example, a consumer can process a batch of messages sent by several producers, each in its own trace. Links connect a span to these spans without making any of them its parent. A link needs `trace_id` and `span_id`, and can have `sampled` and `attributes`.
+
+You can set links when starting a span:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(
+    name="process-batch",
+    attributes={"sentry.op": "queue.process"},
+    links=[
+        {
+            "trace_id": related_span.trace_id,
+            "span_id": related_span.span_id,
+            "sampled": related_span.sampled,
+        },
+    ],
+):
+    process_batch()
+```
+
+Or add them to an already running span:
+
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(name="process-batch") as span:
+    # Add a single link
+    span.add_link({"trace_id": other_span.trace_id, "span_id": other_span.span_id})
+
+    # Add multiple links at once
+    span.add_links([
+        {"trace_id": s.trace_id, "span_id": s.span_id}
+        for s in other_spans
+    ])
+```
+
 ## Breadcrumbs
 
 Breadcrumbs aren't sent with spans.
