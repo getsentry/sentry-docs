@@ -1,7 +1,5 @@
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 
-### Install the Sentry SDK
-
 Install and add the Sentry integration using the `astro` CLI:
 
 ```bash {tabTitle:npm}
@@ -15,8 +13,6 @@ yarn astro add @sentry/astro
 ```bash {tabTitle:pnpm}
 pnpm astro add @sentry/astro
 ```
-
-<OnboardingOption optionId="profiling">
 
 Next, install the Profiling package using your preferred package manager:
 
@@ -32,13 +28,9 @@ yarn add @sentry/profiling-node
 pnpm add @sentry/profiling-node
 ```
 
-</OnboardingOption>
-
 </PlatformSection>
 
 <PlatformSection supported={["javascript.cloudflare"]}>
-
-### Install the Sentry SDKs
 
 Install both `@sentry/astro` and `@sentry/cloudflare`:
 
@@ -60,6 +52,11 @@ pnpm add @sentry/astro @sentry/cloudflare
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
 ### Wrangler Configuration
 
 <PlatformContent
@@ -78,7 +75,12 @@ Astro 6 with `@astrojs/cloudflare` v13+ supports custom entry points directly fr
 }
 ```
 
-Create a `sentry.server.config.ts` file in the root of your project that wraps the Astro Cloudflare handler with Sentry:
+Next, create a `sentry.server.config.ts` file in the root of your project that wraps the Astro Cloudflare handler with Sentry.
+
+The snippet also turns on:
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```typescript {filename:sentry.server.config.ts}
 import * as Sentry from "@sentry/cloudflare";
@@ -87,11 +89,10 @@ import handler from "@astrojs/cloudflare/entrypoints/server";
 export default Sentry.withSentry(
   (env) => ({
     dsn: env.SENTRY_DSN,
-    // ___PRODUCT_OPTION_START___ performance
-    // Define how likely traces are sampled. Adjust this value in production,
-    // or use tracesSampler for greater control.
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   }),
   handler
 );
@@ -133,7 +134,14 @@ export default defineConfig({
 
 ### Configure Client-side Sentry
 
-Create a `sentry.client.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the client:
+Create a `sentry.client.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the client.
+
+The snippet also turns on:
+- Tracing: via [`tracesSampleRate`](/platforms/javascript/guides/astro/configuration/options/#tracesSampleRate) and `browserTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with [`replaysSessionSampleRate`](/platforms/javascript/guides/astro/configuration/options/#replaysSessionSampleRate) and [`replaysOnErrorSampleRate`](/platforms/javascript/guides/astro/configuration/options/#replaysOnErrorSampleRate)
+- User Feedback: via [`feedbackIntegration()`](/platforms/javascript/guides/astro/user-feedback/configuration/)
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```javascript {filename:sentry.client.config.(ts|js)}
 import * as Sentry from "@sentry/astro";
@@ -142,35 +150,28 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
+    // Registers the Sentry Browser Tracing integration,
+    // which automatically instruments your app for performance monitoring
     Sentry.browserTracingIntegration(),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
+    // Registers the Sentry Session Replay integration
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // Enables User Feedback
     Sentry.feedbackIntegration({
       // Additional SDK configuration goes in here, for example:
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Define how likely traces are sampled. Adjust this value in production,
-  // or use tracesSampler for greater control.
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
-
-  // If the entire session is not sampled, use the below sample rate to sample
-  // sessions when an error occurs.
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
@@ -297,98 +298,37 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
-### Avoid Ad Blockers With Tunneling (Optional)
-
-<PlatformContent includePath="getting-started-tunneling" />
-
-</PlatformSection>
-
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add this button to a page in your Astro app and click it to send a test error:
 
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
-To verify that Sentry captures errors and creates issues in your Sentry project,
-create a test page, for example, at `src/pages/test.astro` with two buttons.
+```astro
+<button id="test-error" type="button">Test Sentry Error</button>
 
-```html {filename: test.astro}
 <script>
-  const buttonOne = document.getElementById("one");
-  const buttonTwo = document.getElementById("two");
-
-  buttonOne.addEventListener("click", throwTestError);
-  buttonTwo.addEventListener("click", throwApiError);
-
-  function throwTestError() {
-    throw new Error("Sentry Example Frontend Error");
-  }
-
-  async function throwApiError() {
-    await fetch("/api/test-error");
-  }
+  document.getElementById("test-error")?.addEventListener("click", () => {
+    throw new Error("Sentry Test Error");
+  });
 </script>
-
-<button id="one" type="button">Throw a frontend error</button>
-<button id="two" type="button">Throw an API error</button>
 ```
-
-Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
-
-Next, open your test page in a browser and click the buttons to trigger a frontend error and an error in the API route.
-
-```javascript {filename: test-error.(js|ts)}
-export async function GET() {
-  throw new Error("Sentry Example API Route Error");
-}
-```
-
-<OnboardingOption optionId="performance">
-
-### Tracing
-
-To test tracing, create a custom span to measure the time it takes for the API request to complete:
-
-```html {filename: test.astro}
-<script>
-  import * as Sentry from "@sentry/astro";
-
-  const button = document.getElementById("one");
-
-  button.addEventListener("click", throwApiError);
-
-  async function throwApiError() {
-    await Sentry.startSpan(
-      {
-        name: "Example Frontend Span",
-        op: "test",
-      },
-      async () => {
-        await fetch("/api/test-error");
-      }
-    );
-  }
-</script>
-
-<button id="one" type="button">Throw an API error with a trace</button>
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -408,10 +348,7 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Astro application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics.
-Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Astro application. Here's what to explore next:
 
 <PlatformSection notSupported={["javascript.cloudflare"]}>
 
@@ -426,9 +363,7 @@ Our next recommended steps for you are:
 <PlatformSection supported={["javascript.cloudflare"]}>
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 
 </PlatformSection>
 
