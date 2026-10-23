@@ -99,9 +99,9 @@ Learn more about enriching events with screenshots in our <PlatformLink to="/enr
 
 </SdkOption>
 
-<SdkOption name="ScreenshotQuality" type="enum" defaultValue="low">
+<SdkOption name="ScreenshotQuality" type="enum" defaultValue="high">
 
-The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`. Higher resolutions can make the frame the screenshot gets taken in miss its display refresh, especially on mobile devices.
+The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`.
 
 </SdkOption>
 
@@ -197,21 +197,11 @@ The callback runs on the thread that captured the event, which can be a backgrou
 
 </SdkOption>
 
-<SdkOption name="SetBeforeSendScreenshotPixels" type="function">
-
-A callback function that receives the screenshot's raw pixels before they get compressed, along with the event it belongs to. You can modify the pixels in place, for example to black out sensitive areas. Return `true` to send the screenshot, or `false` to discard it.
-
-The pixels are RGBA32, four bytes per pixel, with the bottom row first. The callback runs on a background thread, so it doesn't stall your game, and runs once per screenshot. Events captured in quick succession share a screenshot, and the callback receives the first of them. Avoid calling Unity APIs that are restricted to the main thread from within it, and don't hold on to the pixels after it returns.
-
-</SdkOption>
-
 <SdkOption name="SetBeforeSendScreenshot" type="function">
-
-**Deprecated** in favor of <PlatformIdentifier name="SetBeforeSendScreenshotPixels" />.
 
 A callback function that receives the screenshot as a `Texture2D` before it gets compressed, along with the event it belongs to. You can modify the texture and return it, return a different texture, or return `null` to discard the screenshot.
 
-Since it operates on a `Texture2D`, the callback and compressing the screenshot run on the main thread, which stalls your game for the duration. It runs once per screenshot. If both callbacks are set, only <PlatformIdentifier name="SetBeforeSendScreenshotPixels" /> runs.
+Since it operates on a `Texture2D`, the callback and compressing the screenshot run on the main thread, which stalls your game for the duration. It runs once per screenshot. Events captured while a screenshot is still being taken share it, and the callback receives the first of them that didn't get dropped.
 
 </SdkOption>
 
