@@ -3,12 +3,14 @@
 # Label a PR `ai-evals:<mark>` to run the tests with that pytest mark, e.g.
 # `ai-evals:products`, on each target (a harness with a model) that repo's plan-evals
 # action lists, or `ai-evals:<mark>:<models>` to run them on the targets whose
-# `<harness>:<model>` contains `<models>`, e.g. `ai-evals:products:opus-5.5`. The labels
-# are in .github/labels.yml, since sync-labels.yml deletes any label that isn't. Each label
-# runs the same skills, sentry-for-ai's `main`, with two sets of docs: the head reads
-# docs.sentry.io from the PR's Vercel preview and the base from the live docs. The plan
-# job creates one run per label and side on evals.sentry.dev, and each target's job sends
-# its results into it. A new push reruns every eval label still on the PR.
+# `<harness>:<model>` contains `<models>`, e.g. `ai-evals:products:opus-5.5`, or
+# `ai-evals:no_tools:opus-5.5` for the tests that give the agent no Sentry skills or MCP,
+# only the docs. The labels are in .github/labels.yml, since sync-labels.yml deletes any
+# label that isn't. Each label runs with two sets of docs and the same skills, from
+# sentry-for-ai's `main`: the head reads docs.sentry.io from the PR's Vercel preview and
+# the base from the live docs. The plan job creates one run per label and side on
+# evals.sentry.dev, and each target's job sends its results into it. A new push reruns
+# every eval label still on the PR.
 #
 # The base can't be the PR's merge base, since old production deploy URLs redirect to
 # docs.sentry.io, so it's master as it is when the runs start. A head that's behind master
@@ -202,10 +204,12 @@ jobs:
           $marker
           ### AI evals
 
-          The skills from sentry-for-ai's \`main\` at $(commit getsentry/sentry-for-ai "$SKILLS_SHA") read docs.sentry.io from:
+          Base and head differ only in where docs.sentry.io comes from:
 
           - **Head:** this PR's preview of $(commit "$GITHUB_REPOSITORY" "$HEAD_SHA"), $DOCS_URL
           - **Base:** the live docs, \`master\` at $(commit "$GITHUB_REPOSITORY" "$BASE_SHA")
+
+          Tests that install the Sentry skills build them from sentry-for-ai's \`main\` at $(commit getsentry/sentry-for-ai "$SKILLS_SHA") on both sides.
 
           $drift
           EOF
