@@ -100,6 +100,28 @@ describe('middleware redirect set selection', () => {
   });
 });
 
+describe('source maps links from backend projects', () => {
+  it.each(['python-django', 'php', 'ruby-rails'])(
+    'redirects the invalid %s guide to JavaScript source maps',
+    async guide => {
+      const {middleware} = await importMiddleware({NODE_ENV: 'production'});
+      const res = middleware(
+        makeRequest(`/platforms/javascript/guides/${guide}/sourcemaps/`)
+      );
+      expect(res.status).toBe(301);
+      expect(res.headers.get('location')).toBe(
+        'http://localhost:3000/platforms/javascript/sourcemaps/'
+      );
+    }
+  );
+
+  it('leaves the destination unchanged', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/javascript/sourcemaps/'));
+    expect(isRedirect(res)).toBe(false);
+  });
+});
+
 describe('non-production host indexing', () => {
   it('adds a noindex header on localhost', async () => {
     const {middleware} = await importMiddleware({});
