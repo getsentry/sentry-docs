@@ -23,7 +23,7 @@ const FEATURE_DATA: Record<
 > = {
   issues: {
     title: 'Issues',
-    link: '/product/issues',
+    link: '/product/issues/',
     learnMore:
       "Sentry's core error monitoring product that automatically reports errors, uncaught exceptions, and unhandled rejections. If you have something that looks like an exception, Sentry can capture it.",
     findInSentry: (
@@ -40,7 +40,7 @@ const FEATURE_DATA: Record<
   },
   tracing: {
     title: 'Tracing',
-    link: '/product/tracing',
+    link: '/concepts/key-terms/tracing/',
     learnMore:
       'Track software performance while seeing the impact of errors across multiple systems. For example, distributed tracing allows you to follow a request from the frontend to the backend and back.',
     findInSentry: (
@@ -60,7 +60,7 @@ const FEATURE_DATA: Record<
   },
   sessionReplay: {
     title: 'Session Replay',
-    link: '/product/session-replay/web',
+    link: '/product/session-replay/web/',
     learnMore:
       "Get to the root cause of an issue faster by viewing a video-like reproduction of what was happening in the user's browser before, during, and after the problem.",
     findInSentry: (
@@ -76,7 +76,7 @@ const FEATURE_DATA: Record<
   },
   logs: {
     title: 'Logs',
-    link: '/product/logs',
+    link: '/product/logs/',
     learnMore:
       "Centralize and analyze your application logs to correlate them with errors and performance issues. Search, filter, and visualize log data to understand what's happening in your applications.",
     findInSentry: (
@@ -109,7 +109,7 @@ const FEATURE_DATA: Record<
   },
   userFeedback: {
     title: 'User Feedback',
-    link: '/product/user-feedback',
+    link: '/product/user-feedback/',
     learnMore:
       'Collect feedback directly from users when they encounter errors, allowing them to describe what happened and provide context that helps you understand and resolve issues faster.',
     findInSentry: (
@@ -125,7 +125,7 @@ const FEATURE_DATA: Record<
   },
   metrics: {
     title: 'Application Metrics',
-    link: '/product/metrics',
+    link: '/product/metrics/',
     learnMore:
       "Track and analyze custom application metrics, such as response times and database query durations, to understand trends and patterns in your application's performance and behavior over time.",
     findInSentry: (
