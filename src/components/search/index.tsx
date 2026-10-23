@@ -103,6 +103,21 @@ type Props = {
 
 const STORAGE_KEY = 'sentry-docs-search-platforms';
 
+/**
+ * Returns the localStorage object, or null if it is unavailable.
+ * In Safari private browsing mode localStorage is null, and in some
+ * restricted environments accessing it throws a SecurityError.
+ */
+function safeLocalStorage(): Storage | null {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage !== null
+      ? localStorage
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 // Paths outside `/platforms/` whose pages are not about any specific SDK.
 // Restoring the user's last-used SDK on these pages biases query results
 // toward irrelevant SDK pages instead of the product/concept docs they're
@@ -133,12 +148,16 @@ export function Search({
 
   // Load stored platforms on mount
   useEffect(() => {
+    const storage = safeLocalStorage();
+    if (!storage) {
+      return;
+    }
     const isSdkAgnosticPath = SDK_AGNOSTIC_PATH_PREFIXES.some(prefix =>
       pathname?.startsWith(prefix)
     );
-    const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
+    const storedPlatforms = storage.getItem(STORAGE_KEY) ?? '[]';
     if (!storedPlatforms) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      storage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
     } else if (
       storedPlatforms &&
       searchPlatforms.length === 0 &&
@@ -156,7 +175,7 @@ export function Search({
   // Update stored platforms when they change
   useEffect(() => {
     if (searchPlatforms.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      safeLocalStorage()?.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
       setCurrentSearchPlatforms(searchPlatforms);
     }
   }, [searchPlatforms]);
