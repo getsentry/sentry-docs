@@ -113,8 +113,12 @@ describe('production build-url redirect to canonical (Deployment Protection off)
     vi.unstubAllEnvs();
   });
 
-  function makeHostRequest(url: string, method = 'GET'): NextRequest {
-    return new NextRequest(new URL(url), {method});
+  function makeHostRequest(
+    url: string,
+    method = 'GET',
+    headers?: HeadersInit
+  ): NextRequest {
+    return new NextRequest(new URL(url), {method, headers});
   }
 
   it('redirects a non-canonical production host to the canonical host', async () => {
@@ -197,8 +201,8 @@ describe('production build-url redirect to canonical (Deployment Protection off)
     const {middleware} = await importMiddleware({});
     vi.stubEnv('VERCEL_ENV', 'production');
     const res = middleware(
-      new NextRequest(new URL('https://sentry-docs-abc123.vercel.app/llms.txt'), {
-        headers: {'x-sentry-evals-pin': '1'},
+      makeHostRequest('https://sentry-docs-abc123.vercel.app/llms.txt', 'GET', {
+        'x-sentry-evals-pin': '1',
       })
     );
     expect(res.status).not.toBe(308);
