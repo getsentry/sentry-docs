@@ -1,0 +1,142 @@
+---
+title: Migrate from 9.x to 10.x
+sidebar_order: 9900
+description: "Learn about migrating from Sentry Cocoa SDK 9.x to 10.x."
+---
+
+Migrating to 10.x from 9.x includes several breaking changes. We provide this guide to help you update your SDK.
+
+## Changes to Minimum OS Versions and Xcode
+
+We bumped the minimum supported OS versions to:
+
+- **macOS**: 12.0 Monterey (previously 10.14)
+- **watchOS**: 9.0 (previously 8.0)
+- **iOS**: 15.0 (unchanged)
+- **tvOS**: 15.0 (unchanged)
+- **visionOS**: 1.0 (unchanged)
+
+We now build the SDK with **Xcode 27**. Consumers that must support macOS 11 or watchOS 8 should stay on Sentry SDK 9.x.
+
+## Installation and Package Changes
+
+### SPM Target Renames
+
+The SPM product names have changed:
+
+| v9 product                     | v10 product      | Notes                      |
+| ------------------------------ | ---------------- | -------------------------- |
+| `SentrySPM`                    | `Sentry`         | Compile-from-source target |
+| `Sentry` (pre-compiled static) | `Sentry-Static`  | Pre-compiled static binary |
+| `Sentry-Dynamic`               | `Sentry-Dynamic` | Unchanged                  |
+
+Update your `Package.swift`:
+
+```swift {tabTitle:v9}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "9.0.0"),
+// ...
+.product(name: "SentrySPM", package: "sentry-cocoa"),
+```
+
+```swift {tabTitle:v10}
+.package(url: "https://github.com/getsentry/sentry-cocoa", from: "10.0.0"),
+// ...
+.product(name: "Sentry", package: "sentry-cocoa"),
+```
+
+If you use the pre-compiled static binary, update from `Sentry` to `Sentry-Static`:
+
+```swift {tabTitle:v10}
+.product(name: "Sentry-Static", package: "sentry-cocoa"),
+```
+
+### Pre-Built Binaries
+
+The `sentry-cocoa` repository no longer includes pre-built binary targets. If you use pre-compiled frameworks via SPM, switch to the [sentry-apple-binaries](https://github.com/getsentry/sentry-apple-binaries) repository:
+
+```swift {tabTitle:v10}
+.package(url: "https://github.com/getsentry/sentry-apple-binaries", from: "10.0.0"),
+// ...
+.product(name: "Sentry-Static", package: "sentry-apple-binaries"),
+```
+
+You can also download XCFrameworks directly from the [GitHub Releases page](https://github.com/getsentry/sentry-cocoa/releases).
+
+### SentrySwiftUI Module Removed
+
+The `SentrySwiftUI` module has been removed. All SwiftUI APIs were merged into the main `Sentry` module in v9.4.0. Replace any imports:
+
+```swift {tabTitle:v9}
+import SentrySwiftUI
+```
+
+```swift {tabTitle:v10}
+import Sentry
+```
+
+## `sendDefaultPii` Replaced by `dataCollection`
+
+The `sendDefaultPii` option has been removed and replaced by the granular `dataCollection` configuration, which gives you fine-grained control over what data the SDK collects automatically.
+
+```swift {tabTitle:v9}
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.sendDefaultPii = true
+}
+```
+
+```swift {tabTitle:v10}
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.dataCollection.userInfo = true
+    options.dataCollection.httpHeaders = true
+    options.dataCollection.httpBodies = [.request, .response]
+    options.dataCollection.cookies = true
+    options.dataCollection.urlQueryParams = true
+}
+```
+
+The following `dataCollection` sub-options that had no effect in the Cocoa SDK have also been removed: `graphql`, `database`, `stackFrameVariables`, and `frameContextLines`.
+
+## SentrySDK Objective-C Changes
+
+`SentrySDK` is now a Swift `enum` and its `@objc` attributes have been removed. Objective-C consumers can no longer use `SentrySDK` directly and must use the `SentryObjC` wrapper instead.
+
+```objc {tabTitle:v9}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+}];
+```
+
+```objc {tabTitle:v10}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+}];
+```
+
+See the <PlatformLink to="/install/swift-package-manager/#sentryobjc-objective-c">SentryObjC installation docs</PlatformLink> for setup details. Swift consumers are unaffected and continue using `import Sentry`.
+
+## Removed APIs
+
+The following deprecated APIs have been removed in v10:
+
+- **`onCrashedLastRun`** and **`crashedLastRun`** on `SentryOptions`.
+- **`enableExperimentalViewRenderer`** on `SentryReplayOptions`.
+- **User Feedback widget APIs**: `showWidget()`, `hideWidget()`, and `customButton` configuration. Present the feedback form from your own UI with `SentrySDK.feedback.show()`, `SentrySDK.FeedbackForm`, or the `.sentryFeedback(isPresented:)` SwiftUI modifier. See the <PlatformLink to="/user-feedback/">User Feedback docs</PlatformLink>.
+- **`configureDarkTheme`** on `SentryUserFeedbackThemeConfiguration`. Use `SentryUserFeedbackThemeConfiguration` initializers with the `dark` parameter instead.
+- **Deprecated SwiftUI trace origins and operations** in `SentrySpanOperation` and `SentryTraceOrigin`.
+- **`device.locale`** in the device context. The SDK now uses `locale` in the culture context instead.
+
+## Behavioral Changes
+
+### `SentryRequest.cookies` Type Change
+
+`SentryRequest.cookies` changed from `String` to `[String: String]` (a dictionary of cookie name-value pairs). Update any code that reads or sets this property.
+
+### Profiling CPU Usage Normalization
+
+Profiling CPU usage values are now normalized to the 0–100 percent range. Previously, raw Mach thread `cpu_usage` values were reported (where 100% = 1000). If you have dashboards or alerts based on profiling CPU measurements, adjust your thresholds accordingly.
