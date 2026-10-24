@@ -25,7 +25,28 @@ builder.Services.AddHangfire(configuration => configuration
 );
 ```
 
-To let the SDK know which jobs to monitor, you need to provide the job with a monitor slug. This can be done by setting the `SentryMonitorSlug` attribute on the job. For example, the following snippet shows how to set up a fire-and-forget job that Sentry will monitor:
+For each monitored job, the SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.ERROR` instead.
+
+## Monitor All Recurring Jobs
+
+We recommend monitoring every recurring job. From the next SDK release, you can do this without adding the `SentryMonitorSlug` attribute to each one. Turn on `MonitorAllRecurringJobs`, and add any recurring jobs you don't want to monitor to `ExcludedRecurringJobs`, by ID or with a regular expression:
+
+```csharp
+GlobalConfiguration.Configuration.UseSentry(options =>
+{
+    options.MonitorAllRecurringJobs = true;
+    options.ExcludedRecurringJobs.Add("cache-warmup");
+    options.ExcludedRecurringJobs.Add(new Regex("^cleanup-", RegexOptions.IgnoreCase));
+});
+```
+
+The monitor slug is the recurring job ID, normalized the same way Sentry normalizes monitor slugs: lowercased, accents removed, spaces and dashes replaced by a single `-`, other characters dropped, and cut to 50 characters. For example, the recurring job `Reports: Nightly Run` reports to the monitor `reports-nightly-run`. Jobs with the `SentryMonitorSlug` attribute keep their slug and are monitored even if their ID is excluded.
+
+The schedule is sent as described in [Send the Recurring Job Schedule](#send-the-recurring-job-schedule). If two recurring jobs end up with the same monitor slug and different schedules, their check-ins are sent without a schedule. Jobs that aren't recurring, such as `BackgroundJob.Enqueue`, still need the attribute.
+
+## Monitor Specific Jobs
+
+To monitor specific jobs, including jobs that aren't recurring, provide the job with a monitor slug by setting the `SentryMonitorSlug` attribute on it. For example, the following snippet shows how to set up a fire-and-forget job that Sentry will monitor:
 
 ```csharp
 using Hangfire;
@@ -44,13 +65,13 @@ public class PricingUpdateWorker
 }
 ```
 
-The SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.ERROR` instead.
+With `MonitorAllRecurringJobs` on, a recurring job with the attribute still sends one check-in per run, using the attribute's slug.
 
 ## Send the Recurring Job Schedule
 
 Sentry only creates a monitor from a check-in that includes a monitor config. From SDK version 7.0.0, the SDK sends the schedule of your recurring jobs with their check-ins by default.
 
-The job still needs the `SentryMonitorSlug` attribute. The SDK doesn't use the recurring job ID as the monitor slug.
+The job still needs the `SentryMonitorSlug` attribute, unless you [monitor all recurring jobs](#monitor-all-recurring-jobs).
 
 ```csharp
 using Hangfire;
@@ -79,4 +100,4 @@ When you upgrade, existing monitors for recurring jobs get their schedule and ti
 GlobalConfiguration.Configuration.UseSentry(options => options.SendMonitorConfig = false);
 ```
 
-If you delete a monitor while its job still has `[SentryMonitorSlug]`, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute.
+If you delete a monitor while its job is still monitored, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, remove the attribute, or add the job to `ExcludedRecurringJobs`.
