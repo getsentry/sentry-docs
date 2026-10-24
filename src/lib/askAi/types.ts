@@ -1,6 +1,7 @@
 export type AskAiSource = {title: string; url: string};
 
 export type AskAiEvent =
+  | {type: 'session'; token: string}
   | {type: 'reference'; reference: string}
   | {type: 'chunk'; id: string; text: string; index: number}
   | {type: 'answer'; id: string; streamId?: string; html: string; sources: AskAiSource[]}

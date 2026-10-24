@@ -2,21 +2,40 @@
 
 This branch adds a first-party Ask AI modal backed by the Fin Agent API. It keeps the header buttons, search-result question submission, example questions, follow-ups, rich answers, citations, and `?askAI=true` entry point. The Fin deployment loads neither Kapa's widget nor Intercom Messenger. Set `ASK_AI_PROVIDER=fin` and `FIN_PILOT_ENABLED=true` to enable it on a protected preview after configuration.
 
+## Start With The API Key
+
+For the first evaluation, use a **protected Vercel preview** with these server variables scoped only to `feat/fin-ask-ai-pilot`:
+
+```env
+FIN_AGENT_API_KEY=<your Fin Agent API key>
+ASK_AI_PROVIDER=fin
+FIN_PILOT_ENABLED=true
+FIN_PUBLIC_ORIGIN=https://sentry-docs-git-feat-fin-ask-ai-pilot.sentry.dev
+```
+
+Confirm Fin Agent API access and SSE/streaming are enabled. The default region is `us`; set `FIN_REGION` to `eu` or `au` if appropriate and confirm the workspace's SSE hostname. No Redis database, webhook, export token, or additional signing secret is needed for this first test. Keep the pilot disabled until this configuration is ready, then rebuild the preview after setting the flags.
+
+With both Redis variables absent, a Vercel preview or local development server uses signed, one-hour conversation tokens kept only in page memory. The Fin API key signs the token on the server with a separate purpose and origin binding; the key is never sent to the browser. The token contains random conversation/user IDs, the docs path, and turn state, not the transcript. Follow-ups work across serverless instances. Reloading the page starts a new conversation.
+
+This mode has **no shared daily budget, server-side lock, local feedback collection, webhook evidence capture, event export, or direct support handoff**. The UI hides feedback and direct handoff controls; transcript copying and an optional support portal link remain available. Fin still processes and retains the conversation in Intercom. Signed tokens cannot be edited, but old tokens can be replayed, so the 20-turn UI/session limit is not a hard spending limit. Restrict preview access to testers and use provider/edge spending and rate controls before broader access. First-party requests preserve the existing preview-protection login cookie; Ask AI itself sets no cookies. Preview authentication is separate from the public docs cookie policy. Production deployments refuse to run without Redis. If either Redis variable is set, storage failures fail closed rather than falling back to stateless mode.
+
+Add Redis and the feedback integration later, after answer quality is worth pursuing. The existing storage-backed path remains available for that phase.
+
 ## What Is Built
 
 - Accessible, responsive dialog with keyboard navigation, focus restoration, light/dark styles, streamed answers, sources, feedback, and conversation copying.
 - Server-only `/fin/start` and `/fin/reply` adapter, pinned to API version 2.17. Streams cumulative text and replaces it with sanitized final HTML; waits for all reply parts before accepting a follow-up.
-- Opaque conversation token held only in React memory. Server-side sessions expire after one hour of inactivity. No new cookies, localStorage, sessionStorage, fingerprinting, or browser requests to Intercom. A page reload starts a new identity; closing/reopening the modal retains the current conversation.
-- Same-origin POST checks, bounded inputs, shared locks, 20-turn session limit, and a configurable daily turn budget. Failures never silently retry a billable request. This is a pilot usage limit, not a replacement for edge rate limiting.
-- Redis evidence stream with questions, page paths, final answers/citations, local helpfulness feedback, Fin statuses, and Intercom conversation IDs. Final answer/status webhooks supplement SSE and deduplicate across delivery paths.
-- Authenticated, cursor-based event export for an internal agent. The export has seven-day Redis retention; consumers need their own durable checkpoint and evidence storage.
-- Optional handoff through `/fin/escalate`, preserving the original reference and returned support conversation ID when available. Handoff is disabled until the real routing/follow-up flow has been tested. A configured support portal link and copyable transcript also work without API handoff.
+- Conversation token held only in React memory. Stateless preview tokens expire one hour after creation; Redis sessions expire after one hour of inactivity. No new cookies, localStorage, sessionStorage, fingerprinting, or browser requests to Intercom. A page reload starts a new identity; closing/reopening the modal retains the current conversation.
+- Same-origin POST checks and bounded inputs in both modes. Redis adds shared locks, a 20-turn session limit, and a configurable daily turn budget. Failures never silently retry a billable request. This is a pilot usage limit, not a replacement for edge rate limiting.
+- Optional Redis evidence stream with questions, page paths, final answers/citations, local helpfulness feedback, Fin statuses, and Intercom conversation IDs. Final answer/status webhooks supplement SSE and deduplicate across delivery paths.
+- With Redis: authenticated, cursor-based event export for an internal agent. The export has seven-day Redis retention; consumers need their own durable checkpoint and evidence storage.
+- With Redis: optional handoff through `/fin/escalate`, preserving the original reference and returned support conversation ID when available. Handoff is disabled until the real routing/follow-up flow has been tested. A configured support portal link and copyable transcript also work without API handoff.
 
-The pilot does not yet run a docs-writing agent, open PRs, ingest later human replies, or join ordinary Algolia searches to tickets. Those are the next stage. Per-answer helpfulness is stored in our event stream; it is not submitted as Intercom CSAT. Disable Fin's CSAT survey for this pilot deployment: the UI deliberately ends the stream on `complete` and does not render Fin surveys.
+The pilot does not yet run a docs-writing agent, open PRs, ingest later human replies, or join ordinary Algolia searches to tickets. Those are the next stage. With Redis, per-answer helpfulness is stored in our event stream; it is not submitted as Intercom CSAT. Disable Fin's CSAT survey for this pilot deployment: the UI deliberately ends the stream on `complete` and does not render Fin surveys.
 
-## Everything Needed From You
+## Configuration Reference: Evaluation And Later Integration
 
-Provide secrets through the deployment/environment secret manager, not chat or a checked-in file. Use a dedicated pilot workspace/environment where possible.
+The first evaluation needs only the settings above. Redis, webhook/export secrets, and handoff permissions below are for the later support/feedback phase. Provide secrets through the deployment/environment secret manager, not chat or a checked-in file. Use a dedicated pilot workspace/environment where possible.
 
 | Item                                          | How To Obtain / Configure                                                                                                                                                                                                                               | Needed For                                                                 |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -43,14 +62,14 @@ Provide secrets through the deployment/environment secret manager, not chat or a
 
 The attached development environment currently has no Fin/Redis credentials or configured outbound identities. No live Fin calls or deployments were performed while implementing this branch.
 
-## Run The Pilot
+## Add Support And The Feedback Pipeline Later
 
-1. Populate a local `.env.local` or protected preview's server variables from `.env.example`.
+1. After the basic evaluation, configure both Redis REST variables in the protected preview from `.env.example`; existing stateless conversations must be restarted.
 2. Set `ASK_AI_PROVIDER=fin`, `FIN_PILOT_ENABLED=true`, and the exact `FIN_PUBLIC_ORIGIN`. Keep `FIN_HANDOFF_ENABLED=false` until its workflow is verified.
 3. Configure Fin public-doc audiences, `docs_origin`/`docs_path` attributes, SSE/streaming, and the webhook. Disable CSAT for this API pilot.
 4. Run `pnpm dev:minimal` and open Ask AI through the header, search results, and home-page `?askAI=true` link.
 5. Verify that a start/reply creates one conversation, the returned Intercom ID locates it, and the docs attributes appear. Inspect a code-heavy answer and its citations.
-6. Check browser network/storage: Ask AI only calls `/api/ask-ai/`; it sends `credentials: omit`, emits no Set-Cookie, and does not load the Fin stream URL or any Messenger/Kapa script. Existing unrelated site analytics still need their own policy review.
+6. Check browser network/storage: Ask AI only calls `/api/ask-ai/`; it sends credentials only to the same origin to preserve preview authentication, emits no Set-Cookie, and does not load the Fin stream URL or any Messenger/Kapa script. Existing unrelated site analytics still need their own policy review.
 7. Validate the signed webhook using the real workspace. Duplicate replies received over both SSE and webhook should appear once in the export. Confirm late inactivity statuses are captured.
 8. Test support routing and email follow-up, then enable handoff if appropriate. Do not treat a successful HTTP response as proof that the correct queue received a usable ticket.
 
@@ -93,7 +112,7 @@ Suggested rollout: cluster recurring questions → classify documentation gaps v
 
 ## API References
 
-Implementation validation: all 25 pilot tests passed; TypeScript and repository-wide formatting passed; ESLint passed with nine warnings in unchanged files. A Chromium harness with mocked Fin responses passed desktop/mobile interaction, streaming, source rendering, HTML sanitization, follow-ups, feedback, transcript copying, focus restoration, new conversations, search-query submission, support form, and no cookies/storage writes/third-party Ask AI requests. The full suite ran 522 tests: 516 passed and six existing CLI tests failed (four hit the sandbox's blocked local sockets; two migration CLI assertions had empty stdout). Live Fin/Redis contracts, full Next.js production build, actual support delivery, and deployed preview validation remain outstanding.
+Validation: 36 targeted tests pass, including stateless token integrity/expiry, cross-instance follow-ups, production gating, and the existing Redis-backed routes. TypeScript, formatting, and ESLint pass for the changed code. Chromium checks with simulated Fin responses cover both modes on desktop/mobile, continuation-token updates, capability-specific controls, sanitization, copying, focus, and no new cookies/storage writes/third-party Ask AI requests. Live Fin contracts and actual support delivery still need the workspace credentials and configuration.
 
 - [Fin setup, scopes, webhooks, and streaming](https://developers.intercom.com/docs/guides/fin-agent-api/setup)
 - [Fin API overview and event contracts](https://developers.intercom.com/docs/guides/fin-agent-api)

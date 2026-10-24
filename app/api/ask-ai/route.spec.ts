@@ -71,6 +71,8 @@ beforeEach(() => {
   vi.stubEnv('FIN_AGENT_API_KEY', 'private-fin-key');
   vi.stubEnv('FIN_HANDOFF_ENABLED', 'false');
   vi.stubEnv('FIN_REGION', 'us');
+  vi.stubEnv('FIN_REDIS_REST_URL', 'https://redis.example');
+  vi.stubEnv('FIN_REDIS_REST_TOKEN', 'test-redis-token');
   store.session = {
     conversationId: 'docs-test',
     userId: 'docs-anonymous-test',

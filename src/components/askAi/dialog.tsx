@@ -23,7 +23,8 @@ const EXAMPLES = [
 async function api(body: object, token: string | null, signal?: AbortSignal) {
   const response = await fetch('/api/ask-ai/', {
     method: 'POST',
-    credentials: 'omit',
+    // Preserve an existing preview-protection login. Ask AI never sets cookies.
+    credentials: 'same-origin',
     cache: 'no-store',
     referrerPolicy: 'no-referrer',
     headers: {
@@ -64,6 +65,7 @@ export default function AskAiDialog({
   const [error, setError] = useState('');
   const [reference, setReference] = useState('');
   const [feedback, setFeedback] = useState<Record<string, string>>({});
+  const [capabilities, setCapabilities] = useState({feedback: false, handoff: false});
   const [showSupport, setShowSupport] = useState(false);
   const [email, setEmail] = useState('');
   const [handedOff, setHandedOff] = useState(false);
@@ -97,7 +99,9 @@ export default function AskAiDialog({
           null,
           controller.signal
         );
-        token.current = (await response.json()).token;
+        const result = await response.json();
+        token.current = result.token;
+        setCapabilities(result.capabilities || {feedback: false, handoff: false});
       }
       const response = await api(
         {action: 'message', question: value.trim()},
@@ -109,6 +113,7 @@ export default function AskAiDialog({
       for await (const raw of readEventStream(response.body)) {
         if (controller.signal.aborted) break;
         const event = raw as AskAiEvent;
+        if (event.type === 'session') token.current = event.token;
         if (event.type === 'reference') setReference(event.reference);
         if (event.type === 'error') throw new Error(event.message);
         if (event.type === 'chunk' || event.type === 'answer')
@@ -153,6 +158,7 @@ export default function AskAiDialog({
     setError('');
     setReference('');
     setFeedback({});
+    setCapabilities({feedback: false, handoff: false});
     setHandedOff(false);
     setEscalated(false);
     setShowSupport(false);
@@ -315,7 +321,7 @@ export default function AskAiDialog({
                     </ol>
                   </nav>
                 )}
-                {message.html !== undefined && (
+                {capabilities.feedback && message.html !== undefined && (
                   <div className={styles.feedback} aria-label="Rate this answer">
                     {feedback[message.id] ? (
                       <span>Thanks for your feedback.</span>
@@ -432,11 +438,15 @@ export default function AskAiDialog({
                 <button onClick={() => void copyTranscript()}>
                   {copied ? 'Copied' : 'Copy conversation'}
                 </button>
-                {handoffEnabled && reference && !handedOff && !escalated && (
-                  <button disabled={busy} onClick={() => setShowSupport(true)}>
-                    Contact support
-                  </button>
-                )}
+                {handoffEnabled &&
+                  capabilities.handoff &&
+                  reference &&
+                  !handedOff &&
+                  !escalated && (
+                    <button disabled={busy} onClick={() => setShowSupport(true)}>
+                      Contact support
+                    </button>
+                  )}
                 {supportUrl && (
                   <a
                     href={supportUrl}
@@ -444,7 +454,9 @@ export default function AskAiDialog({
                     rel="noopener noreferrer"
                     referrerPolicy="no-referrer"
                   >
-                    {handoffEnabled ? 'Support portal' : 'Contact support'}
+                    {handoffEnabled && capabilities.handoff
+                      ? 'Support portal'
+                      : 'Contact support'}
                   </a>
                 )}
               </div>

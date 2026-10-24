@@ -8,6 +8,12 @@ import {
   requireSameOrigin,
 } from 'sentry-docs/lib/askAi/http';
 import {
+  createPreviewSession,
+  getPreviewSession,
+  isStatelessPreview,
+  updatePreviewSession,
+} from 'sentry-docs/lib/askAi/previewSession';
+import {
   AskAiError,
   createSession,
   getSession,
@@ -31,6 +37,9 @@ export async function POST(request: Request) {
   try {
     requirePilot();
     requireSameOrigin(request);
+    const stateless = isStatelessPreview();
+    const persist = stateless ? async () => {} : saveSession;
+    const record = stateless ? async () => {} : recordEvent;
     const body = await readJson(request);
     if (body.action === 'session') {
       const path = typeof body.path === 'string' ? body.path.split(/[?#]/)[0] : '/';
@@ -40,15 +49,26 @@ export async function POST(request: Request) {
         path.startsWith('//')
       )
         throw new AskAiError(400, 'Invalid docs path.');
-      const {token} = await createSession(path);
-      return Response.json({token}, {headers: privateHeaders});
+      const {token} = stateless ? createPreviewSession(path) : await createSession(path);
+      return Response.json(
+        {
+          token,
+          capabilities: {
+            feedback: !stateless,
+            handoff: !stateless && process.env.FIN_HANDOFF_ENABLED === 'true',
+          },
+        },
+        {headers: privateHeaders}
+      );
     }
 
+    if (stateless && body.action !== 'message')
+      throw new AskAiError(503, 'This feature is not enabled for this preview.');
     const token = bearerToken(request);
-    const release = await lockSession(token);
+    const release = stateless ? async () => {} : await lockSession(token);
     let streaming = false;
     try {
-      const session = await getSession(token);
+      const session = stateless ? getPreviewSession(token) : await getSession(token);
       if (body.action === 'feedback') {
         if (
           !['helpful', 'unhelpful'].includes(String(body.rating)) ||
@@ -61,7 +81,7 @@ export async function POST(request: Request) {
           key(`answer:${session.conversationId}:${body.messageId}`)
         );
         if (!exists) throw new AskAiError(400, 'Answer not found.');
-        await recordEvent(
+        await record(
           session.conversationId,
           'feedback',
           {messageId: body.messageId, rating: body.rating},
@@ -84,8 +104,8 @@ export async function POST(request: Request) {
         // Persist before the external side effect; never automatically retry an
         // ambiguous result, which could create duplicate support conversations.
         session.handedOff = true;
-        await saveSession(token, session);
-        await recordEvent(session.conversationId, 'support_requested', {
+        await persist(token, session);
+        await record(session.conversationId, 'support_requested', {
           intercomConversationId: session.intercomId,
           path: session.path,
         });
@@ -94,8 +114,8 @@ export async function POST(request: Request) {
           context: `Docs Ask AI pilot. Page: ${session.path}. Original Intercom conversation: ${session.intercomId}. User supplied this email for follow-up (unverified): ${body.email}. Do not use this email as proof of account ownership.`,
         });
         session.state = 'closed';
-        await saveSession(token, session);
-        await recordEvent(session.conversationId, 'support_handoff', {
+        await persist(token, session);
+        await record(session.conversationId, 'support_handoff', {
           intercomConversationId: session.intercomId,
           supportConversationId: result.intercom_conversation_id ?? null,
         });
@@ -112,15 +132,17 @@ export async function POST(request: Request) {
       if (!['new', 'ready'].includes(session.state))
         throw new AskAiError(409, 'start a new conversation.');
       if (session.turns >= 20) throw new AskAiError(429, 'start a new conversation.');
-      const configuredLimit = Number(process.env.FIN_DAILY_TURN_LIMIT || '100');
-      if (!Number.isInteger(configuredLimit) || configuredLimit < 1)
-        throw new AskAiError(503, 'Ask AI is not configured.');
-      await takeBudget('turns', configuredLimit);
+      if (!stateless) {
+        const configuredLimit = Number(process.env.FIN_DAILY_TURN_LIMIT || '100');
+        if (!Number.isInteger(configuredLimit) || configuredLimit < 1)
+          throw new AskAiError(503, 'Ask AI is not configured.');
+        await takeBudget('turns', configuredLimit);
+      }
       const start = session.state === 'new';
       session.state = 'busy';
       session.turns += 1;
-      await saveSession(token, session);
-      await recordEvent(session.conversationId, 'question', {
+      await persist(token, session);
+      await record(session.conversationId, 'question', {
         question: body.question.trim(),
         path: session.path,
         turn: session.turns,
@@ -147,8 +169,8 @@ export async function POST(request: Request) {
             : {}),
         });
         session.intercomId = result.intercom_conversation_id || session.intercomId;
-        await saveSession(token, session);
-        await recordEvent(session.conversationId, 'linked', {
+        await persist(token, session);
+        await record(session.conversationId, 'linked', {
           intercomConversationId: session.intercomId ?? null,
           metadataAccepted: !result.errors,
         });
@@ -195,23 +217,24 @@ export async function POST(request: Request) {
                 const event = normalizeFinEvent(raw, session.conversationId);
                 if (!event) continue;
                 if (event.type === 'answer') {
-                  await recordEvent(
+                  await record(
                     session.conversationId,
                     'answer',
                     {...event},
                     `answer:${event.id}`
                   );
-                  await redis(
-                    'SET',
-                    key(`answer:${session.conversationId}:${event.id}`),
-                    '1',
-                    'EX',
-                    3600
-                  );
+                  if (!stateless)
+                    await redis(
+                      'SET',
+                      key(`answer:${session.conversationId}:${event.id}`),
+                      '1',
+                      'EX',
+                      3600
+                    );
                 }
                 if (event.type === 'status') {
                   if (event.status === 'escalated') session.handedOff = true;
-                  await recordEvent(
+                  await record(
                     session.conversationId,
                     'status',
                     {status: event.status},
@@ -222,21 +245,24 @@ export async function POST(request: Request) {
                     event.status === 'resolved' ||
                     event.status === 'complete';
                 }
-                send(event);
                 if (
                   event.type === 'status' &&
                   ['awaiting_user_reply', 'complete'].includes(event.status)
                 ) {
                   session.state = closed ? 'closed' : 'ready';
-                  await saveSession(token, session);
+                  await persist(token, session);
+                  if (stateless)
+                    send({type: 'session', token: updatePreviewSession(token, session)});
+                  send(event);
                   finished = true;
                   break;
                 }
+                send(event);
               }
               if (!finished) throw new Error('Incomplete Fin stream');
             } catch {
               session.state = 'failed';
-              await saveSession(token, session).catch(() => {});
+              await persist(token, session).catch(() => {});
               send({
                 type: 'error',
                 message:
@@ -264,7 +290,7 @@ export async function POST(request: Request) {
         });
       } catch (error) {
         session.state = 'failed';
-        await saveSession(token, session).catch(() => {});
+        await persist(token, session).catch(() => {});
         throw error;
       }
     } finally {
