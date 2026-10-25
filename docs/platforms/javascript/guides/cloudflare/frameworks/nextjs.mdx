@@ -103,61 +103,11 @@ main = "./worker.ts"
 
 <AvailableSince version="11.6.0" />
 
-[vinext](https://github.com/cloudflare/vinext) builds your Next.js app with Vite, so you don't need a custom Worker. Add `sentryCloudflareVitePlugin` from `@sentry/cloudflare/vite` to your Vite config, and the plugin wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare` at build time. Your app gets the same Next.js spans as with OpenNext.
-
-The plugin uses `@sentry/nextjs/cloudflare` only when the build uses vinext and `@sentry/nextjs` is installed in version 11.6.0 or later. Otherwise, it wraps the entry with `withSentry` from `@sentry/cloudflare`, which sends no Next.js spans.
-
-Install `@sentry/cloudflare`, because you import the Vite plugin from it directly:
-
-```bash {tabTitle:npm}
-npm install @sentry/cloudflare
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/cloudflare
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/cloudflare
-```
-
-Then, add the plugin after the vinext and Cloudflare plugins:
-
-```typescript {filename:vite.config.ts}
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
-import vinext from "vinext";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [
-    vinext(),
-    cloudflare({ viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] } }),
-    sentryCloudflareVitePlugin(),
-  ],
-});
-```
-
-Pass your Sentry options in an `instrument.server.ts` file next to the Worker entry that `main` in your Wrangler configuration points to. For example, if `main` is `./worker/index.ts`, create `worker/instrument.server.ts`:
-
-```typescript {filename:worker/instrument.server.ts}
-import { defineCloudflareOptions } from "@sentry/nextjs/cloudflare";
-
-export default defineCloudflareOptions({
-  dsn: "___PUBLIC_DSN___",
-
-  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
-  tracesSampleRate: 1.0,
-});
-```
-
-Without this file, the SDK reads its options, such as `SENTRY_DSN`, from the `env` bindings of the Worker. For more on the plugin, see the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink> page.
+With [vinext](https://github.com/cloudflare/vinext), you don't need a custom Worker. Add the <PlatformLink to="/install/vite-plugin/">Sentry Vite plugin</PlatformLink> to your Vite config, and it wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare` automatically.
 
 ### Server and Edge Configuration in the Worker
 
-In the Worker, `withSentry` creates the Sentry client. With vinext, the options of `withSentry` come from `instrument.server.ts`. `Sentry.init()` in `sentry.server.config.ts` and `sentry.edge.config.ts` still runs, but it creates no client and only applies the `release` option. Set all other options in `withSentry`.
+In the Worker, `withSentry` creates the Sentry client. `Sentry.init()` in `sentry.server.config.ts` and `sentry.edge.config.ts` still runs, but it creates no client and only applies the `release` option. Set all other options in `withSentry`.
 
 On Workers, these two files are optional. Keep them if you use `next dev`, which runs on Node.js and doesn't use the Worker entry. They also pass on the release that `withSentryConfig` sets at build time.
 
