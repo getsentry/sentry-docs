@@ -113,6 +113,8 @@ export const FRAMEWORK_QUERY_PARAM = 'framework';
 
 /** The serialized form of a `<PlatformContent>` include, served by the platform-content API route. */
 export type PlatformContentPayload = {
+  /** Whether the content differs from what the runtime's page shows without a framework. */
+  changed: boolean;
   /** Compiled MDX of the resolved include, or `null` if there is no content for it. */
   code: string | null;
   /** Compiled MDX of nested `<Include name="...">` files, keyed by name. */

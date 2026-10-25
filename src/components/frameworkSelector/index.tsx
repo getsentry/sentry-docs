@@ -1,9 +1,18 @@
 'use client';
 
-import {ArrowRightIcon, ChevronDownIcon} from '@radix-ui/react-icons';
+import {ArrowRightIcon, CaretSortIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {useRouter} from 'next/navigation';
-import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 
 import {Alert} from '../alert';
@@ -28,14 +37,23 @@ import {
   platformContentUrl,
   RUNTIMES,
 } from './frameworks';
+import frameworkStyles from './style.module.scss';
 
 const DEFAULT_VALUE = 'none';
 const GUIDE_VALUE_PREFIX = 'guide:';
 const groupLabelClassName = 'px-2 pt-2 pb-1 text-xs font-medium text-[var(--gray-11)]';
 
+/** The state of a switchable block while a framework is selected. */
+type ContentStatus =
+  | {state: 'loading' | 'unchanged'}
+  /** `step` is the title of the `h2` step that contains the block, `targetId` the block's id. */
+  | {state: 'changed'; targetId: string; step?: string};
+
 type FrameworkContextValue = {
   framework: Framework | null;
   platform: string;
+  /** Records the status of the block with `includePath`, or removes it with `null`. */
+  reportContent: (includePath: string, status: ContentStatus | null) => void;
   /** The runtime guide the page belongs to, e.g. `node`. */
   runtime: string;
 };
@@ -53,6 +71,65 @@ function ItemLabel({icon, title}: {icon: string; title: string}) {
       />
       {title}
     </span>
+  );
+}
+
+function stepTitle(el: HTMLElement): string | undefined {
+  const step = Array.from(document.querySelectorAll<HTMLElement>('main h2[id]'))
+    .filter(h => h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
+    .pop();
+  return (step?.querySelector('a') ?? step)?.textContent?.trim();
+}
+
+function FrameworkSummary({
+  contents,
+  framework,
+  platform,
+}: {
+  contents: Record<string, ContentStatus>;
+  framework: Framework;
+  platform: string;
+}) {
+  const statuses = Object.values(contents);
+  if (statuses.some(c => c.state === 'loading')) {
+    return (
+      <p className={frameworkStyles.summary}>Loading the steps for {framework.title}…</p>
+    );
+  }
+
+  const changed = statuses
+    .filter(c => c.state === 'changed')
+    .map(c => ({...c, el: document.getElementById(c.targetId)}))
+    .filter(c => c.el)
+    .sort((a, b) =>
+      a.el!.compareDocumentPosition(b.el!) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    );
+  const steps = changed.filter(
+    (c, i) => changed.findIndex(other => other.step === c.step) === i
+  );
+
+  return (
+    <p className={frameworkStyles.summary}>
+      <PlatformIcon
+        platform={`${platform}-${framework.key}`}
+        size={16}
+        format="sm"
+        className="!border-none !shadow-none"
+      />
+      {steps.length > 0 ? (
+        <span>
+          Updated for {framework.title}:{' '}
+          {steps.map((c, i) => (
+            <span key={c.targetId}>
+              {i > 0 && ', '}
+              <a href={`#${c.targetId}`}>{c.step ?? 'Show the change'}</a>
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span>The steps for {framework.title} are the same as without a framework.</span>
+      )}
+    </p>
   );
 }
 
@@ -90,6 +167,21 @@ export function FrameworkSelector({
   const frameworks = useMemo(() => runtimeConfig?.frameworks ?? [], [runtimeConfig]);
   const frameworkGuides = runtimeConfig?.frameworkGuides ?? [];
   const [framework, setFramework] = useState<Framework | null>(null);
+  const [contents, setContents] = useState<Record<string, ContentStatus>>({});
+
+  const reportContent = useCallback(
+    (includePath: string, status: ContentStatus | null) =>
+      setContents(prev => {
+        const next = {...prev};
+        if (status) {
+          next[includePath] = status;
+        } else {
+          delete next[includePath];
+        }
+        return next;
+      }),
+    []
+  );
 
   // The page is statically rendered, so the query param can only be read after mount.
   useEffect(() => {
@@ -107,8 +199,8 @@ export function FrameworkSelector({
   };
 
   const contextValue = useMemo(
-    () => ({framework, platform, runtime}),
-    [framework, platform, runtime]
+    () => ({framework, platform, reportContent, runtime}),
+    [framework, platform, reportContent, runtime]
   );
 
   return (
@@ -129,7 +221,7 @@ export function FrameworkSelector({
             >
               <RadixSelect.Value />
               <RadixSelect.Icon>
-                <ChevronDownIcon />
+                <CaretSortIcon />
               </RadixSelect.Icon>
             </RadixSelect.Trigger>
             <RadixSelect.Content
@@ -139,10 +231,7 @@ export function FrameworkSelector({
             >
               <RadixSelect.Item value={DEFAULT_VALUE} className={styles.item}>
                 <RadixSelect.ItemText>
-                  <ItemLabel
-                    icon={`${platform}-${runtime}`}
-                    title={`None (plain ${runtimeConfig?.title ?? runtime})`}
-                  />
+                  <ItemLabel icon={`${platform}-${runtime}`} title="No framework" />
                 </RadixSelect.ItemText>
               </RadixSelect.Item>
               {frameworks.length > 0 && (
@@ -182,6 +271,9 @@ export function FrameworkSelector({
           </RadixSelect.Root>
         </div>
       </div>
+      {framework && (
+        <FrameworkSummary contents={contents} framework={framework} platform={platform} />
+      )}
       {children}
     </FrameworkContext.Provider>
   );
@@ -294,18 +386,40 @@ function RemoteFrameworkContent({
   framework,
   includePath,
   platform,
+  reportContent,
   runtime,
 }: {
   fallback: ReactNode;
   framework: Framework;
   includePath: string;
   platform: string;
+  reportContent: FrameworkContextValue['reportContent'];
   runtime: string;
 }) {
   const url = platformContentUrl(platform, runtime, framework.key, includePath);
   const [payload, setPayload] = useState<PlatformContentPayload | null>(null);
   const [error, setError] = useState(false);
   const codeContext = useContext(CodeContext);
+  const changedRef = useRef<HTMLDivElement>(null);
+  const targetId = `framework-content-${includePath.replace(/\//g, '-')}`;
+
+  useEffect(() => {
+    if (error) {
+      reportContent(includePath, {state: 'unchanged'});
+    } else if (!payload) {
+      reportContent(includePath, {state: 'loading'});
+    } else if (!payload.changed || !changedRef.current) {
+      reportContent(includePath, {state: 'unchanged'});
+    } else {
+      reportContent(includePath, {
+        state: 'changed',
+        step: stepTitle(changedRef.current),
+        targetId,
+      });
+    }
+  }, [error, includePath, payload, reportContent, targetId]);
+
+  useEffect(() => () => reportContent(includePath, null), [includePath, reportContent]);
 
   useEffect(() => {
     let cancelled = false;
@@ -333,7 +447,7 @@ function RemoteFrameworkContent({
     }
   }, [payload, codeContext?.onboardingOptions]);
 
-  if (error) {
+  if (error || payload?.changed === false) {
     return fallback;
   }
 
@@ -345,7 +459,20 @@ function RemoteFrameworkContent({
     );
   }
 
-  return <mdx.MDX code={payload.code} />;
+  return (
+    <div key={url} ref={changedRef} id={targetId} className={frameworkStyles.changed}>
+      <p className={frameworkStyles.label}>
+        <PlatformIcon
+          platform={`${platform}-${framework.key}`}
+          size={16}
+          format="sm"
+          className="!border-none !shadow-none"
+        />
+        For {framework.title}
+      </p>
+      <mdx.MDX code={payload.code} />
+    </div>
+  );
 }
 
 /**
@@ -371,6 +498,7 @@ export function FrameworkContent({
       framework={context.framework}
       includePath={includePath}
       platform={context.platform}
+      reportContent={context.reportContent}
       runtime={context.runtime}
     />
   );
