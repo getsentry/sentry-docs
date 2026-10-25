@@ -108,6 +108,23 @@ async function collectNested(
   }
 }
 
+async function buildPayload(
+  includePath: string,
+  resolve: (includePath: string) => Promise<SlugFile | undefined>
+): Promise<PlatformContentPayload> {
+  const doc = await resolve(includePath);
+  const payload: PlatformContentPayload = {
+    changed: false,
+    code: doc?.mdxSource ?? null,
+    includes: {},
+    platformContents: {},
+  };
+  if (doc) {
+    await collectNested(doc.matter.content, resolve, payload);
+  }
+  return payload;
+}
+
 export async function GET(
   _request: Request,
   {
@@ -125,16 +142,20 @@ export async function GET(
   const resolve = (path: string) =>
     resolveForFramework(path, platform, runtime, framework);
 
-  const doc = await resolve(includePath.join('/'));
+  const resolveForRuntime = (path: string) =>
+    resolvePlatformContent({
+      includePath: path,
+      path: ['platforms', platform, 'guides', runtime],
+    });
 
-  const payload: PlatformContentPayload = {
-    code: doc?.mdxSource ?? null,
-    includes: {},
-    platformContents: {},
-  };
-  if (doc) {
-    await collectNested(doc.matter.content, resolve, payload);
-  }
+  const [payload, runtimePayload] = await Promise.all([
+    buildPayload(includePath.join('/'), resolve),
+    buildPayload(includePath.join('/'), resolveForRuntime),
+  ]);
+  payload.changed =
+    payload.code !== runtimePayload.code ||
+    JSON.stringify(payload.platformContents) !==
+      JSON.stringify(runtimePayload.platformContents);
 
   return Response.json(payload);
 }
