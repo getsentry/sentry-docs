@@ -22,14 +22,7 @@ You need:
 
 ## Install
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Install `@sentry/react-router` for the client and the React Router server entry, and `@sentry/cloudflare` for the Worker:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/react-router @sentry/cloudflare
@@ -42,10 +35,6 @@ yarn add @sentry/react-router @sentry/cloudflare
 ```bash {tabTitle:pnpm}
 pnpm add @sentry/react-router @sentry/cloudflare
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Configure
 
@@ -69,16 +58,9 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   platform="javascript.cloudflare.splitlayout"
 />
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### Client-Side Configuration
 
 Initialize Sentry in `app/entry.client.tsx`. If your app doesn't have this file yet, run `npx react-router reveal` to expose the entry files.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/entry.client.tsx}
 import * as Sentry from "@sentry/react-router";
@@ -120,18 +102,9 @@ Sentry.init({
 // ... rest of your client entry
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Server-Side Configuration
 
 Add the Sentry Cloudflare Vite plugin after the Cloudflare and React Router plugins. It wraps your Worker entry with `withSentry` at build time, so you don't need to change `workers/app.ts`.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {diff} {filename:vite.config.ts}
 +import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
@@ -145,18 +118,9 @@ Add the Sentry Cloudflare Vite plugin after the Cloudflare and React Router plug
  });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Then, create an `instrument.server.ts` file next to the Worker entry that `main` in your Wrangler configuration points to, for example `workers/instrument.server.ts`.
 
 For more on the plugin and its options, see the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink> page.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:workers/instrument.server.ts}
 import { defineCloudflareOptions } from "@sentry/cloudflare";
@@ -171,18 +135,9 @@ export default defineCloudflareOptions({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Next, update `app/entry.server.tsx`. Import from `@sentry/react-router/cloudflare`, wrap `handleRequest` with `wrapSentryHandleRequest`, pass the rendered stream through `injectTraceMetaTags` to connect server and client traces, and report errors from `handleError`.
 
 Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers, named after their route.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {diff} {filename:app/entry.server.tsx}
 +import { captureException } from "@sentry/cloudflare";
@@ -218,10 +173,6 @@ Exporting `instrumentations` uses React Router's [instrumentation API](https://r
 +// and request handlers.
 +export const instrumentations = [Sentry.createSentryServerInstrumentation()];
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
