@@ -1,0 +1,77 @@
+---
+title: Integration Templates
+sidebar_title: Templates
+sidebar_order: 5
+description: "Create a pre-configured internal integration from a template, such as one that triggers a Claude routine when a new issue is created."
+keywords:
+  - templates
+  - internal integration
+  - Claude routine
+  - Anthropic
+  - webhooks
+---
+
+Integration templates create a pre-configured [internal integration](/integrations/integration-platform/internal-integration/) for a common workflow. Each template fills in the permissions, webhook subscriptions, and headers for you, so you only need to provide the details for your service.
+
+To use a template:
+
+1. Go to [**Settings > Developer Settings**](https://sentry.io/orgredirect/organizations/:orgslug/settings/developer-settings/).
+2. Click **Create New Integration**.
+3. Under **Templates**, find the template you want and click **Use template**.
+4. Fill in the required fields and click **Save Changes**.
+
+After you save, the integration works like any other internal integration. You can edit it later from **Settings > Developer Settings**.
+
+## Available Templates
+
+### Trigger a Claude Routine
+
+This template fires a [Claude routine](https://code.claude.com/docs/en/routines) each time a new issue is created in your organization. The routine receives a short plain-text prompt with a link to the issue.
+
+#### Before You Start
+
+In [Claude Code](https://claude.ai/code/routines), create a routine and add an API trigger to it. Copy the routine's fire URL and token. The token is shown only once, when you add the API trigger.
+
+If you don't have a prompt for the routine yet, click **Copy a starter prompt** in the template form. The starter prompt tells the routine to review the issue, decide whether it needs a human or can be archived, and then act on that decision.
+
+#### Fields
+
+- **Name**: The name of the integration. Defaults to `Claude Routine`.
+- **Anthropic Routine URL**: The fire URL from the routine's API trigger settings. It must match the format `https://api.anthropic.com/v1/claude_code/routines/<TRIGGER_ID>/fire`.
+- **Routine Token**: The token from the routine's API trigger. Sentry sends it in the `Authorization: Bearer <TOKEN>` header of each webhook request.
+
+#### Defaults
+
+The template configures the integration with:
+
+- **Permissions**: Read & Write access to **Issue & Event**.
+- **Webhooks**: The `issue.created` event only.
+- **Alert Action**: Enabled, so you can also select the integration as an action in an [alert](/product/monitors-and-alerts/alerts/).
+- **Webhook headers**: `anthropic-version: 2023-06-01` and `anthropic-beta: experimental-cc-routine-2026-04-01`, along with the `Authorization` header.
+
+Before you save, you can change the permissions and webhook subscriptions in the collapsed panels below the fields.
+
+#### Webhook Payload
+
+When an integration's webhook URL is a Claude routine fire URL, Sentry adds a top-level `text` field to each webhook payload. The routine receives this field as context for the run. The rest of the payload stays the same as the standard [webhook payload](/integrations/integration-platform/webhooks/#request-structure).
+
+The `text` field has the format `Sentry <RESOURCE>.<ACTION>: <URL>`. For example:
+
+```json
+{
+  "action": "created",
+  "installation": { "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de" },
+  "data": {
+    "issue": {
+      "id": "1234567890",
+      "permalink": "https://example-org.sentry.io/issues/1234567890/"
+    }
+  },
+  "actor": { "type": "application", "id": "sentry", "name": "Sentry" },
+  "text": "Sentry issue.created: https://example-org.sentry.io/issues/1234567890/"
+}
+```
+
+For issue webhooks, the URL is the issue's permalink. For alert and error webhooks, it's the matching Sentry URL from the payload. Comment and installation payloads don't include a URL, so `text` only contains the resource and action.
+
+This applies to any integration whose webhook URL is a Claude routine fire URL, not only integrations created from this template.
