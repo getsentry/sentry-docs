@@ -60,7 +60,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ### Client-Side Configuration
 
-Initialize Sentry in `app/entry.client.tsx`. If your app doesn't have this file yet, run `npx react-router reveal` to expose the entry files.
+The client setup is the same as on Node.js. Initialize Sentry in `app/entry.client.tsx`. If your app doesn't have this file yet, run `npx react-router reveal` to expose the entry files.
 
 ```tsx {filename:app/entry.client.tsx}
 import * as Sentry from "@sentry/react-router";
@@ -135,9 +135,12 @@ export default defineCloudflareOptions({
 });
 ```
 
-Next, update `app/entry.server.tsx`. Import from `@sentry/react-router/cloudflare`, wrap `handleRequest` with `wrapSentryHandleRequest`, pass the rendered stream through `injectTraceMetaTags` to connect server and client traces, and report errors from `handleError`.
+Next, update `app/entry.server.tsx` so Sentry captures server errors, names requests after their route, and connects server and client traces. On Workers, import from `@sentry/react-router/cloudflare`:
 
-Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers, named after their route.
+- Wrap `handleRequest` with `wrapSentryHandleRequest`.
+- Pass the rendered stream through `injectTraceMetaTags`.
+- Report errors from `handleError`.
+- Export `instrumentations` to create spans for all loaders, actions, middleware, and request handlers through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation).
 
 ```tsx {diff} {filename:app/entry.server.tsx}
 +import { captureException } from "@sentry/cloudflare";
@@ -188,7 +191,20 @@ To upload source maps, add the `sentryReactRouter` Vite plugin and the `sentryOn
 
 ## Verify Your Setup
 
-Build and deploy your app to Cloudflare Workers, or run it locally with `wrangler dev`. Then throw a test error, for example from a loader or a button's click handler, and check your Sentry project. With tracing enabled, request spans are named after your React Router routes.
+To verify that Sentry captures errors, add a test button to one of your pages:
+
+```tsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Break the world
+</button>
+```
+
+Run your app locally with `wrangler dev` or deploy it to Cloudflare Workers, click the button, and check your Sentry project for the error. With tracing enabled, Sentry names request spans after your React Router routes.
 
 ### View Captured Data in Sentry
 
