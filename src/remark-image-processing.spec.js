@@ -39,6 +39,10 @@ describe('remarkImageProcessing', () => {
       [path.join(sourceFolder, 'relative.png'), await createImage(200, 150, 'png')],
       [path.join(sourceFolder, 'photo.jpg'), await createImage(64, 48, 'jpeg')],
       [path.join(sourceFolder, 'animation.gif'), await createImage(30, 20, 'gif')],
+      [path.join(sourceFolder, 'wide.png'), await createImage(2942, 1360, 'png')],
+      [path.join(sourceFolder, 'boundary.png'), await createImage(900, 600, 'png')],
+      [path.join(sourceFolder, 'thin.png'), await createImage(1801, 1, 'png')],
+      [path.join(sourceFolder, 'portrait.png'), await createImage(600, 1200, 'png')],
       [
         path.join(sourceFolder, 'icon.svg'),
         Buffer.from(
@@ -75,6 +79,21 @@ describe('remarkImageProcessing', () => {
 
     expect(node.url).toBe(`/img/public.png?v=${hashes['public.png']}#120x80`);
   });
+
+  it.each([
+    ['wide.png', '900x416'],
+    ['boundary.png', '900x600'],
+    ['thin.png', '900x1'],
+    ['portrait.png', '600x1200'],
+  ])(
+    'caps width without upscaling and preserves the content hash for %s',
+    async (fixture, size) => {
+      const node = imageNode(`./${fixture}`);
+      await transform(tree(node));
+
+      expect(node.url).toBe(`./${fixture}?v=${hashes[fixture]}#${size}`);
+    }
+  );
 
   it.each(['https://example.com/img.png', 'http://example.com/img.png', '//cdn/img.png'])(
     'leaves the external image %s untouched',
