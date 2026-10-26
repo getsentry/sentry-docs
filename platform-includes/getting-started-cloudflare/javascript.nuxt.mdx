@@ -7,19 +7,6 @@
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
-
-<Include name="quick-start-features-expandable-cloudflare-frameworks" />
-
 ### Install the Sentry SDK
 
 Run the command for your preferred package manager to add the Sentry SDK to your application:
@@ -38,6 +25,11 @@ pnpm add @sentry/nuxt
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you configure Sentry. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
 ### Apply Instrumentation to Your App
 
 Add the Sentry Nuxt module to your `nuxt.config.ts` file:
@@ -50,7 +42,15 @@ export default defineNuxtConfig({
 
 ### Configure Client-Side Sentry
 
-Add a `sentry.client.config.ts` file to the root of your project (this is probably the same level as the `package.json`). In this file, import and initialize Sentry, specifying any SDK options for the client:
+Add a `sentry.client.config.ts` file to the root of your project (this is probably the same level as the `package.json`). In this file, import and initialize Sentry, specifying any SDK options for the client.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```javascript {filename:sentry.client.config.ts}
 import * as Sentry from "@sentry/nuxt";
@@ -60,38 +60,26 @@ Sentry.init({
   // dsn: useRuntimeConfig().public.sentry.dsn
   // modify depending on your custom runtime config
   dsn: "___PUBLIC_DSN___",
-
-  // ___PRODUCT_OPTION_START___ session-replay
-
-  // Replay may only be enabled for the client-side
   integrations: [
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_END___ session-replay
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
@@ -112,27 +100,37 @@ export default defineNuxtConfig({
 });
 ```
 
-### Configure Cloudflare for Sentry
+### Configure Wrangler
 
 <PlatformContent
   includePath="getting-started-config"
   platform="javascript.cloudflare"
 />
 
-#### Add the Nitro Plugin
+### Add the Nitro Plugin
 
 <Alert level="warning" title="Important">
   If you have an existing `sentry.server.config.ts` file, delete it, as it will
   conflict with the Cloudflare setup.
 </Alert>
 
-To enable Sentry for your Nuxt app on Cloudflare, create a new file in `server/plugins` and add the following code to it:
+To enable Sentry for your Nuxt app on Cloudflare, create a new file in `server/plugins` and add the following code to it.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```TypeScript {filename:server/plugins/sentry-cloudflare-plugin.ts}
 import { sentryCloudflareNitroPlugin } from '@sentry/nuxt/module/plugins'
 
 export default defineNitroPlugin(sentryCloudflareNitroPlugin({
   dsn: '___PUBLIC_DSN___',
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
 }))
 ```
@@ -146,12 +144,16 @@ export default defineNitroPlugin(sentryCloudflareNitroPlugin((nitroApp: NitroApp
   // You can access `nitroApp` here if needed
   return {
     dsn: '___PUBLIC_DSN___',
+
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
   }
 }))
 ```
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside your configuration file:
 
@@ -189,119 +191,60 @@ export default defineNuxtConfig({
 });
 ```
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent
   includePath="getting-started-data-collection"
-  platform="javascript.cloudflare"
+  platform="javascript"
 />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with `console` or Consola, you can capture those logs with <PlatformLink to="/logs/#console-integration">our console integrations</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add a test page with a button that throws an error when you click it:
 
-To verify that Sentry captures errors and creates issues in your Sentry project, create a test page with a button.
+```html {filename:pages/example-error.vue}
+<script setup>
+  function triggerClientError() {
+    throw new Error("Sentry Test Error");
+  }
+</script>
+
+<template>
+  <button type="button" @click="triggerClientError">Test Sentry Error</button>
+</template>
+```
+
+Build and deploy your app, open the page in a browser, and click the button to trigger an error.
 
 <PlatformContent
   includePath="getting-started-browser-sandbox-warning"
   platform="javascript"
 />
 
-```html {tabTitle:Vue} {filename:pages/example-error.vue}
-<script setup>
-  import * as Sentry from "@sentry/nuxt";
-
-  function triggerClientError() {
-    throw new Error("Nuxt Button Error");
-  }
-</script>
-
-<template>
-  <button id="errorBtn" @click="triggerClientError">Throw Client Error</button>
-</template>
-```
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-To test tracing, create a test API route `server/api/sentry-example.get.ts`:
-
-```js {tabTitle:Nitro} {filename:server/api/sentry-example.get.ts}
-export default defineEventHandler((event) => {
-  throw new Error("Sentry Example API Route Error");
-});
-```
-
-Then update the test page by including a new button that executes a function to fetch your API route:
-
-```html {tabTitle:Vue} {filename:pages/example-error.vue}
-<script setup>
-  import * as Sentry from "@sentry/nuxt";
-
-  function triggerClientError() {
-    throw new Error("Nuxt Button Error");
-  }
-
-  function getSentryData() {
-    Sentry.startSpan(
-      {
-        name: "Example Frontend Span",
-        op: "test",
-      },
-      async () => {
-        await $fetch("/api/sentry-example");
-      }
-    );
-  }
-</script>
-
-<template>
-  <button id="errorBtn" @click="triggerClientError">Throw Client Error</button>
-  <button type="button" @click="getSentryData">Throw Server Error</button>
-</template>
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Once you have your test code in place, open the page in a browser and click
-  the button to trigger an error.
-</OnboardingOption>
-
-<OnboardingOption optionId="performance">
-
-Once you have your test code in place, build and run your project.
-
-After running your project, open your test page in a browser and click the buttons.
-
-</OnboardingOption>
-
 ### View Captured Data in Sentry
 
-Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
 
 <Include name="quick-start-locate-data-expandable-cloudflare-frameworks" />
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Nuxt application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Nuxt application on Cloudflare. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to [manually capture errors](/platforms/javascript/guides/nuxt/usage/)
-- Continue to [customize your configuration](/platforms/javascript/guides/nuxt/configuration/)
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
 - Learn how to [track your Vue components or your Pinia store](/platforms/javascript/guides/nuxt/features/)
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
