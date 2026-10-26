@@ -103,6 +103,9 @@ if (
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
+  images: {
+    minimumCacheTTL: 86400, // 1 day
+  },
   serverExternalPackages: [
     'rehype-preset-minify',
     'esbuild',
