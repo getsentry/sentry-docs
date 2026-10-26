@@ -1,6 +1,6 @@
 ---
 title: SolidStart
-description: Learn how to set up Sentry in your SolidStart application and capture your first errors.
+description: Learn how to set up Sentry in your SolidStart application and capture your first events.
 sdk: sentry.javascript.solidstart
 categories:
   - browser
@@ -24,29 +24,9 @@ This SDK is currently in **beta**. Beta features are still in progress and may h
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the Sentry SDK to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/solidstart --save
@@ -60,11 +40,12 @@ yarn add @sentry/solidstart
 pnpm add @sentry/solidstart
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable" />
 
 You need to initialize and configure the Sentry SDK in two places: the client side and the server side.
 
@@ -76,83 +57,59 @@ The examples in this guide will use TypeScript with a `src` folder structure. Ma
 
 ### Configure Client-Side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+Import and initialize the Sentry SDK in your `/src/entry-client.tsx` file. If you use Solid Router, add its tracing integration as shown below and wrap your router in the next step.
 
-Import and initialize the Sentry SDK in your `/src/entry-client.tsx` file.
+The snippet also turns on:
 
-<OnboardingOption optionId="performance">
-  If you're using Solid Router, make sure to import and add the
-  `solidRouterBrowserTracingIntegration` to enable tracing in your app.
-</OnboardingOption>
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `solidRouterBrowserTracingIntegration()` if you're using Solid Router
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
 
-</SplitSectionText>
-<SplitSectionCode>
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```jsx {filename:src/entry-client.tsx}
 import * as Sentry from "@sentry/solidstart";
-// ___PRODUCT_OPTION_START___ performance
 // import solidRouterBrowserTracingIntegration if you're using Solid Router
 import { solidRouterBrowserTracingIntegration } from "@sentry/solidstart/solidrouter";
-// ___PRODUCT_OPTION_END___ performance
 import { mount, StartClient } from "@solidjs/start/client";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
     // add solidRouterBrowserTracingIntegration if you're using Solid Router
+    // enables automatic instrumentation
     solidRouterBrowserTracingIntegration(),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
-    // Replay may only be enabled for the client-side
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 mount(() => <StartClient />, document.getElementById("app"));
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Server-Side Sentry
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Initialize Sentry on the server. On SolidStart 2, do this in a Nitro startup plugin, which runs once when the server starts. On SolidStart 1, create an `instrument.server.ts` file in your `src` folder.
 
-</SplitSectionText>
-<SplitSectionCode>
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 
 ```typescript {tabTitle:SolidStart 2} {filename:server/plugins/sentry.ts} {mdExpandTabs}
 import * as Sentry from "@sentry/solidstart";
@@ -161,15 +118,11 @@ import { definePlugin } from "nitro";
 export default definePlugin(() => {
   Sentry.init({
     dsn: "___PUBLIC_DSN___",
-    // ___PRODUCT_OPTION_START___ performance
 
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for tracing.
-    // We recommend adjusting this value in production
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   });
 });
 ```
@@ -179,34 +132,19 @@ import * as Sentry from "@sentry/solidstart";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Server Instrumentation
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 The Sentry SDK provides [middleware lifecycle](https://docs.solidjs.com/solid-start/advanced/middleware) handlers that enhance the data collected by Sentry on the server side, enabling distributed tracing between the client and server.
 
 Create or update your `src/middleware.ts` file and add the `sentryBeforeResponseMiddleware` handler:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:src/middleware.ts} {6}
 import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
@@ -220,15 +158,7 @@ export default createMiddleware({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 Add the Sentry plugin to your build config and register the middleware you just created. On SolidStart 2, add `sentrySolidStart` to `vite.config.ts`. On SolidStart 1, wrap your `app.config.ts` with `withSentry` so that the instrumentation file gets included in your build output.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:SolidStart 2} {filename:vite.config.ts} {mdExpandTabs}
 import { sentrySolidStart } from "@sentry/solidstart/vite";
@@ -266,22 +196,9 @@ export default defineConfig(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-
 ### Configure Solid Router
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you're using Solid Router and the Sentry `solidRouterBrowserTracingIntegration` integration, wrap your Solid Router with `withSentryRouterRouting` to enable Sentry to collect navigation spans:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app.tsx} {5,9,11}
 import { Router } from "@solidjs/router";
@@ -299,16 +216,7 @@ export default function App() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-</OnboardingOption>
-
 ### Run Your Application
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 On SolidStart 2, the Vite plugin instruments your dependencies at build time, so the server needs no preload flag. Build with `vite build` and start the output directly.
 
@@ -323,9 +231,6 @@ On SolidStart 1, run your build command to generate the `instrument.server.mjs` 
 </Alert>
 
 If you're not able to use the `--import` flag on SolidStart 1, check the alternative <PlatformLink to="/install/">installation methods</PlatformLink>.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 For example, update your scripts in `package.json`:
 
@@ -347,37 +252,15 @@ For example, update your scripts in `package.json`:
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Capture Solid Errors
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 To automatically report exceptions from inside a component tree to Sentry, wrap Solid's `ErrorBoundary` with Sentry's helper function:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 <PlatformContent includePath="getting-started-capture-errors" />
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Add Readable Stack Traces With Source Maps (Optional)
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+### Add Readable Stack Traces With Source Maps
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug to the Sentry plugin in your build config:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:SolidStart 2} {filename:vite.config.ts} {mdExpandTabs}
 import { sentrySolidStart } from "@sentry/solidstart/vite";
@@ -418,15 +301,7 @@ export default defineConfig(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 To keep your auth token secure, always store it in an environment variable instead of directly in your files:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <OrgAuthTokenNote />
 
@@ -434,16 +309,7 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Alternatively, you can create a `.env.sentry-build-plugin` file:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {filename:.env.sentry-build-plugin}
 SENTRY_ORG="___ORG_SLUG___"
@@ -451,121 +317,45 @@ SENTRY_PROJECT="___PROJECT_SLUG___"
 SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-### Avoid Ad Blockers With Tunneling (Optional)
-
-<PlatformContent includePath="getting-started-tunneling" />
-
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to an existing page or create a new one.
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Then, open the page in a browser and click the button to trigger a frontend
-  error.
-</OnboardingOption>
+Add a test button to an existing page. Clicking it throws an error that Sentry captures:
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-</SplitSectionText>
-<SplitSectionCode>
 
-```javascript
+```jsx
 <button
   type="button"
   onClick={() => {
     throw new Error("Sentry Test Error");
   }}
 >
-  Break the world
+  Test Sentry Error
 </button>
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test tracing, create a test API route like `src/routes/sentry-test.tsx`:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:sentry-test.tsx}
-export async function GET() {
-  throw new Error("Sentry Example API Route Error");
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
-Next, update your test button to call this route and throw an error if the response isn't `ok`.
-
-Then, open the page in the browser and click the button to trigger a frontend error, an error in the API route, and a trace to measure the time it takes for the API request to complete.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-<button
-  type="button"
-  onClick={() => {
-    Sentry.startSpan(
-      {
-        op: "test",
-        name: "My First Test Transaction",
-      },
-      async () => {
-        const res = await fetch("/sentry-test");
-        if (!res.ok) {
-          throw new Error("Sentry Test Error");
-        }
-      }
-    );
-  }}
->
-  Break the world
-</button>
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -575,15 +365,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your SolidStart application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your SolidStart application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to make use of <PlatformLink to="/features/">SolidStart-specific features</PlatformLink>
-- Get familiar with [Sentry's product features](/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
