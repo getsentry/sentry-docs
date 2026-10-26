@@ -22,6 +22,8 @@ You need:
 
 <PlatformContent includePath="getting-started-install" />
 
+This guide requires `sentry-sdk` version 2.70.0 or later. If you already have the SDK installed, upgrade it with `pip install --upgrade sentry-sdk`.
+
 ## Configure
 
 **Error Monitoring** starts working as soon as you call `sentry_sdk.init()`. **Logs** and **Application Metrics** need no extra configuration when using `sentry_sdk.logger` and `sentry_sdk.metrics`, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
@@ -43,6 +45,7 @@ Import and initialize the SDK in your app's entry point:
 
 The snippet also turns on:
 
+- Collection of user data, such as the user's IP address: via <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink>
 - Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
 - Profiling: via <PlatformLink to="/configuration/options/#profile_session_sample_rate">`profile_session_sample_rate`</PlatformLink> and <PlatformLink to="/configuration/options/#profile_lifecycle">`profile_lifecycle`</PlatformLink>
 
@@ -53,7 +56,11 @@ import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    send_default_pii=True,
+
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "user_info": True,
+    },
 
     # Enables Tracing.
     # Set to 1.0 to capture 100% of spans for tracing.
@@ -63,7 +70,7 @@ sentry_sdk.init(
     # Enables Profiling.
     # Set to 1.0 to profile 100% of sessions.
     profile_session_sample_rate=1.0,
-    # Profiles are collected while at least one span is active.
+    # Profiles are collected while a transaction is active.
     profile_lifecycle="trace",
 )
 ```
