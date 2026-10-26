@@ -1068,6 +1068,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/remix/cloudflare/',
   },
   {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/',
+    destination: '/platforms/javascript/guides/remix/hydrogen/',
+  },
+  {
     source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
     destination: '/platforms/javascript/guides/nextjs/cloudflare/',
   },
@@ -2141,13 +2149,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
