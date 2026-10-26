@@ -90,11 +90,7 @@ export const RUNTIMES: Record<string, Runtime> = {
     frameworkGuides: [
       guide('Astro', 'astro/cloudflare'),
       guide('Hono', 'hono/cloudflare'),
-      guide(
-        'Hydrogen',
-        'cloudflare/frameworks/hydrogen-react-router',
-        'javascript-hydrogen'
-      ),
+      guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
       guide('Remix', 'remix/cloudflare'),
