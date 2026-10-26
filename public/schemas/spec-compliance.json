@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://develop.sentry.dev/schemas/spec-compliance.json",
+  "title": "Sentry SDK Specification Compliance Manifest",
+  "description": "SDK-maintained declarations of implemented specification versions and sections.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "sdk", "last_updated", "specs"],
+  "properties": {
+    "$schema": {
+      "const": "https://develop.sentry.dev/schemas/spec-compliance.json",
+      "description": "The schema used to validate this manifest."
+    },
+    "sdk": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The SDK repository identifier, for example sentry-cocoa."
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "The date compliance declarations were last changed, in YYYY-MM-DD format."
+    },
+    "specs": {
+      "type": "object",
+      "description": "Compliance declarations keyed by the specification's spec_id.",
+      "propertyNames": {"minLength": 1},
+      "additionalProperties": {"$ref": "#/$defs/spec"}
+    }
+  },
+  "$defs": {
+    "version": {
+      "type": "string",
+      "description": "An exact specification SemVer version, not an SDK release version or version range.",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "version": {
+          "$ref": "#/$defs/version",
+          "description": "The highest fully implemented specification version, accounting for non-applicable sections. Use 0.0.0 until the first complete version is implemented."
+        },
+        "sections": {
+          "type": "object",
+          "description": "Implemented sections keyed by SpecSection id, with the latest specification version each implementation satisfies.",
+          "propertyNames": {"minLength": 1},
+          "additionalProperties": {"$ref": "#/$defs/version"}
+        },
+        "non_applicable": {
+          "type": "object",
+          "description": "Entire sections that require no implementation for this SDK, keyed by SpecSection id, with a reason for each exclusion.",
+          "propertyNames": {"minLength": 1},
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        }
+      }
+    }
+  }
+}
