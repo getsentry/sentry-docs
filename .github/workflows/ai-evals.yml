@@ -195,10 +195,12 @@ jobs:
   eval:
     needs: plan
     if: needs.plan.outputs.docs-url != '' && needs.plan.outputs.eval-jobs != '[]'
-    name: ${{ matrix.job.label }} (${{ matrix.job.revision }}, ${{ matrix.job.target.name }}, ${{ matrix.job.test-name }})
+    # By the test's number, not its name: sentry-for-ai-evals is internal, so this public
+    # repo's checks and logs don't name its tests. evals.sentry.dev has each test's result.
+    name: ${{ matrix.job.label }} (${{ matrix.job.revision }}, ${{ matrix.job.target.name }}, test ${{ matrix.job.test-index }})
     # Per PR, label, revision, target and test, so the jobs don't cancel each other.
     concurrency:
-      group: ai-evals-${{ github.event.pull_request.number }}-${{ matrix.job.label }}-${{ matrix.job.revision }}-${{ matrix.job.target.name }}-${{ matrix.job.test }}
+      group: ai-evals-${{ github.event.pull_request.number }}-${{ matrix.job.label }}-${{ matrix.job.revision }}-${{ matrix.job.target.name }}-${{ matrix.job.test-index }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -242,7 +244,8 @@ jobs:
       - uses: ./sentry-for-ai-evals/.github/actions/run-evals
         with:
           marker: ${{ matrix.job.marker }}
-          test: ${{ matrix.job.test }}
+          test-index: ${{ matrix.job.test-index }}
+          count: ${{ matrix.job.count }}
           harness: ${{ matrix.job.target.harness }}
           model: ${{ matrix.job.target.model }}
           revision: ${{ matrix.job.revision }}
