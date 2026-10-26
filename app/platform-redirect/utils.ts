@@ -35,3 +35,25 @@ export const sanitizeNext = (next: string) => {
 
   return pathname === '/' ? '' : pathname;
 };
+
+/**
+ * Returns the `#fragment` of `next` so the redirect can land on the same section,
+ * or an empty string if there is none. Only characters used in heading and option
+ * ids are kept.
+ */
+export const sanitizeNextHash = (next: string) => {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(next);
+  } catch {
+    return '';
+  }
+
+  const hashIndex = decoded.indexOf('#');
+  if (hashIndex === -1) {
+    return '';
+  }
+
+  const fragment = decoded.slice(hashIndex + 1).replace(/[^\w\-.]/g, '');
+  return fragment ? `#${fragment}` : '';
+};

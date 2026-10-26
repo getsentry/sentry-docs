@@ -7,7 +7,7 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
-import {sanitizeNext} from './utils';
+import {sanitizeNext, sanitizeNextHash} from './utils';
 
 export const metadata: Metadata = {
   robots: 'noindex',
@@ -29,6 +29,7 @@ export default async function Page(props: {
   }
 
   const pathname = sanitizeNext(next);
+  const hash = sanitizeNextHash(next);
   const isTracingAutomatedInstrumentation =
     pathname.replace(/\/$/, '') === '/tracing/instrumentation/automatic-instrumentation';
   const rootNode = await getDocsRootNode();
@@ -145,7 +146,7 @@ export default async function Page(props: {
       p => p.key === requestedPlatform?.toLowerCase()
     );
     if (validPlatform) {
-      return redirect(`${validPlatform.url}${pathname}`);
+      return redirect(`${validPlatform.url}${pathname}${hash}`);
     }
   }
 
@@ -167,7 +168,7 @@ export default async function Page(props: {
       <ul>
         {platformOrGuideList.map(p => (
           <li key={p.key} style={{marginLeft: p.shouldBeNested ? '20px' : '0'}}>
-            <SmartLink to={`${p.url}${pathname}`}>
+            <SmartLink to={`${p.url}${pathname}${hash}`}>
               <PlatformIcon
                 size={16}
                 platform={p.icon}

@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {sanitizeNext} from './utils';
+import {sanitizeNext, sanitizeNextHash} from './utils';
 
 describe('sanitizeNext', () => {
   it('should return an empty string for external URLs', () => {
@@ -81,5 +81,37 @@ describe('sanitizeNext', () => {
     const input = '%E0%A4%A'; // Malformed URI
     const expectedOutput = '';
     expect(sanitizeNext(input)).toBe(expectedOutput);
+  });
+});
+
+describe('sanitizeNextHash', () => {
+  it('should return an empty string when there is no fragment', () => {
+    expect(sanitizeNextHash('/configuration/options/')).toBe('');
+    expect(sanitizeNextHash('/configuration/options/#')).toBe('');
+  });
+
+  it('should keep the fragment of an encoded next path', () => {
+    // `PlatformLink` encodes `next`, so the `#` arrives as `%23`
+    expect(sanitizeNextHash('%2Fconfiguration%2Foptions%2F%23ignoreErrors')).toBe(
+      '#ignoreErrors'
+    );
+    expect(sanitizeNextHash('/configuration/options/#tracing-options')).toBe(
+      '#tracing-options'
+    );
+  });
+
+  it('should keep dots and underscores used in option ids', () => {
+    expect(sanitizeNextHash('/configuration/options/#godot_logger.event_mask')).toBe(
+      '#godot_logger.event_mask'
+    );
+  });
+
+  it('should remove unsafe characters from the fragment', () => {
+    expect(sanitizeNextHash('/path/#a"><script>b')).toBe('#ascriptb');
+    expect(sanitizeNextHash('/path/#a/b?c=1')).toBe('#abc1');
+  });
+
+  it('should return an empty string for a malformed URI component', () => {
+    expect(sanitizeNextHash('/path/#%E0%A4%A')).toBe('');
   });
 });
