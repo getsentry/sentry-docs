@@ -103,9 +103,6 @@ if (
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
-  images: {
-    minimumCacheTTL: 86400, // 1 day
-  },
   serverExternalPackages: [
     'rehype-preset-minify',
     'esbuild',
@@ -127,6 +124,7 @@ const nextConfig = {
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
+    minimumCacheTTL: 86400, // 1 day
   },
   webpack: (config, options) => {
     config.plugins.push(
