@@ -1076,6 +1076,11 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/remix/hydrogen/',
   },
   {
+    // The framework selector on the Cloudflare quick start links to every framework page.
+    source: '/platforms/javascript/guides/cloudflare/frameworks/',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
     source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
     destination: '/platforms/javascript/guides/nextjs/cloudflare/',
   },
