@@ -22,12 +22,11 @@ Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
 
 **Error Monitoring** starts working as soon as you call `SentrySdk.Init()`. **Logs** sent through `SentrySdk.Logger` and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 
-This guide also enables **Tracing**, **Profiling**, and **Session Replay** (experimental).
+This guide also enables **Tracing**. The iOS and Mac Catalyst setup enables **Profiling**, and the iOS setup enables experimental **Session Replay**.
 
-On .NET for iOS, macOS, and Mac Catalyst, you also get:
+On all three platforms, you get the features of the main [.NET SDK](/platforms/dotnet/) for your managed code. On iOS and Mac Catalyst, the embedded [Cocoa SDK](/platforms/apple/) also provides:
 
-- All the features of our main [.NET SDK](/platforms/dotnet/), for your managed code
-- Native crash reporting for Apple platforms, leveraging our [Cocoa SDK](/platforms/apple/) including:
+- Native crash reporting, including:
     - Automatically [attach screenshots to Native exceptions](/platforms/apple/guides/ios/configuration/options/#attachScreenshot)
     - Detect [App Hangs](/platforms/apple/configuration/app-hangs/)
     - [Automatic performance tracing](/platforms/apple/tracing/)
@@ -35,17 +34,23 @@ On .NET for iOS, macOS, and Mac Catalyst, you also get:
     - [Swizzling](/platforms/apple/configuration/swizzling/)
 - Automatic session tracking and [release health](/product/releases/)
 
-In your `AppDelegate.cs` file, call `SentrySdk.Init` in the `FinishedLaunching` event and include any options you would like to set. The `Dsn` is the only required parameter.
+### iOS and Mac Catalyst
+
+In your `AppDelegate.cs` file, call `SentrySdk.Init` in `FinishedLaunching`. Keep your existing window and application setup after the Sentry initialization. The `Dsn` is the only required setting.
 
 The snippet also turns on:
 
-- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink> and `Native.EnableTracing` for the embedded Cocoa SDK
 - Profiling: via <PlatformLink to="/profiling/">`ProfilesSampleRate`</PlatformLink>. On iOS and Mac Catalyst, the SDK adds the native profiling integration automatically, so you don't need the `Sentry.Profiling` package.
-- Session Replay: via <PlatformLink to="/configuration/native-options/#session-replay">`Native.ExperimentalOptions.SessionReplay`</PlatformLink>
+- Session Replay on iOS: via <PlatformLink to="/configuration/native-options/#session-replay">`Native.ExperimentalOptions.SessionReplay`</PlatformLink>
 
 Don't need a feature? Remove its options from the snippet.
 
-```csharp
+```csharp {filename:AppDelegate.cs}
+using Foundation;
+using Sentry;
+using UIKit;
+
 [Register("AppDelegate")]
 public class AppDelegate : UIApplicationDelegate
 {
@@ -60,6 +65,7 @@ public class AppDelegate : UIApplicationDelegate
             // Set to 1.0 to capture 100% of spans for tracing.
             // We recommend reducing this value in production.
             options.TracesSampleRate = 1.0;
+            options.Native.EnableTracing = true;
             // Enables Profiling.
             // Set to 1.0 to profile 100% of captured transactions.
             options.ProfilesSampleRate = 1.0;
@@ -75,9 +81,11 @@ public class AppDelegate : UIApplicationDelegate
             // https://docs.sentry.io/platforms/apple/guides/ios/configuration/options/#attachScreenshot
             options.Native.AttachScreenshot = true;
 
-            // Session Replay is currently available via the ExperimentalOptions
+#if IOS
+            // Session Replay is available on iOS via ExperimentalOptions.
             options.Native.ExperimentalOptions.SessionReplay.OnErrorSampleRate = 1.0;
             options.Native.ExperimentalOptions.SessionReplay.SessionSampleRate = 1.0;
+#endif
 
             options.SetBeforeSend(evt =>
             {
@@ -103,11 +111,43 @@ public class AppDelegate : UIApplicationDelegate
 
 For a full list of native options, see <PlatformLink to="/configuration/native-options/">Apple Native Options</PlatformLink>.
 
+### macOS
+
+For an AppKit application targeting `net*-macos`, initialize Sentry in `NSApplicationDelegate.DidFinishLaunching`. This target doesn't include the Cocoa integration's `options.Native` or `OnCrashedLastRun` APIs.
+
+```csharp {filename:AppDelegate.cs}
+using AppKit;
+using Foundation;
+using Sentry;
+
+[Register("AppDelegate")]
+public class AppDelegate : NSApplicationDelegate
+{
+    public override void DidFinishLaunching(NSNotification notification)
+    {
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.SendDefaultPii = true;
+            options.IsGlobalModeEnabled = true;
+            options.TracesSampleRate = 1.0;
+#if DEBUG
+            options.Debug = true;
+#endif
+        });
+
+        // Keep the rest of your application startup here.
+    }
+}
+```
+
+For custom transactions, see [Verify Your Setup](#verify-your-setup). The Cocoa profiling and replay configuration above doesn't apply to this target.
+
 ### Options
 
 The .NET for iOS, macOS, and Mac Catalyst integration is part of [Sentry](/platforms/dotnet/). Please refer to the documentation for that package for information about platform agnostic options.
 
-For configuration of the embedded Sentry Cocoa SDK, see <PlatformLink to="/configuration/native-options/">Apple Native Options</PlatformLink>.
+For configuration of the embedded Sentry Cocoa SDK on iOS and Mac Catalyst, see <PlatformLink to="/configuration/native-options/">Apple Native Options</PlatformLink>.
 
 ## Send Logs
 
@@ -141,9 +181,11 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
 
+<PlatformContent includePath="getting-started-verify-tracing" />
+
 ### View Captured Data in Sentry
 
-Open your Sentry project to view the captured event.
+<PlatformContent includePath="getting-started-verify-data" />
 
 ## Next Steps
 
@@ -152,4 +194,4 @@ At this point, you should have integrated Sentry into your .NET for iOS, macOS, 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to [manually capture errors](/platforms/dotnet/usage/)
 - Explore [Tracing](/platforms/dotnet/tracing/)
-- Configure the embedded Cocoa SDK with <PlatformLink to="/configuration/native-options/">Apple Native Options</PlatformLink>
+- On iOS and Mac Catalyst, configure the embedded Cocoa SDK with <PlatformLink to="/configuration/native-options/">Apple Native Options</PlatformLink>

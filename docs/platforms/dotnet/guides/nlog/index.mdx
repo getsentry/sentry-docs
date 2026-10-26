@@ -18,7 +18,7 @@ By default, Sentry will keep any message with log level `Info` or higher as a `B
 
 The default value to report a log entry as an event to Sentry is `Error`.
 
-This means that out of the box, any `Error` call will create an `Event` which will include all log messages of level `Info`, `Warn` and also `Error` and `Critical`.
+This means that out of the box, any `Error` call will create an `Event` which will include all log messages of level `Info`, `Warn`, `Error`, and `Fatal` stored as breadcrumbs.
 
 Additionally, when enabled, log messages are sent to Sentry as [Structured Logs](logs/).
 
@@ -36,12 +36,6 @@ dotnet add package Sentry.NLog -v {{@inject packages.version('sentry.dotnet.nlog
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
-<Alert level="warning" title="Note">
-
-Messages logged from assemblies with the name starting with `Sentry` will not generate events.
-
-</Alert>
-
 ## Configure
 
 <Alert title="NLog Layouts">
@@ -50,13 +44,16 @@ For more information on how to dynamically set event data via `NLog.config`, see
 
 </Alert>
 
-You can configure the Sentry NLog target via code as follows:
+If another integration already initializes Sentry, add the NLog target without reinitializing the SDK. Enable `EnableLogs` on the options used by that integration to send structured logs.
 
 ```csharp
-LogManager.Configuration = new LoggingConfiguration();
-LogManager.Configuration
-    .AddSentry(options =>
+using NLog;
+using NLog.Config;
+
+var configuration = new LoggingConfiguration();
+configuration.AddSentry(options =>
     {
+        options.InitializeSdk = false;
         // Optionally specify a separate format for message
         options.Layout = "${message}";
         // Optionally specify a separate format for breadcrumbs
@@ -72,6 +69,7 @@ LogManager.Configuration
 
         // All Sentry Options are accessible here.
     });
+LogManager.Configuration = configuration;
 ```
 
 It's also possible to initialize the SDK through the NLog integration (as opposed to using `SentrySdk.Init`).
@@ -79,18 +77,19 @@ This is useful when NLog is the only integration being used in your application.
 
 
 ```csharp
-LogManager.Configuration = new LoggingConfiguration();
-LogManager.Configuration
-    .AddSentry(o =>
+var configuration = new LoggingConfiguration();
+configuration.AddSentry(o =>
     {
         // The NLog integration will initialize the SDK if DSN is set:
         o.Dsn = "___PUBLIC_DSN___";
+        o.EnableLogs = true;
     });
+LogManager.Configuration = configuration;
 ```
 
 <Alert level="warning" title="Note">
 
-The SDK needs to be initialized only once. If a `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this integration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as `null` instructs the integration not to initialize the SDK and unless another integration initializes it or you call `SentrySdk.Init`, the SDK will stay disabled.
+Initialize the SDK once. `InitializeSdk` defaults to `true`, and initialization can resolve a DSN from `SENTRY_DSN` even when you omit `Dsn`. If another integration or `SentrySdk.Init` owns initialization, set `InitializeSdk = false`. Omitting the DSN doesn't prevent reinitialization and can replace the existing SDK configuration.
 
 </Alert>
 
@@ -121,6 +120,7 @@ The SDK can also be configured via `NLog.config` XML file:
 
       <!-- Advanced options can be configured here-->
       <options
+          enableLogs="true"
           sendDefaultPii="true"
           attachStacktrace="false"
           shutdownTimeoutSeconds="5"
@@ -202,9 +202,16 @@ You can provide a `user` entry matching the following example user. See [Identif
 
 ## Verify
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+After configuring NLog, send an informational log and an error:
 
-<PlatformContent includePath="getting-started-verify" />
+```csharp
+var logger = LogManager.GetCurrentClassLogger();
+logger.Info("Sentry logging verification");
+logger.Error("Sentry error-event verification");
+LogManager.Flush();
+```
+
+With `EnableLogs = true`, the informational message appears in **Logs**. The error message also creates an event in **Issues**. Call `LogManager.Shutdown()` when your application exits to dispose the target and flush pending data.
 
 ## Samples
 
