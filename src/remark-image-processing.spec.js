@@ -3,10 +3,12 @@ import {mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 
+import {bundleMDX} from 'mdx-bundler';
+import remarkMdxImages from 'remark-mdx-images';
 import sharp from 'sharp';
 import {beforeAll, describe, expect, it} from 'vitest';
 
-import remarkImageProcessing from './remark-image-processing';
+import remarkImageProcessing, {remarkImageSizeToSrc} from './remark-image-processing';
 
 const createImage = (width, height, format) => {
   const image = sharp({
@@ -117,5 +119,39 @@ describe('remarkImageProcessing', () => {
 
   it('rejects when the image is missing', async () => {
     await expect(transform(tree(imageNode('./nope.png')))).rejects.toThrow(/ENOENT/);
+  });
+});
+
+describe('remarkImageSizeToSrc', () => {
+  it('keeps the size hash after esbuild bundles the image', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'remark-image-size-to-src-'));
+    writeFileSync(path.join(root, 'wide.png'), await createImage(2942, 1360, 'png'));
+
+    try {
+      const {code} = await bundleMDX({
+        source: '![wide](./wide.png)',
+        cwd: root,
+        mdxOptions(options) {
+          options.remarkPlugins = [
+            [remarkImageProcessing, {publicFolder: root, sourceFolder: root}],
+            remarkMdxImages,
+            remarkImageSizeToSrc,
+          ];
+          return options;
+        },
+        esbuildOptions(options) {
+          options.loader = {...options.loader, '.png': 'file'};
+          options.outdir = path.join(root, 'out');
+          options.publicPath = '/mdx-images';
+          options.write = true;
+          return options;
+        },
+      });
+
+      expect(code).toMatch(/"\/mdx-images\/wide-[A-Z0-9]+\.png"/);
+      expect(code).toContain('"#900x416"');
+    } finally {
+      rmSync(root, {recursive: true, force: true});
+    }
   });
 });
