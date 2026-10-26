@@ -153,12 +153,13 @@ jobs:
         if: steps.preview.outputs.url != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          # The branch, not base.sha, which is a snapshot from the event and can lag it.
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          compare="$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA?per_page=1" \
-            --jq '"\(.merge_base_commit.sha) \(.behind_by)"')"
-          read -r merge_base behind <<<"$compare"
+          compare="$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_REF...$HEAD_SHA?per_page=1" \
+            --jq '"\(.merge_base_commit.sha) \(.base_commit.sha) \(.behind_by)"')"
+          read -r merge_base base_tip behind <<<"$compare"
           ids="$(gh api -X GET "repos/$GITHUB_REPOSITORY/deployments" \
             -f sha="$merge_base" -f environment="Production – sentry-docs" --jq '.[].id')" || ids=""
           url=""
@@ -174,7 +175,7 @@ jobs:
             echo "url=$url" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "sha=$base_tip" >> "$GITHUB_OUTPUT"
           if (( behind > 0 )); then
             echo "::warning::The merge base $merge_base has no production deploy that serves its own pages, so the base reads the live docs. The head is missing $behind of the base branch's commits, so the preview lacks changes the live docs have, and the comparison counts their removal as part of this PR. Update the branch to compare only this PR's changes, which reruns the evals."
           fi
