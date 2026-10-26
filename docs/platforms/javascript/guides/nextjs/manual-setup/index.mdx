@@ -1,7 +1,7 @@
 ---
 title: "Manual Setup"
 sidebar_order: 1
-description: "Learn how to set up and configure Sentry in your Next.js application, capture your first errors, logs and traces and view them in Sentry."
+description: "Learn how to set up and configure Sentry in your Next.js application and capture your first events in Sentry."
 sdk: sentry.javascript.nextjs
 categories:
   - browser
@@ -20,17 +20,6 @@ This guide covers manual setup for **Next.js 15+ with Turbopack and App Router**
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-Choose the features you want to configure:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    { id: "performance", checked: true },
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
-
 **How this guide works:**
 
 1. **Install** - Add the Sentry SDK to your project
@@ -40,8 +29,6 @@ Choose the features you want to configure:
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
-
-### Install the Sentry SDK
 
 Run the command for your preferred package manager to add the Sentry SDK to your application.
 
@@ -58,6 +45,11 @@ pnpm add @sentry/nextjs
 ```
 
 ## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable" />
 
 ### Apply Instrumentation to Your App
 
@@ -93,35 +85,39 @@ Create the following files in your application's root directory (or `src` folder
   variable like `NEXT_PUBLIC_SENTRY_DSN`.
 </Alert>
 
+The snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> in all three files
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>. The wizard doesn't add this integration, so add it to `instrumentation-client.ts` yourself.
+
+Don't need a feature? Remove its integration and options from the snippets.
+
 ```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // ___PRODUCT_OPTION_START___ performance
-
+  // Enables Tracing.
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-  // ___PRODUCT_OPTION_END___ performance
   integrations: [
-    // ___PRODUCT_OPTION_START___ session-replay
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
@@ -133,12 +129,10 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // ___PRODUCT_OPTION_START___ performance
-
+  // Enables Tracing.
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
@@ -148,12 +142,10 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // ___PRODUCT_OPTION_START___ performance
-
+  // Enables Tracing.
   // Capture 100% in dev, 10% in production
   // Adjust based on your traffic volume
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
@@ -221,7 +213,7 @@ export async function submitForm(formData: FormData) {
 }
 ```
 
-### Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 Add the `authToken` option to your `next.config.ts` to enable readable stack traces. Set the `SENTRY_AUTH_TOKEN` environment variable in your CI/CD.
 
@@ -246,7 +238,7 @@ export default withSentryConfig(nextConfig, {
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-### Tunneling (Optional)
+### Avoid Ad Blockers With Tunneling
 
 Prevent ad blockers from blocking Sentry events by routing them through your Next.js server.
 
@@ -273,19 +265,32 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
-## Error Monitoring
+## Send Logs
 
-Test your error monitoring setup by throwing an error and viewing it in Sentry.
+<PlatformContent includePath="getting-started-logs" />
 
-### Throw a Test Error
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+
+- <PlatformLink to="/logs/#console">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#consola">Consola</PlatformLink>
+- <PlatformLink to="/logs/#pino">Pino</PlatformLink>
+- <PlatformLink to="/logs/#winston">Winston</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+In the Node.js runtime, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 Add this button to any page and click it to trigger a test error.
-
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
 ```jsx
 <button
@@ -297,134 +302,7 @@ Add this button to any page and click it to trigger a test error.
   Break the world
 </button>
 ```
-
-### Verify
-
-Open [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) in Sentry to see your test error. [Learn more about capturing errors](/platforms/javascript/guides/nextjs/capturing-errors/).
-
-## Verify Additional Features
-
-Based on the features you selected above, verify each one is working correctly.
-
-<OnboardingOption optionId="session-replay">
-
-### Session Replay
-
-Session Replay captures video-like reproductions of user sessions. It's configured with `replayIntegration()` in your client config.
-
-By default, Sentry masks all text, inputs, and media. You can customize this in [Privacy Configuration](/platforms/javascript/guides/nextjs/session-replay/privacy/).
-
-**Verify:** Trigger an error or navigate your app, then check [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays/) in Sentry.
-
-```typescript {filename:instrumentation-client.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      maskAllInputs: true,
-      blockAllMedia: true,
-    }),
-  ],
-
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-});
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="performance">
-
-### Tracing
-
-Tracing is configured with `tracesSampleRate` in your SDK init files. Next.js routes and API calls are automatically instrumented.
-
-Add [custom spans](/platforms/javascript/guides/nextjs/tracing/instrumentation/custom-instrumentation/) to trace specific operations in your code.
-
-**Verify:** Navigate to any page, then check [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) in Sentry.
-
-```typescript
-import * as Sentry from "@sentry/nextjs";
-
-// Wrap operations with spans
-const result = await Sentry.startSpan(
-  { name: "expensive-operation", op: "function" },
-  async () => {
-    return await fetchDataFromAPI();
-  }
-);
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-### Logs
-
-Logs are enabled by default. Use the Sentry logger to send structured logs from anywhere in your application.
-
-Connect popular logging libraries via [Integrations](/platforms/javascript/guides/nextjs/logs/#integrations).
-
-**Verify:** Add a log statement, trigger it, then check [**Logs**](https://sentry.io/orgredirect/organizations/:orgslug/explore/logs/) in Sentry.
-
-```typescript
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.logger.info("User clicked checkout button");
-
-Sentry.logger.info("Order completed", {
-  orderId: "12345",
-  total: 99.99,
-});
-
-Sentry.logger.warn("Warning message");
-Sentry.logger.error("Error occurred");
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="user-feedback">
-
-### User Feedback
-
-User Feedback adds an embeddable widget via `feedbackIntegration()` that lets users report bugs directly from your app.
-
-**Verify:** Look for the feedback button (bottom-right corner), submit test feedback, then check [**User Feedback**](https://sentry.io/orgredirect/organizations/:orgslug/feedback/) in Sentry.
-
-[Learn more about User Feedback](/platforms/javascript/guides/nextjs/user-feedback/)
-
-```typescript {filename:instrumentation-client.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  integrations: [
-    Sentry.feedbackIntegration({
-      colorScheme: "system",
-    }),
-  ],
-});
-```
-
-</OnboardingOption>
-
-### Application Metrics <FeatureBadge type="new" size="small" />
-
-Track and analyze custom application metrics to understand trends and patterns in your app's performance and behavior over time.
-<PlatformLink to="/metrics/">Application Metrics</PlatformLink> are enabled by default.
-
-**Verify:** Add a metrics statement, trigger it, then check [**Metrics**](https://sentry.io/orgredirect/organizations/:orgslug/explore/metrics/) in Sentry.
-
-```typescript
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.metrics.count("checkout.failed", 1);
-Sentry.metrics.gauge("queue.depth", 42);
-Sentry.metrics.distribution("api_latency", 187, {
-  unit: "millisecond",
-});
-```
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
 <h2 data-no-number>Hybrid Apps (App Router + Pages Router)</h2>
 
@@ -441,13 +319,11 @@ If your application uses both the App Router and Pages Router:
 
 <h2 data-no-number>Next Steps</h2>
 
-You've successfully integrated Sentry into your Next.js application! Here's what to explore next:
+At this point, you should have integrated Sentry into your Next.js application. Here's what to explore next:
 
-- [Logs Integrations](/platforms/javascript/guides/nextjs/logs/#integrations) - Connect popular logging libraries like Pino, Winston, and Bunyan
-- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) - Trace requests across services and microservices
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - [Agent Tracing](/platforms/javascript/guides/nextjs/agent-tracing/) - Monitor agents built with Vercel AI SDK, LangChain, and more
 - [Connect GitHub + Seer](/integrations/source-code-mgmt/github/#installing-github) - Enable AI-powered [root cause analysis](/product/ai-in-sentry/seer/) by connecting your GitHub repository
-- [Configuration Options](/platforms/javascript/guides/nextjs/configuration/) - Explore extended SDK configuration options
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
