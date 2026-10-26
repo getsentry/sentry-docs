@@ -26,6 +26,8 @@ This guide focuses on plain Python. If you're working with Django, FastAPI, Star
 
 <PlatformContent includePath="getting-started-install" />
 
+This guide requires `sentry-sdk` version 2.70.0 or later. If you already have the SDK installed, upgrade it with `pip install --upgrade sentry-sdk`.
+
 ## Configure
 
 **Error Monitoring** starts working as soon as you call `sentry_sdk.init()`. **Logs** and **Application Metrics** need no extra configuration when using `sentry_sdk.logger` and `sentry_sdk.metrics`, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
@@ -41,6 +43,7 @@ Import and initialize the SDK in your app's entry point:
 
 The snippet also turns on:
 
+- Collection of user data, such as the user's IP address: via <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink>
 - Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
 - Profiling: via <PlatformLink to="/configuration/options/#profile_session_sample_rate">`profile_session_sample_rate`</PlatformLink> and <PlatformLink to="/configuration/options/#profile_lifecycle">`profile_lifecycle`</PlatformLink>
 
@@ -51,8 +54,10 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
 
-    # Send request headers and user IP address.
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "user_info": True,
+    },
 
     # Enables Tracing.
     # Set to 1.0 to capture 100% of spans for tracing.
@@ -62,19 +67,22 @@ sentry_sdk.init(
     # Enables Profiling.
     # Set to 1.0 to profile 100% of sessions.
     profile_session_sample_rate=1.0,
-    # Profiles are collected while at least one span is active.
+    # Profiles are collected while a transaction is active.
     profile_lifecycle="trace",
 )
 ```
 
-In async programs, we recommend to initialize the Sentry SDK inside an `async` function to ensure async code is instrumented properly. If possible, call `sentry_sdk.init()` at the beginning of the first `async` function you call:
+In async programs, add the <PlatformLink to="/integrations/asyncio/">`AsyncioIntegration`</PlatformLink> to instrument your async code. This integration isn't enabled by default. Call `sentry_sdk.init()` at the beginning of the first `async` function you call:
 
 ```python
 import asyncio
 import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
 async def main():
     sentry_sdk.init(
-        ...  # same as above
+        ...,  # same options as above
+        integrations=[AsyncioIntegration()],
     )
 
 asyncio.run(main())
@@ -129,11 +137,22 @@ sentry_sdk.metrics.distribution("api_latency", 187, unit="millisecond")
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
-Add an intentional error to your application to confirm that Sentry captures it:
+Run this code after `sentry_sdk.init()` to send a test error, along with a trace, a log, and a metric:
 
 ```python
-1 / 0
+import sentry_sdk
+
+with sentry_sdk.start_transaction(op="test", name="Verify Sentry setup"):
+    sentry_sdk.logger.info("Sentry verification log")
+    sentry_sdk.metrics.count("sentry.verification", 1)
+    1 / 0
 ```
+
+<Alert>
+
+The SDK sends profiles after a transaction finishes, so a script that exits right away, like the one above, might not send a profile. Profiles appear for applications that keep running after their transactions complete.
+
+</Alert>
 
 ### View Captured Data in Sentry
 
