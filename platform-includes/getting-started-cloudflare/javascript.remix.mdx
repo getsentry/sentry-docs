@@ -1,67 +1,68 @@
 ## Configure
 
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
 ### Configure Client-Side Sentry
 
-Create a client file `entry.client.tsx` in the `app` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK:
+Create a client file `entry.client.tsx` in the `app` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK.
 
-```typescript {tabTitle:Client} {filename: entry.client.tsx}
+The snippet also turns on:
+
+- Tracing: via `browserTracingIntegration()` and <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>; <PlatformLink to="/configuration/options/#tracePropagationTargets">`tracePropagationTargets`</PlatformLink> controls which API requests receive trace headers
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
+```typescript {filename:app/entry.client.tsx}
 import { useLocation, useMatches } from "@remix-run/react";
 import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
+    // enables automatic instrumentation
     Sentry.browserTracingIntegration({
       useEffect,
       useLocation,
       useMatches,
     }),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
-    // Replay is only available in the client
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
 
-  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  // Set trace propagation targets for your API requests
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
-#### Remix ErrorBoundary
+### Capture Errors From Your ErrorBoundary
 
 To capture errors from your [ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary), define it in `root.tsx` to act as a fallback for all routes or create route-specific error boundaries in your route components.
 
 In your `ErrorBoundary` component, use `Sentry.captureRemixErrorBoundaryError` to send the captured error to Sentry:
 
-```tsx {filename: root.tsx}
+```tsx {filename:app/root.tsx}
 import { captureRemixErrorBoundaryError } from "@sentry/remix";
 
 export const ErrorBoundary = () => {
@@ -73,11 +74,11 @@ export const ErrorBoundary = () => {
 };
 ```
 
-#### Performance Monitoring
+### Wrap Your Root Component
 
 Wrap your Remix root component with `withSentry` to capture performance data:
 
-```tsx {filename: root.tsx}
+```tsx {filename:app/root.tsx}
 import {
   Links,
   LiveReload,
@@ -121,6 +122,12 @@ Don't also wrap `createRequestHandler` with `makeWrappedCreateRequestHandler`. C
 
 </Alert>
 
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
 ```typescript {filename:server.ts}
 import { createRequestHandler } from "@remix-run/cloudflare";
 import * as Sentry from "@sentry/cloudflare";
@@ -133,15 +140,11 @@ const handleRequest = createRequestHandler(instrumentBuild(remixBuild));
 export default Sentry.withSentry(
   (env) => ({
     dsn: "___PUBLIC_DSN___",
-    // ___PRODUCT_OPTION_START___ performance
 
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for tracing.
-    // We recommend adjusting this value in production
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   }),
   {
     async fetch(request, env, ctx) {
@@ -163,15 +166,10 @@ export const onRequest = [
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
 
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for tracing.
-    // We recommend adjusting this value in production
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
 
     // Optionally limit which action formData fields are captured.
     // Without this option, all fields are captured.
@@ -196,13 +194,13 @@ Import from `@sentry/remix/cloudflare`, not from `@sentry/remix`. In a Cloudflar
 
 </Alert>
 
-```typescript {filename: entry.server.tsx}
+```typescript {filename:app/entry.server.tsx}
 import { sentryHandleError } from "@sentry/remix/cloudflare";
 
 export const handleError = sentryHandleError;
 ```
 
-### Configure Cloudflare for Sentry
+### Configure Wrangler
 
 <PlatformContent
   includePath="getting-started-config"
@@ -245,7 +243,7 @@ Build your app with `remix vite:build`. Under Vite 6, a plain `vite build` only 
 npx remix vite:build
 ```
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 To upload source maps for clear error stack traces, pass your Sentry organization, project, and auth token to `sentryRemixVitePlugin` from the previous step. It injects debug IDs, uploads the source maps during your production build, and deletes them from your build output afterwards.
 
@@ -291,98 +289,55 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with `console` or Consola, you can capture those logs with <PlatformLink to="/logs/#console-integration">our console integrations</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add a test button to one of your pages. Open the page in a browser and click the button to trigger an error for Sentry to capture.
 
-<PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to one of your pages.
-
-<OnboardingOption optionId="performance" hideForThisOption>
-
-Open the page in a browser and click the button to trigger a frontend error.
-
-</OnboardingOption>
-
-```javascript
+```tsx
 <button
   type="button"
   onClick={() => {
-    throw new Error("Sentry Example Frontend Error");
+    throw new Error("Sentry Test Error");
   }}
 >
-  <span>Throw Sample Error</span>
+  Test Sentry Error
 </button>
 ```
 
-<OnboardingOption optionId="performance">
-
-### Tracing
-
-To test your tracing configuration, update the previous code snippet by calling a non-existing route and starting a trace to measure the time it takes for the execution of your code.
-
-Open the page in a browser and click the button to trigger the frontend error and a trace.
-
-```javascript
-<button
-  type="button"
-  onClick={async () => {
-    await Sentry.startSpan(
-      {
-        name: "Example Frontend Span",
-        op: "test",
-      },
-      async () => {
-        const res = await fetch("/api/sentry-example-api");
-        if (!res.ok) {
-          throw new Error("Sentry Example Frontend Error");
-        }
-      }
-    );
-  }}
->
-  <span>Throw Sample Error</span>
-</button>
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
 ### View Captured Data in Sentry
 
-Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
 
 <Include name="quick-start-locate-data-expandable-cloudflare-frameworks" />
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Remix application and should already be sending error and performance data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Remix application on Cloudflare. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- If you encountered issues with the manual setup, try <PlatformLink to="/">our installation wizard</PlatformLink>
-- Find various support topics in [Cloudflare troubleshooting](/platforms/javascript/guides/cloudflare/troubleshooting/) and [Remix troubleshooting](/platforms/javascript/guides/remix/troubleshooting/)
+- Find various topics in [Remix troubleshooting](/platforms/javascript/guides/remix/troubleshooting/) and [Cloudflare troubleshooting](/platforms/javascript/guides/cloudflare/troubleshooting/)
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>
