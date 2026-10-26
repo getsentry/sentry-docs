@@ -14,7 +14,8 @@ const MAX_IMAGE_WIDTH = 900;
  *
  * e.g. /img.png -> /img.png?v=abc12345#100x100
  *
- * The size (#WxH) is consumed by docImage.tsx and passed down to next/image.
+ * For relative imports, remark-image-resize copies #WxH to JSX attributes before
+ * the bundler strips the hash. DocImage reads the hash for public asset URLs.
  * The content hash (?v=xxx) ensures browsers/CDN fetch fresh images when content changes.
  */
 export default function remarkImageProcessing(options) {
