@@ -52,7 +52,7 @@ This span represents a request to an AI model or service that generates a respon
 
 - Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - Span `name` **SHOULD** be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"generate_content"` or `"text_completion"`.
 - Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
 - Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
 - Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
@@ -110,6 +110,41 @@ Additional attributes on the span:
 - **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
 - **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
 - **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
+
+## Embedding Span
+
+This span represents a request to a provider to encode input into numeric vector embeddings.
+
+- Span `op` **SHOULD** be `"gen_ai.embeddings"`.
+- Span `name` **SHOULD** be `"embeddings {gen_ai.request.model}"`. (e.g. `"embeddings text-embedding-3-small"`)
+- Attribute `gen_ai.operation.name` **MUST** be `"embeddings"`.
+- Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"text-embedding-3-small"`)
+- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"text-embedding-3-small-001"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`)
+- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+
+Additional attributes on the span:
+
+### Request Data
+
+| Attribute                         | Type   | Description                                       | Example                                        |
+| :-------------------------------- | :----- | :------------------------------------------------ | :--------------------------------------------- |
+| `gen_ai.embeddings.input`         | string | Input to embed.                                   | `'{"type": "text", "value": "Hello, world!"}'` |
+| `gen_ai.request.encoding_formats` | string | The encoding format requested for the embeddings. | `"base64"`                                     |
+
+### Response Data
+
+| Attribute                           | Type   | Description                                | Example        |
+| :---------------------------------- | :----- | :----------------------------------------- | :------------- |
+| `gen_ai.response.id`                | string | Unique identifier for the completion.      | `"emb_abc123"` |
+| `gen_ai.embeddings.dimension.count` | int[]  | The dimensions of the returned embeddings. | `[1536]`       |
+
+### Token Usage Data
+
+| Attribute                   | Type | Description                             | Example |
+| :-------------------------- | :--- | :-------------------------------------- | :------ |
+| `gen_ai.usage.input_tokens` | int  | The number of tokens used in the input. | `60`    |
 
 ## Execute Tool Span
 
