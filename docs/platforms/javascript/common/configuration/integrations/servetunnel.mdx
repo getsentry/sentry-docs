@@ -1,16 +1,8 @@
 ---
 title: ServeTunnel
 description: "Serves a tunnel on your server so browser events reach Sentry through your own origin, past ad blockers."
-supported:
-  - javascript.sveltekit
-  - javascript.nuxt
-  - javascript.nitro
-  - javascript.astro
-  - javascript.react-router
-  - javascript.tanstackstart-react
-  - javascript.solidstart
-  - javascript.remix
-  - javascript.cloudflare
+supportedCategories:
+  - server
 ---
 
 <AvailableSince version="11.10.0" />
@@ -39,11 +31,7 @@ Sentry.init({
 
 The browser and the server both derive the tunnel path from the DSN, for example `/qpo967`. You don't need a route file, a build step, or an environment variable. If your app is served under a base path, the SDK adds it on both sides.
 
-<Alert>
-
-The tunnel is only served by the SDKs that answer requests from a framework hook: SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, SolidStart, and Remix 3. On other servers, see [Using the `tunnel` Option](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
-
-</Alert>
+The SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, SolidStart, and Remix 3 SDKs serve the tunnel from their request hooks. On other servers, [serve it yourself](#serving-the-tunnel-yourself).
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
@@ -104,3 +92,36 @@ Sentry.init({
 _Type: `string`_
 
 The path prefix your app is served under, for example `/docs`. The SDK reads it from your framework config, so you only need this option when it can't. Set the same value in the browser `tunnel` option.
+
+## Serving the Tunnel Yourself
+
+On servers without a framework SDK hook, like Express, Fastify, `node:http`, Bun, or Deno, mount `handleTunnelRequestIfMatched` before your routes and body parsers. It forwards tunnel requests and returns `undefined` for everything else:
+
+```javascript {tabTitle:Express}
+const express = require("express");
+const Sentry = require("@sentry/node");
+
+const app = express();
+
+app.use(
+  (req, res, next) => Sentry.handleTunnelRequestIfMatched(req, res) ?? next()
+);
+```
+
+```javascript {tabTitle:Fetch API}
+export default {
+  fetch(request) {
+    return Sentry.handleTunnelRequestIfMatched(request) ?? handleApp(request);
+  },
+};
+```
+
+To register the tunnel as a route instead, use `getTunnelPath()`, which returns the path the browser derives from the server's DSN, and `handleTunnelRequest`:
+
+```javascript
+app.post(Sentry.getTunnelPath(), (req, res) =>
+  Sentry.handleTunnelRequest(req, res)
+);
+```
+
+Both helpers take a fetch `Request`, or Node's `req` and `res`. Without options, they use the options of `serveTunnelIntegration`, or the server's own DSN if the integration isn't set up. `handleTunnelRequestIfMatched` also takes the same options as the integration, and `handleTunnelRequest` takes `allowedDsns`. To check a request without reading its body, use `isTunnelRequest(request)`.
