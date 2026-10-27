@@ -1,10 +1,19 @@
-You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnel` option inside your `hooks.client.(js|ts)` file's `Sentry.init` to add an API endpoint in your application that forwards Sentry events to Sentry servers.
+To keep ad blockers from dropping Sentry events, send them through a tunnel on your own origin. The SDK serves the tunnel and forwards the events to Sentry.
 
-This will send all events to the `tunnel` endpoint. However, the events need to be parsed and redirected to Sentry, so you'll need to do additional configuration on the server. The endpoint must forward only the request body to Sentry and accept only your own DSN. You can find a detailed explanation on how to do this on our [Troubleshooting page](/platforms/javascript/guides/sveltekit/troubleshooting/#using-the-tunnel-option).
+Set `tunnel: true` in your client `Sentry.init`, and add `serveTunnelIntegration` to your server `Sentry.init`:
 
-```javascript {filename:hooks.client.(js|ts)} {3}
+```javascript {filename:src/hooks.client.(js|ts)} {3}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tunnel: "/tunnel",
+  tunnel: true,
 });
 ```
+
+```javascript {filename:src/instrumentation.server.(js|ts)} {3}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.serveTunnelIntegration()],
+});
+```
+
+Learn more about the options in <PlatformLink to="/configuration/integrations/servetunnel/">`serveTunnelIntegration`</PlatformLink>. To set up your own tunnel endpoint instead, see our <PlatformLink to="/troubleshooting/#using-the-tunnel-option">Troubleshooting page</PlatformLink>.
