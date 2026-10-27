@@ -16,6 +16,13 @@ The category types and amount of data collected vary, depending on the integrati
 
 </PlatformSection>
 
+## Device and Installation Identifiers
+
+Apple SDK 9.31.0 can send the following identifiers even when `sendDefaultPii` is disabled:
+
+- **Installation ID:** The SDK generates a random UUID and stores it in its cache directory. If no user is set, it uses this ID as the event's user ID. The SDK generates a new ID if the stored ID is no longer available.
+- **Device app hash:** The SDK adds `contexts.app.device_app_hash` to the app context. It is a SHA-1 hash of the hardware machine and model strings, the app's bundle ID when available, and a device identifier. On iOS, tvOS, and visionOS with UIKit, the SDK uses the identifier for vendor (IDFV) when available. On other configurations, it attempts to use the MAC address of the `en0` network interface. If the identifier is unavailable, the SDK uses zero bytes in its place. The hash can persist across reinstalls; for example, IDFV can remain the same while another app from the same vendor is installed.
+
 ## HTTP Headers
 
 The <PlatformLink to="/configuration/http-client-errors/">HTTP Client Errors</PlatformLink>, which are enabled by default, send the HTTP headers of the failed request and response to Sentry. The SDK uses a [denylist](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Swift/Core/Tools/HTTPHeaderSanitizer.swift) to filter out any headers that contain sensitive data.
