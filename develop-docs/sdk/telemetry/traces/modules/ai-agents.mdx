@@ -43,9 +43,6 @@ Additional attributes on the span:
 | :----------------------- | :----- | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
 | `gen_ai.output.messages` | string | Stringified array of message objects representing the model's output. **[0]**, **[1]** | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'` |
 
-- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
-
 ## AI Client Span
 
 This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
@@ -106,11 +103,6 @@ Additional attributes on the span:
 | `gen_ai.usage.input_tokens.cache_write`    | int  | **Deprecated.** Use `gen_ai.usage.cache_creation.input_tokens` instead. Tokens written to cache when processing input.         | `20`    |
 | `gen_ai.usage.output_tokens.reasoning`     | int  | **Deprecated.** Use `gen_ai.usage.reasoning.output_tokens` instead. The number of tokens used for reasoning.                   | `30`    |
 
-- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
-- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
-- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
-
 ## Execute Tool Span
 
 Describes a tool execution.
@@ -136,6 +128,15 @@ Additional attributes on the span:
 | `gen_ai.tool.message`        | string | Response from a tool/function call passed to model.                                                            | `"The random number is 7"`                 |
 | `gen_ai.tool.input`          | string | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input that was given to the executed tool as string. | `'{"max":10}'`                             |
 | `gen_ai.tool.output`         | string | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                               | `"7"`                                      |
+
+
+**[0]:**
+
+Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
+
+**[1]:**
+
+Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
 
 **[2]:**
 
