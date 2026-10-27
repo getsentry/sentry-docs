@@ -33,7 +33,10 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     environment="local",
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
 )
 ```
 
@@ -100,7 +103,19 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - All exceptions are reported.
 
-- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include prompts, messages, or responses by default. Tool definitions are still attached by default; setting `inputs` to `False` in the `gen_ai` key described below removes them. To include prompts, messages, and responses, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default and `include_prompts` is ignored:
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      data_collection={
+          # Record LLM inputs, but not outputs
+          "gen_ai": {"inputs": True, "outputs": False},
+      },
+  )
+  ```
+
+  Alternatively, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below. `send_default_pii` will be removed in version 3.0 of the SDK.
 
 ## Options
 
@@ -127,11 +142,13 @@ You can pass the following keyword arguments to `HuggingfaceHubIntegration()`:
 
 - `include_prompts`
 
-  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. If you use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, this option is ignored. Use the `gen_ai` key instead.
+
+  Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`. `send_default_pii` will be removed in version 3.0 of the SDK.
 
   The default is `True`.
 
 ## Supported Versions
 
 - Python: 3.8+
-- huggingface_hub: 0.24.7+
+- huggingface_hub: 0.24.7+ (SDK &lt;3.0), 2.0+ (SDK 3.0+)

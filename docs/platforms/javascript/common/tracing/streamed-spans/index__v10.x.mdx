@@ -100,14 +100,7 @@ Each flush sends only the spans accumulated since the last flush, grouped into e
 
 ### Start a Span
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.startSpan()` to create a span that is automatically ended when the callback completes:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 const result = await Sentry.startSpan(
@@ -119,16 +112,7 @@ const result = await Sentry.startSpan(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Child spans created inside the callback are automatically associated with the parent:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 await Sentry.startSpan({ name: "parent-operation" }, async () => {
@@ -142,24 +126,13 @@ await Sentry.startSpan({ name: "parent-operation" }, async () => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 For more details on span creation APIs, such as `startSpan`, `startSpanManual`, or `startInactiveSpan`, see <PlatformLink to="/tracing/instrumentation/">Instrumentation</PlatformLink>.
 
 ## Add Attributes
 
 Attach structured metadata to spans using <PlatformLink to="/configuration/apis/#startSpan">`attributes`</PlatformLink>, which can be `string`, `number`, or `boolean`, as well as arrays of these types.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 You can set attributes when starting a span:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.startSpan(
@@ -178,16 +151,7 @@ Sentry.startSpan(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Or add them to an already running span:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 Sentry.startSpan({ name: "handle-request" }, (span) => {
@@ -202,12 +166,7 @@ Sentry.startSpan({ name: "handle-request" }, (span) => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
 For examples, see <PlatformLink to="/tracing/instrumentation/#adding-span-attributes">Adding Span Attributes</PlatformLink>.
-
-</SplitLayout>
 
 ### Shared Attributes
 
@@ -217,19 +176,12 @@ Set shared attributes on a specific scope instead.
 You don't need to remove tags from your code, since they still apply to errors.
 Instead, add attributes for all data that's relevant for spans, logs metrics.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.setAttribute` and `Sentry.setAttributes` to attach attributes that are automatically included in all spans (as well as your logs and metrics).
 These work just like <PlatformLink to="/apis/#setTag">`Sentry.setTag` and `Sentry.setTags`</PlatformLink>, but they accept `string`, `number`, and `boolean` values.
 
 To attach attributes to a broader or narrower context, set them on a specific scope instead. Use the global scope for app-wide attributes and the current scope for a single operation.
 
 See <PlatformLink to="/enriching-events/attributes/">Attributes</PlatformLink> for more information.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 // Applied to all spans, logs and metrics
@@ -252,10 +204,6 @@ Sentry.withScope((scope) => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Breadcrumbs
 
 In stream mode, breadcrumbs are no longer sent with spans.
@@ -265,10 +213,6 @@ They remain attached to errors, so you don't need to change how you record them.
 
 ### Filter Spans
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To modify or redact span data before it's sent, use <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink>. In stream mode, wrap it with `Sentry.withStreamedSpan()` so the SDK applies it to spans as they are flushed rather than only at transaction time.
 
 <Alert>
@@ -277,9 +221,6 @@ To modify or redact span data before it's sent, use <PlatformLink to="/configura
 </Alert>
 
 The `span` object also has different property names in stream mode. For example, `span.op` becomes `span.attributes?.["sentry.op"]` and `span.description` becomes `span.name`. See the migration note below for the full list.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <PlatformCategorySection supported={["server", "serverless"]}>
 
@@ -327,10 +268,6 @@ Sentry.init({
 </PlatformSection>
 </PlatformCategorySection>
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Expandable level="warning" title="Migrating from transaction mode?">
 
 If you're using `beforeSendSpan`, wrap it with `Sentry.withStreamedSpan()` as shown above, otherwise the SDK falls back to transaction mode.
@@ -353,14 +290,7 @@ If you're using `beforeSendTransaction` to drop spans, use [`ignoreSpans`](#drop
 
 In stream mode, `ignoreSpans` is evaluated at span start, so only the span name and attributes available at that point are taken into account. Any name updates or additional attributes added while the span is active won't influence whether the span is dropped.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To prevent specific spans from being created, use the <PlatformLink to="/configuration/options/#ignoreSpans">`ignoreSpans`</PlatformLink> option:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 <PlatformCategorySection supported={["server", "serverless"]}>
 
@@ -418,10 +348,6 @@ Sentry.init({
 </PlatformSection>
 
 </PlatformCategorySection>
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 If a matching span is a service span, all of its child spans are dropped as well. If a child span matches, only that span is dropped and its children are reparented to the nearest ancestor.
 

@@ -21,11 +21,13 @@ The `langGraphIntegration` adds instrumentation for [`@langchain/langgraph`](htt
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // Tracing must be enabled for agent tracing to work
+  // Tracing must be enabled for agent tracing to work.
+  // `langGraphIntegration` is then on by default; add it to `integrations` only to change its options.
   tracesSampleRate: 1.0,
-  integrations: [Sentry.langGraphIntegration()],
 });
 ```
+
+To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
 
 ## Supported Operations
 
@@ -33,13 +35,13 @@ By default, tracing support is added to the following LangGraph operations:
 
 - **Agent Creation** (`gen_ai.create_agent`) - Captures spans when compiling a StateGraph into an executable agent
 - **Agent Invocation** (`gen_ai.invoke_agent`) - Captures spans for agent execution via `invoke()`
-- **Classifier Evaluations** (`gen_ai.evaluate`) - Captures spans for `TypeSafeClassifier` calls in graph nodes
+- **Classifier Evaluations** (`gen_ai.decide`) - Captures spans for `TypeSafeClassifier` calls in graph nodes
 
 ## Trace Classifier Evaluations
 
-<AvailableSince version="11.6.0" />
+<AvailableSince version="11.7.0" />
 
-When a graph node calls a `TypeSafeClassifier` from [`@langchain/typesafe`](https://www.npmjs.com/package/@langchain/typesafe), the <PlatformLink to="/configuration/integrations/langchain/#trace-classifier-evaluations">LangChain integration</PlatformLink> records the call as a `gen_ai.evaluate` span. The span is a child of the graph's `invoke_agent` span and records the graph name as the agent name. No additional setup is needed.
+When a graph node calls a `TypeSafeClassifier` from [`@langchain/typesafe`](https://www.npmjs.com/package/@langchain/typesafe), the <PlatformLink to="/configuration/integrations/langchain/#trace-classifier-evaluations">LangChain integration</PlatformLink> records the call as a `gen_ai.decide` span. The span is a child of the graph's `invoke_agent` span and records the graph name as the agent name. No additional setup is needed.
 
 ```javascript
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";

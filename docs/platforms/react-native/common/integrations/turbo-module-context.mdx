@@ -1,0 +1,167 @@
+---
+title: TurboModule Context
+description: "Record calls to native modules in your React Native app, and add the active call to native crash reports."
+sidebar_order: 105
+---
+
+_(Available in version 8.14.0 and above)_
+
+_Import name: `Sentry.turboModuleContextIntegration`_
+
+The `turboModuleContextIntegration` records the calls that your JavaScript code makes to native modules. TurboModules are the native modules of the React Native New Architecture. The integration gives you this data:
+
+- The module and method that were active when the app crashed in native code
+- Call counts, error counts, and durations for each module and method
+- Breadcrumbs for slow asynchronous calls
+
+The integration is enabled by default when `enableNative` is `true` (the default). By default, it wraps only the Sentry native module (`RNSentry`), and uses these calls only for crash context. To get statistics, span attributes, and breadcrumbs, you must add your own modules to the integration.
+
+<Alert level="info" title="Note">
+
+We recommend version 8.30.0 or later. Earlier versions can attach stale `turbo_module.*` tags to Android native crashes.
+
+</Alert>
+
+## Setup
+
+### New Architecture
+
+Give your TurboModules to the integration in the `modules` option. The integration replaces the default instance:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+import NativeCameraModule from "./specs/NativeCameraModule";
+import NativeStorageModule from "./specs/NativeStorageModule";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.turboModuleContextIntegration({
+      modules: [
+        { name: "NativeCameraModule", module: NativeCameraModule },
+        {
+          name: "NativeStorageModule",
+          module: NativeStorageModule,
+          skipMethods: ["getConstants"],
+        },
+      ],
+    }),
+  ],
+});
+```
+
+Each entry has these fields:
+
+- `name`: the name that Sentry shows for the module
+- `module`: the module object, for example the return value of `TurboModuleRegistry.get`
+- `skipMethods`: optional, the methods that the integration does not record
+
+### Old Architecture
+
+_(Available in version 8.22.0 and above)_
+
+If your app uses the Old Architecture, the integration can record all registered `NativeModules` automatically. You do not need the `modules` list for this:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.turboModuleContextIntegration({
+      enableLegacyNativeModules: true,
+    }),
+  ],
+});
+```
+
+This option records every registered bridge module, including modules from third-party libraries. The integration always skips `RNSentry`, `Timing`, `UIManager`, and the animated modules. If you want to record one of these modules, add it to the `modules` list.
+
+Modules that React Native loads on first use stay lazy. The integration wraps them at the first access, not during `Sentry.init`.
+
+## Options
+
+```javascript
+{
+  // Your TurboModules to record (default: [])
+  modules: Array<{ name: string; module: object; skipMethods?: string[] }>;
+
+  // Count calls, errors, and durations for each module and method (default: true)
+  enableAggregateStats: boolean;
+
+  // Interval for the periodic aggregate event, in ms. 0 disables it (default: 30000)
+  aggregateFlushIntervalMs: number;
+
+  // Modules that give only crash context, without statistics, span attributes, or breadcrumbs (default: ['RNSentry'])
+  ignoreTurboModules: string[];
+
+  // Add the call breakdown to root spans when they end (default: true)
+  enableSpanAttribution: boolean;
+
+  // Async calls that take longer than this value add a breadcrumb, in ms. 0 disables it (default: 500)
+  slowCallThresholdMs: number;
+
+  // Maximum number of module and method rows on one span (default: 16)
+  maxTopModulesPerSpan: number;
+
+  // Old Architecture only: record all registered NativeModules (default: false)
+  enableLegacyNativeModules: boolean;
+
+  // Old Architecture only: more modules to skip
+  legacyModulesSkip: string[];
+
+  // Old Architecture only: methods to skip, for each module
+  legacyModulesSkipMethods: Record<string, string[]>;
+}
+```
+
+## Captured Data
+
+### Crash Context
+
+When a native module call starts, the integration writes the call to the scope. If the app crashes in native code during the call, the crash report has this data:
+
+- The `turbo_module` context, with the `name`, `method`, `kind` (`sync` or `async`), `started_at_ms`, and `call_id` fields
+- The `turbo_module.name` and `turbo_module.method` tags
+
+You can search for the tags in Sentry to find the crashes that a specific module causes.
+
+### Aggregated Statistics
+
+_(Available in version 8.19.0 and above)_
+
+The integration counts the calls for each module, method, and call kind. When a transaction finishes, the integration adds this data to it:
+
+- A `turbo_modules.aggregate` child span. Its attributes have the call count, the error count, the total and maximum duration, and a duration histogram for each method.
+- The `turbo_modules.call_count`, `turbo_modules.error_count`, `turbo_modules.total_ms`, and `turbo_modules.top_module_ms` measurements on the transaction
+
+If your app runs for a long time without transactions, the integration sends the statistics in an info-level event. The event has the message `TurboModule aggregate (periodic)` and the tag `event.kind: turbo_modules.aggregate`. The integration sends this event every 30 seconds by default. If there is no new data, the integration does not send the event.
+
+To stop the periodic event, set `aggregateFlushIntervalMs` to `0`. To stop all aggregated statistics, set `enableAggregateStats` to `false`.
+
+### Span Attributes
+
+_(Available in version 8.21.0 and above)_
+
+When a root span ends, the integration adds the native module calls that occurred during the span. For example, the navigation spans from `reactNavigationIntegration` and `expoRouterIntegration` show the native calls during the screen change. The same is true for root spans that you start with `Sentry.startSpan`.
+
+The span gets these summary attributes:
+
+- `turbo_module.total_call_count`
+- `turbo_module.total_error_count`
+- `turbo_module.total_duration_ms`
+- `turbo_module.unique_methods`
+- `turbo_module.top_module` and `turbo_module.top_module_duration_ms`, for the method with the longest total duration
+- `turbo_module.arch`, with the value `new` or `legacy`
+
+The span also gets the `turbo_module.<module>.<method>.call_count`, `.duration_ms`, and `.error_count` attributes. The integration adds these attributes only for the methods with the longest total duration. The `maxTopModulesPerSpan` option sets the number of methods.
+
+### Slow Call Breadcrumbs
+
+_(Available in version 8.21.0 and above)_
+
+If an asynchronous call takes longer than `slowCallThresholdMs`, the integration adds a breadcrumb:
+
+- **category:** `native.turbo_module`
+- **message:** for example, `NativeCameraModule.takePhoto took 812ms`
+- **data:** `module`, `method`, `kind`, `duration_ms`, and `errored`
+
+Methods that use success and failure callbacks instead of a Promise also get correct durations (version 8.23.0 and above).

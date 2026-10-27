@@ -21,11 +21,13 @@ The `langChainIntegration` adds instrumentation for [`langchain`](https://www.np
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // Tracing must be enabled for agent tracing to work
+  // Tracing must be enabled for agent tracing to work.
+  // `langChainIntegration` is then on by default; add it to `integrations` only to change its options.
   tracesSampleRate: 1.0,
-  integrations: [Sentry.langChainIntegration()],
 });
 ```
+
+To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
 
 ## Supported Operations
 
@@ -57,7 +59,7 @@ The integration captures `gen_ai.embeddings` spans for `embedQuery()` and `embed
 
 ## Trace Classifier Evaluations
 
-<AvailableSince version="11.6.0" />
+<AvailableSince version="11.7.0" />
 
 [`@langchain/typesafe`](https://www.npmjs.com/package/@langchain/typesafe)'s `TypeSafeClassifier` asks TypeSafe's Jev model typed questions about your input. The `langChainIntegration` traces these calls for you, whether you call the classifier yourself, from a <PlatformLink to="/configuration/integrations/langgraph/#trace-classifier-evaluations">LangGraph</PlatformLink> node, or through the `modelRouterMiddleware` and `autoModeMiddleware` of `@langchain/typesafe/middleware` inside a `createAgent` run. No additional integration or setup is needed.
 
@@ -84,11 +86,11 @@ const result = await classifier.invoke(
 console.log(result.choices.department.choice);
 ```
 
-Each `invoke()` call creates a `gen_ai.evaluate` span named `evaluate <model>`, with the model, provider, latency, and token usage. Inside an agent, the span also records the agent name. If the evaluation fails, the span is marked as failed. When recording is enabled, Sentry captures the `state` and `questions` sent to Jev as input messages and `answers` as output messages, including probabilities returned by the model. LangChain messages in the input are recorded as transcript lines, the same way the classifier sends them.
+Each `invoke()` call creates a `gen_ai.decide` span named `decide <model>`, with the model, provider, latency, and token usage. Inside an agent, the span also records the agent name. If the evaluation fails, the span is marked as failed. When recording is enabled, Sentry captures the `state` and `questions` sent to Jev as input messages and `answers` as output messages, including probabilities returned by the model. LangChain messages in the input are recorded as transcript lines, the same way the classifier sends them.
 
 Evaluation inputs and outputs follow the same [`recordInputs`](#recordinputs) and [`recordOutputs`](#recordoutputs) options as other LangChain calls. Disable these options if evaluation state or answers contain sensitive data.
 
-If you call Jev through `TypeSafeClient.systemOne()` or Vercel AI SDK's `experimental_evaluate()` instead, see the <PlatformLink to="/configuration/integrations/typesafe/">TypeSafe</PlatformLink> or <PlatformLink to="/configuration/integrations/vercelai/#trace-jev-evaluations">Vercel AI</PlatformLink> integration.
+If you call Jev through `TypeSafeClient.systemOne()` or Vercel AI SDK's `experimental_decide()` instead, see the <PlatformLink to="/configuration/integrations/typesafe/">TypeSafe</PlatformLink> or <PlatformLink to="/configuration/integrations/vercelai/#trace-jev-decisions">Vercel AI</PlatformLink> integration.
 
 ## Supported Versions
 
