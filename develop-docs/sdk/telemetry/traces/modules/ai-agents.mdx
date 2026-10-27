@@ -23,7 +23,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
-- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[6]**
+- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[4]**
 - Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`)
 - If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
@@ -34,7 +34,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**                                             | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
 
 ### Response Data
@@ -65,7 +65,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
 | :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**                                             | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
@@ -147,19 +147,5 @@ Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` inc
 
 **[4]**
 
-The input list should include the most recent messages up to and including the most recent previous model response. The previous model response is identified with an "assistant" or "model" role in common frameworks. If there is no previous model response in the input list, then all input items which are not system instructions should be included. System instructions must be added in `gen_ai.system_instructions`, and are not included in the `gen_ai.input.messages` list.
-
-**[5]**
-
-Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.
-
-**[6]**
-
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
 In these cases, the span name **SHOULD** be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
-
-**[7]**
-
-Image URLs in the data URL format in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected. For example, data URLs like `data:image/png;base64` will be redacted, but HTTP URLs like `example.com/data?<a-base64-string>` will not be.
-
-See [here](https://github.com/getsentry/sentry-python/blob/5379537fcd2925374fa617e49bb618fc9979509b/sentry_sdk/integrations/pydantic_ai/consts.py#L6) for the regex used.
