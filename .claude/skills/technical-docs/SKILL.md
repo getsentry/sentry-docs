@@ -113,16 +113,6 @@ Good best practice:
 
 ## Sentry Docs Specific Patterns
 
-### SplitLayout Usage
-
-Use `<SplitLayout>` for side-by-side text/code when:
-- The code directly illustrates the text
-- Both are needed to understand the concept
-
-Don't use when:
-- Showing a directory structure (use plain code block)
-- The text is just "here's an example" (just show the code)
-
 ### PlatformLink Usage
 
 Link to related docs rather than repeating content:

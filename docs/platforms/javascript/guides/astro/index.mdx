@@ -1,6 +1,6 @@
 ---
 title: Astro
-description: Learn how to manually set up Sentry in your Astro app and capture your first errors.
+description: Learn how to manually set up Sentry in your Astro app and capture your first events.
 sdk: sentry.javascript.astro
 categories:
   - browser
@@ -18,11 +18,7 @@ You need:
 
 <Alert level="warning" title="What runtime do you use?">
 
-This SDK currently only works on Node runtimes, such as Node adapter or Vercel
-with Lambda functions. If you use Cloudflare Workers or Cloudflare Pages, refer to our [Astro on
-Cloudflare guide](/platforms/javascript/guides/cloudflare/frameworks/astro/).
-Other non-Node runtimes, like Vercel's Edge runtime, are currently **not
-supported**.
+This SDK currently only works on Node runtimes, such as Node adapter or Vercel with Lambda functions. If you use Cloudflare Workers or Cloudflare Pages, refer to our [Astro on Cloudflare guide](/platforms/javascript/guides/cloudflare/frameworks/astro/). Other non-Node runtimes, like Vercel's Edge runtime, are currently **not supported**.
 
 </Alert>
 
@@ -30,20 +26,191 @@ supported**.
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
+### Install the Sentry SDK
 
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "profiling",
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
+Install the Sentry integration using the `astro` CLI, then install the Profiling package using your preferred package manager:
+
+```bash {tabTitle:npm}
+npx astro add @sentry/astro
+npm install @sentry/profiling-node
+```
+
+```bash {tabTitle:yarn}
+yarn astro add @sentry/astro
+yarn add @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm astro add @sentry/astro
+pnpm add @sentry/profiling-node
+```
+
+## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **User Feedback**.
 
 <Include name="quick-start-features-expandable" />
 
-<PlatformContent includePath="getting-started-complete" />
+### Initialize the SDK
+
+To configure Sentry on your app's client-side and server-side, create a `sentry.client.config.(ts|js)` and `sentry.server.config.(ts|js)` file in the root of your project.
+Use the tabs in the code box below to view the client and server configuration snippets.
+
+The snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via `nodeProfilingIntegration()` and <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink>
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippets.
+
+```typescript {tabTitle:Client config}{filename:sentry.client.config.ts}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enables automatic instrumentation
+    Sentry.browserTracingIntegration(),
+    // enables Session Replay
+    Sentry.replayIntegration(),
+    // enables User Feedback
+    Sentry.feedbackIntegration({ colorScheme: "system" }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+```typescript {tabTitle:Server config}{filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/astro";
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // enables Node Profiling
+  integrations: [nodeProfilingIntegration()],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Enables Profiling.
+  // Set to 1.0 to profile every session.
+  // We recommend reducing this value in production.
+  profileSessionSampleRate: 1.0,
+});
+```
+
+### Register the Sentry Integration
+
+Add the Sentry integration to your `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [sentry()],
+});
+```
+
+### Add Readable Stack Traces With Source Maps
+
+To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+});
+```
+
+To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable in your build environment:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<Include name="vite-loadenv-hint-splitlayout.mdx" />
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add this button to a page in your Astro app and click it to send a test error:
+
+```astro
+<button id="test-error" type="button">Test Sentry Error</button>
+
+<script>
+  document.getElementById("test-error")?.addEventListener("click", () => {
+    throw new Error("Sentry Test Error");
+  });
+</script>
+```
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Astro application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
 
 </StepConnector>
