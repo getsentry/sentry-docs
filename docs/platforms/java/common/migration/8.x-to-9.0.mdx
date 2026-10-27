@@ -8,22 +8,46 @@ Version 9 removes the deprecated Hub compatibility APIs and the global Logs and 
 
 ## Removed Hub APIs
 
-The Hub compatibility layer was deprecated in version 8 and is removed in version 9. Replace any remaining Hub references before upgrading:
+Version 8 deprecated Hub and introduced Scopes. Version 9 removes the Hub compatibility layer:
 
-| Removed API                                  | Replacement                                                                   |
-| -------------------------------------------- | ----------------------------------------------------------------------------- |
-| `IHub`                                       | `IScopes`                                                                     |
-| `HubAdapter.getInstance()`                   | `ScopesAdapter.getInstance()`                                                 |
-| `HubScopesWrapper`                           | Use the wrapped `IScopes` instance directly                                   |
-| `NoOpHub.getInstance()`                      | `NoOpScopes.getInstance()`                                                    |
-| `Sentry.getCurrentHub()`                     | `Sentry.getCurrentScopes()`                                                   |
-| `Sentry.setCurrentHub(...)`                  | `Sentry.setCurrentScopes(...)`                                                |
-| `IHub.clone()` and `IScopes.clone()`         | `forkedScopes(...)` or `forkedCurrentScope(...)`                              |
-| `Sentry.popScope()` and `IScopes.popScope()` | Close the lifecycle token returned by `pushScope()` or `pushIsolationScope()` |
-| Spring WebFlux `SENTRY_HUB_KEY`              | `SENTRY_SCOPES_KEY`                                                           |
-| GraphQL `ExceptionDetails.getHub()`          | `ExceptionDetails.getScopes()`                                                |
+- `IHub` has been removed. Use `IScopes` instead.
+- `HubAdapter.getInstance()` has been removed. Use `ScopesAdapter.getInstance()` instead.
+- `HubScopesWrapper` has been removed. Use the wrapped `IScopes` instance directly.
+- `NoOpHub.getInstance()` has been removed. Use `NoOpScopes.getInstance()` instead.
+- `Sentry.getCurrentHub()` and `Sentry.setCurrentHub(...)` have been removed. Use `Sentry.getCurrentScopes()` and `Sentry.setCurrentScopes(...)` instead.
+- `IHub.clone()` and `IScopes.clone()` have been removed. Use `forkedScopes(...)` or `forkedCurrentScope(...)` when you need an independent Scopes instance. For temporary scope changes, use `pushScope()`, `pushIsolationScope()`, `withScope()`, or `withIsolationScope()`.
+- Spring WebFlux's `SENTRY_HUB_KEY` has been removed. Use `SENTRY_SCOPES_KEY` instead.
+- GraphQL's `ExceptionDetails.getHub()` has been removed. Use `ExceptionDetails.getScopes()` instead.
 
-Use try-with-resources or a `finally` block to close lifecycle tokens. This restores the previous scopes without relying on a separate `popScope()` call.
+### Remove `popScope()` Calls
+
+`Sentry.popScope()` and `IScopes.popScope()` have been removed. Close the lifecycle token returned by `pushScope()` or `pushIsolationScope()` to restore the previous scopes:
+
+```java
+try (ISentryLifecycleToken ignored = Sentry.pushScope()) {
+  // This block has its own current scope.
+}
+```
+
+Use the same pattern for an isolation scope:
+
+```java
+try (ISentryLifecycleToken ignored = Sentry.pushIsolationScope()) {
+  // This block has its own isolation scope.
+}
+```
+
+If you can't use try-with-resources, close the token in a `finally` block.
+
+### Scopes Model
+
+The Scopes model introduced in version 8 is the supported context model in version 9:
+
+- The global scope is attached to all events created by the SDK. It can be modified before `Sentry.init()` by calling `Sentry.configureScope(ScopeType.GLOBAL, callback)`.
+- The isolation scope attaches data to events within an isolated lifecycle, such as an incoming request. The SDK automatically forks this scope for incoming requests, CRON jobs, Spring `@Async`, and other integrations.
+- The current scope contains data for the active operation. Child scopes inherit its data, but parent scopes don't receive changes made in a child scope.
+
+For backend and other JVM applications, APIs such as `Sentry.configureScope()` and `Sentry.setTag()` use the isolation scope by default.
 
 ## Manual Logs and Metrics
 
