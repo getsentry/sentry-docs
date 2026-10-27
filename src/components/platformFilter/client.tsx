@@ -145,8 +145,8 @@ function PlatformWithGuides({
       onOpenChange={setExpanded}
     >
       <Collapsible.Trigger asChild className={classNames(styles.CollapsibleTrigger)}>
-        <div>
-          <div className={styles.PlatformTitle} key={platform.key}>
+        <button type="button">
+          <span className={styles.PlatformTitle} key={platform.key}>
             <PlatformIcon
               size={20}
               platform={platform.icon ?? platform.key}
@@ -154,16 +154,16 @@ function PlatformWithGuides({
               className={`${styles.PlatformIcon} !border-none !shadow-none`}
             />
             {platform.title}
-          </div>
-          <button className={styles.ChevronButton}>
+          </span>
+          <span className={styles.ChevronButton}>
             <TriangleRightIcon
               className={styles.CollapsibleChevron}
               aria-hidden
               width="20"
               height="20"
             />
-          </button>
-        </div>
+          </span>
+        </button>
       </Collapsible.Trigger>
       <Collapsible.Content
         className={classNames(styles.CollapsibleContent)}

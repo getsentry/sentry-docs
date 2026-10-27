@@ -424,7 +424,7 @@ export function Search({
           </kbd>
         </div>
         <Fragment>
-          <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
+          <span className="text-[var(--gray-11)] hidden md:inline">or</span>
           <Button
             asChild
             variant="ghost"
