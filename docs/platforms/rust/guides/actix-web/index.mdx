@@ -1,16 +1,16 @@
 ---
 title: Actix Web
-description: "Learn about monitoring your Actix Web application with Sentry."
+description: "Learn how to set up Sentry in your Actix Web application and capture your first events."
 ---
 
-The Sentry SDK offers a middleware for the [Actix Web](https://actix.rs/) framework that supports:
+The Sentry SDK offers middleware for the [Actix Web](https://actix.rs/) framework that supports:
 
 - Capturing server errors returned by Actix Web services.
 - Starting a [transaction](/concepts/key-terms/tracing/) for each request-response cycle.
 
 ## Install
 
-To add Sentry with the Actix Web integration to your Rust project, add a new dependency to your `Cargo.toml`:
+Add Sentry with the `actix` integration to your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
 [dependencies]
@@ -20,15 +20,24 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 ## Configure
 
-Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
-Then, initialize Actix Web with the Sentry middleware.
-The Sentry middleware provides correct request and trace association for any captured errors or panics, so it should be the first to process the request, that means it should be the last in your chain of `wrap` calls.
+**Error Monitoring** starts working as soon as you call `sentry::init()`. **Logs** are supported in Rust SDK 0.42.0 and later and enabled by default. **Application Metrics** are available in Rust SDK 0.48.0 and later; both are covered in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+Initialize Sentry before starting the async runtime, then add the Sentry middleware to your Actix Web app. The example route returns an error so you can verify the setup in the next step.
 
 <Alert level="warning">
 
-Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. Initialize the Sentry client before starting the async runtime, as shown below.
 
 </Alert>
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink> and the middleware's `start_transaction(true)`.
+- User IP and HTTP header collection: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>. Review the data your app sends before enabling this in production.
+- HTTP request body collection: via <PlatformLink to="/configuration/options/#max_request_body_size">`max_request_body_size`</PlatformLink>.
+
+Don't need a feature? Remove its options from the snippet.
 
 ```rust {filename:main.rs}
 use std::io;
@@ -45,12 +54,14 @@ fn main() -> io::Result<()> {
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
             .maybe_release(sentry::release_name!())
-            // Capture all traces and spans. Set to a lower value in production
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
             .traces_sample_rate(1.0)
-            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+            // Capture user IPs and potentially sensitive headers when using HTTP server integrations.
+            // See https://docs.sentry.io/platforms/rust/data-management/data-collected/ for more info.
             .send_default_pii(true)
-            // Capture all HTTP request bodies, regardless of size
+            // Capture all HTTP request bodies, regardless of size.
             .max_request_body_size(sentry::MaxRequestBodySize::Always),
     );
 
@@ -74,24 +85,53 @@ fn main() -> io::Result<()> {
 }
 ```
 
-## Verify
+### Instrument Actix Web
 
-The snippet above sets up a service that always fails, so you can test that everything is working as soon as you set it up.
+The Sentry middleware provides correct request and trace association for any captured errors or panics, so it should be the first to process the request. That means it should be the last in your chain of `wrap` calls.
 
-Send a request to the application. The response error will be captured by Sentry.
+`capture_server_errors(true)` reports server errors returned by your services to Sentry, and `start_transaction(true)` starts a transaction for each request.
+
+## Send Logs
+
+Use Sentry's `logger_*` macros to send logs at different levels. Logs are supported in Rust SDK 0.42.0 and later and enabled by default unless you compile the SDK without default features. In that case, enable the `logs` feature on `sentry`. For logging through the `tracing` or `log` crates, see the <PlatformLink to="/logs/#tracing-integration">`tracing` integration</PlatformLink> and <PlatformLink to="/logs/#log-integration">`log` integration</PlatformLink> guides.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and configuration options.
+
+```rust
+use sentry::logger_info;
+
+logger_info!("Order processed");
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `sentry::metrics` to send counters, gauges, and distributions. Metrics require Rust SDK 0.48.0 or later and are enabled by default in the `sentry` crate.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```rust
+use sentry::metrics;
+
+metrics::counter("checkout.failed", 1).capture();
+metrics::gauge("active_connections", 42).capture();
+```
+
+## Verify Your Setup
+
+Send a request to the application. The route returns an error, and Sentry captures it.
 
 ```bash
 curl http://localhost:3001/
 ```
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Actix Web application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to [manually capture errors](/platforms/rust/usage/).
+- Instrument more operations with [custom tracing](/platforms/rust/tracing/instrumentation/custom-instrumentation/).
