@@ -3,27 +3,23 @@
 import {useSearchParams} from 'next/navigation';
 import {Fragment, useEffect} from 'react';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {openKapa} from 'sentry-docs/lib/kapa';
 
 export default function AskAiSearchParams() {
   const searchParams = useSearchParams();
   const {emit} = usePlausibleEvent();
 
   useEffect(() => {
-    const askAi = searchParams?.get('askAI');
-    // Give Kapa.ai some time to be fully loaded
-    const timer = setTimeout(() => {
-      if (window.Kapa?.open && askAi === 'true') {
-        // open kapa modal
-        window.Kapa.open({});
-        if (searchParams?.get('referrer')) {
-          emit('Ask AI Referrer', {
-            props: {referrer: searchParams.get('referrer') ?? ''},
-          });
-        }
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
+    if (searchParams?.get('askAI') !== 'true') {
+      return;
+    }
+    // openKapa resolves once the widget is actually ready, so the deep link no
+    // longer races a fixed timeout.
+    openKapa({});
+    const referrer = searchParams.get('referrer');
+    if (referrer) {
+      emit('Ask AI Referrer', {props: {referrer}});
+    }
   }, [searchParams, emit]);
 
   return <Fragment />;
