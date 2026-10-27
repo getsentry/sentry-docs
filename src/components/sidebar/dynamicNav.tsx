@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {Fragment} from 'react';
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
@@ -19,8 +18,9 @@ const SECTION_LABELS: Record<string, string> = {
   platform: 'Platform',
 };
 
-// Section links configuration - sections that should be clickable headers
-const SECTION_LINKS: Record<string, string> = {
+// Sections with a landing page at `<root>/<slug>/`. When the landing page is
+// hidden from the sidebar, an "Overview" link to it becomes the section's first item.
+const SECTION_LANDING_PAGES: Record<string, string> = {
   features: 'features',
 };
 
@@ -100,13 +100,28 @@ export const toTree = (nodeList: Node[]): EntityTree[] => {
   return result.length > 0 ? result[0].children : [];
 };
 
+/**
+ * Returns the path of a section's landing page if it exists and is hidden from
+ * the sidebar. Visible landing pages already have their own sidebar entry.
+ */
+export function getSectionOverviewPath(
+  children: EntityTree[],
+  sectionKey: string
+): string | null {
+  const slug = SECTION_LANDING_PAGES[sectionKey];
+  if (!slug) {
+    return null;
+  }
+  const landingNode = children.find(child => child.name === slug)?.node;
+  return landingNode?.context.sidebar_hidden ? landingNode.path : null;
+}
+
 export const renderChildren = (
   children: EntityTree[],
   exclude: string[],
   path: string,
   showDepth: number = 0,
-  depth: number = 0,
-  rootPath?: string
+  depth: number = 0
 ): React.ReactNode[] => {
   const sortedChildren = sortPages(
     children.filter(
@@ -158,7 +173,7 @@ export const renderChildren = (
           isNew={node.context.new}
           earlyAccess={node.context.early_access}
         >
-          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
         </CollapsibleSidebarLink>
       );
 
@@ -180,31 +195,29 @@ export const renderChildren = (
         result.push(<SidebarSeparator key={`sep-${sectionKey}`} />);
       }
 
-      // Add section header (with optional link)
-      const sectionLink = SECTION_LINKS[sectionKey];
-      // Check if the section link page actually exists in the tree before creating a link
-      const sectionPageExists = sectionLink
-        ? children.some(child => child.name === sectionLink && child.node !== null)
-        : false;
-      const sectionHref =
-        sectionLink && rootPath && sectionPageExists
-          ? `/${rootPath}/${sectionLink}/`
-          : null;
-
       result.push(
         <li
           key={`header-${sectionKey}`}
           className="sidebar-section-header text-xs font-semibold text-gray-11 uppercase tracking-wider px-2 py-2 mt-2"
         >
-          {sectionHref ? (
-            <Link href={sectionHref} className="hover:text-purple no-underline">
-              {SECTION_LABELS[sectionKey]}
-            </Link>
-          ) : (
-            SECTION_LABELS[sectionKey]
-          )}
+          {SECTION_LABELS[sectionKey]}
         </li>
       );
+
+      const overviewPath = getSectionOverviewPath(children, sectionKey);
+      if (overviewPath) {
+        result.push(
+          <CollapsibleSidebarLink
+            to={overviewPath}
+            key={`${sectionKey}-overview`}
+            title="Overview"
+            collapsed={false}
+            path={path}
+          >
+            {[]}
+          </CollapsibleSidebarLink>
+        );
+      }
 
       // Render items in this section
       sectionItems.forEach(({node, children: nodeChildren}) => {
@@ -223,7 +236,7 @@ export const renderChildren = (
             isNew={node.context.new}
             earlyAccess={node.context.early_access}
           >
-            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
+            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
           </CollapsibleSidebarLink>
         );
 
@@ -251,7 +264,7 @@ export const renderChildren = (
           isNew={node.context.new}
           earlyAccess={node.context.early_access}
         >
-          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1, rootPath)}
+          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
         </CollapsibleSidebarLink>
       );
     });
@@ -264,20 +277,11 @@ type ChildrenProps = {
   path: string;
   tree: EntityTree[];
   exclude?: string[];
-  rootPath?: string;
   showDepth?: number;
 };
 
-export function Children({
-  tree,
-  path,
-  exclude = [],
-  showDepth = 0,
-  rootPath,
-}: ChildrenProps) {
-  return (
-    <Fragment>{renderChildren(tree, exclude, path, showDepth, 0, rootPath)}</Fragment>
-  );
+export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
+  return <Fragment>{renderChildren(tree, exclude, path, showDepth, 0)}</Fragment>;
 }
 
 type Props = {
@@ -390,7 +394,6 @@ export function DynamicNav({
             exclude={exclude}
             showDepth={0}
             path={linkPath}
-            rootPath={root}
           />
         </ul>
       )}

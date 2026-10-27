@@ -250,7 +250,28 @@ Sentry.init({
 });
 ```
 
-Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here's an example for your server component:
+Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry.
+
+Your tunnel endpoint must:
+
+- Forward only the request body to Sentry, without the request headers.
+- Accept only envelopes whose DSN is on a list of allowed DSNs. Otherwise, anyone can use your endpoint to send requests to other servers.
+- Send the envelope only to the host of that DSN.
+
+On a JavaScript server with Fetch API `Request` and `Response` objects, `handleTunnelRequest` from `@sentry/core` (SDK version `10.40.0` and later) does this for you. Starting with versions `10.77.1` (v10) and `11.9.0` (v11), it also rejects requests larger than 20 MiB.
+
+```javascript
+import { handleTunnelRequest } from "@sentry/core";
+
+export async function POST(request) {
+  return handleTunnelRequest({
+    request,
+    allowedDsns: ["___PUBLIC_DSN___"],
+  });
+}
+```
+
+If you implement the endpoint yourself, here's an example for your server component:
 
 ```csharp
 
@@ -334,7 +355,7 @@ const SENTRY_PROJECT_IDS = ["123456"];
 
 export const postAction = async ({ request }) => {
   try {
-    const envelopeBytes = await req.arrayBuffer();
+    const envelopeBytes = await request.arrayBuffer();
     const envelope = new TextDecoder().decode(envelopeBytes);
     const piece = envelope.split("\n")[0];
     const header = JSON.parse(piece);
@@ -417,6 +438,32 @@ If you would like to copy and paste the snippet directly, here it is minified:
   }
 </script>
 ```
+
+</Expandable>
+
+<Expandable permalink title="Credentials on Tunnel Requests">
+
+The browser SDK doesn't set the [`credentials`](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) option of `fetch`. With the default value `same-origin`, the browser sends credentials (cookies and HTTP authentication) to a tunnel on the same origin as your app. A tunnel that forwards request headers sends these credentials to Sentry.
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+The Next.js `tunnelRoute` option handles this for you. See <PlatformLink to="/configuration/build/#tunnelRoute">`tunnelRoute`</PlatformLink>.
+
+</PlatformSection>
+
+Forward only the request body, or tell the browser to send no credentials:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "/tunnel",
+  transportOptions: {
+    fetchOptions: { credentials: "omit" },
+  },
+});
+```
+
+If a layer in front of your tunnel requires credentials (for example, Vercel Deployment Protection, Cloudflare Access, or HTTP Basic authentication), it rejects requests without credentials. Keep the default in this case, and make sure that your tunnel doesn't forward the request headers.
 
 </Expandable>
 
@@ -808,11 +855,7 @@ error: Uncaught SyntaxError: Unexpected token ':'
 
 This is a Deno bug ([denoland/deno#36240](https://github.com/denoland/deno/issues/36240)): while any module hook is registered, Deno loads `.json` files with the wrong format. Express, Fastify, Hapi, Koa and mysql2 all read a JSON file this way.
 
-Remove the `@sentry/deno/import` line from your entry file to start your app again:
-
-```javascript {filename: main.ts}
-import * as Sentry from "npm:@sentry/deno";
-```
+Remove the `--preload=npm:@sentry/deno/import` flag from your `deno run` command to start your app again.
 
 Errors, `Deno.serve` and `node:http` spans, logs and metrics all keep working without the hook. You lose the integrations that depend on it, such as `mysql` 2.x and `pg`. Drivers that publish their own diagnostics channels, among them `mysql2` 3.20.0 and later and `ioredis` 5.11.0 and later, are instrumented either way.
 

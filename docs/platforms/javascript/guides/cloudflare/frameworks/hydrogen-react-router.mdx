@@ -35,14 +35,7 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add the React Router and Cloudflare SDK:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/react-router @sentry/cloudflare --save
@@ -56,24 +49,13 @@ yarn add @sentry/react-router @sentry/cloudflare
 pnpm add @sentry/react-router @sentry/cloudflare
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Configure
 
 ### Configure Client-side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Initialize Sentry in your `entry.client.tsx` file.
 
 The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename: app/entry.client.tsx}
 import { HydratedRouter } from "react-router/dom";
@@ -133,20 +115,9 @@ startTransition(() => {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Configure Server-side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 First, create an `instrument.server.mjs` file to initialize Sentry on the server:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```js {filename:instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
@@ -166,12 +137,6 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Next, update your `server.ts` file to use the `wrapRequestHandler` method from the `@sentry/cloudflare/request` subpath:
 
 <Alert level="warning">
@@ -185,9 +150,6 @@ On Shopify Oxygen, never import anything directly from `@sentry/cloudflare`. Onl
 `wrapRequestHandler` doesn't isolate requests from each other. Scope data you set during a request, for example with `setTag` or `setUser`, can show up on events from other concurrent or later requests in the same isolate. Use `wrapRequestHandler` only on runtimes that can't enable `nodejs_compat`, such as Shopify Oxygen. On Cloudflare Workers, wrap your handler with `Sentry.withSentry()` instead, as described in the [Cloudflare guide](/platforms/javascript/guides/cloudflare/).
 
 </Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```ts {filename:server.ts}
 import { wrapRequestHandler } from "@sentry/cloudflare/request";
@@ -231,22 +193,11 @@ export default {
 };
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <OnboardingOption optionId="performance">
 
 ### Enable Distributed Tracing
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Update your `entry.server.tsx` file to inject trace meta tags:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/entry.server.tsx}
 import "./instrument.server";
@@ -289,24 +240,13 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 export default Sentry.wrapSentryHandleRequest(handleRequest);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 </OnboardingOption>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 The stack traces in your Sentry errors probably won't look like your actual code without unminifying them. To fix this, upload your source maps to Sentry.
 
 First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```ts {filename:vite.config.ts}
 import { reactRouter } from "@react-router/dev/vite";
@@ -336,16 +276,7 @@ export default defineConfig((config) => ({
 }));
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 Since the `buildEnd` hook will not be executed for Hydrogen, you need to manually upload source maps using the [Sentry CLI](/cli/) instead.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash
 # Inject debug IDs
@@ -353,10 +284,6 @@ sentry-cli sourcemaps inject /path/to/build/dir
 # Upload sourcemaps
 sentry-cli sourcemaps upload /path/to/build/dir
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Control the Data You Send to Sentry (Optional)
 
@@ -372,18 +299,11 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 
 ### Issues
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
 To verify that Sentry captures errors and creates issues in your Sentry project, throw an error in a loader.
 
 Next, open the `/sentry-test` route in your browser, and you should trigger an error.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename: app/routes/sentry-test.tsx}
 import type { Route } from "./+types/sentry-test";
@@ -397,23 +317,12 @@ export default function SentryTestPage() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <OnboardingOption optionId="performance">
 ### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code.
 
 Open the `/sentry-test` route in your browser. You should start a trace and trigger an error.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename: app/routes/sentry-test.tsx}
 import * as Sentry from "@sentry/react-router/cloudflare";
@@ -435,10 +344,6 @@ export default function SentryTestPage() {
   return <div>Loading this page will throw an error</div>;
 }
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 </OnboardingOption>
 
