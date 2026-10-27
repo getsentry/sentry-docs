@@ -462,6 +462,10 @@ type Redirect = {
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
   {
+    from: '/integrations/compliance/vanta-eu/',
+    to: '/integrations/compliance/vanta/',
+  },
+  {
     from: '/platforms/python/http_errors/',
     to: '/platforms/python/integrations/django/http_errors/',
   },
@@ -4703,10 +4707,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/organization/integrations/telegram-alerts-bot/',
     to: '/integrations/notification-incidents/telegram-alerts-bot/',
-  },
-  {
-    from: '/organization/integrations/vanta-eu/',
-    to: '/integrations/compliance/vanta-eu/',
   },
   {
     from: '/organization/integrations/sourcery/',
