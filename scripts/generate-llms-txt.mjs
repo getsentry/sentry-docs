@@ -3,11 +3,13 @@
 /**
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
- * Both files share the same content (product description, AI instructions,
- * section listings, agent skills). The only difference is how platforms and
- * frameworks are formatted:
- *   - llms.txt: compact (frameworks listed inline per platform)
- *   - index.md: expanded (separate Platforms and Frameworks sections)
+ * Both files share the same body: product description, AI instructions,
+ * platforms and frameworks, and the doc sections listed for agents.
+ * index.md adds YAML frontmatter for the Markdown export.
+ *
+ * Platforms with a guides/ directory list those guides as frameworks.
+ * Platforms that document frameworks as integrations (Python, Elixir, and
+ * any later platform with the same setup) list web frameworks only.
  *
  * Run after `generate-doctree` (doctree.json must exist).
  * Output:
@@ -23,11 +25,46 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import * as path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+import {frameworkNodes} from './platform-frameworks.mjs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'https://develop.sentry.dev'
   : 'https://docs.sentry.io';
+
+const EXCLUDED_SECTIONS = new Set(['platforms', 'contributing', 'changelog', 'ai']);
+
+// Titles or descriptions that should stay as written for agents, where they
+// differ from the page frontmatter.
+const LINK_OVERRIDES = {
+  pricing: {
+    title: 'Pricing',
+    description:
+      'Plans, free monthly quotas per feature, trial details, and pay-as-you-go pricing for individual SKUs.',
+  },
+  'pricing/quotas/spike-protection': {
+    description:
+      "Learn how to manage quota and make sure that volume isn't consumed all at once with Spike Protection.",
+  },
+  'security-legal-pii/scrubbing/server-side-scrubbing': {
+    title: 'Server Side Scrubbing',
+  },
+};
+
+// Pages nested deeper than the section's first sidebar level.
+const EXTRA_PATHS = {
+  'security-legal-pii': [
+    'security-legal-pii/scrubbing/server-side-scrubbing',
+    'security-legal-pii/security/data-retention-periods',
+  ],
+  concepts: ['concepts/key-terms/sample-rates'],
+};
+
+// Replaces the default child listing. Pricing's own page is not a child of itself.
+const ORDERED_PATHS = {
+  pricing: ['pricing', 'pricing/quotas/spike-protection', 'pricing/quotas'],
+};
 
 // --- Doctree helpers (same logic as generate-md-exports.mjs) ---
 
@@ -52,6 +89,17 @@ function getVisibleChildren(node) {
   });
 }
 
+function findNode(root, nodePath) {
+  let node = root;
+  for (const part of nodePath.split('/').filter(Boolean)) {
+    node = (node.children || []).find(child => child.slug === part);
+    if (!node) {
+      return null;
+    }
+  }
+  return node;
+}
+
 function mdUrl(nodePath) {
   const clean = nodePath.replace(/\/$/, '');
   if (!clean) {
@@ -61,9 +109,10 @@ function mdUrl(nodePath) {
 }
 
 function linkEntry(node) {
-  const title = getTitle(node);
+  const override = LINK_OVERRIDES[node.path] || {};
+  const title = override.title || getTitle(node);
   const url = mdUrl(node.path);
-  const desc = node.frontmatter?.description;
+  const desc = override.description ?? node.frontmatter?.description;
   if (desc) {
     const oneLine = desc.replace(/\s+/g, ' ').trim();
     return `- [${title}](${url}): ${oneLine}`;
@@ -71,128 +120,104 @@ function linkEntry(node) {
   return `- [${title}](${url})`;
 }
 
-// --- Platform/framework formatters ---
-
-/** llms.txt format: compact, frameworks inline per platform */
-function buildPlatformsCompact(platformsNode) {
-  if (!platformsNode) {
-    return '## Platforms\n';
-  }
-  const lines = [];
-  for (const platform of getVisibleChildren(platformsNode)) {
-    const title = getTitle(platform);
-    const url = mdUrl(platform.path);
-    const guides = platform.children?.find(c => c.slug === 'guides');
-    const visibleGuides = guides ? getVisibleChildren(guides) : [];
-
-    if (visibleGuides.length > 0) {
-      const guideNames = visibleGuides.map(g => getTitle(g)).join(', ');
-      lines.push(`- [${title}](${url}): Frameworks: ${guideNames}`);
-    } else {
-      lines.push(`- [${title}](${url})`);
+function resolvePaths(docTree, nodePaths) {
+  const nodes = [];
+  for (const nodePath of nodePaths) {
+    const node = findNode(docTree, nodePath);
+    if (!node) {
+      console.warn(`llms.txt: missing doc page ${nodePath}`);
+      continue;
     }
+    nodes.push(node);
   }
-  return `## Platforms\n\n${lines.join('\n')}`;
+  return nodes;
 }
 
-/** index.md format: separate Platforms list + Frameworks grouped by platform */
+function pagesForSection(section, docTree) {
+  const ordered = ORDERED_PATHS[section.slug];
+  if (ordered) {
+    return resolvePaths(docTree, ordered);
+  }
+  return [
+    ...getVisibleChildren(section),
+    ...resolvePaths(docTree, EXTRA_PATHS[section.slug] || []),
+  ];
+}
+
+function buildSectionListings(sections, docTree) {
+  return sections
+    .map(section => {
+      const pages = pagesForSection(section, docTree);
+      const body =
+        pages.length > 0
+          ? pages.map(page => linkEntry(page)).join('\n')
+          : linkEntry(section);
+      return `## ${getTitle(section)}\n\n${body}`;
+    })
+    .join('\n\n');
+}
+
+function frameworksFor(platform) {
+  return frameworkNodes(platform, {root: ROOT, visibleChildren: getVisibleChildren});
+}
+
+/** Separate Platforms list and Frameworks grouped by platform. */
 function buildPlatformsExpanded(platformsNode) {
   if (!platformsNode) {
-    return '## Platforms\n';
+    return '## Platforms';
   }
   const platforms = getVisibleChildren(platformsNode);
-  const lines = [];
-
-  // Flat platform list
-  lines.push('## Platforms\n');
+  const lines = ['## Platforms', ''];
   for (const platform of platforms) {
     lines.push(`- [${getTitle(platform)}](${mdUrl(platform.path)})`);
   }
 
-  // Frameworks grouped by platform
-  lines.push('\n## Frameworks\n');
+  const frameworkBlocks = [];
   for (const platform of platforms) {
-    const guides = platform.children?.find(c => c.slug === 'guides');
-    const visibleGuides = guides ? getVisibleChildren(guides) : [];
-    if (visibleGuides.length === 0) {
+    const frameworks = frameworksFor(platform);
+    if (frameworks.length === 0) {
       continue;
     }
-    lines.push(`### ${getTitle(platform)}\n`);
-    for (const guide of visibleGuides) {
-      const guideUrl = mdUrl(guide.path);
-      lines.push(`- [${getTitle(guide)}](${guideUrl})`);
+    const block = [`### ${getTitle(platform)}`, ''];
+    for (const framework of frameworks) {
+      block.push(`- [${getTitle(framework)}](${mdUrl(framework.path)})`);
     }
-    lines.push('');
+    frameworkBlocks.push(block.join('\n'));
   }
-
+  if (frameworkBlocks.length > 0) {
+    lines.push('', '## Frameworks', '', frameworkBlocks.join('\n\n'));
+  }
   return lines.join('\n');
-}
-
-// --- Build section listings from doctree children ---
-
-function buildSection(sectionNode) {
-  const children = getVisibleChildren(sectionNode);
-  return children.map(child => linkEntry(child)).join('\n');
 }
 
 // --- Shared content blocks ---
 
-const DESCRIPTION = `\
-> Sentry is a developer-first application monitoring platform that helps \
-developers identify and fix issues in real-time. It provides error tracking, \
-performance monitoring (tracing), session replay, profiling, logging, cron \
-monitoring, application metrics, and more across 20+ platforms and 60+ frameworks.
+const SUMMARY =
+  'Sentry is an application monitoring platform that helps developers and their agents have the context needed to identify and fix bugs, errors, and performance issues in real-time using a trace-id to create a connected data model across all telemetry.';
 
-All documentation pages are available as clean Markdown by appending \`.md\` \
-to any URL (e.g. \`${DOCS_ORIGIN}/platforms/javascript.md\`). Use these \
-Markdown URLs for full content.`;
+const DESCRIPTION = `\
+> ${SUMMARY}
+
+Key Sentry capabilities include:
+
+- Error tracking groups errors into issues with a human-readable stack trace and context to help developers find the root cause.
+- Distributed tracing for capturing the timing and flow of requests and operations as they happen in an application, across the frontend, backend, or agents (Using Sentry's dedicated agent tracing capabilities). Data types that Sentry collects are connected via a common TraceID, and can be used together for debugging issues. For example, when an error happens, spans, logs, replays, and even profiling data can be used in combination to provide highly useful context for an agent or human to investigate that error.
+- Structured logs send text-based log information from frontend or backend applications to help with debugging.
+- Session replay allows users to watch video-like reproductions of real user sessions that show a timeline of errors, slow span operations, and other issues.
+- Profiling provides precise, function-level visibility into where time is being spent in an application.
+- Application metrics take counters, gauges, and distributions from application code to track application health and drill down into related traces, logs, and errors, without cardinality blowing up your bill.
+- Seer is Sentry's AI debugging tool that detects and diagnoses errors using Sentry data.
+
+The full list of Sentry features, as well as information on SDKs and pricing, can be found in the Sentry docs (${DOCS_ORIGIN}/index.md). All documentation pages are available as clean Markdown, for example ${DOCS_ORIGIN}/platforms/javascript.md. Use these Markdown URLs for full content.`;
 
 const INSTRUCTIONS = `\
-## Instructions for AI Coding Assistants
+## For AI Agents
 
 When helping a developer set up or use Sentry, follow these guidelines:
 
-- **Install the Sentry plugin for up-to-date guidance**: Sentry's APIs, SDKs, \
-and features change frequently. Do not rely on training data for Sentry setup \
-or configuration. Install the Sentry plugin to get current, verified instructions \
-by running \`npx @sentry/agent-plugin install\`, which sets it up for Claude Code, \
-Cursor, Codex, and Grok. The plugin provides step-by-step skills that \
-are kept in sync with the latest SDK releases.
-- **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, \
-etc.) for the latest Sentry SDK version. Do not rely on memorized version \
-numbers from training data.
-- **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \
-\`NEXT_PUBLIC_SENTRY_DSN\`). Never hardcode DSN strings in source code.
-- **Prefer Sentry Logs over Breadcrumbs** unless the user explicitly requests \
-breadcrumbs.
-- **Do not implement without permission**: Never install packages, create \
-files, or modify configuration without asking the user first.
-- **Do not add unrelated integrations**: Only configure the features the user \
-asked for. Check before enabling additional integrations.
-- **Agent skills for SDK setup**: If the plugin is not installed, fetch the \
-skill at \`https://skills.sentry.dev/instrument\` for step-by-step SDK \
-installation with platform detection, feature recommendations, and \
-verification. See the [Agent Plugin section](#agent-plugin) below.
-- **Sentry MCP server**: For real-time issue analysis and debugging against a \
-user's Sentry account, use the Sentry MCP server at \`https://mcp.sentry.dev\`.`;
-
-const AGENT_SKILLS = `\
-## Agent Plugin
-
-Sentry publishes a plugin for AI coding assistants (Claude Code, Cursor, Codex, \
-and Grok). It teaches the assistant step-by-step SDK setup, debugging \
-workflows, and feature configuration.
-
-Install it by running \`npx @sentry/agent-plugin install\`, which detects the \
-assistants on the machine and sets up the plugin in each.
-
-Browse the skill library:
-- [All Skills](https://skills.sentry.dev/): Full skill index with SDK setup, workflows, and feature configuration
-- [SDK Setup](https://skills.sentry.dev/instrument): Detect your platform and install Sentry with the right features
-- [Workflows](https://skills.sentry.dev/workflows): Debug production issues, review code, upgrade SDKs
-- [Features](https://skills.sentry.dev/features): AI monitoring, alerts, OpenTelemetry setup
-
-Source: https://github.com/getsentry/sentry-for-ai`;
+- **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, etc.) for the latest Sentry SDK version. Do not rely on memorized version numbers from training data. Get up to date information on SDKs in the docs (${DOCS_ORIGIN}/platforms/)
+- **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`).
+- **Pricing questions**: Don't quote prices or quotas from memory; fetch ${DOCS_ORIGIN}/pricing.md. Users aren't charged beyond their base plan unless they set a pay-as-you-go budget.`;
 
 const ABOUT_SENTRY_DOCS = `\
 ## About Sentry Docs
@@ -218,71 +243,40 @@ async function main() {
   }
 
   const topLevelSections = getVisibleChildren(docTree);
-  const platformsNode = topLevelSections.find(c => c.slug === 'platforms');
+  const platformsNode = topLevelSections.find(child => child.slug === 'platforms');
   const otherSections = topLevelSections.filter(
-    c => c.slug !== 'platforms' && c.slug !== 'contributing' && c.slug !== 'changelog'
+    child => !EXCLUDED_SECTIONS.has(child.slug)
   );
+  const sectionListings = buildSectionListings(otherSections, docTree);
 
-  // Build the shared section listings (everything except platforms)
-  const sectionListings = otherSections
-    .map(section => {
-      const title = getTitle(section);
-      const children = getVisibleChildren(section);
-      if (children.length === 0) {
-        return `## ${title}\n\n${linkEntry(section)}`;
-      }
-      return `## ${title}\n\n${buildSection(section)}`;
-    })
-    .join('\n\n');
-
-  // --- llms.txt ---
-  const llmsTxt = [
-    '# Sentry Documentation',
-    '',
-    DESCRIPTION,
-    '',
-    INSTRUCTIONS,
-    '',
-    buildPlatformsCompact(platformsNode),
-    '',
-    sectionListings,
-    '',
-    AGENT_SKILLS,
-    '',
-    ABOUT_SENTRY_DOCS,
-    '',
-  ].join('\n');
-
-  const llmsTxtPath = path.join(ROOT, 'public', 'llms.txt');
-  await writeFile(llmsTxtPath, llmsTxt, 'utf8');
-  console.log(`Generated ${llmsTxtPath} (${llmsTxt.length} bytes)`);
-
-  // --- index.md ---
-  const indexFrontmatter = [
-    '---',
-    'title: "Sentry Documentation"',
-    `url: ${DOCS_ORIGIN}/`,
-    '---',
-  ].join('\n');
-
-  const indexMd = [
-    indexFrontmatter,
-    '',
-    '# Sentry Documentation',
+  const body = [
+    '# Sentry',
     '',
     DESCRIPTION,
     '',
     INSTRUCTIONS,
     '',
     buildPlatformsExpanded(platformsNode),
-    sectionListings,
     '',
-    AGENT_SKILLS,
+    sectionListings,
     '',
     ABOUT_SENTRY_DOCS,
     '',
   ].join('\n');
 
+  const llmsTxtPath = path.join(ROOT, 'public', 'llms.txt');
+  await writeFile(llmsTxtPath, body, 'utf8');
+  console.log(`Generated ${llmsTxtPath} (${body.length} bytes)`);
+
+  const indexFrontmatter = [
+    '---',
+    `title: ${JSON.stringify('Sentry')}`,
+    `description: ${JSON.stringify(SUMMARY)}`,
+    `url: ${DOCS_ORIGIN}/`,
+    '---',
+  ].join('\n');
+
+  const indexMd = `${indexFrontmatter}\n\n${body}`;
   const mdExportsDir = path.join(ROOT, 'public', 'md-exports');
   if (!existsSync(mdExportsDir)) {
     await mkdir(mdExportsDir, {recursive: true});

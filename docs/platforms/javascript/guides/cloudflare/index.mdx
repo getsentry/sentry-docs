@@ -1,6 +1,6 @@
 ---
 title: Cloudflare
-description: "Learn how to manually set up Sentry for Cloudflare Workers and capture your first errors."
+description: "Learn how to manually set up Sentry for Cloudflare Workers and capture your first events."
 sdk: sentry.javascript.cloudflare
 categories:
   - server
@@ -34,14 +34,6 @@ If you're using any of the listed frameworks, follow their specific setup instru
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance" ]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
 
 Run the command for your preferred package manager to add the Sentry SDK to your application:
@@ -49,6 +41,11 @@ Run the command for your preferred package manager to add the Sentry SDK to your
 <PlatformContent includePath="getting-started-install" />
 
 ## Configure
+
+**Error Monitoring** starts working as soon as you configure Sentry. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+<Include name="quick-start-features-expandable" />
 
 This guide sets Sentry up through Vite, which is what we recommend for Cloudflare Workers. The plugin does the wiring at build time, so your Worker code stays untouched.
 
@@ -94,18 +91,22 @@ Create an `instrument.server.ts` file next to your Worker entry, the file that `
 
 The name is fixed. The plugin looks for `instrument.server` with a `.ts`, `.mts`, `.js`, `.mjs` or `.cjs` extension, and passes its default export to `withSentry`. Use `defineCloudflareOptions` to get the options type-checked.
 
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
 ```typescript {filename:src/instrument.server.ts}
 import { defineCloudflareOptions } from "@sentry/cloudflare";
 
 export default defineCloudflareOptions((env) => ({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 }));
 ```
 
@@ -115,78 +116,52 @@ If you don't add an `instrument.server.*` file, the SDK reads its configuration 
 
 </Expandable>
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+### Known Limitations
+
+#### Span Durations
+
+Server-side spans will display `0ms` for their durations. In the Cloudflare Workers runtime, `performance.now()` and `Date.now()` only advance after I/O occurs. CPU-bound operations will show zero duration. This is a security measure Cloudflare implements to [mitigate against timing attacks](https://developers.cloudflare.com/workers/runtime-apis/performance/).
+
+This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
+
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with `console` or Consola, you can capture those logs with <PlatformLink to="/logs/#console-integration">our console integrations</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add a route to your Worker that throws an error:
 
-First, let's make sure Sentry is correctly capturing errors and creating issues in your project.
-
-Add the following code snippet to your main worker file to create a `/debug-sentry` route that triggers an error when called:
-
-```javascript {filename:index.js}
+```javascript
 export default {
   async fetch(request) {
     const url = new URL(request.url);
 
     if (url.pathname === "/debug-sentry") {
-      throw new Error("My first Sentry error!");
+      throw new Error("Sentry Test Error");
     }
 
-    // Your existing routes and logic here...
     return new Response("...");
   },
 };
 ```
-
-<OnboardingOption optionId="performance">
-### Tracing
-To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes to run your code.
-
-```javascript {filename:index.js}
-import * as Sentry from "@sentry/cloudflare";
-
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/debug-sentry") {
-      await Sentry.startSpan(
-        {
-          op: "test",
-          name: "My First Test Span",
-        },
-        async () => {
-          await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for 100ms
-          throw new Error("My first Sentry error!");
-        }
-      );
-    }
-
-    // Your existing routes and logic here...
-    return new Response("...");
-  },
-};
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -194,25 +169,12 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 <Include name="quick-start-locate-data-expandable" />
 
-## Known Limitations
-
-### Span Durations
-
-Server-side spans will display `0ms` for their durations. In the Cloudflare Workers runtime, `performance.now()` and `Date.now()` only advance after I/O occurs. CPU-bound operations will show zero duration. This is a security measure Cloudflare implements to [mitigate against timing attacks](https://developers.cloudflare.com/workers/runtime-apis/performance/).
-
-This is expected behavior in the Cloudflare Workers environment and affects all frameworks deployed to Cloudflare Workers, including Next.js, Astro, Remix, and others.
-
 ## Next Steps
 
-At this point, you should have integrated Sentry and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Cloudflare Worker. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to [manually capture errors](/platforms/javascript/guides/cloudflare/usage/)
-- Continue to [customize your configuration](/platforms/javascript/guides/cloudflare/configuration/)
-- Make use of [Cloudflare-specific features](/platforms/javascript/guides/cloudflare/features/)
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
