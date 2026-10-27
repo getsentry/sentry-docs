@@ -13,7 +13,7 @@ description: "Learn how to manually define a Sentry tunnel route in your TanStac
   the route file, the DSN allowlist, or can't use the Vite plugin.
 </Alert>
 
-The `createSentryTunnelRoute` helper returns a TanStack Start server-route configuration with a `POST` handler that forwards Sentry envelopes to Sentry's ingest servers. Use it inside a file route to expose a same-origin tunnel endpoint. It forwards only the request body to Sentry.
+The `createSentryTunnelRoute` helper returns a TanStack Start server-route configuration with a `POST` handler that forwards Sentry envelopes to Sentry's ingest servers. Use it inside a file route to expose a same-origin tunnel endpoint. For a tunnel that needs no route file, use the [`tunnelRoute`](/platforms/javascript/guides/tanstackstart-react/features/sentryTanstackStart/#tunnel-route) option instead.
 
 ## Usage
 
@@ -46,7 +46,7 @@ Sentry.init({
 
 A list of DSN strings that the route is allowed to forward to. The route validates each incoming envelope against this list and rejects any DSN that isn't allowed.
 
-If `allowedDsns` is omitted or empty, the route falls back to the DSN of the active server-side Sentry SDK at runtime. If neither is available, requests to the route return a 500 response.
+Since version `11.10.0`, the DSN of the active server-side Sentry SDK is always allowed too. If `allowedDsns` is omitted or empty, the route uses only that DSN. If neither is available, requests to the route return a 500 response.
 
 ```typescript {filename:src/routes/monitor.ts}
 Sentry.createSentryTunnelRoute({

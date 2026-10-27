@@ -223,6 +223,40 @@ You can work around our CDN bundles being blocked by [using our NPM packages](#u
 
 </Expandable>
 
+<PlatformSection supported={["javascript.sveltekit", "javascript.nuxt", "javascript.astro", "javascript.react-router", "javascript.tanstackstart-react", "javascript.solidstart", "javascript.remix"]}>
+<Expandable permalink title="Using the Managed Tunnel">
+
+<AvailableSince version="11.10.0" />
+
+The SDK can serve the tunnel for you. Set `tunnel: true` in your browser `Sentry.init`, and add `serveTunnelIntegration` to your server `Sentry.init`:
+
+```javascript {tabTitle:Browser}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: true,
+});
+```
+
+```javascript {tabTitle:Server}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.serveTunnelIntegration()],
+});
+```
+
+The browser then sends its events to a path on your own origin derived from the DSN, and your server forwards them to Sentry. The SDK reads your app's base path from your framework config.
+
+<PlatformSection supported={["javascript.remix"]}>
+
+The managed tunnel is only available for Remix 3.
+
+</PlatformSection>
+
+See <PlatformLink to="/configuration/integrations/servetunnel/">`serveTunnelIntegration`</PlatformLink> for a fixed path, more allowed DSNs, and how the tunnel handles requests. If you can't use the managed tunnel, set up your own tunnel as explained below.
+
+</Expandable>
+</PlatformSection>
+
 <Expandable permalink title="Using the `tunnel` Option">
 
 <PlatformSection supported={["javascript.nextjs"]}>
@@ -258,7 +292,7 @@ Your tunnel endpoint must:
 - Accept only envelopes whose DSN is on a list of allowed DSNs. Otherwise, anyone can use your endpoint to send requests to other servers.
 - Send the envelope only to the host of that DSN.
 
-On a JavaScript server with Fetch API `Request` and `Response` objects, `handleTunnelRequest` from `@sentry/core` (SDK version `10.40.0` and later) does this for you. Starting with versions `10.77.1` (v10) and `11.9.0` (v11), it also rejects requests larger than 20 MiB.
+On a JavaScript server with Fetch API `Request` and `Response` objects, `handleTunnelRequest` from `@sentry/core` (SDK version `10.40.0` and later) does this for you. Starting with version `11.10.0`, the DSN of the active server SDK is always allowed, so `allowedDsns` is optional. It forwards the user agent, client hint, `Origin`, and `Referer` headers, and the visitor's IP address, but never cookies or auth headers.
 
 ```javascript
 import { handleTunnelRequest } from "@sentry/core";

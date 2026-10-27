@@ -1,0 +1,106 @@
+---
+title: ServeTunnel
+description: "Serves a tunnel on your server so browser events reach Sentry through your own origin, past ad blockers."
+supported:
+  - javascript.sveltekit
+  - javascript.nuxt
+  - javascript.nitro
+  - javascript.astro
+  - javascript.react-router
+  - javascript.tanstackstart-react
+  - javascript.solidstart
+  - javascript.remix
+  - javascript.cloudflare
+---
+
+<AvailableSince version="11.10.0" />
+
+_Import name: `Sentry.serveTunnelIntegration`_
+
+Ad blockers often drop requests to `*.ingest.sentry.io`. This integration serves a tunnel endpoint from your app's server, so the browser SDK can send its events to your own origin instead. The server forwards them to Sentry.
+
+Set it up on both sides. Add the integration to your server `Sentry.init`:
+
+```javascript {filename:Server}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.serveTunnelIntegration()],
+});
+```
+
+And set `tunnel: true` in your browser `Sentry.init`:
+
+```javascript {filename:Browser}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: true,
+});
+```
+
+The browser and the server both derive the tunnel path from the DSN, for example `/qpo967`. You don't need a route file, a build step, or an environment variable. If your app is served under a base path, the SDK adds it on both sides.
+
+<Alert>
+
+The tunnel is only served by the SDKs that answer requests from a framework hook: SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, SolidStart, and Remix 3. On other servers, see [Using the `tunnel` Option](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
+
+</Alert>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare Workers, import the integration from `@sentry/cloudflare` and add it to the options you pass to `withSentry`, `defineCloudflareOptions`, or `initCloudflareSentryHandle`:
+
+```javascript
+import { serveTunnelIntegration } from "@sentry/cloudflare";
+
+export default {
+  dsn: "___PUBLIC_DSN___",
+  integrations: [serveTunnelIntegration()],
+};
+```
+
+</PlatformSection>
+
+## How It Works
+
+- The tunnel answers before your app's own middleware, so auth or CSRF middleware doesn't block it.
+- It only forwards envelopes whose DSN is allowed. By default, that's the server's own DSN. Other envelopes get a `403`, so the tunnel can't be used as an open proxy.
+- It forwards only the user agent, client hint, `Origin`, and `Referer` headers. Cookies and auth headers never reach Sentry. The visitor's IP address is forwarded from the `cf-connecting-ip`, `x-vercel-forwarded-for`, or `x-forwarded-for` header.
+- Tunnel requests don't create server spans.
+- The tunnel is only served while the server SDK is enabled. Without a DSN, or with `enabled: false`, requests to the tunnel path get your app's 404 page, and the browser's events are lost.
+
+## Options
+
+### `allowedDsns`
+
+_Type: `string[]`_
+
+DSNs to forward besides the server's own. Use this when the browser uses a different DSN than the server. The server's own DSN is always allowed.
+
+```javascript
+Sentry.serveTunnelIntegration({
+  allowedDsns: ["___PUBLIC_DSN___"],
+});
+```
+
+### `path`
+
+_Type: `string`_
+
+A fixed tunnel path instead of the one derived from the DSN. The path is served as written, without the base path. Set the same path in the browser with the object form. A string `tunnel` is sent as `text/plain`, which the CSRF protection in SvelteKit and Astro rejects.
+
+```javascript {filename:Server}
+Sentry.serveTunnelIntegration({ path: "/monitoring" });
+```
+
+```javascript {filename:Browser}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: { path: "/monitoring" },
+});
+```
+
+### `basePath`
+
+_Type: `string`_
+
+The path prefix your app is served under, for example `/docs`. The SDK reads it from your framework config, so you only need this option when it can't. Set the same value in the browser `tunnel` option.
