@@ -4,7 +4,24 @@ description: "Learn how to migrate from Sentry Android SDK 8.x to 9.0.0."
 sidebar_order: 8890
 ---
 
-Version 9 removes the global Logs and Metrics enable options. Manual telemetry APIs now work whenever the SDK is enabled, while automatic Timber and Logcat capture require their own explicit opt-in.
+Version 9 removes the deprecated Hub compatibility APIs and the global Logs and Metrics enable options. Migrate remaining Hub references to Scopes, then update your telemetry configuration.
+
+## Removed Hub APIs
+
+The Hub compatibility layer was deprecated in version 8 and is removed in version 9. Replace any remaining Hub references before upgrading:
+
+| Removed API                                  | Replacement                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------- |
+| `IHub`                                       | `IScopes`                                                                     |
+| `HubAdapter.getInstance()`                   | `ScopesAdapter.getInstance()`                                                 |
+| `HubScopesWrapper`                           | Use the wrapped `IScopes` instance directly                                   |
+| `NoOpHub.getInstance()`                      | `NoOpScopes.getInstance()`                                                    |
+| `Sentry.getCurrentHub()`                     | `Sentry.getCurrentScopes()`                                                   |
+| `Sentry.setCurrentHub(...)`                  | `Sentry.setCurrentScopes(...)`                                                |
+| `IHub.clone()` and `IScopes.clone()`         | `forkedScopes(...)` or `forkedCurrentScope(...)`                              |
+| `Sentry.popScope()` and `IScopes.popScope()` | Close the lifecycle token returned by `pushScope()` or `pushIsolationScope()` |
+
+Use try-with-resources or a `finally` block to close lifecycle tokens. This restores the previous scopes without relying on a separate `popScope()` call.
 
 ## Manual Logs and Metrics
 
