@@ -616,9 +616,9 @@ Propagation over `stub.fetch()` and service binding `fetch()` uses HTTP headers,
 
 <SdkOption name="isStreamingResponse" type='(response: Response, request: Request) => boolean | undefined' availableSince='11.9.0'>
 
-Tells the SDK whether a response is streamed, so the request span stays open until the whole response is sent. Return `true` for streamed responses, `false` for buffered ones, or `undefined` to let the SDK decide.
+Overrides whether Sentry treats a `fetch` response as streaming. Use this if your application streams responses, such as HTML rendered with streaming SSR, that Sentry doesn't detect automatically.
 
-By default, the SDK treats Server-Sent Events, NDJSON, and React Server Components responses as streamed, but not HTML. If you stream HTML with SSR, return `true` for it:
+Return `true` to keep the request span open until streaming completes, `false` to end it when the handler returns, or `undefined` to use automatic detection.
 
 ```typescript {filename:instrument.server.ts}
 import { defineCloudflareOptions } from "@sentry/cloudflare";
@@ -632,7 +632,7 @@ export default defineCloudflareOptions((env) => ({
 }));
 ```
 
-The function must be synchronous and must not read the response body.
+The callback receives the response and request. It must be synchronous and must not read the response body.
 
 </SdkOption>
 
