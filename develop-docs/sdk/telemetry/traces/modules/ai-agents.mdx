@@ -2,164 +2,182 @@
 title: AI Agents Module
 ---
 
-The AI Agents module is agnostic to the library used. The SDK will instrument existing AI agents in certain frameworks or libraries (at the time of writing those are `openai-agents` in Python and `Vercel AI` in Javascript). You may need to manually annotate spans for other libraries.
+The AI Agents module is agnostic to the library used. SDKs instrument supported AI frameworks and provider clients automatically. Users instrument anything else manually with the same span conventions.
 
-## Spans Conventions
-
-For your AI agents data to show up in the Sentry [Agents Dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/), at least one of the AI spans needs to be created and have well-defined names and data attributes. If the required data (marked with MUST or required) is missing, the data will not show up in the Agents dashbboard.
-
-We try to follow [v1.36.0](https://github.com/open-telemetry/semantic-conventions/blob/v1.36.0/docs/gen-ai/README.md) of the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) for Generative AI as close as possible. Being 100% compatible is not yet possible, because OpenTelemetry has "Span Events" which Sentry does not support. The input from/output to an AI model is stored in span events in OpenTelemetry. Since this is not possible in Sentry, we add this data onto span attributes as a list.
+This page lists every attribute SDKs send on AI spans. Send all of them. The descriptions call out the few cases where an attribute can be omitted. Don't send attributes that aren't listed here: no part of the product reads them, or Relay derives them during ingestion.
 
 <Alert level="success" title="Hint">
-The [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) have all the detailed specifications for `"gen_ai.*"` span attributes.
-
-Sentry Conventions is the single source of truth.
-
+  The [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) are
+  the single source of truth for every `gen_ai.*` attribute and span op. They
+  follow the [OpenTelemetry Semantic Conventions for Generative
+  AI](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md) where possible.
+  Sentry doesn't support span events, so message content that OpenTelemetry
+  stores in events is stored as span attributes instead.
 </Alert>
+
+## Span Hierarchy
+
+```
+── invoke_agent Weather Agent       (gen_ai.invoke_agent)
+   ├── search_memory                (gen_ai.memory.client)
+   ├── chat gpt-4o                  (gen_ai.chat)          ← 1st model call
+   ├── execute_tool get_weather     (gen_ai.execute_tool)  ← tool run
+   ├── chat gpt-4o                  (gen_ai.chat)          ← 2nd model call
+   └── decide typesafe/jev-1.13     (gen_ai.decide)        ← decision on the reply
+```
+
+- One `gen_ai.invoke_agent` span covers the whole agent run.
+- Every model request gets its own AI client span, and every tool execution its own `gen_ai.execute_tool` span. Both are children of the agent span.
+- Model and tool spans are siblings. End the model span before running the tool it requested, so model latency doesn't include tool time.
+- When an agent hands control to another agent, a `gen_ai.handoff` span marks the transfer, followed by the receiving agent's own `gen_ai.invoke_agent` span.
+- Standalone model calls create an AI client span without an agent parent.
+- For streamed responses, keep the AI client span open until the stream completes or fails.
+
+## Common Rules
+
+These apply to every span on this page.
+
+- Set `gen_ai.operation.name` on every span. Sentry uses it to recognize AI spans and to tell decision, memory, and embeddings spans apart from ordinary model calls. Relay derives `gen_ai.operation.type` from it, and every Agents insights view filters on that type.
+- Set `gen_ai.operation.name`, `gen_ai.request.model`, `gen_ai.agent.name`, and `gen_ai.tool.name` when the span starts, so sampling decisions can use them.
+- On failure, set the span status to error. Sentry counts errors from the span status alone.
+- When the application has a conversation, chat, or session ID, set `gen_ai.conversation.id` to it on every `gen_ai.*` span. Conversations are keyed on this attribute, so spans without it don't appear in any conversation. Omit it when there is no such ID; never derive one from a trace or request ID.
+- Send structured values (messages, tool definitions, records) as JSON strings. Span attributes only accept primitives, so set `'[{"foo": "bar"}]'`, not `[{"foo": "bar"}]`.
+- Gate prompt, response, and tool content with the `genAI` option of the [data collection](/sdk/foundations/client/data-collection/) configuration. When collection is off, omit those attributes. Metadata such as model names, token counts, and tool names is always sent.
+
+### Derived by Relay
+
+Don't send these. Relay computes them during ingestion and overwrites what the SDK sends:
+
+- `gen_ai.operation.type`
+- `gen_ai.usage.total_tokens`
+- `gen_ai.response.tokens_per_second`
+- `gen_ai.context.window_size` and `gen_ai.context.utilization`
+- `gen_ai.cost.*`, calculated from the model and token counts. Relay keeps an existing `gen_ai.cost.total_tokens` so users can set costs for self-hosted or unpriced models, but SDKs don't calculate costs themselves.
 
 ## Invoke Agent Span
 
-Describes AI agent invocation.
-Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
+Describes an agent run, which can include multiple model calls, tool executions, and other work.
 
-- Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
-- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[6]**
-- Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
-- Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op`: `"gen_ai.invoke_agent"`
+- Span `name`: `"invoke_agent {gen_ai.agent.name}"` (e.g. `"invoke_agent Weather Agent"`). If the library doesn't name agents, use a user-provided identifier for the invocation instead, such as `functionId` in the Vercel AI SDK.
+- `gen_ai.operation.name`: `"invoke_agent"`
 
-Additional attributes on the span:
-
-### Request Data
-
-| Attribute                          | Type   | Requirement Level | Description                                                                                                                             | Example                                                               |
-| :--------------------------------- | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
-| `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                            | `"You are a helpful assistant."`                                      |
-
-### Response Data
-
-| Attribute                    | Type    | Requirement Level | Description                                                                                           | Example                                                                      |
-| :--------------------------- | :------ | :---------------- | :---------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| `gen_ai.output.messages`     | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-
-- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
+| Attribute                 | Type   | Description                                                                                                                                                               | Example                                                                    |
+| :------------------------ | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------- |
+| `gen_ai.agent.name`       | string | The agent's name. Powers the agent filter and grouping in Agents insights, the agent flow in Conversations, and span titles.                                              | `"Weather Agent"`                                                          |
+| `gen_ai.input.messages`   | string | The messages the agent received. Sentry uses them for the conversation preview and transcript when the child model spans don't carry messages. **[0]**                    | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'`      |
+| `gen_ai.output.messages`  | string | The agent's final response. Used the same way as the input messages. **[0]**                                                                                              | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.tool.definitions` | string | The tools available to the agent, as a JSON array of name and description objects. Shown as **Available Tools** in the span details. Omit it when the agent has no tools. | `'[{"name": "get_weather", "description": "..."}]'`                        |
 
 ## AI Client Span
 
-This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
+Describes a single request to a model.
 
-- Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
-- Span `name` **SHOULD** be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
-- Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
-- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
-- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
-- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op`: `"gen_ai.{gen_ai.operation.name}"` (e.g. `"gen_ai.chat"`)
+- Span `name`: `"{gen_ai.operation.name} {gen_ai.request.model}"` (e.g. `"chat gpt-4o"`)
+- `gen_ai.operation.name`: `"chat"`, `"embeddings"`, `"generate_content"`, or `"text_completion"`
 
-Additional attributes on the span:
-
-### Request Data
-
-| Attribute                          | Type   | Requirement Level | Description                                                                                                                          | Example                                                               |
-| :--------------------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | optional          | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
-| `gen_ai.tool.definitions`          | string | optional          | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
-| `gen_ai.system_instructions`       | string | optional          | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
-| `gen_ai.request.max_tokens`        | int    | optional          | Model configuration parameter.                                                                                                       | `500`                                                                 |
-| `gen_ai.request.seed`              | string | optional          | Seed for reproducible outputs.                                                                                                       | `"12345"`                                                             |
-| `gen_ai.request.frequency_penalty` | float  | optional          | Model configuration parameter.                                                                                                       | `0.5`                                                                 |
-| `gen_ai.request.presence_penalty`  | float  | optional          | Model configuration parameter.                                                                                                       | `0.5`                                                                 |
-| `gen_ai.request.temperature`       | float  | optional          | Model configuration parameter.                                                                                                       | `0.1`                                                                 |
-| `gen_ai.request.top_p`             | float  | optional          | Model configuration parameter.                                                                                                       | `0.7`                                                                 |
-| `gen_ai.request.top_k`             | int    | optional          | Limits model to K most likely next tokens.                                                                                           | `40`                                                                  |
-| `gen_ai.request.reasoning.level`   | string | optional          | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.                               | `"medium"`                                                            |
-| `gen_ai.request.messages`          | string | optional          | **Deprecated.** Use `gen_ai.input.messages` instead. List of dictionaries describing the messages (prompts) sent to the LLM. **[0]** | `'[{"role": "system", "content": "..."}, ...]'`                       |
-| `gen_ai.request.available_tools`   | string | optional          | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of dictionaries describing the available tools. **[0]**                  | `'[{"name": "random_number", "description": "..."}, ...]'`            |
-
-### Response Data
-
-| Attribute                             | Type    | Requirement Level | Description                                                                                                         | Example                                                                      |
-| :------------------------------------ | :------ | :---------------- | :------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------- |
-| `gen_ai.output.messages`              | string  | optional          | Stringified array of message objects representing the model's output. **[0]**, **[1]**                              | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-| `gen_ai.response.finish_reasons`      | string  | optional          | The reason why the model stopped generating.                                                                        | `"stop"`                                                                     |
-| `gen_ai.response.id`                  | string  | optional          | Unique identifier for the completion.                                                                               | `"chatcmpl-abc123"`                                                          |
-| `gen_ai.response.streaming`           | boolean | optional          | Whether response was streamed asynchronously.                                                                       | `true`                                                                       |
-| `gen_ai.response.time_to_first_chunk` | double  | optional          | Seconds until first response chunk in streaming.                                                                    | `0.5`                                                                        |
-| `gen_ai.response.text`                | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the model's response. **[0]**      | `"The weather in Paris is rainy"`                                            |
-| `gen_ai.response.tool_calls`          | string  | optional          | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]**               | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
-| `gen_ai.response.time_to_first_token` | double  | optional          | **Deprecated.** Use `gen_ai.response.time_to_first_chunk` instead. Seconds until first response chunk in streaming. | `0.5`                                                                        |
-
-### Token Usage Data
-
-| Attribute                                  | Type | Requirement Level | Description                                                                                                                    | Example |
-| :----------------------------------------- | :--- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------- | :------ |
-| `gen_ai.usage.input_tokens`                | int  | optional          | The number of tokens used in the AI input (prompt), including cached tokens. **[2]**                                           | `60`    |
-| `gen_ai.usage.cache_read.input_tokens`     | int  | optional          | The number of cached tokens used in the AI input (prompt).                                                                     | `50`    |
-| `gen_ai.usage.cache_creation.input_tokens` | int  | optional          | Tokens written to cache when processing input.                                                                                 | `20`    |
-| `gen_ai.usage.output_tokens`               | int  | optional          | The number of tokens used in the AI output, including reasoning tokens. **[3]**                                                | `130`   |
-| `gen_ai.usage.reasoning.output_tokens`     | int  | optional          | The number of tokens used for reasoning.                                                                                       | `30`    |
-| `gen_ai.usage.total_tokens`                | int  | optional          | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.                                                       | `190`   |
-| `gen_ai.usage.input_tokens.cached`         | int  | optional          | **Deprecated.** Use `gen_ai.usage.cache_read.input_tokens` instead. The number of cached tokens used in the AI input (prompt). | `50`    |
-| `gen_ai.usage.input_tokens.cache_write`    | int  | optional          | **Deprecated.** Use `gen_ai.usage.cache_creation.input_tokens` instead. Tokens written to cache when processing input.         | `20`    |
-| `gen_ai.usage.output_tokens.reasoning`     | int  | optional          | **Deprecated.** Use `gen_ai.usage.reasoning.output_tokens` instead. The number of tokens used for reasoning.                   | `30`    |
-
-- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-- **[1]:** Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
-- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
-- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
+| Attribute                                  | Type   | Description                                                                                                                                                                                       | Example                                                                    |
+| :----------------------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------- |
+| `gen_ai.request.model`                     | string | The model the SDK asked for, as the raw provider string. Drives model breakdowns, cost calculation, and model icons. Without a model, Relay doesn't classify the span as a model call.            | `"gpt-4o"`                                                                 |
+| `gen_ai.response.model`                    | string | The concrete model that responded, which Models views group by. Omit it when the provider doesn't report one; Relay copies `gen_ai.request.model` instead.                                        | `"gpt-4o-2024-08-06"`                                                      |
+| `gen_ai.usage.input_tokens`                | int    | Total input tokens, including cache-read and cache-write tokens. Drives token widgets and cost. **[1]**                                                                                           | `60`                                                                       |
+| `gen_ai.usage.output_tokens`               | int    | Total output tokens, including reasoning tokens. Drives token widgets and cost. **[1]**                                                                                                           | `130`                                                                      |
+| `gen_ai.usage.cache_read.input_tokens`     | int    | The part of the input tokens served from the provider's prompt cache. Shown in the token breakdown and priced at the cache-read rate. Omit it when the provider doesn't report it.                | `50`                                                                       |
+| `gen_ai.usage.cache_creation.input_tokens` | int    | The part of the input tokens written to the provider's prompt cache. Priced at the cache-write rate. Omit it when the provider doesn't report it.                                                 | `20`                                                                       |
+| `gen_ai.usage.reasoning.output_tokens`     | int    | The part of the output tokens spent on reasoning or thinking. Shown in the token breakdown and priced at the reasoning rate. Omit it when the provider doesn't report it.                         | `30`                                                                       |
+| `gen_ai.agent.name`                        | string | The agent that made the request, so model usage can be attributed per agent. Sentry copies it from an ancestor agent span when it's missing, but only within the same segment, so send it anyway. | `"Weather Agent"`                                                          |
+| `gen_ai.input.messages`                    | string | The messages sent to the model. Shown in the conversation transcript and the span's **Input** tab, and used to generate conversation titles. **[0]** **[2]**                                      | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'`      |
+| `gen_ai.output.messages`                   | string | The model's response, including any tool calls it requested. Shown in the conversation transcript and the span's **Output** tab. **[0]**                                                          | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.system_instructions`               | string | The system prompt. Shown in the span's **Input** tab. Send system instructions here, not inside `gen_ai.input.messages`. Omit it when the request has none.                                       | `"You are a helpful assistant."`                                           |
+| `gen_ai.request.reasoning.level`           | string | The reasoning or thinking effort the user configured. Shown as **Reasoning Level** in the span details. Values vary by provider. Omit it when the user didn't set one.                            | `"medium"`                                                                 |
+| `gen_ai.embeddings.input`                  | string | The text that was embedded. Only for `embeddings` spans, where it's what the conversation transcript shows; without it, the embeddings row isn't shown.                                           | `"What's the weather in Paris?"`                                           |
 
 ## Execute Tool Span
 
 Describes a tool execution.
 
-- Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
-- Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
-- Attribute `gen_ai.tool.name` **SHOULD** be set to the name of the tool. (e.g. `"query_database"`)
-- Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`)
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op`: `"gen_ai.execute_tool"`
+- Span `name`: `"execute_tool {gen_ai.tool.name}"` (e.g. `"execute_tool get_weather"`)
+- `gen_ai.operation.name`: `"execute_tool"`
 
-Additional attributes on the span:
+| Attribute                    | Type   | Description                                                                                                                  | Example                   |
+| :--------------------------- | :----- | :--------------------------------------------------------------------------------------------------------------------------- | :------------------------ |
+| `gen_ai.tool.name`           | string | The tool's name. Powers Tools views and the tool call in the conversation transcript; without it, the tool call isn't shown. | `"get_weather"`           |
+| `gen_ai.agent.name`          | string | The agent that ran the tool, so tool usage can be attributed per agent.                                                      | `"Weather Agent"`         |
+| `gen_ai.tool.call.arguments` | string | The arguments the tool was called with, as a JSON string. Shown in the span's **Input** tab and as the timeline preview.     | `'{"location": "Paris"}'` |
+| `gen_ai.tool.call.result`    | string | What the tool returned. Shown in the span's **Output** tab, and its size is shown in the timeline.                           | `'{"temperature": 18}'`   |
 
-### Tool Data
+## Handoff Span
 
-| Attribute                    | Type   | Requirement Level | Description                                                                                                    | Example                                    |
-| :--------------------------- | :----- | :---------------- | :------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
-| `gen_ai.tool.name`           | string | optional          | Name of the tool executed.                                                                                     | `"random_number"`                          |
-| `gen_ai.tool.description`    | string | optional          | Description of the tool executed.                                                                              | `"Tool returning a random number"`         |
-| `gen_ai.tool.type`           | string | optional          | The type of the tools.                                                                                         | `"function"`; `"extension"`; `"datastore"` |
-| `gen_ai.tool.call.arguments` | string | optional          | Arguments of the tool call (stringified).                                                                      | `'{"max":10}'`                             |
-| `gen_ai.tool.call.result`    | string | optional          | Result of the tool call (stringified).                                                                         | `"7"`                                      |
-| `gen_ai.tool.message`        | string | optional          | Response from a tool/function call passed to model.                                                            | `"The random number is 7"`                 |
-| `gen_ai.tool.input`          | string | optional          | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input that was given to the executed tool as string. | `'{"max":10}'`                             |
-| `gen_ai.tool.output`         | string | optional          | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                               | `"7"`                                      |
+Describes one agent handing control to another, as in multi-agent frameworks like the OpenAI Agents SDK. Sentry shows handoffs as their own span type in the trace and timeline.
 
-**[2]:**
+- Span `op`: `"gen_ai.handoff"`. Relay uses the op to classify the span as a handoff.
+- Span `name`: `"handoff from {source agent name} to {target agent name}"` (e.g. `"handoff from Triage Agent to Billing Agent"`)
+- `gen_ai.operation.name`: `"handoff"`
 
-Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
+Handoff spans carry no other attributes besides `gen_ai.conversation.id` (see [Common Rules](#common-rules)). The receiving agent's work goes in its own `gen_ai.invoke_agent` span.
 
-**[3]:**
+## Decision Span
 
-Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
+Describes a decision on generated content against a set of questions, such as grading a model's reply for accuracy or classifying a support message, for example from TypeSafe Jev. Sentry shows decisions as their own rows in the conversation transcript and timeline, with dedicated **Input** and **Output** views.
 
-**[4]**
+- Span `op`: `"gen_ai.decide"`
+- Span `name`: `"decide {gen_ai.request.model}"` (e.g. `"decide typesafe/jev-1.13"`)
+- `gen_ai.operation.name`: `"decide"`. Decisions share the `ai_client` operation type with model calls, so this attribute is what tells them apart.
 
-The input list should include the most recent messages up to and including the most recent previous model response. The previous model response is identified with an "assistant" or "model" role in common frameworks. If there is no previous model response in the input list, then all input items which are not system instructions should be included. System instructions must be added in `gen_ai.system_instructions`, and are not included in the `gen_ai.input.messages` list.
+| Attribute                    | Type   | Description                                                                                                                                                                | Example                                                                                                                          |
+| :--------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| `gen_ai.request.model`       | string | The evaluation model the SDK asked for. Drives model breakdowns, cost, and the span title. Without a model, Relay doesn't classify the span as `ai_client`.                | `"typesafe/jev-1.13"`                                                                                                            |
+| `gen_ai.response.model`      | string | The concrete model that responded. Omit it when the provider doesn't report one.                                                                                           | `"typesafe/jev-1.13-20260917"`                                                                                                   |
+| `gen_ai.usage.input_tokens`  | int    | Input tokens used by the evaluation. Drives token widgets and cost.                                                                                                        | `154`                                                                                                                            |
+| `gen_ai.usage.output_tokens` | int    | Output tokens used by the evaluation. Drives token widgets and cost.                                                                                                       | `28`                                                                                                                             |
+| `gen_ai.agent.name`          | string | The agent the decision ran under. Omit it when the decision runs outside an agent.                                                                                         | `"Support Agent"`                                                                                                                |
+| `gen_ai.input.messages`      | string | The content being evaluated and the questions asked about it, as a one-element array holding an evaluation object. Shown in the decision **Input** view. **[3]**           | `'[{"type": "evaluation", "state": "...", "questions": {"accuracy": {"type": "score", "criteria": ["incorrect", "correct"]}}}]'` |
+| `gen_ai.output.messages`     | string | The answers, as a one-element array holding an evaluation object. Shown in the decision **Output** view and as the one-line result in the transcript and timeline. **[4]** | `'[{"type": "evaluation", "answers": {"accuracy": {"type": "score", "score": 1}}}]'`                                             |
 
-**[5]**
+## Memory Span
 
-Binary blobs in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected in a given schema. Only binary blobs in positions where binary data is explicitly expected must be redacted. For example, in OpenAI Completions schema, only binary blobs in content blocks with type `image_url`, `input_audio` or `file` should be redacted.
+Describes a read from, write to, or management operation on an agent's persistent memory store.
 
-**[6]**
+- Span `op`: `"gen_ai.memory.client"`. Relay uses the op to classify the span as a memory operation.
+- `gen_ai.operation.name`: `"search_memory"`, `"create_memory"`, `"update_memory"`, `"upsert_memory"`, `"delete_memory"`, `"create_memory_store"`, or `"delete_memory_store"`
+- Span `name`: the `gen_ai.operation.name` value (e.g. `"search_memory"`)
 
-In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
-In these cases, the span name **SHOULD** be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+| Attribute                    | Type   | Description                                                                                                                                                                 | Example                                                                     |
+| :--------------------------- | :----- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- |
+| `gen_ai.memory.store.id`     | string | The memory store the operation targets, such as a collection, namespace, or vector index. Shown in the span details and as the preview for store operations.                | `"user-preferences-store"`                                                  |
+| `gen_ai.memory.record.id`    | string | The record the operation applies to. Omit it when the operation targets more than one record. On `delete_memory`, a missing ID means every record in the store was deleted. | `"mem_5j66UpCpwteGg4YSxUnt7lPY"`                                            |
+| `gen_ai.memory.record.count` | int    | The number of records returned by `search_memory`, or written or deleted by other operations. Shown as the result in the transcript.                                        | `3`                                                                         |
+| `gen_ai.agent.name`          | string | The agent the operation ran under. Omit it when the operation runs outside an agent.                                                                                        | `"Support Agent"`                                                           |
+| `gen_ai.memory.query.text`   | string | The search query, shown as the preview for `search_memory`. Only for `search_memory`. It can contain sensitive data, so only send it when the user opts in.                 | `"user dietary preferences"`                                                |
+| `gen_ai.memory.records`      | string | The records stored or retrieved. **[5]** They can contain sensitive data, including PII, so only send them when the user opts in.                                           | `'[{"id": "mem_123", "content": "User prefers dark mode", "score": 0.95}]'` |
 
-**[7]**
+## Notes
 
-Image URLs in the data URL format in the input list should be replaced with the string `"[Blob substitute]"` in positions where binary data is expected. For example, data URLs like `data:image/png;base64` will be redacted, but HTTP URLs like `example.com/data?<a-base64-string>` will not be.
+**[0]** Messages use the format `{role, parts}`, where `role` is `"user"`, `"assistant"`, `"tool"`, or `"system"`, and `parts` is an array of typed objects:
 
-See [here](https://github.com/getsentry/sentry-python/blob/5379537fcd2925374fa617e49bb618fc9979509b/sentry_sdk/integrations/pydantic_ai/consts.py#L6) for the regex used.
+- `text`: user-visible content.
+- `reasoning`: the model's thinking. Sentry shows it as a collapsible row, separate from the reply. Never send thinking content as a `text` part.
+- `tool_call` and `tool_call_response`: tool invocations, linked by a shared `id`.
+
+Replace binary data in positions where the provider schema expects it, including `data:` URLs, with the string `"[Blob substitute]"`. Plain HTTP URLs stay as they are. See the [regex used by the Python SDK](https://github.com/getsentry/sentry-python/blob/5379537fcd2925374fa617e49bb618fc9979509b/sentry_sdk/integrations/pydantic_ai/consts.py#L6). Input messages are also subject to the [size limit](/sdk/foundations/envelopes/event-payloads/) for AI input messages.
+
+**[1]** `gen_ai.usage.input_tokens` is the total and includes cache-read and cache-write tokens. `gen_ai.usage.output_tokens` includes reasoning tokens. Relay subtracts the subsets from the totals to calculate cost, so reporting only the non-cached count as `input_tokens` produces negative costs.
+
+**[2]** Send every message the model received on that call, including the earlier turns of the conversation. Don't drop messages that previous spans already carried or keep only the most recent user message: that loses data, for example when two user messages arrive in a row.
+
+**[3]** The input is `[{"type": "evaluation", "state", "questions"}]`. `state` is the content being evaluated. `questions` maps each question key to an object with a `type` and an `instructions` string. A `score` question has `criteria` as an ordered string array whose index is the score (`["low", "medium", "high"]`). A `choice` question has `criteria` that maps each label to its description (`{"positive": "...", "negative": "..."}`).
+
+**[4]** The output is `[{"type": "evaluation", "answers"}]`. `answers` is keyed by the same question keys, and each answer has a `type` that matches its question:
+
+| Answer `type`          | Fields                                                                     |
+| :--------------------- | :------------------------------------------------------------------------- |
+| `boolean`, `predicate` | `probability`. Shown as Yes when it's 0.5 or higher.                       |
+| `noul`                 | `noul` holds the probability. Jev's variant of `boolean`.                  |
+| `score`                | `score`, plus `legend` (`{"0": "low"}`), `probabilities`, and `confidence` |
+| `choice`               | `choice`, plus `probabilities` and `confidence`                            |
+
+`legend`, `probabilities`, and `confidence` can be omitted when the evaluator doesn't report them. A field with the wrong type makes that question or answer unreadable, and Sentry shows it raw.
+
+**[5]** A JSON array of records. Each record has a `content` (a string or JSON object) and can also carry an `id`, `metadata`, and a `score`.
