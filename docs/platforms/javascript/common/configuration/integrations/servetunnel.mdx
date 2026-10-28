@@ -122,14 +122,6 @@ export default {
 };
 ```
 
-To register the tunnel as a route instead, use `getTunnelPath()`, which returns the path the browser derives from the server's DSN, and `handleTunnelRequest`:
+`handleTunnelRequestIfMatched` takes a fetch `Request`, or Node's `req` and `res` (in Fastify, `request.raw` and `reply.raw`). Without options, it uses the options of `serveTunnelIntegration`, or the server's own DSN if the integration isn't set up. It also takes the same options as the integration. To check a request without reading its body, use `isTunnelRequest(request)`.
 
-```javascript
-app.post(Sentry.getTunnelPath(), (req, res) =>
-  Sentry.handleTunnelRequest(req, res)
-);
-```
-
-Both helpers take a fetch `Request`, or Node's `req` and `res` (in Fastify, `request.raw` and `reply.raw`). Without options, they use the options of `serveTunnelIntegration`, or the server's own DSN if the integration isn't set up. `handleTunnelRequestIfMatched` also takes the same options as the integration, and `handleTunnelRequest` takes `allowedDsns`. To check a request without reading its body, use `isTunnelRequest(request)`.
-
-The helpers work without `serveTunnelIntegration`. Add it anyway, so tunnel requests don't create server spans.
+The middleware works without `serveTunnelIntegration`. Add it anyway, so tunnel requests don't create server spans.
