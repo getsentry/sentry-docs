@@ -87,8 +87,8 @@ builder.Build().Run();
 
 `UseSentry` also registers `IHub` for dependency injection and sets the environment from the host environment. It works on `IHostApplicationBuilder` types such as `Host.CreateApplicationBuilder` on .NET 8 and later. It also works on `IHostBuilder` types such as `Host.CreateDefaultBuilder` on every target, including .NET Framework.
 
-If the app calls `builder.Logging.ClearProviders()`, call `UseSentry` after it. `ClearProviders` removes every logger provider registered before it, including Sentry's, and the app then sends no errors from `ILogger` without any warning.
+If the app calls `builder.Logging.ClearProviders()`, call `UseSentry` after it. `ClearProviders` removes every logger provider registered before it, including Sentry's, and the app then sends no errors from `ILogger`. If the app has to clear providers after `UseSentry`, call `builder.Logging.AddSentry()` after `ClearProviders` to add Sentry's providers back. Skip that if Serilog, NLog or log4net already sends the app's `ILogger` entries to Sentry, because each entry would then arrive twice.
 
 A helper that takes any `IHostApplicationBuilder` and runs in an ASP.NET Core app, such as the `AddServiceDefaults` method of .NET Aspire, needs a different call. See [Call UseSentry on WebApplicationBuilder](#call-usesentry-on-webapplicationbuilder).
 
-Like ASP.NET Core, `UseSentry` sends `ILogger` entries as logs only when you set `EnableLogs`. See [EnableLogs Moves to Host Options](#enablelogs-moves-to-host-options).
+Like ASP.NET Core, `UseSentry` sends `ILogger` entries as logs only when you set `EnableLogs`. See [EnableLogs Is Removed from SentryOptions](#enablelogs-is-removed-from-sentryoptions).

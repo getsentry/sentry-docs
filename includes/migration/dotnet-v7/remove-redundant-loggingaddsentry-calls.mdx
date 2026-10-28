@@ -9,9 +9,11 @@ platformCategory: all
 order: 50
 ---
 
-In an app that calls `UseSentry`, `Logging.AddSentry()` now does nothing, and options passed to it in code no longer apply. Move those options to `UseSentry` and remove the call. The exception is an app that calls `ClearProviders()` after `UseSentry`, which also removes Sentry's logger providers: keep `Logging.AddSentry()` there to add them back.
+In an app that calls `UseSentry`, `Logging.AddSentry()` now does nothing, and options passed to it in code no longer apply. Move those options to `UseSentry` and remove the call.
 
-In 6.x, an app with both calls captured each error, breadcrumb and log twice. In 7.x, the `ILogger` integration that `UseSentry` adds captures them once, with the options of `UseSentry`. With `Debug` on, the SDK logs a warning that the `Logging.AddSentry()` call can be removed.
+The exception is an app that calls `ClearProviders()` after `UseSentry`, which also removes Sentry's logger providers. Keep `Logging.AddSentry()` there to add them back. It uses the options of `UseSentry`, not the ones passed to it. Leave it out if Serilog, NLog or log4net already sends the app's `ILogger` entries to Sentry, because each entry would then arrive twice.
+
+In 6.x, an app with both calls captured each error, breadcrumb and log twice. In 7.x, the `ILogger` integration that `UseSentry` adds captures them once, with the options of `UseSentry`. With `Debug` on, the SDK logs a warning about the redundant call.
 
 In 6.x, the app passed the logging options to `Logging.AddSentry`:
 
