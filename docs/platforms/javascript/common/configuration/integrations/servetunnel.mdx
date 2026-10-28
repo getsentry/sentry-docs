@@ -3,6 +3,8 @@ title: ServeTunnel
 description: "Serves a tunnel on your server so browser events reach Sentry through your own origin, past ad blockers."
 supportedCategories:
   - server
+notSupported:
+  - javascript.solidstart
 ---
 
 <AvailableSince version="11.10.0" />
@@ -31,19 +33,22 @@ Sentry.init({
 
 The browser and the server both derive the tunnel path from the DSN, for example `/qpo967`. You don't need a route file, a build step, or an environment variable. If your app is served under a base path, the SDK adds it on both sides.
 
-The SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, SolidStart, and Remix 3 SDKs serve the tunnel from their request hooks. On other servers, [serve it yourself](#serving-the-tunnel-yourself).
+The SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, and Remix 3 SDKs serve the tunnel from their request hooks. On other servers, [serve it yourself](#serving-the-tunnel-yourself).
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
 On Cloudflare Workers, import the integration from `@sentry/cloudflare` and add it to the options you pass to `withSentry`, `defineCloudflareOptions`, or `initCloudflareSentryHandle`:
 
 ```javascript
-import { serveTunnelIntegration } from "@sentry/cloudflare";
+import {
+  defineCloudflareOptions,
+  serveTunnelIntegration,
+} from "@sentry/cloudflare";
 
-export default {
+export default defineCloudflareOptions((env) => ({
   dsn: "___PUBLIC_DSN___",
   integrations: [serveTunnelIntegration()],
-};
+}));
 ```
 
 </PlatformSection>
@@ -124,4 +129,6 @@ app.post(Sentry.getTunnelPath(), (req, res) =>
 );
 ```
 
-Both helpers take a fetch `Request`, or Node's `req` and `res`. Without options, they use the options of `serveTunnelIntegration`, or the server's own DSN if the integration isn't set up. `handleTunnelRequestIfMatched` also takes the same options as the integration, and `handleTunnelRequest` takes `allowedDsns`. To check a request without reading its body, use `isTunnelRequest(request)`.
+Both helpers take a fetch `Request`, or Node's `req` and `res` (in Fastify, `request.raw` and `reply.raw`). Without options, they use the options of `serveTunnelIntegration`, or the server's own DSN if the integration isn't set up. `handleTunnelRequestIfMatched` also takes the same options as the integration, and `handleTunnelRequest` takes `allowedDsns`. To check a request without reading its body, use `isTunnelRequest(request)`.
+
+The helpers work without `serveTunnelIntegration`. Add it anyway, so tunnel requests don't create server spans.
