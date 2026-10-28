@@ -147,6 +147,7 @@ Any string can be used, but these types have predefined meanings:
 |--------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
 | "previous_trace"   | Linking e.g. a navigation span to the previous page load span.                                               | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
 | "cache_origin"     | Linking a span that reads a cached value to the trace that produced that value (e.g. server-side rendering). | Used to navigate from a cache-hit span to the origin trace.                                       |
+| "message_origin"   | Linking a span that processes a queue message to the span that published the message (e.g. a queue job).     | Used to navigate from a consumer span to the producer trace.                                      |
 
 ### `previous_trace`
 
@@ -208,6 +209,35 @@ To attach the link on a cache hit, the SDK must record trace context at cache-fi
 The origin trace may be negatively sampled. The link is still added, with `sampled: false` from the stored span context (same behavior as `previous_trace`).
 
 A background revalidation (for example, stale-while-revalidate) starts its own trace rather than continuing the serving trace, and becomes the origin for future cache hits.
+
+### `message_origin`
+
+When a consumer processes a message, the work often runs long after the producer published it, in another process, and with a different sampling decision.
+A parent/child relationship does not fit well: a delayed or retried job keeps the producer trace open for a long time, one publish span can fan out to many consumers, and a batch can contain messages from unrelated traces, so it has no single correct parent.
+If the consumer starts its own trace, then without a link, the consumer trace has no way to find the code that published the message.
+
+The [Queues module](/sdk/telemetry/traces/modules/queues/#distributed-tracing) continues the producer trace in the consumer where it can.
+For the cases above, start a new trace in the consumer and add a `message_origin` link instead.
+If the consumer continues the producer trace, do not add the link, because it would point into the same trace.
+
+A `message_origin` link connects the span that processes a message (for example, a `queue.process` span) to the span that published it (for example, a `queue.publish` span). "Origin" here means the producer span, not the consumer.
+
+Add the link to the span that processes the message:
+
+```ts
+span.addLink({
+  context: producerSpanContext, // propagated with the message
+  attributes: {
+    'sentry.link.type': 'message_origin'
+  }
+})
+```
+
+- On publish, store the context of the publish span (for example, the `queue.publish` span: `trace_id`, `span_id`, sampling decision) with the message, for example in message metadata or headers.
+- On process, read the stored context and add the link. A span that processes a batch adds one link for each distinct producer span in the batch.
+- If the message has no stored context, emit the consumer span **without** a link.
+
+The producer trace may be negatively sampled. The link is still added, with `sampled: false` from the stored span context (same behavior as `previous_trace`).
 
 ## Usage Example
 

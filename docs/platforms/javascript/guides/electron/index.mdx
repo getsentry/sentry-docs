@@ -1,6 +1,6 @@
 ---
 title: Electron
-description: "Learn how to manually set up Sentry in your Electron app and capture your first errors."
+description: "Learn how to manually set up Sentry in your Electron app and capture your first events."
 sdk: sentry.javascript.electron
 categories:
   - desktop
@@ -30,40 +30,36 @@ pnpm add @sentry/electron
 
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback"
-  ]}
-/>
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 
 <Include name="quick-start-features-expandable" />
 
 You should initialize the SDK in both the `main` process and every `renderer` process you spawn.
+Don't need a feature? Remove its integration and options from the respective snippet.
 
 ### Configure the Main Process
 
-Initialize the SDK in your Electron `main` process as early as possible:
+Initialize the SDK in your Electron `main` process as early as possible.
+
+The main process snippets also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `startupTracingIntegration()`
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  integrations: [Sentry.startupTracingIntegration()],
-  // ___PRODUCT_OPTION_END___ performance
+  integrations: [
+    // Enables startup tracing in the main process
+    Sentry.startupTracingIntegration(),
+  ],
 });
 ```
 
@@ -71,42 +67,38 @@ Sentry.init({
 
 Initialize the SDK in your Electron renderer processes as early as possible. All renderer events are sent through the main process so passing `dsn`, `release` or `environment` to renderer `init` will have no effect.
 
+The renderer process snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `browserTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
+    // enables automatic instrumentation
     Sentry.browserTracingIntegration(),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ performance
 
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
@@ -166,80 +158,38 @@ init(
 );
 ```
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with another library, use an integration to capture those logs as Sentry Logs automatically:
+- <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
 ## Verify Your Setup
 
-Let's test your setup and confirm that Sentry is working correctly.
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
-
-**Main process error**
-
-Add an event listener that throws an error in your main process:
-
-```javascript
-import { app } from "electron";
-import * as Sentry from "@sentry/electron/main";
-
-app.on("ready", () => {
-  throw new Error("Sentry test error in main process");
-});
-```
-
-**Renderer process error**
-
-Add a test button in one of your HTML pages:
-
-```html {filename: index.html}
-<button id="testError">Break the world</button>
-
-<script src="renderer.js"></script>
-```
-
-Then, in your renderer, add the following:
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Finally, start your app and trigger two errors that Sentry will capture: one from the
-  main process and one from the renderer.
-</OnboardingOption>
+Add a test button to one of your renderer pages. Clicking it throws an error that Sentry captures:
 
 ```javascript
 document.getElementById("testError").addEventListener("click", () => {
-  throw new Error("Sentry test error in renderer process");
+  throw new Error("Sentry Test Error");
 });
 ```
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-To test tracing in your renderer, start a trace to measure the time it takes to execute your code.
-
-Then, start your app and trigger two errors that Sentry will capture: one from the main process and one from the renderer. It will also start a trace with the defined name.
-
-```javascript
-document.getElementById("testError").addEventListener("click", () => {
-  Sentry.startSpan({ op: "test", name: "Renderer test span" }, () => {
-    throw new Error("Sentry test error in renderer process");
-  });
-});
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -249,15 +199,10 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Electron application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Electron application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Make use of <PlatformLink to="/features/">Electron-specific features</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/features/">Explore Electron-specific features</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
