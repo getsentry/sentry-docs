@@ -38,6 +38,15 @@ Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sen
 </Alert>
 
 ```rust
+use sentry::integrations::tracing::{BreadcrumbLayer, ErrorLayer};
+# ___PRODUCT_OPTION_START___ logs
+use sentry::integrations::tracing::LogLayer;
+# ___PRODUCT_OPTION_END___ logs
+# ___PRODUCT_OPTION_START___ performance
+use sentry::integrations::tracing::SpanLayer;
+# ___PRODUCT_OPTION_END___ performance
+use tracing::Level;
+use tracing_subscriber::filter::{filter_fn, LevelFilter};
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -52,10 +61,23 @@ fn main() {
             # ___PRODUCT_OPTION_END___ performance
     );
 
-    // Register the Sentry tracing layer
+    // Register the Sentry tracing layers
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(sentry::integrations::tracing::layer())
+        # ___PRODUCT_OPTION_START___ performance
+        // Capture spans as Sentry transactions and spans
+        .with(SpanLayer::new().with_filter(LevelFilter::INFO))
+        # ___PRODUCT_OPTION_END___ performance
+        // Add INFO and WARN events as breadcrumbs to subsequent errors
+        .with(BreadcrumbLayer::new().with_filter(filter_fn(|metadata| {
+            matches!(*metadata.level(), Level::INFO | Level::WARN)
+        })))
+        // Capture ERROR events as Sentry errors
+        .with(ErrorLayer::new().with_filter(LevelFilter::ERROR))
+        # ___PRODUCT_OPTION_START___ logs
+        // Capture INFO, WARN, and ERROR events as Sentry logs
+        .with(LogLayer::new().with_filter(LevelFilter::INFO))
+        # ___PRODUCT_OPTION_END___ logs
         .init();
 
     tokio::runtime::Builder::new_multi_thread()
@@ -72,7 +94,7 @@ fn main() {
 #[tracing::instrument] // Captures a root span (transaction) around this function execution
 # ___PRODUCT_OPTION_END___ performance
 async fn fail() {
-    tracing::debug!("Doing work"); // Adds a breadrcumb
+    tracing::info!("Doing work"); // Adds a breadcrumb (and a log, if enabled)
     # ___PRODUCT_OPTION_START___ performance
     let _span = tracing::info_span("Child span").entered(); // Captures a child span
     # ___PRODUCT_OPTION_END___ performance
@@ -80,26 +102,20 @@ async fn fail() {
 }
 ```
 
-By default, error-level events from `tracing` are captured as Sentry events, while events at or above info level are added to the current scope as breadcrumbs.
+Each layer turns `tracing` data into a different kind of Sentry data, so you can install only the ones you need:
 
-Additionally, the SDK captures [logs](https://docs.sentry.io/product/logs/) for `tracing` events at the info level or above, unless logs were disabled when initializing the SDK.
+- `SpanLayer`: Captures spans as Sentry transactions and spans.
+- `LogLayer`: Captures events as Sentry logs. Requires the `logs` feature, which is enabled by default.
+- `ErrorLayer`: Captures events as Sentry errors.
+- `BreadcrumbLayer`: Adds events as breadcrumbs, which are sent with subsequent errors.
 
-This behavior can be customized by applying a custom `event_filter` when creating the layer.
-The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `tracing` feature flag.
+The layers don't filter by level on their own, so give each one a `tracing_subscriber` filter, as shown above. Without a filter, a layer captures every level, including `DEBUG` and `TRACE`. On `ErrorLayer`, that can quickly use up your error quota.
 
-```rust
-use sentry::integrations::tracing::EventFilter;
+<Alert level="warning">
 
-let sentry_layer =
-    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-        // Capture error and warn level events as both logs and events in Sentry
-        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
-        // Ignore trace level events, as they're too verbose
-        tracing::Level::TRACE => EventFilter::Ignore,
-        // Capture everything else as both a breadcrumb and a log
-        _ => EventFilter::Breadcrumb | EventFilter::Log,
-    });
-```
+`sentry::integrations::tracing::layer()` and `SentryLayer` are deprecated as of version `0.49.4`. When migrating, replace the legacy layer instead of adding the new layers alongside it: combining `SpanLayer` with the legacy layer can panic. See the [migration guide](https://docs.rs/sentry-tracing/0.49.4/sentry_tracing/struct.SentryLayer.html) for details.
+
+</Alert>
 
 ## Verify
 
