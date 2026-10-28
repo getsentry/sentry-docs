@@ -9,7 +9,9 @@ platformCategory: all
 order: 10
 ---
 
-Update every Sentry package in the solution to the same 7.x version. A 6.x integration package left next to `Sentry` 7 fails at runtime with `MissingMethodException`, because it calls members that 7.0 removes. For example, `Sentry.Serilog` 6.12.1 fails as soon as the app adds the sink.
+Update every Sentry package in the solution to the same 7.x version. A 6.x integration package left next to `Sentry` 7 breaks at runtime with `MissingMethodException`, because it calls members that 7.0 removes.
+
+`Sentry.Extensions.Logging` 6.12.1 throws when the app builds its logger factory, and `Sentry.Serilog` 6.12.1 throws when the app calls `WriteTo.Sentry()` without arguments. Set up in other ways, `Sentry.Serilog` and `Sentry.NLog` 6.12.1 fail on every entry they write instead. Serilog and NLog swallow that exception, so the app keeps running and sends nothing to Sentry.
 
 ```xml {filename:MyApp.csproj}
 <ItemGroup>
