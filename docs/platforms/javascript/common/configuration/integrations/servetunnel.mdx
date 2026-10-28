@@ -124,4 +124,19 @@ export default {
 
 `handleTunnelRequestIfMatched` takes a fetch `Request`, or Node's `req` and `res` (in Fastify, `request.raw` and `reply.raw`). Without options, it uses the options of `serveTunnelIntegration`, or the server's own DSN if the integration isn't set up. It also takes the same options as the integration. To check a request without reading its body, use `isTunnelRequest(request)`.
 
-The middleware works without `serveTunnelIntegration`. Add it anyway, so tunnel requests don't create server spans.
+If you'd rather use a fixed path, register it as a route with `handleTunnelRequest`, and set the same path in the browser:
+
+```javascript {filename:Server}
+app.post("/monitoring", (req, res) => Sentry.handleTunnelRequest(req, res));
+```
+
+```javascript {filename:Browser}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: { path: "/monitoring" },
+});
+```
+
+`handleTunnelRequest` also takes a fetch `Request`, and an `allowedDsns` option for DSNs besides the server's own.
+
+Both work without `serveTunnelIntegration`. Add it anyway, so tunnel requests don't create server spans. With a fixed path, pass it as the integration's `path` too: `serveTunnelIntegration({ path: "/monitoring" })`.
