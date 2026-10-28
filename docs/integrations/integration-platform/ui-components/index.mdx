@@ -36,6 +36,15 @@ The UI components are specified in the schema section of the integration details
 The `uri` keys in your schema elements describe the URI path that will receive a request from that UI component. Sentry will append the path in the `uri` field onto the host of your integration's _webhook URL_.
 For example, if the webhook URL is `https://example.com/webhook/`, and your schema's `uri` attribute is `/alerts/`, then the integration will receive requests to `https://example.com/alerts/`.
 
+## Verifying Requests
+
+Sentry signs requests from UI components with your _Client Secret_, the same way it signs [webhooks](/integrations/integration-platform/webhooks/#sentry-hook-signature). The only difference is the header name: UI component requests carry the signature in the `Sentry-App-Signature` header, not `Sentry-Hook-Signature`.
+
+Verify the signature against the raw request body, using the same code as for webhooks. Keep these details in mind:
+
+- [Select](/integrations/integration-platform/ui-components/formfield/#select) option requests are `GET` requests with no body, so Sentry computes the signature over an empty string. These requests still include a `Content-Type: application/json` header, so make sure your framework doesn't reject or rewrite the empty body before you verify it.
+- The signature covers only the body. The query parameters of select option requests, such as `installationId`, aren't signed.
+
 ## Error Handling
 
 Component rendering either 100% works or shows nothing. To protect the integration from looking chaotic due to errors we have no control over, if any part of the third-party component rendering fails, nothing will render.
