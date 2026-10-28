@@ -14,9 +14,9 @@ Capturing transactions requires that you first <PlatformLink to="/tracing/">set 
 
 ## `tracing` Integration
 
-The Rust SDK offers an integration for the `tracing` ecosystem that will track spans automatically for every function that is annotated with `#[tracing::instrument]`.
+The Rust SDK's [`SpanLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.SpanLayer.html) captures `tracing` spans as Sentry spans, so every function annotated with `#[tracing::instrument]` is tracked automatically.
 
-The integration takes care of starting a new transaction or a new child span of an already running transaction, and it automatically sets the created span as the _current_ span.
+The layer takes care of starting a new transaction or a new child span of an already running transaction, and it automatically sets the created span as the _current_ span.
 
 ```rust
 use sentry::integrations::tracing::SpanLayer;
@@ -53,6 +53,8 @@ fn main_span2() {
     thread::sleep(Duration::from_millis(200));
 }
 ```
+
+Without a filter, `SpanLayer` captures spans at every level, including `DEBUG` and `TRACE`, so we recommend adding a level filter, as shown in the example above. `LevelFilter::INFO` is a sensible starting point for most applications.
 
 ## OpenTelemetry Integration
 
