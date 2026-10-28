@@ -27,21 +27,7 @@ Agent invocations represent operations that can include multiple model calls, or
 - Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
 - If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
-
-Additional attributes on the span:
-
-### Request Data
-
-| Attribute                    | Type   | Description                                                                                                            | Example                                                               |
-| :--------------------------- | :----- | :--------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`      | string | List of dictionaries describing the messages (prompts) given to the agent. **[0]**, **[1]**, **[4]**, **[5]**, **[7]** | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
-| `gen_ai.system_instructions` | string | The system instructions passed to the model.                                                                           | `"You are a helpful assistant."`                                      |
-
-### Response Data
-
-| Attribute                | Type   | Description                                                                            | Example                                                                    |
-| :----------------------- | :----- | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| `gen_ai.output.messages` | string | Stringified array of message objects representing the model's output. **[0]**, **[1]** | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'` |
+- As a fallback to missing inputs and outputs on child chat spans, the Invoke Agent Span can carry `gen_ai.input.messages` and `gen_ai.system_instructions` based on the input of the first model call, and `gen_ai.output.messages` based on the output of the final model call under the agent execution.
 
 ## AI Client Span
 
@@ -73,8 +59,6 @@ Additional attributes on the span:
 | `gen_ai.request.top_p`             | float  | Model configuration parameter.                                                                                                       | `0.7`                                                                 |
 | `gen_ai.request.top_k`             | int    | Limits model to K most likely next tokens.                                                                                           | `40`                                                                  |
 | `gen_ai.request.reasoning.level`   | string | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.                               | `"medium"`                                                            |
-| `gen_ai.request.messages`          | string | **Deprecated.** Use `gen_ai.input.messages` instead. List of dictionaries describing the messages (prompts) sent to the LLM. **[0]** | `'[{"role": "system", "content": "..."}, ...]'`                       |
-| `gen_ai.request.available_tools`   | string | **Deprecated.** Use `gen_ai.tool.definitions` instead. List of dictionaries describing the available tools. **[0]**                  | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 
 ### Response Data
 
@@ -85,9 +69,6 @@ Additional attributes on the span:
 | `gen_ai.response.id`                  | string  | Unique identifier for the completion.                                                                               | `"chatcmpl-abc123"`                                                          |
 | `gen_ai.response.streaming`           | boolean | Whether response was streamed asynchronously.                                                                       | `true`                                                                       |
 | `gen_ai.response.time_to_first_chunk` | double  | Seconds until first response chunk in streaming.                                                                    | `0.5`                                                                        |
-| `gen_ai.response.text`                | string  | **Deprecated.** Use `gen_ai.output.messages` instead. The text representation of the model's response. **[0]**      | `"The weather in Paris is rainy"`                                            |
-| `gen_ai.response.tool_calls`          | string  | **Deprecated.** Use `gen_ai.output.messages` instead. The tool calls in the model's response. **[0]**               | `'[{"name": "random_number", "type": "function_call", "arguments": "..."}]'` |
-| `gen_ai.response.time_to_first_token` | double  | **Deprecated.** Use `gen_ai.response.time_to_first_chunk` instead. Seconds until first response chunk in streaming. | `0.5`                                                                        |
 
 ### Token Usage Data
 
@@ -99,9 +80,6 @@ Additional attributes on the span:
 | `gen_ai.usage.output_tokens`               | int  | The number of tokens used in the AI output, including reasoning tokens. **[3]**                                                | `130`   |
 | `gen_ai.usage.reasoning.output_tokens`     | int  | The number of tokens used for reasoning.                                                                                       | `30`    |
 | `gen_ai.usage.total_tokens`                | int  | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.                                                       | `190`   |
-| `gen_ai.usage.input_tokens.cached`         | int  | **Deprecated.** Use `gen_ai.usage.cache_read.input_tokens` instead. The number of cached tokens used in the AI input (prompt). | `50`    |
-| `gen_ai.usage.input_tokens.cache_write`    | int  | **Deprecated.** Use `gen_ai.usage.cache_creation.input_tokens` instead. Tokens written to cache when processing input.         | `20`    |
-| `gen_ai.usage.output_tokens.reasoning`     | int  | **Deprecated.** Use `gen_ai.usage.reasoning.output_tokens` instead. The number of tokens used for reasoning.                   | `30`    |
 
 ## Execute Tool Span
 
@@ -110,25 +88,17 @@ Describes a tool execution.
 - Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
 - Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
 - Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
-- Attribute `gen_ai.tool.name` **SHOULD** be set to the name of the tool. (e.g. `"query_database"`)
 - Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
 - If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
-### Tool Data
-
 | Attribute                    | Type   | Description                                                                                                    | Example                                    |
 | :--------------------------- | :----- | :------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
 | `gen_ai.tool.name`           | string | Name of the tool executed.                                                                                     | `"random_number"`                          |
 | `gen_ai.tool.description`    | string | Description of the tool executed.                                                                              | `"Tool returning a random number"`         |
-| `gen_ai.tool.type`           | string | The type of the tools.                                                                                         | `"function"`; `"extension"`; `"datastore"` |
 | `gen_ai.tool.call.arguments` | string | Arguments of the tool call (stringified).                                                                      | `'{"max":10}'`                             |
 | `gen_ai.tool.call.result`    | string | Result of the tool call (stringified).                                                                         | `"7"`                                      |
-| `gen_ai.tool.message`        | string | Response from a tool/function call passed to model.                                                            | `"The random number is 7"`                 |
-| `gen_ai.tool.input`          | string | **Deprecated.** Use `gen_ai.tool.call.arguments` instead. Input that was given to the executed tool as string. | `'{"max":10}'`                             |
-| `gen_ai.tool.output`         | string | **Deprecated.** Use `gen_ai.tool.call.result` instead. The output from the tool.                               | `"7"`                                      |
-
 
 **[0]:**
 

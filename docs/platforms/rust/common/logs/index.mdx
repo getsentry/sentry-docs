@@ -67,11 +67,12 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 ```
 
-Then, use standard `tracing` macros to capture logs.
+Then, register the [`LogLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.LogLayer.html) with your `tracing` subscriber, and use standard `tracing` macros to capture logs.
 
 ```rust {filename:main.rs}
-use sentry::integrations::tracing::EventFilter;
+use sentry::integrations::tracing::LogLayer;
 use tracing::{error, info, warn};
+use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -82,8 +83,8 @@ fn main() {
     );
 
     tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(sentry::integrations::tracing::layer())
+        // Capture INFO, WARN, and ERROR events as Sentry logs
+        .with(LogLayer::new().with_filter(LevelFilter::INFO))
         .init();
 
     info!("Hello, world!");
@@ -101,24 +102,9 @@ fn main() {
 
 The fields of `tracing` events are automatically captured as attributes in Sentry logs.
 
-By default, `tracing` events at or above info level are captured as Sentry logs.
+Without a filter, `LogLayer` captures events at every level, including `DEBUG` and `TRACE`, so we recommend adding a level filter, as shown in the example above. `LevelFilter::INFO` is a sensible starting point for most applications.
 
-This behavior can be customized by applying a custom `event_filter` when creating the layer.
-The following snippet shows the default `event_filter`:
-
-```rust
-use sentry::integrations::tracing::EventFilter;
-
-let sentry_layer =
-    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-        // Capture error and warn level events as both logs and events in Sentry
-        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
-        // Ignore trace level events, as they're too verbose
-        tracing::Level::TRACE => EventFilter::Ignore,
-        // Capture everything else as both a breadcrumb and a log
-        _ => EventFilter::Breadcrumb | EventFilter::Log,
-    });
-```
+To also capture `tracing` spans, see the [`tracing` integration guide](/platforms/rust/guides/tracing/).
 
 ### `log` Integration
 
