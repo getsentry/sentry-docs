@@ -67,7 +67,8 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 ```
 
-Then, use standard `tracing` macros to capture logs.
+Then, register the [`LogLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.LogLayer.html) with your `tracing` subscriber, and use standard `tracing` macros to capture logs.
+Without a filter, `LogLayer` captures events at every level, including `DEBUG` and `TRACE`, so we recommend adding a level filter. `LevelFilter::INFO` is a sensible starting point for most applications.
 
 ```rust {filename:main.rs}
 use sentry::integrations::tracing::LogLayer;
@@ -102,9 +103,7 @@ fn main() {
 
 The fields of `tracing` events are automatically captured as attributes in Sentry logs.
 
-`LogLayer` captures every event its filter accepts. The example above captures `INFO`, `WARN`, and `ERROR` events. To change which events become logs, adjust the `LevelFilter` or use any other `tracing_subscriber` filter.
-
-To also capture spans, errors, or breadcrumbs from `tracing`, see the [`tracing` integration guide](/platforms/rust/guides/tracing/).
+To also capture `tracing` spans, see the [`tracing` integration guide](/platforms/rust/guides/tracing/).
 
 ### `log` Integration
 
