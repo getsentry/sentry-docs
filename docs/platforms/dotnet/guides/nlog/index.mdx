@@ -117,6 +117,26 @@ The target can also be configured in an `NLog.config` XML file:
 </nlog>
 ```
 
+### ASP.NET Core
+
+In an app that calls `UseSentry`, add NLog with `UseNLog` from the `NLog.Web.AspNetCore` package, and set `ReplaceLoggerFactory`:
+
+```csharp {filename:Program.cs}
+var config = new LoggingConfiguration();
+config.AddSentry();
+LogManager.Configuration = config;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseNLog(new NLogAspNetCoreOptions { ReplaceLoggerFactory = true });
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+```
+
+`ReplaceLoggerFactory` replaces the app's `ILogger` factory with NLog's, so each `ILogger` entry reaches Sentry once, through the target. Without it, `UseNLog()` adds NLog alongside the `ILogger` integration that `UseSentry` adds, and Sentry receives every entry twice. NLog's rules then decide which entries are logged, instead of the `Logging` section of `appsettings.json`.
+
 ### Options
 
 #### MinimumBreadcrumbLevel
@@ -178,6 +198,7 @@ This snippet includes an intentional error, so you can test that everything is w
 ## Samples
 
 - A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.NLog).
+- An [example with ASP.NET Core](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.NLog).
 - Example of [advanced configuration](configuration/advanced-configuration-example/)
 
 ## Next Steps

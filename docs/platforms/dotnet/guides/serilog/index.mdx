@@ -93,6 +93,23 @@ You can also configure the sink in `appsettings.json`:
 
 The sink drops log events while Sentry isn't initialized. If a DSN can be found anyway, for example in the `SENTRY_DSN` environment variable, the sink also writes a warning to standard error the first time it drops an event. To fix it, initialize Sentry at startup as shown above.
 
+### ASP.NET Core
+
+In an app that calls `UseSentry`, add Serilog with `UseSerilog` and add the sink there:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((_, config) => config.WriteTo.Sentry());
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.UseSerilog();
+});
+```
+
+`UseSerilog` replaces the app's `ILogger` factory with Serilog's, so each `ILogger` entry reaches Sentry once, through the sink. Don't add Serilog with `builder.Logging.AddSerilog()` or `UseSerilog(..., writeToProviders: true)`. Both also send each entry through the `ILogger` integration that `UseSentry` adds, so Sentry receives it twice.
+
 ### Serilog Properties on Events
 
 `UseSerilog()` copies the properties in Serilog's `LogContext` onto Sentry events as tags. If you initialize Sentry through a host integration, call it on that integration's options, for example in `UseSentry(options => options.UseSerilog())`.
