@@ -92,6 +92,12 @@ Set this boolean to `false` to disable client reports. Client reports are a prot
 
 </SdkOption>
 
+<SdkOption name="require_user_consent" type="bool" defaultValue="false">
+
+Disables uploads until the user has given consent to the SDK. Give consent with `sentry_user_consent_give` and revoke it with `sentry_user_consent_revoke`. The SDK discards envelopes captured before consent is given, unless [offline caching](/platforms/native/configuration/transports/#offline-caching) or [HTTP retry](/platforms/native/configuration/transports/#retrying-failed-uploads) is enabled.
+
+</SdkOption>
+
 ## Hooks
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
@@ -175,5 +181,39 @@ Must be combined with regular calls to `sentry_app_hang_heartbeat()` from the th
 <SdkOption name="app_hang_timeout" type="uint64_t" defaultValue="5000" defaultNote="milliseconds" availableSince="0.15.2">
 
 Sets the app-hang detection timeout, in milliseconds. If `enable_app_hang_tracking` is enabled and no heartbeat is received from the monitored thread within this window, an app-hang event is captured.
+
+</SdkOption>
+
+## Transport Options
+
+These options control how the HTTP transport retries and caches envelopes. See the [Transports page](/platforms/native/configuration/transports/) for a full explanation and usage example.
+
+<SdkOption name="http_retry" type="bool" defaultValue="false" availableSince="0.13.5">
+
+Enables or disables HTTP retry with exponential backoff for network failures. See [Retrying Failed Uploads](/platforms/native/configuration/transports/#retrying-failed-uploads).
+
+</SdkOption>
+
+<SdkOption name="cache_keep" type="sentry_cache_keep_t" defaultValue="SENTRY_CACHE_KEEP_NONE" availableSince="0.12.7">
+
+Controls if and when the SDK keeps envelopes in a persistent cache, in the `cache/` subdirectory of the database path. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="cache_max_items" type="size_t" defaultValue="30" availableSince="0.12.7">
+
+Sets the maximum number of items in the cache directory. On startup, the SDK removes cached entries from oldest to newest until the directory contains at most the specified number of items. Set to `0` for no limit. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="cache_max_size" type="size_t" defaultValue="0" defaultNote="bytes, no limit" availableSince="0.12.7">
+
+Sets the maximum size in bytes for the cache directory. On startup, the SDK removes cached entries from oldest to newest until the directory size is within the limit. Set to `0` for no limit. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="cache_max_age" type="time_t" defaultValue="0" defaultNote="seconds, no limit" availableSince="0.12.7">
+
+Sets the maximum age in seconds for entries in the cache directory. On startup, the SDK removes cached entries exceeding the limit. Set to `0` for no limit. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
 
 </SdkOption>

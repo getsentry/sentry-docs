@@ -83,3 +83,51 @@ sentry_init(options);
 
 /* ... */
 ```
+
+## Retrying Failed Uploads
+
+To enable retrying failed uploads, use the `sentry_options_set_http_retry` function:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_http_retry(options, 1);
+sentry_init(options);
+
+/* ... */
+```
+
+With HTTP retry enabled, envelopes that fail to upload because of a network failure, such as a connection error or a timeout, are written to the `cache/` subdirectory of the [database path](/platforms/native/configuration/options/#database_path) and sent again later. The SDK doesn't retry HTTP error responses, including `5xx` status codes. HTTP retry applies to the HTTP transport, including HTTP clients plugged in with `sentry_http_transport_new`, but not to custom function transports created with `sentry_transport_new`.
+
+The SDK retries each envelope up to 6 times with exponential backoff, starting at 15 minutes and doubling up to 8 hours. On the next start, the SDK sends any envelopes still pending from the previous run. When the retries run out, the SDK discards the envelope, or keeps it in the cache if [offline caching](#offline-caching) is enabled.
+
+## Offline Caching
+
+To keep envelopes on disk, use the `sentry_options_set_cache_keep` function with one of the following modes:
+
+- `SENTRY_CACHE_KEEP_NONE`: The SDK doesn't keep envelopes. This is the default.
+- `SENTRY_CACHE_KEEP_OFFLINE`: The SDK keeps envelopes that it can't upload. This includes envelopes that failed because of a network failure, envelopes whose retries ran out, and envelopes captured before user consent is given.
+- `SENTRY_CACHE_KEEP_ALWAYS`: The SDK keeps every envelope, regardless of the upload result.
+
+The SDK writes kept envelopes to the `cache/` subdirectory of the database path as `<uuid>.envelope` files, and stores minidumps next to them as `.dmp` files. To send envelopes again after a network failure, enable [HTTP retry](#retrying-failed-uploads) as well. Like HTTP retry, offline caching applies to the HTTP transport only.
+
+On startup, the SDK removes the oldest entries from the cache, including pending retries, until the cache is within the following limits:
+
+- `cache_max_items`: The maximum number of entries. Defaults to `30`.
+- `cache_max_size`: The maximum size in bytes. Defaults to `0` (no limit).
+- `cache_max_age`: The maximum age in seconds. Defaults to `0` (no limit).
+
+The SDK reports entries removed because of `cache_max_items` or `cache_max_size` as `cache_overflow` in [client reports](/platforms/native/configuration/options/#send_client_reports).
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_http_retry(options, 1);
+sentry_options_set_cache_keep(options, SENTRY_CACHE_KEEP_OFFLINE);
+sentry_options_set_cache_max_items(options, 100);
+sentry_options_set_cache_max_size(options, 10 * 1024 * 1024); /* 10 MB */
+sentry_options_set_cache_max_age(options, 7 * 24 * 60 * 60); /* 7 days */
+sentry_init(options);
+
+/* ... */
+```
+
+When [`require_user_consent`](/platforms/native/configuration/options/#require_user_consent) is enabled together with offline caching or HTTP retry, the SDK writes envelopes captured before consent is given to the cache instead of discarding them. With HTTP retry, the SDK sends them once the application gives consent with `sentry_user_consent_give`.
