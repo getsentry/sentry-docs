@@ -1,6 +1,6 @@
 ---
 title: Vue
-description: "Learn how to manually set up Sentry in your Vue app and capture your first errors."
+description: "Learn how to manually set up Sentry in your Vue app and capture your first events."
 sdk: sentry.javascript.vue
 categories:
   - browser
@@ -29,28 +29,30 @@ pnpm add @sentry/vue
 
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 
 <Include name="quick-start-features-expandable" />
 
-To initialize Sentry in your Vue application, add the following code snippet to your `main.js`.
+### Initialize the SDK
+
+To initialize Sentry in your Vue application, add the code shown below to your `main.js`.
+
+The snippet also turns on:
+
+- Tracing: via `browserTracingIntegration()` and <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 <Alert level="info">
 
-If you're creating more than one Vue 3 app within your application, check out how to initialize the SDK for [multiple apps](./features/multiple-apps/).
+If you're creating more than one Vue 3 app within your application, see how to initialize the SDK for [multiple apps](./features/multiple-apps/).
 
 </Alert>
 
-```javascript {tabTitle:Vue 3} {filename:main.js} {3, 12-34}
+```javascript {tabTitle:Vue 3} {filename:main.js}
 import { createApp } from "vue";
 import { createRouter } from "vue-router";
 import * as Sentry from "@sentry/vue";
@@ -65,49 +67,38 @@ const router = createRouter({
 Sentry.init({
   app,
   dsn: "___PUBLIC_DSN___",
-
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
+    // enables automatic instrumentation
     Sentry.browserTracingIntegration({ router }),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
 
-  // ___PRODUCT_OPTION_START___ performance
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
 
-  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  // Set trace propagation targets for your API requests
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 app.use(router);
 app.mount("#app");
 ```
 
-```javascript {tabTitle:Vue 2} {filename:main.js} {3, 11-35}
+```javascript {tabTitle:Vue 2} {filename:main.js}
 import Vue from "vue";
 import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
@@ -122,40 +113,30 @@ Sentry.init({
   Vue,
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
+    // enables Tracing
     Sentry.browserTracingIntegration({ router }),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
+    // enables Session Replay
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
+      // Additional integration configuration goes in here
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
 
-  // ___PRODUCT_OPTION_START___ performance
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
 
-  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  // Set trace propagation targets for your API requests
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-  // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 // ...
@@ -166,17 +147,16 @@ new Vue({
 }).$mount("#app");
 ```
 
-### Configuration for Late-Defined Vue Apps
+### Configure Late-Defined Vue Apps
 
-If your Vue application is not defined from the start, you can add error monitoring for Vue-specific errors later on.
-To manually add the integration for late-defined Vue applications, update your `main.js` file:
+If your Vue application is not defined from the start, add error monitoring for Vue-specific errors later. To manually add the integration for a late-defined Vue application, update your `main.js` file:
 
 ```javascript {filename:main.js}
 import * as Sentry from "@sentry/vue";
 
 Sentry.init({
   dsn: "...",
-  // Filter out default `Vue` integration
+  // Filter out the default Vue integration
   integrations: (integrations) =>
     integrations.filter((integration) => integration.name !== "Vue"),
 });
@@ -189,100 +169,57 @@ const app = createApp({
 Sentry.addIntegration(Sentry.vueIntegration({ app }));
 ```
 
-### Configuration for Pinia
+### Configure Pinia
 
-To capture Pinia state data, use `Sentry.createSentryPiniaPlugin()` and add it to your Pinia store instance.
-
-Learn more about the [Pinia Plugin](./features/pinia/) and its options.
+To capture Pinia state data, use `Sentry.createSentryPiniaPlugin()` and add it to your Pinia store instance. Learn more about the [Pinia Plugin](./features/pinia/) and its options.
 
 ```javascript
 import { createPinia } from "pinia";
 import { createSentryPiniaPlugin } from "@sentry/vue";
 
 const pinia = createPinia();
-
 pinia.use(createSentryPiniaPlugin());
 ```
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Avoid Ad Blockers With Tunneling (Optional)
-
-<PlatformContent includePath="getting-started-tunneling" />
-
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with `console` or Consola, you can capture those logs with <PlatformLink to="/logs/#console-integration">our console integrations</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add a test button to one of your pages. Clicking it will trigger an error for Sentry to capture.
 
-To verify that Sentry is capturing errors and creating issues in your Sentry project, add the following test button to one of your pages, which will trigger an error that Sentry will capture when you click it.
+```javascript {filename:App.vue}
+<button @click="throwError">Throw error</button>
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Then, open the page in a browser and click the button to trigger a frontend
-  error.
-</OnboardingOption>
+<script>
+export default {
+  methods: {
+    throwError() {
+      throw new Error("Sentry Error");
+    },
+  },
+};
+</script>
+```
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-```javascript {filename:App.vue}
-// ...
-<button @click="throwError">Throw error</button>
-// ...
-
-export default {
-  // ...
-  methods: {
-    throwError() {
-      throw new Error('Sentry Error');
-    }
-  }
-};
-```
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-To test your tracing configuration, update the previous code snippet to start a performance trace to measure the time it takes for your code to execute.
-
-Then, open the page in a browser and click the button to trigger a frontend error and performance trace.
-
-```javascript {filename:App.vue}
-// ...
-<button @click="throwError">Throw error</button>
-// ...
-
-export default {
-  // ...
-  methods: {
-    throwError() {
-      Sentry.startSpan({ op: "test", name: "Example Frontend Span" }, async () => {
-        // Simulate an asynchronous operation
-        await new Promise(resolve => setTimeout(resolve, 99));
-
-        throw new Error("Sentry Error");
-      });
-    }
-  }
-};
-
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -292,15 +229,11 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Vue application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Vue application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Extend Sentry to your backend using one of our [SDKs](/)
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Make use of <PlatformLink to="/features/">Vue-specific features</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers from blocking Sentry events
+- Explore <PlatformLink to="/features/">Vue-specific features</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
