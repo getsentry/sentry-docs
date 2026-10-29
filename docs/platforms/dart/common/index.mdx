@@ -33,7 +33,7 @@ dependencies:
 
 ## Configure
 
-**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration in the current SDK, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+Initialize **Error Monitoring** with `Sentry.init()` and run your application in its `appRunner` callback to capture uncaught exceptions and unhandled asynchronous errors. **Logs** and **Application Metrics** are enabled by default in SDK v10, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
 This guide also enables **Tracing**.
 
 <Include name="quick-start-features-expandable" />
@@ -49,32 +49,42 @@ The snippet also turns on:
 - Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 - Additional user and request data: via <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink>
 
-Don't need a feature? Remove its integration and options from the snippet.
+To skip tracing, omit `tracesSampleRate`. To discard logs or metrics, return `null` from <PlatformLink to="/logs/#beforesendlog">`beforeSendLog`</PlatformLink> or <PlatformLink to="/metrics/#beforesendmetric">`beforeSendMetric`</PlatformLink>.
 
 ```dart
 import 'package:sentry/sentry.dart';
 
 Future<void> main() async {
-  await Sentry.init((options) {
-    options.dsn = '___PUBLIC_DSN___';
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
 
-    // Adds request headers and IP to events.
-    options.sendDefaultPii = true;
+      // Allows sending default personal data, such as IP addresses,
+      // when available from the SDK's integrations.
+      options.sendDefaultPii = true;
 
-    // Enables Tracing.
-    // Set to 1.0 to capture 100% of spans for tracing.
-    // We recommend reducing this value in production.
-    options.tracesSampleRate = 1.0;
-  });
+      // Enables Tracing.
+      // Set to 1.0 to capture 100% of spans for tracing.
+      // We recommend reducing this value in production.
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: () async {
+      // Start your application here.
+    },
+  );
 
   // You can also configure SENTRY_DSN, SENTRY_RELEASE, SENTRY_DIST, and
   // SENTRY_ENVIRONMENT via Dart environment variables (--dart-define).
 }
 ```
 
+The `appRunner` callback runs in a guarded error zone. This is required for automatic error capture on Dart web, where isolate error listeners are unavailable. For additional isolates, register an error listener with [`addSentryErrorListener`](https://pub.dev/documentation/sentry/latest/sentry_io/SentryIsolateExtension/addSentryErrorListener.html) from `package:sentry/sentry_io.dart`.
+
+For finite command-line applications, call `await Sentry.close()` after all awaited application work finishes to flush buffered telemetry and close SDK resources, including the isolate error-listener port.
+
 ## Send Logs
 
-Use `Sentry.logger` to send structured logs at different levels. You can add attributes to make logs easier to search and filter.
+Call `Sentry.logger` from your application code after initialization to send structured logs at different levels. You can add attributes to make logs easier to search and filter.
 
 If you use the Dart `logging` package, add the <PlatformLink to="/integrations/logging/">`sentry_logging` integration</PlatformLink> to send its records to Sentry.
 
@@ -92,21 +102,21 @@ Sentry.logger.error('Validation failed');
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `Sentry.metrics` to send counters, gauges, and distributions from your app. Add attributes to filter and group metrics in Sentry.
+Call `Sentry.metrics` from your application code after initialization to send counters, gauges, and distributions. Add attributes to filter and group metrics in Sentry.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for metric types, attributes, and configuration options.
 
 ```dart
 Sentry.metrics.count('checkout.failed', 1);
 Sentry.metrics.gauge('queue.depth', 42);
-Sentry.metrics.distribution('api_latency', 187);
+Sentry.metrics.distribution('api_latency', 187, unit: 'millisecond');
 ```
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
-Add this to your async entry point after `Sentry.init()` to trigger and capture a test error:
+Add this inside the async `appRunner` callback to trigger and capture a test error:
 
 ```dart
 try {
@@ -118,6 +128,10 @@ try {
   );
 }
 ```
+
+Run the log and metric examples from the previous steps after initialization to verify those products too.
+
+<Include name="tracing/dart-quick-start-verify-tracing-splitlayout.mdx" />
 
 ### View Captured Data in Sentry
 

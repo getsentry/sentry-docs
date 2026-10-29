@@ -1,10 +1,11 @@
 ### Tracing
 
-To test your tracing configuration, create a custom transaction and span:
+To verify tracing, run this after SDK initialization, such as inside an async `appRunner` callback. Setting `tracesSampleRate` enables sampling; instrumenting an operation creates the span:
 
 ```dart
-final transaction = Sentry.startTransaction('test-transaction', 'task');
-final span = transaction.startChild('test-span');
-await span.finish();
-await transaction.finish();
+await Sentry.startSpan('setup-verification', (_) async {
+  await Future<void>.delayed(const Duration(milliseconds: 100));
+});
 ```
+
+SDK v10 uses streaming spans by default. `Sentry.startSpan` ends the span automatically when its callback completes. For the older transaction APIs, see <PlatformLink to="/tracing/streamed-spans/">trace lifecycle modes</PlatformLink>.

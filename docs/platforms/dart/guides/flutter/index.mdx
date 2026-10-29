@@ -28,34 +28,34 @@ brew install getsentry/tools/sentry-wizard && sentry-wizard -i flutter
 ```
 
 ```powershell {tabTitle:Windows}
-$downloadUrl = "https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-win-x64.exe"
+$downloadUrl = "https://github.com/getsentry/sentry-wizard/releases/download/v9.1.0/sentry-wizard-win-x64.exe"
 Invoke-WebRequest $downloadUrl -OutFile sentry-wizard.exe
 ./sentry-wizard.exe -i flutter
 ```
 
 ```bash {tabTitle:macOS (Intel/x64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-darwin-x64"
+downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.1.0/sentry-wizard-darwin-x64"
 curl -L $downloadUrl -o sentry-wizard
 chmod +x sentry-wizard
 ./sentry-wizard -i flutter
 ```
 
 ```bash {tabTitle:macOS (Apple Silicon/arm64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-darwin-arm64"
+downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.1.0/sentry-wizard-darwin-arm64"
 curl -L $downloadUrl -o sentry-wizard
 chmod +x sentry-wizard
 ./sentry-wizard -i flutter
 ```
 
 ```bash {tabTitle:Linux (x64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-linux-x64"
+downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.1.0/sentry-wizard-linux-x64"
 curl -L $downloadUrl -o sentry-wizard
 chmod +x sentry-wizard
 ./sentry-wizard -i flutter
 ```
 
 ```bash {tabTitle:Linux (arm64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-linux-arm64"
+downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.1.0/sentry-wizard-linux-arm64"
 curl -L $downloadUrl -o sentry-wizard
 chmod +x sentry-wizard
 ./sentry-wizard -i flutter
@@ -79,8 +79,8 @@ If you prefer, you can also [set up the SDK manually](/platforms/dart/guides/flu
 
 ## Configure
 
-**Error Monitoring** starts working as soon as you call `SentryFlutter.init()`. **Logs** and **Application Metrics** need no extra configuration in the current SDK, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
-This guide also enables **Tracing** and **Session Replay**. Collect **User Feedback** with the Flutter SDK's <PlatformLink to="/user-feedback/">feedback form or API</PlatformLink>.
+**Error Monitoring** starts working as soon as you call `SentryFlutter.init()`. **Logs** and **Application Metrics** are enabled by default in SDK v10, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Session Replay**. Flutter Session Replay is available on **iOS and Android**. Collect **User Feedback** with the Flutter SDK's <PlatformLink to="/user-feedback/">feedback form or API</PlatformLink>.
 
 <Include name="quick-start-features-expandable" />
 
@@ -96,7 +96,7 @@ The snippet also turns on:
 - Session Replay: via `SentryWidget`, sampled with <PlatformLink to="/session-replay/#sampling">`sessionSampleRate` and `onErrorSampleRate`</PlatformLink>
 - Additional user and request data: via <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink>
 
-Don't need a feature? Remove its integration and options from the snippet.
+To skip tracing, omit `tracesSampleRate`. To skip automatic Session Replay recording, omit both replay sample rates. To discard logs or metrics, return `null` from <PlatformLink to="/logs/#beforesendlog">`beforeSendLog`</PlatformLink> or <PlatformLink to="/metrics/#beforesendmetric">`beforeSendMetric`</PlatformLink>.
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -107,7 +107,8 @@ Future<void> main() async {
     (options) {
       options.dsn = '___PUBLIC_DSN___';
 
-      // Adds request headers and IP to events.
+      // Allows sending default personal data, such as IP addresses,
+      // when available from the SDK's integrations.
       options.sendDefaultPii = true;
 
       // Enables Tracing.
@@ -133,7 +134,7 @@ Future<void> main() async {
 
 ## Send Logs
 
-Use `Sentry.logger` to send structured logs at different levels. You can add attributes to make logs easier to search and filter.
+Call `Sentry.logger` from your application code after initialization to send structured logs at different levels. You can add attributes to make logs easier to search and filter.
 
 If you use the Dart `logging` package, add the <PlatformLink to="/integrations/logging/">`sentry_logging` integration</PlatformLink> to send its records to Sentry.
 
@@ -151,7 +152,7 @@ Sentry.logger.error('Validation failed');
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `Sentry.metrics` to send counters, gauges, and distributions from your app. Add attributes to filter and group metrics in Sentry.
+Call `Sentry.metrics` from your application code after initialization to send counters, gauges, and distributions. Add attributes to filter and group metrics in Sentry.
 
 See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for metric types, attributes, and configuration options.
 
@@ -165,13 +166,34 @@ Sentry.metrics.distribution('api_latency', 187, unit: 'millisecond');
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
-The wizard added a sample exception to `main.dart` that is captured when the app starts. Run your app to send it to Sentry:
+The wizard adds a sample exception to `main.dart` after `SentryFlutter.init()`. Keep that exception when updating your initialization code. If it is missing, add this after `await SentryFlutter.init(...)` in your `main` function:
+
+```dart
+try {
+  throw StateError('Sentry Test Error');
+} catch (exception, stackTrace) {
+  await Sentry.captureException(
+    exception,
+    stackTrace: stackTrace,
+  );
+}
+```
+
+Run your app to send the test error to Sentry:
 
 ```bash
 flutter run
 ```
 
 After you've confirmed the issue in Sentry, remove the sample exception from `main.dart` so it isn't captured on every launch.
+
+Run the log and metric examples from the previous steps after initialization to verify those products too.
+
+<Include name="tracing/dart-quick-start-verify-tracing-splitlayout.mdx" />
+
+### Session Replay
+
+To verify Replay, temporarily set `options.replay.sessionSampleRate = 1.0` during initialization and restart your app on iOS or Android. Interact with the app, then open **Replays** in Sentry. Set the sample rate back to `0.1` after testing.
 
 ### View Captured Data in Sentry
 
@@ -184,6 +206,7 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 At this point, you should have integrated Sentry into your Flutter application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Upload <PlatformLink to="/debug-symbols/">debug symbols and source maps</PlatformLink> for readable production stack traces. The wizard configures `sentry_dart_plugin`; run `dart run sentry_dart_plugin` after each production build to upload the files. In CI, provide `SENTRY_AUTH_TOKEN` to the upload step.
 - Learn about <PlatformLink to="/session-replay/">Session Replay</PlatformLink> and its privacy controls
 - Add <PlatformLink to="/tracing/instrumentation/">performance instrumentation</PlatformLink> to your app
 
