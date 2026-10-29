@@ -137,6 +137,45 @@ Sentry.init do |config|
 end
 ```
 
+### resque-scheduler
+
+<Alert>
+
+The resque-scheduler integration ships in the next release of `sentry-resque`.
+
+</Alert>
+
+If you're using `resque-scheduler`, enable the `:resque_scheduler` patch to capture check-ins for every `cron` and `every` schedule, including dynamic schedules:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:resque_scheduler]
+end
+```
+
+```yaml {filename:config/resque_schedule.yml}
+nightly_report:
+  cron: "0 2 * * * America/New_York"
+  class: ReportJob
+  args: nightly
+sync_accounts:
+  every: 10m
+  class: SyncAccountsJob
+```
+
+The monitor slug is the schedule name, so this example creates two monitors: `nightly_report` and `sync_accounts`. Each schedule gets its own monitor, even when schedules share a job class.
+
+Sentry creates and updates each monitor from the schedule and its time zone. Schedules that can't be expressed in the Crons schedule format, such as a job that runs every 10 seconds, aren't monitored.
+
+To skip schedules, list their names in `config.resque.exclude_scheduled_jobs`. Strings match a schedule name exactly, and regular expressions are matched against it:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:resque_scheduler]
+  config.resque.exclude_scheduled_jobs = ["clear_cache", /^tmp_/]
+end
+```
+
 ## Manual Setup
 
 If you're using `Clockwork` or `Whenever`, you'll need to instrument your jobs
