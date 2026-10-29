@@ -4,12 +4,16 @@ import {ChevronDownIcon} from '@radix-ui/react-icons';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useEffect, useState} from 'react';
+import {usePlatforms} from 'sentry-docs/hooks/usePlatforms';
 import {Platform} from 'sentry-docs/types';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {mainSections} from '../navigationData';
 
-export function MobileSidebarNav({platforms = []}: {platforms?: Platform[]}) {
+const NO_PLATFORMS: Platform[] = [];
+
+export function MobileSidebarNav() {
+  const platforms = usePlatforms().platforms ?? NO_PLATFORMS;
   const pathname = usePathname();
 
   const isActive = (href: string) => pathname?.startsWith(href);

@@ -1,6 +1,6 @@
 ---
 title: Elysia
-description: Learn how to set up Sentry in your Elysia app to capture errors and monitor performance.
+description: Learn how to set up Sentry in your Elysia app and capture your first events.
 sdk: sentry.javascript.elysia
 fallbackGuide: javascript.bun
 categories:
@@ -27,29 +27,9 @@ You need:
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance" ]}
-/>
-
-<Include name="quick-start-features-expandable" />
-
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your runtime and preferred package manager to add the Sentry SDK to your application:
-
-<Alert>
-  You do **not** need `@elysiajs/opentelemetry`. The `@sentry/elysia` SDK
-  handles all instrumentation natively.
-</Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:Bun} {mdExpandTabs}
 bun add @sentry/elysia
@@ -63,20 +43,25 @@ yarn add @sentry/elysia @elysiajs/node
 pnpm add @sentry/elysia @elysiajs/node
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+<Alert>
+  You do **not** need `@elysiajs/opentelemetry`. The `@sentry/elysia` SDK
+  handles all instrumentation natively.
+</Alert>
 
 ## Configure
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+<Include name="quick-start-features-expandable" />
 
 Call `Sentry.init()` before creating your Elysia app, then wrap the app with `Sentry.withElysia()` before defining routes.
 
-</SplitSectionText>
-<SplitSectionCode>
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 ```javascript {tabTitle:Bun} {mdExpandTabs} {filename: index.ts}
 import * as Sentry from "@sentry/elysia";
@@ -84,15 +69,10 @@ import { Elysia } from "elysia";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#tracesSampleRate
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 });
 
 // withElysia returns the app instance, so you can chain routes directly
@@ -108,15 +88,10 @@ import { node } from "@elysiajs/node";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/guides/elysia/configuration/options/#tracesSampleRate
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 });
 
 // withElysia returns the app instance, so you can chain routes directly
@@ -125,21 +100,10 @@ const app = Sentry.withElysia(new Elysia({ adapter: node() }))
   .listen(3000);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Customize Automatic Error Capturing (Optional)
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+### Customize Automatic Error Capturing
 
 The SDK captures 5xx errors automatically via a global `onError` hook. Client errors (3xx/4xx) are not captured by default.
 You can customize which errors are captured using the `shouldHandleError` option.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript
 const app = Sentry.withElysia(new Elysia(), {
@@ -150,84 +114,35 @@ const app = Sentry.withElysia(new Elysia(), {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with `console` or Consola, you can capture those logs with <PlatformLink to="/logs/#console-integration">our console integrations</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-First, let's verify that Sentry captures errors and creates issues in your Sentry project. Add the following route to your app, which triggers an error that Sentry will capture:
-
-</SplitSectionText>
-<SplitSectionCode>
+Add a route to your app that throws an error:
 
 ```javascript
 app.get("/debug-sentry", () => {
-  throw new Error("My first Sentry error!");
+  throw new Error("Sentry Test Error");
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript
-app.get("/debug-sentry", async () => {
-  await Sentry.startSpan(
-    {
-      op: "test",
-      name: "My First Test Transaction",
-    },
-    async () => {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      throw new Error("My first Sentry error!");
-    }
-  );
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -237,10 +152,10 @@ Finally, head over to your project on [Sentry.io](https://sentry.io/) to view th
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Elysia application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
