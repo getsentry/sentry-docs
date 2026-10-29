@@ -1,6 +1,6 @@
 Logs sent through the `SentrySdk.Logger` APIs are always sent, so they don't need any extra configuration.
 
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.nlog", "dotnet.log4net"]}>
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-hosting", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.nlog", "dotnet.log4net"]}>
 
 ```csharp
 SentrySdk.Init(options =>
@@ -19,7 +19,7 @@ In earlier versions, these integrations only sent logs when `EnableLogs` was `tr
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.maui"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-hosting", "dotnet.maui"]}>
 
 To also send the entries your app writes through `ILogger`, set `EnableLogs` to `true`:
 
@@ -34,7 +34,7 @@ To also send the entries your app writes through `ILogger`, set `EnableLogs` to 
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.aspnetcore"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.extensions-hosting"]}>
 
 ```json {tabTitle:Configuration} {filename:appsettings.json}
 {
@@ -47,7 +47,7 @@ To also send the entries your app writes through `ILogger`, set `EnableLogs` to 
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.maui"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-hosting", "dotnet.maui"]}>
 
 If your app also sends `ILogger` entries through Serilog, NLog, or log4net, leave `EnableLogs` off and set up the framework as shown below, so each entry reaches Sentry once.
 
@@ -71,7 +71,7 @@ If your app also sends `ILogger` entries through Serilog, NLog, or log4net, leav
 
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.azure-functions-worker", "dotnet.extensions-logging"]}>
+<PlatformSection supported={["dotnet.extensions-logging"]}>
 
 Initialize the SDK with `SentrySdk.Init`, then add Sentry to your logging builder. Entries your app writes through `ILogger` are then sent as logs, without a logs-specific option.
 
@@ -83,6 +83,8 @@ SentrySdk.Init(options =>
 
 builder.Logging.AddSentry();
 ```
+
+Apps on the .NET Generic Host, such as worker services, use `UseSentry` from the `Sentry.Extensions.Hosting` package instead.
 
 <Alert title="Changed in Version 7.0.0">
 
