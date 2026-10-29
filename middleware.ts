@@ -8,6 +8,8 @@ import {
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
+import {toMarkdownDestination} from './markdownDestination';
+
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
 // NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
 const isDeveloperDocs =
@@ -419,11 +421,30 @@ const handleAIClientRedirect = (
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
+  // Every page has a `.md` export, so a redirected page's `.md` URL redirects to the
+  // destination's `.md` export instead of falling through to the Markdown soft-404.
+  const isMarkdown = urlPath.endsWith('.md');
+  const htmlPath = isMarkdown
+    ? urlPath === '/index.md'
+      ? '/'
+      : `${urlPath.slice(0, -'.md'.length)}/`
+    : urlPath;
+
+  const redirectTo = resolveRedirect(htmlPath);
+  if (!redirectTo) {
+    return undefined;
+  }
+
+  const destination = isMarkdown ? toMarkdownDestination(redirectTo) : redirectTo;
+  return NextResponse.redirect(new URL(destination, request.url), {
+    status: redirectStatusCode,
+  });
+};
+
+const resolveRedirect = (urlPath: string): string | undefined => {
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {
-      status: redirectStatusCode,
-    });
+    return redirectTo;
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -438,19 +459,9 @@ const handleRedirects = (request: NextRequest) => {
   const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholder);
   const guide = match[1];
 
-  const redirectToGuide = redirectMap.get(pathWithPlaceholder);
-  if (redirectToGuide) {
-    const finalRedirectToPath = redirectToGuide.replace(
-      guidePlaceholder,
-      `/guides/${guide}/`
-    );
-
-    return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: redirectStatusCode,
-    });
-  }
-
-  return undefined;
+  return redirectMap
+    .get(pathWithPlaceholder)
+    ?.replace(guidePlaceholder, `/guides/${guide}/`);
 };
 
 type Redirect = {

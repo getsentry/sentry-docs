@@ -1,3 +1,5 @@
+const {toMarkdownDestination} = require('./markdownDestination');
+
 const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -624,11 +626,6 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/:guide/opentelemetry/integration/',
     destination:
       '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
   },
 
   // Guides → Get Started restructure
@@ -1961,21 +1958,10 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
   },
   {
-    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
-    destination:
-      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
-  },
-  {
     source:
       '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
     destination:
       '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
-  },
-  {
-    source:
-      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
-    destination:
-      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
   },
   {
     source:
@@ -2318,10 +2304,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/expo/',
     destination: '/platforms/react-native/guides/expo/',
-  },
-  {
-    source: '/platforms/react-native/manual-setup/expo.md',
-    destination: '/platforms/react-native/guides/expo.md',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
@@ -3113,16 +3095,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-monitoring.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
@@ -3170,16 +3144,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-tracing.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',
@@ -3755,6 +3721,32 @@ const userDocsRedirects = [
 ];
 
 /**
+ * Every page has a `.md` export, so a redirected page's `.md` URL must redirect too.
+ * Adds a `.md` twin right after each redirect whose source ends in `/`, keeping it
+ * ahead of any later wildcard rule that would otherwise match the `.md` URL.
+ * Wildcard sources (`/foo/:path*`) are left as they are.
+ *
+ * @template {{source: string, destination: string}} R
+ * @param {R[]} list
+ * @returns {R[]}
+ */
+function withMarkdownRedirects(list) {
+  return list.flatMap(r => {
+    if (r.source === '/' || !r.source.endsWith('/')) {
+      return [r];
+    }
+    return [
+      r,
+      {
+        ...r,
+        source: `${r.source.slice(0, -1)}.md`,
+        destination: toMarkdownDestination(r.destination),
+      },
+    ];
+  });
+}
+
+/**
  * @type {import('next').NextConfig['redirects']}
  *
  * loads the redirects based on the environment variable `NEXT_PUBLIC_DEVELOPER_DOCS`
@@ -3766,9 +3758,16 @@ const redirects = async () => {
     isDeveloperDocs ? 'developer' : 'sdk',
     'docs redirects in next.config.js'
   );
-  return (isDeveloperDocs ? developerDocsRedirects : userDocsRedirects).map(r => {
+  return withMarkdownRedirects(
+    isDeveloperDocs ? developerDocsRedirects : userDocsRedirects
+  ).map(r => {
     return {...r, permanent: true};
   });
 };
 
-module.exports = {redirects, developerDocsRedirects, userDocsRedirects};
+module.exports = {
+  redirects,
+  developerDocsRedirects,
+  userDocsRedirects,
+  withMarkdownRedirects,
+};
