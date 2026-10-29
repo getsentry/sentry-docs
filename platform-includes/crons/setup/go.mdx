@@ -87,6 +87,38 @@ scheduler.Register("0 * * * *", sentryasynq.WithMonitor(task, "<monitor-slug>", 
 
 `Exclude` skips task types by exact name, and `ExcludePatterns` by regular expression. Periodic tasks that share a task type aren't monitored by `NewConfigProvider`, so give them their own slugs with `sentryasynq.WithMonitor`. Pass task options to `Register` instead of `asynq.NewTask`, since a task created with options can't be marked. `NewConfigProvider` doesn't monitor tasks whose schedule can't be expressed in the Crons schedule format (for example, a task that runs every 10 seconds). Tasks marked with `sentryasynq.WithMonitor` send check-ins for those schedules without creating the monitor. The asynq integration ships in the next release of `sentry-go`.
 
+### gocron
+
+If you schedule jobs with [gocron v2](https://github.com/go-co-op/gocron) (v2.22.0 or higher), install the package:
+
+```bash
+go get github.com/getsentry/sentry-go/gocron
+```
+
+Pass `sentrygocron.NewSchedulerMonitor` to `gocron.WithSchedulerMonitor` to monitor every job. Each job name becomes a monitor slug, and each job's schedule and the scheduler's location become the monitor schedule and timezone. Check-ins go to the client carried by the context, or the global client:
+
+```go
+import (
+	"context"
+	"time"
+
+	"github.com/go-co-op/gocron/v2"
+	sentrygocron "github.com/getsentry/sentry-go/gocron"
+)
+
+s, err := gocron.NewScheduler(
+	gocron.WithLocation(time.UTC),
+	gocron.WithSchedulerMonitor(sentrygocron.NewSchedulerMonitor(context.Background(), sentrygocron.Options{
+		// Same as gocron.WithLocation. Defaults to time.Local.
+		Location: time.UTC,
+		Exclude:  []string{"<job-name>"},
+	})),
+)
+s.NewJob(gocron.CronJob("0 * * * *", false), gocron.NewTask(task), gocron.WithName("<monitor-slug>"))
+```
+
+Name your jobs with `gocron.WithName`. Jobs running an anonymous function without a name, and jobs sharing a name, aren't monitored. `Exclude` skips jobs by exact name, and `ExcludePatterns` by regular expression. Random and one-time jobs, and schedules that can't be expressed in the Crons schedule format, aren't monitored. For example, a job that runs every 10 seconds, every 2 days, or on the last day of the month. The gocron integration ships in the next release of `sentry-go`.
+
 ### Manual Check-Ins
 
 To send check-ins yourself, call `sentry.CaptureCheckIn` at the start and end of your job. Pass a monitor config with the in-progress check-in so Sentry creates or updates the monitor from your code:
