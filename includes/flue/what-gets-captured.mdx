@@ -8,9 +8,7 @@ Sentry's Flue integration maps Flue's runtime operations to Sentry operations fo
 | Model turn       | `gen_ai.chat`         |
 | Tool execution   | `gen_ai.execute_tool` |
 
-Spans are tagged with `sentry.origin: auto.ai.flue` and carry the model, token usage, and finish reasons for the turn.
-
-A `chat` span also carries `flue.turn.purpose`, which is how you tell a context-compaction turn from a user-facing one. There's no conventional attribute for that distinction.
+Agent and tool spans are tagged with `sentry.origin: auto.ai.flue`. Model calls come from Sentry's pi-ai instrumentation, since Flue sends them through `@earendil-works/pi-ai`, so `chat` spans are tagged with `sentry.origin: auto.ai.pi_ai` and carry the model, token usage, and finish reasons for the call.
 
 A tool that throws is captured as an error and its span is marked failed. Flue catches the throw and hands it back to the model as a tool result, so the error is reported as handled.
 
