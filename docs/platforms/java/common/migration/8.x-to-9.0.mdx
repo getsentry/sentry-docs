@@ -1,0 +1,46 @@
+---
+title: Migrating Version 8.x to 9.0
+description: "Learn how to migrate from version 8.x to 9.0 of the Sentry Java SDK."
+sidebar_order: 994
+---
+
+Version 9 removes the global Logs and Metrics enable options. Manual telemetry APIs now work whenever the SDK is enabled, while automatic logging integrations require their own explicit opt-in.
+
+## Manual Logs and Metrics
+
+Calls to `Sentry.logger()` and `Sentry.metrics()` no longer require a global enable option. Remove calls to:
+
+- `options.getLogs().setEnabled(...)`
+- `options.getMetrics().setEnabled(...)`
+
+The `beforeSendLog` and `beforeSendMetric` callbacks remain available for filtering or modifying telemetry.
+
+## Removed External Configuration
+
+Remove these options from your configuration:
+
+| Configuration        | Removed Logs Option   | Removed Metrics Option   |
+| -------------------- | --------------------- | ------------------------ |
+| `sentry.properties`  | `logs.enabled`        | `metrics.enabled`        |
+| Java system property | `sentry.logs.enabled` | `sentry.metrics.enabled` |
+| Environment variable | `SENTRY_LOGS_ENABLED` | `SENTRY_METRICS_ENABLED` |
+| Spring Boot          | `sentry.logs.enabled` | `sentry.metrics.enabled` |
+
+Metrics are sent only when your application calls `Sentry.metrics()`. To discard selected metrics, use `beforeSendMetric`.
+
+## Automatic Logging Integrations
+
+Automatic Sentry Logs capture is disabled by default. Enable it on each logging integration that should forward records:
+
+| Integration                            | Version 9 Opt-In                                          |
+| -------------------------------------- | --------------------------------------------------------- |
+| Logback                                | Set `<logsEnabled>true</logsEnabled>` on `SentryAppender` |
+| Log4j 2                                | Set `logsEnabled="true"` on the `<Sentry>` appender       |
+| `java.util.logging`                    | Set `io.sentry.jul.SentryHandler.logsEnabled=true`        |
+| Spring Boot logging auto-configuration | Set `sentry.logging.logs-enabled=true`                    |
+
+The minimum-level options only select eligible records. They do not enable Sentry Logs capture.
+
+## Constructor Changes
+
+The Log4j 2 `SentryAppender` constructor and `createAppender` factory now require a `logsEnabled` argument. Pass `true` to capture Sentry Logs or `false` to keep capture disabled. The deprecated constructor without `minimumLevel` has been removed.

@@ -9,7 +9,7 @@ For the best experience, we recommend using Sentry's Spring Boot integration wit
 
 <Alert level="warning" title="Logs over Breadcrumbs">
 
-By default this integration captures logs as breadcrumbs and error events (great for error context!). But if you need to search and query your logs across your entire application, we recommend enabling the new logs feature. Logs at or above the `sentry.logging.minimum-level` are automatically sent as Sentry Logs when enabled.
+By default this integration captures logs as breadcrumbs and error events (great for error context!). To search and query logs across your application, enable Sentry Logs capture with `sentry.logging.logs-enabled`. Records at or above `sentry.logging.minimum-level` are then sent as Sentry Logs.
 
 </Alert>
 
@@ -33,10 +33,10 @@ implementation 'io.sentry:sentry-logback:{{@inject packages.version('sentry.java
 
 ### Spring Boot Configuration
 
-To send logs to Sentry and have them show up in the Logs section, you need to enable the feature:
+To send Logback records to Sentry Logs, enable log capture for the auto-configured appender:
 
 ```properties
-sentry.logs.enabled=true
+sentry.logging.logs-enabled=true
 ```
 
 Minimum logging levels for `SentryAppender` can be configured in `application.properties` or `application.yml` file.
@@ -70,6 +70,7 @@ If you decide to opt-out from the `application.properties` based Spring Boot log
   <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
 
   <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
+    <logsEnabled>true</logsEnabled>
     <minimumLevel>INFO</minimumLevel>
   </appender>
 
