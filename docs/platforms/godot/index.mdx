@@ -27,24 +27,151 @@ Sentry captures data through our addon for Godot Engine which you can install in
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you set your DSN: the SDK automatically captures crashes and Godot runtime errors, such as script and shader errors. **Logs** and **Application Metrics** are enabled by default in SDK 2.0.0 and later, and you'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing**, which requires SDK 2.2.0 or later. To collect **User Feedback** from players, add the SDK's <PlatformLink to="/user-feedback/">feedback form or use the feedback API</PlatformLink>.
+
+### Initialize the SDK
+
 <PlatformContent includePath="getting-started-config" />
 
-## Verify
+To configure the SDK in code instead, for example to define a <PlatformLink to="/configuration/options/#before_send">`before_send`</PlatformLink> callback, turn off **Auto Init** in **Project Settings > Sentry > Options** and call `init()` from a script that extends `SceneTree`. Then enter the script's class name in **Project Settings > Application > Run > Main Loop Type**. A single `init()` call from either GDScript or C# initializes the SDK for both languages. See <PlatformLink to="/configuration/options/#programmatic-configuration">Programmatic Configuration</PlatformLink> for details.
 
-Add a `Node` to your test scene and attach a script with the following content:
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>, or **Sentry > Options > Tracing > Traces Sample Rate** in Project Settings (turn on **Advanced Settings** to see it). Add spans around operations like level loads with <PlatformLink to="/tracing/instrumentation/">instrumentation</PlatformLink>. For C#, use the [Sentry .NET tracing API](/platforms/dotnet/tracing/).
+- Scene tree attachments: via <PlatformLink to="/configuration/options/#attach_scene_tree">`attach_scene_tree`</PlatformLink>, or **Sentry > Options > Attach Scene Tree** in Project Settings. See <PlatformLink to="/enriching-events/view-hierarchy/">Scene Tree</PlatformLink> for details.
+
+Don't need a feature? Remove its options.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs} {filename:ProjectMainLoop.gd}
+class_name ProjectMainLoop
+extends SceneTree
+
+func _initialize() -> void:
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		options.dsn = "___PUBLIC_DSN___"
+		# Enables Tracing.
+		# Set to 1.0 to capture 100% of traces.
+		# We recommend reducing this value in production.
+		options.traces_sample_rate = 1.0
+		# Attaches scene tree data to events.
+		options.attach_scene_tree = true
+	)
+```
+
+```csharp {tabTitle:C#} {filename:ProjectMainLoop.cs}
+using Godot;
+using Sentry;
+using Sentry.Godot;
+
+[GlobalClass]
+public partial class ProjectMainLoop : SceneTree
+{
+    public override void _Initialize()
+    {
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of traces.
+            // We recommend reducing this value in production.
+            options.TracesSampleRate = 1.0;
+            // Attaches scene tree data to events.
+            options.AttachSceneTree = true;
+        });
+    }
+}
+```
+
+### Get Readable Stack Traces
+
+The official Godot Engine builds only provide export templates without debug information. To get function names, file paths, and line numbers for native crashes, export your game with <PlatformLink to="/configuration/stack-traces/">export templates that contain debug symbols</PlatformLink> and <PlatformLink to="/configuration/stack-traces/#uploading-debug-symbols">upload the debug symbols</PlatformLink> to Sentry.
+
+To see GDScript source code around stack trace frames in exported games, set up <PlatformLink to="/configuration/source-context/">Source Context</PlatformLink>.
+
+### Export for Android
+
+Exporting for Android with the Sentry SDK requires Godot's Gradle build. Install the Android build template with **Project > Install Android Build Template...**, then turn on **Use Gradle Build** in your Android export preset. See <PlatformLink to="/configuration/android/">Exporting for Android</PlatformLink> for the full setup.
+
+### Capture Errors From C# Code
+
+C# support requires SDK 2.0.0 or later and the .NET build of Godot Engine 4.5 or later. The addon ships the .NET libraries and adds them to your project's `.csproj` file when you open the project in the editor. Build your project to restore the NuGet package. See <PlatformLink to="/dotnet/">C#/.NET Support</PlatformLink> for details.
+
+## Send Logs
+
+Use `SentrySDK.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can pass any attributes you want and search or filter by them later. Logs are generally available in SDK 1.2.0 and later and enabled by default starting with SDK 2.0.0.
+
+To also capture Godot's own log output, such as engine errors and `print()` statements, set <PlatformLink to="/configuration/options/#godot_logger.log_mask">`godot_logger.log_mask`</PlatformLink>. It's empty by default.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and configuration options.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.logger.info("Level loaded successfully")
+
+SentrySDK.logger.warn("Item configuration not found")
+
+SentrySDK.logger.debug("Spawning %s with %d units", ["enemies", 5], {
+	"current_scene": get_tree().current_scene.scene_file_path,
+	"wave_id": "main_wave_3"
+})
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Logger.LogInfo("Level loaded successfully");
+
+SentrySdk.Logger.LogWarning("Item configuration not found");
+
+SentrySdk.Logger.LogDebug(
+    log =>
+    {
+        log.SetAttribute("current_scene", GetTree().CurrentScene.SceneFilePath);
+        log.SetAttribute("wave_id", "main_wave_3");
+    },
+    "Spawning {0} with {1} units", "enemies", 5);
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `SentrySDK.metrics` to send counters, gauges, and distributions from your game to Sentry. You can pass any attributes you want and search or filter by them later. Metrics require SDK 2.0.0 or later, where they're enabled by default.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```gdscript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.metrics.count("match_started")
+
+SentrySDK.metrics.gauge("players_online", lobby.get_player_count())
+
+SentrySDK.metrics.distribution("level_load_time", load_time, SentryUnit.millisecond, {
+	"scene": get_tree().current_scene.name
+})
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Metrics.EmitCounter("match_started", 1);
+
+SentrySdk.Metrics.EmitGauge("players_online", lobby.GetPlayerCount());
+
+SentrySdk.Metrics.EmitDistribution("level_load_time", loadTime, MeasurementUnit.Duration.Millisecond, new Dictionary<string, object>
+{
+    ["scene"] = GetTree().CurrentScene.Name.ToString(),
+});
+```
+
+## Verify Your Setup
+
+Add a `Node` to your test scene and attach a script with the following content, then run the scene. The script captures a message, so you can confirm that Sentry receives events from your game.
 
 <PlatformContent includePath="getting-started-verify" />
 
-This snippet includes message capturing, so you can test that everything is working as soon as you set it up.
+### View Captured Data in Sentry
 
-<Alert>
-
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar, then select the message's title to open a page where you can see detailed information and mark it as resolved.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Godot Engine game. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to <PlatformLink to="/usage/">manually capture errors and messages</PlatformLink>.
+- Add tags, breadcrumbs, context, and attachments, such as <PlatformLink to="/enriching-events/screenshots/">screenshots</PlatformLink>, to <PlatformLink to="/enriching-events/">enrich your events</PlatformLink>.
+- Track crash-free users and sessions with <PlatformLink to="/configuration/releases/">Releases & Health</PlatformLink>.

@@ -25,7 +25,7 @@ const FEATURE_DATA: Record<
     title: 'Issues',
     link: '/product/issues',
     learnMore:
-      "Sentry's core error monitoring product that automatically reports errors, uncaught exceptions, and unhandled rejections. If you have something that looks like an exception, Sentry can capture it.",
+      "Sentry's core error monitoring product that automatically reports errors, uncaught exceptions, and crashes. If you have something that looks like an exception, Sentry can capture it.",
     findInSentry: (
       <Fragment>
         Open the{' '}
@@ -60,9 +60,9 @@ const FEATURE_DATA: Record<
   },
   sessionReplay: {
     title: 'Session Replay',
-    link: '/product/session-replay/web',
+    link: '/product/session-replay/',
     learnMore:
-      "Get to the root cause of an issue faster by viewing a video-like reproduction of what was happening in the user's browser before, during, and after the problem.",
+      'Get to the root cause of an issue faster by viewing a video-like reproduction of what users saw in your app before, during, and after the problem.',
     findInSentry: (
       <Fragment>
         Open the{' '}
@@ -102,8 +102,10 @@ const FEATURE_DATA: Record<
         <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/profiling/">
           <strong>Profiles</strong>
         </ExternalLink>{' '}
-        page, select a transaction, and then a profile ID to view its flame graph. For
-        more information, click <a href="/product/profiling/profile-details/">here</a>.
+        page to see your slowest functions and an aggregate flame graph of your most
+        frequent code paths. If tracing is enabled, select a transaction to see the flame
+        graph for that part of your app. For more information, click{' '}
+        <a href="/product/profiling/profile-details/">here</a>.
       </Fragment>
     ),
   },

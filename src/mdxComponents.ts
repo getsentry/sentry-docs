@@ -60,12 +60,6 @@ import {SpecChangelog} from './components/specChangelog';
 import {SpecMeta} from './components/specMeta';
 import {SpecRfcAlert} from './components/specRfcAlert';
 import {SpecSection} from './components/specSection';
-import {
-  SplitLayout,
-  SplitSection,
-  SplitSectionCode,
-  SplitSectionText,
-} from './components/splitLayout';
 import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
@@ -137,10 +131,6 @@ export function mdxComponents(
     SpecMeta,
     SpecRfcAlert,
     SpecSection,
-    SplitLayout,
-    SplitSection,
-    SplitSectionText,
-    SplitSectionCode,
     StatusBadge,
     StepComponent,
     StepConnector,
