@@ -1,3 +1,29 @@
+### Monitor All `@Cron` Methods
+
+<AvailableSince version="11.9.0" />
+
+We recommend enabling `monitorCronJobs` on the Nest integration, which monitors every `@Cron` method without adding `@SentryCron` to each one:
+
+```typescript {filename:instrument.ts}
+import * as Sentry from "@sentry/nestjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.nestIntegration({
+      monitorCronJobs: true,
+      excludeCronJobs: ["cleanup-temp-files", /^Debug/], // Optional.
+    }),
+  ],
+});
+```
+
+The monitor slug is the `name` option of `@Cron`, or `ClassName.methodName` if there's no `name`. Set a `name` if your build minifies class names, so the slug doesn't change between deploys. `excludeCronJobs` skips jobs whose slug matches a string exactly or a regular expression.
+
+Each check-in sends the schedule and time zone of `@Cron`, as described in [Monitor Config From `@Cron`](#monitor-config-from-cron). Jobs with schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds) aren't monitored. To monitor one, add `@SentryCron` and create the monitor in Sentry first. `@Cron` with a `Date` runs once and isn't monitored.
+
+### Monitor Specific Methods
+
 <AvailableSince version="8.16.0" />
 
 The NestJS SDK includes a `@SentryCron` decorator that can be used to augment the native NestJS `@Cron` decorator to send check-ins to Sentry before and after each cron job run.
@@ -29,8 +55,9 @@ export class MyCronService {
 }
 ```
 
+`monitorCronJobs` skips methods that have `@SentryCron`, so they check in once, with the slug and options you pass to `@SentryCron`.
 
-### Monitor Config From `@Cron`
+#### Monitor Config From `@Cron`
 
 <AvailableSince version="11.5.0" />
 
