@@ -2,13 +2,31 @@ If you are using [Quartz](http://www.quartz-scheduler.org/), please see <Platfor
 
 <Alert level="info">
 
-The `@SentryCheckIn` annotation requires `org.aspectj:aspectjweaver` to be present as a dependency in your project.
+The `@SentryCheckIn` annotation and `sentry.monitor-scheduled-tasks` require `org.aspectj:aspectjweaver` to be present as a dependency in your project.
 
 </Alert>
 
 ## Check-Ins (Recommended)
 
-Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed). To start sending check-ins simply add the `@SentryCheckIn("<monitor-slug>")` annotation to the method you want to send check-ins for.
+Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+
+### Monitor All `@Scheduled` Methods
+
+We recommend monitoring every `@Scheduled` method. From the next Sentry Java SDK release (after `8.61.0`), you can do this without adding `@SentryCheckIn` to each one:
+
+```properties {filename:application.properties}
+sentry.monitor-scheduled-tasks=true
+# Optional: methods to skip, as ClassName.methodName or a regular expression
+sentry.exclude-scheduled-tasks=ReportJobs.sendDailyReport,Internal.*
+```
+
+Each method gets a monitor slug built from its class and method name, for example `report-jobs-send-daily-report` for `ReportJobs.sendDailyReport`. Nested classes include the outer class name (`Outer.Inner.method`), and slugs longer than 50 characters are shortened with a hash suffix. The schedule is sent as described in [Monitor Configuration From `@Scheduled`](#monitor-configuration-from-scheduled). Methods with schedules that can't be expressed in the Crons schedule format (for example, a `fixedDelay` job) aren't monitored. To monitor one, add `@SentryCheckIn` with a slug and create the monitor in Sentry first.
+
+Methods annotated with `@SentryCheckIn` keep their own slug and settings and are checked in once per run. Methods on `final` classes, `final` methods, and reactive or Kotlin `suspend` methods can't be monitored this way.
+
+### Monitor Specific Methods
+
+To send check-ins for specific methods, add the `@SentryCheckIn("<monitor-slug>")` annotation to the method you want to send check-ins for.
 
 ```java {tabTitle:Java (Spring Boot 3)} {mdExpandTabs}
 import io.sentry.spring.jakarta.checkin.SentryCheckIn;
