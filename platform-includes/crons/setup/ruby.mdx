@@ -137,6 +137,51 @@ Sentry.init do |config|
 end
 ```
 
+### GoodJob
+
+<Alert>
+
+The GoodJob integration ships in the next release of `sentry-rails`.
+
+</Alert>
+
+If you're using GoodJob cron, enable the `:good_job_cron` patch to capture check-ins for every entry in `config.good_job.cron`:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:good_job_cron]
+end
+```
+
+```rb {filename:config/application.rb}
+config.good_job.enable_cron = true
+config.good_job.cron = {
+  nightly_report: {
+    cron: "0 2 * * * America/New_York",
+    class: "ReportJob",
+    args: ["nightly"],
+  },
+  weekly_report: {
+    cron: "every monday at 9am",
+    class: "ReportJob",
+    args: ["weekly"],
+  },
+}
+```
+
+The monitor slug is the cron key, so this example creates two monitors: `nightly_report` and `weekly_report`. Each entry gets its own monitor, even when entries share a job class.
+
+Sentry creates and updates each monitor from the entry's schedule and time zone. Schedules that can't be expressed in the Crons schedule format, such as a job that runs every 10 seconds, and entries whose `cron` is a proc aren't monitored. Jobs that already call `sentry_monitor_check_ins` are left as they are.
+
+To skip entries, list their keys in `config.rails.good_job_exclude_cron_jobs`. Strings and symbols match a cron key exactly, and regular expressions are matched against it:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:good_job_cron]
+  config.rails.good_job_exclude_cron_jobs = [:clear_cache, /^tmp_/]
+end
+```
+
 ### resque-scheduler
 
 <Alert>
