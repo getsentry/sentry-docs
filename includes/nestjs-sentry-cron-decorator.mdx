@@ -49,10 +49,10 @@ export class MyCronService {
 }
 ```
 
-If `@Cron` has neither `timeZone` nor `utcOffset`, the job runs in your server's local time zone, so that time zone is sent.
+If `@Cron` has neither `timeZone` nor `utcOffset`, the job runs in your server's local time zone, so that time zone is sent. If your servers run in different time zones, set `timeZone` on `@Cron`, so every server sends the same one.
 
 The monitor is created, and billed, on the first run. Each check-in overwrites the monitor's schedule and time zone with the ones from `@Cron`, so change them in your code rather than in Sentry.
 
-A six-field expression is sent without its seconds field if that field is a single number, such as `0 30 9 * * *`. Presets such as `@daily` and `@weekly` are sent too. Sub-minute schedules, `Date` values, `utcOffset`, month numbers (use names such as `MAY`; steps such as `*/3` work), a `*/n` or full-range day field (such as `1-31`) combined with the other day field, and time zones that aren't IANA names send no monitor config, including any other options you pass. In those cases, pass a full monitor config to `@SentryCron` or create the monitor in Sentry first.
+A six-field expression is sent without its seconds field if that field is a single number, such as `0 30 9 * * *`. Presets such as `@daily` and `@weekly` are sent too. Sub-minute schedules, `Date` values, `utcOffset`, month numbers with `@nestjs/schedule` 3 and earlier (use names such as `MAY`; steps such as `*/3` work), a `*/n` or full-range day field (such as `1-31` or `sun-sat`) combined with the other day field, and time zones that aren't IANA names send no monitor config, including any other options you pass. In those cases, pass a full monitor config to `@SentryCron` or create the monitor in Sentry first.
 
 To send check-ins without a monitor config, pass `{ fromCronDecorator: false }`.
