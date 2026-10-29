@@ -1,43 +1,79 @@
 ---
 title: "Spring"
-description: "Learn how to use Sentry's Spring SDK."
+description: "Learn how to set up Sentry in your Spring application and capture your first events."
 sdk: sentry.java.spring
 ---
 
 <PlatformContent includePath="getting-started-primer" />
 
-On this page, we get you up and running with Sentry's SDK.
-
-Don't already have an account and Sentry project established? Head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
+Install the Sentry Spring integration:
 
 <PlatformContent includePath="getting-started-install" />
 
 <PlatformContent includePath="getting-started-install/opentelemetry" />
 
+If you use the plain SDK setup in Configure, skip the agent download and launch command.
+
 ## Configure
 
-<PlatformContent includePath="getting-started-config" />
+**Error Monitoring** starts when the Spring integration initializes. This guide configures **Tracing** and **Profiling**. **Logs** require an explicit enable option, which the setup below includes. **Application Metrics** need no extra configuration; send them in [step 4](#send-application-metrics-).
+
+Don't need a feature? Remove its configuration. Remove the `sentry-async-profiler` dependency to disable Profiling.
+
+The default setup uses the Sentry OpenTelemetry agent. See the [agent setup guide](/platforms/java/opentelemetry/setup/agent/) or [agentless setup guide](/platforms/java/opentelemetry/setup/agentless/) for details.
 
 <PlatformContent includePath="getting-started-config/opentelemetry" />
 
-## Verify
+<Expandable title="Not using OpenTelemetry?">
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+The following setup initializes Sentry through the Spring integration without the OpenTelemetry agent. It configures Error Monitoring, Tracing, Profiling, and Logs. Logs are enabled with `logs.enabled=true`; Metrics are available after SDK initialization and have no enable option.
+
+<PlatformContent includePath="getting-started-config" />
+
+</Expandable>
+
+## Send Logs
+
+Logs must be enabled in your configuration; the snippets in Configure already do this. Use `Sentry.logger()` to send logs at different levels:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.logger().info("User example action completed");
+Sentry.logger().warn("Slow operation detected");
+Sentry.logger().error("Validation failed");
+```
+
+If you already log with JUL, Log4j2, or Logback, see the [JUL](/platforms/java/guides/jul/), [Log4j2](/platforms/java/guides/log4j2/), and [Logback](/platforms/java/guides/logback/) guides to send those logs to Sentry. Spring Boot users can also use the [logging framework integrations](/platforms/java/guides/spring-boot/logging-frameworks/).
+
+See [Set Up Logs](/platforms/java/logs/) for all logging methods and configuration options.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Metrics are available after SDK initialization; no additional option is required. Use `Sentry.metrics()` to send counters, gauges, and distributions. Add attributes to filter and group metrics.
+
+See [Set Up Metrics](/platforms/java/metrics/) for all metric types and configuration options.
+
+```java
+import io.sentry.Sentry;
+
+Sentry.metrics().count("checkout.failed", 1.0);
+Sentry.metrics().gauge("queue_depth", 42.0);
+Sentry.metrics().distribution("response_time", 187.5);
+```
+
+## Verify Your Setup
+
+Run the following code after initializing the SDK. It captures a test error that you can find in your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
-
-<Alert>
-
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
 
 ## Next Steps
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+
+</StepConnector>
