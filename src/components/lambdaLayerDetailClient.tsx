@@ -296,8 +296,11 @@ const SelectionField = styled('div')`
   }
 
   /* react-select defaults to white control and menu backgrounds and dark text
-     (https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/Control.tsx#L55,
-     .../SingleValue.tsx#L46); map them to the site's dark theme. */
+     (https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/theme.ts#L12-L21,
+     https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/Control.tsx#L55,
+     https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/Menu.tsx#L297,
+     https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/SingleValue.tsx#L46);
+     map them to the site's dark theme. */
   .dark & {
     .layer-select__control {
       background-color: var(--gray-a2);
