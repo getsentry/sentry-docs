@@ -145,6 +145,7 @@ const FEATURE_DATA: Record<
 
 type FeatureInfoProps = {
   features: FeatureKey[];
+  overrides?: Partial<Record<FeatureKey, {learnMore?: ReactNode; link?: string}>>;
   type: 'learnMore' | 'findInSentry';
 };
 
@@ -155,11 +156,11 @@ type FeatureInfoProps = {
  * @param features - Array of feature keys to display
  * @param type - learnMore shows feature descriptions, findInSentry shows navigation help
  */
-export function FeatureInfo({features, type}: FeatureInfoProps) {
+export function FeatureInfo({features, overrides, type}: FeatureInfoProps) {
   return (
     <ul>
       {features.map(key => {
-        const feature = FEATURE_DATA[key];
+        const feature = {...FEATURE_DATA[key], ...overrides?.[key]};
 
         if (type === 'learnMore') {
           return (
