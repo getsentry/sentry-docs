@@ -11,15 +11,21 @@ description: "Symfony is a set of reusable PHP components and a PHP framework to
 
 ## Install
 
-Install the `sentry/sentry-symfony` bundle:
+Install Sentry Symfony SDK 5.13.0 or later. This requires PHP SDK 4.31.0 or later, where Logs and Application Metrics don't need enable options:
 
 ```bash
-composer require sentry/sentry-symfony
+composer require "sentry/sentry-symfony:^5.13"
+```
+
+The logging configuration below also requires MonologBundle. If it isn't already installed, add it:
+
+```bash
+composer require symfony/monolog-bundle
 ```
 
 ## Configure
 
-**Error Monitoring** starts working as soon as the bundle is enabled and your DSN is set. **Logs** (Symfony SDK 5.4.0 and above) need Sentry's Monolog `LogsHandler`, which the snippet below registers. **Application Metrics** (Symfony SDK 5.8.0 and above) need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+**Error Monitoring** starts working as soon as the bundle is enabled and your DSN is set. **Logs** need Sentry's Monolog `LogsHandler`, which the snippet below registers. **Application Metrics** need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 This guide also enables **Tracing** and **Profiling**. Symfony also supports <PlatformLink to="/crons/">Crons</PlatformLink>, <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>, and <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
 
 Add your DSN to your `.env` file:
@@ -87,11 +93,13 @@ pecl install excimer
 
 Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
 
+Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
+
 ### Capture Stack Trace Arguments
 
 <Alert level="warning">
   To receive stack trace arguments in your errors, set
-  `zend.exception_ignore_args: Off` in your `php.ini`.
+  `zend.exception_ignore_args = Off` in your `php.ini`.
 </Alert>
 
 ### Use Sentry With Monolog
@@ -100,10 +108,15 @@ If you already use [Monolog](https://github.com/Seldaek/monolog) to report error
 
 ## Send Logs
 
-Once the `sentry_logs` handler is registered, your regular `LoggerInterface` sends logs to Sentry. Symfony flushes logs automatically when a request or command finishes.
+Once the `sentry_logs` handler is registered, logs sent through `Psr\Log\LoggerInterface` go to Sentry. Symfony flushes logs automatically when a request or command finishes. For example, inject the logger into a controller action:
 
 ```php
-$this->logger->info('Checkout completed', ['order_id' => $orderId]);
+public function checkout(\Psr\Log\LoggerInterface $logger): \Symfony\Component\HttpFoundation\Response
+{
+    $logger->info('Checkout completed', ['order_id' => 12345]);
+
+    return new \Symfony\Component\HttpFoundation\Response('Checkout completed');
+}
 ```
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for log levels, filtering, and all available options.
@@ -142,7 +155,12 @@ class SentryTestController extends AbstractController
 
 ### View Captured Data in Sentry
 
-After a few moments, open your project in [Sentry](https://sentry.io/) and check the Issues page for the test error.
+Run the logging and metrics examples above in a request or command in an environment where Sentry is enabled. If you kept Tracing and Profiling enabled, make a request to a route in that environment. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
+
+- **Issues** for the test error.
+- **Logs** for `Checkout completed`.
+- **Application Metrics** for the `checkout.failed` counter.
+- **Tracing and Profiling** for the request's trace and its associated profile. Very short requests may not collect enough profiling samples to produce a profile.
 
 ## Next Steps
 

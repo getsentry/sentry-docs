@@ -11,21 +11,21 @@ og_image: /og-images/platforms-php-guides-laravel.png
 ## Prerequisites
 
 - You need a [Sentry account](https://sentry.io/signup/) and project
-- Your Laravel application needs to run on PHP 7.2 or later
+- Your application needs to meet your Laravel version's PHP requirements (PHP 8.2 or later for Laravel 11)
 - Your Laravel version needs to be 11.x or higher
 - Read one of these guides if you use an [older version](/platforms/php/guides/laravel/other-versions/) or need [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/)
 
 ## Install
 
-Install the `sentry/sentry-laravel` package:
+Install Sentry Laravel SDK 4.28.0 or later. This requires PHP SDK 4.31.0 or later, where Logs and Application Metrics don't need enable options:
 
 ```bash
-composer require sentry/sentry-laravel
+composer require "sentry/sentry-laravel:^4.28"
 ```
 
 ## Configure
 
-**Error Monitoring** starts working once you add your DSN and register Sentry's exception handler. **Logs** (Laravel SDK 4.15.0 and above) need the `sentry_logs` log channel in your log stack, which the snippet below sets up. **Application Metrics** (Laravel SDK 4.20.0 and above) need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+**Error Monitoring** starts working once you add your DSN and register Sentry's exception handler. **Logs** need the `sentry_logs` log channel in your log stack, which the snippet below sets up. **Application Metrics** need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 This guide also enables **Tracing** and **Profiling**. Laravel also supports <PlatformLink to="/crons/">Crons</PlatformLink>, <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink>, <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>, and <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
 
 Publish the Sentry config file and set your DSN with this command:
@@ -101,11 +101,13 @@ pecl install excimer
 
 Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
 
+Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
+
 ### Capture Stack Trace Arguments
 
 <Alert level="warning">
   To receive stack trace arguments in your errors, set
-  `zend.exception_ignore_args: Off` in your `php.ini`.
+  `zend.exception_ignore_args = Off` in your `php.ini`.
 </Alert>
 
 ### Disable Sentry During Local Development and Testing
@@ -127,10 +129,10 @@ Once the `sentry_logs` channel is in your log stack, Laravel's `Log` facade send
 ```php
 use Illuminate\Support\Facades\Log;
 
-Log::info('Checkout completed', ['order_id' => $order->id]);
+Log::info('Checkout completed', ['order_id' => 12345]);
 ```
 
-If you use Laravel SDK 4.16.0 or below, also add the `sentry_logs` channel to `config/logging.php` as described in <PlatformLink to="/logs/#setup">Set Up Logs</PlatformLink>. That guide also covers log levels, filtering, and all available options.
+If your `config/logging.php` defines the stack's `channels` array directly instead of reading `LOG_STACK`, add `sentry_logs` to that array. See <PlatformLink to="/logs/#setup">Set Up Logs</PlatformLink> for older SDK versions, custom channel configuration, log levels, and filtering.
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
@@ -152,9 +154,20 @@ Route::get('/debug-sentry', function () {
 });
 ```
 
+To check your DSN and connectivity from the command line, you can also run:
+
+```shell
+php artisan sentry:test
+```
+
 ### View Captured Data in Sentry
 
-After a few moments, open your project in [Sentry](https://sentry.io/) and check the Issues page for the test error.
+Run the logging and metrics examples above in a request, command, or job. If you kept Tracing and Profiling enabled, make a request to a route in your application. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
+
+- **Issues** for the test error.
+- **Logs** for `Checkout completed`.
+- **Application Metrics** for the `checkout.failed` counter.
+- **Tracing and Profiling** for the request's trace and its associated profile. Very short requests may not collect enough profiling samples to produce a profile.
 
 ## Next Steps
 
