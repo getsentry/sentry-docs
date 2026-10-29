@@ -2,7 +2,32 @@
 
 Use the Laravel SDK to monitor and notify you if your [scheduled task](https://laravel.com/docs/10.x/scheduling) is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
 
-To set up, add the `sentryMonitor()` macro to the scheduled tasks defined in your application as shown below. (Please note, this will create a Cron monitor that will count against your quota.)
+### Monitor All Scheduled Tasks
+
+<Alert>
+
+This option ships in the next release of `sentry/sentry-laravel`.
+
+</Alert>
+
+We recommend monitoring every scheduled task. To do this without adding `sentryMonitor()` to each one, turn on `monitor_scheduled_tasks` in your Sentry config. (Please note, this creates a Cron monitor for every scheduled task, which counts against your quota.)
+
+```php {filename:config/sentry.php}
+'crons' => [
+    'monitor_scheduled_tasks' => env('SENTRY_CRONS_MONITOR_SCHEDULED_TASKS', false),
+
+    // Commands, job classes, task names or monitor slugs to skip, `*` is a wildcard
+    'exclude_scheduled_tasks' => ['horizon:snapshot', 'scheduled_reports-*'],
+],
+```
+
+Each task is monitored as if you'd called `sentryMonitor()` on it. Tasks that already call `sentryMonitor()` keep their own settings, and closures without a `name()` aren't monitored. Tasks that share a slug, such as the same command on different schedules, aren't monitored and a warning is logged. Give each of them a unique slug with `->sentryMonitor('your-monitor-slug')`. Slugs longer than 50 characters are shortened and end in a short hash of the full name.
+
+Tasks that use `between`, `unlessBetween`, `when` or `skip`, tasks without a `timezone()` when the app's timezone isn't UTC, and tasks with schedules that can't be expressed in the Crons schedule format (for example, a task that runs every 10 seconds) aren't monitored automatically. To monitor one of them, add `->sentryMonitor()` with `updateMonitorConfig: false` and create the monitor in Sentry with the same slug.
+
+### Monitor Specific Tasks
+
+To monitor specific tasks, add the `sentryMonitor()` macro to them as shown below. (Please note, this will create a Cron monitor that will count against your quota.)
 
 ```php {tabTitle:Laravel 12.x & 11.x} {mdExpandTabs} {filename:routes/console.php}
 Schedule::command(SendEmailsCommand::class)
@@ -21,6 +46,8 @@ protected function schedule(Schedule $schedule)
 
 Tasks that use Laravel's `between`, `unlessBetween`, `when` and `skip` methods are currently not supported.
 For the best results, we recommend using Laravel's [`cron`](https://laravel.com/docs/10.x/scheduling#schedule-frequency-options) method to define your schedule's frequency.
+
+With `monitor_scheduled_tasks` on, a task that calls `sentryMonitor()` is only monitored once, with its own settings.
 
 ## Configure a Job Monitor
 
