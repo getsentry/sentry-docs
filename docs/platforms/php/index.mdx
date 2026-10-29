@@ -20,26 +20,31 @@ og_image: /og-images/platforms-php.png
 
 ## Install
 
-Install the Sentry SDK using [Composer](https://getcomposer.org/):
+Install Sentry PHP SDK 4.31.0 or later using [Composer](https://getcomposer.org/). The examples below use this version or later, where Logs and Application Metrics don't need enable options:
 
 ```bash
-composer require sentry/sentry
+composer require "sentry/sentry:^4.31"
 ```
 
 ## Configure
 
-**Error Monitoring** starts working as soon as you call `\Sentry\init()`. **Logs** (PHP SDK 4.12.0 and above) and **Application Metrics** (PHP SDK 4.19.0 and above) need no extra configuration, and you'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
-This guide also enables **Tracing** and **Profiling**. PHP also supports **User Feedback** through a browser-based crash-report modal; see <PlatformLink to="/user-feedback/">Set Up User Feedback</PlatformLink>.
+**Error Monitoring** starts working as soon as you call `\Sentry\init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
 
-To capture errors that occur during startup, initialize the Sentry PHP SDK as early as possible in your application's lifecycle.
+This guide also configures **Tracing** and **Profiling**. In plain PHP, you need to [start and finish a transaction](#start-a-transaction) to collect traces and profiles.
+
+PHP also supports <PlatformLink to="/crons/">Crons</PlatformLink> and <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>. To collect feedback through a browser-based crash-report modal, see <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
+
+To capture errors that occur during startup, initialize the Sentry PHP SDK as early as possible in your application's lifecycle, after loading Composer's autoloader. This example assumes your entry point is in the project root:
 
 ```php
+require_once __DIR__ . '/vendor/autoload.php';
+
 \Sentry\init([
   'dsn' => '___PUBLIC_DSN___',
   // Send request headers, cookies, and IP address.
   'send_default_pii' => true,
 
-  // Enables Tracing.
+  // Configures sampling for transactions you create below.
   // Set to 1.0 to capture 100% of spans for tracing.
   // We recommend reducing this value in production.
   'traces_sample_rate' => 1.0,
@@ -50,7 +55,7 @@ To capture errors that occur during startup, initialize the Sentry PHP SDK as ea
 ]);
 ```
 
-The snippet also turns on:
+The snippet configures:
 
 - Request headers, cookies, and IP address: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>
 - Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
@@ -68,10 +73,34 @@ pecl install excimer
 
 Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
 
+Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
+
+### Start a Transaction
+
+The sampling options above don't create transactions automatically. Start a transaction around the work you want to trace and profile, and finish it to send the data to Sentry:
+
+```php
+$transactionContext = \Sentry\Tracing\TransactionContext::make()
+    ->setName('Example transaction')
+    ->setOp('task');
+
+$transaction = \Sentry\startTransaction($transactionContext);
+\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+
+try {
+    // Run the application code you want to trace and profile.
+} finally {
+    $transaction->finish();
+    \Sentry\SentrySdk::getCurrentHub()->setSpan(null);
+}
+```
+
+See <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> to add child spans and instrument more of your application.
+
 ### Capture Stack Trace Arguments
 
 <Alert level="warning">
-  To receive stack trace arguments in your errors, set `zend.exception_ignore_args: Off` in your `php.ini`.
+  To receive stack trace arguments in your errors, set `zend.exception_ignore_args = Off` in your `php.ini`.
 </Alert>
 
 ### Set Up Sentry Through Forge
@@ -82,7 +111,9 @@ If you use Laravel Forge to provision and deploy your PHP application, you can c
 
 ## Send Logs
 
-Use `\Sentry\logger()` to send logs at different levels. The `enable_logs` option is deprecated and has no effect, so you don't need to set it. Logs are usually flushed at the end of a request or job. For scripts and long-running CLI tasks, flush pending logs before exit or periodically.
+Use `\Sentry\logger()` to send logs at different levels. In PHP SDK 4.31.0 and later, the `enable_logs` option is deprecated and has no effect, so you don't need to set it.
+
+In standalone PHP applications, explicitly flush buffered logs before the request or script ends. In long-running processes, flush periodically. Laravel and Symfony provide lifecycle-based flushing.
 
 If you already use Monolog, its <PlatformLink to="/integrations/monolog/#logs">Sentry LogsHandler</PlatformLink> can send messages to Sentry.
 
@@ -95,7 +126,7 @@ See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available loggi
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. Metrics are enabled by default after you initialize the SDK; no metrics option is required. Flush collected metrics before the process exits.
+Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. No metrics enable option is required. Flush collected metrics before the request or script ends, or periodically in long-running processes.
 
 ```php
 \Sentry\traceMetrics()->count('checkout.failed', 1);
@@ -106,7 +137,7 @@ See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available
 
 ## Verify Your Setup
 
-Temporarily add an uncaught exception to a route or test script and run it to confirm that Sentry captures it:
+After initializing the SDK, temporarily add an uncaught exception to a route or test script and run it to confirm that Sentry captures it:
 
 ```php
 throw new \RuntimeException('Sentry test exception');
@@ -114,7 +145,12 @@ throw new \RuntimeException('Sentry test exception');
 
 ### View Captured Data in Sentry
 
-After a few moments, open your project in [Sentry](https://sentry.io/) and check the Issues page for the test error.
+Run the logging and metrics examples above in your initialized application, and run an instrumented operation if you kept Tracing and Profiling enabled. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
+
+- **Issues** for the test error.
+- **Logs** for `Checkout completed`.
+- **Application Metrics** for the `checkout.failed` counter.
+- **Tracing and Profiling** for the completed transaction and its associated profile. Very short transactions may not collect enough profiling samples to produce a profile.
 
 ## Next Steps
 
