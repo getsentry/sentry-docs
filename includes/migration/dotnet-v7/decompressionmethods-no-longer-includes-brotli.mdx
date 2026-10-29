@@ -1,0 +1,26 @@
+---
+id: decompressionmethods-no-longer-includes-brotli
+title: "DecompressionMethods No Longer Includes Brotli"
+phase: verify
+category: behavior
+severity: informational
+frameworks: all
+platformCategory: all
+order: 80
+---
+
+`SentryOptions.DecompressionMethods` now defaults to `GZip | Deflate`. In 6.x, it included every method, so the SDK asked your Sentry server for Brotli-compressed responses and decoded them. Sentry's responses to the SDK are small, so this shouldn't make a visible difference.
+
+The new default keeps the SDK away from the .NET Brotli decoder, which has a security issue in unpatched runtimes. See [CVE-2026-111497](https://github.com/dotnet/announcements/issues/494). This matters most for self-contained, Native AOT and mobile apps, which carry their own runtime.
+
+To accept Brotli-compressed responses again, add it back. `DecompressionMethods.Brotli` is available on .NET Core 3.0 and later:
+
+```csharp {filename:Program.cs}
+using System.Net;
+
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.DecompressionMethods |= DecompressionMethods.Brotli;
+});
+```

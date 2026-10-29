@@ -5,15 +5,11 @@ description: "Learn about monitoring your Rust application with Sentry's tokio-r
 
 The Sentry SDK offers an integration for tokio's [tracing](https://github.com/tokio-rs/tracing) ecosystem that supports:
 
-- Reporting `tracing` events to Sentry as events, breadcrumbs, or logs.
-- Reporting `tracing` spans to Sentry.
+- Reporting `tracing` spans to Sentry as transactions and spans.
+- Reporting `tracing` events to Sentry as logs.
 - Reporting errors and panics with the correct trace correlation.
 
 ## Install
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "logs"]}
-/>
 
 To add Sentry with the `tracing` integration to your Rust project, add the necessary dependencies to your `Cargo.toml`:
 
@@ -29,7 +25,7 @@ tokio = { version = "1.45.0", features = ["full"] }
 
 ## Configure
 
-Initialize the Sentry SDK and register the Sentry layer to start sending `tracing` events and spans to Sentry:
+Initialize the Sentry SDK and register the Sentry layers to start sending `tracing` spans and logs to Sentry:
 
 <Alert level="warning">
 
@@ -38,6 +34,8 @@ Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sen
 </Alert>
 
 ```rust
+use sentry::integrations::tracing::{LogLayer, SpanLayer};
+use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::prelude::*;
 
 fn main() {
@@ -46,16 +44,17 @@ fn main() {
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
             .maybe_release(sentry::release_name!())
-            # ___PRODUCT_OPTION_START___ performance
             // Capture all traces and spans. Set to a lower value in production
             .traces_sample_rate(1.0)
-            # ___PRODUCT_OPTION_END___ performance
     );
 
-    // Register the Sentry tracing layer
+    // Register the Sentry tracing layers
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(sentry::integrations::tracing::layer())
+        // Capture INFO, WARN, and ERROR spans as Sentry transactions and spans
+        .with(SpanLayer::new().with_filter(LevelFilter::INFO))
+        // Capture INFO, WARN, and ERROR events as Sentry logs
+        .with(LogLayer::new().with_filter(LevelFilter::INFO))
         .init();
 
     tokio::runtime::Builder::new_multi_thread()
@@ -68,38 +67,28 @@ fn main() {
         });
 }
 
-# ___PRODUCT_OPTION_START___ performance
 #[tracing::instrument] // Captures a root span (transaction) around this function execution
-# ___PRODUCT_OPTION_END___ performance
 async fn fail() {
-    tracing::debug!("Doing work"); // Adds a breadrcumb
-    # ___PRODUCT_OPTION_START___ performance
+    tracing::info!("Doing work"); // Captured as a log
     let _span = tracing::info_span("Child span").entered(); // Captures a child span
-    # ___PRODUCT_OPTION_END___ performance
-    tracing::error!("Everything is on fire!");
+    tracing::error!("Everything is on fire!"); // Captured as a log, linked to the child span
 }
 ```
 
-By default, error-level events from `tracing` are captured as Sentry events, while events at or above info level are added to the current scope as breadcrumbs.
+The integration provides two layers, and we recommend installing both:
 
-Additionally, the SDK captures [logs](https://docs.sentry.io/product/logs/) for `tracing` events at the info level or above, unless logs were disabled when initializing the SDK.
+- [`SpanLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.SpanLayer.html): Captures `tracing` spans as Sentry transactions and spans.
+- [`LogLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.LogLayer.html): Captures `tracing` events as Sentry logs. Requires the `logs` feature, which is enabled by default.
 
-This behavior can be customized by applying a custom `event_filter` when creating the layer.
-The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `tracing` feature flag.
+The layers don't filter by level on their own, and without a filter they capture every level, including `DEBUG` and `TRACE`. We recommend giving each layer a `tracing_subscriber` filter, as shown above. `LevelFilter::INFO` is a sensible starting point for most applications.
 
-```rust
-use sentry::integrations::tracing::EventFilter;
+The SDK also provides [`ErrorLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.ErrorLayer.html) and [`BreadcrumbLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.BreadcrumbLayer.html), which capture `tracing` events as Sentry errors and breadcrumbs. They're mainly there to support legacy setups, so most applications should stick with the span and log layers.
 
-let sentry_layer =
-    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-        // Capture error and warn level events as both logs and events in Sentry
-        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
-        // Ignore trace level events, as they're too verbose
-        tracing::Level::TRACE => EventFilter::Ignore,
-        // Capture everything else as both a breadcrumb and a log
-        _ => EventFilter::Breadcrumb | EventFilter::Log,
-    });
-```
+<Alert level="warning">
+
+`sentry::integrations::tracing::layer()` and `SentryLayer` are deprecated as of version `0.49.4`. When migrating, replace the legacy layer instead of adding the new layers alongside it: combining `SpanLayer` with the legacy layer can panic. See the [migration guide](https://docs.rs/sentry-tracing/~0.49/sentry_tracing/struct.SentryLayer.html) for details.
+
+</Alert>
 
 ## Verify
 
@@ -109,11 +98,9 @@ Learn more about manually capturing an error or message in our <PlatformLink to=
 
 </Alert>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
+To view the recorded traces and spans, log into [sentry.io](https://sentry.io), select your project, and then select Explore > Traces in the sidebar.
 
-If you're using tracing (the Sentry feature), you can view the recorded traces and spans by selecting Explore, and then Traces in the sidebar.
-
-If you're using logs, you can view the recorded logs by selecting Explore, and then Logs in the sidebar.
+To view the recorded logs, select Explore > Logs in the sidebar.
 
 ## Next Steps
 

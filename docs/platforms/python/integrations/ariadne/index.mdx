@@ -78,12 +78,27 @@ This will create a corresponding `GraphQLError` in the Issues section of
 ## Options
 
 The Ariadne integration can capture request and response payload for each GraphQL
-error that happens. Since these may contain sensitive data, the SDK needs to be
-initialized with the
-[send_default_pii](/platforms/python/configuration/options/#send-default-pii)
-option set to `True`.
+error that happens. Since these may contain sensitive data, no request and response
+data will be attached by default.
 
-By default, no request and response data will be attached.
+To attach this data, use the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key controls the query document and its variables in the request
+payload, and the `outgoing_response` entry in `http_bodies` controls the response
+payload:
+
+```python
+sentry_sdk.init(
+    # same options as above
+    data_collection={
+        "graphql": {"document": True, "variables": True},
+        "http_bodies": ["incoming_request", "outgoing_request", "outgoing_response"],
+    },
+)
+```
+
+These are also the defaults when you pass a `data_collection` dictionary, so you only
+need to set the keys you want to change. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
+
+Alternatively, you can initialize the SDK with the <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink> option set to `True`, though `send_default_pii` will be removed in version 3.0 of the SDK:
 
 ```python
 sentry_sdk.init(
@@ -96,7 +111,8 @@ sentry_sdk.init(
 
 Since `send_default_pii` is a global SDK option, setting it to `True` will affect all integrations, not just Ariadne. Please make sure to
 [scrub sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option.
+from events before enabling this option. With `data_collection`, you can enable
+only the categories you need instead.
 
 </Alert>
 
