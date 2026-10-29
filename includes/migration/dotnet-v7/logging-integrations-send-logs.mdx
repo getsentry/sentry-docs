@@ -1,0 +1,56 @@
+---
+id: logging-integrations-send-logs
+title: "Logging Integrations Send Logs"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 10
+---
+
+The Serilog sink, the NLog target, the log4net appender and `Logging.AddSentry()` after `SentrySdk.Init` send every entry they receive to Sentry as a log. In 6.x, they sent logs only with `EnableLogs` on, so an upgraded app can send many more logs.
+
+Adding one of these integrations is now the opt-in for its logs, in every kind of app. `EnableLogs` on the options of `UseSentry` doesn't change this. See [EnableLogs Is Removed from SentryOptions](#enablelogs-is-removed-from-sentryoptions).
+
+Each integration sends the entries its logging framework passes to it:
+
+- The Serilog sink gets entries at the logger's minimum level, which is `Information` unless you change it.
+- The NLog target gets the levels of the rules that write to it.
+- The log4net appender gets entries at its `threshold`.
+- `Logging.AddSentry()` gets the levels from the `Logging` configuration, which default to `Information`.
+
+Logs carry whatever the app writes at those levels. Debug and Information lines can hold personal data, such as customer email addresses, that 6.x didn't send to Sentry as logs. Check what those levels contain before you upgrade.
+
+To keep only warnings and more severe logs, filter on the level in `SetBeforeSendLog`:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.SetBeforeSendLog(log => log.Level >= SentryLogLevel.Warning ? log : null);
+});
+```
+
+To drop every log and keep sending errors and breadcrumbs, return `null`:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.SetBeforeSendLog(_ => null);
+});
+```
+
+In apps that call `UseSentry`, set the same callback on its options. The callback applies to every log, including logs from `SentrySdk.Logger` and from the `ILogger` integration.
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.SetBeforeSendLog(_ => null);
+});
+```
+
+See [Logs](/platforms/dotnet/logs/) for more about filtering logs.

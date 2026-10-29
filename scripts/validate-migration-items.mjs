@@ -7,8 +7,9 @@
  * Validate it so mistakes cannot silently drop items from the guide.
  *
  * `loadItems` is called from `validate-migration-items.spec.ts`, so `pnpm test`
- * fails on invalid frontmatter. Run `pnpm migration-items` (JavaScript) or
- * `pnpm migration-items flutter-v10` for the phase, severity and category counts.
+ * fails on invalid frontmatter. Run `pnpm migration-items` (JavaScript),
+ * `pnpm migration-items flutter-v10` or `pnpm migration-items dotnet-v7` for the
+ * phase, severity and category counts.
  */
 import {readdirSync, readFileSync} from 'fs';
 import path from 'path';
@@ -19,6 +20,7 @@ import matter from 'gray-matter';
 const COLLECTIONS = {
   'javascript-v11': 'docs/platforms/javascript/guides',
   'flutter-v10': 'docs/platforms/dart/guides',
+  'dotnet-v7': 'docs/platforms/dotnet/guides',
 };
 
 /** The change itself, stated once. Anything longer is an explanation. */

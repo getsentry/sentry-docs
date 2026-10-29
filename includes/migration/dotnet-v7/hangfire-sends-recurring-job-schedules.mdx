@@ -1,0 +1,23 @@
+---
+id: hangfire-sends-recurring-job-schedules
+title: "Hangfire Sends Recurring Job Schedules"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 70
+---
+
+Hangfire recurring jobs marked with `[SentryMonitorSlug]` now send their cron schedule and time zone with each check-in. Sentry creates monitors that don't exist yet. On each job's next run, Sentry also updates the schedule and time zone of existing monitors and keeps their other settings.
+
+If you manage monitor schedules in Sentry, turn this off:
+
+```csharp {filename:Program.cs}
+using Hangfire;
+using Sentry.Hangfire;
+
+GlobalConfiguration.Configuration.UseSentry(options => options.SendMonitorConfig = false);
+```
+
+See [Hangfire](/platforms/dotnet/crons/hangfire/) for more about cron monitoring with Hangfire.
