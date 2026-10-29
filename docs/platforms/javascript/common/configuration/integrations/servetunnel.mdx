@@ -12,7 +12,7 @@ notSupported:
 
 _Import name: `Sentry.serveTunnelIntegration`_
 
-Ad blockers often drop requests to `*.ingest.sentry.io`. This integration serves a tunnel endpoint from your app's server, so the browser SDK can send its events to your own origin instead. The server forwards them to Sentry.
+Ad blockers often drop requests to `*.ingest.sentry.io`. With a tunnel on your own origin, the browser SDK sends its events to your server instead, and your server forwards them to Sentry. This integration configures that tunnel on the server.
 
 Set it up on both sides. Add the integration to your server `Sentry.init`, and set `tunnel: true` in your browser `Sentry.init`:
 
@@ -32,29 +32,36 @@ Sentry.init({
 
 The browser and the server both derive the tunnel path from the DSN, for example `/qpo967`. You don't need a route file, a build step, or an environment variable. If your app is served under a base path, the SDK adds it on both sides.
 
-The SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, and Remix 3 SDKs serve the tunnel from their request hooks. On other servers, [serve it yourself](#serving-the-tunnel-yourself).
+The integration doesn't handle requests by itself. The SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, and Remix 3 SDKs serve the tunnel from their request hooks. On other servers, like Express, Fastify, Bun, Deno, or Cloudflare Workers, [serve it yourself](#serving-the-tunnel-yourself).
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
-On Cloudflare Workers, import the integration from `@sentry/cloudflare` and add it to the options you pass to `withSentry`, `defineCloudflareOptions`, or `initCloudflareSentryHandle`:
+On Cloudflare Workers, add the integration to your Sentry options, and call `handleTunnelRequestIfMatched` at the start of your `fetch` handler:
 
 ```javascript
-import {
-  defineCloudflareOptions,
-  serveTunnelIntegration,
-} from "@sentry/cloudflare";
+import * as Sentry from "@sentry/cloudflare";
 
-export default defineCloudflareOptions((env) => ({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [serveTunnelIntegration()],
-}));
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [Sentry.serveTunnelIntegration()],
+  }),
+  {
+    async fetch(request, env, ctx) {
+      return (
+        (await Sentry.handleTunnelRequestIfMatched(request)) ??
+        new Response("Hello")
+      );
+    },
+  }
+);
 ```
 
 </PlatformSection>
 
 ## How It Works
 
-- The tunnel answers before your app's own middleware, so auth or CSRF middleware doesn't block it.
+- Framework SDKs answer tunnel requests before your app's own middleware, so auth or CSRF middleware doesn't block them. When you serve the tunnel yourself, mount it before that middleware too.
 - It only forwards envelopes whose DSN is allowed. By default, that's the server's own DSN. Other envelopes get a `403`, so the tunnel can't be used as an open proxy.
 - It forwards only the user agent, client hint, `Origin`, and `Referer` headers. Cookies and auth headers never reach Sentry. The visitor's IP address is forwarded from the `cf-connecting-ip`, `x-vercel-forwarded-for`, or `x-forwarded-for` header.
 - Tunnel requests don't create server spans.
