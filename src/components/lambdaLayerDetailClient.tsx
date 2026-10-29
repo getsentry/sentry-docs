@@ -295,7 +295,9 @@ const SelectionField = styled('div')`
     z-index: 1;
   }
 
-  /* react-select ships light-only colors; map them to the site's dark theme. */
+  /* react-select defaults to white control and menu backgrounds and dark text
+     (https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/Control.tsx#L55,
+     .../SingleValue.tsx#L46); map them to the site's dark theme. */
   .dark & {
     .layer-select__control {
       background-color: var(--gray-a2);
