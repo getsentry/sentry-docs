@@ -5,7 +5,7 @@ description: Learn about Sentry's .NET integration with Entity Framework.
 og_image: /og-images/platforms-dotnet-guides-entityframework.png
 ---
 
-Sentry provides an integration with `EntityFramework` through the of the [Sentry.EntityFramework NuGet package](https://www.nuget.org/packages/Sentry.EntityFramework).
+Sentry provides an integration with Entity Framework 6 through the [Sentry.EntityFramework NuGet package](https://www.nuget.org/packages/Sentry.EntityFramework).
 
 > Looking for `EntityFramework Core`? If you're targeting .NET Core 3.1 or newer, that's already built in to the main Sentry .NET SDK. It's also enabled by default for our ASP.NET or ASP.NET Core integrations, even for older targets. For other scenarios, you may need to add the `Sentry.DiagnosticSource` package and call `AddDiagnosticSourceIntegration`, [as described here](/platforms/dotnet/tracing/instrumentation/automatic-instrumentation/#diagnosticsource-integration). (The rest of this page describes our EF6 integration, not EFCore.)
 
@@ -40,7 +40,15 @@ Add the Entity Framework 6 support to your project in one step:
 
 ### Example configuration
 
-For example, configuring an ASP.NET app with _global.asax_:
+The following example configures an ASP.NET application in `Global.asax.cs`. In addition to `Sentry.EntityFramework`, install [Sentry.AspNet](/platforms/dotnet/guides/aspnet/), which provides request context, request-scoped data, and the HTTP transaction helpers used here:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.AspNet -Version {{@inject packages.version('sentry.dotnet.aspnet') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.AspNet -v {{@inject packages.version('sentry.dotnet.aspnet') }}
+```
 
 The snippet also turns on:
 
@@ -48,14 +56,15 @@ The snippet also turns on:
 
 Don't need a feature? Remove its options from the snippet.
 
-```csharp {filename:global.asax}
+```csharp {filename:Global.asax.cs}
 using System;
 using System.Configuration;
+using Sentry;
 using Sentry.AspNet;
 
 public class MvcApplication : System.Web.HttpApplication
 {
-    private IDisposable _sentrySdk;
+    private static IDisposable _sentrySdk;
 
     protected void Application_Start()
     {
@@ -69,7 +78,7 @@ public class MvcApplication : System.Web.HttpApplication
             // Set to 1.0 to capture 100% of spans for tracing.
             // We recommend reducing this value in production.
             options.TracesSampleRate = 1.0;
-            // Add the EntityFramework integration
+            options.AddAspNet();
             options.AddEntityFramework();
         });
     }
@@ -85,10 +94,9 @@ public class MvcApplication : System.Web.HttpApplication
     {
         Context.FinishSentryTransaction();
     }
-    public override void Dispose()
+    protected void Application_End()
     {
-        _sentrySdk.Dispose();
-        base.Dispose();
+        _sentrySdk?.Dispose();
     }
 }
 ```
@@ -127,11 +135,11 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 ### View Captured Data in Sentry
 
-Open your Sentry project to view the captured event.
+<PlatformContent includePath="getting-started-verify-data" />
 
 ## Sample
 
-Check out a complete working [sample](https://github.com/getsentry/sentry-dotnet-ef/tree/master/samples/Sentry.Samples.AspNet.Mvc) to see it in action.
+See the [Entity Framework sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.EntityFramework) for a standalone application using this integration.
 
 ![Sample breadcrumbs in Sentry](./img/dotnet-entityframework.png)
 

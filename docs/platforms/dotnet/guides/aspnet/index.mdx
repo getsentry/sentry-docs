@@ -37,16 +37,15 @@ The snippet also turns on:
 
 Don't need a feature? Remove its options from the snippet.
 
-```csharp
+```csharp {filename:Global.asax.cs}
 using System;
 using System.Web;
+using Sentry;
 using Sentry.AspNet;
-using Sentry.EntityFramework; // If you also installed Sentry.EntityFramework
-using Sentry.Extensibility;
 
 public class MvcApplication : HttpApplication
 {
-    private IDisposable _sentry;
+    private static IDisposable _sentry;
 
     protected void Application_Start()
     {
@@ -64,8 +63,6 @@ public class MvcApplication : HttpApplication
             // We recommend reducing this value in production.
             options.TracesSampleRate = 1.0;
 
-            // If you also installed the Sentry.EntityFramework package
-            options.AddEntityFramework();
             options.AddAspNet();
         });
     }
@@ -90,6 +87,8 @@ public class MvcApplication : HttpApplication
 }
 ```
 
+If you also use Entity Framework 6, install `Sentry.EntityFramework` and add `options.AddEntityFramework()` to the same initialization callback. See the [Entity Framework guide](/platforms/dotnet/guides/entityframework/) for setup details.
+
 ### Capturing the affected user
 
 When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
@@ -104,7 +103,7 @@ options.SendDefaultPii = true;
 
 ### SendDefaultPii
 
-Although this setting is part of the [Sentry](/platforms/dotnet/) package, in the context of ASP.NET Core, it means reporting the user by reading the frameworks `HttpContext.User`. The strategy to create the `SentryUser` can be customized.
+Although this setting is part of the [Sentry](/platforms/dotnet/) package, in ASP.NET it also enables reporting the user from `HttpContext.User`.
 
 ### IncludeRequestPayload
 
@@ -151,7 +150,7 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 ### View Captured Data in Sentry
 
-Open your Sentry project to view the captured event.
+<PlatformContent includePath="getting-started-verify-data" />
 
 ## Troubleshooting
 
