@@ -18,43 +18,97 @@ Support for [visionOS](https://developer.apple.com/visionos/) is experimental an
 
 </PlatformSection>
 
+## Prerequisites
+
+The examples below use Sentry Cocoa SDK 9.27.0 or later. Minimum OS versions for SDK 9.25.0 and later are:
+
+<PlatformSection supported={["apple.ios"]}>
+
+- iOS 15.0
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.macos"]}>
+
+- macOS 12.0
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.tvos"]}>
+
+- tvOS 15.0
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.visionos"]}>
+
+- visionOS 1.0
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.watchos"]}>
+
+- watchOS 9.0
+
+</PlatformSection>
+
+If your app supports older OS versions, use a compatible earlier SDK release. See the <PlatformLink to="/migration/">migration guides</PlatformLink> for version-specific requirements.
+
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Sentry captures data by using an SDK within your application's runtime. We recommend installing the SDK with Swift Package Manager (SPM). In Xcode, open **File > Add Packages**, then enter this repository URL:
-
-```
-https://github.com/getsentry/sentry-cocoa.git
-```
+Sentry captures data by using an SDK within your application's runtime. We recommend installing the SDK with Swift Package Manager (SPM).
 
 <PlatformSection supported={["apple.ios"]}>
 
-For iOS, you can install and configure the SDK with the [Sentry Wizard](https://github.com/getsentry/sentry-wizard). Run this command from your project directory:
+### Automatic Install
+
+The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) installs the SDK and adds an initial configuration. Run this command from your project directory:
 
 ```bash
 brew install getsentry/tools/sentry-wizard && sentry-wizard -i ios
 ```
 
-The wizard patches your project with the SDK configuration and adds the patched files to your version control. To set up the SDK manually, see <PlatformLink to="/manual-setup/">Manual Setup</PlatformLink> or continue below.
+Review and commit the files the wizard modifies.
 
 <Expandable title="The following tasks will be performed by the Sentry Wizard">
 
 - Install the Sentry SDK with Swift Package Manager
-- Update your `AppDelegate` or SwiftUI app initializer with the default Sentry configuration and an example error
-- Add an `Upload Debug Symbols` phase to your `xcodebuild` build script
+- Update your `AppDelegate` or SwiftUI app initializer with the initial Sentry configuration and an example message
+- Add an `Upload Debug Symbols` build phase to your Xcode target
 - Create `.sentryclirc` with an auth token for uploading debug symbols (the file is added to `.gitignore`)
 - Add a Fastlane lane for uploading debug symbols if you're using Fastlane
 
 </Expandable>
 
+**Return to this guide after running the wizard to complete setup.** The wizard doesn't configure Session Replay, instrument your SwiftUI views, or add application-specific logs and metrics.
+
+Continue with [Configure](#configure), merge the settings into the existing `SentrySDK.start` call, and follow the remaining steps to send and verify your data.
+
+Wizard 9.0.0 also needs these corrections when used with the SDK versions in this guide:
+
+- Remove `options.experimental.enableLogs` if the wizard adds it. SDK 9.27.0+ sends logs through `SentrySDK.logger` without an enable flag.
+- In Objective-C, replace `SentryProfilingLifecycleTrace` with `SentryProfileLifecycleTrace`.
+
+### Manual Install
+
+To install without the wizard, follow the SPM instructions below. If you used the wizard, skip to [Configure](#configure). For more detail, see <PlatformLink to="/manual-setup/">Manual Setup</PlatformLink>.
+
 </PlatformSection>
 
-<PlatformSection notSupported={["apple.ios"]}>
+In Xcode, open **File > Add Package Dependencies**, then enter this repository URL:
 
-To use another installation method, see <PlatformLink to="/install/">the installation options</PlatformLink>.
+```
+https://github.com/getsentry/sentry-cocoa.git
+```
 
-</PlatformSection>
+Select a compatible SDK version and add **one** SDK product to your application target:
+
+- **SentrySPM** builds the SDK from source and is the recommended choice.
+- **Sentry** uses the prebuilt static framework.
+
+Both products use `import Sentry`. See <PlatformLink to="/install/swift-package-manager/">Swift Package Manager</PlatformLink> for other products, or <PlatformLink to="/install/">the installation options</PlatformLink> for other installation methods.
 
 ## Configure
 
@@ -72,40 +126,43 @@ On watchOS, Error Monitoring captures handled errors; crash detection isn't avai
 
 <PlatformSection supported={["apple.ios"]}>
 
-This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **Logs**. Logs require an explicit option; see [Send Logs](#send-logs).
+This guide also configures **Tracing**, **Profiling**, and **Session Replay**, and shows you how to send **Logs**.
 
 </PlatformSection>
 
 <PlatformSection supported={["apple.macos"]}>
 
-This guide also enables **Tracing**, **Profiling**, and **Logs**. Logs require an explicit option; see [Send Logs](#send-logs).
+This guide also configures **Tracing** and **Profiling**, and shows you how to send **Logs**.
 
 </PlatformSection>
 
 <PlatformSection supported={["apple.tvos", "apple.visionos"]}>
 
-This guide also enables **Tracing** and **Logs**. Logs require an explicit option; see [Send Logs](#send-logs).
+This guide also configures **Tracing** and shows you how to send **Logs**.
 
 </PlatformSection>
 
 <PlatformSection supported={["apple.watchos"]}>
 
-This guide also enables **Tracing**. Logs capturing isn't available on watchOS; see the <PlatformLink to="/features/">watchOS feature limitations</PlatformLink>.
+This guide also configures **Tracing** and shows you how to send **Logs**. See the <PlatformLink to="/features/">watchOS feature limitations</PlatformLink> for other platform restrictions.
 
 </PlatformSection>
 
-**Application Metrics** are enabled by default and don't need extra configuration. See [Send Application Metrics](#send-application-metrics-) to use them.
+**Application Metrics** are enabled by default, but aren't collected automatically. See [Send Application Metrics](#send-application-metrics-) to record your own metrics.
 
 The snippets set `sendDefaultPii` to include IP addresses. Remove that option if you don't want to send this data. Remove other options for features you don't need.
+
+Initialize the SDK **on the main thread**, as early as possible. Set `debug` to `false` or remove it after setup, and reduce sampling rates before using the configuration in production.
 
 <PlatformSection supported={["apple.ios"]}>
 
 ### Initialize the SDK
 
-To capture errors, initialize the SDK as early as possible, such as in your app delegate's `application(_:didFinishLaunchingWithOptions:)` method or your SwiftUI `App` initializer. Session Replay is available on iOS 16+ with Sentry Cocoa SDK 8.31.1+; UI Profiling requires SDK 8.49.0+.
+Initialize the SDK in your app delegate's `application(_:didFinishLaunchingWithOptions:)` method or your SwiftUI `App` initializer. Session Replay requires Sentry Cocoa SDK 8.31.1+ and supports the iOS versions supported by that SDK; it doesn't require iOS 16. UI Profiling requires SDK 8.49.0+.
 
 ```swift {tabTitle:Swift} {mdExpandTabs}
 import Sentry
+import UIKit
 
 func application(_ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -126,9 +183,6 @@ func application(_ application: UIApplication,
         // Enable Session Replay.
         options.sessionReplay.onErrorSampleRate = 1.0
         options.sessionReplay.sessionSampleRate = 0.1
-
-        // Enable Logs.
-        options.enableLogs = true
     }
     return true
 }
@@ -155,9 +209,6 @@ func application(_ application: UIApplication,
         // Enable Session Replay.
         options.sessionReplay.onErrorSampleRate = 1.0;
         options.sessionReplay.sessionSampleRate = 0.1;
-
-        // Enable Logs.
-        options.enableLogs = YES;
     }];
     return YES;
 }
@@ -165,6 +216,7 @@ func application(_ application: UIApplication,
 
 ```swift {tabTitle:SwiftUI with App conformer}
 import Sentry
+import SwiftUI
 
 @main
 struct ExampleApp: App {
@@ -180,11 +232,20 @@ struct ExampleApp: App {
             }
             options.sessionReplay.onErrorSampleRate = 1.0
             options.sessionReplay.sessionSampleRate = 0.1
-            options.enableLogs = true
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            SentryTracedView("Home") {
+                Text("Hello, world!")
+            }
         }
     }
 }
 ```
+
+For SwiftUI, keep your existing app content inside `WindowGroup` and wrap the views you want to measure with `SentryTracedView`, as shown above. See <PlatformLink to="/tracing/instrumentation/swiftui-instrumentation/">SwiftUI Instrumentation</PlatformLink> for more options.
 
 </PlatformSection>
 
@@ -192,7 +253,7 @@ struct ExampleApp: App {
 
 ### Initialize the SDK
 
-Initialize the SDK as early as possible when your application starts. The snippet enables Tracing, Profiling, and Logs. UI Profiling requires Sentry Cocoa SDK 8.49.0+. macOS doesn't support Session Replay.
+Initialize the SDK in your app delegate's `applicationDidFinishLaunching(_:)` method or your SwiftUI `App` initializer. The snippet configures Tracing and Profiling. UI Profiling requires Sentry Cocoa SDK 8.49.0+. macOS doesn't support Session Replay.
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -211,9 +272,6 @@ SentrySDK.start { options in
         $0.lifecycle = .trace
         $0.sessionSampleRate = 1.0
     }
-
-    // Enable Logs.
-    options.enableLogs = true
 }
 ```
 
@@ -230,11 +288,12 @@ SentrySDK.start { options in
         profiling.lifecycle = SentryProfileLifecycleTrace;
         profiling.sessionSampleRate = 1.0;
     };
-    options.enableLogs = YES;
 }];
 ```
 
-On macOS, the SDK can't capture uncaught exceptions without additional configuration. The snippets enable `enableUncaughtNSExceptionReporting`. For other options, see <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink>.
+On macOS, the SDK can't capture uncaught exceptions without additional configuration. The snippets enable `enableUncaughtNSExceptionReporting`, which also sets `NSApplicationCrashOnExceptions` so the app crashes on an uncaught exception.
+
+Don't combine this option with `SentryCrashExceptionApplication`, which can cause duplicate reports. See <PlatformLink to="/usage/#capturing-uncaught-exceptions">capturing uncaught exceptions</PlatformLink> for details.
 
 </PlatformSection>
 
@@ -242,16 +301,17 @@ On macOS, the SDK can't capture uncaught exceptions without additional configura
 
 ### Initialize the SDK
 
-Initialize the SDK as early as possible, such as in your app delegate's `application(_:didFinishLaunchingWithOptions:)` method. The snippets enable Tracing and Logs. Profiling isn't available on tvOS or visionOS.
+Initialize the SDK in your app delegate's `application(_:didFinishLaunchingWithOptions:)` method or your SwiftUI `App` initializer. The snippets configure Tracing. Profiling isn't available on tvOS or visionOS.
 
 <PlatformSection supported={["apple.tvos"]}>
 
-Session Replay may run on tvOS 16+, but it's only officially supported on iOS. This guide doesn't configure it on tvOS.
+Session Replay may run on tvOS, but it's only officially supported on iOS. This guide doesn't configure it on tvOS.
 
 </PlatformSection>
 
 ```swift {tabTitle:Swift} {mdExpandTabs}
 import Sentry
+import UIKit
 
 func application(_ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -260,7 +320,6 @@ func application(_ application: UIApplication,
         options.debug = true
         options.sendDefaultPii = true
         options.tracesSampleRate = 1.0
-        options.enableLogs = true
     }
     return true
 }
@@ -275,7 +334,6 @@ func application(_ application: UIApplication,
         options.debug = YES;
         options.sendDefaultPii = YES;
         options.tracesSampleRate = @1.0;
-        options.enableLogs = YES;
     }];
     return YES;
 }
@@ -287,7 +345,7 @@ func application(_ application: UIApplication,
 
 ### Initialize the SDK
 
-Initialize the SDK in your `WKExtensionDelegate.applicationDidFinishLaunching` method. This snippet enables Tracing.
+Initialize the SDK in your `WKExtensionDelegate.applicationDidFinishLaunching` method or your SwiftUI `App` initializer. This snippet configures Tracing.
 
 ```swift
 import Sentry
@@ -306,13 +364,53 @@ func applicationDidFinishLaunching() {
 
 </PlatformSection>
 
-<PlatformSection supported={["apple.ios", "apple.macos", "apple.tvos", "apple.visionos"]}>
+### Send a Test Trace
+
+Sampling settings determine which transactions to send; they don't create transactions. Start a transaction around an operation in your app and finish it when the operation completes:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+let transaction = SentrySDK.startTransaction(
+    name: "Example Operation",
+    operation: "task",
+    bindToScope: true
+)
+
+// Perform the operation you want to measure.
+
+transaction.finish()
+```
+
+```objc {tabTitle:Objective-C}
+id<SentrySpan> transaction = [SentrySDK startTransactionWithName:@"Example Operation"
+                                                    operation:@"task"
+                                                  bindToScope:YES];
+
+// Perform the operation you want to measure.
+
+[transaction finish];
+```
+
+For asynchronous work, finish the transaction in the completion handler. Binding a transaction to the scope lets automatic instrumentation, such as HTTP tracing, attach child spans to it.
+
+<PlatformSection supported={["apple.macos", "apple.watchos"]}>
+
+macOS and watchOS don't automatically create UIKit screen-load or app-start transactions. Add transactions around operations you want to measure, as shown above, or instrument your views with <PlatformLink to="/tracing/instrumentation/swiftui-instrumentation/">SwiftUI Instrumentation</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.ios", "apple.macos"]}>
+
+With the `.trace` profiling lifecycle used above, profiling runs while sampled root spans are active. Configure and start a transaction to collect profiles; setting a profile sample rate alone doesn't start the profiler. See <PlatformLink to="/profiling/">Set Up Apple Profiling</PlatformLink> for other lifecycles.
+
+</PlatformSection>
 
 ## Send Logs
 
-Logs for Apple platforms require Sentry Cocoa SDK 8.55.0 or later. Starting with version 9.0.0, set `options.enableLogs = true` in the SDK initialization snippet above. For earlier versions, use `options.experimental.enableLogs = true` instead. See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all logging methods and options.
+Use `SentrySDK.logger` after initializing the SDK to send logs on all supported Apple platforms, including watchOS. In SDK 9.27.0+, these calls don't require an enable flag.
 
-```swift {tabTitle:Swift}
+For SDK 9.0.0–9.26.x, set `options.enableLogs = true` during initialization. For SDK 8.55.0–8.x, use `options.experimental.enableLogs = true`. See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for logging methods and options.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
 SentrySDK.logger.info("User example action completed")
 
 SentrySDK.logger.warn("Slow operation detected", attributes: [
@@ -330,11 +428,13 @@ SentryLogger *logger = SentrySDK.logger;
 }];
 ```
 
-</PlatformSection>
+To stop sending logs, remove the logging calls or filter them with <PlatformLink to="/logs/#beforesendlog">`beforeSendLog`</PlatformLink>. In SDK 9.27.0+, setting `enableLogs` to `false` doesn't drop logs sent through this API.
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Application Metrics are enabled by default. In Sentry Cocoa SDK 9.12.0 and later, use `SentrySDK.metrics` to send counters, gauges, and distributions. Metrics were experimental in versions 9.4.0–9.11.x. The metrics API is currently Swift-only. See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for details.
+Application Metrics are enabled by default, but you must record them explicitly. In Sentry Cocoa SDK 9.12.0 and later, use `SentrySDK.metrics` to send counters, gauges, and distributions. Metrics were experimental in versions 9.2.0–9.11.x.
+
+`SentrySDK.metrics` is a Swift API. Objective-C projects can use `SentryObjCSDK.metrics` through the separate `SentryObjC` integration, available since SDK 9.16.0. See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for usage and filtering options.
 
 ```swift {tabTitle:Swift}
 SentrySDK.metrics.count(key: "checkout.failed", value: 1)
@@ -349,11 +449,24 @@ SentrySDK.metrics.distribution(
 )
 ```
 
+## Upload Debug Symbols
+
+Upload your app's debug symbols (dSYMs) so Sentry can show function names and source locations in stack traces. Follow <PlatformLink to="/dsym/">Uploading Debug Symbols</PlatformLink> to configure uploads for your builds.
+
+<PlatformSection supported={["apple.ios"]}>
+
+If you used the wizard, it already added an upload build phase. Check that uploads succeed, and set `SENTRY_AUTH_TOKEN` in your CI environment so CI builds can upload symbols too.
+
+</PlatformSection>
+
 ## Verify Your Setup
 
-Capture a test error to confirm that your app is sending events to Sentry. You should see it in your project within a few minutes.
+Capture a handled test error after initializing the SDK. You should see it in your Sentry project's Issues page within a few minutes.
 
-```swift {tabTitle:Swift}
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Foundation
+import Sentry
+
 SentrySDK.capture(error: NSError(domain: "SentryTest", code: 1))
 ```
 
@@ -361,11 +474,19 @@ SentrySDK.capture(error: NSError(domain: "SentryTest", code: 1))
 [SentrySDK captureError:[NSError errorWithDomain:@"SentryTest" code:1 userInfo:nil]];
 ```
 
+<PlatformSection notSupported={["apple.watchos"]}>
+
+This verifies handled-error delivery. To test crash reporting, run your app **without a debugger attached**, trigger a test crash, then relaunch the app so the SDK can send the report. See <PlatformLink to="/usage/">Capturing Errors</PlatformLink> for more ways to capture events.
+
+</PlatformSection>
+
 ## Next Steps
 
 At this point, you've integrated Sentry into your Apple application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/dsym/">Add readable stack traces to errors</PlatformLink>
+- <PlatformLink to="/features/">
+    Explore the SDK's features and platform limitations
+  </PlatformLink>
 
 </StepConnector>

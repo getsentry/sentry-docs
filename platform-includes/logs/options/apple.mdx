@@ -4,7 +4,7 @@ To filter logs, or update them before they are sent to Sentry, you can use the `
 
 <Alert>
 
-Starting with version 9.0.0, structured logging is no longer experimental. The option moved from `options.experimental.enableLogs` to `options.enableLogs`.
+In SDK 9.27.0+, manual logging doesn't require an enable flag. To drop logs, return `nil` from `beforeSendLog`; setting `enableLogs` to `false` doesn't drop them. For older SDKs, also enable logging as described in [Setup](#setup).
 
 </Alert>
 
@@ -13,7 +13,6 @@ import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableLogs = true
 
     options.beforeSendLog = { log in
         if log.level == .info {
@@ -30,7 +29,6 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.enableLogs = YES;
 
     options.beforeSendLog = ^SentryLog* (SentryLog *log) {
         if (log.level == SentryLogLevelInfo) {
@@ -47,61 +45,10 @@ SentrySDK.start { options in
 
 [SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.enableLogs = YES;
 
-    options.beforeSendLog = ^SentryLog* (SentryLog *log) {
-        if (log.level == SentryLogLevelInfo) {
+    options.beforeSendLog = ^SentryObjCLog* (SentryObjCLog *log) {
+        if (log.level == SentryObjCLogLevelInfo) {
             // Filter out all info logs
-            return nil;
-        }
-        return log;
-    };
-}];
-```
-
-Before 9.0.0:
-
-```swift {tabTitle:Swift}
-import Sentry
-
-SentrySDK.start { options in
-    options.dsn = "___PUBLIC_DSN___"
-    options.experimental.enableLogs = true
-
-    options.beforeSendLog = { log in
-        if log.level == .info {
-            return nil
-        }
-        return log
-    }
-}
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-    options.experimental.enableLogs = YES;
-
-    options.beforeSendLog = ^SentryLog* (SentryLog *log) {
-        if (log.level == SentryLogLevelInfo) {
-            return nil;
-        }
-        return log;
-    };
-}];
-```
-
-```objc {tabTitle:Objective-C (SentryObjC)}
-#import <SentryObjC/SentryObjC.h>
-
-[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-    options.experimental.enableLogs = YES;
-
-    options.beforeSendLog = ^SentryLog* (SentryLog *log) {
-        if (log.level == SentryLogLevelInfo) {
             return nil;
         }
         return log;
