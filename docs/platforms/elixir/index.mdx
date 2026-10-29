@@ -1,6 +1,6 @@
 ---
 title: Elixir
-description: Sentry's Elixir SDK enables automatic reporting of errors, exceptions and messages. You can also use it to monitor your cron jobs.
+description: "Learn how to set up Sentry's Elixir SDK for error monitoring, logs, metrics, tracing, and crons."
 sdk: sentry.elixir
 caseStyle: snake_case
 supportLevel: production
@@ -11,39 +11,146 @@ categories:
 
 <AgentSetupCallout skill="sentry-elixir-sdk" platformName="Elixir" />
 
-On this page, we get you up and running with Sentry's SDK.
+On this page, we get you up and running with Sentry's Elixir SDK.
 
 <Alert>
-  You don't have an account and Sentry project established? Head over to
-  [sentry.io](https://sentry.io/signup/), then return to this page.
+
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
 </Alert>
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
+Add `:sentry` and its dependencies to your `mix.exs` file. The OpenTelemetry packages are only needed for tracing:
 
-<PlatformContent includePath="getting-started-install" />
+```elixir {filename:mix.exs}
+defp deps do
+  [
+    # ...
+    {:sentry, "~> {{@inject packages.version('sentry.elixir') }}"},
+    {:jason, "~> 1.1"},
+
+    # Sentry's default HTTP client
+    {:finch, "~> 0.21"},
+
+    # OpenTelemetry packages for Tracing
+    {:opentelemetry, "~> 1.7"},
+    {:opentelemetry_api, "~> 1.5"},
+    {:opentelemetry_exporter, "~> 1.10"},
+    {:opentelemetry_semantic_conventions, "~> 1.27"}
+  ]
+end
+```
+
+Then run `mix deps.get` to fetch the new dependencies.
 
 ## Configure
 
-Configuration should happen as early as possible in your application's lifecycle.
+**Error Monitoring** starts working as soon as the `:sentry` application starts with a DSN. **Logs** are turned on by the `:logs` option in the snippet below, and **Application Metrics** are always on. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing** (Beta). You can monitor scheduled jobs with **Crons** after you finish this guide.
 
-<PlatformContent includePath="getting-started-config" />
+Add your Sentry configuration to `config/config.exs`. Configuration should happen as early as possible in your application's lifecycle.
 
-## Verify
+The snippet also turns on:
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+- Tracing (Beta): via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>, plus the OpenTelemetry span processor and sampler that send spans to Sentry. Tracing requires SDK version 11.0.0 or later.
+- Logs: via the <PlatformLink to="/logs/#logs-configuration">`:logs`</PlatformLink> option. Setting `:level` sends `Logger` messages at or above that level to Sentry as logs. This configuration requires SDK version 14.0.0 or later.
+- Source code context: via `enable_source_code_context` and `root_source_code_paths`, which add the surrounding source code to stack traces.
 
-<PlatformContent includePath="getting-started-verify" />
+Don't need a feature? Remove its options from the snippet.
 
-<Alert>
+```elixir {filename:config/config.exs}
+config :sentry,
+  dsn: "___PUBLIC_DSN___",
+  environment_name: config_env(),
+  enable_source_code_context: true,
+  root_source_code_paths: [File.cwd!()],
+  # Enables Tracing.
+  # Set to 1.0 to capture 100% of spans for tracing.
+  # We recommend reducing this value in production.
+  traces_sample_rate: 1.0,
+  # Enables Logs at or above the :info level.
+  logs: [level: :info]
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+# Sends OpenTelemetry spans to Sentry. Required for Tracing.
+config :opentelemetry, span_processor: {Sentry.OpenTelemetry.SpanProcessor, []}
 
-</Alert>
+config :opentelemetry, sampler: {Sentry.OpenTelemetry.Sampler, []}
+```
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+### Add Tracing Instrumentation
+
+The snippet above sends OpenTelemetry spans to Sentry. To create spans for your web requests and database queries, add OpenTelemetry instrumentation libraries such as `opentelemetry_phoenix`, `opentelemetry_bandit`, and `opentelemetry_ecto`, then set them up in your application's `start/2` callback.
+
+See <PlatformLink to="/tracing/">Set Up Tracing</PlatformLink> for the full Phoenix, LiveView, and Ecto setup and for distributed tracing.
+
+### Add Integrations
+
+Integrations capture errors and add context from the libraries your application uses. If you're using one of these libraries, set up its integration:
+
+- [Plug and Phoenix](/platforms/elixir/integrations/plug_and_phoenix/)
+- [Oban](/platforms/elixir/integrations/oban/)
+- [Quantum](/platforms/elixir/integrations/quantum/)
+
+## Send Logs
+
+With `:level` set under `:logs`, the SDK automatically attaches `Sentry.LoggerHandler`, so you can send logs using Elixir's standard `Logger` module. Logs at or above the configured level are sent to Sentry. Logs are supported in SDK version 12.0.0 and later, and the `logs: [level: ...]` configuration requires version 14.0.0 or later.
+
+To send `Logger` metadata as log attributes, list the keys in the `:metadata` option under `:logs`.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all configuration options and message templates.
+
+```elixir
+require Logger
+
+Logger.info("Updated global cache")
+
+Logger.warning("Rate limit reached for endpoint", endpoint: "/api/results/")
+
+Logger.error("Failed to process payment", order_id: "or_2342", amount: 99.99)
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use the `Sentry.Metrics` module to send counters, gauges, and distributions. Metrics are supported in SDK version 13.0.0 and later and are always on, so they need no extra configuration. To stop sending them, drop them in a <PlatformLink to="/metrics/#before_send_metric">`before_send_metric`</PlatformLink> callback.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```elixir
+Sentry.Metrics.count("button_click", 5, attributes: %{browser: "Firefox"})
+
+Sentry.Metrics.gauge("page_load", 15.0, unit: "millisecond")
+
+Sentry.Metrics.distribution(
+  "page_load",
+  15.0,
+  unit: "millisecond",
+  attributes: %{page: "/home"}
+)
+```
+
+## Verify Your Setup
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
+
+```elixir
+try do
+  raise "This is a test!"
+rescue
+  exception ->
+    Sentry.capture_exception(exception, stacktrace: __STACKTRACE__)
+end
+```
+
+### View Captured Data in Sentry
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Elixir application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to [manually capture errors and messages](/platforms/elixir/usage/).
+- [Set up Crons](/platforms/elixir/crons/) to monitor your scheduled jobs.
+- [Collect user feedback](/platforms/elixir/user-feedback/) when an error occurs.
