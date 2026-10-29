@@ -228,7 +228,7 @@ You can work around our CDN bundles being blocked by [using our NPM packages](#u
 
 <AvailableSince version="11.10.0" />
 
-The SDK can serve the tunnel for you. Set `tunnel: true` in your browser `Sentry.init`, and add `serveTunnelIntegration` to your server `Sentry.init`:
+Set `tunnel: true` in your browser `Sentry.init`, and add `serveTunnelIntegration` to your server `Sentry.init`:
 
 ```javascript {tabTitle:Browser}
 Sentry.init({
@@ -246,13 +246,35 @@ Sentry.init({
 
 The browser then sends its events to a path on your own origin derived from the DSN, and your server forwards them to Sentry.
 
-The SvelteKit, Nuxt, Nitro, Astro, React Router (framework mode), TanStack Start, and Remix 3 SDKs serve the tunnel for you and read your app's base path from your framework config. On other servers, like Express, mount `handleTunnelRequestIfMatched` before your routes and body parsers:
+<PlatformSection supported={["javascript.sveltekit", "javascript.nuxt", "javascript.nitro", "javascript.astro", "javascript.tanstackstart-react"]}>
+
+The SDK serves the tunnel for you and reads your app's base path from your framework config.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.react-router"]}>
+
+In framework mode, the SDK serves the tunnel for you and reads your app's base path from your framework config. In other modes, see <PlatformLink to="/configuration/integrations/servetunnel/#serving-the-tunnel-yourself">Serving the Tunnel Yourself</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.remix"]}>
+
+On Remix 3, the SDK serves the tunnel for you and reads your app's base path from your framework config. On earlier versions, see <PlatformLink to="/configuration/integrations/servetunnel/#serving-the-tunnel-yourself">Serving the Tunnel Yourself</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.sveltekit", "javascript.nuxt", "javascript.nitro", "javascript.astro", "javascript.tanstackstart-react", "javascript.react-router", "javascript.remix"]}>
+
+The integration doesn't handle requests by itself. Mount `handleTunnelRequestIfMatched` on your server, before your routes and body parsers:
 
 ```javascript {filename:Server}
 app.use(
   (req, res, next) => Sentry.handleTunnelRequestIfMatched(req, res) ?? next()
 );
 ```
+
+</PlatformSection>
 
 <PlatformCategorySection supported={["server"]}>
 
