@@ -1,0 +1,134 @@
+---
+title: Resumable Uploads
+---
+
+<Alert level="warning">
+  The upload endpoint is an experimental feature which requires the `projects:resumable-uploads` feature flag to be enabled.
+</Alert>
+
+For attachments larger than ~100 MiB, SDKs **SHOULD** use the resumable upload endpoint.
+This allows the client to upload attachments that are much larger than what the envelope endpoint currently allows, and to resume an upload when the stream got interrupted. The endpoint is based on the [tus resumable upload protocol](https://tus.io/protocols/resumable-upload).
+
+## Workflow
+
+1. Create the upload to receive a pre-signed URL to the assigned upload location:
+
+    ```shell
+    curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
+      --header "Tus-Resumable: 1.0.0" \
+      --header "Upload-Length: ${FILE_SIZE}" \
+      --header "Upload-Metadata: sentry $(echo -n '{"attachment_type":"event.attachment"}' | base64)"
+    ```
+
+    The `Upload-Length` header **MUST** be specified. Sentry does not support the [`creation-defer-length` extension](https://tus.io/protocols/resumable-upload#post) of the tus protocol.
+
+    The `Upload-Metadata` header follows the [TUS metadata format](https://tus.io/protocols/resumable-upload#upload-metadata). Sentry recognizes a single key, `sentry`, the value of which **MUST** be the Base64 encoding of a UTF-8 JSON object describing the attachment:
+
+    ```json
+    {
+      "attachment_type": "event.attachment"
+    }
+    ```
+
+    | Field             | Type   | Required     | Description                                                        |
+    | ----------------- | ------ | ------------ | ------------------------------------------------------------------ |
+    | `attachment_type` | String | **REQUIRED** | One of the values listed in [Attachment Types](/sdk/telemetry/attachments/#attachment-types). |
+
+1. Parse response headers necessary for proceeding:
+
+    1. `Upload-Chunk-Granularity`  (bytes) - Every `PATCH` request made to location below must be a multiple of this number (except for the final request).
+    1. `Upload-Min-Chunk-Size` (bytes) - Every `PATCH` request made to location below must be at least this large (except for the final request).
+    1. `Upload-Max-Chunk-Size`  (bytes) - No `PATCH` request made to location below may be larger than this. If the file is larger than the maximum chunk size, split it into multiple requests (see `Upload-Offset` below).
+    1. `Location` (URL) - The target of subsequent `PATCH` requests.
+
+    Example response:
+
+    ```
+    HTTP/1.1 201 Created
+    Tus-Resumable: 1.0.0
+    Tus-Extension: creation
+    Upload-Chunk-Granularity: 256
+    Upload-Min-Chunk-Size: 1048576
+    Upload-Max-Chunk-Size: 1073741824
+    Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
+    ```
+
+    If the server replies with a [501 Not Implemented](https://www.rfc-editor.org/info/rfc9110/#status.501) response, the SDK **SHOULD** either fall back to submitting the attachment in an envelope (if it is [small enough](/sdk/foundations/envelopes/#size-limits)), or drop the attachment.
+
+1. Upload the first chunk:
+
+    ```shell
+    head -c 1073741824 myfile.log | \  # Take the first `Max-Chunk-Size` bytes
+    curl -X PATCH https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/ \
+      --header "Tus-Resumable: 1.0.0" \
+      --header "Content-Type: application/offset+octet-stream" \
+      --header "Upload-Offset: 0" \
+      --header "X-Decoded-Content-Length: 1073741824"
+      --data-binary @-
+    ```
+
+    The client **SHOULD** compress the request body to speed up the upload (see [Request Compression](/sdk/foundations/transport/compression/)). When it does, the `Content-Length` header refers to the compressed length of the current chunk. Therefore, the client **MUST** send the custom `X-Decoded-Content-Length` header containing the original, uncompressed length of the current chunk, to inform the storage backend about its size upfront.
+
+1. Resume the upload:
+
+    Regardless of whether the previous `PATCH` request was successful, the client **SHOULD** attempt to resume the upload if it is incomplete. If the previous response from the server reports the `Upload-Offset` header, then this is the offset in bytes from which to resume.
+
+    If the server did _not_ communicate the current server offset through the `Upload-Offset` header, or the response has been lost (for example, after a process restart), the client **MUST** make a `HEAD` request to the upload location to retrieve the current state:
+
+    ```shell
+    curl -X HEAD https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
+    ```
+
+    Example response:
+
+    ```
+    HTTP/1.1 204 No Content
+    Tus-Resumable: 1.0.0
+    Upload-Offset: 1073741824
+    Cache-Control: no-store
+    ```
+
+    Plug the returned `Upload-Offset` into the next patch request to resume:
+
+    ```shell
+    tail -c 1073741825 myfile.log | \ # Skip the offset
+    curl -X PATCH https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/ \
+      --header "Tus-Resumable: 1.0.0" \
+      --header "Content-Type: application/offset+octet-stream" \
+      --header "Upload-Offset: 1073741824" \
+      --header "X-Decoded-Content-Length: 2345256" \ # remaining file size
+      --data-binary @-
+    ```
+
+1. Finalize the upload:
+
+    Once the total number of uploaded bytes matches the `Upload-Length` that was announced in the initial `POST` request, the server returns the **final** location of the upload in the `Location` response header:
+
+    ```
+    HTTP/1.1 204 No Content
+    Tus-Resumable: 1.0.0
+    Upload-Offset: 1076087080
+    Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/?upload_length=1076087080&upload_signature=..."
+    ```
+
+    SDKs **MUST** use this location to attach a [placeholder item](/sdk/telemetry/attachments/#attachment-placeholders) to the event envelope. SDKs **MUST NOT** use the `Location` header from the initial `POST` request, or any intermediate request, because it may not contain all the fields needed to create a valid placeholder.
+
+## Common Error Responses
+
+This table lists some of the errors you might encounter while uploading.
+
+| Status                  | Error Text                                                                               | Solution                                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 400 Bad Request         | `Missing X-Decoded-Content-Length header`                                                | Specify the size of the request body before compression.                                                        |
+| 400 Bad Request         | `non-final chunk {chunk_length} is smaller than upload granularity {upload_granularity}` | Use chunks of at least `Upload-Min-Chunk-Size` bytes, in multiples of `Upload-Chunk-Granularity`, except for the final chunk. |
+| 409 Conflict            | `upload offset mismatch (server holds {offset} bytes)`                                   | Make a `HEAD` request to obtain the server's current state.                                                                   |
+| 413 Payload Too Large   | `Chunk of {chunk_length} bytes exceeds the remaining {remaining} bytes`                  | You are trying to upload more than you initially declared with `Upload-Length`. Cap the file or look for bugs in the counting logic. |
+| 413 Payload Too Large   | `length limit exceeded`                                                                  | The request's `Content-Length` exceeds the server's request body size limit. Send smaller chunks.                             |
+| 413 Payload Too Large   | _empty response_                                                                         | Split your file into smaller chunks.                                                                                          |
+| 501 Not Implemented     | `upload error: resumable upload declined`                                                | Send the attachment in an envelope instead, or drop it if it is too large.                                                    |
+| 503 Service Unavailable |                                                                                          | Retry.                                                                                                                        |
+| 504 Gateway Timeout     |                                                                                          | Retry.                                                                                                                        |
+
+## Compression
+
+The byte sizes in the headers refer to the request body _before_ compression, that is, before applying any form of `Content-Encoding`. This applies to `Upload-Chunk-Granularity`, `Upload-Min-Chunk-Size`, `Upload-Max-Chunk-Size` and `Upload-Offset`. The server interprets `Content-Encoding` on a `PATCH` request as a self-contained transport optimization that only concerns the current request in isolation, not the full upload.

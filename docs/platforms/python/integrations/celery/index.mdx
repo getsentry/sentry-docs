@@ -11,8 +11,12 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - Your application up and running
-- Celery `4.4.7+`
-- Python `3.6+`
+- Celery:
+  - `4.4.7+` (SDK &lt;3.0)
+  - `5.0.0+` (SDK 3.0+)
+- Python:
+  - `3.6+` (SDK &lt;3.0)
+  - `3.7+` (SDK 3.0+)
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -63,9 +67,10 @@ app = Celery("tasks", broker="...")
 def init_sentry(**_kwargs):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        # Add request headers and IP for users,
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
+        # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+        data_collection={
+            "queues": True,
+        },
         # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
@@ -102,9 +107,10 @@ def main():
     # Initializing Sentry SDK in our process
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        # Add data like request headers and IP for users, if applicable;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
+        # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+        data_collection={
+            "queues": True,
+        },
         # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
@@ -154,10 +160,6 @@ Distributed tracing extends the trace from the code running your Celery task to 
 
 You can disable this globally with the `propagate_traces` option, documented in the [options](#options) below. If you set `propagate_traces` to `False`, all Celery tasks will start their own trace.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you want to have more fine-grained control over trace distribution, you can override the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
 
 <Alert>
@@ -165,9 +167,6 @@ If you want to have more fine-grained control over trace distribution, you can o
 The `CeleryIntegration` does not utilize the `traces_sample_rate` config option for deciding if a trace should be propagated into a Celery task.
 
 </Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
 import sentry_sdk
@@ -199,18 +198,6 @@ my_task_b.apply_async(
 # Note: overriding the tracing behaviour using `task_x.delay()` is not possible.
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<Alert level="warning" title="Note on distributed tracing for Celery versions 4.x">
-
-Sentry uses custom message headers for distributed tracing. For Celery versions 4.x, with [message protocol version 1](https://docs.celeryq.dev/en/stable/internals/protocol.html#version-1), this functionality is broken, and Celery fails to propagate custom headers to the worker. Protocol version 2, the default since Celery 4.0, is not affected.
-
-The fix for the custom headers propagation issue was introduced to the Celery project ([PR](https://github.com/celery/celery/pull/6374)) starting with version 5.0.1. However, the fix was not backported to versions 4.x.
-
-</Alert>
-
 </OnboardingOption>
 
 ## Verify Your Setup
@@ -219,14 +206,7 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 ### Issues
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python {filename:tasks.py}
 from celery import Celery, signals
@@ -242,10 +222,6 @@ def init_sentry(**_kwargs):
 def debug_sentry():
     1/0
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 Trigger the error by calling `debug_sentry.delay()`.
 

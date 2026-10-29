@@ -33,7 +33,10 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     environment="local",
     traces_sample_rate=1.0,
-    send_default_pii=True
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
 )
 ```
 
@@ -122,7 +125,9 @@ You can pass the following keyword arguments to `LanggraphIntegration()`:
 
 - `include_prompts`
 
-  Controls whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+  Controls whether LLM inputs and outputs should be sent to Sentry. If you use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, this option is ignored. Use the `gen_ai` key instead.
+
+  Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`. `send_default_pii` will be removed in version 3.0 of the SDK.
 
   The default is `True`.
 
