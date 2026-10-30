@@ -8,8 +8,6 @@ import {
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
-import {toMarkdownDestination} from './markdownDestination';
-
 // DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
 // NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
 const isDeveloperDocs =
@@ -463,6 +461,19 @@ const resolveRedirect = (urlPath: string): string | undefined => {
     .get(pathWithPlaceholder)
     ?.replace(guidePlaceholder, `/guides/${guide}/`);
 };
+
+/**
+ * Maps a redirect destination to its `.md` export. External URLs and
+ * destinations with a query string are returned unchanged.
+ */
+function toMarkdownDestination(destination: string): string {
+  if (/^https?:\/\//.test(destination) || destination.includes('?')) {
+    return destination;
+  }
+  const [path, hash] = destination.split('#');
+  const mdPath = `${path.replace(/\/+$/, '') || '/index'}.md`;
+  return hash === undefined ? mdPath : `${mdPath}#${hash}`;
+}
 
 type Redirect = {
   /** a string with a leading and a trailing slash */

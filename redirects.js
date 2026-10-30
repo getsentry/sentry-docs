@@ -1,5 +1,3 @@
-const {toMarkdownDestination} = require('./markdownDestination');
-
 const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -3720,10 +3718,18 @@ const userDocsRedirects = [
   },
 ];
 
+// Matches the trailing `/` of a page URL or the `.md` of its export.
+const MD_SUFFIX_PARAM = ':mdSuffix(/|\\.md)';
+
+// path-to-regexp rejects a param directly after another one (`/:guide:mdSuffix`).
+const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
+
 /**
  * Every page has a `.md` export, so a redirected page's `.md` URL must redirect too.
- * Adds a `.md` twin right after each redirect whose source ends in `/`, keeping it
- * ahead of any later wildcard rule that would otherwise match the `.md` URL.
+ * Each redirect whose source ends in `/` also matches its `.md` URL and sends it to the
+ * destination's `.md` export (external and query-string destinations stay as they are).
+ * Where possible this is folded into the same rule through `:mdSuffix`, so the route
+ * count does not grow. A separate `.md` rule is added only when a path ends in a param.
  * Wildcard sources (`/foo/:path*`) are left as they are.
  *
  * @template {{source: string, destination: string}} R
@@ -3735,12 +3741,35 @@ function withMarkdownRedirects(list) {
     if (r.source === '/' || !r.source.endsWith('/')) {
       return [r];
     }
+    const source = r.source.slice(0, -1);
+    const keepDestination =
+      /^https?:\/\//.test(r.destination) || r.destination.includes('?');
+    const [path, hash] = r.destination.split('#');
+    const destination = path.replace(/\/+$/, '');
+    const fragment = hash === undefined ? '' : `#${hash}`;
+
+    const canFold =
+      !ENDS_WITH_PARAM.test(source) &&
+      (keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination)));
+    if (canFold) {
+      return [
+        {
+          ...r,
+          source: `${source}${MD_SUFFIX_PARAM}`,
+          destination: keepDestination
+            ? r.destination
+            : `${destination}:mdSuffix${fragment}`,
+        },
+      ];
+    }
     return [
       r,
       {
         ...r,
-        source: `${r.source.slice(0, -1)}.md`,
-        destination: toMarkdownDestination(r.destination),
+        source: `${source}.md`,
+        destination: keepDestination
+          ? r.destination
+          : `${destination || '/index'}.md${fragment}`,
       },
     ];
   });
