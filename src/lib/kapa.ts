@@ -96,14 +96,24 @@ export function prefetchKapa(): void {
   loadKapa().catch(() => {});
 }
 
-/** Load the widget if needed, then open the modal. */
+/**
+ * Load the widget if needed, then open the modal. Aborting the signal skips the
+ * open (e.g. the user navigated away mid-load) but lets the load finish, so the
+ * next Ask AI click is still fast. Resolves to whether the modal was opened.
+ */
 export async function openKapa(
-  options: {mode?: string; query?: string; submit?: boolean} = {}
-): Promise<void> {
+  options: {mode?: string; query?: string; submit?: boolean} = {},
+  signal?: AbortSignal
+): Promise<boolean> {
   try {
     await loadKapa();
-    window.Kapa?.open(options);
+    if (signal?.aborted || !window.Kapa?.open) {
+      return false;
+    }
+    window.Kapa.open(options);
+    return true;
   } catch (error) {
     captureException(error);
+    return false;
   }
 }

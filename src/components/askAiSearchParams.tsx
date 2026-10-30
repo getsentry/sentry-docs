@@ -11,15 +11,19 @@ export default function AskAiSearchParams() {
 
   useEffect(() => {
     if (searchParams?.get('askAI') !== 'true') {
-      return;
+      return undefined;
     }
     // openKapa resolves once the widget is actually ready, so the deep link no
-    // longer races a fixed timeout.
-    openKapa({});
+    // longer races a fixed timeout. Loading can take seconds, so abort on
+    // unmount to avoid popping the modal over whatever page the user moved on to.
+    const controller = new AbortController();
     const referrer = searchParams.get('referrer');
-    if (referrer) {
-      emit('Ask AI Referrer', {props: {referrer}});
-    }
+    openKapa({}, controller.signal).then(opened => {
+      if (opened && referrer) {
+        emit('Ask AI Referrer', {props: {referrer}});
+      }
+    });
+    return () => controller.abort();
   }, [searchParams, emit]);
 
   return <Fragment />;
