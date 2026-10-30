@@ -4,7 +4,7 @@ description: "Learn how to use the Unity SDK when your game runs inside an iOS o
 sidebar_order: 10
 ---
 
-With [Unity as a Library](https://docs.unity3d.com/Manual/UnityasaLibrary.html), you export your game and embed it into a native iOS or Android app. When that app already uses Sentry, the Unity SDK attaches to the app's sentry-cocoa or sentry-android SDK instead of bundling and starting its own. Both report to Sentry together: native crashes in the game carry the game's context and breadcrumbs, and the game's C# events use the app's release, environment, user, and trace.
+With [Unity as a Library](https://docs.unity3d.com/Manual/UnityasaLibrary.html), you export your game and embed it into a native iOS or Android app. When that app already uses Sentry, the Unity SDK doesn't bundle its own sentry-cocoa or sentry-android SDK. It attaches to the app's SDK or, when the game runs in a separate Android process, starts one there. Both report to Sentry together: native crashes in the game carry the game's context and breadcrumbs, and the game's C# events use the app's release, environment, user, and trace.
 
 <Alert level="warning">
 
@@ -24,15 +24,19 @@ The app initializes Sentry before it loads the game. Use the same DSN as in the 
 
 ```swift {tabTitle:iOS (Swift)} {mdExpandTabs}
 import Sentry
+import UIKit
 
-func application(_ application: UIApplication,
-                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    SentrySDK.start { options in
-        options.dsn = "___PUBLIC_DSN___"
+@main
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+        }
+
+        // Load UnityFramework afterwards
+        return true
     }
-
-    // Load UnityFramework afterwards
-    return true
 }
 ```
 
@@ -122,7 +126,7 @@ On Android, the game can run in the app's main process, or in a separate process
 - **Separate process**: The app's SDK isn't running in the game's process, so the game initializes sentry-android there with the options set in Unity.
   - The game takes the app's release and environment when it starts, and the app's user and trace when it starts and whenever it resumes. It reads them from the app's SDK cache, which requires the same DSN.
   - The game's user, breadcrumbs, tags, and contexts go to the game's own SDK. Its native crashes carry them, and the app's events don't get the game's tags.
-  - The game's SDK reports native crashes the next time the game starts, so a crash isn't reported if the game never gets opened again. On Android 11 and later, the app's SDK reports ANRs for both processes.
+  - The game's SDK reports native crashes the next time the game starts, so a crash isn't reported if the game never gets opened again. On Android 11 and later, the app's SDK reports ANRs of both processes the next time the app starts.
 
 ## Known Limitations
 
