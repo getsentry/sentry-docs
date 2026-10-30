@@ -66,7 +66,7 @@ With Quartz.NET 4.x, the SDK captures each exception a job throws once, in the j
 
 ### Monitor All Jobs
 
-We recommend monitoring every scheduled job. Set `MonitorAllJobs`, and jobs whose trigger has a schedule Sentry can send are monitored without adding an attribute to each class. Jobs aren't monitored when they're started by a trigger that fires once (such as `TriggerJob`), use a calendar or a cron expression Sentry can't express (`L`, `W`, `#`, or a year), or are built without `WithIdentity`. Jobs whose triggers have different schedules, or that share a slug with a job on a different schedule, aren't monitored either, since Sentry can't create one monitor for them.
+We recommend monitoring every scheduled job. Set `MonitorAllJobs`, and jobs whose trigger has a schedule Sentry can send are monitored without adding an attribute to each class. Jobs aren't monitored when the trigger that started them has a schedule Sentry can't send (see [Monitor Schedule](#monitor-schedule)), or when they're built without `WithIdentity`. Jobs whose triggers have different schedules, or that share a slug with a job on a different schedule, aren't monitored either, since Sentry can't create one monitor for them.
 
 To skip some jobs, add them to `ExcludedJobs`. A string matches a job whose name or full key (`group.name`) is equal to it, and a `Regex` matches a job whose name or full key it matches. Jobs with `[SentryMonitorSlug]` are monitored even when they match.
 
@@ -130,7 +130,7 @@ Sentry only creates a monitor from a check-in that includes a schedule. For moni
 - Cron triggers, with the trigger's time zone. Quartz.NET cron triggers use the server's local time zone unless you set one with `InTimeZone`, so set it if your servers don't all use the same time zone. The cron expression must use a fixed number of seconds and no year, `L`, `W`, or `#`. Quartz.NET 3.x needs `?` in exactly one of the two day fields. Quartz.NET 4.x also accepts `*` or values in both. When both have values, the job runs on days that match either field, and Sentry reads the schedule the same way.
 - Simple triggers that repeat forever every whole number of minutes, hours, or days.
 
-Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule. Triggers that share a slug are also sent without one if their schedules differ, for example two triggers of the same job. To give each trigger its own monitor, set a different slug in each trigger's data map.
+Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule, and with `MonitorAllJobs` their jobs aren't monitored. Triggers that share a slug are also sent without one if their schedules differ, for example two triggers of the same job. To give each trigger its own monitor, set a different slug in each trigger's data map.
 
 Sentry sets the monitor's schedule and time zone from every check-in that includes them, so changes you make to those two settings in Sentry are overwritten. Other monitor settings are kept. To stop sending the schedule for one job, set `SendMonitorConfig` on its attribute:
 
@@ -149,7 +149,7 @@ q.AddSentry(options => options.SendMonitorConfig = false);
 q.AddJobListener(_ => new SentryJobListener(new SentryQuartzOptions { SendMonitorConfig = false }));
 ```
 
-If you delete a monitor while its job is still monitored, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, remove the attribute, or add the job to `ExcludedJobs`.
+If you delete a monitor while its job is still monitored, the next run that sends a schedule creates it again. To stop monitoring a job, disable the monitor in Sentry, remove the attribute, or add the job to `ExcludedJobs`.
 
 ## Monitor Settings
 
