@@ -2,11 +2,16 @@
 title: AI Agents Module
 ---
 
-The AI Agents module is agnostic to the library used. The SDK will instrument existing AI agents in certain frameworks or libraries (at the time of writing those are `openai-agents` in Python and `Vercel AI` in Javascript). You may need to manually annotate spans for other libraries.
+The AI Agents module is agnostic to the library used.
+Agent invocation and tool execution spans are automatically instrumented in supported agent frameworks (such as LangChain).
+Requests to model providers are automatically instrumented when the request is issued with a client library instrumented by the SDK (first-party libraries from OpenAI, Anthropic, etc.). Requests through supported client libraries are instrumented even when triggered indirectly by an agent framework.
 
 ## Spans Conventions
 
-For your AI agents data to show up in the Sentry [Agents Dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/), at least one of the AI spans needs to be created and have well-defined names and data attributes. If the required data (marked with MUST or required) is missing, the data will not show up in the Agents dashbboard.
+The `gen_ai.operation.name` attribute is essential to accurately categorize the GenAI span.
+For accurate cost calculation, token attributes and `gen_ai.response.model` are required. Cached and reasoning tokens are crucial if available, since they are subtracted from input and output tokens.
+The `gen_ai.agent.name`, or its `gen_ai.function_id` fallback drive grouping. The values allow users to filter for interactions with a specific identifier.
+For a span to show on the conversations page, `gen_ai.conversation.id` is required. The `gen_ai.input.messages` and `gen_ai.output.messages` are required to view the actual back-and-forth with a GenAI model. The page highlights an expanding set of part types, such as text, reasoning and tool uses.
 
 <Alert level="success" title="Hint">
 The [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) have all the detailed specifications for `"gen_ai.*"` span attributes.
@@ -20,25 +25,25 @@ Sentry Conventions is the single source of truth.
 Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
-- Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
-- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[4]**
-- Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
-- Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` is `"gen_ai.invoke_agent"`.
+- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[4]**
+- Attribute `gen_ai.operation.name` is `"invoke_agent"`.
+- Attribute `gen_ai.agent.name` is the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
+- If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - As a fallback to missing inputs and outputs on child chat spans, the Invoke Agent Span can carry `gen_ai.input.messages` and `gen_ai.system_instructions` based on the input of the first model call, and `gen_ai.output.messages` based on the output of the final model call under the agent execution.
 
 ## AI Client Span
 
 This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
 
-- Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
-- Span `name` **SHOULD** be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
-- Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
-- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
-- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
-- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` is `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- Span `name` is `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- Attribute `gen_ai.operation.name` is `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- Attribute `gen_ai.provider.name` is the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` is the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute is  the name of the agent. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
+- If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
@@ -83,11 +88,11 @@ Additional attributes on the span:
 
 Describes a tool execution.
 
-- Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
-- Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
-- Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` is `"gen_ai.execute_tool"`.
+- Span `name` is `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
+- Attribute `gen_ai.operation.name` is `"execute_tool"`.
+- Attribute `gen_ai.agent.name` is the name of the agent that invoked the tool. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
+- If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
@@ -117,4 +122,4 @@ Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` inc
 **[4]**
 
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
-In these cases, the span name **SHOULD** be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+In these cases, the span name is `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
