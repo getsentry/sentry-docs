@@ -8,6 +8,7 @@ The Sentry SDK offers an integration for tokio's [tracing](https://github.com/to
 - Reporting `tracing` spans to Sentry as transactions and spans.
 - Reporting `tracing` events to Sentry as logs.
 - Reporting errors and panics with the correct trace correlation.
+- Optionally, reporting `tracing` events to Sentry as errors, which create issues.
 
 ## Install
 
@@ -75,20 +76,46 @@ async fn fail() {
 }
 ```
 
-The integration provides two layers, and we recommend installing both:
+The integration provides separate layers, so you can choose which `tracing` data to send to Sentry. For most applications, we recommend installing the span and log layers, as shown above:
 
 - [`SpanLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.SpanLayer.html): Captures `tracing` spans as Sentry transactions and spans.
 - [`LogLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.LogLayer.html): Captures `tracing` events as Sentry logs. Requires the `logs` feature, which is enabled by default.
 
 The layers don't filter by level on their own, and without a filter they capture every level, including `DEBUG` and `TRACE`. We recommend giving each layer a `tracing_subscriber` filter, as shown above. `LevelFilter::INFO` is a sensible starting point for most applications.
 
-The SDK also provides [`ErrorLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.ErrorLayer.html) and [`BreadcrumbLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.BreadcrumbLayer.html), which capture `tracing` events as Sentry errors and breadcrumbs. They're mainly there to support legacy setups, so most applications should stick with the span and log layers.
-
 <Alert level="warning">
 
 `sentry::integrations::tracing::layer()` and `SentryLayer` are deprecated as of version `0.49.4`. When migrating, replace the legacy layer instead of adding the new layers alongside it: combining `SpanLayer` with the legacy layer can panic. See the [migration guide](https://docs.rs/sentry-tracing/~0.49/sentry_tracing/struct.SentryLayer.html) for details.
 
 </Alert>
+
+### Capture Errors as Issues
+
+If you want `tracing` error events to create Sentry issues, for example, to use them in issue alerts, add [`ErrorLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.ErrorLayer.html) with an `ERROR` level filter:
+
+```rust
+use sentry::integrations::tracing::{ErrorLayer, LogLayer, SpanLayer};
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::prelude::*;
+
+tracing_subscriber::registry()
+    .with(tracing_subscriber::fmt::layer())
+    .with(SpanLayer::new().with_filter(LevelFilter::INFO))
+    .with(LogLayer::new().with_filter(LevelFilter::INFO))
+    // Capture ERROR events as Sentry errors
+    .with(ErrorLayer::new().with_filter(LevelFilter::ERROR))
+    .init();
+```
+
+With this setup, `ERROR` events are sent to Sentry as both logs and errors.
+
+<Alert level="warning">
+
+Events captured by `ErrorLayer` count toward your [error quota](/pricing/quotas/manage-event-stream-guide/), which is typically more expensive than logs. Always add a level filter: without one, `ErrorLayer` sends every `tracing` event as an error, including `DEBUG` and `TRACE`.
+
+</Alert>
+
+The SDK also provides [`BreadcrumbLayer`](https://docs.rs/sentry-tracing/latest/sentry_tracing/struct.BreadcrumbLayer.html), which adds `tracing` events as breadcrumbs to subsequent Sentry errors. It's mainly there to support legacy setups. We recommend `LogLayer` instead, since logs are sent whether or not an error occurs.
 
 ## Verify
 
