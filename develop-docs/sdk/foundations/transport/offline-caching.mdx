@@ -22,25 +22,27 @@ Envelope sizes vary widely. Most are a few kilobytes, but envelopes with screens
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `max_cache_items` | `int` | `30` | Maximum number of envelopes in the cache. **MUST** be supported. `0` disables the count limit. |
-| `max_cache_size` | `int` | `536870912` (512 MiB) | Maximum total size of the cached envelopes, in bytes. **SHOULD** be supported. `0` disables the size limit. |
+| `max_cache_items` | `int` | `30` | Maximum number of envelopes in the cache. **MUST** be supported. |
+| `max_cache_size` | `int` | `536870912` (512 MiB) | Maximum total size of the cached envelopes, in bytes. **SHOULD** be supported. |
 
-SDKs **SHOULD** use the platform's naming convention, for example `maxCacheSize` or `MaxCacheSize`.
+SDKs **SHOULD** use the platform's naming convention, for example `maxCacheSize` or `MaxCacheSize`. SDKs **SHOULD** use a 64-bit integer type for `max_cache_size` where the platform has one, so users can set limits above 2 GiB.
 
 With only `max_cache_items`, the cache can grow to 30 envelopes of up to 200 MiB each, the largest envelope Relay accepts (see [Size Limits](/sdk/foundations/envelopes/#size-limits)). The 512 MiB default for `max_cache_size` bounds disk usage to a predictable amount while still fitting one envelope of the maximum size.
 
-Setting either option to `0` disables that limit, so users can rely on only one of them. For example, users who care about disk usage rather than the number of envelopes can set `max_cache_items` to `0` and keep `max_cache_size`. If both are `0`, the cache is unbounded, and SDKs **SHOULD** log a warning in debug mode.
+Setting either option to `0` disables caching: the SDK **MUST NOT** write envelopes to the cache and handles each envelope as described in [Envelopes Larger Than the Limit](#envelopes-larger-than-the-limit).
+
+To remove a limit, users set the option to the platform's maximum integer value, for example `Int.MAX_VALUE`, `Long.MAX_VALUE`, `UInt.max`, or `SIZE_MAX`. This lets users rely on only one of the limits. For example, users who care about disk usage rather than the number of envelopes can set `max_cache_items` to the maximum value and keep `max_cache_size`.
 
 If a user sets a negative value for either option, SDKs **MUST** ignore it, use the default, and log a warning in debug mode.
 
 ### Enforcing the Limits
 
-The two limits apply together. The cache is within its limits only when every enabled limit is satisfied, so exceeding either one triggers eviction.
+The two limits apply together. The cache is within its limits only when both are satisfied, so exceeding either one triggers eviction.
 
 Before writing a new envelope to the cache, SDKs **MUST** delete the oldest cached envelopes until:
 
-- the number of cached envelopes plus one is at most `max_cache_items`, unless the count limit is disabled, and
-- the total size of cached envelopes plus the size of the new envelope is at most `max_cache_size`, unless the size limit is disabled.
+- the number of cached envelopes plus one is at most `max_cache_items`, and
+- the total size of cached envelopes plus the size of the new envelope is at most `max_cache_size`.
 
 SDKs **SHOULD** also enforce both limits when the SDK initializes. The cache can exceed them after an app update lowers a limit, after an SDK update introduces `max_cache_size`, or after envelopes were written without enforcement (see [Crash Handling](#crash-handling)).
 
@@ -61,16 +63,16 @@ When an envelope is deleted to satisfy either limit, SDKs:
 
 ### Envelopes Larger Than the Limit
 
-If a single envelope is larger than `max_cache_size`, it can never fit in the cache. In that case, SDKs:
+If a single envelope is larger than `max_cache_size`, it can never fit in the cache. The same applies to every envelope when either option is `0`. In that case, SDKs:
 
 - **MUST NOT** delete other cached envelopes to make room for it.
 - **MUST NOT** write it to the cache.
 - **SHOULD** still try to send it directly without persisting it, if the transport supports that. If the SDK can't send it, it **MUST** discard it and record a client report with the discard reason `cache_overflow`.
-- **SHOULD** log a warning in debug mode that the envelope exceeded `max_cache_size`.
+- **SHOULD** log a warning in debug mode that the envelope exceeded `max_cache_size`, unless caching is disabled because an option is `0`.
 
 ### Migrating Existing SDKs
 
-Some SDKs currently treat `max_cache_items` set to `0` as "cache nothing" or reject it as invalid. Changing `0` to mean "no limit" and enabling `max_cache_size` by default both change behavior for existing users. SDKs **SHOULD** ship these changes in a major version.
+Enabling `max_cache_size` by default changes behavior for existing users, because caches that were bounded only by `max_cache_items` can now evict envelopes earlier. SDKs that currently treat `0` as "no limit", such as sentry-native's `cache_max_items` and `cache_max_size`, also change behavior when they adopt `0` as "cache nothing". SDKs **SHOULD** ship these changes in a major version.
 
 ### Crash Handling
 
