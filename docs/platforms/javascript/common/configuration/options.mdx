@@ -83,13 +83,54 @@ Environments are case-sensitive. The environment name can't contain newlines, sp
 
 </SdkOption>
 
+<PlatformCategorySection notSupported={['browser']}>
+
 <SdkOption name="tunnel" type='string'>
 
-Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
+Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
 
-The endpoint must forward only the request body to Sentry and accept only your own DSNs. Learn more in [Using the `tunnel` Option](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
+The endpoint must forward only the request body to Sentry and accept only your own DSNs. Learn more in <PlatformLink to="/configuration/tunneling/#setting-up-your-own-tunnel">Setting Up Your Own Tunnel</PlatformLink>.
 
 </SdkOption>
+
+</PlatformCategorySection>
+
+<PlatformCategorySection supported={['browser']}>
+
+<SdkOption name="tunnel" type='string | true | object'>
+
+Where the browser SDK sends captured events instead of the Sentry ingest URL. Use it to work around ad blockers or to control which events reach Sentry. The DSN is still required, so the SDK can initialize correctly and forward the Sentry ingest URL to the tunnel.
+
+The `tunnel` option can be set to the following values:
+
+- A string (URL or relative path) sends events to it as written. This **requires the implementation** of a custom server endpoint. The endpoint must forward only the request body to Sentry and accept only your own DSNs. Learn more in <PlatformLink to="/configuration/tunneling/#setting-up-your-own-tunnel">Setting Up Your Own Tunnel</PlatformLink>.
+
+<PlatformSection notSupported={["javascript.nextjs", "javascript.solidstart"]}>
+
+<PlatformCategorySection supported={["server"]}>
+
+- `true` sends events to the managed tunnel, a path on your own origin derived from the DSN. Your server needs to serve it, as described in <PlatformLink to="/configuration/integrations/servetunnel/">`serveTunnelIntegration`</PlatformLink>. Available since version `11.10.0`.
+
+</PlatformCategorySection>
+
+<PlatformCategorySection notSupported={["server"]}>
+
+- `true` sends events to the managed tunnel, a path on your own origin derived from the DSN. Your server needs to serve it, as described in [`serveTunnelIntegration`](/platforms/javascript/guides/node/configuration/integrations/servetunnel/). Available since version `11.10.0`.
+
+</PlatformCategorySection>
+
+- An object works like `true`, with these options:
+  - `path`: a fixed tunnel path, used as written without the base path.
+  - `basePath`: the path prefix your app is served under, for example `/docs`. Most framework SDKs set it for you.
+  - `trailingSlash`: appends a trailing slash to the tunnel path, for servers that redirect paths without one.
+
+On the server, `tunnel` only takes a URL. It's where the server SDK sends its own events, and it's independent from `serveTunnelIntegration`.
+
+</PlatformSection>
+
+</SdkOption>
+
+</PlatformCategorySection>
 
 <PlatformSection supported={['javascript.aws-lambda']}>
 
@@ -108,7 +149,7 @@ Set to `false` to opt out, for example, when using a custom `tunnel` or when run
 <SdkOption name="dataCollection" type='DataCollection' availableSince="10.57.0">
 
 Controls which categories of data the SDK collects automatically. All fields are optional.
-  By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+By default the SDK collects rich debugging context (including user identity, request/response bodies, and generative AI content) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
 
 <PlatformSection notSupported={["javascript.electron"]}>
 
@@ -299,21 +340,35 @@ The callback gets a second argument (called a "hint") which contains the origina
 <SdkOption name="transport" type="(transportOptions: TransportOptions) => Transport">
 
 <PlatformSection notSupported={["javascript.electron"]}>
-  The JavaScript SDK uses a transport to send events to Sentry.
-  Transports will drop an event if it fails to send due to a lack of connection.
+  The JavaScript SDK uses a transport to send events to Sentry. Transports will
+  drop an event if it fails to send due to a lack of connection.
 </PlatformSection>
 
 <PlatformCategorySection supported={["browser"]}>
   In the browser, a `fetch`-based transport is used by default.
 </PlatformCategorySection>
 
-<PlatformSection notSupported={["javascript.bun", "javascript.elysia", "javascript.deno", "javascript.cloudflare"]}>
-<PlatformCategorySection supported={["server", "serverless"]}>
-  On the server, a `https`-based transport is used by default.
-</PlatformCategorySection>
+<PlatformSection
+  notSupported={[
+    "javascript.bun",
+    "javascript.elysia",
+    "javascript.deno",
+    "javascript.cloudflare",
+  ]}
+>
+  <PlatformCategorySection supported={["server", "serverless"]}>
+    On the server, a `https`-based transport is used by default.
+  </PlatformCategorySection>
 </PlatformSection>
 
-<PlatformSection supported={["javascript.bun", "javascript.elysia", "javascript.deno", "javascript.cloudflare"]}>
+<PlatformSection
+  supported={[
+    "javascript.bun",
+    "javascript.elysia",
+    "javascript.deno",
+    "javascript.cloudflare",
+  ]}
+>
   A `fetch`-based transport is used by default.
 </PlatformSection>
 
@@ -551,7 +606,8 @@ The `samplingContext` object passed to the function has the following properties
 - `name`: The name of the span as it was started.
 - `attributes`: The initial attributes of the span.
   <PlatformCategorySection supported={["browser"]}>
-    - `location`: The current page or worker URL, if available. Provided by the BrowserTracing integration.
+    - `location`: The current page or worker URL, if available. Provided by the
+    BrowserTracing integration.
   </PlatformCategorySection>
   <PlatformCategorySection supported={["server", "serverless"]}>
     - `normalizedRequest`: Request information of the currently active HTTP
@@ -605,7 +661,7 @@ The SDK skips storage operation spans for Durable Object keys whose names start 
 
 Controls which bindings on `env` receive tracing data over [RPC calls](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/) to Durable Objects and other Workers. RPC has no headers, so the SDK appends the trace context as a trailing argument that an instrumented receiver strips again before your method runs.
 
-String entries must match a binding name exactly, so `"DB"` matches `"DB"` but not  `"MY_DB"`. Use a regular expression for pattern matching.
+String entries must match a binding name exactly, so `"DB"` matches `"DB"` but not `"MY_DB"`. Use a regular expression for pattern matching.
 
 This option controls outgoing RPC trace propagation, which is disabled by default. Add bindings to enable it for those receivers. Sentry-instrumented receivers automatically continue incoming traces without configuring this option.
 
@@ -860,7 +916,8 @@ Controls whether the SDK installs runtime hooks that instrument supported depend
 </PlatformSection>
 
 <Alert>
-  On SDK versions below `10.71.0`, logs are opt-in. Set `enableLogs: true` in your `Sentry.init` to send them.
+  On SDK versions below `10.71.0`, logs are opt-in. Set `enableLogs: true` in
+  your `Sentry.init` to send them.
 </Alert>
 
 <SdkOption name="beforeSendLog" type='(log: Log) => Log | null'>
@@ -872,8 +929,8 @@ This function is called with a log object, and can return a modified log object,
 ## Metrics Options
 
 <PlatformSection supported={["javascript.electron"]}>
-  **Note:** For Electron, metric options apply to the process where these options
-  are set.
+  **Note:** For Electron, metric options apply to the process where these
+  options are set.
 </PlatformSection>
 
 <SdkOption name="beforeSendMetric" type='(metric: Metric) => Metric | null'>
