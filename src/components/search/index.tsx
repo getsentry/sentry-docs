@@ -14,6 +14,7 @@ import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createInsightsClient} from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {openKapa, prefetchKapa} from 'sentry-docs/lib/kapa';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 import {MagicIcon} from '../cutomIcons/magic';
@@ -431,9 +432,15 @@ export function Search({
             color="gray"
             size="3"
             radius="medium"
-            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer hidden md:flex mr-4"
           >
-            <button type="button" aria-label="Ask AI">
+            <button
+              type="button"
+              aria-label="Ask AI"
+              onPointerEnter={prefetchKapa}
+              onFocus={prefetchKapa}
+              onClick={() => openKapa({})}
+            >
               <MagicIcon />
               <span>Ask AI</span>
             </button>
@@ -450,16 +457,16 @@ export function Search({
             <button
               id="ai-list-entry"
               className={styles['sgs-ai-button']}
+              onPointerEnter={prefetchKapa}
+              onFocus={prefetchKapa}
               onClick={() => {
-                if (window.Kapa?.open) {
-                  setInputFocus(false);
-                  onAskAi?.();
-                  // Open next frame, after the overlay's scroll lock is released
-                  // on commit, so Kapa's lock and ours never overlap.
-                  requestAnimationFrame(() => {
-                    window.Kapa?.open({query, submit: true});
-                  });
-                }
+                setInputFocus(false);
+                onAskAi?.();
+                // Open next frame, after the overlay's scroll lock is released
+                // on commit, so Kapa's lock and ours never overlap.
+                requestAnimationFrame(() => {
+                  openKapa({query, submit: true});
+                });
               }}
             >
               <MagicIcon className="size-6 text-[var(--sgs-color-hit-highlight)] flex-shrink-0" />
