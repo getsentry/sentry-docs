@@ -56,6 +56,37 @@ sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_interv
 sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_crontab('5 * * * *')
 ```
 
+### rufus-scheduler
+
+If you're using `rufus-scheduler`, enable the `:rufus_scheduler` patch to capture check-ins for `cron` and `every` jobs:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:rufus_scheduler]
+end
+```
+
+```rb
+scheduler = Rufus::Scheduler.new
+
+scheduler.cron '0 9 * * 1-5', name: 'daily-report' do
+  # do stuff
+end
+
+scheduler.every '10m', name: 'sync-accounts' do
+  # do stuff
+end
+
+# skip a job
+scheduler.every '1m', sentry_monitor: false do
+  # do stuff
+end
+```
+
+The monitor slug comes from the job's `name` option, or from the handler's class or method name when you pass one instead of a block. Blocks without a `name` aren't monitored, so set `name` on every block you want to monitor.
+
+Sentry creates the monitor from `cron` jobs and from `every` jobs whose frequency is a whole number of minutes, hours, or days. Jobs whose schedule can't be expressed in the Crons schedule format aren't monitored, such as a job that runs every 10 seconds or one whose time zone is an offset like `+05:30` rather than an IANA name like `Europe/Vienna`. `interval` jobs aren't monitored either, since they wait a fixed time after each run ends and have no fixed schedule. One-off `in` and `at` jobs are not monitored, and jobs scheduled by `sidekiq-scheduler` are left to the `:sidekiq_scheduler` patch.
+
 ## Manual Setup
 
 If you're using `Clockwork` or `Whenever`, you'll need to instrument your jobs
