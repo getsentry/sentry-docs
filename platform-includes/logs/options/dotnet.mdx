@@ -1,33 +1,24 @@
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-hosting", "dotnet.maui"]}>
+
 #### EnableLogs
 
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog", "dotnet.nlog", "dotnet.log4net"]}>
-Set to `true` to send logs captured by logging integrations, such as `Microsoft.Extensions.Logging`, Serilog, NLog, and log4net. Defaults to `false`.
+Set to `true` to send the entries your app writes through the `ILogger<TCategoryName>` API to Sentry as logs. Defaults to `false`.
 
-Since version 6.10.0, this option doesn't apply to logs sent through the `SentrySdk.Logger` APIs. Those logs are always sent.
+This option doesn't apply to logs sent through the `SentrySdk.Logger` APIs or through the Serilog, NLog, and log4net integrations. Those logs are always sent.
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, `EnableLogs` was an option on `SentryOptions`, and the Serilog, NLog, and log4net integrations only sent logs when it was `true`.
+
+</Alert>
+
 </PlatformSection>
 
-<PlatformSection supported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
-Set to `true` in order to enable the logging integration via the `ILogger<TCategoryName>` API.
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.serilog"]}>
-Set to `true` in order to enable the logging integration via the `Log`/`Logger` APIs.
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.nlog"]}>
-Set to `true` in order to enable the logging integration via the NLog `Logger` APIs.
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.log4net"]}>
-Set to `true` in order to enable the logging integration via the log4net `ILog` APIs.
-</PlatformSection>
-
-<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.aws-lambda", "dotnet.azure-functions-worker", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.extensions-hosting", "dotnet.extensions-logging", "dotnet.maui"]}>
 
 #### Configure Microsoft.Extensions.Logging Filters
 
-In apps that use `Microsoft.Extensions.Logging`, setting `EnableLogs = true` enables Sentry's `Microsoft.Extensions.Logging` integration.
-Sentry's provider defines the alias `Sentry`.
+Sentry's `Microsoft.Extensions.Logging` provider defines the alias `Sentry`.
 
 Logs emitted through `ILogger<T>` are sent to Sentry according to your configured provider/category filters and log levels.
 
@@ -51,7 +42,7 @@ Use standard `Microsoft.Extensions.Logging` filtering to reduce noisy categories
 
 Setting `Logging:Sentry:LogLevel:Default` to `None` disables logs sent through the `Microsoft.Extensions.Logging` provider for all categories. Logs sent through the `SentrySdk.Logger` APIs aren't affected by these filters and are still sent.
 
-Example with `EnableLogs = true` and `Logging:Sentry:LogLevel:Default = None`:
+Example with `Logging:Sentry:LogLevel:Default = None`:
 
 ```csharp
 logger.LogInformation("Will not be sent to Sentry through Microsoft.Extensions.Logging");
@@ -80,7 +71,6 @@ To filter logs or update them before they are sent to Sentry, you can use the `S
 options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
-    options.EnableLogs = true;
     // a callback that is invoked before sending a log to Sentry
     options.SetBeforeSendLog(static log =>
     {
