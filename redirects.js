@@ -625,11 +625,6 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
   },
-  {
-    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
-  },
 
   // Guides → Get Started restructure
   {
@@ -1961,21 +1956,10 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
   },
   {
-    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
-    destination:
-      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
-  },
-  {
     source:
       '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
     destination:
       '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
-  },
-  {
-    source:
-      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
-    destination:
-      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
   },
   {
     source:
@@ -2318,10 +2302,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/expo/',
     destination: '/platforms/react-native/guides/expo/',
-  },
-  {
-    source: '/platforms/react-native/manual-setup/expo.md',
-    destination: '/platforms/react-native/guides/expo.md',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
@@ -3113,16 +3093,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-monitoring.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
@@ -3170,16 +3142,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-tracing.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',
@@ -3754,6 +3718,63 @@ const userDocsRedirects = [
   },
 ];
 
+// Matches the trailing `/` of a page URL or the `.md` of its export.
+const MD_SUFFIX_PARAM = ':mdSuffix(/|\\.md)';
+
+// path-to-regexp rejects a param directly after another one (`/:guide:mdSuffix`).
+const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
+
+/**
+ * Every page has a `.md` export, so a redirected page's `.md` URL must redirect too.
+ * Each redirect whose source ends in `/` also matches its `.md` URL and sends it to the
+ * destination's `.md` export (external and query-string destinations stay as they are).
+ * Where possible this is folded into the same rule through `:mdSuffix`, so the route
+ * count does not grow. A separate `.md` rule is added only when a path ends in a param.
+ * Wildcard sources (`/foo/:path*`) are left as they are.
+ *
+ * @template {{source: string, destination: string}} R
+ * @param {R[]} list
+ * @returns {R[]}
+ */
+function withMarkdownRedirects(list) {
+  return list.flatMap(r => {
+    if (r.source === '/' || !r.source.endsWith('/')) {
+      return [r];
+    }
+    const source = r.source.slice(0, -1);
+    const keepDestination =
+      /^https?:\/\//.test(r.destination) || r.destination.includes('?');
+    const [path, hash] = r.destination.split('#');
+    const destination = path.replace(/\/+$/, '');
+    const fragment = hash === undefined ? '' : `#${hash}`;
+
+    const canFold =
+      !ENDS_WITH_PARAM.test(source) &&
+      (keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination)));
+    if (canFold) {
+      return [
+        {
+          ...r,
+          source: `${source}${MD_SUFFIX_PARAM}`,
+          destination: keepDestination
+            ? r.destination
+            : `${destination}:mdSuffix${fragment}`,
+        },
+      ];
+    }
+    return [
+      r,
+      {
+        ...r,
+        source: `${source}.md`,
+        destination: keepDestination
+          ? r.destination
+          : `${destination || '/index'}.md${fragment}`,
+      },
+    ];
+  });
+}
+
 /**
  * @type {import('next').NextConfig['redirects']}
  *
@@ -3766,9 +3787,16 @@ const redirects = async () => {
     isDeveloperDocs ? 'developer' : 'sdk',
     'docs redirects in next.config.js'
   );
-  return (isDeveloperDocs ? developerDocsRedirects : userDocsRedirects).map(r => {
+  return withMarkdownRedirects(
+    isDeveloperDocs ? developerDocsRedirects : userDocsRedirects
+  ).map(r => {
     return {...r, permanent: true};
   });
 };
 
-module.exports = {redirects, developerDocsRedirects, userDocsRedirects};
+module.exports = {
+  redirects,
+  developerDocsRedirects,
+  userDocsRedirects,
+  withMarkdownRedirects,
+};

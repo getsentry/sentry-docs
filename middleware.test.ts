@@ -209,6 +209,42 @@ describe('production build-url redirect to canonical (Deployment Protection off)
   });
 });
 
+describe('redirects for .md exports', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['/product/sentry-basics/sampling.md', '/organization/dynamic-sampling.md'],
+    [
+      '/platforms/javascript/guides/react/sourcemaps/multiple-origins.md',
+      '/platforms/javascript/guides/react/sourcemaps.md',
+    ],
+    [
+      '/pricing/quotas/manage-event-stream-guide/adjusting-quotas.md',
+      '/pricing/quotas/manage-event-stream-guide.md#adjusting-quotas',
+    ],
+  ])('redirects %s to %s', async (from, to) => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest(from));
+    expect(isRedirect(res)).toBe(true);
+    expect(res.headers.get('location')).toBe(`http://localhost:3000${to}`);
+  });
+
+  it('redirects to external destinations unchanged', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/product/sentry-mcp.md'));
+    expect(isRedirect(res)).toBe(true);
+    expect(res.headers.get('location')).toBe('https://mcp.sentry.dev/');
+  });
+
+  it('serves .md exports of pages that are not redirected', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
+    expect(isRedirect(res)).toBe(false);
+  });
+});
+
 describe('canonical Link header on .md responses', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
