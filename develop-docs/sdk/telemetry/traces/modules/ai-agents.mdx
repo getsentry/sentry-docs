@@ -100,6 +100,127 @@ Additional attributes on the span:
 | `gen_ai.tool.call.arguments` | string | Arguments of the tool call (stringified).                                                                      | `'{"max":10}'`                             |
 | `gen_ai.tool.call.result`    | string | Result of the tool call (stringified).                                                                         | `"7"`                                      |
 
+## Decision Span
+
+Describes a decision on generated content against a set of questions, such as grading a model's reply for accuracy or classifying a support message, for example from TypeSafe Jev. Sentry shows decisions as their own rows in the conversation transcript and timeline, with dedicated **Input** and **Output** views.
+
+- Span `op`: `"gen_ai.decide"`
+- Span `name`: `"decide {gen_ai.request.model}"` (e.g. `"decide typesafe/jev-1.13"`)
+- `gen_ai.operation.name`: `"decide"`. Decisions share the `ai_client` operation type with model calls, so this attribute is what tells them apart.
+
+| Attribute                    | Type   | Description                                                                                                                                                                                                         | Example                                                                                                    |
+| :--------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------- |
+| `gen_ai.request.model`       | string | The evaluation model the SDK asked for. Drives model breakdowns, cost, and the span title. Without a model, Relay doesn't classify the span as `ai_client`.                                                         | `"typesafe/jev-1.13"`                                                                                      |
+| `gen_ai.response.model`      | string | The concrete model that responded. Omit it when the provider doesn't report one.                                                                                                                                    | `"typesafe/jev-1.13-20260917"`                                                                             |
+| `gen_ai.usage.input_tokens`  | int    | Input tokens used by the evaluation. Drives token widgets and cost.                                                                                                                                                 | `154`                                                                                                      |
+| `gen_ai.usage.output_tokens` | int    | Output tokens used by the evaluation. Drives token widgets and cost.                                                                                                                                                | `28`                                                                                                       |
+| `gen_ai.agent.name`          | string | The agent the decision ran under. Omit it when the decision runs outside an agent.                                                                                                                                  | `"Support Agent"`                                                                                          |
+| `gen_ai.input.messages`      | string | The content being evaluated and the questions asked about it, as a one-element array holding one object. Shown in the decision **Input** view. See [Decision Input Messages](#decision-input-messages).             | `'[{"state": "...", "questions": {"accuracy": {"type": "score", "criteria": ["incorrect", "correct"]}}}]'` |
+| `gen_ai.output.messages`     | string | The answers, as a one-element array holding one object. Shown in the decision **Output** view and as the one-line result in the transcript and timeline. See [Decision Output Messages](#decision-output-messages). | `'[{"answers": {"accuracy": {"type": "score", "score": 1}}}]'`                                             |
+
+### Decision Input Messages
+
+`gen_ai.input.messages` holds a one-element array: `[{"state", "questions"}]`. Copy `state` and the questions as the caller passed them. If the provider uses a different layout, convert it to this layout. `<name>` is the question key.
+
+| Field                           | Type                   | Required                 | Description                                                                                                                                                             | Example                                                 |
+| :------------------------------ | :--------------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------ |
+| `state`                         | any                    | Yes                      | The content being evaluated: a string, an object, or a message array, as the caller passed it. Replace binary data, including `data:` URLs, with `"[Blob substitute]"`. | `"I was charged twice and want a refund."`              |
+| `questions`                     | object                 | Yes                      | The questions, keyed by question name.                                                                                                                                  | `{"urgency": {...}}`                                    |
+| `questions.<name>.type`         | string                 | Yes                      | `"boolean"`, `"predicate"`, `"noul"`, `"choice"`, or `"score"`. Copy other values as they are.                                                                          | `"choice"`                                              |
+| `questions.<name>.instructions` | string                 | Yes                      | The question text.                                                                                                                                                      | `"Which team should handle this?"`                      |
+| `questions.<name>.criteria`     | object or string array | For `choice` and `score` | For `choice`, an object that maps each option to its description. For `score`, an ordered array of labels. The index is the score.                                      | `{"billing": "Charges and refunds"}`, `["low", "high"]` |
+| `questions.<name>.descriptions` | object                 | No                       | Only for `score`. Maps a score index (as a string) to the description of that level. Omit the levels that have no description.                                          | `{"1": "Blocks the customer"}`                          |
+
+### Decision Output Messages
+
+`gen_ai.output.messages` holds a one-element array: `[{"answers"}]`. `answers` uses the same keys as `questions`, and each answer has a `type` that matches its question.
+
+| Field                          | Type   | Required                      | Description                                                                                           | Example                                |
+| :----------------------------- | :----- | :---------------------------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------- |
+| `answers`                      | object | Yes                           | The answers, keyed by question name.                                                                  | `{"urgency": {...}}`                   |
+| `answers.<name>.type`          | string | Yes                           | The type of the question.                                                                             | `"score"`                              |
+| `answers.<name>.probability`   | number | For `boolean` and `predicate` | The probability that the answer is yes. Shown as Yes when it's 0.5 or higher.                         | `0.97`                                 |
+| `answers.<name>.noul`          | number | For `noul`                    | The probability that the answer is yes. Jev's variant of `boolean`.                                   | `0.98`                                 |
+| `answers.<name>.choice`        | string | For `choice`                  | The selected option.                                                                                  | `"billing"`                            |
+| `answers.<name>.score`         | number | For `score`                   | The score. It can be a fraction between two levels.                                                   | `1.58`                                 |
+| `answers.<name>.probabilities` | object | No                            | Only for `choice` and `score`. Maps each option, or each score index as a string, to its probability. | `{"billing": 0.64, "technical": 0.36}` |
+| `answers.<name>.legend`        | object | No                            | Only for `score`. Maps each score index (as a string) to its label.                                   | `{"0": "low", "1": "high"}`            |
+| `answers.<name>.confidence`    | number | No                            | Only for `choice` and `score`. The confidence of the answer.                                          | `0.28`                                 |
+
+Omit optional fields when the provider doesn't report them. A field with the wrong type makes that question or answer unreadable, and Sentry shows it raw.
+
+## Extraction Span
+
+Describes an extraction of typed fields from an input, such as the total and due date of an invoice, for example from Cloudflare Clairic. The model can extract values that are in the input, compute values from them, and estimate or forecast values that the input doesn't determine.
+
+- Span `op`: `"gen_ai.extract"`
+- Span `name`: `"extract {gen_ai.request.model}"` (e.g. `"extract @cf/cloudflare/clairic"`)
+- `gen_ai.operation.name`: `"extract"`
+
+| Attribute                    | Type   | Description                                                                                                                                  | Example                                                                                         |
+| :--------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| `gen_ai.request.model`       | string | The extraction model the SDK asked for. Drives model breakdowns, cost, and the span title.                                                   | `"@cf/cloudflare/clairic"`                                                                      |
+| `gen_ai.response.model`      | string | The concrete model that responded. Omit it when the provider doesn't report one.                                                             | `"clairic"`                                                                                     |
+| `gen_ai.usage.input_tokens`  | int    | Input tokens used by the extraction, including all passes. Drives token widgets and cost.                                                    | `655`                                                                                           |
+| `gen_ai.usage.output_tokens` | int    | Output tokens used by the extraction. Drives token widgets and cost.                                                                         | `0`                                                                                             |
+| `gen_ai.agent.name`          | string | The agent the extraction ran under. Omit it when the extraction runs outside an agent.                                                       | `"Billing Agent"`                                                                               |
+| `gen_ai.input.messages`      | string | The input and the field specs, as a one-element array holding the request body. See [Extraction Input Messages](#extraction-input-messages). | `'[{"state": "Invoice INV-2291 ...", "fields": {"total": {"type": "number", "unit": "USD"}}}]'` |
+| `gen_ai.output.messages`     | string | The answers, as a one-element array holding the response body. See [Extraction Output Messages](#extraction-output-messages).                | `'[{"answers": {"total": {"type": "number", "value": 1080}}, "truncated": false}]'`             |
+
+Don't send the other usage counts that the provider reports (such as Clairic's `state_tokens`, `image_tokens`, `schema_tokens`, and `passes`). `gen_ai.usage.input_tokens` already includes them.
+
+### Extraction Input Messages
+
+`gen_ai.input.messages` holds a one-element array with the request body as the caller passed it, without `model`. Don't change the values, and leave out the keys that the caller didn't set. `<name>` is the field key.
+
+| Field                          | Type             | Required                      | Description                                                                                                    | Example                                                |
+| :----------------------------- | :--------------- | :---------------------------- | :------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------- |
+| `state`                        | string           | When there are no `images`    | The text the model reads. Text answers are spans of this string.                                               | `"Invoice INV-2291 from Northwind Supply, issued ..."` |
+| `fields`                       | object           | Yes                           | The field specs, keyed by field name. Names match `^[A-Za-z_][A-Za-z0-9_.\-]{0,63}$`.                          | `{"total": {...}}`                                     |
+| `fields.<name>.type`           | string           | Yes                           | `"text"`, `"number"`, `"date"`, `"time"`, `"datetime"`, `"duration"`, `"list"`, `"estimate"`, or `"forecast"`. | `"number"`                                             |
+| `fields.<name>.instructions`   | string           | No                            | What the field must contain.                                                                                   | `"Amount due including shipping"`                      |
+| `fields.<name>.unit`           | string           | No                            | The unit label. For `duration`, one of `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`, or `years`.   | `"USD"`                                                |
+| `fields.<name>.integer`        | boolean          | No                            | Only for `number` and `duration`. Makes the value a whole number.                                              | `true`                                                 |
+| `fields.<name>.decimals`       | int              | No                            | Only for `number`, `duration`, and number lists. From 0 to 6.                                                  | `2`                                                    |
+| `fields.<name>.items`          | string           | For `list`                    | The type of the list items: `"text"`, `"number"`, or `"date"`.                                                 | `"text"`                                               |
+| `fields.<name>.min`            | number or string | For `estimate` and `forecast` | The lowest value, or an ISO date for date estimates.                                                           | `0`                                                    |
+| `fields.<name>.max`            | number or string | For `estimate` and `forecast` | The highest value, or an ISO date for date estimates.                                                          | `120`                                                  |
+| `fields.<name>.step`           | number or string | No                            | The grid of an estimate: a positive number (days for date estimates), `"month"`, or `"year"`.                  | `1`                                                    |
+| `fields.<name>.scale`          | string           | No                            | `"linear"` or `"log"`.                                                                                         | `"linear"`                                             |
+| `fields.<name>.null_threshold` | number           | No                            | The probability of null above which the value is `null`. Greater than 0 and up to 1.                           | `0.5`                                                  |
+| `fields.<name>.horizon`        | int              | No                            | Only for `forecast`. The number of steps, from 1 to 64.                                                        | `12`                                                   |
+| `fields.<name>.interval`       | string           | No                            | Only for `forecast`. `"step"`, `"minute"`, `"hour"`, `"day"`, `"week"`, `"month"`, `"quarter"`, or `"year"`.   | `"month"`                                              |
+| `images`                       | string array     | No                            | One `"[Blob substitute]"` string for each image. Never send the image data.                                    | `["[Blob substitute]"]`                                |
+| `reference_date`               | string           | No                            | The ISO date that anchors dates written without a year.                                                        | `"2026-09-01"`                                         |
+| `options`                      | object           | No                            | Request options.                                                                                               | `{"include_quantiles": true}`                          |
+| `options.include_quantiles`    | boolean          | No                            | Adds 99 percentiles to estimates.                                                                              | `true`                                                 |
+| `options.return_state_text`    | boolean          | No                            | Returns the text that spans index into.                                                                        | `true`                                                 |
+
+### Extraction Output Messages
+
+`gen_ai.output.messages` holds a one-element array with the response body as the provider returned it, without `model` and `usage`. Don't change the values. `answers` has one answer for each field in the input, keyed by field name.
+
+| Field                       | Type                | Required | Description                                                                                                                          | Example                    |
+| :-------------------------- | :------------------ | :------- | :----------------------------------------------------------------------------------------------------------------------------------- | :------------------------- |
+| `answers`                   | object              | Yes      | The answers, keyed by field name.                                                                                                    | `{"total": {...}}`         |
+| `answers.<name>.type`       | string              | Yes      | The type of the field.                                                                                                               | `"number"`                 |
+| `answers.<name>.value`      | any                 | Yes      | The answer, typed by the field: a string, a number, an ISO date, or an array for `list`. `null` when the input doesn't determine it. | `1080`                     |
+| `answers.<name>.guess`      | any                 | No       | The best guess. It is there even when `value` is `null`.                                                                             | `"INV-2291"`               |
+| `answers.<name>.p_null`     | number              | No       | The probability that the value is `null`.                                                                                            | `2.3e-08`                  |
+| `answers.<name>.confidence` | number              | No       | The confidence of the answer.                                                                                                        | `0.9999`                   |
+| `answers.<name>.span`       | int array           | No       | Only for `text`. `[start, end]` character offsets of the value in `state` (or in `state_text`). `end` is exclusive.                  | `[8, 16]`                  |
+| `answers.<name>.spans`      | array of int arrays | No       | Only for `list`. One `[start, end]` pair for each item.                                                                              | `[[120, 129], [131, 141]]` |
+| `answers.<name>.mean`       | number or string    | No       | Only for `estimate`. The mean of the distribution.                                                                                   | `29.535`                   |
+| `answers.<name>.median`     | number or string    | No       | Only for `estimate`. The median of the distribution.                                                                                 | `30`                       |
+| `answers.<name>.p10`        | number or string    | No       | Only for `estimate`. The 10th percentile.                                                                                            | `21`                       |
+| `answers.<name>.p90`        | number or string    | No       | Only for `estimate`. The 90th percentile.                                                                                            | `38`                       |
+| `answers.<name>.p_below`    | number              | No       | Only for `estimate`. The probability that the value is below `min`.                                                                  | `5.9e-06`                  |
+| `answers.<name>.p_above`    | number              | No       | Only for `estimate`. The probability that the value is above `max`.                                                                  | `1.2e-05`                  |
+| `answers.<name>.quantiles`  | array               | No       | Only for `estimate`, when `options.include_quantiles` is set. 99 percentiles.                                                        |                            |
+| `answers.<name>.steps`      | array               | No       | Only for `forecast`. One estimate for each step.                                                                                     |                            |
+| `truncated`                 | boolean             | Yes      | Copy it as the provider returned it.                                                                                                 | `false`                    |
+| `state_text`                | string              | No       | Only when `options.return_state_text` is set. The text that spans index into.                                                        |                            |
+
 **[0]:**
 
 Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
