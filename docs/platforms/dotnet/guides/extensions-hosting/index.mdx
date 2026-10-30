@@ -1,0 +1,301 @@
+---
+title: Generic Host
+sdk: sentry.dotnet.extensions.hosting
+description: "Learn about Sentry's .NET integration with the .NET Generic Host, for worker services, console apps, and Windows services."
+---
+
+Sentry provides an integration with the [.NET Generic Host](https://learn.microsoft.com/dotnet/core/extensions/generic-host) through the [Sentry.Extensions.Hosting NuGet package](https://www.nuget.org/packages/Sentry.Extensions.Hosting). Use it in worker services, Windows services, and console apps that run on the host. Azure Functions apps on the isolated worker model use it too, with or without the ASP.NET Core integration.
+
+<Alert title="New in Version 7.0.0">
+
+In earlier versions, generic host apps initialized Sentry with `builder.Logging.AddSentry()`. To upgrade, see the <PlatformLink to="/migration/">migration guide</PlatformLink>.
+
+</Alert>
+
+## Install
+
+Add the Sentry dependency:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Extensions.Hosting -v {{@inject packages.version('sentry.dotnet') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Extensions.Hosting -Version {{@inject packages.version('sentry.dotnet') }}
+```
+
+The package brings in [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) and the core [Sentry](/platforms/dotnet/) SDK, so you don't need to add them yourself.
+
+## Configure
+
+**Error Monitoring** starts working as soon as you initialize the SDK. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+
+This guide also enables **Tracing**.
+
+Call `UseSentry` on the host builder. It initializes Sentry, adds Sentry's `ILogger` integration, and registers `IHub`, `ISentryClient`, and `Func<IHub>` for dependency injection. It's available on:
+
+- `IHostApplicationBuilder`, which `Host.CreateApplicationBuilder()` returns, on .NET 8 and later.
+- `IHostBuilder`, which `Host.CreateDefaultBuilder()` returns, on every target, including [.NET Framework](#net-framework).
+
+The snippet also turns on:
+
+- Logs: via <PlatformLink to="/logs/#enablelogs">`EnableLogs`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
+
+```csharp {tabTitle:IHostApplicationBuilder} {filename:Program.cs} {mdExpandTabs}
+var builder = Host.CreateApplicationBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    // Send ILogger entries to Sentry as logs
+    options.EnableLogs = true;
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    options.TracesSampleRate = 1.0;
+});
+builder.Services.AddHostedService<Worker>();
+
+await builder.Build().RunAsync();
+```
+
+```csharp {tabTitle:IHostBuilder} {filename:Program.cs}
+await Host.CreateDefaultBuilder(args)
+    .UseSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+        // Send ILogger entries to Sentry as logs
+        options.EnableLogs = true;
+        // Enables Tracing.
+        // Set to 1.0 to capture 100% of spans for tracing.
+        // We recommend reducing this value in production.
+        options.TracesSampleRate = 1.0;
+    })
+    .ConfigureServices(services => services.AddHostedService<Worker>())
+    .Build()
+    .RunAsync();
+```
+
+Don't also call `builder.Logging.AddSentry()`. `UseSentry` already adds Sentry's logger providers, so that call has no effect, and the options passed to it are ignored. The one exception is [clearing the logger providers](#clearing-logger-providers).
+
+A worker has no incoming requests, so Sentry doesn't start transactions on its own. Start one around each unit of work, as shown in <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink>. Requests your app makes through `IHttpClientFactory` inside a transaction become spans.
+
+### Configuration
+
+`UseSentry` reads its options from the `Sentry` section of your configuration, such as `appsettings.json`, and the log levels from `Logging:Sentry`. Options set in the callback are applied after the configuration, so they win.
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "MinimumBreadcrumbLevel": "Debug",
+      "MinimumEventLevel": "Warning"
+    }
+  },
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "SendDefaultPii": true,
+    "EnableLogs": true,
+    "TracesSampleRate": 1.0
+  }
+}
+```
+
+`Logging:Sentry` only takes `LogLevel`, `MinimumBreadcrumbLevel`, and `MinimumEventLevel`. Any other key there, such as `Dsn`, makes `Build()` throw.
+
+To turn Sentry off, for example during local development, set `"Dsn": ""`. The `SENTRY_DSN` environment variable still takes precedence over an empty `Dsn`. If no DSN is set anywhere, `Build()` throws.
+
+### Environment
+
+The SDK uses the host environment as the Sentry environment. The host environment defaults to `Production`, and you usually set it with `DOTNET_ENVIRONMENT`. The SDK lowercases `Production`, `Staging`, and `Development`, and keeps other names as they are. To keep the original casing, set `AdjustStandardEnvironmentNameCasing` to `false`.
+
+An `Environment` set in code or in the `Sentry` section takes precedence, followed by the `SENTRY_ENVIRONMENT` environment variable.
+
+### When Sentry Starts and Stops
+
+`UseSentry` starts the SDK in `Build()`, before any hosted service starts, so code that runs between `Build()` and `Run()` is covered too. That's also the case when the app clears the logger providers or replaces the logger factory.
+
+The SDK closes when the host raises `ApplicationStopped`, after the hosted services have stopped. Errors logged while the app shuts down are still sent.
+
+### Clearing Logger Providers
+
+`ClearProviders()` removes every logger provider registered before it, including the ones `UseSentry` adds. Call `UseSentry` after it:
+
+```csharp {filename:Program.cs}
+var builder = Host.CreateApplicationBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.UseSentry();
+```
+
+If the app has to clear the providers after `UseSentry`, call `builder.Logging.AddSentry()` after `ClearProviders()`. It adds Sentry's providers back, with the options of `UseSentry`. Leave it out if NLog, Serilog, or log4net already sends your `ILogger` entries to Sentry, because each entry would then arrive twice.
+
+With `Debug` on, the SDK logs a warning during `Build()` when Sentry's providers were removed and not added back.
+
+### ASP.NET Core and MAUI Apps
+
+Web and MAUI apps use `UseSentry` from [Sentry.AspNetCore](/platforms/dotnet/guides/aspnetcore/) or [Sentry.Maui](/platforms/dotnet/guides/maui/). `WebApplicationBuilder` and `MauiAppBuilder` implement `IHostApplicationBuilder`, so the generic `UseSentry` compiles there too. With only the generic call, those apps miss what their own integration adds:
+
+- ASP.NET Core apps get no request data on events, and no transactions for incoming requests.
+- MAUI apps get no navigation or UI breadcrumbs, and Sentry starts only when the app first uses a logger or `IHub`.
+
+The generic `UseSentry` warns about this once. In a web app, it logs the warning through `ILogger` when the host starts. In a MAUI app, it writes the warning to standard error.
+
+If an app calls both, the generic `UseSentry` steps aside, in either order, and the app runs with the ASP.NET Core or MAUI integration and its options.
+
+### .NET Aspire Service Defaults
+
+The `AddServiceDefaults` method in an Aspire ServiceDefaults project takes any `IHostApplicationBuilder`, so it runs in web projects as well as workers. Its `Extensions.cs` file is declared in the `Microsoft.Extensions.Hosting` namespace. C# looks for extension methods in the enclosing namespace before the ones from `using` directives, so in that file, `web.UseSentry()` calls the generic `UseSentry`, even on a `WebApplicationBuilder`. Call the ASP.NET Core or MAUI `UseSentry` as a static method instead:
+
+```csharp {tabTitle:ASP.NET Core} {filename:Extensions.cs}
+using Microsoft.AspNetCore.Builder;
+
+namespace Microsoft.Extensions.Hosting;
+
+public static class Extensions
+{
+    public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder)
+        where TBuilder : IHostApplicationBuilder
+    {
+        if (builder is WebApplicationBuilder web)
+        {
+            SentryWebApplicationBuilderExtensions.UseSentry(web);
+        }
+        else
+        {
+            builder.UseSentry();
+        }
+
+        // ...
+        return builder;
+    }
+}
+```
+
+```csharp {tabTitle:MAUI} {filename:Extensions.cs}
+using Microsoft.Maui.Hosting;
+
+namespace Microsoft.Extensions.Hosting;
+
+public static class Extensions
+{
+    public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder)
+        where TBuilder : IHostApplicationBuilder
+    {
+        if (builder is MauiAppBuilder maui)
+        {
+            SentryMauiAppBuilderExtensions.UseSentry(maui);
+        }
+        else
+        {
+            builder.UseSentry();
+        }
+
+        // ...
+        return builder;
+    }
+}
+```
+
+The ServiceDefaults project then needs both `Sentry.Extensions.Hosting` and `Sentry.AspNetCore` or `Sentry.Maui`.
+
+Don't call the ASP.NET Core `UseSentry` again in the web project's `Program.cs`: with two calls, each error is sent twice. The generic `UseSentry` doesn't have that problem. If a worker calls it in `AddServiceDefaults` and again in `Program.cs`, Sentry is set up once, with the options from both calls.
+
+### .NET Framework
+
+On .NET Framework, `UseSentry` is only available on `IHostBuilder`. The package supports Microsoft.Extensions.Hosting 3.1 and later there, and `IHostApplicationBuilder` only exists from 8.0. An app that uses `Host.CreateApplicationBuilder()` can switch to `Host.CreateDefaultBuilder()`, as in the `IHostBuilder` example [above](#configure).
+
+The app can also keep `Host.CreateApplicationBuilder()`, initialize Sentry with `SentrySdk.Init`, and add the logging integration with `builder.Logging.AddSentry()`. It then doesn't read the `Sentry` section, and Sentry doesn't start and close with the host. `Logging.AddSentry()` doesn't register `IHub`, `ISentryClient`, or `Func<IHub>`, so register them if your services inject them:
+
+```csharp {filename:Program.cs}
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Sentry.Extensibility;
+
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.Logging.AddSentry();
+builder.Services.AddSingleton<IHub>(HubAdapter.Instance);
+builder.Services.AddSingleton<ISentryClient>(HubAdapter.Instance);
+builder.Services.AddSingleton<Func<IHub>>(() => HubAdapter.Instance);
+builder.Services.AddHostedService<Worker>();
+
+await builder.Build().RunAsync();
+```
+
+Disposing the object that `SentrySdk.Init` returns sends any pending events before the app exits.
+
+### Replacing SentrySdk.Init
+
+If your app calls `SentrySdk.Init`, remove that call when you add `UseSentry`, and move its options into the `UseSentry` callback or the `Sentry` section. Whichever initialization runs last wins, and the two don't merge their options.
+
+## Send Logs
+
+Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in the `UseSentry` options or in the `Sentry` section. It's off by default, as in the ASP.NET Core and MAUI integrations.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```csharp {filename:Worker.cs}
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+public sealed class Worker(ILogger<Worker> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            logger.LogInformation("Processing batch {BatchId}", Guid.NewGuid());
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+        }
+    }
+}
+```
+
+`EnableLogs` doesn't change how errors and breadcrumbs are captured. Entries at `Error` and above are sent as events, and entries at `Information` and above are kept as breadcrumbs. To change that, set `MinimumEventLevel` and `MinimumBreadcrumbLevel`.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Metrics are enabled by default. Use `SentrySdk.Metrics` to send counters, gauges, and distributions from your app.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```csharp
+SentrySdk.Metrics.EmitCounter("button_click", 5,
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
+SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["page"] = "/home" });
+SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
+```
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+<PlatformContent includePath="getting-started-verify" />
+
+### View Captured Data in Sentry
+
+Open your Sentry project to view the captured event.
+
+## Samples
+
+- A [worker service](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.GenericHost) that calls `UseSentry` and reads its options from `appsettings.json`. (**C#**)
+- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your generic host app. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
+- Explore <PlatformLink to="/tracing/">Tracing</PlatformLink>
+- See all <PlatformLink to="/configuration/options/">configuration options</PlatformLink>
