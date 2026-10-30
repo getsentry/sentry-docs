@@ -22,34 +22,12 @@ _Import name: `Sentry.awsLambdaWebIntegration`_
 
 This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
-[AWS Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html) run a standard Node.js HTTP server, like Express or Hono, without a Lambda handler. Because there's no handler to wrap, you instrument a Web Function with the regular Node.js SDK, the same way you would any other Node.js server. The `awsLambdaWebIntegration` adds the Lambda-specific metadata that Sentry would otherwise miss, so you can tell which function, endpoint, and request an error or slow transaction came from.
+The `awsLambdaWebIntegration` adds AWS Lambda metadata, such as the request ID, endpoint name, and cold start, to errors and spans when your app runs as an [AWS Lambda Web Function](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html). Outside of a Web Function, it does nothing.
 
-The integration only runs when the SDK detects a Web Function through the `AWS_LAMBDA_HTTP_ENDPOINT` environment variable. Outside of a Web Function, it does nothing.
-
-<Alert>
-
-If you're running a Lambda Event Function (a function with a handler that's invoked by API Gateway, SQS, S3, or another event source), use the [AWS Lambda SDK](/platforms/javascript/guides/aws-lambda/) instead.
-
-</Alert>
+For Lambda Event Functions, use the [AWS Lambda SDK](/platforms/javascript/guides/aws-lambda/) instead.
 
 ```JavaScript
 Sentry.init({
   integrations: [Sentry.awsLambdaWebIntegration()],
 });
 ```
-
-## Captured Data
-
-For every incoming request, the integration adds the following data to errors (in the `aws.lambda` context) and to the request's root span:
-
-| Data                                                               | Error context field   | Span attribute                   |
-| ------------------------------------------------------------------ | --------------------- | -------------------------------- |
-| Request ID from the `lambda-web-request-id` header                 | `aws_request_id`      | `faas.invocation_id`             |
-| Endpoint name from the `lambda-web-endpoint-name` header           | `endpoint_name`       | `aws.lambda.web.endpoint_name`   |
-| Whether the request was the first one in the execution environment | `cold_start`          | `faas.coldstart`                 |
-| Configured function memory in bytes                                | `memory_size`         | `faas.max_memory`                |
-| Initialization type of the execution environment                   | `initialization_type` | `aws.lambda.initialization_type` |
-
-Each execution environment of a Web Function handles multiple requests concurrently. The integration keeps request data isolated, so an error is always tagged with the request that caused it.
-
-The integration doesn't add Lambda metadata to logs or metrics.
