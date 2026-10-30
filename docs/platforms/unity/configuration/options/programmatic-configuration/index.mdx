@@ -51,6 +51,35 @@ public override void Configure(SentryUnityOptions options)
 }
 ```
 
+## Manual Initialization
+
+To initialize the SDK yourself instead of letting it self-initialize, uncheck **Enable Sentry** in the editor window (**Tools > Sentry**) and call `SentrySdk.Init` as early as possible, for example from a `RuntimeInitializeOnLoadMethod`:
+
+```csharp
+using Sentry.Unity;
+using UnityEngine;
+
+public static class SentryInitializer
+{
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Init()
+    {
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+        });
+    }
+}
+```
+
+When you initialize manually, the options from the editor window and the option configuration script don't apply. Only the options you set in code are used.
+
+<Alert level="warning">
+
+With **Enable Sentry** unchecked, the build doesn't set up native support or upload debug symbols, so the SDK only captures C# errors. To keep native crash support, leave **Enable Sentry** checked and use the option configuration script instead.
+
+</Alert>
+
 ### Initialize Native SDKs first when targeting iOS or Android
 
 On mobile, the Unity SDK automatically modifies the generated Xcode and Gradle project to also contain the Cocoa and Java SDK respectively. These SDKs are capable of self-initializing before the Unity engine itself is started. This allows us to capture bugs/crashes happening within the engine itself.
