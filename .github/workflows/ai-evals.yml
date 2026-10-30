@@ -236,10 +236,10 @@ jobs:
           path: sentry-for-ai
           persist-credentials: false
 
-      # Sends this test's result into the run the plan job created for the label and
-      # side. The head reads the preview, and the base the merge base's production deploy
-      # when the plan job found one, or else the live docs. No artifact-name: this repo is
-      # public.
+      # Sends this test's result into the run the plan job created for the label, side and
+      # repeat, or for the label and side when the plan makes no run per repeat. The head
+      # reads the preview, and the base the merge base's production deploy when the plan
+      # job found one, or else the live docs. No artifact-name: this repo is public.
       - uses: ./sentry-for-ai-evals/.github/actions/run-evals
         with:
           marker: ${{ matrix.job.marker }}
@@ -252,6 +252,6 @@ jobs:
           base-sha: ${{ needs.plan.outputs.base-sha }}
           sentry-for-ai-path: sentry-for-ai
           docs-url: ${{ matrix.job.revision == 'head' && needs.plan.outputs.docs-url || needs.plan.outputs.base-docs-url }}
-          run-id: ${{ fromJSON(needs.plan.outputs.eval-runs)[format('{0}-{1}', matrix.job.label, matrix.job.revision)].id }}
+          run-id: ${{ matrix.job.run-id || fromJSON(needs.plan.outputs.eval-runs)[format('{0}-{1}', matrix.job.label, matrix.job.revision)].id }}
           openrouter-api-key: ${{ secrets.AI_EVALS_OPENROUTER_API_KEY }}
           evals-api-key: ${{ secrets.SENTRY_EVALS_API_KEY }}
