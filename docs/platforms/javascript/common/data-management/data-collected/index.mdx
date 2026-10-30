@@ -272,8 +272,6 @@ Sentry.init({
 
   The content of generative AI inputs (system instructions, prompt messages, tool definitions, and tool call arguments) and outputs (such as completion text and tool call results) might carry personal data. By default, the SDK records both inputs and outputs. Metadata like model ID and token counts is always collected.
 
-  The same setting applies to instrumented MCP servers. By default, the SDK records the inputs and outputs of tool calls, prompt retrievals, and resource reads. Use the `recordInputs` and `recordOutputs` options of `wrapMcpServerWithSentry` to control recording per server.
-
   Use the `dataCollection.genAI` option to control this. For example, opt out of recording AI message content while keeping the metadata:
 
   ```JavaScript
@@ -287,6 +285,32 @@ Sentry.init({
     },
   });
   ```
+
+  <PlatformCategorySection supported={["server"]}>
+  ## MCP Server Inputs and Outputs
+
+  When you instrument an MCP server, metadata like the method name, the tool or prompt name, the session and protocol version, content counts, and error status is always sent to Sentry.
+
+  The content of MCP requests and responses might carry personal data, such as tokens, file paths, or private user content. By default, the SDK records both inputs (such as tool call arguments, prompt arguments, and the payload of MCP logging notifications) and outputs (such as tool results and prompt result messages).
+
+  Use the `dataCollection.mcp` option, available in SDK version `11.9.0` and above, to control this. For example, opt out of recording MCP content while keeping the metadata:
+
+  ```JavaScript
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    dataCollection: {
+      mcp: {
+        inputs: false,
+        outputs: false,
+      },
+    },
+  });
+  ```
+
+  If you don't set a field of `dataCollection.mcp`, the SDK uses the matching `dataCollection.genAI` field instead. In SDK versions before `11.9.0`, `dataCollection.genAI` is the only global setting for MCP content.
+
+  To control recording for a specific server, use the `recordInputs` and `recordOutputs` options of <PlatformLink to="/mcp-monitoring/">`wrapMcpServerWithSentry`</PlatformLink>. They take precedence over the `dataCollection` settings.
+  </PlatformCategorySection>
 </PlatformSection>
 
 <PlatformSection supported={["javascript.electron"]}>
