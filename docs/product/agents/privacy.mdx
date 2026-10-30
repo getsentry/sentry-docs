@@ -14,29 +14,32 @@ keywords:
 og_image: /og-images/product-agents-privacy.png
 ---
 
-## SDK PII Settings
+## SDK Data Collection
 
-By default, Sentry agent integrations respect your [SDK's PII settings](/platforms/javascript/guides/nextjs/data-management/data-collected/):
+Sentry's AI integrations always send metadata, such as model names, token counts, tool names, and execution times. Your SDK's data collection settings control whether they also send content: prompts, system instructions, model responses, tool definitions, tool call arguments, and tool call results.
 
-- `sendDefaultPii: false` - Only metadata like model names, token counts, tool names, and execution times are collected
-- `sendDefaultPii: true` - Full inputs, outputs, prompts, and responses from AI models and tools are captured.
+By default, Sentry agent integrations collect this content. To stop sending it, turn off generative AI inputs and outputs in your SDK's [`dataCollection` option](/platforms/javascript/guides/nextjs/configuration/options/#dataCollection).
 
-You can override this per integration with `recordInputs` and `recordOutputs`. For more details see [Options](/platforms/javascript/guides/nextjs/configuration/integrations/vercelai/#options).
+You can override this per integration with `recordInputs` and `recordOutputs`. For more details, see [Options](/platforms/javascript/guides/nextjs/configuration/integrations/vercelai/#options).
 
-## Server side PII Scrubbing
+## Server-Side Data Scrubbing
 
-<Alert level="info">
+Sentry has built-in [Server-Side Data Scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) that detects and removes common sensitive data from most event data. For AI attributes, Sentry applies a narrower set of rules so conversations stay readable.
 
-Sentry has built-in [Server-Side Data Scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) that automatically detects and removes common sensitive data like credit card numbers, social security numbers, and passwords from most event data.
+If **Use Default Scrubbers** is enabled in your **Security & Privacy** settings, Sentry replaces the following values in AI attributes and keeps the rest of the content intact:
 
-However, the following agent span attributes are not protected by default:
+- Email addresses
+- Credit card numbers
+- IBANs
+- US Social Security numbers
+- Bearer tokens
+
+This applies to the following attributes:
 
 - `gen_ai.input.messages`
+- `gen_ai.output.messages`
+- `gen_ai.system_instructions`
 - `gen_ai.tool.call.arguments`
 - `gen_ai.tool.call.result`
-- `gen_ai.output.messages`
-
-</Alert>
-If you wish to enable Data Scrubbing for any of these fields you can add an [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advanced-datascrubbing/) rule in [Organization-level **Security & Privacy** settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) or [Project-level **Security & Privacy** settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) in the following format: `$span.data.'<span attribute>'`.
-
-![Additional Sensitive Fields](./img/advanced-scrubbing-rule.png)
+- `gen_ai.tool.definitions`
+- `gen_ai.tool.name`
