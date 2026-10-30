@@ -62,7 +62,7 @@ export default defineConfig({
 });
 ```
 
-The plugin registers the Flue instrumentation for you at build time, so you don't write an `instrument()` call as you do on Node.js. It instruments the other libraries your tools call at the same point, so their spans land in the agent's trace.
+The plugin is required. It registers the Flue instrumentation for you at build time, so you don't write an `instrument()` call as you do on Node.js. It also instruments Flue's model library, `@earendil-works/pi-ai`, which is where model call spans come from, and the other libraries your tools call, so their spans land in the agent's trace.
 
 Each Flue agent runs in its own Durable Object, which is a separate isolate from your Worker entry. `Sentry.init()` has to run inside it, so create a module that wraps the generated agent Durable Object:
 
@@ -137,6 +137,7 @@ See [`dataCollection` documentation](../configuration/options/#dataCollection) f
 ## Troubleshooting
 
 - **The agent runs but nothing reaches Sentry.** Confirm each agent module re-exports `cloudflare` from your `src/sentry.ts`. This is the most common cause, and it fails silently.
+- **Agent and tool spans arrive, but no model calls.** Confirm `sentryCloudflareVitePlugin()` is in your Vite config and that you build with Vite. The SDK logs `Flue model calls are not being traced` when the plugin didn't run.
 - **`instrument.server.ts` has no effect.** That convention needs a worker entry named in Wrangler's `main`. Flue supplies its own virtual entry instead, so the file is never picked up. Use the Durable Object wrapper above.
 - **Token and cost values are doubled.** Remove the `createOpenTelemetryInstrumentation` call left over from the `flue add tooling sentry` blueprint.
 

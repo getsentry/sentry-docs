@@ -120,9 +120,9 @@ import "./instrument.ts";
 
 Call `instrument()` once, at module scope. On Cloudflare the Vite plugin registers the instrumentation at build time instead; on Node there's no equivalent, so this call is what installs it.
 
-### Run With the Sentry Loader
+### Start With the Sentry Loader
 
-Libraries like database drivers, caches, and `dataloader` are instrumented by a module transform that has to be installed before your app loads them. A Flue build imports your dependencies before `src/instrument.ts` runs, so start the server with the Sentry loader to catch them:
+The `instrument()` call only covers agent and tool spans. Model calls are traced through Flue's model library, `@earendil-works/pi-ai`, and so are your tools' database drivers, caches, and libraries like `dataloader`. All of these are instrumented by a module transform that has to be installed before your app loads them. A Flue build imports your dependencies before `src/instrument.ts` runs, so always start the server with the Sentry loader, in development and production:
 
 ```json {filename:package.json}
 {
@@ -133,7 +133,11 @@ Libraries like database drivers, caches, and `dataloader` are instrumented by a 
 }
 ```
 
-Agent, model, and tool spans arrive without this, as do outgoing HTTP requests. Everything instrumented through the module transform needs it.
+<Alert level="warning">
+
+Without the loader, your agents still record agent and tool spans, but no model calls (`gen_ai.chat` spans), so token usage and cost are missing. The SDK logs a warning on the first model call when this happens.
+
+</Alert>
 
 <Include name="flue/captured-summary" />
 
@@ -162,6 +166,7 @@ See [`dataCollection` documentation](./configuration/options/#dataCollection) fo
 
 - **Token and cost values are doubled.** Remove the `createOpenTelemetryInstrumentation` call left over from the `flue add tooling sentry` blueprint. Flue emits its own model spans through it, so both it and the SDK count the same turn.
 - **No AI spans at all.** Confirm `instrument(Sentry.createFlueInstrumentation())` actually runs. Importing `src/instrument.ts` at the top of `src/app.ts` runs it during app startup, before any agent takes a turn.
+- **Agent and tool spans arrive, but no model calls.** The server started without the Sentry loader. Confirm every script that starts the server, including `dev`, sets `NODE_OPTIONS='--import=@sentry/node/import'`. The SDK logs `Flue model calls are not being traced` when the loader is missing.
 
 <Include name="flue/next-steps" />
 
