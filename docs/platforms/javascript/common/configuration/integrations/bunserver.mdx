@@ -24,3 +24,109 @@ Sentry.init({
   integrations: [Sentry.bunServerIntegration()],
 });
 ```
+
+## Options
+
+### `maxRequestBodySize`
+
+_Type: `'none' | 'small' | 'medium' | 'always'`_ (Defaults to `'medium'`)
+
+Controls the maximum size of incoming HTTP request bodies attached to events.
+
+Available options:
+
+- `'none'`: No request bodies will be attached
+- `'small'`: Request bodies up to 1,000 bytes will be attached
+- `'medium'`: Request bodies up to 10,000 bytes will be attached (default)
+- `'always'`: Request bodies will always be attached
+
+Note that even with the `'always'` setting, bodies exceeding 1 MB will never be attached for performance and security reasons.
+
+### `ignoreRequestBody`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `(url: string, request: Request) => boolean`_
+
+Skips the request body for incoming requests where the callback returns `true`. If the callback throws, the SDK skips the body.
+
+The callback function receives two arguments:
+
+- `url`: The full URL of the incoming request, including the query string. For example: `https://example.com/users?name=John`.
+- `request`: The incoming `Request`.
+
+### `ignoreIncomingRequests`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `(urlPath: string, request: Request) => boolean`_
+
+Skips the span for incoming requests where the callback returns `true`. The SDK still captures errors for these requests.
+
+The callback function receives two arguments:
+
+- `urlPath`: The URL path of the incoming request, including the query string. For example: `/users?name=John`.
+- `request`: The incoming `Request`.
+
+### `ignoreStaticAssets`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `boolean`_ (Defaults to `true`)
+
+If set to `true`, no spans will be captured for `GET` requests to static assets such as `favicon.ico`, `robots.txt`, or `*.js` files.
+
+### `spans`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `boolean`_ (Defaults to `true` when tracing is enabled)
+
+If set to `false`, no spans will be created for incoming requests. The SDK still captures errors and attaches request data.
+
+### `onSpanCreated`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `(span: Span, request: Request) => void`_
+
+A hook that's called after the span for an incoming request starts, before your handler runs. Use this to add custom attributes to incoming request spans.
+
+### `onSpanEnd`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `(span: Span, request: Request, response: Response) => void`_
+
+A hook that's called before the span for an incoming request ends. For a streamed response, it runs when the stream finishes. It's not called when your handler throws.
+
+```javascript
+Sentry.bunServerIntegration({
+  onSpanEnd: (span, request, response) => {
+    span.setAttribute("cache_hit", response.headers.get("x-cache") === "HIT");
+  },
+});
+```
+
+### `sessions`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `boolean`_ (Defaults to `true`)
+
+Determines whether the integration should create [Sessions](/product/releases/health/#sessions) for incoming requests to track the health and crash-free rate of your releases in Sentry. Sessions are only sent when you set a `release`.
+Read more about [Release Health](/product/releases/health/).
+
+### `sessionFlushingDelayMS`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `number`_ (Defaults to `60000`)
+
+The delay in milliseconds before sessions are flushed as a session aggregate.
+
+## Behavior Changes in 11.10.0
+
+- Static asset requests no longer create spans by default. To keep these spans, set `ignoreStaticAssets: false`.
+- When tracing is disabled, the integration doesn't create spans.
+- The SDK now captures errors thrown for `OPTIONS` and `HEAD` requests.
