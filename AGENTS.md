@@ -104,6 +104,7 @@ When writing requirements in `develop-docs/`:
 - Every page at `docs.sentry.io/<path>` has a `.md` export at `docs.sentry.io/<path>.md`
 - `scripts/generate-md-exports.mjs` generates these as a post-build step
 - Frontmatter metadata (title, description, URL) is emitted as a YAML frontmatter block in MD exports — pages missing descriptions lose LLM relevance signal
+- Quick starts set `runtime` (for example `node` or `cloudflare`) in their frontmatter. The MD export adds `runtime` and a `runtimes` list with the `.md` URLs of the quick starts for the other runtimes
 - MDX override templates live in `md-overrides/`
 - Architecture spec: `specs/llm-friendly-docs.md`
 
