@@ -20,7 +20,8 @@ const root = process.cwd();
 // so many files at once.
 const FILE_CONCURRENCY_LIMIT = 200;
 
-const formatSlug = (slug: string): string => slug.replace(/\.(mdx|md)$/, '');
+const formatSlug = (slug: string): string =>
+  slug.replace(/\\/g, '/').replace(/\.(mdx|md)$/, '');
 
 const isSupported = (
   frontmatter: FrontMatter,
@@ -88,7 +89,7 @@ export async function getDocsFrontMatterFromDirectory(
     files.map(
       limitFunction(
         async file => {
-          const fileName = file.slice(docsPath.length + 1);
+          const fileName = file.slice(docsPath.length + 1).replace(/\\/g, '/');
           if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
             return;
           }
@@ -102,7 +103,7 @@ export async function getDocsFrontMatterFromDirectory(
           allFrontMatter.push({
             ...(frontmatter as FrontMatter),
             slug: formatSlug(fileName),
-            sourcePath: path.join('docs', fileName),
+            sourcePath: path.posix.join('docs', fileName),
           });
         },
         {concurrency: FILE_CONCURRENCY_LIMIT}
@@ -215,9 +216,12 @@ export async function getDocsFrontMatterFromDirectory(
               return;
             }
 
-            const subpath = commonFile.commonFileName.slice(commonPath.length + 1);
+            const subpath = commonFile.commonFileName
+              .slice(commonPath.length + 1)
+              .replace(/\\/g, '/');
             const slug = commonFile.commonFileName
               .slice(docsPath.length + 1)
+              .replace(/\\/g, '/')
               .replace(/\/common\//, '/');
             // Check if the file exists using the pre-computed Set
             const noFrontMatter =
@@ -234,7 +238,10 @@ export async function getDocsFrontMatterFromDirectory(
                 ...frontmatter,
                 slug: formatSlug(slug),
                 sourcePath:
-                  'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
+                  'docs/' +
+                  commonFile.commonFileName
+                    .slice(docsPath.length + 1)
+                    .replace(/\\/g, '/'),
               });
             }
           },
@@ -301,13 +308,11 @@ export async function getDocsFrontMatterFromDirectory(
                 return;
               }
 
-              const subpath = commonFile.commonFileName.slice(commonPath.length + 1);
-              const slug = path.join(
-                'platforms',
-                platformName,
-                'guides',
-                guideName,
-                subpath
+              const subpath = commonFile.commonFileName
+                .slice(commonPath.length + 1)
+                .replace(/\\/g, '/');
+              const slug = ['platforms', platformName, 'guides', guideName, subpath].join(
+                '/'
               );
               // Check if file exists using pre-computed Set
               if (existingFilesSet.has(path.join(docsPath, slug))) {
@@ -322,7 +327,10 @@ export async function getDocsFrontMatterFromDirectory(
                 ...frontmatter,
                 slug: formatSlug(slug),
                 sourcePath:
-                  'docs/' + commonFile.commonFileName.slice(docsPath.length + 1),
+                  'docs/' +
+                  commonFile.commonFileName
+                    .slice(docsPath.length + 1)
+                    .replace(/\\/g, '/'),
               });
             },
             {concurrency: FILE_CONCURRENCY_LIMIT}
@@ -368,7 +376,7 @@ async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
       files.map(
         limitFunction(
           async file => {
-            const fileName = file.slice(docsPath.length + 1);
+            const fileName = file.slice(docsPath.length + 1).replace(/\\/g, '/');
             if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
               return undefined;
             }
@@ -378,7 +386,7 @@ async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
             return {
               ...(frontmatter as FrontMatter),
               slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-              sourcePath: path.join(folder, fileName),
+              sourcePath: path.posix.join(folder, fileName),
             };
           },
           {concurrency: FILE_CONCURRENCY_LIMIT}
