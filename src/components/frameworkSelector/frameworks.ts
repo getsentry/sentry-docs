@@ -88,22 +88,14 @@ export const RUNTIMES: Record<string, Runtime> = {
     title: 'Cloudflare Workers',
     frameworks: [],
     frameworkGuides: [
-      guide('Astro', 'cloudflare/frameworks/astro', 'javascript-astro'),
-      guide('Hono', 'cloudflare/frameworks/hono', 'javascript-hono'),
-      guide(
-        'Hydrogen',
-        'cloudflare/frameworks/hydrogen-react-router',
-        'javascript-hydrogen'
-      ),
+      guide('Astro', 'astro/cloudflare'),
+      guide('Hono', 'hono/cloudflare'),
+      guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
-      guide('Remix', 'cloudflare/frameworks/remix', 'javascript-remix'),
-      guide('SvelteKit', 'cloudflare/frameworks/sveltekit', 'javascript-sveltekit'),
-      guide(
-        'TanStack Start',
-        'cloudflare/frameworks/tanstack-start',
-        'javascript-tanstackstart-react'
-      ),
+      guide('Remix', 'remix/cloudflare'),
+      guide('SvelteKit', 'sveltekit/cloudflare'),
+      guide('TanStack Start', 'tanstackstart-react/cloudflare'),
     ],
     includePaths: [],
   },
