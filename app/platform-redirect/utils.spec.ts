@@ -1,10 +1,53 @@
+import type {DocNode} from 'sentry-docs/docTree';
 import {describe, expect, it} from 'vitest';
 
-import {platformUrlFor, sanitizeNext} from './utils';
+import {landingPageFallbackGuide, platformUrlFor, sanitizeNext} from './utils';
 
 const path = (next: string) => sanitizeNext(next).pathname;
 const hash = (next: string) => sanitizeNext(next).hash;
 const REJECTED = {pathname: '', hash: ''};
+
+describe('landingPageFallbackGuide', () => {
+  const node = (
+    slug: string,
+    frontmatter: Record<string, unknown> = {},
+    children: DocNode[] = []
+  ) => ({slug, frontmatter, children, missing: false, path: slug}) as unknown as DocNode;
+
+  const rootNode = node('', {}, [
+    node('platforms', {}, [
+      node('javascript', {}, [
+        node('guides', {}, [
+          node('express', {
+            inheritCommonContent: false,
+            fallbackGuide: 'javascript.node',
+          }),
+          node('nestjs', {fallbackGuide: 'javascript.node'}),
+          node('cordova', {inheritCommonContent: false}),
+        ]),
+      ]),
+    ]),
+  ]);
+
+  it('returns the fallback guide of a landing page guide', () => {
+    expect(landingPageFallbackGuide(rootNode, 'javascript.express')).toBe(
+      'javascript.node'
+    );
+  });
+
+  it('returns nothing for a guide that inherits the common content', () => {
+    expect(landingPageFallbackGuide(rootNode, 'javascript.nestjs')).toBeUndefined();
+  });
+
+  it('returns nothing for a landing page guide without a fallback guide', () => {
+    expect(landingPageFallbackGuide(rootNode, 'javascript.cordova')).toBeUndefined();
+  });
+
+  it('returns nothing for a platform or an unknown guide', () => {
+    expect(landingPageFallbackGuide(rootNode, 'javascript')).toBeUndefined();
+    expect(landingPageFallbackGuide(rootNode, 'javascript.unknown')).toBeUndefined();
+  });
+});
 
 describe('sanitizeNext', () => {
   it('should return an empty string for external URLs', () => {

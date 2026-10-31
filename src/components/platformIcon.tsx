@@ -76,6 +76,7 @@ import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
 import HuggingfaceSVG from 'platformicons/svg/huggingface.svg';
+import HydrogenSVG from 'platformicons/svg/hydrogen.svg';
 import IonicSVG from 'platformicons/svg/ionic.svg';
 import IrisSVG from 'platformicons/svg/iris.svg';
 import JavaSVG from 'platformicons/svg/java.svg';
@@ -235,6 +236,7 @@ import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
 import HuggingfaceSVGLarge from 'platformicons/svg_80x80/huggingface.svg';
+import HydrogenSVGLarge from 'platformicons/svg_80x80/hydrogen.svg';
 import IonicSVGLarge from 'platformicons/svg_80x80/ionic.svg';
 import IrisSVGLarge from 'platformicons/svg_80x80/iris.svg';
 import JavaSVGLarge from 'platformicons/svg_80x80/java.svg';
@@ -672,6 +674,10 @@ const formatToSVG = {
     sm: HonoSVG,
     lg: HonoSVGLarge,
   },
+  hydrogen: {
+    sm: HydrogenSVG,
+    lg: HydrogenSVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -1076,6 +1082,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-hydrogen': 'hydrogen',
   'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
   'javascript-flue': 'flue',
