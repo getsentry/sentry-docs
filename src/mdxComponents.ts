@@ -51,6 +51,7 @@ import {PlatformOrGuideName} from './components/platformOrGuideName';
 import {PlatformSdkPackageName} from './components/platformSdkPackageName';
 import {PlatformSection} from './components/platformSection';
 import {RelayMetrics} from './components/relayMetrics';
+import {RuntimeSelector} from './components/runtimeSelector';
 import {SandboxLink} from './components/sandboxLink';
 import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
@@ -124,6 +125,7 @@ export function mdxComponents(
     OnboardingOptionButtons,
     OnboardingSteps,
     RelayMetrics,
+    RuntimeSelector,
     SandboxLink,
     CopyableCard,
     SignInNote,
