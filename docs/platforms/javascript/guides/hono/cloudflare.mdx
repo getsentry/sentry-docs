@@ -1,0 +1,167 @@
+---
+title: Hono on Cloudflare
+sidebar_title: Quick Start (Cloudflare)
+sidebar_order: 0.5
+description: "Learn how to set up Sentry in your Hono app on Cloudflare Workers and capture your first errors."
+---
+
+The `@sentry/hono` SDK works as Hono middleware, so you can drop it into your existing Cloudflare Workers app. For Node.js, Bun, and Deno, see the [Hono quick start](/platforms/javascript/guides/hono/).
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+### Install the Sentry SDK
+
+Install `@sentry/hono` together with `@sentry/cloudflare`. The runtime package is a peer dependency that you never import directly, but it must be present and its version must match `@sentry/hono`.
+
+```bash {tabTitle:npm}
+npm install @sentry/hono @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/hono @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/hono @sentry/cloudflare
+```
+
+## Configure
+
+**Error Monitoring** starts working as soon as you add the `sentry()` middleware. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**.
+
+<Include name="quick-start-features-expandable-cloudflare-server" />
+
+### Configure Wrangler
+
+The SDK needs `AsyncLocalStorage`, so set the `nodejs_compat` compatibility flag and a `compatibility_date` of `2024-09-23` or later in your Wrangler configuration:
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  // Set this to today's date
+  "compatibility_date": "{{@inject new Date().toISOString().slice(0, 10) }}",
+  "compatibility_flags": ["nodejs_compat"],
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+# Set this to today's date
+compatibility_date = "{{@inject new Date().toISOString().slice(0, 10) }}"
+compatibility_flags = ["nodejs_compat"]
+```
+
+### Add the Sentry Middleware
+
+Add the `sentry()` middleware as early as possible in your Hono app, before any route that you want covered.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
+```typescript {filename:index.ts}
+import { Hono } from "hono";
+import { sentry } from "@sentry/hono/cloudflare";
+
+const app = new Hono();
+
+app.use(
+  sentry(app, {
+    dsn: "___PUBLIC_DSN___",
+
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    tracesSampleRate: 1.0,
+  })
+);
+
+// Your routes here
+
+export default app;
+```
+
+<Expandable title="Accessing env from Worker Bindings">
+
+To read the DSN from a Worker binding, for example a secret, pass a callback instead of a plain options object. The callback receives the Worker `env`:
+
+```typescript {filename:index.ts}
+import { Hono } from "hono";
+import { sentry } from "@sentry/hono/cloudflare";
+
+type Bindings = { SENTRY_DSN: string };
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+app.use(sentry(app, (env) => ({ dsn: env.SENTRY_DSN })));
+
+export default app;
+```
+
+</Expandable>
+
+### Report Unhandled Exceptions
+
+By default, Sentry captures exceptions from Hono's `onError` handler, excluding errors with 3xx or 4xx status codes. No additional configuration is needed for this.
+
+To control which errors are captured, use the <PlatformLink to="/features/error-handler/">`shouldHandleError`</PlatformLink> option.
+
+### Add Readable Stack Traces With Source Maps
+
+<PlatformContent
+  includePath="getting-started-sourcemaps-short-version"
+  platform="javascript.cloudflare"
+/>
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add a test route to your Hono app that throws an error, then request `/debug-sentry` to trigger it:
+
+```typescript
+app.get("/debug-sentry", () => {
+  throw new Error("Sentry Test Error");
+});
+```
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable-cloudflare-server" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Hono application on Cloudflare Workers. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Explore <PlatformLink to="/features/">Hono-specific features</PlatformLink> like custom error filtering
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in [Cloudflare troubleshooting](/platforms/javascript/guides/cloudflare/troubleshooting/)
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

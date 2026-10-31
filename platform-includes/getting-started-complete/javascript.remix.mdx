@@ -111,8 +111,6 @@ export default withSentry(App);
 
 ### Configure Server-Side Sentry
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 Create an instrumentation file `instrument.server.mjs` in your project's root folder and initialize the Sentry SDK within it:
 
 ```typescript {tabTitle:Server} {filename: instrument.server.mjs}
@@ -178,90 +176,7 @@ const app = express();
 
 </Expandable>
 
-</ PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-Create a Worker entry file, for example `server.ts` in your project's root folder, and set it as `main` in your wrangler config.
-
-In this file, instrument your Remix server build with `instrumentBuild` from `@sentry/remix/cloudflare`, pass it to `createRequestHandler`, and wrap the exported handler with `Sentry.withSentry()` from `@sentry/cloudflare`. `withSentry` isolates each request, so scope data like tags and users stays on the request that set it.
-
-<Alert level="warning">
-
-Don't also wrap `createRequestHandler` with `makeWrappedCreateRequestHandler`. Combined with `withSentry`, it reports every request twice, as two `http.server` transactions in two different traces.
-
-</Alert>
-
-```typescript {filename:server.ts}
-import { createRequestHandler } from "@remix-run/cloudflare";
-import * as Sentry from "@sentry/cloudflare";
-import { instrumentBuild } from "@sentry/remix/cloudflare";
-// The server build produced by `remix vite:build`
-import * as remixBuild from "./build/server/index.js";
-
-const handleRequest = createRequestHandler(instrumentBuild(remixBuild));
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for tracing.
-    // We recommend adjusting this value in production
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-  }),
-  {
-    async fetch(request, env, ctx) {
-      return handleRequest(request, { env, ctx });
-    },
-  }
-);
-```
-
-<Expandable title="Deploying to Cloudflare Pages?">
-
-<Include name="cloudflare-pages-middleware-intro.mdx" />
-
-```javascript {filename:functions/_middleware.js}
-import * as Sentry from "@sentry/cloudflare";
-
-export const onRequest = [
-  // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => ({
-    dsn: "___PUBLIC_DSN___",
-
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for tracing.
-    // We recommend adjusting this value in production
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-
-    // Optionally limit which action formData fields are captured.
-    // Without this option, all fields are captured.
-    captureActionFormDataKeys: {
-      key_x: true,
-      key_y: true,
-    },
-  })),
-  // Add more middlewares here
-];
-```
-
-</Expandable>
-
-</ PlatformSection>
-
 ### Capture Server-Side Errors
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 To automatically capture server-side errors, export a [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function from your server entry point (`entry.server.tsx`). Choose one of the two options:
 
@@ -290,40 +205,7 @@ import * as Sentry from "@sentry/remix";
 export const handleError = Sentry.sentryHandleError;
 ```
 
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-To automatically capture server-side errors, export `sentryHandleError` as the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function from your server entry point (`entry.server.tsx`). Without this export, Remix handles errors thrown in loaders and actions itself, and Sentry doesn't receive them.
-
-<Alert level="warning">
-
-Import from `@sentry/remix/cloudflare`, not from `@sentry/remix`. In a Cloudflare server build, `sentryHandleError` from `@sentry/remix` is `undefined`, and no errors are captured.
-
-</Alert>
-
-```typescript {filename: entry.server.tsx}
-import { sentryHandleError } from "@sentry/remix/cloudflare";
-
-export const handleError = sentryHandleError;
-```
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-### Configure Cloudflare for Sentry
-
-<PlatformContent
-  includePath="getting-started-config"
-  platform="javascript.cloudflare"
-/>
-
-</ PlatformSection>
-
 ### Configure Vite
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 Add `sentryRemixVitePlugin` from `@sentry/remix/vite` to your `vite.config.ts`. The plugin:
 
@@ -350,46 +232,6 @@ export default defineConfig({
   ],
 });
 ```
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-Add two Sentry plugins to your `vite.config.ts`, next to the Remix plugin:
-
-- `sentryRemixVitePlugin` from `@sentry/remix/vite` parameterizes transaction names with your route patterns, for example `/users/:id`.
-- `sentryCloudflareVitePlugin` from `@sentry/cloudflare/vite` instruments supported bundled dependencies at build time, so you get spans for database clients like `mysql`. Without it, database calls produce no spans and no warning.
-
-Set `ssr.target` to `webworker` and bundle the Sentry packages and any database client you want traced with `ssr.noExternal`. Setting `noExternal: true` bundles every dependency, which works too.
-
-```typescript {filename:vite.config.ts} {2-3, 11-12, 14-17}
-import { vitePlugin as remix } from "@remix-run/dev";
-import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
-import { sentryRemixVitePlugin } from "@sentry/remix/vite";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [
-    remix({
-      // ... your Remix plugin options
-    }),
-    sentryRemixVitePlugin(),
-    sentryCloudflareVitePlugin(),
-  ],
-  ssr: {
-    target: "webworker",
-    noExternal: ["mysql", /^@sentry\//, "@opentelemetry/api"],
-  },
-});
-```
-
-Build your app with `remix vite:build`. Under Vite 6, a plain `vite build` only builds the client and skips `build/server`, without an error.
-
-```bash
-npx remix vite:build
-```
-
-</PlatformSection>
 
 ### Add Readable Stack Traces With Source Maps (Optional)
 
@@ -437,12 +279,9 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
 ### Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
-
-</PlatformSection>
 
 ### Control the Data You Send to Sentry (Optional)
 
@@ -519,16 +358,7 @@ Open the page in a browser and click the button to trigger the frontend error an
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-<Include name="quick-start-locate-data-expandable-cloudflare-frameworks" />
-
-</PlatformSection>
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 <Include name="quick-start-locate-data-expandable" />
-
-</PlatformSection>
 
 ## Next Steps
 
@@ -541,7 +371,6 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 - Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
 - If you encountered issues with the manual setup, try <PlatformLink to="/">our installation wizard</PlatformLink>
@@ -549,14 +378,3 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-<Expandable permalink={false} title="Are you having problems setting up the SDK?">
-
-- If you encountered issues with the manual setup, try <PlatformLink to="/">our installation wizard</PlatformLink>
-- Find various support topics in <PlatformLink to="/troubleshooting/">Cloudflare troubleshooting</PlatformLink> and [Remix troubleshooting](/platforms/javascript/guides/remix/troubleshooting/)
-- [Get support](https://www.sentry.help/en/)
-
-</Expandable>
-</PlatformSection>

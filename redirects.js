@@ -1051,7 +1051,38 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/nuxt/cloudflare/',
+  },
+  // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
+    destination: '/platforms/javascript/guides/:framework/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
+    destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/',
+    destination: '/platforms/javascript/guides/remix/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/',
+    destination: '/platforms/javascript/guides/remix/hydrogen/',
+  },
+  {
+    // The Cloudflare quick start links to every framework page.
+    source: '/platforms/javascript/guides/cloudflare/frameworks/',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -2123,13 +2154,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
