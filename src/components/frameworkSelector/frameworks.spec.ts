@@ -5,9 +5,12 @@ import matter from 'gray-matter';
 import {describe, expect, it} from 'vitest';
 
 import {getRuntimeLinks} from '../runtimeLinks';
-import {RUNTIMES} from './frameworks';
+import {Runtime, RUNTIMES} from './frameworks';
 
 const GUIDES_DIR = 'docs/platforms/javascript/guides';
+
+const linkedUrls = (runtime: Runtime) =>
+  [...(runtime.frameworkGuides ?? []), ...(runtime.agentGuides ?? [])].map(g => g.url);
 
 const pageExists = (url: string) => {
   const file = join('docs', url.replace(/\/$/, ''));
@@ -59,8 +62,7 @@ const switchableIncludePaths = (runtime: string) => {
 
 describe('RUNTIMES', () => {
   it.each(Object.entries(RUNTIMES))('%s links only to existing pages', (_, runtime) => {
-    const urls = (runtime.frameworkGuides ?? []).map(g => g.url);
-    expect(urls.filter(url => !pageExists(url))).toEqual([]);
+    expect(linkedUrls(runtime).filter(url => !pageExists(url))).toEqual([]);
   });
 
   it.each(Object.entries(RUNTIMES))(
@@ -79,7 +81,7 @@ describe('RUNTIMES', () => {
         .filter(
           link =>
             link.runtime in RUNTIMES &&
-            !RUNTIMES[link.runtime].frameworkGuides?.some(g => g.url === link.url)
+            !linkedUrls(RUNTIMES[link.runtime]).includes(link.url)
         )
         .map(link => link.url)
     );
