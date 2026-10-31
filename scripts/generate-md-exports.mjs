@@ -29,6 +29,7 @@ import {remove} from 'unist-util-remove';
 import {frameworkNodes} from './platform-frameworks.mjs';
 import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
 import {selectMarkdownContent} from './md-export-content.mjs';
+import {formatRuntimeYaml, quickStartRuntimes} from './quick-start-runtimes.mjs';
 import {replaceCurrentUrlTokens} from './markdown-keywords.mjs';
 
 // Default values for code keyword placeholders (e.g. ___PUBLIC_DSN___) that are
@@ -371,13 +372,14 @@ function normalizeRelativePath(filePath) {
 
 /**
  * Walks the doctree to build a map of relativePath → {title, description, url}
- * for YAML frontmatter generation.
+ * for YAML frontmatter generation. Quick starts also get {runtime, runtimes}.
  */
 function buildFrontmatterMap(docTree) {
   const map = new Map();
   if (!docTree) {
     return map;
   }
+  const runtimes = quickStartRuntimes(docTree, DOCS_ORIGIN);
 
   function walk(node) {
     if (node.path) {
@@ -386,6 +388,7 @@ function buildFrontmatterMap(docTree) {
         title: getTitle(node),
         description: node.frontmatter?.description || '',
         url: `${DOCS_ORIGIN}/${node.path}/`,
+        ...runtimes.get(node.path),
       });
     }
     if (node.children) {
@@ -408,7 +411,7 @@ function buildFrontmatterMap(docTree) {
  * Formats a YAML frontmatter block for a markdown file.
  * Only includes fields that have non-empty values.
  */
-function formatYamlFrontmatter({title, description, url}) {
+function formatYamlFrontmatter({title, description, url, runtime, runtimes}) {
   let yaml = '---\n';
   if (title) {
     yaml += `title: ${JSON.stringify(title.replace(/\r?\n/g, ' '))}\n`;
@@ -419,6 +422,7 @@ function formatYamlFrontmatter({title, description, url}) {
   if (url) {
     yaml += `url: ${url}\n`;
   }
+  yaml += formatRuntimeYaml({runtime, runtimes});
   yaml += '---\n\n';
   return yaml;
 }

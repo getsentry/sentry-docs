@@ -98,8 +98,9 @@ export interface FrontMatter {
   previousPage?: PaginationNavNode;
 
   /**
-   * The runtime of a quick start, for example `node` or `cloudflare`. `<RuntimeSelector />`
-   * links the quick starts of the same guide for the other runtimes.
+   * The runtime of a quick start, for example `node` or `cloudflare`. The Markdown
+   * export lists the quick starts of the same guide for the other runtimes, and
+   * `<RuntimeSelector />` links them on the page.
    */
   runtime?: string;
 
