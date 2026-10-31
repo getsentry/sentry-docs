@@ -98,6 +98,7 @@ When writing requirements in `develop-docs/`:
 - **ALWAYS** run `/brand-guidelines` to audit any user-facing content before committing. See `.agents/skills/brand-guidelines/SKILL.md`
 - Use `docs-review` skill for Sentry style and voice review. See `.claude/skills/docs-review/SKILL.md`
 - Use `technical-docs` skill when writing or reviewing SDK documentation. See `.claude/skills/technical-docs/SKILL.md`
+- Quick starts set `runtime` (for example `node` or `cloudflare`) in their frontmatter. Add `<RuntimeSelector />` to a quick start to link the quick starts of the same guide for the other runtimes
 
 ## LLM-Friendly MD Exports
 
