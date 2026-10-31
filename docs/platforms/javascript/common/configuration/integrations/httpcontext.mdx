@@ -1,6 +1,6 @@
 ---
 title: HttpContext
-description: "Attaches HTTP request information, such as URL, user-agent, referrer, and other headers to the event. (default)"
+description: "Attaches the page URL and the user agent and referrer headers to the event. (default)"
 notSupportedCategories:
   - server-only
 notSupported:
@@ -17,11 +17,18 @@ _Import name: `Sentry.httpContextIntegration`_
 
 This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
-This integration attaches HTTP request information, such as URL, user-agent, referrer, and other headers, to the event.
-It allows us to correctly catalog and tag events with specific OS, browser, and version information.
+This integration attaches the current page URL and the `User-Agent` and `Referer` headers to events and spans.
+Sentry uses the `User-Agent` header to tag events with browser, OS, and device information.
 
 ```JavaScript
 Sentry.init({
   integrations: [Sentry.httpContextIntegration()],
 });
 ```
+
+## Data Collection
+
+This integration respects the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> option in your root `Sentry.init` config:
+
+- `dataCollection.httpHeaders.request` controls the `User-Agent` and `Referer` headers. If you disable request header collection, the SDK doesn't send these headers, and events won't include the browser, OS, and device information derived from `User-Agent`.
+- `dataCollection.urlQueryParams` controls the query parameters in the page URL and the referrer.
