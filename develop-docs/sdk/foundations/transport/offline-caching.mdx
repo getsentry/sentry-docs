@@ -12,7 +12,71 @@ sidebar_order: 5
 
 ## Overview
 
-Also known as "Buffer to Disk". SDKs write envelopes to disk before attempting to send, so that they can be retried in the event of a temporary network failure. SDKs **MUST** implement a cap on the number of stored envelopes. This feature is mostly useful on mobile and desktop apps, where stable connectivity is often not available.
+Also known as "Buffer to Disk". SDKs write envelopes to disk before attempting to send, so that they can be retried in the event of a temporary network failure. SDKs **MUST** implement a cap on the number of stored envelopes and **SHOULD** implement a cap on their total size, as described in [Cache Limits](#cache-limits). This feature is mostly useful on mobile and desktop apps, where stable connectivity is often not available.
+
+## Cache Limits
+
+Envelope sizes vary widely. Most are a few kilobytes, but envelopes with screenshots, view hierarchies, or other attachments can be several megabytes. A limit on the number of envelopes alone doesn't bound how much disk space the cache uses, so SDKs **SHOULD** also support a limit in bytes.
+
+### Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `max_cache_items` | `int` | `30` | Maximum number of envelopes in the cache. **MUST** be supported. |
+| `max_cache_size` | `int` | `536870912` (512 MiB) | Maximum total size of the cached envelopes, in bytes. **SHOULD** be supported. |
+
+SDKs **SHOULD** use the platform's naming convention, for example `maxCacheSize` or `MaxCacheSize`. SDKs **SHOULD** use a 64-bit integer type for `max_cache_size` where the platform has one, so users can set limits above 2 GiB.
+
+With only `max_cache_items`, the cache can grow to 30 envelopes of up to 200 MiB each, the largest envelope Relay accepts (see [Size Limits](/sdk/foundations/envelopes/#size-limits)). The 512 MiB default for `max_cache_size` bounds disk usage to a predictable amount while still fitting one envelope of the maximum size.
+
+Setting either option to `0` disables caching: the SDK **MUST NOT** write envelopes to the cache and handles each envelope as described in [Envelopes Larger Than the Limit](#envelopes-larger-than-the-limit).
+
+To remove a limit, users set the option to the platform's maximum integer value, for example `Int.MAX_VALUE`, `Long.MAX_VALUE`, `UInt.max`, or `SIZE_MAX`. This lets users rely on only one of the limits. For example, users who care about disk usage rather than the number of envelopes can set `max_cache_items` to the maximum value and keep `max_cache_size`.
+
+If a user sets a negative value for either option, SDKs **MUST** ignore it, use the default, and log a warning in debug mode.
+
+### Enforcing the Limits
+
+The two limits apply together. The cache is within its limits only when both are satisfied, so exceeding either one triggers eviction.
+
+Before writing a new envelope to the cache, SDKs **MUST** delete the oldest cached envelopes until:
+
+- the number of cached envelopes plus one is at most `max_cache_items`, and
+- the total size of cached envelopes plus the size of the new envelope is at most `max_cache_size`.
+
+SDKs **SHOULD** also enforce both limits when the SDK initializes. The cache can exceed them after an app update lowers a limit, after an SDK update introduces `max_cache_size`, or after envelopes were written without enforcement (see [Crash Handling](#crash-handling)).
+
+### Measuring Size
+
+- The size of an envelope is the size of its file on disk, as reported by the file system. If the SDK compresses envelopes before writing them, the compressed size counts.
+- Only cached envelope files count toward either limit. Files the SDK keeps in the cache directory for other purposes, such as session files, crash markers, or another SDK's data (for example, a native SDK's database directory), **MUST NOT** count toward the limits and **MUST NOT** be deleted to satisfy them.
+- SDKs **SHOULD** read file sizes from file system metadata and **SHOULD NOT** read or parse envelopes only to measure them.
+
+### Eviction Order
+
+SDKs **MUST** delete envelopes from oldest to newest, ordered by the time they were written to the cache, and **MUST** delete only as many envelopes as needed to satisfy both limits.
+
+When an envelope is deleted to satisfy either limit, SDKs:
+
+- **MUST** record a [client report](/sdk/telemetry/client-reports/) with the discard reason `cache_overflow` for the items in the deleted envelope.
+- **MUST** preserve session integrity: if the deleted envelope contains a session update with `init: true`, the SDK **MUST** move the `init` flag to the next remaining session update for the same session, so release health stays correct.
+
+### Envelopes Larger Than the Limit
+
+If a single envelope is larger than `max_cache_size`, it can never fit in the cache. The same applies to every envelope when either option is `0`. In that case, SDKs:
+
+- **MUST NOT** delete other cached envelopes to make room for it.
+- **MUST NOT** write it to the cache.
+- **SHOULD** still try to send it directly without persisting it, if the transport supports that. If the SDK can't send it, it **MUST** discard it and record a client report with the discard reason `cache_overflow`.
+- **SHOULD** log a warning in debug mode that the envelope exceeded `max_cache_size`, unless caching is disabled because an option is `0`.
+
+### Migrating Existing SDKs
+
+Enabling `max_cache_size` by default changes behavior for existing users, because caches that were bounded only by `max_cache_items` can now evict envelopes earlier. SDKs that currently treat `0` as "no limit", such as sentry-native's `cache_max_items` and `cache_max_size`, also change behavior when they adopt `0` as "cache nothing". SDKs **SHOULD** ship these changes in a major version.
+
+### Crash Handling
+
+Writing to the cache while the app crashes is time-sensitive, and some crash handlers are restricted to async-signal-safe operations. When writing an envelope from a crash handler, SDKs **MAY** skip enforcing the limits and enforce them the next time the SDK initializes. Because eviction is oldest-first, the crash envelope is the newest and is deleted last.
 
 ## Dealing With Network Failures
 
