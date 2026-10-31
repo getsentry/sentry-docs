@@ -168,6 +168,20 @@ url: https://docs.sentry.io/platforms/python/
 ## Prerequisites
 ```
 
+Quick starts with a `runtime` key in their MDX frontmatter also get `runtime` and `runtimes`, built by `quickStartRuntimes` in `scripts/quick-start-runtimes.mjs`. A guide page and its direct children with a `runtime` are one group. Guide pages with a `runtime` and no runtime children (Node.js, Bun, Deno, Cloudflare) are one group per platform. `runtimes` lists the other quick starts of the group:
+
+```markdown
+---
+title: "Quick Start (Cloudflare)"
+description: "Learn how to set up Sentry in your Next.js application deployed on Cloudflare Workers and capture your first errors."
+url: https://docs.sentry.io/platforms/javascript/guides/nextjs/cloudflare/
+runtime: cloudflare
+runtimes:
+  - runtime: node
+    url: https://docs.sentry.io/platforms/javascript/guides/nextjs.md
+---
+```
+
 Pages without a doctree entry (e.g., error pages) get no frontmatter. The cache stores raw markdown without frontmatter, so metadata changes don't cause unnecessary cache invalidation.
 
 ## Current Override Registry
