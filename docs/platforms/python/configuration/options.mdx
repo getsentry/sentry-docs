@@ -102,7 +102,7 @@ If this flag is enabled, [certain personally identifiable information (PII)](/pl
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 <Alert>
-  We plan to eventually deprecate `send_default_pii` in favor of the [`data_collection`](#data_collection) option, but that won't happen until a future major version. Until then, `send_default_pii` remains fully supported.
+  `send_default_pii` will be removed in version 3.0 of the SDK. Use the [`data_collection`](#data_collection) option instead.
 
 If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
 
@@ -203,8 +203,8 @@ This option can be overridden using `in_app_include`.
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
 - `never`: Request bodies are never sent.
-- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
-- `medium`: Medium and small requests will be captured (typically 10KB).
+- `small`: Only small request bodies (up to 1,000 bytes) will be captured.
+- `medium`: Medium and small request bodies (up to 10,000 bytes) will be captured.
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
 Please note that the Sentry server [limits HTTP request body size](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/#variable-size). The server always enforces its size limit, regardless of how you configure this option.
@@ -577,7 +577,7 @@ The threshold in milliseconds for adding the source location to an outgoing HTTP
 
 </SdkOption>
 
-<SdkOption name="trace_ignore_status_codes" type='bool' defaultValue='frozenset()'>
+<SdkOption name="trace_ignore_status_codes" type='set[int]' defaultValue='frozenset()'>
 
 An optional property that disables tracing for HTTP requests with certain status codes.
 

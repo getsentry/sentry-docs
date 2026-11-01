@@ -13,6 +13,7 @@ import {compareItems, MigrationItem, PhaseId} from './constants';
 const MIGRATIONS = {
   'javascript-v11': {storagePrefix: 'sentry-v11-migration', platform: 'javascript'},
   'flutter-v10': {storagePrefix: 'sentry-flutter-v10-migration', platform: 'dart'},
+  'dotnet-v7': {storagePrefix: 'sentry-dotnet-v7-migration', platform: 'dotnet'},
 } as const;
 
 // Share the MDX component map across item bodies and platform pages.
