@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import {useCallback, useEffect, useState} from 'react';
+import {useAskAi} from 'sentry-docs/components/askAi/provider';
 import {useBodyScrollLock} from 'sentry-docs/hooks/useBodyScrollLock';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
@@ -44,6 +45,7 @@ export function Header({
   noSearch,
   useStoredSearchPlatforms,
 }: Props) {
+  const openAskAi = useAskAi();
   const isHomePage = pathname === '/';
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -274,8 +276,15 @@ export function Header({
               </button>
             )}
             <button
-              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
+              onClick={() => {
+                openAskAi({}, () => {
+                  setMobileSearchOpen(false);
+                  setHomeMobileNavOpen(false);
+                  closeSidebar();
+                });
+              }}
             >
               <MagicIcon className="size-4" />
               <span className="uppercase text-xs">Ask AI</span>
@@ -378,7 +387,7 @@ export function Header({
                 searchPlatforms={searchPlatforms}
                 autoFocus
                 useStoredSearchPlatforms={useStoredSearchPlatforms}
-                // Release every overlay's lock before Kapa opens so it owns scrolling alone.
+                // Release every overlay's scroll lock before Ask AI opens.
                 onAskAi={() => {
                   setMobileSearchOpen(false);
                   closeSidebar();
