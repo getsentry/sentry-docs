@@ -6,29 +6,6 @@ description: "Learn about Sentry's .NET integration with Google Cloud Functions.
 
 Sentry provides an integration with `Google Cloud Functions` through the [Sentry.Google.Cloud.Functions NuGet package](https://www.nuget.org/packages/sentry.google.cloud.functions).
 
-## Overview of the Features
-
-- Easy Google Cloud Functions integration, single line: `[assembly: FunctionsStartup(typeof(SentryStartup))]`
-- Captures unhandled exceptions in the middleware pipeline
-- Captures exceptions handled by the framework `UseExceptionHandler`
-- Captures process-wide unhandled exceptions (AppDomain)
-- Captures `LogError` or `LogCritical`
-- Any event sent will include relevant application log messages
-- RequestId as tag
-- URL as tag
-- Environment is automatically set (IHostingEnvironment)
-- Request payload can be captured if opt-in
-- Support for EventProcessors registered with DI
-- Support for ExceptionProcessors registered with DI
-- Supports configuration system (bind to `SentryAspNetCoreOptions`)
-- Server OS info sent
-- Server Runtime info sent
-- Request headers sent
-- HTTP Proxy configuration
-- Request body compressed
-- Event flooding protection (429 retry-after and internal bound queue)
-- Assembly Strong named
-
 ## Install
 
 Add the Sentry dependency:
@@ -59,13 +36,44 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you initialize the SDK. **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Application Metrics](#send-application-metrics-).
+
+This guide also enables **Tracing**.
+
+The `Sentry.Google.Cloud.Functions` integration also gives you:
+
+- Easy Google Cloud Functions integration, single line: `[assembly: FunctionsStartup(typeof(SentryStartup))]`
+- Captures unhandled exceptions in the middleware pipeline
+- Captures exceptions handled by the framework `UseExceptionHandler`
+- Captures process-wide unhandled exceptions (AppDomain)
+- Captures `LogError` or `LogCritical`
+- Any event sent will include relevant application log messages
+- RequestId as tag
+- URL as tag
+- Environment is automatically set (IHostingEnvironment)
+- Request payload can be captured if opt-in
+- Support for EventProcessors registered with DI
+- Support for ExceptionProcessors registered with DI
+- Supports configuration system (bind to `SentryAspNetCoreOptions`)
+- Server OS info sent
+- Server Runtime info sent
+- Request headers sent
+- HTTP Proxy configuration
+- Request body compressed
+- Event flooding protection (429 retry-after and internal bound queue)
+- Assembly Strong named
+
 The simplest way to configure the `Sentry.Google.Cloud.Functions` package is by setting up your Sentry configuration into `appsettings.json`
 using the assembly method `FunctionsStartup` to include the type `SentryStartup`.
 
-For example:
+The snippet also turns on:
 
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
 
 ```json {filename:appsettings.json}
+{
   "Sentry": {
     "Dsn": "___PUBLIC_DSN___",
     "MaxRequestBodySize": "Always",
@@ -74,11 +82,15 @@ For example:
     "MinimumEventLevel": "Warning",
     "AttachStackTrace": true,
     "Debug": true,
-    "DiagnosticsLevel": "Error"
+    "DiagnosticLevel": "Error",
+    "TracesSampleRate": 1.0
   }
+}
 ```
 
 > An example of some of the options that can be configured via `appsettings.json`.
+
+Setting `TracesSampleRate` to `1.0` captures 100% of spans. We recommend reducing this value in production.
 
 To load the configurations, you will need to use the assembly `[assembly: FunctionsStartup(typeof(SentryStartup))]`. After being initialized, the framework automatically loads `appsettings.json` and environment variables, binding to `SentryAspNetCoreOptions`.
 
@@ -124,11 +136,11 @@ public class CustomOptions : FunctionsStartup
 
 > Example modifying all events before they are sent to avoid server names being reported.
 
-## Dependency Injection
+### Dependency Injection
 
 Much of the behavior of the Google cloud functions integration with Sentry can be customized by using the frameworks dependency injection system. That is done by registering your own implementation of some of the exposed abstraction inside of `FunctionsStartup`.
 
-### Capturing the Affected User
+#### Capturing the Affected User
 
 When opting in to `SendDefaultPii`, the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
 
@@ -152,21 +164,40 @@ public class UserFactoryStartup : FunctionsStartup
 }
 ```
 
-### Options & Initialization
+### Options and Initialization
 
 As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/), [Sentry.AspNetCore](/platforms/dotnet/guides/aspnetcore/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
 
-## Verify
+## Send Application Metrics <FeatureBadge type="new" />
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Metrics are enabled by default in Sentry .NET SDK 6.1.0 and later. Use `SentrySdk.Metrics` to send counters, gauges, and distributions from your app.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```csharp
+SentrySdk.Metrics.EmitCounter("button_click", 5,
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
+SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["page"] = "/home" });
+SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
+```
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
 
-## Samples
+### View Captured Data in Sentry
 
-- [Google Cloud Functions sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Google.Cloud.Functions)
-- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.
+Open your Sentry project to view the captured event.
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Google Cloud Functions application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to [manually capture errors](/platforms/dotnet/usage/)
+- Explore [Tracing](/platforms/dotnet/tracing/)
+- Check out the [Google Cloud Functions sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Google.Cloud.Functions), or browse [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs
