@@ -9,10 +9,6 @@ Sentry's Next.js SDK automatically captures most unhandled errors. However, Next
 
 ## Automatic vs Manual Capture
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### What's Captured Automatically
 
 The SDK captures these without any code:
@@ -30,9 +26,6 @@ Next.js intercepts errors in these patterns, hiding them from Sentry:
 
 If you catch an error and don't re-throw it, Sentry never sees it.
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```tsx
 // Automatic: unhandled errors bubble up to Sentry
 throw new Error("This is captured automatically");
@@ -47,22 +40,11 @@ try {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Error Boundaries
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Next.js `error.tsx` files catch rendering errors to show a fallback UI. This is good for UX but means errors never reach Sentry's global handler.
 
 **Add `captureException` in every error boundary** to maintain visibility.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/error.tsx}
 "use client";
@@ -90,20 +72,11 @@ export default function Error({
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Global Error Boundary
 
 `global-error.tsx` is a last-resort safety net that only triggers when your root layout itself fails. This is rare—most errors are caught by route-level `error.tsx` files first.
 
 Include `<html>` and `<body>` tags since it replaces the entire document.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/global-error.tsx}
 "use client";
@@ -133,22 +106,11 @@ export default function GlobalError({
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Caught Errors
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 When you catch errors to return graceful responses (in Server Actions, API routes, or middleware), add `captureException` before returning.
 
 **The pattern is the same everywhere:** if you `catch` and don't `throw`, call `captureException`.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/actions.ts}
 "use server";
@@ -167,10 +129,6 @@ export async function createPost(formData: FormData) {
   }
 }
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ### Adding Context
 
@@ -211,18 +169,11 @@ app/
 
 ## Troubleshooting
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### Errors Not Appearing
 
 1. **Error boundary intercepting** — Check that `captureException` is called in your `error.tsx` files
 2. **SDK not initialized** — Verify config files exist with correct DSN
 3. **`beforeSend` filtering** — Check if a hook is dropping errors
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/error.tsx}
 "use client";
@@ -240,38 +191,20 @@ export default function Error({ error }: { error: Error }) {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Duplicate Errors
 
 If you see the same error twice, you're likely capturing in multiple places. Check that only one handler captures each error.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx
 // Don't capture in both error.tsx AND a parent component
 // Pick one location per error
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Missing Stack Traces
 
 Server errors may show minified traces in production. Enable source maps for readable traces.
 
 The `digest` property on server errors is a hash you can search for in logs.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx
 // Server errors include a digest for debugging
@@ -280,9 +213,5 @@ error: Error & { digest?: string }
 // Log it for cross-referencing
 console.error("Error digest:", error.digest);
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 See <PlatformLink to="/sourcemaps/">Source Maps</PlatformLink> for setup instructions.
