@@ -2,14 +2,19 @@
 title: Spans
 description: Span creation, sampling, filtering, buffering, and wire format for the span-first tracing model.
 spec_id: sdk/telemetry/spans
-spec_version: 1.1.0
+spec_version: 1.2.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
   - id: sdk/foundations/trace-propagation
     version: ">=1.0.0"
+  - id: sdk/foundations/trace-propagation/dynamic-sampling-context
+    version: ">=1.4.0"
 spec_changelog:
+  - version: 1.2.0
+    date: 2026-10-19
+    summary: Require DSC spec 1.4.0 so span envelopes always have a trace envelope header, even for incoming traces without baggage
   - version: 1.1.0
     date: 2026-10-08
     summary: Added client reports section listing discard reasons for spans and clarifying that the quantity is the number of discarded spans
@@ -613,6 +618,8 @@ The envelope header **MUST** contain the same properties as previously with tran
 ```
 
 Unlike transactions, envelope headers for spans **REQUIRE** [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/). See also [Envelope Headers](/sdk/foundations/envelopes/#headers).
+
+To guarantee a DSC for every span envelope, SDKs implementing span streaming **MUST** follow version 1.4.0 or later of the DSC spec.
 
 ### Span v2 Envelope Item Header
 
