@@ -11,7 +11,7 @@ Before you begin, make sure you have:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - A [Cloudflare Workers project](https://dash.cloudflare.com/workers/overview)
-- A Next.js application configured for Cloudflare Workers with [OpenNext](https://opennext.js.org/cloudflare)
+- A Next.js application configured for Cloudflare Workers with [OpenNext](https://opennext.js.org/cloudflare) or [vinext](https://github.com/cloudflare/vinext)
 - The Sentry SDK [installed and configured](/platforms/javascript/guides/nextjs/) in your Next.js application
 
 <Alert level="info">
@@ -57,6 +57,8 @@ compatibility_date = "2025-08-16"
 
 <AvailableSince version="11.6.0" />
 
+If you build your app with vinext, skip to [Wrap the Worker Entry With vinext](#wrap-the-worker-entry-with-vinext).
+
 On Cloudflare Workers, your Next.js app runs inside the Worker entry that OpenNext generates (`.open-next/worker.js`). Wrap this entry with `withSentry` from `@sentry/nextjs/cloudflare` to get the same Next.js spans as on Node.js, plus Cloudflare data such as spans for D1 queries. Each request gets one `http.server` span with the name of the Next.js route, and the Next.js spans become its children.
 
 `@sentry/nextjs` depends on `@sentry/cloudflare`, so you don't need to install another package.
@@ -96,6 +98,12 @@ Then, point `main` in your Wrangler configuration to this file:
 ```toml {tabTitle:wrangler.toml}
 main = "./worker.ts"
 ```
+
+### Wrap the Worker Entry With vinext
+
+<AvailableSince version="11.6.0" />
+
+With [vinext](https://github.com/cloudflare/vinext), you don't need a custom Worker. Add the <PlatformLink to="/install/vite-plugin/">Sentry Vite plugin</PlatformLink> to your Vite config, and it wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare` automatically.
 
 ### Server and Edge Configuration in the Worker
 
