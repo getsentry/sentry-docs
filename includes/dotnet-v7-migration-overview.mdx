@@ -1,0 +1,27 @@
+<Alert level="warning" title="Release candidate">
+
+There is no stable 7.0 release of the Sentry SDK for .NET yet. The current release candidate is `7.0.0-rc.2`. Until 7.0.0 ships, use that version wherever this guide says `7.0.0`. The rest of the .NET docs still describe 6.x until then, so where they differ from this guide, follow this guide. If you run into problems, [open an issue on GitHub](https://github.com/getsentry/sentry-dotnet/issues).
+
+On `7.0.0-rc.2`, three things work differently from what this guide describes:
+
+- `Logging.AddSentry()` after `ClearProviders()` doesn't add Sentry's logger providers back. Call `UseSentry` after `ClearProviders()` instead.
+- `DecompressionMethods` still includes Brotli, which the next release takes out of the default. To leave it out now, set `options.DecompressionMethods = DecompressionMethods.GZip | DecompressionMethods.Deflate` where you initialize Sentry.
+- An ASP.NET Core app that sends `ILogger` entries through NLog crashes with a stack overflow when `Debug` is on. In these apps, leave `Debug` off and check that the test event arrives in Sentry instead.
+
+The release candidate's `net11.0` builds depend on the .NET 11 release candidate versions of `Microsoft.Extensions.Http`, `Microsoft.Extensions.Logging.Configuration` and `Microsoft.Extensions.Configuration.Binder`. A .NET 11 app that references 10.0.x of one of these packages directly fails to restore with error NU1605. Remove that reference, or update it to the same .NET 11 release candidate version.
+
+</Alert>
+
+Version 7 of the Sentry SDK for .NET adds support for .NET 11 and moves SDK initialization out of the logging integrations. The biggest changes are:
+
+- **One place to initialize Sentry.** The Serilog, NLog, log4net and `Microsoft.Extensions.Logging` integrations no longer start the SDK. Call `UseSentry` or `SentrySdk.Init` first, and move the DSN and other SDK settings there.
+- **`UseSentry` for generic host apps.** Worker services, Azure Functions isolated worker apps and other apps on the .NET Generic Host can now call `UseSentry` from the new `Sentry.Extensions.Hosting` package.
+- **Logs.** Version 7 removes `SentryOptions.EnableLogs`. Structured logs are now enabled automatically if you add the Serilog, NLog or log4net integrations, or call `Logging.AddSentry()` after `SentrySdk.Init`, so check the volume and content of your logs after upgrading if you use any of these integrations.
+- **Platforms.** Android, iOS, Mac Catalyst and MAUI apps need .NET 10 or later.
+- **Defaults.** The SDK traces fewer incoming requests, and more apps report the host environment instead of `production`.
+
+Upgrade to the latest 6.x release first, and fix its obsolete warnings. Some APIs that 7.0 removes, such as `EnableMetrics` and the iOS option `EnableAppHangTrackingV2`, are already obsolete in 6.x.
+
+The `Sentry.OpenTelemetry` package has been obsolete since 6.12.0. Code using this integration, such as `AddSentry()` on the tracer provider builder with `options.UseOpenTelemetry()`, still compiles on 7.0, but you will get warnings. The package will not see any future improvements or bug fixes, and it will be removed in a future version. Its replacement is the OTLP exporter from `Sentry.OpenTelemetry.Exporter`, with `AddSentryOtlpExporter` and `UseOtlp`. See [OpenTelemetry (OTLP)](/platforms/dotnet/tracing/instrumentation/opentelemetry-otlp/).
+
+The compiler catches most of the changes. A few only show up at runtime or in your data. A logging integration sends nothing until you initialize Sentry. An app that calls `SentrySdk.Init` and injects `IHub` fails when the container resolves the service. The new defaults change log volume, traced requests and the reported environment. Read the behavior changes before you upgrade.
