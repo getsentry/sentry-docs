@@ -1,0 +1,64 @@
+---
+id: logging-integrations-no-longer-initialize-sentry
+title: "Logging Integrations No Longer Initialize Sentry"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 10
+---
+
+The Serilog sink, the NLog target, the log4net appender and `Logging.AddSentry()` no longer start the SDK. Initialize Sentry once at startup, before the logging framework, and move the DSN and every other SDK setting there.
+
+Initialize Sentry with the call that matches your app:
+
+| App                                                                                           | Initialize Sentry with                                                                                                                                     |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ASP.NET Core                                                                                  | `UseSentry` from `Sentry.AspNetCore`                                                                                                                       |
+| MAUI                                                                                          | `UseSentry` from `Sentry.Maui`                                                                                                                             |
+| Blazor WebAssembly                                                                            | `UseSentry` from `Sentry.AspNetCore.Blazor.WebAssembly`                                                                                                    |
+| Worker services, Azure Functions isolated worker apps and other apps on the .NET Generic Host | `UseSentry` from `Sentry.Extensions.Hosting`                                                                                                               |
+| Console apps that build their own `ServiceCollection` without a host                          | `SentrySdk.Init`, then `Logging.AddSentry()`. If the app injects `IHub`, see [IHub Is Registered Only by UseSentry](#ihub-is-registered-only-by-usesentry) |
+| Other console apps, ASP.NET on .NET Framework and any other app                               | `SentrySdk.Init`                                                                                                                                           |
+
+`UseSentry` reads its settings from the `Sentry` section of `appsettings.json`. `SentrySdk.Init` only uses the options you set in code and environment variables such as `SENTRY_DSN`.
+
+`UseSentry` also adds Sentry's own `ILogger` integration. If your app sends `ILogger` entries through Serilog, NLog or log4net as well, Sentry receives each entry twice unless only one of them sends it:
+
+- **Serilog.** Add Serilog with `builder.Services.AddSerilog(...)` from `Serilog.Extensions.Hosting`, or with `builder.Host.UseSerilog(...)`. Both replace the app's `ILogger` factory, so each entry reaches Sentry once, through the sink. Don't use `builder.Logging.AddSerilog()` or `writeToProviders: true`.
+- **NLog.** Set `ReplaceLoggerFactory = true` when you add NLog, for example with `builder.Logging.AddNLog(new NLogProviderOptions { ReplaceLoggerFactory = true })`. `UseNLog` in ASP.NET Core takes the same option.
+- **log4net.** `AddLog4Net()` can't replace the factory. Set `MinimumEventLevel` and `MinimumBreadcrumbLevel` to `LogLevel.None` on the options of `UseSentry`, and leave `EnableLogs` off, so each entry reaches Sentry once, through the appender.
+
+The [Serilog](/platforms/dotnet/guides/serilog/#apps-that-call-usesentry), [NLog](/platforms/dotnet/guides/nlog/#apps-that-call-usesentry) and [log4net](/platforms/dotnet/guides/log4net/#apps-that-call-usesentry) guides show the full setup.
+
+A logging integration sends nothing until you initialize Sentry. SDK settings left on the integration fail in different ways:
+
+- `Logging.AddSentry(o => o.Dsn = ...)`, the Serilog `WriteTo.Sentry(dsn)` overload and the NLog `AddSentry(dsn)` overloads fail to compile with error CS0619, to make it clear that these integrations no longer initialize the SDK. The error message explains what to change.
+- Other SDK settings in code, such as `TracesSampleRate` on `SentryLoggingOptions` or `Environment` on the Serilog and NLog options, fail to compile with error CS1061.
+- `Dsn` or any other SDK setting under `Logging:Sentry` in configuration throws `NotSupportedException` at startup.
+- A `dsn` argument in Serilog's JSON configuration fails when Serilog reads the configuration, with a `TargetInvocationException` whose inner `NotSupportedException` explains the change. Serilog ignores other SDK arguments, such as `environment`, without a message.
+- The NLog target writes one message to standard error for `dsn`. NLog ignores `environment`, `release` and the other SDK settings without a message.
+- The log4net appender writes an error to standard error for `Dsn` and for `Environment`.
+
+The changes for each integration are in these sections:
+
+- [Generic Host Apps Call UseSentry](#generic-host-apps-call-usesentry)
+- [Logging Options Only Set Log Levels](#logging-options-only-set-log-levels)
+- [Move SDK Settings Out of the Serilog Sink](#move-sdk-settings-out-of-the-serilog-sink)
+- [Move SDK Settings Out of the NLog Target](#move-sdk-settings-out-of-the-nlog-target)
+- [Move SDK Settings Out of the log4net Appender](#move-sdk-settings-out-of-the-log4net-appender)
+
+After the upgrade, run the app once and confirm that Sentry starts. A build alone doesn't catch a missing initialization. An NLog or log4net app with only the package versions bumped builds, runs and sends nothing. Set `Debug` to `true` where you initialize Sentry, look for `Initializing Hub for Dsn` in the console output, and capture a test event:
+
+```csharp {filename:Program.cs}
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Debug = true;
+});
+
+SentrySdk.CaptureMessage("Sentry 7 is set up");
+```
+
+Turn `Debug` off again once the event arrives.
