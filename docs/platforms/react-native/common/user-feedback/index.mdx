@@ -93,6 +93,52 @@ Note that when the device is offline, the feedback will be stored locally and se
 
 </Alert>
 
+### Opening the Feedback Form Over a Presented Sheet on iOS
+
+On iOS, `Sentry.showFeedbackForm()`, shake-to-report, and the auto-injected feedback button present the Feedback Form inside a React Native `Modal`. UIKit only allows one presentation per view controller, so when a native-stack screen is already presented as a sheet (`presentation: "formSheet"` or `"modal"` with `@react-navigation/native-stack`), UIKit refuses the second presentation and the form doesn't appear. Android is unaffected.
+
+To collect feedback while such a sheet is open, render the [`FeedbackForm`](#feedback-form-component) component yourself and control its visibility. On iOS, wrap it in react-native-screens' `FullWindowOverlay` so it draws above the presented sheet:
+
+```jsx
+import { useState } from "react";
+import { Button, Modal, Platform, StyleSheet, View } from "react-native";
+import { FeedbackForm } from "@sentry/react-native";
+import { FullWindowOverlay } from "react-native-screens";
+
+function FeedbackButton() {
+  const [visible, setVisible] = useState(false);
+  const close = () => setVisible(false);
+
+  // Pass the same options you'd give `feedbackIntegration(...)`
+  // (formTitle, namePlaceholder, styles, imagePicker, and so on).
+  const form = (
+    <View style={StyleSheet.absoluteFill}>
+      <FeedbackForm onFormClose={close} onFormSubmitted={close} />
+    </View>
+  );
+
+  return (
+    <>
+      <Button title="Give feedback" onPress={() => setVisible(true)} />
+      {visible &&
+        (Platform.OS === "ios" ? (
+          <FullWindowOverlay>{form}</FullWindowOverlay>
+        ) : (
+          <Modal transparent onRequestClose={close}>
+            {form}
+          </Modal>
+        ))}
+    </>
+  );
+}
+```
+
+<Alert>
+
+`FullWindowOverlay` requires `react-native-screens`, which is already installed in apps using native-stack navigation.
+
+</Alert>
+
 ### Session Replay
 
 The User Feedback Form integrates seamlessly with Session Replay. When the widget is opened, the SDK buffers up to 30 seconds of the user's session. If feedback is submitted, this replay is sent along with the feedback, allowing you to view both the feedback and the user's actions leading up to the feedback submission.

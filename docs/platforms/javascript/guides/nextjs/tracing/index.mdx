@@ -20,18 +20,11 @@ Before enabling tracing, ensure you have:
 
 ## Enable Tracing
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### Configure Sample Rate
 
 Add `tracesSampleRate` to your Sentry configuration in all three runtime files.
 
 **Start with 100% in development, and 10-20% in production.** Adjust based on traffic volume and budget.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
 import * as Sentry from "@sentry/nextjs";
@@ -60,15 +53,7 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## What's Traced Automatically
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### By Runtime
 
@@ -79,9 +64,6 @@ The SDK instruments different operations depending on where your code runs:
 | **Client** | Page loads, navigations, fetch requests, Web Vitals |
 | **Server** | API routes, Server Components, `getServerSideProps` |
 | **Edge** | Middleware, edge API routes |
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx
 // All of these create spans automatically
@@ -101,17 +83,9 @@ export default async function Page() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 For configuration options like timeouts, INP settings, and filtering spans, see <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink>.
 
 ## Server Actions
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### Why Manual Instrumentation?
 
@@ -122,9 +96,6 @@ Use `withServerActionInstrumentation` to:
 - Capture timing and errors
 - Connect client and server traces via `headers`
 - Attach form data to Sentry events via `formData`
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/actions.ts}
 "use server";
@@ -145,18 +116,9 @@ export async function createOrder(formData: FormData) {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### With Headers and Form Data
 
 Pass `headers` to connect client-side traces with server-side spans for full distributed tracing across the browser-to-server boundary. Pass `formData` to attach submitted form data to Sentry events for easier debugging.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/actions.ts}
 "use server";
@@ -179,10 +141,6 @@ export async function submitForm(formData: FormData) {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Web Vitals
 
 The SDK automatically captures [Web Vitals](/product/dashboards/sentry-dashboards/frontend/web-vitals/) in the browser. These metrics measure real user experience:
@@ -201,10 +159,6 @@ To configure collection, see the <PlatformLink to="/configuration/integrations/w
 
 ## Custom Instrumentation
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### When to Use `startSpan`
 
 Add custom spans when you want to measure:
@@ -214,9 +168,6 @@ Add custom spans when you want to measure:
 - Expensive computations
 
 For the full span API including `startSpanManual` and `startInactiveSpan`, see <PlatformLink to="/tracing/instrumentation/">Custom Instrumentation</PlatformLink>.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/api/checkout/route.ts}
 import * as Sentry from "@sentry/nextjs";
@@ -242,18 +193,9 @@ export async function POST(request: Request) {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Add Attributes
 
 Attach data to spans for filtering and debugging in Sentry.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx
 Sentry.startSpan(
@@ -272,15 +214,7 @@ Sentry.startSpan(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Distributed Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 ### Automatic Propagation
 
@@ -289,9 +223,6 @@ The SDK automatically propagates trace context for:
 - Server Actions (when using `withServerActionInstrumentation` with headers)
 
 For external APIs, configure `tracePropagationTargets`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript {filename:instrumentation-client.ts}
 Sentry.init({
@@ -306,10 +237,6 @@ Sentry.init({
   ],
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 For CORS configuration and manual trace propagation (WebSockets, etc.), see <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink>.
 
@@ -327,18 +254,11 @@ For CORS configuration and manual trace propagation (WebSockets, etc.), see <Pla
 
 ## Troubleshooting
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 ### High trace volume
 
 If you're sending too many traces, lower your sample rate or use `tracesSampler` for dynamic sampling based on route.
 
 See <PlatformLink to="/tracing/configure-sampling/">Configure Sampling</PlatformLink> for more options.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```typescript
 Sentry.init({
@@ -353,12 +273,6 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
 ### Detached spans with `after()` or `waitUntil()`
 
 If you're using Next.js's [`after()`](https://nextjs.org/docs/app/api-reference/functions/after) or [`waitUntil`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#waituntil) and you see multiple root spans (like individual `db` spans) instead of one cohesive trace, your spans are becoming detached.
@@ -366,9 +280,6 @@ If you're using Next.js's [`after()`](https://nextjs.org/docs/app/api-reference/
 This happens when `after()` or `waitUntil()` runs after the response is sent. By then, the request's root span has already ended.
 
 Wrap your deferred work with `startSpan` inside the `after()` or `waitUntil()` callback to group all background spans into a single transaction:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```tsx {filename:app/api/webhook/route.ts}
 import { after } from "next/server";
@@ -395,7 +306,3 @@ export async function POST(request: Request) {
   return Response.json({ received: true });
 }
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>

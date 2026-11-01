@@ -10,7 +10,7 @@ import {
 const CODEOWNERS = `
 # A documentation comment without reviewers
 **/vercel.json @getsentry/security
-# /docs/platforms/android/ @getsentry/team-mobile-core
+# /docs/platforms/android/ @getsentry/team-mobile-android-sdk
 # /docs/platforms/native/ @getsentry/product-owners-sdks-native
 # /docs/product/explore/session-replay/web @getsentry/replay-sdk-web @getsentry/replay-frontend
 # /includes/session-replay-web-report-bug.mdx @getsentry/replay-sdk-web
@@ -22,7 +22,9 @@ describe('parseCommentedCodeowners', () => {
     expect(parseCommentedCodeowners(CODEOWNERS)).toEqual([
       {
         pattern: '/docs/platforms/android/',
-        reviewers: [{type: 'team', organization: 'getsentry', slug: 'team-mobile-core'}],
+        reviewers: [
+          {type: 'team', organization: 'getsentry', slug: 'team-mobile-android-sdk'},
+        ],
       },
       {
         pattern: '/docs/platforms/native/',
@@ -112,7 +114,7 @@ describe('collectSpecialistReviewers', () => {
       'getsentry'
     );
 
-    expect(result.teams).toEqual(['team-mobile-core']);
+    expect(result.teams).toEqual(['team-mobile-android-sdk']);
   });
 
   it('ignores teams from another organization', () => {
@@ -135,7 +137,7 @@ describe('buildReviewerPlan', () => {
       requestDocsReview: true,
     });
 
-    expect(result.teams).toEqual(['docs', 'team-mobile-core']);
+    expect(result.teams).toEqual(['docs', 'team-mobile-android-sdk']);
   });
 
   it('skips existing requests and the pull request author', () => {
@@ -146,7 +148,7 @@ describe('buildReviewerPlan', () => {
         'docs/platforms/android/index.mdx',
       ],
       repositoryOwner: 'getsentry',
-      requestedTeams: [{slug: 'team-mobile-core'}],
+      requestedTeams: [{slug: 'team-mobile-android-sdk'}],
       excludedUsers: ['ryan953'],
       requestDocsReview: true,
     });
