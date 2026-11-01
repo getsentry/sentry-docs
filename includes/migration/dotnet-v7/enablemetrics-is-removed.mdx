@@ -1,0 +1,34 @@
+---
+id: enablemetrics-is-removed
+title: "EnableMetrics Is Removed"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 100
+---
+
+Version 7 removes `SentryOptions.EnableMetrics`, so setting it fails to compile with error CS1061. The option has been obsolete and ignored since 6.10.0, because metrics are always on. To drop metrics, return `null` from `SetBeforeSendMetric`.
+
+In 6.x, the obsolete option compiled but had no effect:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.EnableMetrics = false;
+});
+```
+
+In 7.x, drop metrics in the callback:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.SetBeforeSendMetric(_ => null);
+});
+```
+
+The SDK ignores an `EnableMetrics` key in the `Sentry` section of `appsettings.json`. Remove it.

@@ -60,6 +60,36 @@ describe('migration guide collection selection', () => {
     );
   });
 
+  it('loads the .NET steps for the bare platform without guide-only steps', async () => {
+    context.platform = {type: 'platform', name: 'dotnet', categories: []};
+    const result = await MigrationGuide({migration: 'dotnet-v7'});
+    expect(result.props.storageKey).toBe('sentry-dotnet-v7-migration:dotnet');
+    expect(result.key).toBe(result.props.storageKey);
+    expect(
+      result.props.items.some(item => item.id === 'logging-integrations-send-logs')
+    ).toBe(true);
+    expect(
+      result.props.items.some(
+        item => item.id === 'usesentry-overrides-appsettingsjson-in-maui'
+      )
+    ).toBe(false);
+    expect(result.props.items.some(item => item.id === 'node-version')).toBe(false);
+    expect(result.props.bodies.map(item => item.id)).toEqual(
+      result.props.items.map(item => item.id)
+    );
+  });
+
+  it('adds the MAUI step for the .NET MAUI guide with its own saved progress', async () => {
+    context.platform = {type: 'guide', name: 'maui', categories: []};
+    const result = await MigrationGuide({migration: 'dotnet-v7'});
+    expect(result.props.storageKey).toBe('sentry-dotnet-v7-migration:maui');
+    expect(
+      result.props.items.some(
+        item => item.id === 'usesentry-overrides-appsettingsjson-in-maui'
+      )
+    ).toBe(true);
+  });
+
   it('keeps JavaScript progress scoped to the selected framework', async () => {
     context.platform = {type: 'guide', name: 'nextjs', categories: ['browser', 'server']};
     const result = await MigrationGuide({});

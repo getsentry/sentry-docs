@@ -6,16 +6,7 @@ description: "Learn about Sentry's .NET integration with ASP.NET."
 
 Sentry provides an integration with ASP.NET through the [Sentry.AspNet NuGet package](https://www.nuget.org/packages/Sentry.AspNet).
 
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
 ## Install
-
-<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
-
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
@@ -31,8 +22,20 @@ as well as your logs as breadcrumbs. The logging integrations also capture event
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you initialize the SDK. **Logs** sent through `SentrySdk.Logger` and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+
+This guide also enables **Tracing**.
+
+
 You configure the SDK in the `Global.asax.cs`:
 
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+- Logs from logging integrations: via <PlatformLink to="/logs/#enablelogs">`EnableLogs`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
 
 ```csharp
 using System;
@@ -55,12 +58,11 @@ public class MvcApplication : HttpApplication
             options.Debug = true;
             // Adds request URL and headers, IP and name for users, etc.
             options.SendDefaultPii = true;
-
-            // ___PRODUCT_OPTION_START___ performance
-            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
-            // We recommend adjusting this value in production.
+            options.EnableLogs = true;
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
             options.TracesSampleRate = 1.0;
-            // ___PRODUCT_OPTION_END___ performance
 
             // If you also installed the Sentry.EntityFramework package
             options.AddEntityFramework();
@@ -70,8 +72,6 @@ public class MvcApplication : HttpApplication
 
     // Global error catcher
     protected void Application_Error() => Server.CaptureLastError();
-
-    // ___PRODUCT_OPTION_START___ performance
     protected void Application_BeginRequest()
     {
         Context.StartSentryTransaction();
@@ -81,7 +81,6 @@ public class MvcApplication : HttpApplication
     {
         Context.FinishSentryTransaction();
     }
-    // ___PRODUCT_OPTION_END___ performance
 
     protected void Application_End()
     {
@@ -116,11 +115,43 @@ Opt-in to send the request body to Sentry:
 options.AddAspNet(RequestSize.Always);
 ```
 
-## Verify
+## Send Logs
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Use `SentrySdk.Logger` to send logs at different levels without an additional option. If you also send logs through an integration, set `EnableLogs = true` in the initialization snippet.
+
+If you use Serilog, NLog, or log4net, see the documented [Serilog](/platforms/dotnet/guides/serilog/), [NLog](/platforms/dotnet/guides/nlog/), and [log4net](/platforms/dotnet/guides/log4net/) integrations.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```csharp
+SentrySdk.Logger.LogInfo("Order processed");
+SentrySdk.Logger.LogWarning("Rate limit reached for /api/orders");
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Metrics are enabled by default in Sentry .NET SDK 6.1.0 and later. Use `SentrySdk.Metrics` to send counters, gauges, and distributions from your app.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```csharp
+SentrySdk.Metrics.EmitCounter("button_click", 5,
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
+SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["page"] = "/home" });
+SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
+```
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
+
+### View Captured Data in Sentry
+
+Open your Sentry project to view the captured event.
 
 ## Troubleshooting
 
@@ -132,4 +163,8 @@ For information about Troubleshooting, please visit the [troubleshooting](troubl
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your ASP.NET application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to [manually capture errors](/platforms/dotnet/usage/)
+- Explore [Tracing](/platforms/dotnet/tracing/)

@@ -1,6 +1,6 @@
 ---
 title: Capacitor
-description: Learn how to set up Sentry in your Capacitor application, capture your first errors and traces, and view them in Sentry.
+description: Learn how to set up Sentry in your Capacitor application, capture your first events and traces, and view them in Sentry.
 sdk: sentry.javascript.capacitor
 categories:
   - browser
@@ -22,20 +22,9 @@ This guide will show you setup instructions for Angular, React, Vue, and Nuxt. I
 
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Run the command for your preferred package manager to add Sentry's Capacitor SDK and the SDK for the framework you're using to your application:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 <PlatformContent includePath="getting-started-install" />
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Expandable title="Notes on framework compatibility">
 
@@ -59,250 +48,367 @@ Both frameworks are fully compatible with the current and beta versions of Sentr
 
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** need no extra configuration, and you'll learn how to send them in step [#3](#send-logs).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 
 <Include name="quick-start-features-expandable" />
 
 ### Initialize the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Initialize Sentry as early as possible in your application's lifecycle.
+
+The snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
 
 If you're using Angular, React, Vue, or Nuxt, make sure to forward the `init` method from the framework's Sentry SDK, as you can see in these code snippets. If you're following the vanilla setup, you don't need to do this.
 
-</SplitSectionText>
-<SplitSectionCode>
+```typescript {tabTitle: Angular 14+} {mdExpandTabs} {filename: app.module.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryAngular from "@sentry/angular";
 
-<PlatformContent includePath="getting-started-config" />
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Enables automatic instrumentation
+      Sentry.browserTracingIntegration(),
+      // enables Session Replay
+      Sentry.replayIntegration(),
+      // enables User Feedback
+      Sentry.feedbackIntegration({
+        // Additional integration configuration goes in here
+        colorScheme: "system",
+      }),
+    ],
 
-### Add Readable Stack Traces With Source Maps (Optional)
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    tracesSampleRate: 1.0,
+
+    // Limit which URLs receive trace propagation
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture replays for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Requires Sentry.replayIntegration()
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+  // Forward the init method from @sentry/angular
+  SentryAngular.init
+);
+
+@NgModule({
+  providers: [
+    {
+      provide: ErrorHandler,
+      // Attach the Sentry ErrorHandler
+      useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
+    },
+  ],
+})
+```
+
+```typescript {tabTitle: Angular 12, 13} {filename: app.module.ts}
+// Requires @sentry/capacitor V0.
+import * as Sentry from "@sentry/capacitor";
+import * as SentryAngular from "@sentry/angular-ivy";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Enables automatic instrumentation
+      new Sentry.BrowserTracing(),
+      // enables Session Replay
+      new Sentry.Replay(),
+      // enables User Feedback
+      Sentry.feedbackIntegration({
+        // Additional integration configuration goes in here
+        colorScheme: "system",
+      }),
+    ],
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    tracesSampleRate: 1.0,
+
+    // Limit which URLs receive trace propagation
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture replays for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Requires Sentry.replayIntegration()
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+  // Forward the init method from @sentry/angular
+  SentryAngular.init
+);
+
+@NgModule({
+  providers: [
+    {
+      provide: ErrorHandler,
+      // Attach the Sentry ErrorHandler
+      useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
+    },
+  ],
+})
+```
+
+```typescript {tabTitle: React} {filename: index.tsx}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryReact from "@sentry/react";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Enables automatic instrumentation
+      Sentry.browserTracingIntegration(),
+      // enables Session Replay
+      Sentry.replayIntegration(),
+      // enables User Feedback
+      Sentry.feedbackIntegration({
+        // Additional integration configuration goes in here
+        colorScheme: "system",
+      }),
+    ],
+
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    tracesSampleRate: 1.0,
+
+    // Limit which URLs receive trace propagation
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture replays for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Requires Sentry.replayIntegration()
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+  // Forward the init method from @sentry/react
+  SentryReact.init
+);
+```
+
+```typescript {tabTitle: Vue} {filename: main.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryVue from "@sentry/vue";
+import { createApp } from "vue";
+
+const app = createApp(App);
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+
+    // Vue specific settings.
+    siblingOptions: {
+      vueOptions: {
+        app: app,
+        attachErrorHandler: false,
+        attachProps: true,
+      },
+    },
+
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Enables automatic instrumentation
+      Sentry.browserTracingIntegration(),
+      // enables Session Replay
+      Sentry.replayIntegration(),
+      // enables User Feedback
+      Sentry.feedbackIntegration({
+        // Additional integration configuration goes in here
+        colorScheme: "system",
+      }),
+    ],
+
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    tracesSampleRate: 1.0,
+
+    // Limit which URLs receive trace propagation
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture replays for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Requires Sentry.replayIntegration()
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+
+  // Forward the init method from @sentry/vue
+  SentryVue.init
+);
+```
+
+```typescript {tabTitle: Nuxt} {filename: sentry.client.config.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryNuxt from "@sentry/nuxt";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Enables automatic instrumentation
+      Sentry.browserTracingIntegration(),
+      // enables Session Replay
+      Sentry.replayIntegration(),
+      // enables User Feedback
+      Sentry.feedbackIntegration({
+        // Additional integration configuration goes in here
+        colorScheme: "system",
+      }),
+    ],
+
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    tracesSampleRate: 1.0,
+
+    // Limit which URLs receive trace propagation
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture replays for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Requires Sentry.replayIntegration()
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+
+  // Forward the init method from @sentry/nuxt
+  SentryNuxt.init
+);
+```
+
+```javascript {tabTitle: Other} {filename: main.(ts|js)}
+import * as Sentry from "@sentry/capacitor";
+import { feedbackIntegration } from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Set your release version, such as "getsentry@1.0.0"
+  release: "my-project-name@<release-name>",
+  // Set your dist version, such as "1"
+  dist: "<dist>",
+  integrations: [
+    // Enables automatic instrumentation
+    Sentry.browserTracingIntegration(),
+    // enables Session Replay
+    Sentry.replayIntegration(),
+    // enables User Feedback
+    feedbackIntegration({
+      // Additional integration configuration goes in here
+      colorScheme: "system",
+    }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Limit which URLs receive trace propagation
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+### Add Readable Stack Traces With Source Maps
 
 <PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-### Provide Native Debug Information for iOS (Optional)
+### Provide Native Debug Information for iOS
 
 You need to provide debug information to Sentry to make the stack-trace information for native crashes on iOS easier to understand. You can provide debug information by [uploading dSYM files](/platforms/javascript/guides/capacitor/dsym/).
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
-## Verify
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+
+## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To verify that Sentry captures errors and creates issues in your Sentry project, add the following test button and logic.
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page in a browser and click the button to trigger a frontend error.
-</OnboardingOption>
+Add a test button to an existing page. Clicking it throws an error that Sentry captures:
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {tabTitle: Angular 12, 13, 14+} {mdExpandTabs}
-@Component({
-    selector: "app-root",
-    template: `
-      <!-- rest of your page -->
-      <button (click)="throwError()">Test Sentry Error</button>`
-})
-class AppComponent {
-  // ...
-  throwError(): void {
-      throw new Error("Sentry Test Error");
-  }
-}
-```
-
-```javascript {tabTitle: React}
-<button
-  type="button"
-  onClick={() => {
-    throw new Error("Sentry Test Error");
-  }}
->
-  Break the world
-</button>
-```
-
-```javascript {tabTitle: Vue}
-<button @click="throwError">Throw error</button>
-
-export default {
-  // ...
-  methods: {
-    throwError() {
-      throw new Error('Sentry Error');
-    }
-  }
-};
-```
-
-```html {tabTitle: Nuxt}
-<template>
-  <button type="button" @click="throwError">Break the world</button>
-</template>
-
-<script setup>
-  function throwError() {
-    throw new Error("Sentry Test Error");
-  }
-</script>
-```
-
-```html {tabTitle: Other}
-<button type="button" id="break-btn">Break the world</button>
+```html
+<button type="button" id="test-sentry-error">Test Sentry Error</button>
 
 <script type="module">
-  const button = document.getElementById("break-btn");
-
-  button.addEventListener("click", () => {
+  document.getElementById("test-sentry-error").addEventListener("click", () => {
     throw new Error("Sentry Test Error");
   });
 </script>
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<OnboardingOption optionId="performance">
-
-### Tracing
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To test your tracing configuration, update the previous code snippet and wrap the error in a custom span.
-Then, open the page in a browser and click the button to trigger a frontend error and trace.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {tabTitle: Angular 12, 13, 14+} {mdExpandTabs}
-import * as Sentry from "@sentry/capacitor";
-
-@Component({
-    selector: "app-root",
-    template: `
-      <!-- rest of your page -->
-      <button (click)="throwError()">Test Sentry Error</button>`
-})
-class AppComponent {
-  // ...
-  throwError(): void {
-    Sentry.startSpan({ op: "test", name: "Example Frontend Span" }, () => {
-      throw new Error("Sentry Test Error");
-    });
-  }
-}
-```
-
-```javascript {tabTitle: React}
-import * as Sentry from "@sentry/capacitor";
-
-<button
-  type="button"
-  onClick={() => {
-    Sentry.startSpan({ op: "test", name: "Example Frontend Span" }, () => {
-      throw new Error("Sentry Test Error");
-    });
-  }}
->
-  Break the world
-</button>;
-```
-
-```javascript {tabTitle: Vue}
-import * as Sentry from "@sentry/capacitor";
-
-<button @click="throwError">Throw error</button>
-
-export default {
-  // ...
-  methods: {
-    throwError() {
-      Sentry.startSpan({ op: "test", name: "Example Frontend Span" }, async () => {
-        throw new Error("Sentry Error");
-      });
-    }
-  }
-};
-```
-
-```html {tabTitle: Nuxt}
-<template>
-  <button type="button" @click="throwError">Break the world</button>
-</template>
-
-<script setup>
-  import * as Sentry from "@sentry/capacitor";
-
-  // Trigger from client-side interaction
-  function throwError() {
-    Sentry.startSpan({ op: "test", name: "Example Frontend Span" }, () => {
-      throw new Error("Sentry Test Error");
-    });
-  }
-</script>
-```
-
-```html {tabTitle: Other}
-<button type="button" id="break-btn">Break the world</button>
-
-<script type="module">
-  import * as Sentry from "@sentry/capacitor";
-
-  const button = document.getElementById("break-btn");
-
-  button.addEventListener("click", async () => {
-    await Sentry.startSpan(
-      { name: "Example Frontend Span", op: "test" },
-      async () => {
-        throw new Error("Sentry Test Error");
-      }
-    );
-  });
-</script>
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
 
 ### View Captured Data in Sentry
 
@@ -312,15 +418,10 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Capacitor application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your Capacitor application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Learn how to <PlatformLink to="/ionic/">use Sentry with Ionic</PlatformLink>
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Make use of framework-specific features, such as [Angular](/platforms/javascript/guides/angular/features/), [Vue](/platforms/javascript/guides/vue/features/), [React](/platforms/javascript/guides/react/features/), or [Nuxt](/platforms/javascript/guides/nuxt/features/)
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 - Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
