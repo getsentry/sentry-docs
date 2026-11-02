@@ -1,19 +1,21 @@
 import {describe, expect, it} from 'vitest';
 
-import {DOCS_ORIGIN, sentryLoginUrl} from './docsOrigin';
+import {sentryLoginUrl} from './docsOrigin';
 
 describe('sentryLoginUrl', () => {
-  it('redirects back to the page on the production docs origin', () => {
+  it('redirects back to the page on docs.sentry.io', () => {
     const url = new URL(sentryLoginUrl('/platforms/javascript/guides/nextjs/tracing/'));
 
     expect(url.origin).toBe('https://sentry.io');
     expect(url.pathname).toBe('/auth/login/');
     expect(url.searchParams.get('next')).toBe(
-      `${DOCS_ORIGIN}/platforms/javascript/guides/nextjs/tracing/`
+      'https://docs.sentry.io/platforms/javascript/guides/nextjs/tracing/'
     );
   });
 
-  it('uses docs.sentry.io for the user docs', () => {
-    expect(DOCS_ORIGIN).toBe('https://docs.sentry.io');
+  it('falls back to the docs root when there is no pathname', () => {
+    const url = new URL(sentryLoginUrl(null));
+
+    expect(url.searchParams.get('next')).toBe('https://docs.sentry.io/');
   });
 });
