@@ -2,6 +2,7 @@
 
 import {usePathname} from 'next/navigation';
 import {Fragment, useContext} from 'react';
+import {sentryLoginUrl} from 'sentry-docs/docsOrigin';
 
 import {Alert} from './alert';
 import {CodeContext} from './codeContext';
@@ -10,7 +11,6 @@ import {SignedInCheck} from './signedInCheck';
 
 export function OrgAuthTokenNote() {
   const pathname = usePathname();
-  const url = 'https://docs.sentry.io' + pathname;
 
   const orgAuthTokenUrl = useOrgAuthTokenUrl();
 
@@ -22,11 +22,8 @@ export function OrgAuthTokenNote() {
           <ExternalLink href={orgAuthTokenUrl} target="_blank">
             manually create an Auth Token
           </ExternalLink>{' '}
-          or{' '}
-          <ExternalLink href={`https://sentry.io/auth/login/?next=${url}`}>
-            sign in
-          </ExternalLink>{' '}
-          to create a token directly from this page.
+          or <ExternalLink href={sentryLoginUrl(pathname)}>sign in</ExternalLink> to
+          create a token directly from this page.
         </Alert>
       </SignedInCheck>
 

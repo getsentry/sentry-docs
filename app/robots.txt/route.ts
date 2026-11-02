@@ -1,8 +1,6 @@
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {DOCS_ORIGIN} from 'sentry-docs/docsOrigin';
 
-const sitemap = isDeveloperDocs
-  ? 'https://develop.sentry.dev/sitemap.xml'
-  : 'https://docs.sentry.io/sitemap.xml';
+const sitemap = `${DOCS_ORIGIN}/sitemap.xml`;
 
 export const GET = (_request: Request) => {
   return new Response(

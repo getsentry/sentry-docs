@@ -15,6 +15,7 @@ import {SpecChangelog} from 'sentry-docs/components/specChangelog';
 import {isSpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {isDevelopDocsIndexablePath} from 'sentry-docs/developDocsConfig';
+import {DOCS_ORIGIN} from 'sentry-docs/docsOrigin';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -327,9 +328,7 @@ function resolveOgImageUrl(
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const domain = isDeveloperDocs
-    ? 'https://develop.sentry.dev'
-    : 'https://docs.sentry.io';
+  const domain = DOCS_ORIGIN;
   // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`

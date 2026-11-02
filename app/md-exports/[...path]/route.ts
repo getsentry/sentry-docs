@@ -1,6 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
+import {DOCS_ORIGIN} from 'sentry-docs/docsOrigin';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {AI_AGENT_PATTERN, matchPattern} from 'sentry-docs/lib/trafficClassification';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -12,9 +13,7 @@ interface DocTreeNode {
   children?: DocTreeNode[];
 }
 
-const BASE_URL = isDeveloperDocs
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
+const BASE_URL = DOCS_ORIGIN;
 
 let cachedDocTree: DocTreeNode | null = null;
 
