@@ -151,9 +151,12 @@ export function PlatformSelector({
     });
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
-    const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey
-    );
+    // A platform can have a guide with its own key (e.g. `javascript`). That guide
+    // is the selected item, as the platform item gets the `-redirect` suffix.
+    const selectedPlatform =
+      platformsAndGuides.find(
+        lang => lang.key === currentPlatformKey && lang.type !== 'platform'
+      ) ?? platformsAndGuides.find(lang => lang.key === currentPlatformKey);
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
