@@ -9,7 +9,7 @@ import {SignedInCheck} from './signedInCheck';
 export function SignInNote() {
   const pathname = usePathname();
 
-  const url = 'https://sentry-docs-next.sentry.dev/' + pathname;
+  const url = 'https://docs.sentry.io' + pathname;
 
   return (
     <SignedInCheck isUserAuthenticated={false}>
