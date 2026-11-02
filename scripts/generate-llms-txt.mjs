@@ -25,13 +25,12 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import * as path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+import {DOCS_ORIGIN, DOCTREE_FILENAME} from '../src/docsSite.mjs';
+
 import {frameworkNodes} from './platform-frameworks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
 
 const EXCLUDED_SECTIONS = new Set(['platforms', 'contributing', 'changelog', 'ai']);
 
@@ -228,10 +227,7 @@ const ABOUT_SENTRY_DOCS = `\
 // --- Main ---
 
 async function main() {
-  const doctreeFilename = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-    ? 'doctree-dev.json'
-    : 'doctree.json';
-  const doctreePath = path.join(ROOT, 'public', doctreeFilename);
+  const doctreePath = path.join(ROOT, 'public', DOCTREE_FILENAME);
   let docTree;
   try {
     docTree = JSON.parse(await readFile(doctreePath, 'utf8'));

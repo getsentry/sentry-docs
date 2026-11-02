@@ -2,7 +2,7 @@
 
 import {usePathname} from 'next/navigation';
 import {Fragment, useContext} from 'react';
-import {sentryLoginUrl} from 'sentry-docs/docsOrigin';
+import {sentryLoginUrl} from 'sentry-docs/sentryLoginUrl';
 
 import {Alert} from './alert';
 import {CodeContext} from './codeContext';
@@ -11,7 +11,6 @@ import {SignedInCheck} from './signedInCheck';
 
 export function OrgAuthTokenNote() {
   const pathname = usePathname();
-
   const orgAuthTokenUrl = useOrgAuthTokenUrl();
 
   return (

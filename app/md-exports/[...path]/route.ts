@@ -1,8 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
-import {DOCS_ORIGIN} from 'sentry-docs/docsOrigin';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {DOCS_ORIGIN, DOCTREE_FILENAME} from 'sentry-docs/docsSite.mjs';
 import {AI_AGENT_PATTERN, matchPattern} from 'sentry-docs/lib/trafficClassification';
 import {DocMetrics} from 'sentry-docs/metrics';
 
@@ -19,8 +18,7 @@ async function getDocTree(): Promise<DocTreeNode> {
   if (cachedDocTree) {
     return cachedDocTree;
   }
-  const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
-  const treePath = join(process.cwd(), 'public', filename);
+  const treePath = join(process.cwd(), 'public', DOCTREE_FILENAME);
   const raw = await readFile(treePath, 'utf-8');
   cachedDocTree = JSON.parse(raw) as DocTreeNode;
   return cachedDocTree;

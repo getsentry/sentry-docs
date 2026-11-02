@@ -368,7 +368,8 @@ describe('docTree', () => {
     });
 
     test('should return undefined for getting-started page in developer docs', () => {
-      vi.mock('./isDeveloperDocs', () => ({
+      vi.mock('./docsSite.mjs', async importOriginal => ({
+        ...(await importOriginal<typeof import('./docsSite.mjs')>()),
         isDeveloperDocs: true,
       }));
 

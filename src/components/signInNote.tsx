@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
-import {sentryLoginUrl} from 'sentry-docs/docsOrigin';
+import {sentryLoginUrl} from 'sentry-docs/sentryLoginUrl';
 
 import {Alert} from './alert';
 import {SignedInCheck} from './signedInCheck';

@@ -15,7 +15,7 @@ import {SpecChangelog} from 'sentry-docs/components/specChangelog';
 import {isSpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {isDevelopDocsIndexablePath} from 'sentry-docs/developDocsConfig';
-import {DOCS_ORIGIN} from 'sentry-docs/docsOrigin';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -25,7 +25,6 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
@@ -380,7 +379,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       if (pageNode.frontmatter.og_image) {
         ogImageUrl = resolveOgImageUrl(
           pageNode.frontmatter.og_image,
-          previewDomain ?? DOCS_ORIGIN,
+          previewDomain,
           params.path
         );
       }
@@ -389,7 +388,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   // Default fallback
   if (!ogImageUrl) {
-    ogImageUrl = `${previewDomain ?? DOCS_ORIGIN}/og.png`;
+    ogImageUrl = `${previewDomain}/og.png`;
   }
 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];

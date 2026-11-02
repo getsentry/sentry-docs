@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {sentryLoginUrl} from './docsOrigin';
+import {sentryLoginUrl} from './sentryLoginUrl';
 
 describe('sentryLoginUrl', () => {
   it('redirects back to the page on docs.sentry.io', () => {

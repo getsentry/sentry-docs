@@ -1,9 +1,8 @@
 import type {MetadataRoute} from 'next';
 import {canonicalPath} from 'sentry-docs/canonical';
 import {DEVELOP_DOCS_INDEXABLE_ROOTS} from 'sentry-docs/developDocsConfig';
-import {DOCS_ORIGIN} from 'sentry-docs/docsOrigin';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 /**
  * Recursively extracts all slugs (paths) from a DocNode tree.
@@ -40,7 +39,6 @@ function filterDevelopDocsPaths(paths: string[]): string[] {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rootNode = await getDocsRootNode();
-
   let paths = extractSlugsFromDocTree(rootNode);
   if (isDeveloperDocs) {
     paths = filterDevelopDocsPaths(paths);
