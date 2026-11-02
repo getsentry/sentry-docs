@@ -13,8 +13,6 @@ interface DocTreeNode {
   children?: DocTreeNode[];
 }
 
-const BASE_URL = DOCS_ORIGIN;
-
 let cachedDocTree: DocTreeNode | null = null;
 
 async function getDocTree(): Promise<DocTreeNode> {
@@ -82,7 +80,7 @@ export async function GET(
     const lines: string[] = [
       '---',
       `title: "Page Not Found"`,
-      `url: "${BASE_URL}/${requestedPath}"`,
+      `url: "${DOCS_ORIGIN}/${requestedPath}"`,
       '---',
       '',
       '# Page Not Found',
@@ -97,15 +95,15 @@ export async function GET(
         ancestor.frontmatter?.title || ancestor.slug || 'this section';
       lines.push(`## Pages in ${ancestorTitle}`);
       lines.push('');
-      lines.push(renderSiblingList(ancestor.children, BASE_URL));
+      lines.push(renderSiblingList(ancestor.children, DOCS_ORIGIN));
       lines.push('');
     }
 
     lines.push('## Find what you need');
     lines.push('');
-    lines.push(`- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`);
-    lines.push(`- [Documentation root](${BASE_URL}/index.md) — full docs overview`);
-    lines.push(`- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`);
+    lines.push(`- [Site index](${DOCS_ORIGIN}/llms.txt) — LLM-optimized page listing`);
+    lines.push(`- [Documentation root](${DOCS_ORIGIN}/index.md) — full docs overview`);
+    lines.push(`- [Platforms](${DOCS_ORIGIN}/platforms.md) — all SDK platforms`);
     lines.push('');
 
     body = lines.join('\n');
@@ -113,7 +111,7 @@ export async function GET(
     body = [
       '---',
       `title: "Page Not Found"`,
-      `url: "${BASE_URL}/${requestedPath}"`,
+      `url: "${DOCS_ORIGIN}/${requestedPath}"`,
       '---',
       '',
       '# Page Not Found',
@@ -122,9 +120,9 @@ export async function GET(
       '',
       '## Find what you need',
       '',
-      `- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`,
-      `- [Documentation root](${BASE_URL}/index.md) — full docs overview`,
-      `- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`,
+      `- [Site index](${DOCS_ORIGIN}/llms.txt) — LLM-optimized page listing`,
+      `- [Documentation root](${DOCS_ORIGIN}/index.md) — full docs overview`,
+      `- [Platforms](${DOCS_ORIGIN}/platforms.md) — all SDK platforms`,
       '',
     ].join('\n');
   }

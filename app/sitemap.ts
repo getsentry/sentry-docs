@@ -40,13 +40,12 @@ function filterDevelopDocsPaths(paths: string[]): string[] {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rootNode = await getDocsRootNode();
-  const baseUrl = DOCS_ORIGIN;
 
   let paths = extractSlugsFromDocTree(rootNode);
   if (isDeveloperDocs) {
     paths = filterDevelopDocsPaths(paths);
   }
-  return docsToSitemap(paths, baseUrl);
+  return docsToSitemap(paths, DOCS_ORIGIN);
 }
 
 function docsToSitemap(paths: string[], baseUrl: string): MetadataRoute.Sitemap {

@@ -328,11 +328,10 @@ function resolveOgImageUrl(
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const domain = DOCS_ORIGIN;
   // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : domain;
+    : DOCS_ORIGIN;
   let title =
     'Sentry Docs | Application Performance Monitoring & Error Tracking Software';
   let customCanonicalTag: string = '';
@@ -381,7 +380,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       if (pageNode.frontmatter.og_image) {
         ogImageUrl = resolveOgImageUrl(
           pageNode.frontmatter.og_image,
-          previewDomain ?? domain,
+          previewDomain ?? DOCS_ORIGIN,
           params.path
         );
       }
@@ -390,12 +389,12 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   // Default fallback
   if (!ogImageUrl) {
-    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+    ogImageUrl = `${previewDomain ?? DOCS_ORIGIN}/og.png`;
   }
 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
-  const canonical = `${domain}${canonicalPath(
+  const canonical = `${DOCS_ORIGIN}${canonicalPath(
     customCanonicalTag || params.path?.join('/') || ''
   )}`;
 
