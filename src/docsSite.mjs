@@ -4,14 +4,10 @@
 // Node build scripts in scripts/ all read the same values.
 
 /**
- * True when building develop.sentry.dev.
- *
- * NEXT_PUBLIC_DEVELOPER_DOCS is the variable people set. next.config.ts copies it
- * into DEVELOPER_DOCS, which Next.js inlines into the edge middleware bundle.
+ * True when building develop.sentry.dev. Next.js inlines NEXT_PUBLIC_* variables
+ * into every bundle, including the edge middleware.
  */
-export const isDeveloperDocs = !!(
-  process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-);
+export const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** Production origin of the site, without a trailing slash. */
 export const DOCS_ORIGIN = isDeveloperDocs

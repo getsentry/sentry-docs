@@ -4,18 +4,14 @@ import {sentryLoginUrl} from './sentryLoginUrl';
 
 describe('sentryLoginUrl', () => {
   it('redirects back to the page on docs.sentry.io', () => {
-    const url = new URL(sentryLoginUrl('/platforms/javascript/guides/nextjs/tracing/'));
-
-    expect(url.origin).toBe('https://sentry.io');
-    expect(url.pathname).toBe('/auth/login/');
-    expect(url.searchParams.get('next')).toBe(
-      'https://docs.sentry.io/platforms/javascript/guides/nextjs/tracing/'
+    expect(sentryLoginUrl('/platforms/javascript/guides/nextjs/tracing/')).toBe(
+      'https://sentry.io/auth/login/?next=https%3A%2F%2Fdocs.sentry.io%2Fplatforms%2Fjavascript%2Fguides%2Fnextjs%2Ftracing%2F'
     );
   });
 
   it('falls back to the docs root when there is no pathname', () => {
-    const url = new URL(sentryLoginUrl(null));
-
-    expect(url.searchParams.get('next')).toBe('https://docs.sentry.io/');
+    expect(sentryLoginUrl(null)).toBe(
+      'https://sentry.io/auth/login/?next=https%3A%2F%2Fdocs.sentry.io%2F'
+    );
   });
 });
