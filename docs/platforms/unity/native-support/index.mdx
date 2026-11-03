@@ -126,12 +126,12 @@ The SDK uploads debug symbols for release builds. To also upload them for develo
 
 Where the upload runs depends on the platform:
 
-| Platform                                         | Where the upload runs                | Condition                                 | Log                                                                                         |
-| ------------------------------------------------ | ------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Windows, macOS, Linux, Xbox, PlayStation, Switch | In the Unity Editor, after the build | Always                                    | Unity Console                                                                               |
-| Android                                          | In the Gradle build                  | IL2CPP and Android native support enabled | `Logs/sentry-symbols-upload.log` and `Logs/sentry-mapping-upload.log` in your Unity project |
-| iOS                                              | In an Xcode build phase              | Always                                    | `sentry-symbols-upload.log` in the Xcode project                                            |
-| WebGL                                            | No upload                            |                                           |                                                                                             |
+| Platform                                           | Where the upload runs                | Condition                                                  | Log                                                                                                                    |
+| -------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Windows, macOS, Linux, Xbox, PlayStation 5, Switch | In the Unity Editor, after the build | Sentry enabled with a DSN                                  | Unity Console                                                                                                          |
+| Android                                            | In the Gradle build                  | Sentry enabled, IL2CPP, and Android native support enabled | `Logs/sentry-symbols-upload.log` in your Unity project, and `Logs/sentry-mapping-upload.log` with minification enabled |
+| iOS                                                | In an Xcode build phase              | Always                                                     | `sentry-symbols-upload.log` in the root of the Xcode project                                                           |
+| WebGL                                              | No upload                            |                                                            |                                                                                                                        |
 
 If you export a Gradle or Xcode project instead of building the app in Unity, the upload runs when you build the exported project. For exported Gradle projects, the SDK doesn't write the log files; the upload output is in the Gradle build output. The exported Gradle project contains the `sentry-cli` for the operating system you exported it from, so build it on that operating system. The exported Xcode project contains the macOS `sentry-cli`.
 
@@ -151,7 +151,7 @@ The SDK adds its ProGuard rules, `proguard-sentry-unity.pro`, to the Gradle proj
 
 ### Manual Upload Using sentry-cli
 
-If you don't want to rely on the automated upload, you can run `sentry-cli` from the command line. Use the executables in the SDK package, or follow the [sentry-cli documentation](/cli/installation/) to install it globally. To upload debug symbols, run:
+If you don't want to rely on the automated upload for desktop and console builds, you can run `sentry-cli` from the command line. Use the executables in the SDK package, or follow the [sentry-cli documentation](/cli/installation/) to install it globally. To upload your game's debug symbols, run:
 
 <OrgAuthTokenNote />
 
@@ -160,6 +160,16 @@ sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --il2cpp-mapping
 ```
 
 `sentry-cli` scans `PATH_TO_BUILD_OUTPUT` recursively. Point it at the folder that contains your build and the `<Product>_BackUpThisFolder_ButDontShipItWithYourGame` and `<Product>_BurstDebugInformation_DoNotShip` folders that Unity creates next to it. These folders hold the IL2CPP output and the Burst debug information.
+
+The build folder doesn't contain the symbols of the Sentry native SDK. The automated upload also uploads them from the SDK package, so upload them too if you want symbolicated frames from the Sentry native SDK:
+
+- Windows: the `.pdb` files in `Plugins/Windows/Sentry~/` or `Plugins/Windows/SentryNative~/`, in the `x64` or `x86` subfolder
+- Linux: the `.dbg` and `.dbg.so` files in `Plugins/Linux/Sentry~/` or `Plugins/Linux/SentryNative~/`, in the `x86_64` or `ARM64` subfolder
+- macOS: the `.dSYM` folders in `Plugins/macOS/Sentry~/` or `Plugins/macOS/SentryNative~/`
+
+These paths are relative to the SDK package. If you installed the SDK with UPM, the package is in `Library/PackageCache/` in your Unity project.
+
+For Android and iOS, rely on the automated upload. On Android, it uploads the symbols from `Library/Bee/` in your Unity project. On iOS, it uploads them from the Xcode build output.
 
 - `--il2cpp-mapping` uploads the line mapping that Sentry needs for [C# line numbers in IL2CPP builds](/platforms/unity/configuration/il2cpp/). Leave it out for Mono builds.
 - `--include-sources` is optional. It uploads your source code so Sentry can show [source context](/platforms/unity/data-management/debug-files/source-context/).

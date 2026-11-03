@@ -20,11 +20,18 @@ The SDK doesn't read environment variables such as `SENTRY_AUTH_TOKEN` itself. T
 ```csharp
 using System;
 using Sentry.Unity;
+using UnityEngine;
 
 public class SentryCliConfiguration : SentryCliOptionsConfiguration
 {
     public override void Configure(SentryCliOptions cliOptions)
     {
+        // Only set secrets for CI builds
+        if (!Application.isBatchMode)
+        {
+            return;
+        }
+
         var authToken = Environment.GetEnvironmentVariable("SENTRY_AUTH_TOKEN");
         if (!string.IsNullOrEmpty(authToken))
         {
@@ -36,11 +43,9 @@ public class SentryCliConfiguration : SentryCliOptionsConfiguration
 
 In CI, store the auth token as a secret and expose it to the Unity build as the `SENTRY_AUTH_TOKEN` environment variable. You can set `Organization` and `Project` the same way.
 
-<Alert level="warning">
+Values you set in `Configure` change the stored options for the rest of the editor session, and the editor can save them to `SentryCliOptions.asset`. Set secrets only in batch mode, as in the sample above.
 
-When you export an Xcode or Gradle project, it contains a `sentry.properties` file with the auth token in plain text. Don't commit this file to version control. See [Debug Symbols](/platforms/unity/native-support/#debug-symbols) for where the file is.
-
-</Alert>
+Exported Xcode and Gradle projects contain the auth token in plain text. See the [warning about `sentry.properties`](/platforms/unity/native-support/#debug-symbols).
 
 ## Sentry CLI Options
 
