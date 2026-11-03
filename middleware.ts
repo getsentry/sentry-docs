@@ -554,6 +554,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/react-native/manual-setup/manual-setup/',
   },
   {
+    from: '/platforms/unity/configuration/app-not-responding/',
+    to: '/platforms/unity/app-hangs/',
+  },
+  {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',
     to: '/platforms/unity/usage/sdk-fingerprinting/',
   },
