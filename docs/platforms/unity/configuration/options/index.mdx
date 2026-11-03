@@ -58,6 +58,98 @@ To write the logs somewhere else, such as a file, <PlatformLink to="/configurati
 
 </SdkOption>
 
+<SdkOption name="Enabled" type="bool" defaultValue="true">
+
+Turns the SDK on or off. When set to `false`, the SDK doesn't initialize.
+
+</SdkOption>
+
+<SdkOption name="CaptureInEditor" type="bool" defaultValue="true">
+
+Controls whether the SDK initializes while the game runs in the Unity Editor. When set to `false`, the SDK sends nothing from Play Mode.
+
+</SdkOption>
+
+<SdkOption name="DiagnosticLogger" type="IDiagnosticLogger">
+
+Sets the logger for the SDK's own diagnostic messages. The SDK uses it only when <PlatformIdentifier name="Debug" /> is on. If you don't set one, the SDK writes to the Unity Console. There's no field for it in the configuration window. Learn more in <PlatformLink to="/configuration/diagnostic-logger/">Diagnostic Logger</PlatformLink>.
+
+</SdkOption>
+
+## Filtering Options
+
+<SdkOption name="SampleRate" type="float?" defaultValue="null">
+
+The sample rate for error events, greater than `0` and up to `1`. When `null`, the SDK sends every error event. In the configuration window, it's the **Event Sample Rate** field, where `1` means `null`. Learn more in <PlatformLink to="/configuration/sampling/">Sampling</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="Throttler" type="IThrottler" defaultValue="null">
+
+Limits repeated errors, breadcrumbs, and structured logs that come from Unity logging. Turning on **Enable Error Event Throttling** in the configuration window sets a throttler that only limits error events, unless your options configuration script already set one. Implement `IThrottler` to also limit breadcrumbs and structured logs.
+
+</SdkOption>
+
+<SdkOption name="FilterBadGatewayExceptions" type="bool" defaultValue="true">
+
+Drops exceptions of type `System.Exception` whose message starts with `Error: HTTP/1.1 502 Bad Gateway`.
+
+The SDK applies this option when it loads the options from the configuration window, after your options configuration script runs. Set it in the window or in `Configure`. When you initialize the SDK with `SentrySdk.Init`, setting it to `false` has no effect. Call `DisableBadGatewayExceptionFilter()` instead.
+
+On iOS with `BuildTime` native initialization, this option also makes the iOS SDK drop events for requests to `operate-sdk-telemetry.unity3d.com`.
+
+</SdkOption>
+
+<SdkOption name="DisableBadGatewayExceptionFilter" type="method">
+
+Removes the filter that drops Bad Gateway exceptions. Use it when you initialize the SDK with `SentrySdk.Init`, or in your options configuration script.
+
+</SdkOption>
+
+<SdkOption name="DisableWebExceptionFilter" type="method">
+
+Removes the filter that drops `System.Net.WebException` with the message `Error: ConnectFailure (The requested address is not valid in this context)`. In the configuration window, it's the **WebException** toggle.
+
+</SdkOption>
+
+<SdkOption name="DisableSocketExceptionFilter" type="method">
+
+Removes the filter that drops `System.Net.Sockets.SocketException` with error code 10049 (`The requested address is not valid in this context`). In the configuration window, it's the **SocketException** toggle.
+
+</SdkOption>
+
+<SdkOption name="AddExceptionFilter" type="method">
+
+Adds an `IExceptionFilter`. The SDK drops exceptions for which the filter returns `true`. To drop an exception type and the types derived from it, call `AddExceptionFilterForType<TException>()`.
+
+</SdkOption>
+
+<SdkOption name="DeduplicateMode" type="DeduplicateMode" defaultValue="All ^ InnerException">
+
+Controls which duplicate events the SDK drops: the same event (`SameEvent`), the same exception instance (`SameExceptionInstance`), an already captured exception that's the inner exception of a new one (`InnerException`), or part of an `AggregateException` (`AggregateException`). By default, the SDK drops all of these except inner exceptions. There's no field for it in the configuration window.
+
+</SdkOption>
+
+## Logging & Breadcrumbs Options
+
+<SdkOption name="AddBreadcrumbsForLogType" type="Dictionary<LogType, bool>" defaultValue="true" defaultNote="for Log, Warning, Assert, and Error">
+
+Controls, for each Unity `LogType`, whether the SDK adds log messages as breadcrumbs. In the configuration window, these are the breadcrumb toggles on the **Logging** tab. Learn more in <PlatformLink to="/enriching-events/breadcrumbs/">Breadcrumbs</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="DisableUnityLoggingIntegration" type="method">
+
+Stops the SDK from capturing `Debug.Log`, `Debug.LogWarning`, `Debug.LogAssertion`, and `Debug.LogError` calls as events, breadcrumbs, and structured logs.
+
+</SdkOption>
+
+<SdkOption name="DisableUnhandledExceptionCapture" type="method">
+
+Stops the SDK from capturing unhandled exceptions and `Debug.LogException` calls.
+
+</SdkOption>
+
 ## Data Enrichment & Attachments
 
 <SdkOption name="AddInAppInclude" type="function">
@@ -129,6 +221,18 @@ It applies to requests sent with an `HttpClient` that uses `SentryHttpMessageHan
 
 </SdkOption>
 
+<SdkOption name="FailedRequestStatusCodes" type="IList<HttpStatusCodeRange>" defaultValue="500-599">
+
+The response status codes that count as failed requests for <PlatformIdentifier name="CaptureFailedRequests" />. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="FailedRequestTargets" type="IList<StringOrRegex>" defaultValue=".*">
+
+The request URLs that <PlatformIdentifier name="CaptureFailedRequests" /> applies to, as substrings or regular expressions. Adding an item removes the default `.*`. There's no field for it in the configuration window.
+
+</SdkOption>
+
 <SdkOption name="IsGlobalModeEnabled" type="bool" defaultValue="true">
 
 Defaults to `true`. Specifies whether to use global scope management mode. Should be `true` for client applications and `false` for server applications.
@@ -138,6 +242,24 @@ Defaults to `true`. Specifies whether to use global scope management mode. Shoul
 <SdkOption name="Distribution" type="string">
 
 Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
+
+</SdkOption>
+
+<SdkOption name="ReportAssembliesMode" type="ReportAssembliesMode" defaultValue="Version">
+
+Controls whether events list the loaded assemblies, and which version they report: `None`, `Version`, or `InformationalVersion`. If an assembly has no informational version, `InformationalVersion` reports the assembly version.
+
+</SdkOption>
+
+<SdkOption name="DefaultTags" type="Dictionary<string, string>">
+
+Tags the SDK adds to every event. If an event already has a tag with the same key, it keeps its own value. Add tags to the dictionary, for example `options.DefaultTags["level"] = "forest";`. Learn more in <PlatformLink to="/enriching-events/tags/">Tags</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="TagFilters" type="IList<StringOrRegex>">
+
+Tag keys the SDK ignores, as substrings or regular expressions. Setting a tag whose key matches has no effect.
 
 </SdkOption>
 
@@ -156,6 +278,17 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</SdkOption>
+
+<SdkOption name="IsEnvironmentUser" type="bool" defaultValue="false" defaultNote="in the configuration window">
+
+Reports `Environment.UserName` as the user of each event. It applies only when <PlatformIdentifier name="SendDefaultPii" /> is on and the event has no user set.
+
+The default depends on where the options come from:
+
+- Configuration window (**Auto Set UserName**): `false`. An options configuration script sees the window's value.
+- `new SentryUnityOptions()` and `SentrySdk.Init`: `true` in Windows, macOS, and Linux players and dedicated servers, and `false` everywhere else, including the Unity Editor, Android, iOS, and consoles.
 
 </SdkOption>
 
@@ -207,6 +340,24 @@ A callback function that controls view hierarchy capture behavior. Return `false
 
 </SdkOption>
 
+<SdkOption name="SetBeforeSendViewHierarchy" type="function">
+
+A callback function that receives the captured view hierarchy before the SDK serializes it, along with the event it belongs to. Modify the hierarchy and return it, or return `null` to discard it. Learn more in <PlatformLink to="/enriching-events/view-hierarchy/">View Hierarchy</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="SetBeforeSendFeedback" type="function">
+
+A callback function that receives user feedback before the SDK sends it. Return the feedback event, modified or not, or return `null` to drop it. Learn more in <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="AddEventProcessor" type="method">
+
+Adds an `ISentryEventProcessor` that runs for every event. A processor can change the event, or return `null` to drop it.
+
+</SdkOption>
+
 ## Transport & Network Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
@@ -243,6 +394,36 @@ Controls how long to wait before shutting down. Sentry SDKs send events from a b
 
 </SdkOption>
 
+<SdkOption name="CacheDirectoryPath" type="string" defaultValue="Application.persistentDataPath" defaultNote="not set on Nintendo Switch and Xbox">
+
+The directory where the SDK stores events before it sends them, so they survive restarts and network outages. Set it to `null` to turn offline caching off. Turning off **Enable Offline Caching** in the configuration window sets it to `null`.
+
+</SdkOption>
+
+<SdkOption name="MaxQueueItems" type="int" defaultValue="30">
+
+The maximum number of events the SDK keeps in memory while it sends them. Set it to at least `1`.
+
+</SdkOption>
+
+<SdkOption name="FlushTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(2)">
+
+How long `SentrySdk.Flush()` waits for queued events to be sent. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="RequestBodyCompressionLevel" type="CompressionLevelWithAuto" defaultValue="NoCompression">
+
+How the SDK compresses the requests it sends to Sentry: `NoCompression`, `Optimal`, `Fastest`, or `Auto`, which uses `NoCompression`. IL2CPP doesn't support `Optimal` and `Fastest`. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="EnableBackpressureHandling" type="bool" defaultValue="true">
+
+Lets the SDK lower the sample rate of events and transactions while the system is under load. There's no field for it in the configuration window.
+
+</SdkOption>
+
 ## Tracing Options
 
 <SdkOption name="TracesSampleRate" type="float" defaultValue="0.0">
@@ -266,6 +447,42 @@ Controls whether the SDK will automatically trace the app's startup. Requires <P
 <SdkOption name="AutoSceneLoadTraces" type="bool" defaultValue="true">
 
 Controls whether the SDK will automatically trace when loading scenes. Requires <PlatformIdentifier name="TracesSampleRate" /> to be greater than `0`.
+
+</SdkOption>
+
+<SdkOption name="PerformanceAutoInstrumentationEnabled" type="bool" defaultValue="false">
+
+Adds spans for `Awake` calls during startup and scene loading. In the configuration window, it's the **Spans for Awake Calls** toggle. The SDK reads this option only during the build, when it instruments the game's code, and only if <PlatformIdentifier name="TracesSampleRate" /> is greater than `0`. Setting it at runtime has no effect. Learn more in <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="IgnoreTransactions" type="IList<StringOrRegex>">
+
+Transaction names to drop, as substrings or regular expressions. The SDK drops matching transactions before <PlatformIdentifier name="SetBeforeSendTransaction" /> runs. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="TracePropagationTargets" type="IList<StringOrRegex>" defaultValue=".*">
+
+The outgoing HTTP requests that get the `sentry-trace` and `baggage` headers, matched by URL as substrings or regular expressions. It applies to requests sent through `SentryHttpMessageHandler`. Adding an item removes the default `.*`, and an empty list turns propagation off. There's no field for it in the configuration window. Learn more in <PlatformLink to="/tracing/trace-propagation/">Trace Propagation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="PropagateTraceparent" type="bool" defaultValue="false">
+
+Also sends the W3C `traceparent` header with requests that match <PlatformIdentifier name="TracePropagationTargets" />. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="StrictTraceContinuation" type="bool" defaultValue="false">
+
+When set to `true`, the SDK continues an incoming trace only if it has the same org ID as yours. Otherwise, it starts a new trace. When set to `false`, the SDK also continues incoming traces that have no org ID. A trace with a different org ID always starts a new trace. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="OrgId" type="string">
+
+The org ID the SDK uses for trace propagation and <PlatformIdentifier name="StrictTraceContinuation" />. By default, the SDK reads it from the DSN. Set it when your DSN doesn't contain it, for example with self-hosted Sentry or a local Relay. There's no field for it in the configuration window.
 
 </SdkOption>
 
@@ -316,5 +533,183 @@ Reports historical Android ANRs recorded by the operating system. This option re
 <SdkOption name="AndroidAttachAnrThreadDump" type="bool" defaultValue="false">
 
 Attaches the Android operating system's thread dump to ANR events. This option requires <PlatformIdentifier name="AndroidNativeAnrEnabled" />.
+
+</SdkOption>
+
+## Native Support Options
+
+These options control the native SDKs that the Unity SDK includes. Learn more in <PlatformLink to="/native-support/">Native Support</PlatformLink>.
+
+<SdkOption name="IosNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on iOS through the [iOS SDK](/platforms/apple/guides/ios/).
+
+</SdkOption>
+
+<SdkOption name="AndroidNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on Android through the [Android SDK](/platforms/android/).
+
+</SdkOption>
+
+<SdkOption name="NdkIntegrationEnabled" type="bool" defaultValue="true">
+
+Turns on the Android NDK integration, which captures native crashes in C and C++ code. Requires <PlatformIdentifier name="AndroidNativeSupportEnabled" />.
+
+</SdkOption>
+
+<SdkOption name="NdkScopeSyncEnabled" type="bool" defaultValue="true">
+
+Syncs the scope, such as breadcrumbs, tags, and the user, to the Android NDK layer, so native crashes include it. Requires <PlatformIdentifier name="NdkIntegrationEnabled" />.
+
+</SdkOption>
+
+<SdkOption name="WindowsNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on Windows.
+
+</SdkOption>
+
+<SdkOption name="MacosNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on macOS.
+
+</SdkOption>
+
+<SdkOption name="LinuxNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on Linux.
+
+</SdkOption>
+
+<SdkOption name="XboxNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on Xbox. Learn more in <PlatformLink to="/game-consoles/">Game Consoles</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="PlayStationNativeSupportEnabled" type="bool" defaultValue="true">
+
+Turns on native support on PlayStation. Learn more in <PlatformLink to="/game-consoles/">Game Consoles</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="SwitchNativeSupportEnabled" type="bool" defaultValue="true">
+
+Syncs the scope to the native layer on Nintendo Switch and Switch 2. Learn more in <PlatformLink to="/game-consoles/">Game Consoles</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="IosNativeInitializationType" type="NativeInitializationType" defaultValue="Runtime">
+
+When the iOS SDK initializes: `Runtime`, `BuildTime`, or `External`. `External` is experimental and is for <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>. The SDK reads it during the build to set up the Xcode project, so set it in an <PlatformLink to="/configuration/options/programmatic-configuration/">options configuration script</PlatformLink>, which also runs during the build. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="AndroidNativeInitializationType" type="NativeInitializationType" defaultValue="Runtime">
+
+When the Android SDK initializes: `Runtime`, `BuildTime`, or `External`. `External` is experimental and is for <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>. The SDK reads it during the build to set up the Gradle project, so set it in an <PlatformLink to="/configuration/options/programmatic-configuration/">options configuration script</PlatformLink>, which also runs during the build. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="IosWatchdogTerminationIntegrationEnabled" type="bool" defaultValue="false">
+
+Turns on [watchdog termination tracking](/platforms/apple/guides/ios/configuration/watchdog-terminations/) in the iOS SDK. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="AndroidTombstoneEnabled" type="bool" defaultValue="false">
+
+Reports native crashes that Android records as tombstones, which the Android SDK reads through `ApplicationExitInfo`. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="AndroidReportHistoricalTombstones" type="bool" defaultValue="false">
+
+Also reports tombstones that Android recorded in earlier runs. Requires <PlatformIdentifier name="AndroidTombstoneEnabled" />. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="PostGenerateGradleProjectCallbackOrder" type="int" defaultValue="1">
+
+The `callbackOrder` of the build step in which the SDK changes the generated Gradle project. Change it if another `IPostGenerateGradleAndroidProject` step must run before or after the SDK's. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="NativeHandlerPath" type="string" availableSince="4.11.0">
+
+The path to the out-of-process crash handler executable. By default, the SDK looks for it next to the player executable. It applies on Windows, Linux, and on macOS with the `Native` backend. There's no field for it in the configuration window.
+
+</SdkOption>
+
+<SdkOption name="Experimental.WindowsBackend" type="WindowsBackend" defaultValue="Crashpad">
+
+The native backend on Windows. `Crashpad` uses `crashpad_handler.exe`. `Native` is experimental and uses the out-of-process `sentry-crash.exe` handler, which uploads crashes right away.
+
+</SdkOption>
+
+<SdkOption name="Experimental.MacosBackend" type="MacosBackend" defaultValue="Cocoa">
+
+The native backend on macOS. `Cocoa` uses the [macOS SDK](/platforms/apple/guides/macos/) and requires IL2CPP. `Native` is experimental and uses the [Native SDK](/platforms/native/) with an out-of-process handler, which uploads crashes right away. It works with IL2CPP and Mono.
+
+</SdkOption>
+
+<SdkOption name="Experimental.LinuxBackend" type="LinuxBackend" defaultValue="Breakpad">
+
+The native backend on Linux. `Breakpad` captures crashes in process and uploads them on the next launch. `Native` is experimental and uses the out-of-process `sentry-crash` handler, which uploads crashes right away.
+
+</SdkOption>
+
+When any of these backends is set to `Native`, the SDK raises <PlatformIdentifier name="ShutdownTimeout" /> to at least 10 seconds, so the handler has time to upload before the player exits. It does this when it loads the options from the configuration window, after your options configuration script runs. When you initialize the SDK with `SentrySdk.Init`, set `ShutdownTimeout` yourself.
+
+## Metrics Options
+
+These options are experimental. They make the SDK collect game metrics and send them to Sentry. Learn more in <PlatformLink to="/metrics/">Metrics</PlatformLink>.
+
+<SdkOption name="AutoFrameMetrics" type="bool" defaultValue="false">
+
+Collects frame metrics, such as frame time, FPS, and CPU thread timings.
+
+</SdkOption>
+
+<SdkOption name="FrameMetricsInterval" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(1)">
+
+How often the SDK samples frame metrics. The minimum is one second.
+
+</SdkOption>
+
+<SdkOption name="AutoMemoryMetrics" type="bool" defaultValue="false">
+
+Collects memory usage.
+
+</SdkOption>
+
+<SdkOption name="MemoryMetricsInterval" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(60)">
+
+How often the SDK samples memory metrics. The minimum is one second.
+
+</SdkOption>
+
+<SdkOption name="AutoGcMetrics" type="bool" defaultValue="false">
+
+Collects garbage collection counts for each generation.
+
+</SdkOption>
+
+<SdkOption name="GcMetricsInterval" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(60)">
+
+How often the SDK samples garbage collection metrics. The minimum is one second.
+
+</SdkOption>
+
+<SdkOption name="AutoNetworkMetrics" type="bool" defaultValue="false">
+
+Collects multiplayer network metrics: the round-trip time on clients and the number of connected clients on the server. Requires the Netcode for GameObjects package.
+
+</SdkOption>
+
+<SdkOption name="NetworkMetricsInterval" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(10)">
+
+How often the SDK samples network metrics. The minimum is one second.
 
 </SdkOption>
