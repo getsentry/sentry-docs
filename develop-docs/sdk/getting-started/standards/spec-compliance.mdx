@@ -1,0 +1,143 @@
+---
+title: Spec Compliance Manifest
+description: Record which SDK specification versions and sections an SDK implements, explain non-applicable sections, and validate the manifest with JSON Schema.
+sidebar_order: 1
+---
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
+  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
+SDK specifications define a shared contract, but SDKs implement that contract at different speeds. A spec compliance manifest records which versions and sections an SDK implements so maintainers and reviewers can identify coverage and gaps without inferring support from the specification alone.
+
+The manifest is an SDK-maintained declaration, not a generated test report or proof of conformance. Tests and implementation review support each declaration. The [Spec Lifecycle](/sdk/getting-started/standards/spec-lifecycle/) describes the status and version of the specification itself. This manifest describes an SDK's implementation of it.
+
+<Alert level="warning">
+  This initial format tracks whole specifications and sections, not individual
+  requirements. An omitted section makes no compliance claim. It does not
+  necessarily mean the SDK has no implementation of that section.
+</Alert>
+
+## Add a Manifest
+
+Keep the file named `sentry-spec-compliance.json` at the root of the SDK repository. The manifest **MUST** reference [the JSON schema](/schemas/spec-compliance.json) with the following `$schema` URL. Editors that support JSON Schema can use this reference for validation and completion.
+
+This example records partial attachments support. It declares compliance with the `flamegraph` section at spec version `1.8.0`, but does not claim a complete attachments specification version:
+
+```json {filename:sentry-spec-compliance.json}
+{
+  "$schema": "https://develop.sentry.dev/schemas/spec-compliance.json",
+  "sdk": "sentry-cocoa",
+  "last_updated": "2026-10-19",
+  "specs": {
+    "sdk/telemetry/attachments": {
+      "version": "0.0.0",
+      "sections": {
+        "flamegraph": "1.8.0"
+      }
+    }
+  }
+}
+```
+
+The example illustrates the format, not a complete inventory of Cocoa support. The manifest in an SDK repository is the source for that SDK's declarations.
+
+## Identify the SDK and Specifications
+
+Stable identifiers let reviewers match each declaration to the specification it describes. These top-level fields are required:
+
+| Field          | Meaning                                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `$schema`      | `https://develop.sentry.dev/schemas/spec-compliance.json`.                                               |
+| `sdk`          | The SDK repository identifier, such as `sentry-cocoa`.                                                   |
+| `last_updated` | The date compliance declarations last changed, formatted as `YYYY-MM-DD`.                                |
+| `specs`        | An object mapping specification identifiers to compliance declarations. An empty object makes no claims. |
+
+Each key in `specs` **MUST** match the specification's `spec_id` frontmatter value, such as `sdk/telemetry/attachments`. Use the identifier, not the page title, a full URL, or a section anchor.
+
+Within a specification declaration, `version` is required. `sections` and `non_applicable` are optional objects:
+
+| Field            | Value                                    | Meaning                                                                                                    |
+| ---------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `version`        | Exact specification version              | Highest version fully implemented by the SDK. Use `0.0.0` until the first complete version is implemented. |
+| `sections`       | Section ID → exact specification version | Individual sections the SDK implements, even when the complete specification is not implemented.           |
+| `non_applicable` | Section ID → explanation                 | Entire sections that require no implementation for this SDK.                                               |
+
+Section keys **MUST** match the `id` of a `<SpecSection>` block in the referenced specification. The same section **MUST NOT** appear in both `sections` and `non_applicable`.
+
+## Declare Implemented Versions
+
+Specification versions and SDK release versions are separate. Every version in the manifest **MUST** be an exact specification [SemVer](https://semver.org/) version, not an SDK version, a range such as `>=1.0.0`, or a lifecycle status such as `stable`.
+
+### Record Section-Level Coverage
+
+Add a section to `sections` only when the implementation satisfies that section's applicable requirements. Set its value to the latest specification version the implementation satisfies. Applicable but incomplete sections **MUST** remain absent.
+
+Section versions are independent. An SDK can implement one section at `1.5.0` and another at `1.4.0` while its overall specification version remains `0.0.0`. Section versions can also be newer than a nonzero overall version when the SDK implements some, but not all, changes in a newer specification.
+
+A section's `since` attribute identifies when its current requirements were introduced. It is not an SDK implementation date or an instruction to automatically advance a manifest entry. Compare the implementation with the section's requirements and the specification changelog before changing its declared version.
+
+### Record Full Specification Coverage
+
+Set the spec-level `version` to the highest specification version whose applicable requirements the SDK fully implements. Entirely non-applicable sections do not require implementation, but **MUST** be identified with explanations in `non_applicable`.
+
+The overall version is not the highest or lowest value in `sections`, and **MUST NOT** be calculated from those values alone. Review all applicable requirements in the target specification version, including sections not listed in the manifest. Use `0.0.0` when no complete specification version is implemented.
+
+An omitted specification makes no compliance claim. A specification listed with `version: "0.0.0"` explicitly records that no complete version is implemented and can still report section-level coverage.
+
+## Explain Non-Applicable Sections
+
+A section belongs in `non_applicable` only when the entire section requires no implementation for the SDK. Each explanation **MUST** be nonempty and describe why the section does not apply. Missing work, a disabled feature, or an implementation backlog is not a reason to exclude an applicable requirement.
+
+For example, a section that only defines data sensitivity categories requires no SDK implementation. A specification declaration can exclude it with this explanation:
+
+```json
+{
+  "version": "0.0.0",
+  "non_applicable": {
+    "data-sensitivity-levels": "Defines data sensitivity categories but does not require SDK behavior."
+  }
+}
+```
+
+This is a specification declaration, not a complete manifest. Non-applicability is an explicit, reviewable exclusion rather than a successful implementation claim.
+
+### Mixed-Applicability Sections
+
+The initial format cannot express partially applicable sections. For example, a section might combine supported HTTP controls with queue or GenAI categories an SDK does not collect.
+
+Such a section **MUST NOT** be marked wholly non-applicable. It **MUST** remain absent from section-level declarations until the format supports requirement-level applicability or the specification splits the section into smaller sections. Do not use a partial implementation entry to imply full section coverage.
+
+## Keep Declarations Current
+
+Review the manifest whenever an implementation changes behavior covered by a specification, or when a specification update needs a compliance assessment:
+
+1. Identify the affected `spec_id`, section IDs, and specification versions.
+2. Compare the implementation and its tests with the relevant requirements. Add or advance a section declaration only when the implementation satisfies them.
+3. Review exclusions and the overall `version`. Implementing another section does not automatically establish full specification compliance.
+4. Remove or lower declarations that no longer describe the implementation, such as after a feature removal or a corrected assessment.
+5. Update `last_updated` whenever compliance declarations change, and include the manifest update in the implementation review.
+
+A new specification release does not automatically change an SDK's declared versions. Keep the existing declarations until the implementation has been assessed against the new requirements.
+
+## Validate the Manifest
+
+The schema is served at [`https://develop.sentry.dev/schemas/spec-compliance.json`](/schemas/spec-compliance.json). It uses JSON Schema Draft 2020-12. Validate with an editor or a validator that supports that draft. Enable `format` validation to check calendar dates in `last_updated`, in addition to the schema's `YYYY-MM-DD` pattern.
+
+Schema validation checks:
+
+- Required fields and their types.
+- Exact SemVer syntax for specification and section versions.
+- Date syntax, nonempty identifiers, and nonblank exclusion explanations.
+- Unknown fields at the manifest and specification-declaration levels, helping catch typos.
+
+Schema validation does not check:
+
+- Whether specification and section IDs exist, or versions have been published.
+- Whether the implementation satisfies the claimed requirements.
+- Whether exclusions are justified or a section appears in both coverage maps.
+- Whether the overall version is supported by full coverage, or `last_updated` reflects the latest assessment.
+
+These checks require specification and implementation review. Passing schema validation establishes that a declaration is well-formed, not that an SDK conforms to the specification.
