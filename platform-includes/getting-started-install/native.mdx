@@ -1,26 +1,25 @@
-The Native SDK currently supports **Windows**, **macOS**, and **Linux**. The Native SDK also acts as an **Android** NDK support library in downstream SDKs via the [Android SDK](/platforms/android/configuration/using-ndk/), but currently does not directly support the platform.
+The Native SDK currently supports **Windows**, **macOS**, and **Linux**. The Native SDK also acts as an **Android** NDK support library in downstream SDKs via the [Android SDK](/platforms/android/configuration/using-ndk/), but currently does not directly support the platform. **Nintendo Switch**, **PlayStation**, and **Xbox** are supported via Sentry's console SDKs. See the [Nintendo Switch](/platforms/nintendo-switch/), [PlayStation](/platforms/playstation/), and [Xbox](/platforms/xbox/) documentation to get access.
 
 To build the SDK, download the latest sources from the [Releases page](https://github.com/getsentry/sentry-native/releases). The SDK is managed as a [CMake] project, which additionally supports several configuration options, such as the backend to use.
 
-For example, `CMake` can be used like this (on macOS):
+For example, `CMake` can be used like this:
 
-```shell
+```shell {tabTitle:macOS} {mdExpandTabs}
 # When using CMake 4 ensure you have valid SDKROOT defined in your environment.
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-# Configure the CMake build into the `build` directory with crashpad (the default
-# backend on macOS, thus optional to specify). Specifying `RelWithDebInfo` as the
-# `CMAKE_BUILD_TYPE` is also optional because it is the default in sentry-native
-# for all generators supporting it.
-cmake -B build -D SENTRY_BACKEND=crashpad -D CMAKE_BUILD_TYPE=RelWithDebInfo
+# Configure the CMake build into the `build` directory with the desired backend.
+# Specifying `RelWithDebInfo` as the `CMAKE_BUILD_TYPE` is optional because it
+# is the default in sentry-native for all generators supporting it.
+cmake -B build -D SENTRY_BACKEND=native -D CMAKE_BUILD_TYPE=RelWithDebInfo
 # build the project
 cmake --build build --parallel
 # install the resulting artifacts into a specific prefix
 cmake --install build --prefix install
-# which will result in the following (on macOS):
-exa --tree install --level 2
+# which will result in the following:
+eza --tree install --level 2
 install
 ├── bin
-│  └── crashpad_handler
+│  └── sentry-crash
 ├── include
 │  └── sentry.h
 └── lib
@@ -28,15 +27,34 @@ install
    ├── libsentry.dylib
    └── libsentry.dylib.dSYM
 ```
-(For further details on the `SDKROOT` usage with CMake please consult the [macOS build section in the SDK README](https://github.com/getsentry/sentry-native?tab=readme-ov-file#building-and-installation))
 
-Contrast the above with the build-steps for a typical `msbuild` project on Windows:
+```shell {tabTitle:Linux}
+# Configure the CMake build into the `build` directory with the desired backend.
+# Specifying `RelWithDebInfo` as the `CMAKE_BUILD_TYPE` is optional because it
+# is the default in sentry-native for all generators supporting it.
+cmake -B build -D SENTRY_BACKEND=native -D CMAKE_BUILD_TYPE=RelWithDebInfo
+# build the project
+cmake --build build --parallel
+# install the resulting artifacts into a specific prefix
+cmake --install build --prefix install
+# which will result in the following:
+tree install -L 2
+install
+├── bin
+│   └── sentry-crash
+├── include
+│   └── sentry.h
+└── lib
+    ├── cmake
+    └── libsentry.so
 
-```shell
+5 directories, 3 files
+```
+
+```shell {tabTitle:Windows}
 # The msbuild generator ignores the CMAKE_BUILD_TYPE because it contains all
-# build-types. Here we leave out the backend specification and rely on CMake
-# selecting crashpad as Windows' default backend.
-cmake -B build
+# build-types.
+cmake -B build -D SENTRY_BACKEND=native
 # The actual build step then requires we specify which build-type we want
 # to apply via the `--config` parameter. Please be aware that in msbuild
 # projects, the `--parallel` option has no effect.
@@ -46,8 +64,9 @@ cmake --install build --prefix install --config RelWithDebInfo
 # which will result in the following output (ignoring non-essential lines):
 tree /f install
 ├───bin
-│       crashpad_handler.exe
-│       crashpad_handler.pdb
+│       sentry-crash.exe
+│       sentry-wer.dll
+│       sentry-wer.pdb
 │       sentry.dll
 │       sentry.pdb
 │
@@ -56,12 +75,16 @@ tree /f install
 │
 └───lib
     │   sentry.lib
+    │
+    └───cmake
 ```
+
+(For further details on the `SDKROOT` usage with CMake please consult the [macOS build section in the SDK README](https://github.com/getsentry/sentry-native?tab=readme-ov-file#building-and-installation))
 
 [cmake]: https://cmake.org/cmake/help/latest/
 
-<Alert level="warning" title="Bundling crashpad_handler">
+<Alert level="warning" title="Bundling out-of-process backends">
 
-When using the _Crashpad backend_, which is the default on all supported Desktop platforms (Windows, Linux and macOS), the `crashpad_handler` binary has to be shipped alongside the application binary. See the [Crashpad documentation](/platforms/native/configuration/backends/crashpad/) for more information.
+The out-of-process _Native_ and _Crashpad_ backends require shipping `sentry-crash` or `crashpad_handler`, respectively, alongside the application binary. See the [Native](/platforms/native/configuration/backends/native/) and [Crashpad](/platforms/native/configuration/backends/crashpad/) backend documentation for more information.
 
 </Alert>
