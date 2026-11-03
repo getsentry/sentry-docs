@@ -78,6 +78,8 @@ To bypass the hook once without marking the file, use `SKIP=trailing-slashes git
 
 Managed skills in `.agents/skills/` are not checked in. Run `make develop` (or `npx -y @sentry/dotagents install`) to install them before relying on skills like `/brand-guidelines` or `/commit`.
 
+Repo-specific skills live in `.agents/skills/<name>/`, are checked in, and are declared in `agents.toml` with a `path:` source (for example `writing-sdk-specs`).
+
 ## Developer Documentation (develop-docs/)
 
 When writing requirements in `develop-docs/`:
@@ -97,7 +99,8 @@ When writing requirements in `develop-docs/`:
 
 - **ALWAYS** run `/brand-guidelines` to audit any user-facing content before committing. See `.agents/skills/brand-guidelines/SKILL.md`
 - Use `docs-review` skill for Sentry style and voice review. See `.claude/skills/docs-review/SKILL.md`
-- Use `technical-docs` skill when writing or reviewing SDK documentation. See `.claude/skills/technical-docs/SKILL.md`
+- Use `technical-docs` skill when writing or reviewing user-facing SDK docs (`docs/platforms/`). See `.claude/skills/technical-docs/SKILL.md`
+- Use `writing-sdk-specs` skill when writing, editing, or reviewing SDK specs (pages in `develop-docs/sdk/` with `spec_id` frontmatter, except those with `spec_kind: process`). See `.agents/skills/writing-sdk-specs/SKILL.md`
 
 ## LLM-Friendly MD Exports
 
