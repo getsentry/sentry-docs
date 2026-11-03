@@ -12,19 +12,15 @@ The SDK provides a configuration window that allows you to set most of Sentry's 
 
 <TableOfContents ignoreIds={["core-options", "programmatic-configuration"]} />
 
-Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
+<SdkOption name="Dsn" type="string">
 
-<SdkOption name="Dsn" type="string" envVar="SENTRY_DSN">
-
-The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
-
-In runtimes without a process environment (such as the browser) that fallback does not apply.
+The DSN tells the SDK where to send the events. Without a DSN, the SDK is disabled and doesn't send any events. The SDK doesn't read the DSN, or any other option, from environment variables.
 
 Learn more about [DSN utilization](/concepts/key-terms/dsn-explainer/#dsn-utilization).
 
 </SdkOption>
 
-<SdkOption name="Environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
+<SdkOption name="Environment" type="string" defaultValue="production">
 
 Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
@@ -34,47 +30,49 @@ By default, the SDK reports `editor` when running inside the Unity Editor. Other
 
 <SdkOption name="Release" type="string">
 
-Sets the release. The SDKk will try to automatically configure a release out of the box. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+Sets the release. The SDK will try to automatically configure a release out of the box. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will read from `Application.productName` and `Application.version` to create the release in the format `$"{Application.productName}@{Application.version}".`
-
-</SdkOption>
-
-<SdkOption name="Debug" type="bool" defaultValue="false">
-
-Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+By default, the SDK creates the release from `Application.productName` and `Application.version`, in the format `{productName}@{version}`. In the product name, line breaks, tabs, `/`, `\`, `..` and `@` are each replaced with `_`. If the product name is empty, only whitespace, or only dots, the release is just `Application.version`.
 
 </SdkOption>
 
-<SdkOption name="DiagnosticLevel" type="enum">
+<SdkOption name="Debug" type="bool" defaultValue="true" defaultNote="false with a manual SentrySdk.Init">
 
-Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
+Turns debug mode on or off. If debug is enabled, the SDK prints useful debugging information if something goes wrong with sending the event. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
-- `debug`: **default** The most verbose mode
-- `info`: Informational messages
-- `warning`: Warning that something might not be right
-- `error`: Only SDK internal errors are printed
-- `fatal`: Only critical errors are printed
+In the editor window, **Enable Debug Output** is on and **Only In Editor** is checked, so the SDK prints its diagnostic logs in the Editor but not in builds. Uncheck **Only In Editor** to get them in builds too.
 
-For app models that don't have a console to print to, you can <PlatformLink to="/configuration/diagnostic-logger/">customize the SDK's diagnostic logger</PlatformLink> to write to a file or to Visual Studio's debug window.
+</SdkOption>
+
+<SdkOption name="DiagnosticLevel" type="SentryLevel" defaultValue="SentryLevel.Warning" defaultNote="SentryLevel.Debug with a manual SentrySdk.Init">
+
+Sets the minimum level of the SDK's diagnostic logs when `debug` mode is on. In the editor window, this is **Verbosity Level**.
+
+- `SentryLevel.Debug`: The most verbose mode
+- `SentryLevel.Info`: Informational messages
+- `SentryLevel.Warning`: Warning that something might not be right
+- `SentryLevel.Error`: Only SDK internal errors are printed
+- `SentryLevel.Fatal`: Only critical errors are printed
+
+To write the logs somewhere else, such as a file, <PlatformLink to="/configuration/diagnostic-logger/">customize the SDK's diagnostic logger</PlatformLink>.
 
 </SdkOption>
 
 ## Data Enrichment & Attachments
 
-<SdkOption name="InAppInclude" type="array">
+<SdkOption name="AddInAppInclude" type="function">
 
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+Adds a prefix of module names that belong to the app. Call `options.AddInAppInclude("MyCompany.")` with a string prefix, or pass a `Regex`, or use `options.AddInAppIncludeRegex(pattern)`. Includes take precedence over excludes.
 
 Sentry differentiates stack frames that are directly related to your game ("in application") from stack frames that come from other packages such as the standard library, third party plugins, or other dependencies. The game's code that is part of the 'Assembly-CSharp' is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
 </SdkOption>
 
-<SdkOption name="InAppExclude" type="array">
+<SdkOption name="AddInAppExclude" type="function">
 
-A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
+Adds a prefix of module names that don't belong to the app, but to third-party packages. Call `options.AddInAppExclude("ThirdParty.")` with a string prefix, or pass a `Regex`, or use `options.AddInAppExcludeRegex(pattern)`. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using <PlatformIdentifier name="InAppInclude" />.
+The Unity SDK excludes `UnityEngine`, `UnityEditor`, `Cysharp` and `DG.Tweening` by default. Use <PlatformIdentifier name="AddInAppInclude" /> to override an exclude.
 
 </SdkOption>
 
@@ -84,7 +82,7 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </SdkOption>
 
-<SdkOption name="AttachStacktrace" type="bool" defaultValue="true">
+<SdkOption name="AttachStacktrace" type="bool" defaultValue="false" defaultNote="true with a manual SentrySdk.Init">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
@@ -127,6 +125,8 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
 
+It applies to requests sent with an `HttpClient` that uses `SentryHttpMessageHandler`, for example `new HttpClient(new SentryHttpMessageHandler())`. Requests sent with `UnityWebRequest` aren't captured. On iOS and macOS, the option is also passed to the native Cocoa SDK, unless the app initializes that SDK itself. The status codes that count as failed are set by `FailedRequestStatusCodes`, which defaults to 500–599. Both options can only be set in code.
+
 </SdkOption>
 
 <SdkOption name="IsGlobalModeEnabled" type="bool" defaultValue="true">
@@ -156,12 +156,6 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
-
-</SdkOption>
-
-<SdkOption name="ServerName" type="string">
-
-This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
 </SdkOption>
 
@@ -217,9 +211,9 @@ A callback function that controls view hierarchy capture behavior. Return `false
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<SdkOption name="Transport" type="function">
+<SdkOption name="Transport" type="ITransport">
 
-Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+Switches out the transport used to send events. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication. On WebGL and Nintendo Switch, this option has no effect: the SDK always sends events with `UnityWebRequest` there.
 
 </SdkOption>
 
@@ -229,23 +223,23 @@ The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/enve
 
 </SdkOption>
 
-<SdkOption name="HttpProxy" type="string">
+<SdkOption name="HttpProxy" type="IWebProxy">
 
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+Sets the proxy the SDK uses to send events to Sentry, for both HTTP and HTTPS. On WebGL and Nintendo Switch, this option has no effect.
 
 </SdkOption>
 
-<SdkOption name="InitCacheFlushTimeout" type="int" defaultValue="1">
+<SdkOption name="InitCacheFlushTimeout" type="TimeSpan" defaultValue="TimeSpan.Zero">
 
 When caching is enabled (that is, <PlatformIdentifier name="CacheDirectoryPath" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
 
-The default is `1` (one) second.
+The default is zero, so the SDK doesn't block during initialization to flush the cache.
 
 </SdkOption>
 
-<SdkOption name="ShutdownTimeout" type="int">
+<SdkOption name="ShutdownTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(2)">
 
-Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+Controls how long to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount of time to drain pending events. The default is two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
 </SdkOption>
 
@@ -253,25 +247,25 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 <SdkOption name="TracesSampleRate" type="float" defaultValue="0.0">
 
-A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="TracesSampler" /> must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. The automatic startup, scene-load and `Awake` instrumentation only runs when this is greater than `0`.
 
 </SdkOption>
 
 <SdkOption name="TracesSampler" type="function">
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="TracesSampleRate" /> must be defined to enable tracing.
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. A `TracesSampler` on its own enables tracing for the transactions you create. The automatic instrumentation also needs <PlatformIdentifier name="TracesSampleRate" /> to be greater than `0`.
 
 </SdkOption>
 
 <SdkOption name="AutoStartupTraces" type="bool" defaultValue="true">
 
-Controls whether the SDK will automatically trace the app's startup.
+Controls whether the SDK will automatically trace the app's startup. Requires <PlatformIdentifier name="TracesSampleRate" /> to be greater than `0`.
 
 </SdkOption>
 
 <SdkOption name="AutoSceneLoadTraces" type="bool" defaultValue="true">
 
-Controls whether the SDK will automatically trace when loading scenes.
+Controls whether the SDK will automatically trace when loading scenes. Requires <PlatformIdentifier name="TracesSampleRate" /> to be greater than `0`.
 
 </SdkOption>
 
@@ -293,11 +287,15 @@ Sets how long the main thread must be unresponsive before the SDK captures an ap
 
 <SdkOption name="AnrDetectionEnabled" type="bool" defaultValue="false">
 
-Controls the managed Unity watchdog in the Sentry configuration window. To disable this detector programmatically, call `options.DisableAnrIntegration()`.
+**Deprecated:** Use <PlatformIdentifier name="EnableAppHangTracking" /> instead.
+
+Controls the managed C# watchdog. You can only set it in the editor window, under **Advanced > Automatic Behaviour > C# Watchdog (Deprecated)**. Programmatic initialization doesn't add the watchdog.
 
 </SdkOption>
 
 <SdkOption name="AnrTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(5)">
+
+**Deprecated:** Use <PlatformIdentifier name="AppHangTimeout" /> instead.
 
 Sets how long the Unity main thread must be unresponsive before the managed watchdog reports an ANR event.
 
