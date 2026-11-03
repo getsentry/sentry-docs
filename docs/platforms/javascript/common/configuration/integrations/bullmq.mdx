@@ -53,13 +53,9 @@ const telemetry = new Sentry.BullMQTelemetry({ enableMetrics: true });
 
 ## Spans
 
-- Adding jobs (`add`, `addBulk`, `addFlow`, and `addBulkFlows`) creates `queue.publish` spans.
-- Processing a job creates a `queue.process` span that starts a new trace and links to the `queue.publish` span of the job. The link needs `telemetry` on the queue that added the job.
-- Other BullMQ operations create `queue` spans, but only inside an active span.
+The SDK creates a span when you add a job to a queue and when a worker processes it, and links the two so you can follow each job from the code that added it to the worker that ran it. These spans populate the [Queues dashboard](/product/dashboards/sentry-dashboards/backend/queues/).
 
-The `queue.publish` and `queue.process` spans populate the [Queues dashboard](/product/dashboards/sentry-dashboards/backend/queues/).
-
-BullMQ's `bullmq.*` span attributes are sent as `messaging.*` attributes. For example, the queue name is sent as `messaging.destination.name` and the job ID as `messaging.message.id`. All other attributes are sent as `messaging.bullmq.*`, and some of them use underscores instead of dots. For example, `bullmq.job.name` becomes `messaging.bullmq.job.name` and `bullmq.worker.force.close` becomes `messaging.bullmq.worker.force_close`.
+Span attributes follow Sentry's `messaging.*` conventions, for example `messaging.destination.name` for the queue name. Other BullMQ attributes are sent as `messaging.bullmq.*`, some with underscores instead of dots, such as `messaging.bullmq.worker.force_close`.
 
 ## Errors
 
