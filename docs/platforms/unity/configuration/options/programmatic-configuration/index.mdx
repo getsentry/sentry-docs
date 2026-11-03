@@ -6,7 +6,9 @@ og_image: >-
   /og-images/platforms-unity-configuration-options-programmatic-configuration.png
 ---
 
-We've added `Sentry Options Configuration` to the `Options Config` tab in the Sentry editor window to provide a way to modify options programmatically.
+To set options in code, use an options configuration script. In the Sentry configuration window (**Tools > Sentry**), open the **Options Config** tab and click **New** next to the **Option Config Script** field. The SDK asks where to save the script, starting in `Assets/Scripts`, and writes a class that inherits from `SentryOptionsConfiguration`. After Unity compiles the script, the SDK creates its asset in `Assets/Resources/Sentry/` and assigns it to the field, unless the field already has a script.
+
+The SDK calls the script's `Configure` method after it applies the values from the configuration window, so the values you set in `Configure` override the window. `Configure` also runs during player builds, where the SDK uses the options to set up the native SDKs and other build steps. During a build, `Environment` defaults to `production`. Don't rely on the game's runtime state in `Configure`, and wrap code that must only run in the game in `if (Application.isPlaying)`.
 
 ![Options Configuration](./img/unity-options-configuration.png)
 
@@ -14,11 +16,21 @@ We've added `Sentry Options Configuration` to the `Options Config` tab in the Se
 
 The Sentry SDK for Unity includes [platform-specific (that is, Native)](/platforms/unity/native-support/) SDKs, such as [Android](/platforms/android/), [Apple](/platforms/apple/guides/ios/), and [Native](/platforms/native/) to provide native crash support. These SDKs share the options with which they get initialized.
 
-The C# layer self-initializes through the use of the [SubsystemRegistration RuntimeInitializeOnLoadMethodAttribute](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html).
+The SDK initializes itself at [SubsystemRegistration](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html) through `RuntimeInitializeOnLoadMethod`. On WebGL, it initializes at [BeforeSceneLoad](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.BeforeSceneLoad.html) instead, because the WebGL transport can't send requests earlier. The native steps only run in a player with native support: not in the Editor, on WebGL, on Android with Mono, or on macOS with Mono and the default `Cocoa` backend. With `BuildTime` initialization on iOS and Android, the native SDK starts before Unity, so the SDK skips that step. With `External`, it skips it when the app that embeds the game has already started the native SDK. Learn more in <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>.
 
-![Flow of initialization](./img/initialization-flow.png)
+```mermaid
+flowchart TD
+    Start["SubsystemRegistration<br/>(BeforeSceneLoad on WebGL)"] --> Load[Load the options from the configuration window]
+    Load --> Configure["Call Configure in your options configuration script"]
+    Configure --> HasNative{"Native support<br/>in this player?"}
+    HasNative -- Yes --> Native["Initialize the native SDK<br/>(unless it's already running)"]
+    Native --> Sync[Set up scope sync with the native SDK]
+    Sync --> CSharp[Initialize the C# SDK]
+    HasNative -- No --> CSharp
+    CSharp --> Game[Load the first scene]
+```
 
-If provided, the `Option Configuration Script` is executed on each app startup. The options are first used to initialize the native SDKs, then the managed (C#) SDK. This means that the options you set in your `Configure` callback will also apply on the native layer. For example:
+The SDK initializes the native SDK with the same options before the C# SDK, so the options you set in `Configure` also apply to the native layer. With `BuildTime` initialization, the native SDK uses the options from the build instead, and with `External`, usually the options of the app that embeds the game. For example:
 
 ```csharp
 public override void Configure(SentryUnityOptions options)
