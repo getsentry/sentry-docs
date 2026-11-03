@@ -1,0 +1,26 @@
+---
+id: logging-integrations-no-longer-report-startup-crashes
+title: "Logging Integrations No Longer Report Startup Crashes"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 55
+---
+
+Apps that set the DSN on the Serilog sink, the NLog target or the log4net appender no longer send crashes that happen before `UseSentry` starts Sentry. In 6.x, the logging integration started Sentry as soon as the logging framework was set up, so a crash logged from `Main` was sent.
+
+`UseSentry` starts Sentry when the host is built or, in ASP.NET Core, when the app starts running. To also send crashes from before then, call `SentrySdk.Init` at the top of `Main`, before you create the builder, and keep `UseSentry`:
+
+```csharp {filename:Program.cs}
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+```
+
+`UseSentry` replaces the first initialization once it starts, and the two don't share options. The [Serilog guide](/platforms/dotnet/guides/serilog/#capturing-startup-crashes) shows the full setup with a bootstrap logger.
