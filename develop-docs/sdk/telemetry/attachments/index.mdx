@@ -170,7 +170,7 @@ When using `Crashpad` as the crash-capturing backend in the Native SDK, the file
 
 SDKs **MAY** attach a `flamegraph.json` file containing aggregated call trees, such as those captured for application hangs. The attachment **MUST** use `attachment_type: "event.flamegraph"` and `content_type: "application/json"`.
 
-The format reuses profiling frame objects and debug metadata to support symbolication. Tree nodes describe aggregated call paths and sample counts.
+The format reuses profiling frame objects and debug metadata to support symbolication. A flat node table describes aggregated call paths and sample counts. Child references use node indices to avoid deeply nested JSON and allow iterative processing without recursive traversal.
 
 #### Flame Graph Attachment Transport
 
@@ -190,13 +190,14 @@ Event context such as release, environment, SDK identity, device, OS, and hang d
 
 #### Flame Graph Payload
 
-The top-level object describes one collection of call trees and their shared frame table.
+The top-level object describes one collection of call trees and their shared frame and node tables.
 
 | Field        | Type                   | Requirement                                      | Description                                                                                                                         |
 | ------------ | ---------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `version`    | String                 | **REQUIRED**                                     | `"1"` for this wire format.                                                                                                         |
 | `platform`   | String                 | **REQUIRED**                                     | Existing Sentry platform identifier. Used as the default platform for frames. Native Apple frames use `"cocoa"`.                    |
 | `frames`     | Array of frame objects | **REQUIRED**                                     | Non-empty frame table using the same frame objects as a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data).                  |
+| `nodes`      | Array of node objects  | **REQUIRED**                                     | Non-empty flat node table. Child and root references are zero-based indices into this array.                                       |
 | `trees`      | Array of tree objects  | **REQUIRED**                                     | Non-empty collection of independent call trees.                                                                                     |
 | `debug_meta` | Debug Meta object      | **REQUIRED** for native frames with known images | Existing debug metadata for the process that produced the diagnostic. See [Native Symbolication](#flame-graph-native-symbolication). |
 
@@ -216,7 +217,7 @@ A tree object groups root nodes that share the same sample population. Each obje
 
 | Field               | Type           | Requirement  | Description                                                                                                                           |
 | ------------------- | -------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `roots`             | Array of nodes | **REQUIRED** | Non-empty forest of call paths. Roots are the oldest retained callers.                                                                |
+| `roots`             | Array of integers | **REQUIRED** | Non-empty list of zero-based indices into `nodes`. Roots are the oldest retained callers.                                                                |
 | `thread_id`         | String         | **OPTIONAL** | Actual source thread identifier, if known. Uses the string representation used by profiling samples.                                  |
 | `thread_attributed` | Boolean        | **OPTIONAL** | Whether the diagnostic source identifies this tree's thread as responsible for the reported issue, such as a hang. Omit when unknown. |
 
@@ -224,13 +225,15 @@ Each tree is an independent sample population. Producers **MUST** include `threa
 
 ##### Flame Graph Nodes
 
-Each node describes one frame occurrence in a call path.
+Each entry in the top-level `nodes` array describes one frame occurrence in a call path.
 
 | Field          | Type           | Requirement  | Description                                                                      |
 | -------------- | -------------- | ------------ | -------------------------------------------------------------------------------- |
 | `frame_id`     | Integer        | **REQUIRED** | Zero-based index into `frames`. **MUST** be between `0` and `frames.length - 1`. |
 | `sample_count` | Integer        | **REQUIRED** | Positive inclusive count of samples containing this call-path prefix.            |
-| `children`     | Array of nodes | **OPTIONAL** | Direct callees. Defaults to `[]` when omitted.                                   |
+| `children`     | Array of integers | **OPTIONAL** | Zero-based indices into `nodes` for direct callees. Defaults to `[]` when omitted. |
+
+Root and child indices **MUST** be between `0` and `nodes.length - 1`. Node references **MUST** form independent trees without cycles or shared nodes. Recursive calls use separate nodes that **MAY** reference the same `frame_id`.
 
 Paths **MUST** run from caller to callee. Each root-to-leaf path is one observed call path, potentially ending before the true bottom or top of the stack if the source was incomplete.
 
@@ -248,13 +251,13 @@ Frame addresses **MUST** follow the existing [`instruction_addr` and `addr_mode`
 
 Symbolication **MUST** preserve captured addresses, addressing modes, and debug images. Resolved function names and source locations **MUST** populate the standard profiling frame fields. Unresolved frames **MUST** retain their original data.
 
-Consumers **MUST** track symbolication state and skip symbolication for already-processed payloads. If symbolication is rerun, it **MUST** start from the original, unexpanded frames and trees.
+Consumers **MUST** track symbolication state and skip symbolication for already-processed payloads. If symbolication is rerun, it **MUST** start from the original, unexpanded frames, nodes, and trees.
 
 ##### Flame Graph Inline Frames
 
 Compiler-inlined functions share a physical stack frame with their caller. [Native symbolication](/ingestion/symbolicator/#native-symbolication) can recover these functions as separate logical frames.
 
-A processor that expands inline frames **MUST** replace each affected node occurrence with a caller-to-callee chain, assign the original `sample_count` to every node in that chain, and attach the original children to its innermost node. The expansion **MUST** preserve the tree's total sample count. Frame-table changes **MUST** update all affected indices.
+A processor that expands inline frames **MUST** replace each affected node occurrence with a caller-to-callee chain, assign the original `sample_count` to every node in that chain, and attach the original children to its innermost node. The expansion **MUST** preserve the tree's total sample count. Frame-table changes **MUST** update all affected `frame_id` values. Node-table changes **MUST** update all affected `roots` and `children` indices.
 
 #### Flame Graph Example
 
@@ -290,21 +293,21 @@ This example contains 10 samples. Six continue from `main` into `process` and fo
       "lineno": 42
     }
   ],
+  "nodes": [
+    {
+      "frame_id": 0,
+      "sample_count": 10,
+      "children": [1]
+    },
+    {
+      "frame_id": 1,
+      "sample_count": 6
+    }
+  ],
   "trees": [
     {
       "thread_attributed": true,
-      "roots": [
-        {
-          "frame_id": 0,
-          "sample_count": 10,
-          "children": [
-            {
-              "frame_id": 1,
-              "sample_count": 6
-            }
-          ]
-        }
-      ]
+      "roots": [0]
     }
   ]
 }
@@ -349,46 +352,7 @@ Attachment placeholders use item type `"attachment"` with content type `"applica
 
 SDKs **MUST** send placeholders in the same envelope as the event the file is attached to.
 
-**Workflow:**
-
-1. If an attachment is larger than ~100 MiB, upload it to the [TUS](https://tus.io/protocols/resumable-upload#creation-with-upload)-conformant upload endpoint:
-   1. Create the upload:
-
-      ```shell
-      curl -X POST https://o0.ingest.sentry.io/api/0/upload/ \
-        --header "Tus-Resumable: 1.0.0" \
-        --header "Upload-Length: ${FILE_SIZE}" \
-        --header "Upload-Metadata: sentry $(echo -n '{"attachment_type":"event.attachment"}' | base64)"
-      ```
-
-      The `Upload-Metadata` header follows the [TUS metadata format](https://tus.io/protocols/resumable-upload#upload-metadata). Sentry recognizes a single key, `sentry`, the value of which **MUST** be the Base64 encoding of a UTF-8 JSON object describing the attachment:
-
-      ```json
-      {
-        "attachment_type": "event.attachment"
-      }
-      ```
-
-      | Field             | Type   | Required     | Description                                                        |
-      | ----------------- | ------ | ------------ | ------------------------------------------------------------------ |
-      | `attachment_type` | String | **REQUIRED** | One of the values listed in [Attachment Types](#attachment-types). |
-
-   1. Get the location response header:
-      ```
-      HTTP/1.1 201 Created
-      Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
-      Tus-Resumable: 1.0.0
-      ```
-   1. Upload the file:
-      ```shell
-      curl -X PATCH https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/ \
-        --header "Tus-Resumable: 1.0.0" \
-        --header "Content-Type: application/offset+octet-stream" \
-        --header "Upload-Offset: 0" \
-        --data @myfile.log
-      ```
-
-1. Upon successful upload, attach a placeholder item to the event envelope, using the `Location` header from the upload response.
+See [Resumable Uploads](/sdk/telemetry/attachments/upload/) for a detailed guide on how to obtain an attachment placeholder.
 
 </SpecSection>
 

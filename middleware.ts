@@ -19,6 +19,11 @@ const BASE_URL = isDeveloperDocs
 
 const CANONICAL_HOST = new URL(BASE_URL).hostname;
 
+// sentry-for-ai-evals compares a PR's docs with the docs at its merge base, which it reads
+// from that commit's production build URL. It sends this header so the build serves its
+// own pages instead of redirecting to the canonical host.
+const EVALS_PIN_HEADER = 'x-sentry-evals-pin';
+
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
 // get X-Robots-Tag: noindex to prevent search engines from indexing stale content.
@@ -73,7 +78,10 @@ function redirectProductionBuildUrlToCanonical(
   ) {
     return null;
   }
-  if (request.nextUrl.hostname === CANONICAL_HOST) {
+  if (
+    request.nextUrl.hostname === CANONICAL_HOST ||
+    request.headers.has(EVALS_PIN_HEADER)
+  ) {
     return null;
   }
   const url = request.nextUrl.clone();
