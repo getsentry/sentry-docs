@@ -23,6 +23,23 @@ We offer the following options depending on your legal and operational needs:
 - [configuring server-side scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) to ensure Sentry does _not store_ data. Configuration changes are done in the Sentry UI and apply immediately for new events.
 - [running a local Relay](/product/relay/) on your own server between the SDK and Sentry, so that data is _not sent to_ Sentry while configuration can still be applied without deploying.
 
+## Scrubbing Data in the SDK
+
+To remove sensitive data before it leaves the device, use these callbacks:
+
+- [`SetBeforeSend`](/platforms/unity/configuration/options/#SetBeforeSend): edit or drop error events.
+- [`SetBeforeBreadcrumb`](/platforms/unity/configuration/options/#SetBeforeBreadcrumb): edit or drop breadcrumbs.
+- [`SetBeforeSendTransaction`](/platforms/unity/configuration/options/#SetBeforeSendTransaction): edit or drop transactions.
+- `SetBeforeSendLog`: edit or drop logs. Learn more in [Logs](/platforms/unity/logs/#before-log-handler).
+- [`SetBeforeCaptureScreenshot`](/platforms/unity/configuration/options/#SetBeforeCaptureScreenshot) and [`SetBeforeSendScreenshot`](/platforms/unity/configuration/options/#SetBeforeSendScreenshot): skip, edit, or drop screenshots.
+- [`SetBeforeCaptureViewHierarchy`](/platforms/unity/configuration/options/#SetBeforeCaptureViewHierarchy) and [`SetBeforeSendViewHierarchy`](/platforms/unity/configuration/options/#SetBeforeSendViewHierarchy): skip, edit, or drop the view hierarchy.
+
+<Alert>
+
+These callbacks run in C# only. Native crashes, from C and C++, Java and Kotlin, or Objective-C and Swift code, are captured by the native SDKs and don't run them. Breadcrumbs reach the native SDKs after `SetBeforeBreadcrumb` runs, so breadcrumbs you edit or drop there stay that way in native crashes. To remove other data from native crashes, use [server-side scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/).
+
+</Alert>
+
 <Alert>
 
 Ensure that your team is aware of your company's policy around what can and cannot be sent to Sentry. We recommend determining this policy early in your implementation and communicating it as well as enforcing it via code review.
