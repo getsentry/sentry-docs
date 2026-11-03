@@ -121,6 +121,57 @@ The target can also be configured in an `NLog.config` XML file:
 
 <Include name="dotnet-usesentry-logging/nlog" />
 
+### Capturing Startup Crashes
+
+`UseSentry` starts Sentry when the host is built or, in ASP.NET Core, when the app starts running. If the app crashes before then, for example while it reads configuration or registers services, the crash isn't sent.
+
+To send these crashes, also call `SentrySdk.Init` before you create the builder, and log the crash if startup fails:
+
+```csharp {filename:Program.cs}
+using NLog;
+using NLog.Config;
+using NLog.Extensions.Logging;
+
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+
+var config = new LoggingConfiguration();
+config.AddSentry();
+LogManager.Configuration = config;
+var logger = LogManager.GetCurrentClassLogger();
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Logging.AddNLog(new NLogProviderOptions { ReplaceLoggerFactory = true });
+    builder.UseSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+    });
+
+    var app = builder.Build();
+    app.Run();
+}
+catch (Exception ex)
+{
+    logger.Fatal(ex, "Application terminated unexpectedly");
+    throw;
+}
+finally
+{
+    LogManager.Shutdown();
+}
+```
+
+The two initializations don't share anything:
+
+- `SentrySdk.Init` runs before the app reads `appsettings.json`, so set its DSN in code or with the `SENTRY_DSN` environment variable.
+- `UseSentry` doesn't reuse those options. Give it a DSN as well, in its callback or the `Sentry` section.
+- Once `UseSentry` starts Sentry, it replaces the first initialization. Crashes before then are sent with the first initialization's options, such as its release and environment. Breadcrumbs logged before then aren't carried over.
+- Crashes after then, such as a port that's already in use, are sent by `UseSentry`. `logger.Fatal` doesn't send them a second time.
+
 ### Options
 
 #### MinimumBreadcrumbLevel
