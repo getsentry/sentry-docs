@@ -1,6 +1,6 @@
 ---
 title: Flutter
-description: Learn how to set up Sentry in your Flutter app, capture your first events and traces, and view them in Sentry.
+description: Learn how to set up Sentry in your Flutter app, capture your first events, and view them in Sentry.
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.dart.flutter
@@ -65,7 +65,7 @@ chmod +x sentry-wizard
 npx @sentry/wizard@latest -i flutter
 ```
 
-This will patch your project and configure the SDK. You only need to patch the project once, then you can add the patched files to your version control system.
+This will patch your project and configure the SDK. **Logs** and **Application Metrics** are enabled by default in SDK v10, and you'll learn how to send them in steps [#2](#send-logs) and [#3](#send-application-metrics-). You only need to patch the project once, then you can add the patched files to your version control system.
 If you prefer, you can also [set up the SDK manually](/platforms/dart/guides/flutter/manual-setup/).
 
 <Expandable title="The following tasks will be performed by the Sentry Wizard">
@@ -77,66 +77,9 @@ If you prefer, you can also [set up the SDK manually](/platforms/dart/guides/flu
 
 </Expandable>
 
-## Configure
-
-**Error Monitoring** starts working as soon as you call `SentryFlutter.init()`. **Logs** and **Application Metrics** are enabled by default in SDK v10, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
-This guide also enables **Tracing** and **Session Replay**. Flutter Session Replay is available on **iOS and Android**. Collect **User Feedback** with the Flutter SDK's <PlatformLink to="/user-feedback/">feedback form or API</PlatformLink>.
-
-<Include name="quick-start-features-expandable" />
-
-### Initialize the Sentry SDK
-
-The wizard patches `main.dart` with `SentryFlutter.init` and prompts you for optional features. Enable Tracing and Session Replay when prompted, or update `main.dart` to match this snippet.
-
-Import and initialize the SDK in your app's `main` function:
-
-The snippet also turns on:
-
-- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
-- Session Replay: via `SentryWidget`, sampled with <PlatformLink to="/session-replay/#sampling">`sessionSampleRate` and `onErrorSampleRate`</PlatformLink>
-- Additional user and request data: via <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink>
-
-To skip tracing, omit `tracesSampleRate`. To skip automatic Session Replay recording, omit both replay sample rates. To discard logs or metrics, return `null` from <PlatformLink to="/logs/#beforesendlog">`beforeSendLog`</PlatformLink> or <PlatformLink to="/metrics/#beforesendmetric">`beforeSendMetric`</PlatformLink>.
-
-```dart
-import 'package:flutter/widgets.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-Future<void> main() async {
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = '___PUBLIC_DSN___';
-
-      // Allows sending default personal data, such as IP addresses,
-      // when available from the SDK's integrations.
-      options.sendDefaultPii = true;
-
-      // Enables Tracing.
-      // Set to 1.0 to capture 100% of spans for tracing.
-      // We recommend reducing this value in production.
-      options.tracesSampleRate = 1.0;
-
-      // Capture replays for 10% of sessions and 100% of sessions with an error.
-      options.replay.sessionSampleRate = 0.1;
-      options.replay.onErrorSampleRate = 1.0;
-    },
-    appRunner: () => runApp(
-      SentryWidget(
-        child: MyApp(),
-      ),
-    ),
-  );
-
-  // You can also configure SENTRY_DSN, SENTRY_RELEASE, SENTRY_DIST, and
-  // SENTRY_ENVIRONMENT via Dart environment variables (--dart-define).
-}
-```
-
 ## Send Logs
 
 Call `Sentry.logger` from your application code after initialization to send structured logs at different levels. You can add attributes to make logs easier to search and filter.
-
-If you use the Dart `logging` package, add the <PlatformLink to="/integrations/logging/">`sentry_logging` integration</PlatformLink> to send its records to Sentry.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and message formatting.
 
@@ -149,6 +92,8 @@ Sentry.logger.info('Order completed', attributes: {
 Sentry.logger.warn('Slow operation detected');
 Sentry.logger.error('Validation failed');
 ```
+
+If you use the Dart `logging` package, add the <PlatformLink to="/integrations/logging/">`sentry_logging` integration</PlatformLink> to send its records to Sentry.
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
@@ -166,34 +111,13 @@ Sentry.metrics.distribution('api_latency', 187, unit: 'millisecond');
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
-The wizard adds a sample exception to `main.dart` after `SentryFlutter.init()`. Keep that exception when updating your initialization code. If it is missing, add this after `await SentryFlutter.init(...)` in your `main` function:
-
-```dart
-try {
-  throw StateError('Sentry Test Error');
-} catch (exception, stackTrace) {
-  await Sentry.captureException(
-    exception,
-    stackTrace: stackTrace,
-  );
-}
-```
-
-Run your app to send the test error to Sentry:
+The wizard added a sample exception to main.dart that is captured when the app starts. Run your app to send it to Sentry:
 
 ```bash
 flutter run
 ```
 
 After you've confirmed the issue in Sentry, remove the sample exception from `main.dart` so it isn't captured on every launch.
-
-Run the log and metric examples from the previous steps after initialization to verify those products too.
-
-<Include name="tracing/dart-quick-start-verify-tracing-splitlayout.mdx" />
-
-### Session Replay
-
-To verify Replay, temporarily set `options.replay.sessionSampleRate = 1.0` during initialization and restart your app on iOS or Android. Interact with the app, then open **Replays** in Sentry. Set the sample rate back to `0.1` after testing.
 
 ### View Captured Data in Sentry
 
