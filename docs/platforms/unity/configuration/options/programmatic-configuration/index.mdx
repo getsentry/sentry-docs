@@ -16,21 +16,21 @@ The SDK calls the script's `Configure` method after it applies the values from t
 
 The Sentry SDK for Unity includes [platform-specific (that is, Native)](/platforms/unity/native-support/) SDKs, such as [Android](/platforms/android/), [Apple](/platforms/apple/guides/ios/), and [Native](/platforms/native/) to provide native crash support. These SDKs share the options with which they get initialized.
 
-The SDK initializes itself at [SubsystemRegistration](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html) through `RuntimeInitializeOnLoadMethod`. On WebGL, it initializes at [BeforeSceneLoad](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.BeforeSceneLoad.html) instead, because the WebGL transport can't send requests earlier. WebGL has no native SDK, so the native steps don't run there.
+The SDK initializes itself at [SubsystemRegistration](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html) through `RuntimeInitializeOnLoadMethod`. On WebGL, it initializes at [BeforeSceneLoad](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.BeforeSceneLoad.html) instead, because the WebGL transport can't send requests earlier. The native steps only run in a player with native support: not in the Editor, on WebGL, on Android with Mono, or on macOS with Mono and the default `Cocoa` backend. On Switch, the SDK only sets up scope sync. With `BuildTime` or `External` initialization on iOS and Android, the native SDK is already running before Unity starts, so the SDK skips initializing it.
 
 ```mermaid
 flowchart TD
     Start["SubsystemRegistration<br/>(BeforeSceneLoad on WebGL)"] --> Load[Load the options from the configuration window]
     Load --> Configure["Call Configure in your options configuration script"]
-    Configure --> WebGL{WebGL?}
-    WebGL -- No --> Native[Initialize the native SDK]
+    Configure --> HasNative{"Native support<br/>in this player?"}
+    HasNative -- Yes --> Native["Initialize the native SDK<br/>(unless it's already running)"]
     Native --> Sync[Set up scope sync with the native SDK]
     Sync --> CSharp[Initialize the C# SDK]
-    WebGL -- Yes --> CSharp
+    HasNative -- No --> CSharp
     CSharp --> Game[Load the first scene]
 ```
 
-If provided, the **Option Config Script** is executed on each app startup. The options are first used to initialize the native SDKs, then the managed (C#) SDK. This means that the options you set in your `Configure` callback will also apply on the native layer. For example:
+The SDK initializes the native SDK with the same options before the C# SDK, so the options you set in `Configure` also apply to the native layer. With `BuildTime` initialization, the native SDK uses the options from the build instead. For example:
 
 ```csharp
 public override void Configure(SentryUnityOptions options)
