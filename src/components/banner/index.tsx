@@ -48,6 +48,13 @@ type BannerType = {
 // ];
 
 const BANNERS: BannerType[] = [
+  {
+    appearsOn: ['^/pricing/$'],
+    text: 'On December 8, Seer moves to usage-based credits, and Code Review is deprecated.',
+    linkURL: '/pricing/#seer-pricing',
+    linkText: 'Seer pricing',
+    expiresOn: '2026-12-22T00:00:00Z',
+  },
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
