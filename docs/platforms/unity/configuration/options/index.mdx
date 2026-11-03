@@ -32,21 +32,21 @@ By default, the SDK reports `editor` when running inside the Unity Editor. Other
 
 Sets the release. The SDK will try to automatically configure a release out of the box. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default, the SDK creates the release from `Application.productName` and `Application.version`, in the format `{productName}@{version}`. In the product name, line breaks, tabs, `/`, `\`, `..` and `@` are each replaced with `_`. If the product name is empty or consists only of dots, the release is just `Application.version`.
+By default, the SDK creates the release from `Application.productName` and `Application.version`, in the format `{productName}@{version}`. In the product name, line breaks, tabs, `/`, `\`, `..` and `@` are each replaced with `_`. If the product name is empty, only whitespace, or only dots, the release is just `Application.version`.
 
 </SdkOption>
 
-<SdkOption name="Debug" type="bool" defaultValue="true">
+<SdkOption name="Debug" type="bool" defaultValue="true" defaultNote="false with a manual SentrySdk.Init">
 
 Turns debug mode on or off. If debug is enabled, the SDK prints useful debugging information if something goes wrong with sending the event. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
-In the editor window, **Enable Debug Output** is on and **Only In Editor** is checked, so the SDK prints its diagnostic logs in the Editor but not in builds. Uncheck **Only In Editor** to get them in builds too. When you initialize the SDK manually with `SentrySdk.Init`, `Debug` defaults to `false`.
+In the editor window, **Enable Debug Output** is on and **Only In Editor** is checked, so the SDK prints its diagnostic logs in the Editor but not in builds. Uncheck **Only In Editor** to get them in builds too.
 
 </SdkOption>
 
-<SdkOption name="DiagnosticLevel" type="SentryLevel" defaultValue="SentryLevel.Warning">
+<SdkOption name="DiagnosticLevel" type="SentryLevel" defaultValue="SentryLevel.Warning" defaultNote="SentryLevel.Debug with a manual SentrySdk.Init">
 
-Sets the minimum level of the SDK's diagnostic logs when `debug` mode is on. In the editor window, this is **Verbosity Level**. When you initialize the SDK manually with `SentrySdk.Init`, it defaults to `SentryLevel.Debug`.
+Sets the minimum level of the SDK's diagnostic logs when `debug` mode is on. In the editor window, this is **Verbosity Level**.
 
 - `SentryLevel.Debug`: The most verbose mode
 - `SentryLevel.Info`: Informational messages
@@ -82,13 +82,11 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </SdkOption>
 
-<SdkOption name="AttachStacktrace" type="bool" defaultValue="false">
+<SdkOption name="AttachStacktrace" type="bool" defaultValue="false" defaultNote="true with a manual SentrySdk.Init">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
-
-When you initialize the SDK manually with `SentrySdk.Init`, `AttachStacktrace` defaults to `true`.
 
 </SdkOption>
 
@@ -127,7 +125,7 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
 
-It applies to requests sent with an `HttpClient` that uses `SentryHttpMessageHandler`, for example `new HttpClient(new SentryHttpMessageHandler())`. Requests sent with `UnityWebRequest` aren't captured. On iOS, the option is also passed to the native SDK. The status codes that count as failed are set by `FailedRequestStatusCodes`, which defaults to 500–599. Both options can only be set in code.
+It applies to requests sent with an `HttpClient` that uses `SentryHttpMessageHandler`, for example `new HttpClient(new SentryHttpMessageHandler())`. Requests sent with `UnityWebRequest` aren't captured. On iOS and macOS, the option is also passed to the native Cocoa SDK, unless the app initializes that SDK itself. The status codes that count as failed are set by `FailedRequestStatusCodes`, which defaults to 500–599. Both options can only be set in code.
 
 </SdkOption>
 
@@ -215,7 +213,7 @@ Transports are used to send events to Sentry. Transports can be customized to so
 
 <SdkOption name="Transport" type="ITransport">
 
-Switches out the transport used to send events. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication. On WebGL, this option has no effect: the SDK always sends events with `UnityWebRequest`.
+Switches out the transport used to send events. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication. On WebGL and Nintendo Switch, this option has no effect: the SDK always sends events with `UnityWebRequest` there.
 
 </SdkOption>
 
@@ -227,7 +225,7 @@ The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/enve
 
 <SdkOption name="HttpProxy" type="IWebProxy">
 
-Sets the proxy the SDK uses to send events to Sentry, for both HTTP and HTTPS. On WebGL, this option has no effect.
+Sets the proxy the SDK uses to send events to Sentry, for both HTTP and HTTPS. On WebGL and Nintendo Switch, this option has no effect.
 
 </SdkOption>
 
@@ -289,7 +287,7 @@ Sets how long the main thread must be unresponsive before the SDK captures an ap
 
 <SdkOption name="AnrDetectionEnabled" type="bool" defaultValue="false">
 
-Deprecated: use <PlatformIdentifier name="EnableAppHangTracking" /> instead.
+**Deprecated:** Use <PlatformIdentifier name="EnableAppHangTracking" /> instead.
 
 Controls the managed C# watchdog. You can only set it in the editor window, under **Advanced > Automatic Behaviour > C# Watchdog (Deprecated)**. Programmatic initialization doesn't add the watchdog.
 
@@ -297,7 +295,7 @@ Controls the managed C# watchdog. You can only set it in the editor window, unde
 
 <SdkOption name="AnrTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(5)">
 
-Deprecated: use <PlatformIdentifier name="AppHangTimeout" /> instead.
+**Deprecated:** Use <PlatformIdentifier name="AppHangTimeout" /> instead.
 
 Sets how long the Unity main thread must be unresponsive before the managed watchdog reports an ANR event.
 

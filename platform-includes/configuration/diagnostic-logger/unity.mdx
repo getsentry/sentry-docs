@@ -2,7 +2,7 @@ Sentry's SDK includes its own internal logger to report diagnostics that may be 
 
 In the editor window (**Tools > Sentry**), the diagnostic logs are controlled by **Enable Debug Output**, **Only In Editor** and **Verbosity Level**. By default, debug output is on and limited to the Editor, at the `Warning` level. Uncheck **Only In Editor** to also get the logs in builds.
 
-To set the same options in code, use an option configuration script or a manual `SentrySdk.Init`:
+To set the same options in code, use an <PlatformLink to="/configuration/options/programmatic-configuration/">option configuration script</PlatformLink> or a manual `SentrySdk.Init`:
 
 ```csharp
 using Sentry;
@@ -35,9 +35,15 @@ using UnityEngine;
 
 // ...
 options.Debug = true;
+#if !UNITY_EDITOR
+// The option configuration script also runs in the Editor during builds,
+// so only create the file logger in the game itself.
 options.DiagnosticLogger = new FileDiagnosticLogger(
     System.IO.Path.Combine(Application.persistentDataPath, "sentry-log.txt"));
+#endif
 ```
+
+`FileDiagnosticLogger` keeps its file open until the process exits, and creating a second logger for the same file throws. If several instances of the game can run at once, give each its own file name. Don't use it with `Application.persistentDataPath` on Nintendo Switch or Xbox, where the SDK itself doesn't write to that path.
 
 <Alert level="warning" title="Warning">
 
