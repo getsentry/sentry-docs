@@ -9,7 +9,7 @@ notSupported:
   - javascript.cloudflare
 ---
 
-<AvailableSince version="11.9.0" />
+<AvailableSince version="11.11.0" />
 
 _Import name: `Sentry.BullMQTelemetry`_
 
@@ -33,6 +33,12 @@ const worker = new Worker(
 );
 ```
 
+What gets sent to Sentry:
+
+- **Spans** follow your tracing configuration in `Sentry.init()`, such as <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>. Without tracing, no spans are sent.
+- **Errors** from failed jobs are always captured.
+- **Metrics** are off by default. To send them, set [`enableMetrics`](#enablemetrics).
+
 ## Options
 
 ### `enableMetrics`
@@ -48,31 +54,12 @@ const telemetry = new Sentry.BullMQTelemetry({ enableMetrics: true });
 ## Spans
 
 - Adding jobs (`add`, `addBulk`, `addFlow`, and `addBulkFlows`) creates `queue.publish` spans.
-- Processing a job creates a `queue.process` span. Each job starts a new trace, with a span link of the type `message_origin` to the `queue.publish` span that added the job. The link is only added when the queue that added the job also has `telemetry` set.
-- Other BullMQ operations create `queue` spans, but only when a span is active.
+- Processing a job creates a `queue.process` span that starts a new trace and links to the `queue.publish` span of the job. The link needs `telemetry` on the queue that added the job.
+- Other BullMQ operations create `queue` spans, but only inside an active span.
 
 The `queue.publish` and `queue.process` spans populate the [Queues dashboard](/product/dashboards/sentry-dashboards/backend/queues/).
 
-### Span Attributes
-
-The SDK sends these BullMQ attributes with a `messaging.*` attribute key from the conventions:
-
-| BullMQ attribute           | Sentry attribute                                        |
-| -------------------------- | ------------------------------------------------------- |
-| `bullmq.queue.name`        | `messaging.destination.name`                            |
-| `bullmq.queue.operation`   | `messaging.operation.name`                              |
-| `bullmq.job.id`            | `messaging.message.id`                                  |
-| `bullmq.job.attempts.made` | `messaging.message.retry.count` (attempts made minus 1) |
-| `bullmq.job.bulk.count`    | `messaging.batch.message_count`                         |
-| `bullmq.worker.id`         | `messaging.client.id`                                   |
-| `bullmq.job.status`        | `messaging.bullmq.job.state` (before BullMQ 5.81.2)     |
-
-All other BullMQ attributes get the prefix `messaging.`. For example, `bullmq.job.name` becomes `messaging.bullmq.job.name`. Where BullMQ separates the words of one name with dots, the SDK uses snake_case instead. For example, `bullmq.worker.force.close` becomes `messaging.bullmq.worker.force_close`.
-
-The SDK does not send these attributes:
-
-- `bullmq.job.options`, `bullmq.job.progress`, `bullmq.queue.options`, and `bullmq.worker.options`, because BullMQ sets them to JSON strings.
-- `bullmq.job.finished.timestamp`, because BullMQ deprecated it for `bullmq.job.attempt_finished_timestamp`.
+BullMQ's `bullmq.*` span attributes are sent as `messaging.*` attributes. For example, the queue name is sent as `messaging.destination.name` and the job ID as `messaging.message.id`. All other attributes are sent as `messaging.bullmq.*`, and some of them use underscores instead of dots. For example, `bullmq.job.name` becomes `messaging.bullmq.job.name` and `bullmq.worker.force.close` becomes `messaging.bullmq.worker.force_close`.
 
 ## Errors
 
