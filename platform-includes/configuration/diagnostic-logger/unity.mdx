@@ -1,0 +1,52 @@
+Sentry's SDK includes its own internal logger to report diagnostics that may be useful when troubleshooting your Sentry configuration.
+
+In the editor window (**Tools > Sentry**), the diagnostic logs are controlled by **Enable Debug Output**, **Only In Editor** and **Verbosity Level**. By default, debug output is on and limited to the Editor, at the `Warning` level. Uncheck **Only In Editor** to also get the logs in builds.
+
+To set the same options in code, use an option configuration script or a manual `SentrySdk.Init`:
+
+```csharp
+using Sentry;
+using Sentry.Unity;
+
+public class SentryOptionConfiguration : SentryOptionsConfiguration
+{
+    public override void Configure(SentryUnityOptions options)
+    {
+        // Enable debug mode to write diagnostic messages
+        options.Debug = true;
+
+        // Log everything, from the most verbose level up
+        options.DiagnosticLevel = SentryLevel.Debug;
+    }
+}
+```
+
+The SDK writes its diagnostic logs to Unity's log, tagged `Sentry`. They show up in the Editor's Console window, in the Player log of a build, and in logcat or the Xcode console on mobile. They aren't sent to Sentry.
+
+## Customize Implementation
+
+To write the logs somewhere else, set the `DiagnosticLogger` option. The SDK only uses a custom logger while `Debug` is on.
+
+For example, `FileDiagnosticLogger` writes diagnostic messages to a file at the path you specify:
+
+```csharp
+using Sentry.Infrastructure;
+using UnityEngine;
+
+// ...
+options.Debug = true;
+options.DiagnosticLogger = new FileDiagnosticLogger(
+    System.IO.Path.Combine(Application.persistentDataPath, "sentry-log.txt"));
+```
+
+<Alert level="warning" title="Warning">
+
+The `FileDiagnosticLogger` implementation will overwrite any existing file, and will grow indefinitely. You should avoid using it long-term in a production environment.
+
+</Alert>
+
+<Alert>
+
+You can also create your own diagnostic logger class, either by implementing the `IDiagnosticLogger` interface, or inheriting from the `DiagnosticLogger` abstract class and overriding the `LogMessage` method.
+
+</Alert>
