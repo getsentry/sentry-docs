@@ -8,54 +8,44 @@ Sentry takes data privacy very seriously and has default settings in place that 
 
 The data the Sentry Unity SDK collects depends on the options and integrations you enable. Here's a list of data categories it collects:
 
-## HTTP Requests and Database Queries
-
-The Unity SDK doesn't instrument HTTP requests or databases, so it doesn't send request URLs, headers, cookies, or SQL queries.
-
 ## Information About the User
 
-The SDK always sends an anonymous installation ID as `user.id`. On iOS, Android, and Nintendo Switch, it's the native SDK's installation ID, so C# events and native crashes share the same user.
+The SDK always sends an anonymous installation ID as `user.id`. It's a random ID that the SDK stores in a file on the device. On platforms where the SDK can't write files, such as UWP and visionOS, it uses the MAC address of the network adapter or a hash of the machine name instead. On iOS, Android, Nintendo Switch, and macOS with the Cocoa backend, it's the native SDK's installation ID, so C# events and native crashes share the same user.
 
-If `SendDefaultPii` is set to `true`, the SDK also sends:
-
-- The user's IP address. See [Users' IP Address](#users-ip-address).
-- The device unique identifier. See [Device Unique Identifier](#device-unique-identifier).
-- The device name. See [Device Name](#device-name).
-- The operating system's user name as `user.username`, if **Auto Set UserName** (`IsEnvironmentUser`) is also enabled. Learn more in [Options](/platforms/unity/configuration/options/#IsEnvironmentUser).
+With <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>, the game's events carry the user that the host app sets.
 
 To send your own user information, [identify the user](../../enriching-events/identify-user/).
 
-## Users' IP Address
+## Data Sent With SendDefaultPii
 
-By default, the Sentry SDK doesn't send the user's IP address.
+If `SendDefaultPii` is set to `true`, the SDK also sends:
 
-If `SendDefaultPii` is set to `true`, the SDK sets the user's IP address to `{{auto}}`, and Sentry fills in the IP address the event came from.
+- The user's IP address. The SDK sets it to `{{auto}}`, and Sentry fills in the IP address the event came from.
+- The device unique identifier (`SystemInfo.deviceUniqueIdentifier`).
+- The device's name as `device.name`. On desktop, this is the computer name.
+- The operating system's user name as `user.username`, if **Auto Set UserName** (`IsEnvironmentUser`) is also enabled. Learn more in [Options](/platforms/unity/configuration/options/#IsEnvironmentUser).
+
+Error events don't include a server name.
 
 You can [prevent Sentry from storing IP Addresses](../../enriching-events/identify-user/#ip_address) either by configuring this in the ["Security & Privacy"](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) settings of your Sentry project or using [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/).
 
-## Device Unique Identifier
+## Failed HTTP Requests
 
-The Sentry SDK does not set the `Device Unique Identifier` by default.
+On iOS and macOS with the Cocoa backend, the Cocoa SDK captures failed `NSURLSession` requests as native events, with the URL, query string, method, and sanitized headers. These events don't run the C# callbacks. To turn this off, set [`CaptureFailedRequests`](/platforms/unity/configuration/options/#CaptureFailedRequests) to `false`.
 
-If `SendDefaultPii` is set to `true` then the SDK will capture `SystemInfo.deviceUniqueIdentifier` automatically and send this with any event.
-
-## Device Name
-
-By default, the Sentry SDK doesn't send the device name.
-
-If `SendDefaultPii` is set to `true`, the SDK sends the device's name as `device.name`. On desktop, this is the computer name.
-
-The SDK never sends `ServerName`.
+In C#, the SDK only records HTTP requests sent through `SentryHttpMessageHandler`. For these, it adds `http` breadcrumbs with the URL, and captures failed requests as events with the URL and query string. If `SendDefaultPii` is set to `true`, these events also include the full URL, the headers, and the cookies.
 
 ## General Device Information
 
-The SDK collects information about the app, the operating system, the device, the GPU, and Unity, and sends it with every event. It sets these contexts when the SDK starts:
+The SDK collects information about the app, the operating system, the device, the GPU, the runtime, and Unity, and sends it with every event:
 
 - `app`: the product name, the start time, and whether it's a debug or release build.
 - `os`: the operating system description. On Xbox and PlayStation, it's the name of the console.
 - `device`: the processor count, CPU, time zone, vibration support, device type, model, and system memory. In the Unity Editor, the device is marked as a simulator.
 - `gpu`: the GPU's ID, name, vendor name and ID, memory, graphics API and version, maximum texture size, shader level, multithreaded rendering, and support for non-power-of-two textures, instancing, ray tracing, and compute and geometry shaders.
 - `unity`: the Editor version, install mode, target frame rate, copy texture support, and rendering threading mode.
+- `runtime`: the .NET runtime the game runs on.
+- The current culture and UI culture, and the thread pool's thread counts.
 
 For events captured on the main thread, the SDK also adds:
 
@@ -69,6 +59,10 @@ Every event also records whether it was captured on the main thread (`unity.is_m
 ## Breadcrumbs
 
 The SDK records Unity log messages, scene changes, and app lifecycle events as breadcrumbs, and sends them with events. Log messages can contain PII, depending on what your game logs. Learn more in [Breadcrumbs](../../enriching-events/breadcrumbs/).
+
+## Logs
+
+Unity log messages that the SDK forwards to Sentry Logs can contain PII, depending on what your game logs. Each log carries the user from the scope as attributes. If `SendDefaultPii` is set to `true`, each log also carries the machine name as `server.address`. Learn more in [Logs](/platforms/unity/logs/).
 
 ## Screenshots and View Hierarchy
 
