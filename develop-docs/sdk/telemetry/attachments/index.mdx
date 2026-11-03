@@ -153,7 +153,13 @@ SDKs **MAY** attach a `view-hierarchy.json` file following the structure describ
 For native SDKs (since 1.4.0), the path to the view hierarchy file **SHOULD** be configurable at SDK initialization. The SDK monitors the file and uploads it along with any event or crash:
 
 ```c
-sentry_options_add_view_hierarchy(options, "./view-hierarchy.json");
+void setup_scope(sentry_scope_t *scope, void *user_data) {
+  sentry_value_t attachment = sentry_attachment_from_file("./view-hierarchy.json");
+  sentry_attachment_set_type(attachment, SENTRY_ATTACHMENT_TYPE_VIEW_HIERARCHY);
+  sentry_scope_add_attachment(scope, attachment);
+}
+
+sentry_options_set_initial_scope(options, setup_scope, NULL);
 ```
 
 <Alert>
