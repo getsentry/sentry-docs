@@ -9,25 +9,18 @@ The Unity SDK captures C# errors on every platform it supports. On most platform
 
 ## Supported Platforms
 
-| Platform                           | C# errors | Native crashes | Native SDK                                                          | Requirements            |
-| ---------------------------------- | --------- | -------------- | ------------------------------------------------------------------- | ----------------------- |
-| Android                            | Yes       | Yes            | sentry-java with the NDK integration                                | IL2CPP                  |
-| iOS                                | Yes       | Yes            | sentry-cocoa                                                        |                         |
-| Windows (x64, x86)                 | Yes       | Yes            | sentry-native with Crashpad, or the experimental Native backend     |                         |
-| macOS                              | Yes       | Yes            | sentry-cocoa, or sentry-native with the experimental Native backend | IL2CPP for sentry-cocoa |
-| Linux (x86_64, ARM64)              | Yes       | Yes            | sentry-native with Breakpad, or the experimental Native backend     |                         |
-| Xbox, PlayStation, Nintendo Switch | Yes       | Yes            | See <PlatformLink to="/game-consoles/">Game Consoles</PlatformLink> |                         |
-| WebGL                              | Yes       | No             |                                                                     |                         |
-| visionOS, UWP                      | Yes       | No             |                                                                     |                         |
+| Platform                           | Native crashes | Native SDK                                                          | Requirements                                        |
+| ---------------------------------- | -------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| Android                            | Yes            | sentry-java with the NDK integration                                | IL2CPP                                              |
+| iOS                                | Yes            | sentry-cocoa                                                        |                                                     |
+| Windows (x64, x86)                 | Yes            | sentry-native with Crashpad, or the experimental Native backend     |                                                     |
+| macOS                              | Yes            | sentry-cocoa, or sentry-native with the experimental Native backend | IL2CPP for sentry-cocoa                             |
+| Linux (x86_64, ARM64)              | Yes            | sentry-native with Breakpad, or the experimental Native backend     |                                                     |
+| Xbox, PlayStation, Nintendo Switch | Yes            | See <PlatformLink to="/game-consoles/">Game Consoles</PlatformLink> |                                                     |
+| WebGL                              | No             |                                                                     |                                                     |
+| visionOS, UWP                      | No             |                                                                     | Best effort: no offline caching or session tracking |
 
 The SDK supports Unity 2021.3 and later. Dedicated server builds for Windows, macOS, and Linux get the same native support as players. On consoles, the SDK supports Xbox with the GDK, PlayStation 5, Nintendo Switch, and Nintendo Switch 2. The SDK doesn't support PlayStation 4, Xbox One without the GDK, tvOS, Embedded Linux, or Cloud Rendering.
-
-Some native SDKs need the IL2CPP scripting backend:
-
-- **Android**: With Mono, native support is off and the SDK captures C# errors only.
-- **macOS**: The default Cocoa backend needs IL2CPP. The experimental Native backend works with both IL2CPP and Mono.
-
-iOS and WebGL always build with IL2CPP. On WebGL, setting exception support to `None` fails the build.
 
 ## Scope Sync
 
@@ -41,14 +34,18 @@ The SDK syncs the scope you set in C# to the native SDK, so native crashes inclu
 - Trace
 - Attachments
 
-Two things don't reach native crashes:
+Some scope data doesn't reach native crashes:
 
 - Custom contexts you set through `scope.Contexts`. The SDK only syncs the contexts it collects itself, such as device and app data.
 - Attachments on iOS, and on macOS with the default Cocoa backend.
+- With <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>, the app's own SDK owns part of the scope. On iOS, that's the user, environment, and trace. On Android, it's the trace, and the user when the game runs in the app's process.
+- On Android, setting `NdkScopeSyncEnabled` to `false` turns off scope sync for NDK crashes.
 
 ## Mobile
 
 The native crash support for Android and iOS is provided by adding platform-specific SDKs to the generated Xcode and Gradle projects at build time.
+
+On Android, `NdkIntegrationEnabled`, `NdkScopeSyncEnabled`, `AndroidTombstoneEnabled`, and `AndroidReportHistoricalTombstones` control the NDK integration and tombstone reporting. On iOS, `IosWatchdogTerminationIntegrationEnabled` controls watchdog termination reporting. Learn more in <PlatformLink to="/configuration/options/">Options</PlatformLink>.
 
 ### Initialization of the Native SDKs
 
@@ -71,7 +68,7 @@ At build time, the SDK modifies the generated Gradle project to include the Andr
 
 #### iOS
 
-At built time, the SDK modifies the generated Xcode project to include the iOS SDK but will not modify the `main.mm` file or write the options to file. The Unity SDK will then initialize the iOS SDK when it initializes itself.
+At build time, the SDK modifies the generated Xcode project to include the iOS SDK but will not modify the `main.mm` file or write the options to file. The Unity SDK will then initialize the iOS SDK when it initializes itself.
 
 ### Build Time Initialization
 
@@ -91,31 +88,19 @@ The [iOS SDK](/platforms/apple/guides/ios/) supports capturing Objective-C excep
 
 When your game runs inside an iOS or Android app with Unity as a Library, the app owns the native SDK. The Unity SDK doesn't bundle it and attaches to the one the app initialized. On Android, a game running in a separate process initializes it there. Learn more in <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>.
 
-### Android Options
-
-Android native support needs IL2CPP. With Mono, the SDK captures C# errors only.
-
-- `NdkIntegrationEnabled` turns the NDK integration on or off. It's on by default.
-- `NdkScopeSyncEnabled` syncs the scope to the NDK, so native crashes include it. It's on by default.
-- `AndroidTombstoneEnabled` reports native crashes that Android records as tombstones, through the `ApplicationExitInfo` API. `AndroidReportHistoricalTombstones` also reports tombstones from earlier runs. Both are off by default.
-
-### iOS Options
-
-`IosWatchdogTerminationIntegrationEnabled` reports watchdog terminations, when the operating system kills the app, for example because it uses too much memory. It's off by default.
-
 ## Desktop
 
 The native support is configured and enabled as early as possible by the C# layer, right after the Unity engine starts. This is slightly different from on mobile where we inject native initialization code that runs before the Unity engine runs.
 
 Native support on Windows, Linux, and macOS with the Native backend writes files to disk. If you set `DisableFileWrite`, the SDK turns native support off on these platforms.
 
-Crashpad on Windows and the Native backend on every desktop platform use an out-of-process crash handler. The SDK looks for the handler executable next to the player. If you ship it somewhere else, set `NativeHandlerPath` to its path.
+On Windows, Linux, and macOS, `NativeHandlerPath` sets where the SDK looks for the crash handler executable. Learn more in <PlatformLink to="/configuration/options/">Options</PlatformLink>.
 
 ### Windows
 
 On Windows, the Unity SDK includes the [Native SDK](/platforms/native/) with the Crashpad backend, for both 64-bit (x64) and 32-bit (x86) players. Windows native crashes are captured through minidumps. At the end of the build, the SDK copies `crashpad_handler.exe`, `crashpad_wer.dll`, and `sentry-native.dll` next to the player. Include all three files when you ship your game.
 
-With the experimental Native backend, which you can select with `options.Experimental.WindowsBackend = WindowsBackend.Native`, the SDK uploads crashes right away through the out-of-process `sentry-crash.exe` handler. The build copies `sentry-crash.exe` and `sentry-native.dll` next to the player instead.
+With the experimental Native backend, which you can select with `options.Experimental.WindowsBackend = WindowsBackend.Native`, the SDK uploads crashes right away through the out-of-process `sentry-crash.exe` handler. The build copies `sentry-crash.exe`, `sentry-wer.dll`, and `sentry-native.dll` next to the player instead. Include all three files when you ship your game.
 
 ### macOS
 
