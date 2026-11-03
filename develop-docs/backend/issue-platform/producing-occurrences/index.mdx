@@ -45,9 +45,6 @@ Required:
     of the issue and also used in notifications.
 - `subtitle`: str
   - Extra detail about the issue, displayed below the `issue_title`.
-- `culprit`: str
-  - Where the problem occurred. This could be an api path, a function path, etc.
-    ![issue properties](img/issueProperties.png)
 - `evidence_data`: Mapping[str, Any]
   - An arbitrary map of data. The issue platform doesn't
     make use of this data directly, it just make it available for use on the frontend and in
@@ -58,8 +55,6 @@ Required:
   - The type of issue you are creating. Maps to `type_id` in your registered `GroupType`.
 - `detection_time`: float
   - A timestamp representing when the issue was detected.
-- `level`: str
-  - `Info`, `Warning`, or `Error`.
 
 One of:
 
@@ -72,6 +67,17 @@ Optional:
 - `resource_id`: str | None
   - An identifier used to link to an external system to load data.
     For example, this could be an id that we use to build a link to a specific product page.
+- `culprit`: str | None
+  - Where the problem occurred. This could be an api path, a function path, etc.
+    ![issue properties](img/issueProperties.png)
+- `level`: str | None
+  - For example `info`, `warning`, or `error`. Defaults to `info`.
+- `assignee`: str | None
+  - Who to assign the issue to when it's created, as an actor identifier such as `user:123` or `team:456`.
+    Has no effect on existing issues. An assignee that can't be resolved in the project's organization is ignored.
+- `priority`: int | None
+  - The initial priority of the issue: `25` (low), `50` (medium), or `75` (high).
+    Defaults to the `default_priority` of the issue's `GroupType`.
 
 ### Issue Evidence Schema
 
@@ -118,8 +124,11 @@ If `payload_type` is set to `STATUS_CHANGE`, providing a `StatusChangeMessage` w
 
 The `StatusChangeMessage` schema is as follows:
 
-- `fingerprint`: str
-  - Unique identifier for the occurrence.
+- `id`: str
+  - A unique id for this status change message. `StatusChangeMessage` generates a uuid by default.
+    The consumer uses it to skip duplicate messages.
+- `fingerprint`: Sequence[str]
+  - The fingerprint of the issue to update. It must match the `fingerprint` used when producing the issue's occurrences.
 - `project_id`: int
   - Id of the project this occurred in.
 - `new_status`: int
@@ -129,5 +138,11 @@ The `StatusChangeMessage` schema is as follows:
     - `IGNORED`
 - `new_substatus`: int | None
   - Uses <Link url="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/types/group.py#L4">GroupSubStatus</Link> enum. We do not support the `NEW` substatus.
+- `detector_id`: int | None
+  - Optional. The id of the detector that triggered the status change. It's recorded on the activity created for the change.
+- `activity_data`: dict[str, Any] | None
+  - Optional. Extra data to store on the activity created for the change.
+- `update_date`: datetime | None
+  - Optional. When the status change happened. Defaults to the time the message is processed.
 
 When providing the `new_status` and `new_substatus`, refer to the supported issue states and transitions <Link url="https://docs.sentry.io/product/issues/states-triage/">here</Link>.
