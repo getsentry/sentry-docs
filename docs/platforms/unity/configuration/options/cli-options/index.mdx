@@ -5,62 +5,89 @@ sidebar_order: 30
 og_image: /og-images/platforms-unity-configuration-options-cli-options.png
 ---
 
-The Unity SDK includes [Sentry CLI](/cli/) as a tool to upload debug symbols to Sentry. These debug symbols are used in processing events sent to Sentry to provide stacktraces and linenumbers. This page describes the options available to configure the Sentry CLI.
+The Unity SDK includes [Sentry CLI](/cli/) as a tool to upload debug symbols to Sentry. Sentry uses these debug symbols to provide stack traces and line numbers for your events. This page describes the options available to configure Sentry CLI. You can set them in **Tools > Sentry**, on the **Debug Symbols** tab.
 
 ## Programmatic Configuration
 
-Similar to the [programmatic configuration](/platforms/unity/configuration/options/programmatic-configuration/) of the SDK itself, the debug symbol upload via Sentry CLI also supports programmatic configuration.
+Similar to the [programmatic configuration](/platforms/unity/configuration/options/programmatic-configuration/) of the SDK itself, the debug symbol upload with Sentry CLI also supports programmatic configuration. Create a class that inherits from `SentryCliOptionsConfiguration` and assign it to the **CLI Config Script** field on the **Debug Symbols** tab.
 
 ![Options Configuration](./img/sentry-cli-option-configuration.png)
 
-The `Configure` callback gets invoked during the build process and allows you to modify the options used by Sentry CLI.
+The SDK calls `Configure` during the build and passes it the options used by Sentry CLI, so you can change them.
+
+The SDK doesn't read environment variables such as `SENTRY_AUTH_TOKEN` itself. To pass credentials from your CI system, read them in `Configure`:
+
+```csharp
+using System;
+using Sentry.Unity;
+
+public class SentryCliConfiguration : SentryCliOptionsConfiguration
+{
+    public override void Configure(SentryCliOptions cliOptions)
+    {
+        var authToken = Environment.GetEnvironmentVariable("SENTRY_AUTH_TOKEN");
+        if (!string.IsNullOrEmpty(authToken))
+        {
+            cliOptions.Auth = authToken;
+        }
+    }
+}
+```
+
+In CI, store the auth token as a secret and expose it to the Unity build as the `SENTRY_AUTH_TOKEN` environment variable. You can set `Organization` and `Project` the same way.
+
+<Alert level="warning">
+
+When you export an Xcode or Gradle project, it contains a `sentry.properties` file with the auth token in plain text. Don't commit this file to version control. See [Debug Symbols](/platforms/unity/native-support/#debug-symbols) for where the file is.
+
+</Alert>
 
 ## Sentry CLI Options
 
-<SdkOption name="UploadSymbols" type="bool" categorySupported={["desktop"]}>
+<SdkOption name="UploadSymbols" type="bool" defaultValue="true">
 
-Whether the SDK should automatically upload debug symbols to Sentry. This requires a valid auth token, organization, and project.
-
-</SdkOption>
-
-<SdkOption name="UploadDevelopmentSymbols" type="bool" categorySupported={["desktop"]}>
-
-Whether the SDK should automatically upload debug symbols to Sentry for development builds.
+Whether the SDK should automatically upload debug symbols to Sentry. This requires a valid auth token and project.
 
 </SdkOption>
 
-<SdkOption name="UploadSources" type="bool" categorySupported={["desktop"]}>
+<SdkOption name="UploadDevelopmentSymbols" type="bool" defaultValue="false">
 
-Whether the SDK should automatically upload sources to Sentry; this enables Sentry to provide source-context on events.
-
-</SdkOption>
-
-<SdkOption name="UrlOverride" type="string" categorySupported={["desktop"]}>
-
-This option allows you to override the default Sentry URL in case you are using a self-hosted Sentry instance or a custom domain.
+Whether the SDK should automatically upload debug symbols to Sentry for development builds. In the editor, this is **Upload Dev Symbols**.
 
 </SdkOption>
 
-<SdkOption name="Auth" type="string" categorySupported={["desktop"]}>
+<SdkOption name="UploadSources" type="bool" defaultValue="false">
 
-The auth token to use when uploading symbols to Sentry.
-
-</SdkOption>
-
-<SdkOption name="Organization" type="string" categorySupported={["desktop"]}>
-
-The organization to use when uploading symbols to Sentry.
+Whether the SDK should automatically upload your source code to Sentry, so Sentry can show [source context](/platforms/unity/data-management/debug-files/source-context/) on events. The SDK passes `--include-sources` to Sentry CLI.
 
 </SdkOption>
 
-<SdkOption name="Project" type="string" categorySupported={["desktop"]}>
+<SdkOption name="UrlOverride" type="string">
 
-The project to use when uploading symbols to Sentry.
+The URL of your Sentry instance. Set this only if you use a self-hosted Sentry instance or a custom domain. If you don't set it and your DSN's host isn't `sentry.io` or one of its subdomains, the SDK uses the DSN's host. The **Debug Symbols** tab has no field for this option, so set it in [code](#programmatic-configuration).
 
 </SdkOption>
 
-<SdkOption name="IgnoreCliErrors" type="bool" categorySupported={["desktop"]}>
+<SdkOption name="Auth" type="string">
 
-If set to true, the Sentry CLI will not exit with an error code if it encounters an error. **BE AWARE** you might have unminified/unsymbolicated crashes in production if the debug symbol upload fails. When using this flag, you should store built sourcemaps and debug files, to re-run the upload symbols command at a later point.
+The auth token to use when uploading symbols to Sentry. In the editor, this is **Auth Token**.
+
+</SdkOption>
+
+<SdkOption name="Organization" type="string">
+
+The organization slug to use when uploading symbols to Sentry. You can leave it empty. In the editor, this is **Org Slug**.
+
+</SdkOption>
+
+<SdkOption name="Project" type="string">
+
+The project to use when uploading symbols to Sentry. In the editor, this is **Project Name**.
+
+</SdkOption>
+
+<SdkOption name="IgnoreCliErrors" type="bool" defaultValue="false">
+
+If set to `true`, a failed upload doesn't fail the build. The SDK passes `--allow-failure` to Sentry CLI. **Be aware** that you might get unsymbolicated crashes in production if the debug symbol upload fails. When you use this option, store the built debug files so you can upload them again later.
 
 </SdkOption>
