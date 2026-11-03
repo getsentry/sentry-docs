@@ -34,6 +34,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
+  // Next selects this provider while prerendering the docs. Environment changes
+  // need a fresh build; a skipped deployment keeps the previous provider.
   const askAiProvider = process.env.ASK_AI_PROVIDER === 'fin' ? 'fin' : 'kapa';
   return (
     <html lang="en" suppressHydrationWarning>
