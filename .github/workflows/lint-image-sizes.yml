@@ -1,0 +1,84 @@
+name: Lint Image Sizes
+
+# Fails when a PR adds or modifies an image larger than MAX_IMAGE_KB.
+# Only files changed by the PR are checked, so existing images are never blamed.
+# GIFs are intentionally excluded for now.
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '**/*.png'
+      - '**/*.PNG'
+      - '**/*.jpg'
+      - '**/*.JPG'
+      - '**/*.jpeg'
+      - '**/*.JPEG'
+      - '**/*.webp'
+      - '**/*.WEBP'
+      - '**/*.avif'
+      - '**/*.AVIF'
+      - '**/*.svg'
+      - '**/*.SVG'
+      - '.github/workflows/lint-image-sizes.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint-image-sizes:
+    name: Check image sizes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # paths-filter reads the PR's changed files from the GitHub API.
+      pull-requests: read
+    env:
+      MAX_IMAGE_KB: 300
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Get changed images
+        id: changed
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        with:
+          list-files: json
+          filters: |
+            images:
+              - added|modified|renamed: '**/*.{png,PNG,jpg,JPG,jpeg,JPEG,webp,WEBP,avif,AVIF,svg,SVG}'
+
+      - name: Check image sizes
+        if: steps.changed.outputs.images == 'true'
+        env:
+          # Passed through the environment rather than interpolated into the
+          # script, so a filename can never be read as shell syntax.
+          CHANGED_IMAGES: ${{ steps.changed.outputs.images_files }}
+          CHANGED_COUNT: ${{ steps.changed.outputs.images_count }}
+        run: |
+          max_bytes=$((MAX_IMAGE_KB * 1024))
+          too_large=()
+
+          while IFS= read -r path; do
+            size=$(stat -c %s "$path")
+            if (( size > max_bytes )); then
+              kb=$(( (size + 1023) / 1024 ))
+              too_large+=("$path ($kb KB)")
+              echo "::error file=$path::Image is $kb KB, over the $MAX_IMAGE_KB KB limit. Compress it (for example with https://squoosh.app or https://tinypng.com) or resize it."
+            fi
+          done < <(jq -r '.[]' <<< "$CHANGED_IMAGES")
+
+          echo "Checked $CHANGED_COUNT changed image(s) against a $MAX_IMAGE_KB KB limit."
+
+          if (( ${#too_large[@]} > 0 )); then
+            {
+              echo "## Images over $MAX_IMAGE_KB KB"
+              echo
+              echo "Compress or resize these images before merging. GIFs are not checked."
+              echo
+              printf -- '- `%s`\n' "${too_large[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
