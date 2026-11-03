@@ -2,10 +2,11 @@ The SDK tracks sessions by default. It marks each session as:
 
 - Healthy
 - Abnormal
-- Errored: if the SDK captures an event that contains an exception (this includes manually captured errors).
+- Errored: if the SDK captures a handled exception, for example through `SentrySdk.CaptureException`.
+- Unhandled: if the SDK captures an uncaught exception or a `Debug.LogException` call, and the game keeps running.
 - Crashed
 
-The SDK starts a session when the game starts. When the game quits, the SDK pauses the session and closes it at the next start. This way, the SDK can tell whether the previous run crashed.
+The SDK starts a session when the game starts. When the game quits, the SDK pauses the session and closes it at the next start. This way, the SDK can tell whether the previous run crashed. Closing the paused session and detecting the crash need a [`CacheDirectoryPath`](/platforms/unity/configuration/options/#CacheDirectoryPath), so they don't work when offline caching is off, or on Nintendo Switch and Xbox, where the SDK doesn't set one.
 
 The SDK pauses the session when the game loses focus or goes into the background. If the game comes back within `AutoSessionTrackingInterval`, the session continues. Otherwise, the SDK ends it and starts a new one. The default is 30 seconds. In the editor, these settings are under **Auto Session Tracking** in **Tools > Sentry > Advanced**, where **Timeout [ms]** sets the interval.
 

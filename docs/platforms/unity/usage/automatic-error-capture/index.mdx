@@ -15,7 +15,7 @@ The Unity SDK automatically captures errors reported through Unity's logging sys
 
 ### `Debug.LogError` and `Debug.LogAssertion`
 
-`Debug.LogError` and `Debug.LogAssertion` are captured as error-level message events. A failed `Debug.Assert` logs through `Debug.LogAssertion`, so it's captured too. Disable automatic capture in **Tools -> Sentry -> Logging**, or set `CaptureLogErrorEvents` to `false` in the [configure callback](/platforms/unity/configuration/options/programmatic-configuration/).
+`Debug.LogError` and `Debug.LogAssertion` are captured as error-level message events. A failed `Debug.Assert` is captured the same way. Unity only runs `Debug.Assert` and `Debug.LogAssertion` in the editor and in development builds, so release builds don't send them. Disable automatic capture in **Tools -> Sentry -> Logging**, or set `CaptureLogErrorEvents` to `false` in the [configure callback](/platforms/unity/configuration/options/programmatic-configuration/).
 
 Enable `AttachStacktrace` to include and parse the stack trace Unity provides with the log. On platforms other than WebGL, Unity 6 or later can include source lines in that stack trace when you enable source code line numbers in [Player Settings](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-managed-stack-traces.html).
 
@@ -57,7 +57,7 @@ To stop capturing errors from Unity's logging system, call these in your [option
 
 - [`DisableUnityLoggingIntegration()`](/platforms/unity/configuration/options/#DisableUnityLoggingIntegration) stops capturing `Debug.LogError` and `Debug.LogAssertion` calls, along with
   log breadcrumbs and structured logs.
-- [`DisableUnhandledExceptionCapture()`](/platforms/unity/configuration/options/#DisableUnhandledExceptionCapture) stops capturing unhandled exceptions and `Debug.LogException` calls.
+- [`DisableUnhandledExceptionCapture()`](/platforms/unity/configuration/options/#DisableUnhandledExceptionCapture) stops capturing exceptions that reach Unity's log handler: uncaught exceptions and `Debug.LogException` calls, and uncaught exceptions on WebGL.
 
 ```csharp
 public override void Configure(SentryUnityOptions options)
@@ -66,6 +66,8 @@ public override void Configure(SentryUnityOptions options)
     options.DisableUnhandledExceptionCapture();
 }
 ```
+
+The SDK still captures unhandled exceptions from .NET's `AppDomain` and unobserved tasks. To stop those, call `options.DisableAppDomainUnhandledExceptionCapture()` and `options.DisableUnobservedTaskExceptionCapture()`.
 
 ## Automatic Error Capture on the Native Layer
 
