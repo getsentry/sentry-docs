@@ -1,0 +1,100 @@
+---
+title: Bref
+sdk: sentry.php.bref
+sidebar_order: 999999
+inheritCommonContent: false
+description: "Bref runs PHP applications on AWS Lambda. Learn how to set it up with Sentry."
+categories:
+  - server
+  - serverless
+---
+
+[Bref](https://bref.sh) runs PHP applications on AWS Lambda. Some of what goes wrong on Lambda happens outside your application code, where the Sentry SDK can't see it. The `sentry/sentry-bref` package adds it to the Sentry SDK for PHP, Laravel, or Symfony:
+
+- [Lambda errors](usage/) that happen outside PHP-FPM, like timeouts
+- [Exceptions](usage/) and [transactions](tracing/automatic-instrumentation/) for event handlers (SQS, EventBridge, S3, and so on)
+- [Cold starts](tracing/automatic-instrumentation/) in your transactions
+- [AWS SDK calls](tracing/aws-sdk/) as spans and breadcrumbs
+
+Everything else works like in any other PHP application, so keep following the [PHP](/platforms/php/), [Laravel](/platforms/php/guides/laravel/), or [Symfony](/platforms/php/guides/symfony/) docs to configure the SDK.
+
+## Prerequisites
+
+- You need a [Sentry account](https://sentry.io/signup/) and project
+- Your application needs to run on Bref 3 and PHP 8.2 or later
+- Your Laravel version needs to be 12.x or higher, and your Symfony version 6.4 or higher
+- Sentry needs to be set up in your application: follow the [PHP](/platforms/php/), [Laravel](/platforms/php/guides/laravel/), or [Symfony](/platforms/php/guides/symfony/) guide first
+
+## Install
+
+Install the `sentry/sentry-bref` package:
+
+```bash
+composer require sentry/sentry-bref
+```
+
+## Configure
+
+Your Lambda functions need the DSN at runtime. Deploy it in your `.env` file, or set it as an environment variable in `serverless.yml`:
+
+```yaml {filename:serverless.yml}
+provider:
+  environment:
+    # SENTRY_LARAVEL_DSN for Laravel
+    SENTRY_DSN: ___PUBLIC_DSN___
+```
+
+Transactions, cold starts, and AWS SDK spans are only sent when [tracing](tracing/) is enabled.
+
+The integration adds the cold start to the transaction of the request. To do that, it needs to hook into your framework.
+
+### Laravel
+
+There's nothing to do. Laravel discovers the integration's service provider automatically.
+
+### Symfony
+
+Register the bundle:
+
+```php {filename:config/bundles.php}
+return [
+    // ...
+    Sentry\Bref\Symfony\BrefSentryBundle::class => ['all' => true],
+];
+```
+
+### Other Frameworks
+
+Add the `Sentry\Bref\Psr15\BrefSentryMiddleware` PSR-15 middleware to your HTTP middleware stack.
+
+## Verify
+
+To verify that Sentry captures errors in your event handlers, deploy a function that throws an exception:
+
+```php {filename:index.php}
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+// Reads the DSN from the `SENTRY_DSN` environment variable
+\Sentry\init();
+
+return function (array $event) {
+    throw new \RuntimeException('My first Sentry error!');
+};
+```
+
+Invoke the function:
+
+```bash
+serverless invoke -f <function-name>
+```
+
+The error shows up in Sentry with the details of the Lambda function and a link to the logs of the invocation in CloudWatch.
+
+## Next Steps
+
+- Learn what the integration reports in [Usage](usage/) and [Tracing](tracing/)
+- Trace your [AWS SDK calls](tracing/aws-sdk/)
+- Learn more about [Bref](https://bref.sh/docs)
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
