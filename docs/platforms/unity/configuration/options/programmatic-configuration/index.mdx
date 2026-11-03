@@ -6,7 +6,9 @@ og_image: >-
   /og-images/platforms-unity-configuration-options-programmatic-configuration.png
 ---
 
-We've added `Sentry Options Configuration` to the `Options Config` tab in the Sentry editor window to provide a way to modify options programmatically.
+To set options in code, use an options configuration script. In the Sentry configuration window (**Tools > Sentry**), open the **Options Config** tab and click **New** next to the **Option Config Script** field. The SDK asks where to save the script, starting in `Assets/Scripts`, and writes a class that inherits from `SentryOptionsConfiguration`. After Unity compiles the script, the SDK creates its asset in `Assets/Resources/Sentry/` and assigns it to the field, unless the field already has a script.
+
+The SDK calls the script's `Configure` method after it applies the values from the configuration window, so the values you set in `Configure` override the window. `Configure` also runs during player builds, where the SDK uses the options to set up the native SDKs and other build steps. During a build, `Environment` defaults to `production`. Don't rely on the game's runtime state in `Configure`, and wrap code that must only run in the game in `if (Application.isPlaying)`.
 
 ![Options Configuration](./img/unity-options-configuration.png)
 
@@ -14,11 +16,21 @@ We've added `Sentry Options Configuration` to the `Options Config` tab in the Se
 
 The Sentry SDK for Unity includes [platform-specific (that is, Native)](/platforms/unity/native-support/) SDKs, such as [Android](/platforms/android/), [Apple](/platforms/apple/guides/ios/), and [Native](/platforms/native/) to provide native crash support. These SDKs share the options with which they get initialized.
 
-The C# layer self-initializes through the use of the [SubsystemRegistration RuntimeInitializeOnLoadMethodAttribute](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html).
+The SDK initializes itself at [SubsystemRegistration](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.SubsystemRegistration.html) through `RuntimeInitializeOnLoadMethod`. On WebGL, it initializes at [BeforeSceneLoad](https://docs.unity3d.com/ScriptReference/RuntimeInitializeLoadType.BeforeSceneLoad.html) instead, because the WebGL transport can't send requests earlier. WebGL has no native SDK, so the native steps don't run there.
 
-![Flow of initialization](./img/initialization-flow.png)
+```mermaid
+flowchart TD
+    Start["SubsystemRegistration<br/>(BeforeSceneLoad on WebGL)"] --> Load[Load the options from the configuration window]
+    Load --> Configure["Call Configure in your options configuration script"]
+    Configure --> WebGL{WebGL?}
+    WebGL -- No --> Native[Initialize the native SDK]
+    Native --> Sync[Set up scope sync with the native SDK]
+    Sync --> CSharp[Initialize the C# SDK]
+    WebGL -- Yes --> CSharp
+    CSharp --> Game[Load the first scene]
+```
 
-If provided, the `Option Configuration Script` is executed on each app startup. The options are first used to initialize the native SDKs, then the managed (C#) SDK. This means that the options you set in your `Configure` callback will also apply on the native layer. For example:
+If provided, the **Option Config Script** is executed on each app startup. The options are first used to initialize the native SDKs, then the managed (C#) SDK. This means that the options you set in your `Configure` callback will also apply on the native layer. For example:
 
 ```csharp
 public override void Configure(SentryUnityOptions options)
