@@ -1,8 +1,22 @@
-<PlatformContent includePath="configuration/auto-session-tracking/dotnet" />
+The SDK tracks sessions by default. It marks each session as:
 
-Sentry SDK subscribes to `OnApplicationPause` and `OnApplicationFocus` events to track if the application has focus or if it has been put in the background. On resume within `AutoSessionTrackingInterval` the session will be continued. The default value is `30 seconds`. Otherwise, the previous session will be ended and we create a new one.
+- Healthy
+- Abnormal
+- Errored: if the SDK captures an event that contains an exception (this includes manually captured errors).
+- Crashed
 
-```csharp {tabTitle:C#}
+The SDK starts a session when the game starts. When the game quits, the SDK pauses the session and closes it at the next start. This way, the SDK can tell whether the previous run crashed.
+
+The SDK pauses the session when the game loses focus or goes into the background. If the game comes back within `AutoSessionTrackingInterval`, the session continues. Otherwise, the SDK ends it and starts a new one. The default is 30 seconds. In the editor, these settings are under **Auto Session Tracking** in **Tools > Sentry > Advanced**, where **Timeout [ms]** sets the interval.
+
+```csharp
 // Add this to the SDK initialization callback
 options.AutoSessionTrackingInterval = TimeSpan.FromSeconds(30);
+```
+
+To turn off session tracking:
+
+```csharp
+// Add this to the SDK initialization callback
+options.AutoSessionTracking = false;
 ```
