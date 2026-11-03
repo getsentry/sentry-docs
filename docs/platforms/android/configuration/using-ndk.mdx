@@ -136,6 +136,65 @@ You can also configure these options in `AndroidManifest.xml`, which is useful w
 
 For details about the native watchdog and heartbeat behavior, see the [Native SDK app hang documentation](/platforms/native/app-hangs/).
 
+## Out-of-Process Crash Handling
+
+By default, the NDK integration handles a native crash inside the crashing process, and the SDK sends it the next time the app starts. With out-of-process crash handling, a crash service in a separate process captures the crash and sends it right away. This way, you see native crashes even from users who don't open the app again.
+
+<Alert title="Experimental">
+
+Out-of-process crash handling is experimental. It requires Android 11 (API level 30) or later. On older Android versions, the SDK doesn't report native crashes in this mode.
+
+</Alert>
+
+Enable it with the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/):
+
+```groovy {filename:app/build.gradle}
+sentry {
+    ndkBackend = "native"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+sentry {
+    ndkBackend.set("native")
+}
+```
+
+The plugin adds `sentry-android-ndk-outproc` and replaces `sentry-native-ndk` with `sentry-native-ndk-outproc`.
+
+Without the plugin, add `sentry-android-ndk-outproc` and exclude `sentry-native-ndk`, which the `sentry-android` bundle includes:
+
+```groovy {filename:app/build.gradle}
+dependencies {
+    implementation "io.sentry:sentry-android-ndk-outproc:{{@inject packages.version('sentry.java.android', '8.21.1') }}"
+}
+
+configurations.configureEach {
+    exclude group: "io.sentry", module: "sentry-native-ndk"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+dependencies {
+    implementation("io.sentry:sentry-android-ndk-outproc:{{@inject packages.version('sentry.java.android', '8.21.1') }}")
+}
+
+configurations.configureEach {
+    exclude(group = "io.sentry", module = "sentry-native-ndk")
+}
+```
+
+If the build contains both native packages, Gradle fails with a conflict on the capability `io.sentry:sentry-ndk-backend`.
+
+If you [link against the NDK libraries](#allowing-the-compiler-to-link-libraries), keep your `CMakeLists.txt`. Without the plugin, depend on `io.sentry:sentry-native-ndk-outproc` instead of `io.sentry:sentry-native-ndk`.
+
+Keep in mind:
+
+- The crash service runs in a separate process, `<applicationId>.sentry_ndk_crash`, while your app runs, and uses additional memory.
+- Android creates your `Application` in that process too. The SDK skips its own initialization there. If your `Application.onCreate` does other startup work, check `Application.getProcessName()` and skip that work in the crash service process.
+- With the [Tombstone Integration](/platforms/android/configuration/tombstones/) enabled on Android 12 (API level 31) or later, the crash service merges the tombstone into the native crash event before it sends it.
+- If the crash service can't send the crash, for example without a network connection, the SDK sends it the next time the app starts.
+
 ## Disable NDK Integration
 
 You can disable the NDK integration by adding the following to your `AndroidManifest.xml`:
