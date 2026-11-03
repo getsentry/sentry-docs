@@ -13,9 +13,9 @@ The Sentry SDK for Unity provides both automatic and manual error capturing capa
 
 The Unity SDK automatically captures errors reported through Unity's logging system. How an event is captured depends on the logging method you use.
 
-### `Debug.LogError`
+### `Debug.LogError` and `Debug.LogAssertion`
 
-`Debug.LogError` is captured as an error-level message event. Disable automatic capture in **Tools -> Sentry -> Logging**, or set `CaptureLogErrorEvents` to `false` in the [configure callback](/platforms/unity/configuration/options/programmatic-configuration/).
+`Debug.LogError` and `Debug.LogAssertion` are captured as error-level message events. A failed `Debug.Assert` logs through `Debug.LogAssertion`, so it's captured too. Disable automatic capture in **Tools -> Sentry -> Logging**, or set `CaptureLogErrorEvents` to `false` in the [configure callback](/platforms/unity/configuration/options/programmatic-configuration/).
 
 Enable `AttachStacktrace` to include and parse the stack trace Unity provides with the log. On platforms other than WebGL, Unity 6 or later can include source lines in that stack trace when you enable source code line numbers in [Player Settings](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-managed-stack-traces.html).
 
@@ -47,6 +47,26 @@ catch (Exception e)
 
 For IL2CPP line-number requirements, see [IL2CPP Line Numbers](/platforms/unity/configuration/il2cpp/).
 
+### Limit Repeated Errors
+
+A game can log the same error every frame. To drop the repeats, turn on <PlatformLink to="/configuration/event-debouncing/">event throttling</PlatformLink>.
+
+### Disable Automatic Capture
+
+To stop capturing errors from Unity's logging system, call these in your [options configuration script](/platforms/unity/configuration/options/programmatic-configuration/):
+
+- [`DisableUnityLoggingIntegration()`](/platforms/unity/configuration/options/#DisableUnityLoggingIntegration) stops capturing `Debug.LogError` and `Debug.LogAssertion` calls, along with
+  log breadcrumbs and structured logs.
+- [`DisableUnhandledExceptionCapture()`](/platforms/unity/configuration/options/#DisableUnhandledExceptionCapture) stops capturing unhandled exceptions and `Debug.LogException` calls.
+
+```csharp
+public override void Configure(SentryUnityOptions options)
+{
+    options.DisableUnityLoggingIntegration();
+    options.DisableUnhandledExceptionCapture();
+}
+```
+
 ## Automatic Error Capture on the Native Layer
 
 The Unity SDK also supports automatic error capture on the native layer. This is enabled by default and works through the respective native SDKs for each platform.
@@ -63,4 +83,4 @@ On the issues details page, you will see this as errors being connected within t
 
 ![Trace Preview](./img/trace-preview.png)
 
-The Sentry SDK regenerates the trace ID whenever the game gains focus or the active scene changes. This creates smaller, more focused trace groups rather than one continuous trace from startup to shutdown, helping you identify truly related errors.
+Without tracing, the SDK creates one trace at startup, and every error in the session shares it. With tracing enabled, each transaction (startup, scene load, or one you start yourself and set on the scope) has its own trace, and errors that happen while it runs join that trace. When a transaction finishes, the SDK starts a new trace.
