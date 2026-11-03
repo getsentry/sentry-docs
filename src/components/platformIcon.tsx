@@ -18,6 +18,7 @@ import BackboneSVG from 'platformicons/svg/backbone.svg';
 import BlazorSVG from 'platformicons/svg/blazor.svg';
 import BootstrapSVG from 'platformicons/svg/bootstrap.svg';
 import BottleSVG from 'platformicons/svg/bottle.svg';
+import BrefSVG from 'platformicons/svg/bref.svg';
 import BunSVG from 'platformicons/svg/bun.svg';
 import CapacitorSVG from 'platformicons/svg/capacitor.svg';
 import CelerySVG from 'platformicons/svg/celery.svg';
@@ -177,6 +178,7 @@ import BackboneSVGLarge from 'platformicons/svg_80x80/backbone.svg';
 import BlazorSVGLarge from 'platformicons/svg_80x80/blazor.svg';
 import BootstrapSVGLarge from 'platformicons/svg_80x80/bootstrap.svg';
 import BottleSVGLarge from 'platformicons/svg_80x80/bottle.svg';
+import BrefSVGLarge from 'platformicons/svg_80x80/bref.svg';
 import BunSVGLarge from 'platformicons/svg_80x80/bun.svg';
 import CapacitorSVGLarge from 'platformicons/svg_80x80/capacitor.svg';
 import CelerySVGLarge from 'platformicons/svg_80x80/celery.svg';
@@ -415,6 +417,10 @@ const formatToSVG = {
   bottle: {
     sm: BottleSVG,
     lg: BottleSVGLarge,
+  },
+  bref: {
+    sm: BrefSVG,
+    lg: BrefSVGLarge,
   },
   bun: {
     sm: BunSVG,
@@ -1115,6 +1121,7 @@ export const PLATFORM_TO_ICON = {
   openai: 'openai',
   perl: 'perl',
   php: 'php',
+  'php-bref': 'bref',
   'php-laravel': 'laravel',
   'php-monolog': 'php',
   'php-symfony2': 'symfony',
