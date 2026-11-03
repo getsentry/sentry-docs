@@ -12,13 +12,13 @@ Throttling is off by default.
 
 Open **Tools > Sentry > Logging** and turn on **Enable Error Event Throttling**. **Dedupe Window [ms]** sets how long the SDK waits before it captures the same error again. The default is `1000` milliseconds.
 
-The built-in throttler handles errors from `Debug.LogError`, `Debug.LogAssertion`, and `Debug.LogException`. It treats two errors as the same when their message and stack trace match, and remembers the last 100 distinct errors. It doesn't throttle breadcrumbs or structured logs.
+The built-in throttler handles errors from `Debug.LogError`, `Debug.LogException`, and, in the editor and development builds, `Debug.LogAssertion`. It treats two errors as the same when their message and stack trace match, and remembers the last 100 distinct errors. It doesn't throttle breadcrumbs or structured logs.
 
 ## Configure Throttling in Code
 
 To throttle in code, implement `IThrottler` and set it as the [`Throttler`](/platforms/unity/configuration/options/#Throttler) option. A custom throttler can also throttle breadcrumbs and structured logs. If you set a throttler in code, the SDK uses it instead of the editor settings.
 
-This example drops any error, breadcrumb, or log that repeats within five seconds:
+This example drops any error, breadcrumb, or log that repeats within five seconds. The SDK can call the throttler from any thread, so make it thread-safe and don't call Unity APIs in it.
 
 ```csharp
 using System;
@@ -35,7 +35,7 @@ public class RepeatThrottler : IThrottler
         ShouldCapture("event:" + message + stackTrace);
 
     public bool ShouldCaptureException(Exception exception) =>
-        ShouldCapture("exception:" + exception.GetType().Name + exception.Message);
+        ShouldCapture("exception:" + exception.GetType().FullName + exception.Message + exception.StackTrace);
 
     public bool ShouldCaptureBreadcrumb(string message, LogType logType) =>
         ShouldCapture("breadcrumb:" + message);
@@ -55,7 +55,20 @@ public class RepeatThrottler : IThrottler
 
             if (_lastSeen.Count >= 100)
             {
-                _lastSeen.Clear();
+                // Forget entries whose window has passed.
+                var expired = new List<string>();
+                foreach (var entry in _lastSeen)
+                {
+                    if (now - entry.Value >= Window)
+                    {
+                        expired.Add(entry.Key);
+                    }
+                }
+
+                foreach (var expiredKey in expired)
+                {
+                    _lastSeen.Remove(expiredKey);
+                }
             }
 
             _lastSeen[key] = now;
