@@ -37,24 +37,22 @@ Each check-in sends the schedule and time zone (your server's time zone if `time
 
 In NestJS, use the Nest integration's `monitorCronJobs` option instead, because `@nestjs/schedule` runs `@Cron()` methods as named `cron` jobs.
 
-#### Monitor Specific Jobs
+#### Migrate From `instrumentCron`
 
-Requires SDK version `7.92.0` or higher.
+`Sentry.cron.instrumentCron` is deprecated. To move to `cronJobIntegration`:
 
-Use `Sentry.cron.instrumentCron` to instrument the `CronJob` constructor or `CronJob.from` method in the [`cron`](https://www.npmjs.com/package/cron) library. Pass the name of the cron monitor as a second argument to the function.
+1. Upgrade `cron` to version `4.3.0` or higher.
+2. Add `cronJobIntegration` to `Sentry.init`, as shown above.
+3. Remove the `instrumentCron` wrapper, and set each job's `name` to the monitor slug you passed to `instrumentCron`, so check-ins keep going to the same monitor.
+
+Before:
 
 ```JavaScript
 import { CronJob } from "cron";
 
 const CronJobWithCheckIn = Sentry.cron.instrumentCron(CronJob, "my-cron-job");
 
-// use the constructor
-const job = new CronJobWithCheckIn("* * * * *", () => {
-  console.log("You will see this message every minute");
-});
-
-// or from method
-const job = CronJobWithCheckIn.from({
+CronJobWithCheckIn.from({
   cronTime: "* * * * *",
   onTick: () => {
     console.log("You will see this message every minute");
@@ -62,7 +60,21 @@ const job = CronJobWithCheckIn.from({
 });
 ```
 
-`cronJobIntegration` skips jobs created with `instrumentCron`, so using both doesn't send duplicate check-ins.
+After:
+
+```JavaScript
+import { CronJob } from "cron";
+
+CronJob.from({
+  name: "my-cron-job",
+  cronTime: "* * * * *",
+  onTick: () => {
+    console.log("You will see this message every minute");
+  },
+});
+```
+
+Until you migrate, `cronJobIntegration` skips jobs created with `instrumentCron`, so using both doesn't send duplicate check-ins.
 
 ### Node Cron
 
