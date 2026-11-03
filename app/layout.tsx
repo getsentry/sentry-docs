@@ -34,8 +34,9 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
-  // Next selects this provider while prerendering the docs. Environment changes
-  // need a fresh build; a skipped deployment keeps the previous provider.
+  // Next selects this provider while prerendering the docs. Changes to this
+  // provider or FIN_PILOT_ENABLED need a fresh Vercel deployment; skipped
+  // deployments keep the previous environment.
   const askAiProvider = process.env.ASK_AI_PROVIDER === 'fin' ? 'fin' : 'kapa';
   return (
     <html lang="en" suppressHydrationWarning>
