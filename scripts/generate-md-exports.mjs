@@ -26,6 +26,8 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+import {DOCS_ORIGIN, DOCTREE_FILENAME, isDeveloperDocs} from '../src/docsSite.mjs';
+
 import {frameworkNodes} from './platform-frameworks.mjs';
 import {rehypeExpandCodeTabs} from './rehype-expand-code-tabs.mjs';
 import {selectMarkdownContent} from './md-export-content.mjs';
@@ -89,14 +91,9 @@ function applyKeywordDefaults(markdown) {
 }
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
 const CACHE_VERSION = 10;
 const CACHE_COMPRESS_LEVEL = 4;
-const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? 'sentry-develop-docs'
-  : 'sentry-docs';
+const R2_BUCKET = isDeveloperDocs ? 'sentry-develop-docs' : 'sentry-docs';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
@@ -537,7 +534,7 @@ function buildMdxComponents(docTree, createElement) {
 }
 
 async function renderMdxOverrides(root, docTree) {
-  const overrideDir = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  const overrideDir = isDeveloperDocs
     ? path.join(root, 'md-overrides', 'dev')
     : path.join(root, 'md-overrides');
 
@@ -641,10 +638,7 @@ async function createWork() {
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
 
   // Load doctree for structured navigation
-  const doctreeFilename = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-    ? 'doctree-dev.json'
-    : 'doctree.json';
-  const doctreePath = path.join(root, 'public', doctreeFilename);
+  const doctreePath = path.join(root, 'public', DOCTREE_FILENAME);
   let docTree = null;
   try {
     docTree = JSON.parse(await readFile(doctreePath, {encoding: 'utf8'}));
