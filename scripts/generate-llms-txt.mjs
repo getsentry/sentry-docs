@@ -214,6 +214,8 @@ const INSTRUCTIONS = `\
 
 When helping a developer set up or use Sentry, follow these guidelines:
 
+- **Setting up Sentry in a project**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/get-started.md before you start. It covers agents with the Sentry MCP server, the Sentry CLI, or neither.
+- **Adding a feature to a project that already uses Sentry** (tracing, logs, Session Replay, metrics, profiling, crons, uptime, AI agent monitoring): Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/instrument.md.
 - **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, etc.) for the latest Sentry SDK version. Do not rely on memorized version numbers from training data. Get up to date information on SDKs in the docs (${DOCS_ORIGIN}/platforms/)
 - **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`).
 - **Pricing questions**: Don't quote prices or quotas from memory; fetch ${DOCS_ORIGIN}/pricing.md. Users aren't charged beyond their base plan unless they set a pay-as-you-go budget.`;
