@@ -1,0 +1,16 @@
+---
+id: callback-failures
+title: "Throwing Callbacks Drop Telemetry"
+phase: code-changes
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 115
+---
+
+In v10, an exception in an event processor or a filtering callback drops the affected telemetry item instead of sending the item through unchanged.
+
+This applies to event processors, `beforeSend`, `beforeSendTransaction`, `beforeSendFeedback`, `beforeBreadcrumb`, `beforeSendLog`, and `beforeSendMetric`. Review callbacks that can throw, especially custom filtering and scrubbing logic. Handle expected failures inside the callback and return the intended item or `null` explicitly.
+
+In transaction mode, a throwing `tracesSampler` uses the inherited sampling decision when available, then falls back to `tracesSampleRate`. In stream mode, it falls back to `tracesSampleRate`. Do not rely on throwing an exception to reject a trace; return `0.0` to reject it explicitly.

@@ -10,7 +10,11 @@ import {PlatformCategory} from 'sentry-docs/types';
 import {MigrationGuideClient} from './client';
 import {compareItems, MigrationItem, PhaseId} from './constants';
 
-const ITEMS_DIR = 'includes/migration/javascript-v11';
+const MIGRATIONS = {
+  'javascript-v11': {storagePrefix: 'sentry-v11-migration', platform: 'javascript'},
+  'flutter-v10': {storagePrefix: 'sentry-flutter-v10-migration', platform: 'dart'},
+  'dotnet-v7': {storagePrefix: 'sentry-dotnet-v7-migration', platform: 'dotnet'},
+} as const;
 
 // Share the MDX component map across item bodies and platform pages.
 const components = mdxComponents();
@@ -30,7 +34,13 @@ function ItemBody({mdxSource}: {mdxSource: string}) {
 }
 
 /** Load the migration checklist for the platform or guide selected in the URL. */
-export async function MigrationGuide() {
+export async function MigrationGuide({
+  migration = 'javascript-v11',
+}: {
+  migration?: keyof typeof MIGRATIONS;
+}) {
+  const {storagePrefix, platform} = MIGRATIONS[migration];
+  const itemsDir = `includes/migration/${migration}`;
   const {rootNode, path: urlPath} = serverContext();
   const platformOrGuide = getCurrentPlatformOrGuide(rootNode, urlPath);
 
@@ -40,12 +50,12 @@ export async function MigrationGuide() {
   const framework = platformOrGuide?.type === 'guide' ? platformOrGuide.name : undefined;
   const categories: PlatformCategory[] = platformOrGuide?.categories ?? [];
 
-  const slugs = readdirSync(path.join(process.cwd(), ITEMS_DIR))
+  const slugs = readdirSync(path.join(process.cwd(), itemsDir))
     .filter(file => file.endsWith('.mdx'))
     .map(file => file.replace(/\.mdx$/, ''));
 
   const docs = await Promise.all(
-    slugs.map(slug => getFileBySlugWithCache(`${ITEMS_DIR}/${slug}`))
+    slugs.map(slug => getFileBySlugWithCache(`${itemsDir}/${slug}`))
   );
 
   const rendered = docs
@@ -58,6 +68,7 @@ export async function MigrationGuide() {
         category: data.category as string,
         severity: data.severity,
         frameworks: data.frameworks as string[] | 'all',
+        excludeFrameworks: (data.excludeFrameworks ?? []) as string[],
         platformCategory: data.platformCategory as PlatformCategory | 'all',
         order: data.order as number,
         mdxSource: doc.mdxSource,
@@ -65,6 +76,9 @@ export async function MigrationGuide() {
     })
     .filter(item => {
       if (item.frameworks !== 'all' && !item.frameworks.includes(framework ?? '')) {
+        return false;
+      }
+      if (framework && item.excludeFrameworks.includes(framework)) {
         return false;
       }
       // A guide with no declared categories (or a platform-level page) should
@@ -77,17 +91,25 @@ export async function MigrationGuide() {
     .sort(compareItems);
 
   const items: MigrationItem[] = rendered.map(
-    ({mdxSource: _mdxSource, frameworks: _frameworks, ...item}) => item
+    ({
+      mdxSource: _mdxSource,
+      frameworks: _frameworks,
+      excludeFrameworks: _excludeFrameworks,
+      ...item
+    }) => item
   );
+
+  const storageKey = `${storagePrefix}:${framework ?? platform}`;
 
   return (
     <MigrationGuideClient
+      key={storageKey}
       items={items}
       bodies={rendered.map(item => ({
         id: item.id,
         body: <ItemBody key={item.id} mdxSource={item.mdxSource} />,
       }))}
-      framework={framework ?? 'javascript'}
+      storageKey={storageKey}
     />
   );
 }

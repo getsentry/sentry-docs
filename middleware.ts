@@ -2,22 +2,19 @@ import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
 import {canonicalPath} from 'sentry-docs/canonical';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
-// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
-// NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
-const isDeveloperDocs =
-  process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
+const CANONICAL_HOST = new URL(DOCS_ORIGIN).hostname;
 
-const BASE_URL = isDeveloperDocs
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
-
-const CANONICAL_HOST = new URL(BASE_URL).hostname;
+// sentry-for-ai-evals compares a PR's docs with the docs at its merge base, which it reads
+// from that commit's production build URL. It sends this header so the build serves its
+// own pages instead of redirecting to the canonical host.
+const EVALS_PIN_HEADER = 'x-sentry-evals-pin';
 
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
@@ -73,7 +70,10 @@ function redirectProductionBuildUrlToCanonical(
   ) {
     return null;
   }
-  if (request.nextUrl.hostname === CANONICAL_HOST) {
+  if (
+    request.nextUrl.hostname === CANONICAL_HOST ||
+    request.headers.has(EVALS_PIN_HEADER)
+  ) {
     return null;
   }
   const url = request.nextUrl.clone();
@@ -360,7 +360,7 @@ const handleAIClientRedirect = (
     const response = nextWithClassification(request, classification);
     response.headers.set(
       'Link',
-      `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
+      `<${DOCS_ORIGIN}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
     );
     return response;
   }
@@ -544,6 +544,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/react-native/install/',
     to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
+    from: '/platforms/unity/configuration/app-not-responding/',
+    to: '/platforms/unity/app-hangs/',
   },
   {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',
@@ -980,6 +984,38 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/rust/guides/actix-web/profiling/',
     to: '/platforms/rust/guides/actix-web/',
+  },
+  {
+    from: '/platforms/rust/user-feedback/',
+    to: '/platforms/rust/',
+  },
+  {
+    from: '/platforms/rust/user-feedback/configuration/',
+    to: '/platforms/rust/',
+  },
+  {
+    from: '/platforms/rust/guides/actix-web/user-feedback/',
+    to: '/platforms/rust/guides/actix-web/',
+  },
+  {
+    from: '/platforms/rust/guides/actix-web/user-feedback/configuration/',
+    to: '/platforms/rust/guides/actix-web/',
+  },
+  {
+    from: '/platforms/rust/guides/axum/user-feedback/',
+    to: '/platforms/rust/guides/axum/',
+  },
+  {
+    from: '/platforms/rust/guides/axum/user-feedback/configuration/',
+    to: '/platforms/rust/guides/axum/',
+  },
+  {
+    from: '/platforms/rust/guides/tracing/user-feedback/',
+    to: '/platforms/rust/guides/tracing/',
+  },
+  {
+    from: '/platforms/rust/guides/tracing/user-feedback/configuration/',
+    to: '/platforms/rust/guides/tracing/',
   },
   {
     from: '/clients/java/modules/log4j2/',
@@ -1736,6 +1772,106 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/cordova/troubleshooting/supported-browsers/',
     to: '/platforms/javascript/guides/cordova/troubleshooting/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/micro-frontends/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/multiple-sentry-instances/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/sentry-testkit/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/best-practices/shared-environments/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/captureconsole/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/console/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/extraerrordata/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/httpclient/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/modulemetadata/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/reportingobserver/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/rewriteframes/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/featureflags/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/graphqlclient/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/supabase/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/configuration/integrations/zodErrors/',
+    to: '/platforms/javascript/guides/cordova/configuration/integrations/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/enriching-events/attributes/',
+    to: '/platforms/javascript/guides/cordova/enriching-events/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/feature-flags/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/security-policy-reporting/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/sourcemaps/uploading/hosting-publicly/',
+    to: '/platforms/javascript/guides/cordova/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/instrumentation/requests-module/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/span-metrics/',
+    to: '/platforms/javascript/guides/cordova/tracing/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/span-metrics/examples/',
+    to: '/platforms/javascript/guides/cordova/tracing/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/user-feedback/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/user-feedback/configuration/',
+    to: '/platforms/javascript/guides/cordova/',
   },
   {
     from: '/clients/cordova/ionic/',

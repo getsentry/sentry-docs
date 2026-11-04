@@ -140,6 +140,55 @@ You may also combine the wildcard character `*` with other operators like so:
 
 In the above example, the search query returns results which do not have message values like `ConnectionTimeout`, `ReadTimeout`, etc.
 
+#### Regular Expressions (logs only)
+
+A regular expression (regex) is a pattern that describes a sequence of characters you want to find in text. They're useful when a plain value or a wildcard isn't precise enough, like finding every log message that starts with `Timeout after` followed by any number of milliseconds.
+
+You can match a string attribute in [logs](/product/logs/) against a regular expression.
+
+In the search bar, add a filter for the attribute, open its operator dropdown, and choose **matches regex**, or **does not match regex** to exclude matching values.
+
+In query syntax, wrap the pattern in double slashes: `key://pattern//`.
+
+Without any special symbols, a pattern matches anywhere in the value. This matches both `Timeout after 30ms` and `Request Timeout`:
+
+```
+message://Timeout//
+```
+
+Patterns support [RE2 syntax](https://github.com/google/re2/wiki/Syntax) to define more specific matchers.
+
+You can use either or both of `^` to match the start of the field's value, and/or `$` to match the end of the log.
+This matches only messages that start with "Timeout":
+
+```
+message://^Timeout//
+```
+
+`\d` is a character class, meaning it matches any one character from a set. `\d` matches any digit. This matches `Timeout after 1s` and `Timeout after 234ms`, but not `Timeout after a while`:
+
+```
+message://^Timeout after \d//
+```
+
+To exclude matching values, use the negation operator `!`.
+This excludes timeouts whose amounts start with `\w`, or word characters:
+
+```
+!message://^Timeout after \w//
+```
+
+Keep the following in mind when you write patterns:
+
+- Regular expressions only work on string attributes in logs.
+- Patterns use [RE2 syntax](https://github.com/google/re2/wiki/Syntax), which doesn't support lookarounds or backreferences.
+- Patterns are case sensitive. Start a pattern with `(?i)` to ignore case.
+- Patterns can be up to 64 characters long. An escape sequence like `\d` counts as one character.
+- Spaces and parentheses inside a pattern don't need quotes.
+- A pattern ends at the first `//` followed by a space, a `)`, or the end of the query. To match `//`, escape it as `\/\/`.
+- There's no list form like `key:[value1, value2]`. Use `|` inside the pattern instead.
+- To search for a literal value that starts with `//`, wrap it in quotes, like `url:"//cdn.example.com/"`.
+
 ## Page Filters
 
 Page filters allow you to narrow down the results shown on a page by selecting specific projects, environments, and date ranges. After you've set your filters, they'll persist as you navigate across pages in Sentry.

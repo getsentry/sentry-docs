@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.14.0
+spec_version: 0.15.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.15.0
+    date: 2026-09-29
+    summary: "Attach cookie headers as one string-array span attribute (`name=value` elements) instead of one attribute per cookie name. Filter nameless cookie segments and unparseable cookie strings."
   - version: 0.14.0
     date: 2026-09-28
     summary: "Add `mcp`, defaulting to `{ inputs: true, outputs: true }`, to control collection of MCP request and response content independently of `genAI`."
@@ -241,13 +244,22 @@ Cookies and URL query params may arrive as a single unparsed string (e.g., `Cook
 
 For cookies: the rules and terms as specified in `cookies` in the `dataCollection` configuration apply to cookie names. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is. This selective filtering retains harmless contextual information for debugging while protecting sensitive fields.
 
-For example, a `Cookie` header parsed into individual cookies:
+When SDKs parse a cookie header, the following rules apply:
+
+- Split the `Cookie` header on `";"`. The space after the semicolon is not guaranteed. Splitting on `"; "` could leak the previous cookie's value.
+- A segment without `"="` is a nameless cookie: the bare token is its **value**, not its name ([RFC 6265bis](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis)). The SDK **MUST** replace the element with `"[Filtered]"`.
+- `Set-Cookie` attributes such as `Max-Age`, `Path`, or `HttpOnly` are metadata, not cookies, and **MUST NOT** appear as cookie pairs.
+
+For example, `Cookie: user_session=abc; theme=dark-mode;opaque-token` and `Set-Cookie: theme=light-mode; HttpOnly` become (based on [`http.request.header.<key>`](https://getsentry.github.io/sentry-conventions/attributes/http/#http-request-header-key)):
 
 ```
-http.request.header.cookie.user_session: "[Filtered]"   // matches "session" in sensitive denylist
-http.request.header.cookie.theme: "dark-mode"           // not sensitive — value sent as-is
-http.request.header.set_cookie.theme: "light-mode"      // not sensitive — value sent as-is
+http.request.header.cookie: ["user_session=[Filtered]", "theme=dark-mode", "[Filtered]"]
+http.request.header.set-cookie: ["theme=light-mode"]
 ```
+
+- `user_session=[Filtered]` matches "session" in the sensitive denylist
+- `theme=dark-mode` not sensitive, value sent as-is
+- `[Filtered]` nameless cookie, where the bare token is a value and is always filtered
 
 For URL query parameters: the rules and terms as specified in `urlQueryParams` in the `dataCollection` configuration apply to query parameters. The SDK replaces values for sensitive keys with `"[Filtered]"` while keeping non-sensitive values as-is (see [URLs](#urls)).
 
@@ -255,7 +267,7 @@ For URL query parameters: the rules and terms as specified in `urlQueryParams` i
 **When individual key-value pairs cannot be extracted** (e.g., malformed or opaque cookie string), the entire `Cookie` or `Set-Cookie` header value **MUST** be replaced with `"[Filtered]"`. This value is used as a fallback:
 
 ```
-http.request.header.cookie: "[Filtered]"   // fallback: cookie header could not be parsed
+http.request.header.cookie: ["[Filtered]"]   // fallback: cookie header could not be parsed
 ```
 
 Unfiltered, raw cookie header values **MUST NOT** be sent. When in doubt, treat the entire cookie header as sensitive and use the fallback.
