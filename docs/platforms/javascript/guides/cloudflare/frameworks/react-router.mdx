@@ -1,0 +1,234 @@
+---
+title: React Router on Cloudflare
+description: "Learn how to instrument your React Router framework app on Cloudflare Workers with Sentry."
+---
+
+<AvailableSince version="11.5.0" />
+
+<Alert level="info">
+
+This guide is for React Router apps in [framework mode](https://reactrouter.com/start/modes#framework) that you deploy to Cloudflare Workers with the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/). For Node.js deployments, see the [React Router guide](/platforms/javascript/guides/react-router/). For Shopify Oxygen, see [Hydrogen with React Router](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/).
+
+</Alert>
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A React Router app (version `7.15.0` or above) configured for Cloudflare Workers, for example one created with Cloudflare's [React Router guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/)
+
+<StepComponent>
+
+## Install
+
+Install `@sentry/react-router` for the client and the React Router server entry, and `@sentry/cloudflare` for the Worker:
+
+```bash {tabTitle:npm}
+npm install @sentry/react-router @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router @sentry/cloudflare
+```
+
+## Configure
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+  ]}
+/>
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+### Wrangler Configuration
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare.splitlayout"
+/>
+
+### Client-Side Configuration
+
+The client setup is the same as on Node.js. Initialize Sentry in `app/entry.client.tsx`. If your app doesn't have this file yet, run `npx react-router reveal` to expose the entry files.
+
+```tsx {filename:app/entry.client.tsx}
+import * as Sentry from "@sentry/react-router";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    // ___PRODUCT_OPTION_START___ performance
+    Sentry.reactRouterTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // Capture Replay for 10% of all sessions,
+  // plus 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+});
+
+// ... rest of your client entry
+```
+
+### Server-Side Configuration
+
+Add the Sentry Cloudflare Vite plugin after the Cloudflare and React Router plugins. It wraps your Worker entry with `withSentry` at build time, so you don't need to change `workers/app.ts`.
+
+```typescript {diff} {filename:vite.config.ts}
++import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+
+ export default defineConfig({
+   plugins: [
+     cloudflare({ viteEnvironment: { name: "ssr" } }),
+     reactRouter(),
++    sentryCloudflareVitePlugin(),
+   ],
+ });
+```
+
+Then, create an `instrument.server.ts` file next to the Worker entry that `main` in your Wrangler configuration points to, for example `workers/instrument.server.ts`.
+
+For more on the plugin and its options, see the <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink> page.
+
+```typescript {filename:workers/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+Next, update `app/entry.server.tsx` so Sentry captures server errors, names requests after their route, and connects server and client traces. On Workers, import from `@sentry/react-router/cloudflare`:
+
+- Wrap `handleRequest` with `wrapSentryHandleRequest`.
+- Pass the rendered stream through `injectTraceMetaTags`.
+- Report errors from `handleError`.
+- Export `instrumentations` to create spans for all loaders, actions, middleware, and request handlers through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation).
+
+```tsx {diff} {filename:app/entry.server.tsx}
++import { captureException } from "@sentry/cloudflare";
++import * as Sentry from "@sentry/react-router/cloudflare";
++import type { HandleErrorFunction } from "react-router";
+ // ... your existing imports
+
+-export default async function handleRequest(
++async function handleRequest(
+   // ... your existing parameters
+ ) {
+   // ... your existing rendering logic
+
+-  return new Response(body, {
++  return new Response(Sentry.injectTraceMetaTags(body), {
+     headers: responseHeaders,
+     status: responseStatusCode,
+   });
+ }
+
++export default Sentry.wrapSentryHandleRequest(handleRequest);
++
++export const handleError: HandleErrorFunction = (error, { request }) => {
++  // React Router also calls handleError for aborted requests, skip those
++  if (!request.signal.aborted) {
++    captureException(error, {
++      mechanism: { type: "react-router", handled: false },
++    });
++  }
++};
++
++// Automatically instruments all server loaders, actions, middleware,
++// and request handlers.
++export const instrumentations = [Sentry.createSentryServerInstrumentation()];
+```
+
+### Add Readable Stack Traces With Source Maps (Optional)
+
+To upload source maps, add the `sentryReactRouter` Vite plugin and the `sentryOnBuildEnd` hook as described in the [React Router guide](/platforms/javascript/guides/react-router/manual-setup/#add-readable-stack-traces-with-source-maps-optional).
+
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent
+  includePath="getting-started-data-collection"
+  platform="javascript"
+  noGuides
+/>
+
+## Verify Your Setup
+
+To verify that Sentry captures errors, add a test button to one of your pages:
+
+```tsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Break the world
+</button>
+```
+
+Run your app locally with `wrangler dev` or deploy it to Cloudflare Workers, click the button, and check your Sentry project for the error. With tracing enabled, Sentry names request spans after your React Router routes.
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to [manually capture errors](/platforms/javascript/guides/cloudflare/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/cloudflare/configuration/)
+- Make use of [Cloudflare-specific features](/platforms/javascript/guides/cloudflare/features/)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Check out setup instructions for other popular [frameworks on Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/)
+- Find various support topics in <PlatformLink to="/troubleshooting/">troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepComponent>
