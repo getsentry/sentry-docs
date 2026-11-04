@@ -9,9 +9,9 @@ platformCategory: all
 order: 55
 ---
 
-Apps that set the DSN on the Serilog sink, the NLog target or the log4net appender no longer send crashes that happen before `UseSentry` starts Sentry. In 6.x, the logging integration started Sentry as soon as the logging framework was set up, so a crash logged from `Main` was sent.
+Apps that set the DSN on the Serilog sink, the NLog target or the log4net appender no longer send crashes that happen before `UseSentry` starts Sentry. In 6.x, the logging integration started Sentry itself, so a crash logged from `Main` was sent.
 
-`UseSentry` starts Sentry when the host is built or, in ASP.NET Core, when the app starts running. To also send crashes from before then, call `SentrySdk.Init` at the top of `Main`, before you create the builder, and keep `UseSentry`:
+`UseSentry` starts Sentry when the host is built or, in ASP.NET Core, when the app starts running. To also send crashes from before then, call `SentrySdk.Init` at the top of `Main`, before you create the builder, keep `UseSentry` and capture the crash in a `catch`:
 
 ```csharp {filename:Program.cs}
 using var sentry = SentrySdk.Init(options =>
@@ -19,8 +19,21 @@ using var sentry = SentrySdk.Init(options =>
     options.Dsn = "___PUBLIC_DSN___";
 });
 
-var builder = WebApplication.CreateBuilder(args);
-builder.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    builder.UseSentry(options => options.Dsn = "___PUBLIC_DSN___");
+
+    var app = builder.Build();
+    app.Run();
+}
+catch (Exception ex)
+{
+    SentrySdk.CaptureException(ex);
+    throw;
+}
 ```
 
-`UseSentry` replaces the first initialization once it starts, and the two don't share options. The [Serilog guide](/platforms/dotnet/guides/serilog/#capturing-startup-crashes) shows the full setup with a bootstrap logger.
+If your `catch` already logs the crash, such as with Serilog's `Log.Fatal`, you can keep that instead of calling `CaptureException`.
+
+`UseSentry` replaces the first initialization once it starts, and the two don't share options. The [Serilog](/platforms/dotnet/guides/serilog/#capturing-startup-crashes), [NLog](/platforms/dotnet/guides/nlog/#capturing-startup-crashes) and [log4net](/platforms/dotnet/guides/log4net/#capturing-startup-crashes) guides show the full setup.
