@@ -4,7 +4,7 @@ description: "Learn how to migrate from Sentry Android SDK 8.x to 9.0.0."
 sidebar_order: 8890
 ---
 
-Version 9 removes the deprecated Hub compatibility APIs and the global Logs and Metrics enable options. Migrate remaining Hub references to Scopes, then update your telemetry configuration.
+Version 9 removes the deprecated Hub compatibility APIs, the global Logs and Metrics enable options, and the `enablePerformanceV2` option. Migrate remaining Hub references to Scopes, then update your telemetry configuration.
 
 ## Removed Hub APIs
 
@@ -71,3 +71,23 @@ new SentryTimberIntegration(false);
 ```
 
 Pass `true` only when Timber records should also be sent as Sentry Logs.
+
+## Removed Performance V2 Option
+
+Version 8 enabled Performance V2 by default. Version 9 always enables it and removes the option to turn it off:
+
+- `SentryAndroidOptions.setEnablePerformanceV2(...)` and `SentryAndroidOptions.isEnablePerformanceV2()` have been removed. Delete these calls.
+- The `io.sentry.performance-v2.enable` manifest entry has been removed. Delete it from your manifest:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.performance-v2.enable" android:value="false" />
+```
+
+If you previously turned Performance V2 off, the SDK now:
+
+- Measures app starts from process start on Android 7.0 (API 24) and later. Below API 24, it falls back to the SDK initialization time.
+- Measures slow and frozen frames for each span instead of only for Activity transactions.
+
+### Removed `ActivityFramesTracker`
+
+`ActivityFramesTracker` has been removed, and the `ActivityLifecycleIntegration` constructor no longer takes it. If you create `ActivityLifecycleIntegration` manually, pass only the `Application` and `BuildInfoProvider` arguments.
