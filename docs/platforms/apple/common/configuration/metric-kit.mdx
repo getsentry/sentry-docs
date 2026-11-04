@@ -1,7 +1,7 @@
 ---
 title: MetricKit
 sidebar_order: 20
-description: "This feature, once enabled, subscribes to MXDiagnosticPayload data of MetricKit and it to Sentry."
+description: "Capture system-provided hang, CPU, and disk write diagnostics with MetricKit, and investigate hangs using sampled call trees."
 ---
 
 The [MetricKit](https://developer.apple.com/documentation/metrickit) integration subscribes to [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic), [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic)
@@ -13,9 +13,11 @@ Note that the Cocoa SDK has no control over the stack traces provided by MetricK
 
 You can identify MetricKit events by looking at the `mx_hang_diagnostic`, `mx_cpu_exception`, and `mx_disk_write_exception` `mechanism.type`.
 
+## Enable MetricKit
+
 Enable this feature by setting the `enableMetricKit` option to `true`:
 
-```swift {tabTitle:Swift}
+```swift {tabTitle:Swift} {mdExpandTabs}
 import Sentry
 
 SentrySDK.start { options in
@@ -42,9 +44,81 @@ SentrySDK.start { options in
 }];
 ```
 
-You can enable `enableMetricKitRawPayload` to view the raw MetricKit diagnostic payload in JSON format as an attachment on the converted event in Sentry. This feature is available on Cocoa 8.29.0 and up.
+## Hang Diagnostics
 
-```swift {tabTitle:Swift}
+MetricKit helps you investigate periods when your app is too busy to respond to user input. Each hang diagnostic includes a hang duration and a sampled call stack tree, which can contain multiple execution paths rather than a single stack trace.
+
+We recommend MetricKit for system-provided hang diagnostics. Unlike <PlatformLink to="/configuration/app-hangs/">App Hang tracking</PlatformLink>, which captures a stack trace after a timeout, MetricKit provides sampled context collected by the operating system. Apple controls which hangs are reported and how much detail they contain, so **MetricKit does not guarantee a report for every hang**.
+
+The integrations are independent. Disabling or pausing App Hang tracking does not stop MetricKit reports, and `appHangTimeoutInterval` does not configure MetricKit's detection threshold.
+
+### Read the Hang Flame Graph
+
+A flame graph shows the call paths sampled during a reported hang. Use it to find frequently observed application code and inspect the system calls beneath it.
+
+- **Width represents sample count**, including samples in a frame's descendants. Wider paths were observed more often.
+- The graph contains aggregate observations, not timestamped samples. Horizontal position does not represent execution order, and frame width is not an exact duration.
+- A frequently sampled path is a starting point for investigation, not proof that it caused the hang.
+- Some call trees aggregate samples across threads. Do not assume every tree represents a single thread or the main thread.
+
+Upload your app's <PlatformLink to="/dsym/">debug information files</PlatformLink> so Sentry can resolve native addresses to function names. Missing debug information or limited data from MetricKit can leave frames unresolved.
+
+### Default Reporting
+
+The default reporting mode flattens the call tree into event stack frames, retaining parent references and sample counts so Sentry can reconstruct the flame graph. Large trees are subject to ordinary event size and stack trace limits, which can leave the graph incomplete. The flattened tree is not a single call chain, and related hangs may appear in separate issues.
+
+### Experimental Flame Graph Attachments
+
+Flame graph attachments keep the sampled tree separate from the event stack trace so it is not trimmed by ordinary event stack trace limits.
+
+<Alert level="warning">
+
+Flame graph attachment reporting is experimental and not yet generally available. It requires an SDK build with this option and server-side support for flame graph ingestion, symbolication, and display. The API and behavior may change before release.
+
+</Alert>
+
+Set `hangReportingMode` before starting the SDK. This option affects hang diagnostics only, not CPU or disk write diagnostics:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetricKit = true
+    options.experimental.metrickit.hangReportingMode = .flamegraphAttachment
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+    options.experimental.metrickit.hangReportingMode =
+        SentryObjCMetricKitHangReportingModeFlamegraphAttachment;
+}];
+```
+
+The SDK sends a `flamegraph.json` attachment with the hang event. When server-side support is enabled, Sentry symbolicates the attachment and displays it in the event's **Flamegraph** section. If the diagnostic contains multiple call trees, select a tree to inspect it.
+
+This mode does not add a representative culprit stack trace to the event or guarantee improved issue grouping. It also does not require enabling SDK profiling. The attachment contains aggregate diagnostic data, not a time-based profile.
+
+Keep these limits in mind:
+
+- Flame graph attachments count toward your attachment quota and are subject to attachment retention and access permissions. A stored event does not guarantee its graph is available.
+- Each flame graph attachment is limited to 10 MiB. If the SDK cannot create it, including because sample counts are invalid or the payload exceeds this limit, it falls back to the flattened event representation.
+- Server-side symbolication processes at most the first 2,500 frame entries in an attachment. Additional frames remain in the graph but may be unresolved.
+
+To return to default reporting, remove the experimental setting or set `hangReportingMode` to `.legacy` (`SentryObjCMetricKitHangReportingModeLegacy` in Objective-C).
+
+## Attach the Raw Diagnostic Payload
+
+Enable `enableMetricKitRawPayload` to inspect the original diagnostic as an `MXDiagnosticPayload.json` attachment on the event. This feature is available on Cocoa 8.29.0 and up.
+
+The raw payload is separate from `flamegraph.json`. It is not required for the experimental flame graph viewer. Enabling both options sends both attachments and consumes additional attachment quota.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
 import Sentry
 
 SentrySDK.start { options in
