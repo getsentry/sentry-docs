@@ -50,7 +50,7 @@ type BannerType = {
 const BANNERS: BannerType[] = [
   {
     appearsOn: ['^/pricing/$'],
-    text: 'On December 8, Seer moves to usage-based credits, and Code Review is deprecated.',
+    text: 'On December 8, Seer moves from active-contributor pricing to usage-based credits.',
     linkURL: '/pricing/#seer-pricing',
     linkText: 'Seer pricing',
     expiresOn: '2026-12-22T00:00:00Z',
