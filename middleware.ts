@@ -2,22 +2,14 @@ import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
 import {canonicalPath} from 'sentry-docs/canonical';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
-// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
-// NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
-const isDeveloperDocs =
-  process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
-
-const BASE_URL = isDeveloperDocs
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
-
-const CANONICAL_HOST = new URL(BASE_URL).hostname;
+const CANONICAL_HOST = new URL(DOCS_ORIGIN).hostname;
 
 // sentry-for-ai-evals compares a PR's docs with the docs at its merge base, which it reads
 // from that commit's production build URL. It sends this header so the build serves its
@@ -368,7 +360,7 @@ const handleAIClientRedirect = (
     const response = nextWithClassification(request, classification);
     response.headers.set(
       'Link',
-      `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
+      `<${DOCS_ORIGIN}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
     );
     return response;
   }
@@ -552,6 +544,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/react-native/install/',
     to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
+    from: '/platforms/unity/configuration/app-not-responding/',
+    to: '/platforms/unity/app-hangs/',
   },
   {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',

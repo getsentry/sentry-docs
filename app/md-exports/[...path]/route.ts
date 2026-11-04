@@ -1,7 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {DOCS_ORIGIN, DOCTREE_FILENAME} from 'sentry-docs/docsSite.mjs';
 import {AI_AGENT_PATTERN, matchPattern} from 'sentry-docs/lib/trafficClassification';
 import {DocMetrics} from 'sentry-docs/metrics';
 
@@ -12,18 +12,13 @@ interface DocTreeNode {
   children?: DocTreeNode[];
 }
 
-const BASE_URL = isDeveloperDocs
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
-
 let cachedDocTree: DocTreeNode | null = null;
 
 async function getDocTree(): Promise<DocTreeNode> {
   if (cachedDocTree) {
     return cachedDocTree;
   }
-  const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
-  const treePath = join(process.cwd(), 'public', filename);
+  const treePath = join(process.cwd(), 'public', DOCTREE_FILENAME);
   const raw = await readFile(treePath, 'utf-8');
   cachedDocTree = JSON.parse(raw) as DocTreeNode;
   return cachedDocTree;
@@ -83,7 +78,7 @@ export async function GET(
     const lines: string[] = [
       '---',
       `title: "Page Not Found"`,
-      `url: "${BASE_URL}/${requestedPath}"`,
+      `url: "${DOCS_ORIGIN}/${requestedPath}"`,
       '---',
       '',
       '# Page Not Found',
@@ -98,15 +93,15 @@ export async function GET(
         ancestor.frontmatter?.title || ancestor.slug || 'this section';
       lines.push(`## Pages in ${ancestorTitle}`);
       lines.push('');
-      lines.push(renderSiblingList(ancestor.children, BASE_URL));
+      lines.push(renderSiblingList(ancestor.children, DOCS_ORIGIN));
       lines.push('');
     }
 
     lines.push('## Find what you need');
     lines.push('');
-    lines.push(`- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`);
-    lines.push(`- [Documentation root](${BASE_URL}/index.md) — full docs overview`);
-    lines.push(`- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`);
+    lines.push(`- [Site index](${DOCS_ORIGIN}/llms.txt) — LLM-optimized page listing`);
+    lines.push(`- [Documentation root](${DOCS_ORIGIN}/index.md) — full docs overview`);
+    lines.push(`- [Platforms](${DOCS_ORIGIN}/platforms.md) — all SDK platforms`);
     lines.push('');
 
     body = lines.join('\n');
@@ -114,7 +109,7 @@ export async function GET(
     body = [
       '---',
       `title: "Page Not Found"`,
-      `url: "${BASE_URL}/${requestedPath}"`,
+      `url: "${DOCS_ORIGIN}/${requestedPath}"`,
       '---',
       '',
       '# Page Not Found',
@@ -123,9 +118,9 @@ export async function GET(
       '',
       '## Find what you need',
       '',
-      `- [Site index](${BASE_URL}/llms.txt) — LLM-optimized page listing`,
-      `- [Documentation root](${BASE_URL}/index.md) — full docs overview`,
-      `- [Platforms](${BASE_URL}/platforms.md) — all SDK platforms`,
+      `- [Site index](${DOCS_ORIGIN}/llms.txt) — LLM-optimized page listing`,
+      `- [Documentation root](${DOCS_ORIGIN}/index.md) — full docs overview`,
+      `- [Platforms](${DOCS_ORIGIN}/platforms.md) — all SDK platforms`,
       '',
     ].join('\n');
   }

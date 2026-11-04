@@ -1,0 +1,94 @@
+---
+id: generic-host-apps-call-usesentry
+title: "Generic Host Apps Call UseSentry"
+phase: code-changes
+category: package
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 20
+---
+
+Worker services, Azure Functions isolated worker apps, Windows services and console apps on `Host.CreateApplicationBuilder` often started Sentry with `Logging.AddSentry`. Install `Sentry.Extensions.Hosting` and call `UseSentry` on the host builder instead.
+
+```shell
+dotnet add package Sentry.Extensions.Hosting
+```
+
+`Sentry.Extensions.Hosting` brings in `Sentry.Extensions.Logging`, so remove the app's direct `Sentry.Extensions.Logging` reference.
+
+In 6.x, `Logging.AddSentry()` started Sentry with the settings under `Logging:Sentry`:
+
+```csharp {filename:Program.cs}
+var builder = Host.CreateApplicationBuilder(args);
+builder.Logging.AddSentry();
+builder.Services.AddHostedService<Worker>();
+builder.Build().Run();
+```
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "Dsn": "___PUBLIC_DSN___",
+      "MinimumEventLevel": "Error"
+    }
+  }
+}
+```
+
+In 7.x, `UseSentry()` starts Sentry with the settings in the `Sentry` section and adds the `ILogger` integration. The log levels stay under `Logging:Sentry`:
+
+```csharp {filename:Program.cs}
+var builder = Host.CreateApplicationBuilder(args);
+builder.UseSentry();
+builder.Services.AddHostedService<Worker>();
+builder.Build().Run();
+```
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "MinimumEventLevel": "Error"
+    }
+  },
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___"
+  }
+}
+```
+
+If the app set the options in code, move them from `Logging.AddSentry` to `UseSentry`. In 6.x, the code looked like this:
+
+```csharp {filename:Program.cs}
+var builder = Host.CreateApplicationBuilder(args);
+builder.Logging.AddSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.TracesSampleRate = 1.0;
+});
+builder.Services.AddHostedService<Worker>();
+builder.Build().Run();
+```
+
+In 7.x, pass the same options to `UseSentry`:
+
+```csharp {filename:Program.cs}
+var builder = Host.CreateApplicationBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.TracesSampleRate = 1.0;
+});
+builder.Services.AddHostedService<Worker>();
+builder.Build().Run();
+```
+
+`UseSentry` also registers `IHub` for dependency injection and sets the environment from the host environment. It works on `IHostApplicationBuilder` types such as `Host.CreateApplicationBuilder` on .NET 8 and later. It also works on `IHostBuilder` types such as `Host.CreateDefaultBuilder` on every target, including .NET Framework.
+
+If the app calls `builder.Logging.ClearProviders()`, call `UseSentry` after it. `ClearProviders` removes every logger provider registered before it, including Sentry's, and the app then sends no errors from `ILogger`. If the app has to clear providers after `UseSentry`, call `builder.Logging.AddSentry()` after `ClearProviders` to add Sentry's providers back. Skip that if Serilog, NLog or log4net already sends the app's `ILogger` entries to Sentry, because each entry would then arrive twice.
+
+A helper that takes any `IHostApplicationBuilder` and runs in an ASP.NET Core app, such as the `AddServiceDefaults` method of .NET Aspire, needs a different call. See [Call UseSentry on WebApplicationBuilder](#call-usesentry-on-webapplicationbuilder).
+
+Like ASP.NET Core, `UseSentry` sends `ILogger` entries as logs only when you set `EnableLogs`. See [EnableLogs Is Removed from SentryOptions](#enablelogs-is-removed-from-sentryoptions).
