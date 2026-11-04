@@ -94,7 +94,7 @@ The Converse APIs use the same request and response format for every model, so t
 From SDK version `TODO`, Bedrock spans also include:
 
 - `gen_ai.usage.total_tokens` for Converse calls, Claude `InvokeModel` calls, and streamed responses
-- `gen_ai.usage.cache_read_input_tokens` and `gen_ai.usage.cache_creation_input_tokens` for Converse, Claude, and streamed Amazon Nova calls that use prompt caching. `gen_ai.usage.input_tokens` then includes the cached tokens.
+- `gen_ai.usage.cache_read.input_tokens` and `gen_ai.usage.cache_creation.input_tokens` for Converse and Claude calls that use prompt caching. `gen_ai.usage.input_tokens` then includes the cached tokens.
 - `gen_ai.response.id` and `gen_ai.response.model` for Claude `InvokeModel` and `InvokeModelWithResponseStream` calls
 - `gen_ai.response.streaming` set to `true` on spans of streamed responses
 
@@ -102,7 +102,7 @@ From SDK version `TODO`, Bedrock spans also include:
 
 <AvailableSince version="TODO" />
 
-Sentry records the prompts and responses of Bedrock calls by default. The <PlatformLink to="/agent-tracing/#privacy-controls">`dataCollection.genAI`</PlatformLink> option controls what's recorded, the same way it does for other AI integrations. `sendDefaultPii` doesn't affect it.
+Sentry records the prompts and responses of Bedrock calls by default. The <PlatformLink to="/agent-tracing/#privacy-controls">`dataCollection.genAI`</PlatformLink> option controls what's recorded, the same way it does for other AI integrations.
 
 | Option                         | Recorded attributes                                                              |
 | ------------------------------ | -------------------------------------------------------------------------------- |
@@ -121,14 +121,14 @@ Sentry.init({
 });
 ```
 
-Inputs include the request messages (text, tool calls, tool results, and reasoning), the system instructions, and the tool definitions. Outputs include the assistant message with its text, reasoning, and tool calls, the response text, and the tool calls.
+Inputs include the request messages (text, tool calls, tool results, and reasoning), the system instructions, and the tool definitions. Outputs include the assistant message (text, reasoning, and tool calls), plus the response text and tool calls as separate attributes.
 
 Prompts and responses are recorded for all four [supported commands](#supported-operations):
 
 - `ConverseCommand` and `ConverseStreamCommand`: For any model.
 - `InvokeModelCommand` and `InvokeModelWithResponseStreamCommand`: For the model families listed in [Captured Data](#captured-data). Claude and Amazon Nova requests also record system instructions and tool definitions. Claude messages are recorded in the Anthropic Messages format you sent. For Amazon Titan, Meta Llama, Cohere, and Mistral, the prompt is recorded as a single user message.
 
-Sentry doesn't record the contents of files. Images, documents, video, and audio are recorded as `blob` parts that only contain the modality, plus the MIME type for Converse images and for Claude images and documents. This applies to Converse and Amazon Nova content blocks, and to Claude `image` and `document` blocks, including those inside tool results.
+Sentry doesn't record the contents of files. Images, documents, video, and audio in Converse and Amazon Nova content blocks, and Claude `image` and `document` blocks, are recorded as `blob` parts that only contain the modality, plus the MIME type when the request includes one (Converse and Nova image formats, Claude `media_type`). Claude blocks inside `tool_result` are handled the same way. Files inside Converse and Nova tool results are left out.
 
 For streamed responses, Sentry assembles the output while your code reads the stream and records it when the span ends. If outputs aren't recorded, the streamed content isn't buffered.
 
@@ -149,7 +149,7 @@ Sentry.init({
 });
 ```
 
-Sentry checks these settings on every Bedrock call, so the values from the active Sentry client at call time apply.
+Sentry reads `dataCollection.genAI` from the active Sentry client on every Bedrock call.
 
 ## Disable Bedrock Instrumentation
 
