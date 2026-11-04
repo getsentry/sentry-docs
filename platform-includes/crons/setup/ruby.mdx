@@ -87,6 +87,44 @@ The monitor slug comes from the job's `name` option, or from the handler's class
 
 Sentry creates the monitor from `cron` jobs and from `every` jobs whose frequency is a whole number of minutes, hours, or days. Jobs whose schedule can't be expressed in the Crons schedule format aren't monitored, such as a job that runs every 10 seconds or one whose time zone is an offset like `+05:30` rather than an IANA name like `Europe/Vienna`. `interval` jobs aren't monitored either, since they wait a fixed time after each run ends and have no fixed schedule. One-off `in` and `at` jobs are not monitored, and jobs scheduled by `sidekiq-scheduler` are left to the `:sidekiq_scheduler` patch.
 
+### Solid Queue
+
+If you're using Solid Queue recurring tasks, enable the `:solid_queue_recurring` patch to capture check-ins for every task in `config/recurring.yml`, as well as dynamic tasks:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:solid_queue_recurring]
+end
+```
+
+```yaml {filename:config/recurring.yml}
+production:
+  nightly_report:
+    class: ReportJob
+    args: [nightly]
+    schedule: "0 2 * * * America/New_York"
+  weekly_report:
+    class: ReportJob
+    args: [weekly]
+    schedule: every monday at 9am
+  clear_cache:
+    command: "Rails.cache.clear"
+    schedule: every hour
+```
+
+The monitor slug is the task key, so this example creates three monitors: `nightly_report`, `weekly_report`, and `clear_cache`. Each task gets its own monitor, even when tasks share a job class. Both `class` and `command` tasks are monitored.
+
+Sentry creates and updates each monitor from the task's schedule and time zone. Tasks whose schedule can't be expressed in the Crons schedule format, such as a task that runs every 10 seconds, aren't monitored. Jobs that already call `sentry_monitor_check_ins` are left as they are.
+
+To skip tasks, list their keys in `config.rails.solid_queue_exclude_recurring_tasks`. Strings match a task key exactly, and regular expressions are matched against it:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:solid_queue_recurring]
+  config.rails.solid_queue_exclude_recurring_tasks = ["clear_cache", /^tmp_/]
+end
+```
+
 ## Manual Setup
 
 If you're using `Clockwork` or `Whenever`, you'll need to instrument your jobs
