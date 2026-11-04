@@ -1,0 +1,52 @@
+---
+id: enablelogs-is-removed-from-sentryoptions
+title: "EnableLogs Is Removed from SentryOptions"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 90
+---
+
+Version 7 removes `EnableLogs` from `SentryOptions`, the core options of the SDK, so setting it in `SentrySdk.Init` fails to compile with error CS1061. Remove the line.
+
+Whether logs are on now depends on how your app writes them:
+
+- **Logging integrations.** If you add the Serilog, NLog or log4net integration, or call `Logging.AddSentry()` after `SentrySdk.Init`, logs are on by default. Your logging framework's configuration, such as its minimum level, controls which entries they send. See [Logging Integrations Send Logs](#logging-integrations-send-logs).
+- **Host integrations.** In ASP.NET Core, MAUI, Blazor WebAssembly and generic host apps, `UseSentry` adds an `ILogger` integration. It sends errors and breadcrumbs, but its logs are off by default. To turn them on, set `EnableLogs = true` on the options of `UseSentry`. `EnableLogs` doesn't affect a Serilog, NLog or log4net integration in the same app.
+- **`SentrySdk.Logger`.** It sends logs in every app and needs no option.
+
+In 6.x, `SentrySdk.Init` turned logs on:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.EnableLogs = true;
+});
+```
+
+In 7.x, remove `EnableLogs`:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+```
+
+In apps that call `UseSentry`, keep `EnableLogs` on its options to send `ILogger` entries as logs. You can also set it in the `Sentry` section of `appsettings.json`:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.EnableLogs = true;
+});
+```
+
+A generic host app that set `EnableLogs` on `Logging.AddSentry` in 6.x sets it on `UseSentry` now.
+
+The Serilog sink no longer takes an `enableLogs` argument. NLog's `enableLogs` setting no longer turns logs off, and setting it to `false` writes a warning to standard error. To drop logs and keep errors and breadcrumbs, use `SetBeforeSendLog`, as shown in [Logging Integrations Send Logs](#logging-integrations-send-logs).

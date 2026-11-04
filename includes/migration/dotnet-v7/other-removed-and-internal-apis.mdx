@@ -1,0 +1,65 @@
+---
+id: other-removed-and-internal-apis
+title: "Other Removed and Internal APIs"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 130
+---
+
+Version 7 removes a few APIs that most apps don't use, makes others internal and reorders some parameters. Update any code that uses them:
+
+| API                                                                                            | Migration                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Envelope.FromEvent`, `Envelope.FromFeedback`, `Envelope.FromTransaction`                      | The `IDiagnosticLogger` parameter moves to the end. Reorder the arguments or pass them by name.         |
+| `options.Native.EnableAppHangTrackingV2` on iOS and Mac Catalyst                               | Use `options.Native.EnableAppHangTracking`. App hang tracking V2 is already the default.                |
+| `options.Native.AddInAppExclude(string)` on iOS and Mac Catalyst                               | Remove the call. It had no effect.                                                                      |
+| `SentryOptions.ScopeObserver`, `SentryOptions.EnableScopeSync`, `SentryOptions.CrashedLastRun` | These are internal now, because only the SDK's native integrations set them. Remove references to them. |
+
+The SDK ignores an `EnableScopeSync` key in the `Sentry` section of `appsettings.json`.
+
+The `Envelope` factory methods only matter if you build envelopes yourself, for example in a custom transport. In 6.x, the logger came second:
+
+```csharp {filename:Program.cs}
+using Sentry.Extensibility;
+using Sentry.Protocol.Envelopes;
+
+static Envelope CreateEnvelope(SentryEvent @event, IDiagnosticLogger logger,
+    IReadOnlyCollection<SentryAttachment> attachments, SessionUpdate sessionUpdate)
+    => Envelope.FromEvent(@event, logger, attachments, sessionUpdate);
+```
+
+In 7.x, the logger comes last:
+
+```csharp {filename:Program.cs}
+using Sentry.Extensibility;
+using Sentry.Protocol.Envelopes;
+
+static Envelope CreateEnvelope(SentryEvent @event, IDiagnosticLogger logger,
+    IReadOnlyCollection<SentryAttachment> attachments, SessionUpdate sessionUpdate)
+    => Envelope.FromEvent(@event, attachments, sessionUpdate, logger);
+```
+
+On iOS and Mac Catalyst, the 6.x app hang option looked like this:
+
+```csharp {filename:MauiProgram.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Native.EnableAppHangTrackingV2 = true;
+});
+```
+
+In 7.x, use the main option:
+
+```csharp {filename:MauiProgram.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Native.EnableAppHangTracking = true;
+});
+```
+
+The SDK no longer reads the breadcrumb level `"critical"` as `Fatal`. Only envelopes that a 5.x app cached on disk and never sent used that level.
