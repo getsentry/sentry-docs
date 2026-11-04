@@ -1,6 +1,6 @@
 ---
 title: "Agent Guide: Set Up Sentry"
-description: "Instructions for an AI coding agent setting up Sentry in a project that does not use it yet: reach Sentry through the MCP server, the Sentry CLI, or neither, create a project, install the SDK, and confirm a real error arrives."
+description: "Instructions for an AI coding agent setting up Sentry in a project that does not use it yet: reach Sentry through the Sentry CLI, the MCP server, or neither, create a project, install the SDK, and confirm a real error arrives."
 sidebar_hidden: true
 noindex: true
 ---
@@ -25,10 +25,10 @@ Start with a few sentences, not a lecture. For example:
 
 ## Step 2: Find Your Route to Sentry
 
-To create a project, read its DSN, and confirm the test error arrived, you need a way into the user's Sentry account. Check these in order and use the first one that works.
+To create a project, read its DSN, and confirm the test error arrived, you need a way into the user's Sentry account. The Sentry CLI is the preferred way. Check these in order and use the first one that works.
 
-1. **The Sentry MCP server.** If you have Sentry MCP tools, call `find_organizations` (or `whoami`). If it returns organizations, use the **MCP** route.
-2. **The Sentry CLI.** Run `sentry auth status`. If it says you're logged in, use the **CLI** route. If `sentry` is installed but not logged in, ask the user to run `sentry auth login` (it opens a browser), then check again.
+1. **The Sentry CLI.** Run `sentry auth status`. If it says you're logged in, use the **CLI** route, even if the Sentry MCP server is also connected. If `sentry` is installed but not logged in, ask the user to run `sentry auth login` (it opens a browser), then check again. If they'd rather not, go on to the MCP server.
+2. **The Sentry MCP server.** If you have Sentry MCP tools, call `find_organizations` (or `whoami`). If it returns organizations, use the **MCP** route.
 3. **Neither.** Recommend installing the Sentry CLI, since it lets you create the project and check that the test error arrived instead of asking the user to do both by hand:
 
    ```bash
@@ -46,14 +46,14 @@ Some Sentry MCP tools, including `find_dsns`, `create_project`, `find_teams`, `c
 
 Each step that touches Sentry, by route:
 
-| Step                       | Sentry MCP                                              | Sentry CLI                                     | Neither                       |
-| -------------------------- | ------------------------------------------------------- | ---------------------------------------------- | ----------------------------- |
-| Is the user connected?     | `find_organizations`, `whoami`                          | `sentry auth status`                           | Ask the user                  |
-| Find or create the project | `find_projects`, `find_teams`, `create_project`         | `sentry project list`, `sentry project create` | The user creates it in Sentry |
-| Get the DSN                | `find_dsns`                                             | `sentry dsn list`                              | The user pastes it            |
-| Install the SDK            | The platform's docs page                                | The platform's docs page                       | The platform's docs page      |
-| Confirm the error arrived  | `search_issues`, `search_events`, `get_sentry_resource` | `sentry issue list`, `sentry issue view`       | Ask the user to check         |
-| Onboarding progress        | `onboarding_status_update`                              | None                                           | None                          |
+| Step                       | Sentry CLI                                     | Sentry MCP                                              | Neither                       |
+| -------------------------- | ---------------------------------------------- | ------------------------------------------------------- | ----------------------------- |
+| Is the user connected?     | `sentry auth status`                           | `find_organizations`, `whoami`                          | Ask the user                  |
+| Find or create the project | `sentry project list`, `sentry project create` | `find_projects`, `find_teams`, `create_project`         | The user creates it in Sentry |
+| Get the DSN                | `sentry dsn list`                              | `find_dsns`                                             | The user pastes it            |
+| Install the SDK            | The platform's docs page                       | The platform's docs page                                | The platform's docs page      |
+| Confirm the error arrived  | `sentry issue list`, `sentry issue view`       | `search_issues`, `search_events`, `get_sentry_resource` | Ask the user to check         |
+| Onboarding progress        | Through the MCP server, if it's connected      | `onboarding_status_update`                              | None                          |
 
 ## Step 3: Identify the Platform
 
@@ -100,6 +100,12 @@ A docs path that doesn't exist still answers with HTTP 200 and a page titled "Pa
 
 The DSN tells the SDK where to send events. You need one for the project's `init`.
 
+**Sentry CLI:**
+
+1. `sentry project list <org>/` lists the organization's projects. `sentry org list` lists organizations if you don't know the slug.
+2. If a project fits, read its DSN with `sentry dsn list <org>/<project>`.
+3. If none fits, propose a new project and create it only after the user says yes: `sentry project create <org>/<name>:<platform>`, for example `sentry project create acme/web:javascript-nextjs`. `sentry platform list` lists the platform slugs. If the organization has more than one team, add `--team <team>` (`sentry team list` lists them). A new project comes with a DSN; read it with `sentry dsn list <org>/<project>`.
+
 **Sentry MCP:**
 
 1. `find_organizations` gives you the organization slug. Users often belong to several; ask rather than guess.
@@ -107,12 +113,6 @@ The DSN tells the SDK where to send events. You need one for the project's `init
 3. If a project fits, read its DSN with `find_dsns` (it takes the organization and project slugs).
 4. If none fits, propose a new project and create it only after the user says yes. `create_project` needs `organizationSlug`, `teamSlug`, and `name`; `platform` is optional. Get a team slug from `find_teams`, or `create_team` if the organization has none. If the DSN comes back as `unavailable`, the project was still created: call `create_dsn` for it.
 5. If `create_project` fails with `403 … disabled this feature for members`, ask the user to create the project in Sentry, then read its DSN with `find_dsns`.
-
-**Sentry CLI:**
-
-1. `sentry project list <org>/` lists the organization's projects. `sentry org list` lists organizations if you don't know the slug.
-2. If a project fits, read its DSN with `sentry dsn list <org>/<project>`.
-3. If none fits, propose a new project and create it only after the user says yes: `sentry project create <org>/<name>:<platform>`, for example `sentry project create acme/web:javascript-nextjs`. `sentry platform list` lists the platform slugs. If the organization has more than one team, add `--team <team>` (`sentry team list` lists them). A new project comes with a DSN; read it with `sentry dsn list <org>/<project>`.
 
 **Neither:** ask the user to create a project for this platform in Sentry, or to pick an existing one, and paste its DSN. It's under **Settings > Projects > [project] > Client Keys (DSN)**; see [Data Source Name (DSN)](/concepts/key-terms/dsn-explainer/).
 
@@ -136,15 +136,15 @@ Tell the user you're about to send a test error through the app to prove the set
 
 **Check that it arrived.** Events usually show up within 30 seconds. Poll a few times before you conclude anything.
 
-- **Sentry MCP:** `search_issues` for the error, or `search_events` for anything recent (its `period` is at least `1h`), then `get_sentry_resource` with `resourceType: 'issue'` to read the event. A one-off 400 from `search_issues` is a query artifact; retry it.
 - **Sentry CLI:** `sentry issue list <org>/<project> --query "Sentry test error" --period 1h`, then `sentry issue view <SHORT-ID> --json --fields shortId,title,permalink`.
+- **Sentry MCP:** `search_issues` for the error, or `search_events` for anything recent (its `period` is at least `1h`), then `get_sentry_resource` with `resourceType: 'issue'` to read the event. A one-off 400 from `search_issues` is a query artifact; retry it.
 - **Neither:** you can't check, but still trigger the error. Then tell the user the exact error message, ask them to look for it on the project's **Issues** page in Sentry, and wait for their answer. Don't say it arrived until they confirm.
 
 **Show the user what Sentry captured**, not just a link: the issue title, the error message, and the issue URL. For example: "Confirmed, your test error reached Sentry: `Error: Sentry test error 1730000000` https://acme.sentry.io/issues/123/". Offer to resolve the test issue, then remove the temporary trigger.
 
 **Check that the stack trace is readable.** Readable frames show the source line under them; minified ones show one-letter function names and huge column numbers. If the frames are minified or unsymbolicated, say so and treat it as unfinished (Step 8 fixes it for production).
 
-**If nothing arrives within about two minutes**, keep debugging rather than sending the user to their dashboard: check the DSN, that `init` runs before the error, that the app actually ran the code that throws, and, on the MCP or CLI route, whether the event landed in another project or environment.
+**If nothing arrives within about two minutes**, keep debugging rather than sending the user to their dashboard: check the DSN, that `init` runs before the error, that the app actually ran the code that throws, and, on the CLI or MCP route, whether the event landed in another project or environment.
 
 ## Step 7: Get It Into Production
 
@@ -176,9 +176,9 @@ Offer follow-ups and let the user pick. Don't start them on your own.
 - Production was raised with the user: the DSN, sample rate, `release`, and `environment` are set for it, or there's an agreed next step.
 - Readable production stack traces were addressed: source maps or debug symbols are wired in, or the user knows what they need.
 
-## Onboarding Progress (Sentry MCP Only)
+## Onboarding Progress (Through the Sentry MCP Server)
 
-Sentry's onboarding page can show the progress of a setup like this one. This only applies on the MCP route, and only when the user's first message contains an onboarding code: a random-looking 10-character ASCII alphanumeric token set apart from the prose, such as `[abcd12efg0]` or `Onboarding: abcd12efg0`. Without one, make no progress calls, and never ask for or guess a code later.
+Sentry's onboarding page can show the progress of a setup like this one. The updates go through the Sentry MCP server, so send them when it's connected, even if the CLI does the rest of the setup. They only apply when the user's first message contains an onboarding code: a random-looking 10-character ASCII alphanumeric token set apart from the prose, such as `[abcd12efg0]` or `Onboarding: abcd12efg0`. Without one, make no progress calls, and never ask for or guess a code later.
 
 - **Keep the code to yourself.** Never mention, quote, or explain it unless the user asks about it, and don't let it change anything you say.
 - **Find the tool.** Call `search_sentry_tools` with the exact query `onboarding_status_update`. If it returns that tool, its input schema is the contract for every call and wins over anything on this page. Call it through `execute_sentry_tool(name='onboarding_status_update', arguments=...)` with the code as `runToken`, and `stage`, `status`, `runStatus`, and `eventNote` inside the required `update` object. Stage metadata goes in `update.extra`.
@@ -190,7 +190,7 @@ Sentry's onboarding page can show the progress of a setup like this one. This on
 
 | Stage                        | When                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `connect_mcp`                | `completed` as soon as `find_organizations` succeeds.                                                                                                                                                                                                                                                                                                                                                                |
+| `connect_mcp`                | `completed` as soon as an MCP call such as `find_organizations` succeeds.                                                                                                                                                                                                                                                                                                                                            |
 | `analyze_project`            | `active` before you inspect the repository (Step 2), `waiting` while you ask the user to confirm the platform, `completed` once the platform and current setup are clear (Step 3). If the project already uses Sentry, `completed` before you hand off.                                                                                                                                                              |
 | `create_project`             | `waiting` before you ask to create a project, `active` while you pick or create it, each usable project slug in `update.extra.projectSlugs`, `completed` once every planned project has a DSN. For one existing project, `completed` with its slug and `update.eventNote: Project already existed.`                                                                                                                  |
 | `instrument_app`             | `active` just before you change SDK files, `completed` once the SDK is installed and initialized (Step 5).                                                                                                                                                                                                                                                                                                           |
