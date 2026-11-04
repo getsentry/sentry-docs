@@ -2,7 +2,7 @@
 title: Logs
 description: Structured logging protocol with severity levels, trace context, and batched envelope delivery.
 spec_id: sdk/telemetry/logs
-spec_version: 3.1.0
+spec_version: 3.2.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/state-management/scopes/attributes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 3.2.0
+    date: 2026-10-21
+    summary: Downgraded log_byte client reports from MUST to SHOULD; SDKs MAY omit them if calculating log size has a performance impact
   - version: 3.1.0
     date: 2026-10-08
     summary: Listed client report discard reasons for logs and clarified that the quantity is the number of discarded logs
@@ -359,7 +362,9 @@ If `debug` is set to `true` in SDK init, calls to the Sentry logger API **SHOULD
 
 ### Client Reports
 
-SDKs **MUST** report count (`log_item`) and size in bytes (`log_byte`) of discarded log messages. An approximation of log size is sufficient (e.g., by counting as if serialized).
+SDKs **MUST** report the count (`log_item`) of discarded log messages.
+
+SDKs **SHOULD** also report the size in bytes (`log_byte`) of discarded log messages if calculating or estimating the log size has only a negligible performance impact. If calculating or estimating the log size has a significant performance impact, SDKs **MAY** omit `log_byte` outcomes. An approximation of log size is sufficient (e.g., by counting as if serialized).
 
 SDKs **MUST** record a [client report](/sdk/telemetry/client-reports/) in at least the following cases:
 
