@@ -16,7 +16,7 @@ notSupported:
 
 <AvailableSince version="11.0.0" />
 
-Sentry automatically instruments [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) model calls that you make with the AWS SDK for JavaScript v3 Bedrock Runtime client (`@aws-sdk/client-bedrock-runtime`). Each call creates a `gen_ai` span that follows Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions and records the model, request parameters, token usage, and finish reasons.
+Sentry automatically instruments [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) model calls that you make with the AWS SDK for JavaScript v3 Bedrock Runtime client (`@aws-sdk/client-bedrock-runtime`). Each call creates a `gen_ai` span that follows Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions and records the model, request parameters, token usage, and finish reasons. Newer SDK versions also record prompts and responses. See [Prompts and Responses](#prompts-and-responses).
 
 There's no separate Bedrock integration to add. The spans come from the <PlatformLink to="/configuration/integrations/aws/">`awsIntegration`</PlatformLink>, which is on by default. Enable tracing and Bedrock calls are instrumented:
 
@@ -91,7 +91,65 @@ The Converse APIs use the same request and response format for every model, so t
 
 `InvokeModel` request and response bodies differ by model, so request parameters, token usage, and finish reasons are only recorded for model IDs that contain `amazon.titan`, `amazon.nova`, `anthropic.claude`, `meta.llama`, `cohere.command`, or `mistral`. Cohere and Mistral `InvokeModel` bodies don't include token counts, so for those models Sentry estimates token usage from the text length (one token per six characters). Spans for other models record the model ID but no parameters or token usage.
 
-Sentry doesn't record prompts, messages, or model responses for Bedrock calls, so the `dataCollection.genAI` option has no effect on these spans.
+From SDK version `TODO`, Bedrock spans also include:
+
+- `gen_ai.usage.total_tokens` for Converse calls, Claude `InvokeModel` calls, and streamed responses
+- `gen_ai.usage.cache_read_input_tokens` and `gen_ai.usage.cache_creation_input_tokens` for Converse, Claude, and streamed Amazon Nova calls that use prompt caching. `gen_ai.usage.input_tokens` then includes the cached tokens.
+- `gen_ai.response.id` and `gen_ai.response.model` for Claude `InvokeModel` and `InvokeModelWithResponseStream` calls
+- `gen_ai.response.streaming` set to `true` on spans of streamed responses
+
+## Prompts and Responses
+
+<AvailableSince version="TODO" />
+
+Sentry records the prompts and responses of Bedrock calls by default. The <PlatformLink to="/agent-tracing/#privacy-controls">`dataCollection.genAI`</PlatformLink> option controls what's recorded, the same way it does for other AI integrations. `sendDefaultPii` doesn't affect it.
+
+| Option                         | Recorded attributes                                                              |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `dataCollection.genAI.inputs`  | `gen_ai.input.messages`, `gen_ai.system_instructions`, `gen_ai.tool.definitions` |
+| `dataCollection.genAI.outputs` | `gen_ai.output.messages`, `gen_ai.response.text`, `gen_ai.response.tool_calls`   |
+
+The two options work independently. For example, you can record responses but not prompts:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  dataCollection: {
+    genAI: { inputs: false, outputs: true },
+  },
+});
+```
+
+Inputs include the request messages (text, tool calls, tool results, and reasoning), the system instructions, and the tool definitions. Outputs include the assistant message with its text, reasoning, and tool calls, the response text, and the tool calls.
+
+Prompts and responses are recorded for all four [supported commands](#supported-operations):
+
+- `ConverseCommand` and `ConverseStreamCommand`: For any model.
+- `InvokeModelCommand` and `InvokeModelWithResponseStreamCommand`: For the model families listed in [Captured Data](#captured-data). Claude and Amazon Nova requests also record system instructions and tool definitions. Claude messages are recorded in the Anthropic Messages format you sent. For Amazon Titan, Meta Llama, Cohere, and Mistral, the prompt is recorded as a single user message.
+
+Sentry doesn't record the contents of files. Images, documents, video, and audio are recorded as `blob` parts that only contain the modality, plus the MIME type for Converse images and for Claude images and documents. This applies to Converse and Amazon Nova content blocks, and to Claude `image` and `document` blocks, including those inside tool results.
+
+For streamed responses, Sentry assembles the output while your code reads the stream and records it when the span ends. If outputs aren't recorded, the streamed content isn't buffered.
+
+### Override for Bedrock Only
+
+To change what's recorded for Bedrock calls without changing `dataCollection.genAI`, set `recordInputs` and `recordOutputs` on <PlatformLink to="/configuration/integrations/aws/#options">`awsIntegration`</PlatformLink>. These options take precedence over `dataCollection.genAI`:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.awsIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+Sentry checks these settings on every Bedrock call, so the values from the active Sentry client at call time apply.
 
 ## Disable Bedrock Instrumentation
 
