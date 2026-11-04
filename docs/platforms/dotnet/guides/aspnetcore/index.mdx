@@ -6,16 +6,7 @@ description: "Learn about Sentry's .NET integration with ASP.NET Core."
 
 Sentry provides an integration with ASP.NET Core through the [Sentry.AspNetCore](https://www.nuget.org/packages/Sentry.AspNetCore) NuGet package.
 
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
 ## Install
-
-<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
-
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
@@ -32,15 +23,34 @@ paket add Sentry --version {{@inject packages.version('sentry.dotnet.aspnetcore'
 
 This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
 
-## Initialize
+## Configure
+
+**Error Monitoring** starts working as soon as you initialize the SDK. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+
+This guide also enables **Tracing**.
 
 The simplest way to initialize Sentry in ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-7.0).
 
-When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information. The SDK provides this as extension methods to support ASP.NET Core `2.X`, `3.X`, and `5.X` and later:
+Call `UseSentry` with your DSN and the options you want. The SDK provides this as extension methods to support ASP.NET Core `2.X`, `3.X`, and `5.X` and later.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+- Logs: via <PlatformLink to="/logs/#enablelogs">`EnableLogs`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
 
 ```csharp {tabTitle:WebApplication} {mdExpandTabs}
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseSentry(); // Initialize Sentry
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.EnableLogs = true;
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    options.TracesSampleRate = 1.0;
+});
 ```
 
 ```csharp {tabTitle:IHostBuilder}
@@ -48,19 +58,33 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)
         .ConfigureWebHostDefaults(webBuilder =>
         {
-            // Add the following line:
-            webBuilder.UseSentry();
+            webBuilder.UseSentry(options =>
+            {
+                options.Dsn = "___PUBLIC_DSN___";
+                options.EnableLogs = true;
+                // Enables Tracing.
+                // Set to 1.0 to capture 100% of spans for tracing.
+                // We recommend reducing this value in production.
+                options.TracesSampleRate = 1.0;
+            });
         });
 ```
 
 ```csharp {tabTitle:IWebHost}
 public static IWebHost BuildWebHost(string[] args) =>
     WebHost.CreateDefaultBuilder(args)
-        // Add the following line:
-        .UseSentry()
+        .UseSentry(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.EnableLogs = true;
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
+            options.TracesSampleRate = 1.0;
+        })
 ```
 
-## Configure
+### Additional configuration
 
 The framework takes configuration settings from `appsettings.json`, environment variables, or from code. These settings get applied to `Sentry.AspNetCore.SentryAspNetCoreOptions`, which extends `Sentry.Extensions.Logging.SentryLoggingOptions`, which in turn extends `Sentry.SentryOptions`. This means options for `Sentry.AspNetCore` as well as all the inner packages are available to be configured through the configuration system.
 
@@ -70,6 +94,7 @@ An example of some of the options that can be configured via `appsettings.json`:
 
 
 ```json {filename:appsettings.json}
+{
   "Sentry": {
     "Dsn": "___PUBLIC_DSN___",
     "SendDefaultPii": true,
@@ -78,18 +103,10 @@ An example of some of the options that can be configured via `appsettings.json`:
     "MinimumEventLevel": "Warning",
     "AttachStackTrace": true,
     "Debug": true,
-    "DiagnosticLevel": "Error",
-    // ___PRODUCT_OPTION_START___ performance
-    "TracesSampleRate": 1.0
-    // ___PRODUCT_OPTION_END___ performance
-  },
+    "DiagnosticLevel": "Error"
+  }
+}
 ```
-
-<OnboardingOption optionId="performance">
-
-Setting `TracesSampleRate` to `1.0` in this example configures Sentry to capture 100% of transactions for tracing. We recommend adjusting this value in production. See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> for further information.
-
-</OnboardingOption>
 
 ### Environment variables
 
@@ -113,9 +130,10 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 .UseSentry(options =>
 {
     options.SendDefaultPii = true; // Adds request URL and headers, IP and name for users, etc.
-    // ___PRODUCT_OPTION_START___ performance
-    options.TracesSampleRate = 1.0; // Set this to configure automatic tracing
-    // ___PRODUCT_OPTION_END___ performance
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    options.TracesSampleRate = 1.0;
     options.SetBeforeSend((@event, hint) =>
     {
         // Never report server names
@@ -128,9 +146,10 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 ```fsharp
 .UseSentry (fun options ->
     options.SendDefaultPii <- true // Adds request URL and headers, IP and name for users, etc.
-    // ___PRODUCT_OPTION_START___ performance
-    options.TracesSampleRate <- 1.0 // Set this to configure automatic tracing
-    // ___PRODUCT_OPTION_END___ performance
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
+    options.TracesSampleRate <- 1.0
     options.SetBeforeSend(fun event hint ->
         // Never report server names
         event.ServerName <- null
@@ -141,21 +160,15 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 
 > Example modifying all events before they are sent to avoid server names being reported.
 
-## Verify
-
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
-
-<PlatformContent includePath="getting-started-verify" />
-
-## Dependency Injection
+### Dependency Injection
 
 Much of the behavior of the ASP.NET Core integration with Sentry can be customized by using the frameworks dependency injection system. That is done by registering your own implementation of some of the exposed abstraction.
 
-### Lifetimes
+#### Lifetimes
 
 The lifetime used will be respected by the SDK. For example, when registering a `Transient` dependency, a new instance of the processor is created for each event sent out to Sentry. This allows the use of non thread-safe event processors.
 
-### Capturing the affected user
+#### Capturing the affected user
 
 When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
 
@@ -173,7 +186,7 @@ member this.ConfigureServices(services: IServiceCollection) =
     services.AddSingleton<ISentryUserFactory, MyUserFactory>() |> ignore
 ```
 
-### Adding event and exception processors
+#### Adding event and exception processors
 
 Event processors and exception processors can be added via DI:
 
@@ -191,17 +204,17 @@ member this.ConfigureServices(services: IServiceCollection) =
     services.AddScoped<ISentryEventExceptionProcessor, MyExceptionProcessor>() |> ignore
 ```
 
-## Options and Initialization
+### Options and Initialization
 
 As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
 
 Below, the options that are specific to `Sentry.AspNetCore` will be described.
 
-### SendDefaultPii
+#### SendDefaultPii
 
 Although this setting is part of the [Sentry](/platforms/dotnet/) package, in the context of ASP.NET Core, it means reporting the user by reading the frameworks `HttpContext.User`. The strategy to create the `SentryUser` can be customized. Please read [retrieving user info](#capturing-the-affected-user) for more.
 
-### Environment
+#### Environment
 
 The environment name is automatically populated by reading the frameworks `IHostingEnvironment` value.
 
@@ -213,7 +226,7 @@ Methods that take precedence over `IHostingEnvironment` are:
 - Environment variable _SENTRY_ENVIRONMENT_
 - Configuration system like `appsettings.json`
 
-### MaxRequestBodySize
+#### MaxRequestBodySize
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
@@ -224,7 +237,7 @@ This parameter controls whether integrations should capture HTTP request bodies.
 
 If the request bodies should be captured, all requests will have the `EnableRewind` method invoked. This is done so that the request data can be read later, in case an error happens while processing the request.
 
-### CaptureBlockingCalls
+#### CaptureBlockingCalls
 
 When set to `true`, the SDK will detect blocking calls in async methods (like `Task.Wait()` and `Task.Result`) and report these to Sentry as errors. Blocking calls can lead to [Threadpool starvation](https://learn.microsoft.com/en-nz/archive/blogs/vancem/diagnosing-net-core-threadpool-starvation-with-perfview-why-my-service-is-not-saturating-all-cores-or-seems-to-stall).
 
@@ -240,24 +253,18 @@ This feature makes use of the `Ben.BlockingDetector` library and so has [the sam
 >
 > It will detect CLR-initiated waits lock, `ManualResetEventSlim`, `Semaphore\{Slim\}`, `Task.Wait`, `Task.Result` etc. if they do block.
 
-### IncludeActivityData
+#### IncludeActivityData
 
 Opt-in to capture values from [System.Diagnostic.Activity](https://github.com/dotnet/runtime/blob/master/src/libraries/System.Diagnostics.DiagnosticSource/src/ActivityUserGuide.md) if one exists.
 
-## Samples
 
-- A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Basic) without MVC. (**C#**)
-- An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features. (**C#**)
-- An [example](https://github.com/sentry-demos/giraffe) using Giraffe on top of ASP.NET Core with a basic overview of available features. (**F#**)
-- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.
-
-## Tunnel
+### Tunnel
 
 If events are being logged to Sentry from the client-side, then you should use a [tunnel](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
 
 A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your application. Because you control this server, there is no risk of any requests sent to it being blocked.
 
-### Usage
+#### Usage
 
 - Add to the container by calling `AddSentryTunneling();` on `IServiceCollection`.
 - Add the web app by calling `UseSentryTunneling();` on `IApplicationBuilder`.
@@ -274,6 +281,68 @@ Sentry.init({
 
 The [AspNetCore.Mvc sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) uses this approach.
 
+
+## Send Logs
+
+Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in your Sentry initialization.
+
+See [Microsoft.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) for setup details.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+public sealed class OrderService
+{
+    private readonly ILogger<OrderService> _logger;
+
+    public OrderService(ILogger<OrderService> logger) => _logger = logger;
+
+    public void Process()
+    {
+        _logger.LogInformation("Order processed {OrderId}", "order-123");
+        _logger.LogWarning("Rate limit reached for {Endpoint}", "/api/orders");
+    }
+}
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Metrics are enabled by default in Sentry .NET SDK 6.1.0 and later. Use `SentrySdk.Metrics` to send counters, gauges, and distributions from your app.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```csharp
+SentrySdk.Metrics.EmitCounter("button_click", 5,
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
+SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["page"] = "/home" });
+SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
+```
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
+
+<PlatformContent includePath="getting-started-verify" />
+
+### View Captured Data in Sentry
+
+Open your Sentry project to view the captured event.
+
+## Samples
+
+- A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Basic) without MVC. (**C#**)
+- An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features. (**C#**)
+- An [example](https://github.com/sentry-demos/giraffe) using Giraffe on top of ASP.NET Core with a basic overview of available features. (**F#**)
+- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.
+
 ## Next Steps
 
+At this point, you should have integrated Sentry into your ASP.NET Core application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to [manually capture errors](/platforms/dotnet/usage/)
+- Explore [Tracing](/platforms/dotnet/tracing/)

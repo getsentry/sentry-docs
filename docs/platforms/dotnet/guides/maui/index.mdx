@@ -6,7 +6,7 @@ description: "Learn about Sentry's .NET integration with .NET Multi-platform App
 
 Sentry has an integration for the [.NET Multi-platform App UI (MAUI)](https://dotnet.microsoft.com/apps/maui) through the [Sentry.Maui NuGet package](https://www.nuget.org/packages/Sentry.Maui).
 
-## Overview of the features
+**Overview of the features**
 
 - Easy MAUI integration by calling `UseSentry` on your `MauiAppBuilder`
 - All the features of our main [.NET SDK](/platforms/dotnet/), for your managed code
@@ -18,16 +18,7 @@ Sentry has an integration for the [.NET Multi-platform App UI (MAUI)](https://do
 - Detailed device and runtime information passed on every event
 - Automatic session tracking enabled, to support [release health](/product/releases/)
 
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
 ## Install
-
-<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
-
 Add the Sentry dependency to your .NET MAUI application:
 
 ```shell {tabTitle:.NET Core CLI}
@@ -42,8 +33,20 @@ This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extens
 
 ## Configure
 
+**Error Monitoring** starts working as soon as you initialize the SDK. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+
+This guide also enables **Tracing**.
+
+
 In your `MauiProgram.cs` file, call `UseSentry` on your `MauiAppBuilder`, and include any options you would like to set. The `Dsn` is the only required parameter.
 
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#TracesSampleRate">`TracesSampleRate`</PlatformLink>
+- Logs: via <PlatformLink to="/logs/#enablelogs">`EnableLogs`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
 
 ```csharp
 public static MauiApp CreateMauiApp()
@@ -57,6 +60,7 @@ public static MauiApp CreateMauiApp()
         {
             // The DSN is the only required setting.
             options.Dsn = "___PUBLIC_DSN___";
+            options.EnableLogs = true;
 
             // Use debug mode if you want to see what the SDK is doing.
             // Debug messages are written to stdout with Console.Writeline,
@@ -66,15 +70,12 @@ public static MauiApp CreateMauiApp()
 
             // Adds request URL and headers, IP and name for users, etc.
             options.SendDefaultPii = true;
-
-            // ___PRODUCT_OPTION_START___ performance
-            // Set TracesSampleRate to 1.0 to capture 100% of transactions for tracing.
-            // We recommend adjusting this value in production.
+            // Enables Tracing.
+            // Set to 1.0 to capture 100% of spans for tracing.
+            // We recommend reducing this value in production.
             options.TracesSampleRate = 1.0;
-            // ___PRODUCT_OPTION_END___ performance
 
             // If your app doesn't have sensitive data, you can get screenshots on error events automatically
-            // https://docs.sentry.io/platforms/dotnet/guides/maui/configuration/options/#AttachScreenshot
             options.AttachScreenshot = true;
 
             // Other Sentry options can be set here.
@@ -127,12 +128,60 @@ Use caution when enabling, as such values may contain personally identifiable in
 
 </Alert>
 
-## Verify
+## Send Logs
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in your Sentry initialization.
+
+See [Microsoft.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) for setup details.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+public sealed class OrderService
+{
+    private readonly ILogger<OrderService> _logger;
+
+    public OrderService(ILogger<OrderService> logger) => _logger = logger;
+
+    public void Process()
+    {
+        _logger.LogInformation("Order processed {OrderId}", "order-123");
+        _logger.LogWarning("Rate limit reached for {Endpoint}", "/api/orders");
+    }
+}
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Metrics are enabled by default in Sentry .NET SDK 6.1.0 and later. Use `SentrySdk.Metrics` to send counters, gauges, and distributions from your app.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```csharp
+SentrySdk.Metrics.EmitCounter("button_click", 5,
+    new Dictionary<string, object> { ["browser"] = "Firefox" });
+SentrySdk.Metrics.EmitGauge("page_load", 15.0, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["page"] = "/home" });
+SentrySdk.Metrics.EmitDistribution("api_latency", 187, MeasurementUnit.Duration.Millisecond,
+    new Dictionary<string, object> { ["endpoint"] = "/api/orders" });
+```
+
+## Verify Your Setup
+
+Let's test your setup and confirm that data reaches your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
 
+### View Captured Data in Sentry
+
+Open your Sentry project to view the captured event.
+
 ## Next Steps
 
+At this point, you should have integrated Sentry into your .NET MAUI application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn how to [manually capture errors](/platforms/dotnet/usage/)
+- Explore [Tracing](/platforms/dotnet/tracing/)

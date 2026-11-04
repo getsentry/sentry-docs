@@ -1,0 +1,152 @@
+---
+title: Migrate from 7.x to 8.x
+sidebar_order: 8000
+description: "Learn about migrating from Sentry Electron SDK 7.x to 8.x."
+---
+
+Version 8 of the Sentry Electron SDK updates the underlying Sentry JavaScript SDKs from version 10 to version 11. Most of the breaking changes come from those SDKs. The biggest changes are:
+
+- **Version support:** Electron 35 is the new minimum.
+- **Span streaming:** [Stream mode](#span-streaming-is-the-default) is the new default, so the SDK no longer sends transactions.
+- **Data collection:** `sendDefaultPii` is replaced by `dataCollection`, and the SDK [collects more by default](#data-collection).
+- **OpenTelemetry:** The SDK [no longer sets up OpenTelemetry](#opentelemetry-setup-is-opt-in) by default.
+
+This page covers the changes that affect most Electron apps. For the full list of changes, see the JavaScript SDK migration guides:
+
+- [Browser JavaScript 10.x to 11.x](/platforms/javascript/migration/v10-to-v11/) for the `renderer` processes
+- [Node.js 10.x to 11.x](/platforms/javascript/guides/node/migration/v10-to-v11/) for the `main` and utility processes
+
+We recommend that you upgrade to the most recent 7.x release first, because most of what version 8 removes is already deprecated there.
+
+Version 8 of the SDK requires Sentry self-hosted 26.4.2 or higher. Lower versions may continue to work, but are not supported.
+
+## Supported Electron Versions
+
+The Sentry Node SDK now requires Node.js 20.19.0 or higher. Because of this, the Electron SDK now supports Electron 35.0.0 or higher. On older Electron versions, `Sentry.init()` throws an error in the `main` process.
+
+## Tracing
+
+### Span Streaming Is the Default
+
+Tracing now uses <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> (`traceLifecycle: 'stream'`) by default. The SDK sends finished spans in batches. It no longer sends a transaction when the root span ends.
+
+If you opted into span streaming in version 7, you can remove `traceLifecycle: 'stream'` and `spanStreamingIntegration()` from your configuration.
+
+<Alert level="warning">
+
+Because the SDK no longer sends transactions, the `beforeSendTransaction` and `ignoreTransactions` options have no effect. Use `beforeSendSpan` and `ignoreSpans` instead.
+
+</Alert>
+
+`beforeSendSpan` callbacks now receive the streamed span format. See [The `beforeSendSpan` Payload Changed](/platforms/javascript/migration/v10-to-v11/#the-beforesendspan-payload-changed) for the renamed fields.
+
+Scope `tags` and `extra` are not applied to streamed spans. Use `Sentry.setAttribute()` and `Sentry.setAttributes()` to set data that must be searchable on spans.
+
+Span names, operations, and attributes also changed for many automatically created spans. If your filters, dashboards, or alerts use them, see [Tracing](/platforms/javascript/migration/v10-to-v11/#tracing) in the JavaScript migration guide.
+
+### Staying on Transaction Mode
+
+To keep sending transactions, set `traceLifecycle: 'static'`. Tracing options apply to the process where they are set, so set the option in each process where you enabled tracing.
+
+In transaction mode, wrap `beforeSendSpan` callbacks with `Sentry.withStaticSpan()` to receive the previous span format. The SDK does not call a callback that is not wrapped.
+
+```javascript {tabTitle:Main Process}
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  traceLifecycle: "static",
+  beforeSendSpan: Sentry.withStaticSpan((span) => {
+    // `span` has the previous `SpanJSON` format
+    return span;
+  }),
+});
+```
+
+```javascript {tabTitle:Renderer Process}
+import * as Sentry from "@sentry/electron/renderer";
+
+Sentry.init({
+  integrations: [Sentry.browserTracingIntegration()],
+  tracesSampleRate: 1.0,
+  traceLifecycle: "static",
+});
+```
+
+Transaction mode only exists for backwards compatibility and will be removed in a future major version.
+
+### Electron `net` Spans Use OpenTelemetry Attributes
+
+Spans that the <PlatformLink to="/configuration/integrations/net/">ElectronNet integration</PlatformLink> creates now use the same attributes as the `http.client` spans from the Node.js and browser SDKs:
+
+- The `url`, `http.method`, and `type: 'net.request'` attributes are replaced by `http.request.method`, `url.full`, `url.path`, `url.query`, `url.scheme`, `server.address`, and `server.port`.
+- The span name no longer includes the query string or the fragment. In stream mode, the span name is the method and the host, for example `GET example.com`.
+- In stream mode, the integration creates spans even when there is no active parent span.
+
+If your `beforeSendSpan` callback, dashboards, or alerts use the previous span names or attributes, update them.
+
+## Data Collection
+
+The `sendDefaultPii` option was removed and is replaced by `dataCollection`, which controls each category of collected data separately.
+
+<Alert level="warning">
+
+This is a behavior change, not a rename. The SDK now infers the user's IP address by default. Apps that did not set `sendDefaultPii: true` in version 7 now send IP addresses.
+
+</Alert>
+
+If you set `sendDefaultPii: true`, remove it. The version 8 default matches that behavior.
+
+To opt out of IP address inference, set `dataCollection: { userInfo: false }` in the `main` process. This setting controls IP address inference for events from all processes:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  dataCollection: {
+    userInfo: false,
+  },
+});
+```
+
+Other categories, such as HTTP bodies and cookies, are also collected by default now. See [Data Collection](/platforms/javascript/migration/v10-to-v11/#data-collection) in the JavaScript migration guide for the previous and the new defaults, and the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> for the full list of categories.
+
+## OpenTelemetry Setup Is Opt-In
+
+The SDK no longer sets up OpenTelemetry by default. If you only use the Sentry SDK, tracing works as before and you do not need to change anything.
+
+The `skipOpenTelemetrySetup` option is replaced by `enableOpenTelemetrySetup`, which defaults to `false`. Set `enableOpenTelemetrySetup: true` in the `main` or utility process to register the Sentry OpenTelemetry tracer provider. The SDK then sends spans created with the OpenTelemetry API to Sentry:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  enableOpenTelemetrySetup: true,
+});
+```
+
+If you use your own OpenTelemetry setup, do not set `enableOpenTelemetrySetup`. Instead, add `openTelemetryIntegration()` to link Sentry events to your OpenTelemetry spans, and use `getOtlpTracesEndpoint()` to export spans to Sentry. See [OpenTelemetry](/platforms/javascript/guides/node/migration/v10-to-v11/#opentelemetry) in the Node.js migration guide for an example.
+
+## Removed Exports
+
+The following exports were removed from `@sentry/electron/main` and `@sentry/electron/utility`:
+
+- `inboundFiltersIntegration`. Use `eventFiltersIntegration` instead. The integration name changed from `InboundFilters` to `EventFilters`.
+- `honoIntegration` and `setupHonoErrorHandler`
+- `connectIntegration` and `setupConnectErrorHandler`
+- `instrumentLangGraph`. Use `instrumentStateGraph` instead.
+- `SentryContextManager`, `setNodeAsyncContextStrategy`, `generateInstrumentOnce`, and `validateOpenTelemetrySetup`
+- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`
+- `experimentalUseDiagnosticsChannelInjection`, `diagnosticsChannelInjectionIntegrations`, `applyDiagnosticsChannelInjectionIntegrations`, and `isDiagnosticsChannelInjectionEnabled`. Diagnostics channel injection is now enabled by default. To disable it, set `enableRuntimeChannelInjection: false`.
+
+The following exports were removed from `@sentry/electron/renderer`:
+
+- `instrumentOpenAiClient`, `instrumentAnthropicAiClient`, `instrumentGoogleGenAIClient`, `instrumentLangGraph`, `instrumentStateGraph`, `instrumentCreateReactAgent`, `instrumentLangChainEmbeddings`, and `createLangChainCallbackHandler`. AI integrations are no longer available in the browser SDK. They remain available in the `main` and utility processes.
+- `inboundFiltersIntegration`. Use `eventFiltersIntegration` instead.
+- `SEMANTIC_ATTRIBUTE_SENTRY_SOURCE`
+
+See [Removed APIs](/platforms/javascript/guides/node/migration/v10-to-v11/#removed-apis) in the JavaScript migration guide for more removed APIs and their replacements.
