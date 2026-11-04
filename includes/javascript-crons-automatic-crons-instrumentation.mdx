@@ -1,4 +1,4 @@
-If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](https://www.npmjs.com/package/node-cron) or [`node-schedule`](https://www.npmjs.com/package/node-schedule) libraries to run your periodic tasks, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs. These functions send the job's schedule with each check-in, so Sentry creates the monitor for you.
+If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](https://www.npmjs.com/package/node-cron) or [`node-schedule`](https://www.npmjs.com/package/node-schedule) libraries to run your periodic tasks, or [BullMQ](https://www.npmjs.com/package/bullmq) job schedulers, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs. These functions send the job's schedule with each check-in, so Sentry creates the monitor for you.
 
 ### Cron
 
@@ -64,3 +64,28 @@ scheduleWithCheckIn.scheduleJob(
   }
 );
 ```
+
+### BullMQ
+
+Requires SDK version `11.9.0` or higher and `bullmq` version `5.16.0` or higher.
+
+Use `Sentry.cron.instrumentBullMQWorker` to send check-ins for every job a BullMQ `Worker` runs from a [job scheduler](https://docs.bullmq.io/guide/job-schedulers). The job scheduler ID is the monitor slug, and the scheduler's `pattern` or `every` is sent as the monitor schedule. Jobs that weren't created by a job scheduler aren't monitored.
+
+```JavaScript
+import { Queue, Worker } from "bullmq";
+
+const queue = new Queue("reports", { connection });
+await queue.upsertJobScheduler(
+  "daily-report",
+  { pattern: "0 9 * * 1-5", tz: "Europe/Vienna" },
+  { name: "report" }
+);
+
+const worker = new Worker("reports", processor, { connection });
+Sentry.cron.instrumentBullMQWorker(worker, {
+  // job scheduler IDs or regular expressions to skip
+  excludeJobSchedulers: ["cache-warmup", /^tmp-/],
+});
+```
+
+Sentry creates the monitor from `pattern` schedules and from `every` intervals that are a whole number of minutes. Schedulers with schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), with a `limit` or `endDate`, or with a time zone given as an offset like `UTC+5` rather than an IANA name like `Europe/Vienna` aren't monitored. Repeatable jobs added with `queue.add` and the `repeat` option aren't monitored.
