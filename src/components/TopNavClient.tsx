@@ -2,34 +2,26 @@
 import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
-import ReactDOM from 'react-dom';
 import {usePlatforms} from 'sentry-docs/hooks/usePlatforms';
 import {Platform} from 'sentry-docs/types';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import {mainSectionsWithDropdowns} from './navigationData';
-import {PlatformSelector} from './platformSelector';
-import platformSelectorStyles from './platformSelector/style.module.scss';
 
 const mainSections = mainSectionsWithDropdowns;
 
 // Helper hook for dropdown positioning
-// Returns both absolute (for portals) and fixed (for inline) coordinates
 function useDropdownPosition(triggerRef, open) {
   const [position, setPosition] = useState<{
-    top: number;
-    left: number;
-    width: number;
-    fixedTop: number;
     fixedLeft: number;
+    fixedTop: number;
+    width: number;
   } | null>(null);
   useEffect(() => {
     function updatePosition() {
       if (triggerRef.current && open) {
         const rect = triggerRef.current.getBoundingClientRect();
         setPosition({
-          top: rect.bottom + window.scrollY,
-          left: rect.left + window.scrollX,
           width: rect.width,
           fixedTop: rect.bottom,
           fixedLeft: rect.left,
@@ -53,10 +45,6 @@ const NO_PLATFORMS: Platform[] = [];
 
 export default function TopNavClient() {
   const platforms = usePlatforms().platforms ?? NO_PLATFORMS;
-  const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
-  const [platformDropdownByClick, setPlatformDropdownByClick] = useState(false);
-  const platformBtnRef = useRef<HTMLButtonElement>(null);
-  const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -118,7 +106,6 @@ export default function TopNavClient() {
   const closeTimers = useRef<{
     concepts?: NodeJS.Timeout;
     more?: NodeJS.Timeout;
-    sdks?: NodeJS.Timeout;
   }>({});
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
@@ -133,15 +120,6 @@ export default function TopNavClient() {
   // Close dropdowns on outside click if opened by click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (platformDropdownOpen && platformDropdownByClick) {
-        if (
-          !platformBtnRef.current?.contains(e.target as Node) &&
-          !platformDropdownRef.current?.contains(e.target as Node)
-        ) {
-          setPlatformDropdownOpen(false);
-          setPlatformDropdownByClick(false);
-        }
-      }
       if (conceptsDropdownOpen) {
         if (
           !conceptsBtnRef.current?.contains(e.target as Node) &&
@@ -169,11 +147,6 @@ export default function TopNavClient() {
           setMoreDropdownOpen(false);
           moreBtnRef.current?.focus();
         }
-        if (platformDropdownOpen) {
-          setPlatformDropdownOpen(false);
-          setPlatformDropdownByClick(false);
-          platformBtnRef.current?.focus();
-        }
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -182,12 +155,7 @@ export default function TopNavClient() {
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [
-    platformDropdownOpen,
-    platformDropdownByClick,
-    conceptsDropdownOpen,
-    moreDropdownOpen,
-  ]);
+  }, [conceptsDropdownOpen, moreDropdownOpen]);
 
   useEffect(() => {
     function updateScrollState() {
@@ -215,8 +183,7 @@ export default function TopNavClient() {
     }
   }
 
-  // For each dropdown, use the hook and portal rendering
-  const sdksPosition = useDropdownPosition(platformBtnRef, platformDropdownOpen);
+  // Position the dropdowns below their buttons
   const conceptsPosition = useDropdownPosition(conceptsBtnRef, conceptsDropdownOpen);
   const morePosition = useDropdownPosition(moreBtnRef, moreDropdownOpen);
 
@@ -295,7 +262,6 @@ export default function TopNavClient() {
                       clearTimeout(closeTimers.current.concepts);
                       setConceptsDropdownOpen(true);
                       setMoreDropdownOpen(false);
-                      setPlatformDropdownOpen(false);
                     }}
                     onMouseLeave={() => {
                       closeTimers.current.concepts = setTimeout(() => {
@@ -380,7 +346,6 @@ export default function TopNavClient() {
                       clearTimeout(closeTimers.current.more);
                       setMoreDropdownOpen(true);
                       setConceptsDropdownOpen(false);
-                      setPlatformDropdownOpen(false);
                     }}
                     onMouseLeave={() => {
                       closeTimers.current.more = setTimeout(() => {
@@ -487,128 +452,6 @@ export default function TopNavClient() {
           </ul>
         </div>
       </div>
-      {/* Portal-based dropdowns */}
-      {platformDropdownOpen &&
-        sdksPosition &&
-        ReactDOM.createPortal(
-          <div
-            ref={platformDropdownRef}
-            className="absolute left-0 bg-white dark:bg-black shadow-lg z-50 min-w-[300px] p-4 rounded-b-md rounded-t-none border border-[var(--gray-a3)] dark:border-[var(--gray-7)]"
-            tabIndex={0}
-            style={{
-              position: 'absolute',
-              top: sdksPosition.top,
-              left: sdksPosition.left,
-              minWidth: 340,
-              width: 340,
-              maxHeight: 'calc(100vh - 32px)',
-              overflowY: 'auto',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              fontFamily: 'var(--font-sans, sans-serif)',
-            }}
-            onClick={e => e.stopPropagation()}
-            onMouseEnter={() => {
-              clearTimeout(closeTimers.current.sdks);
-            }}
-            onMouseLeave={() => {
-              closeTimers.current.sdks = setTimeout(() => {
-                setPlatformDropdownOpen(false);
-                setPlatformDropdownByClick(false);
-              }, 150);
-            }}
-          >
-            <style>{`
-            .${platformSelectorStyles.popover} {
-              background: var(--gray-2) !important;
-              border: 1px solid var(--gray-4) !important;
-              box-shadow: var(--shadow-6);
-            }
-            .dark .${platformSelectorStyles.popover} {
-              background: #18181b !important;
-              border: 1px solid #23232b !important;
-              box-shadow: var(--shadow-6);
-            }
-            .dark .${platformSelectorStyles.popover} .${platformSelectorStyles['combobox-wrapper']} {
-              background: #18181b !important;
-              box-shadow: 0 2px 6px 0 rgba(0,0,0,0.24);
-            }
-            .dark .${platformSelectorStyles.popover} .${platformSelectorStyles.combobox} {
-              background: #18181b !important;
-              color: #fff !important;
-            }
-            .dark .${platformSelectorStyles.popover} .${platformSelectorStyles.combobox}::placeholder {
-              color: #a1a1aa !important;
-              opacity: 1;
-            }
-            .dark .${platformSelectorStyles.popover} .${platformSelectorStyles['combobox-icon']} {
-              color: #fff !important;
-            }
-            .dark .${platformSelectorStyles.item} {
-              color: #fff !important;
-            }
-            .dark .${platformSelectorStyles.item}:hover {
-              background: #18181b !important;
-            }
-            button[class*="expand-button"] {
-              background: none !important;
-              border: none !important;
-              box-shadow: none !important;
-              padding: 0 !important;
-            }
-            .${platformSelectorStyles.item} {
-              padding-top: 0.315rem !important;
-              padding-bottom: 0.315rem !important;
-            }
-            .${platformSelectorStyles.popover} {
-              padding-top: 0 !important;
-              border-radius: 0.5rem !important;
-              margin-top: 0 !important;
-              border-top: 0 !important;
-            }
-            .${platformSelectorStyles.popover} .${platformSelectorStyles['combobox-wrapper']} {
-              border-radius: 0 !important;
-              padding: 0 !important;
-              margin-top: 0 !important;
-              border-top: 0 !important;
-              margin-bottom: 0.25rem;
-              position: sticky;
-              top: 0;
-              z-index: 2;
-              transform: translateY(-16px);
-            }
-            .${platformSelectorStyles.popover} > :first-child {
-              margin-top: 0 !important;
-              padding-top: 0 !important;
-              border-top: 0 !important;
-            }
-            .${platformSelectorStyles.popover} .${platformSelectorStyles.combobox} {
-              border-radius: 0.5rem 0.5rem 0 0 !important;
-              width: 100% !important;
-              margin: 0 !important;
-              padding-left: 2.5rem !important;
-              padding-right: 0.75rem !important;
-            }
-            .${platformSelectorStyles.popover} .${platformSelectorStyles.combobox}::placeholder {
-              color: #A1A1AA !important;
-              opacity: 1;
-            }
-            .${platformSelectorStyles.popover} .${platformSelectorStyles['combobox-icon']} {
-              pointer-events: none;
-              position: absolute;
-              left: 0.75rem;
-              top: 50%;
-              transform: translateY(-50%);
-              font-size: 1.1rem;
-              line-height: 1;
-              display: flex;
-              align-items: center;
-            }
-          `}</style>
-            <PlatformSelector listOnly />
-          </div>,
-          document.body
-        )}
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;

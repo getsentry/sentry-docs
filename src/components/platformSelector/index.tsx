@@ -61,19 +61,13 @@ function PlatformsListStatus({
 export function PlatformSelector({
   currentPlatform,
   initialPlatforms = NO_PLATFORMS,
-  alwaysOpen = false,
-  listOnly = false,
-  dropdownStyle = false,
 }: {
-  alwaysOpen?: boolean;
   currentPlatform?: Platform | PlatformGuide;
-  dropdownStyle?: boolean;
   /**
    * Rendered until the full list has loaded. Must contain the current platform or
    * guide, as Radix Select needs the selected item to display it in the trigger.
    */
   initialPlatforms?: Platform[];
-  listOnly?: boolean;
 }) {
   const {
     platforms: loadedPlatforms,
@@ -136,7 +130,7 @@ export function PlatformSelector({
   const pathname = usePathname();
 
   // Not auto-opened on /platforms/: Radix Select locks body scroll while open.
-  const [open, setOpen] = useState(alwaysOpen);
+  const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
   const matches = useMemo(() => {
@@ -238,76 +232,6 @@ export function PlatformSelector({
     storedPlatform &&
     pathname !== '/platforms/';
 
-  if (listOnly) {
-    return (
-      <div
-        className={styles.popover}
-        style={{display: 'flex', flexDirection: 'column', height: '100%'}}
-      >
-        <div
-          className={styles['combobox-wrapper']}
-          style={{position: 'sticky', top: 0, zIndex: 2}}
-        >
-          <div className={styles['combobox-icon']}>
-            <MagnifyingGlassIcon />
-          </div>
-          <input
-            type="text"
-            value={searchValue}
-            onChange={e => setSearchValue(e.target.value)}
-            placeholder="Search platforms"
-            className={styles.combobox}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-          />
-        </div>
-        <div className={styles.listbox} style={{flex: 1, overflowY: 'auto'}}>
-          {uniqByReference(
-            matches.map(x => (x.type === 'platform' ? x : x.platform))
-          ).map(platform => (
-            <PlatformItem
-              key={platform.key}
-              platform={{
-                ...platform,
-                guides: platform.guides
-                  .filter(g => matches.some(m => m.key === g.key && m.type === 'guide'))
-                  .sort((a, b) => {
-                    const indexA = matches.findIndex(m => m.key === a.key);
-                    const indexB = matches.findIndex(m => m.key === b.key);
-                    return indexA - indexB;
-                  }),
-                integrations: platform.integrations.filter(i =>
-                  matches.some(m => m.key === i.key)
-                ),
-                isExpanded:
-                  searchValue !== '' ||
-                  expandedPlatforms.has(platform.key) ||
-                  platform.key === currentPlatformKey ||
-                  platform.key === storedPlatformKey ||
-                  platform.guides.some(
-                    g => g.key === currentPlatformKey || g.key === storedPlatformKey
-                  ),
-              }}
-              activeItemRef={
-                platform.key === currentPlatformKey ||
-                platform.guides.some(g => g.key === currentPlatformKey)
-                  ? activeElementRef
-                  : null
-              }
-              activeItemKey={currentPlatformKey}
-              onPlatformExpand={onToggleExpand}
-              dropdownStyle={dropdownStyle}
-              listOnly
-            />
-          ))}
-          {platformsStatus !== 'loaded' && (
-            <PlatformsListStatus status={platformsStatus} onRetry={retryPlatforms} />
-          )}
-        </div>
-      </div>
-    );
-  }
   return (
     <div>
       <RadixSelect.Root
@@ -324,22 +248,16 @@ export function PlatformSelector({
           includesBaseElement={false}
           setValue={v => startTransition(() => setSearchValue(v))}
         >
-          {!alwaysOpen && (
-            <RadixSelect.Trigger
-              aria-label="Platform"
-              aria-busy={isNavigating}
-              className={styles.select}
-            >
-              <RadixSelect.Value placeholder="Choose your SDK" />
-              <RadixSelect.Icon className={styles['select-icon']}>
-                {isNavigating ? (
-                  <UpdateIcon className="animate-spin" />
-                ) : (
-                  <CaretSortIcon />
-                )}
-              </RadixSelect.Icon>
-            </RadixSelect.Trigger>
-          )}
+          <RadixSelect.Trigger
+            aria-label="Platform"
+            aria-busy={isNavigating}
+            className={styles.select}
+          >
+            <RadixSelect.Value placeholder="Choose your SDK" />
+            <RadixSelect.Icon className={styles['select-icon']}>
+              {isNavigating ? <UpdateIcon className="animate-spin" /> : <CaretSortIcon />}
+            </RadixSelect.Icon>
+          </RadixSelect.Trigger>
           <RadixSelect.Content
             role="dialog"
             aria-label="Platforms"
@@ -401,8 +319,6 @@ export function PlatformSelector({
                     }
                     activeItemKey={currentPlatformKey}
                     onPlatformExpand={onToggleExpand}
-                    dropdownStyle={dropdownStyle}
-                    listOnly={false}
                   />
                 );
               })}
@@ -432,8 +348,6 @@ type PlatformItemProps = {
   activeItemRef: Ref<HTMLDivElement>;
   platform: Platform & {isExpanded?: boolean};
   activeItemKey?: string;
-  dropdownStyle?: boolean;
-  listOnly?: boolean;
   onPlatformExpand?: (platformKey: string) => void;
 };
 function PlatformItem({
@@ -441,8 +355,6 @@ function PlatformItem({
   activeItemRef,
   activeItemKey,
   onPlatformExpand: onExpand,
-  dropdownStyle = false,
-  listOnly = false,
 }: PlatformItemProps) {
   const showCaret = (p: Platform) => p.guides.length > 0 || p.integrations.length > 0;
 
@@ -461,64 +373,6 @@ function PlatformItem({
     ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
     : [];
 
-  if (listOnly) {
-    return (
-      <Fragment>
-        <div
-          className={
-            dropdownStyle
-              ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
-              : styles.item
-          }
-          data-platform-with-guides
-          ref={activeItemRef}
-          style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              if (isLocalStorageAvailable()) {
-                localStorage.setItem('active-platform', platform.key);
-              }
-              window.location.href = platform.url;
-            }
-          }}
-        >
-          <span className={dropdownStyle ? '' : styles['item-text']}>
-            <PlatformIcon
-              platform={platform.icon ?? platform.key}
-              size={16}
-              format="sm"
-              className={styles['platform-icon']}
-            />
-            {platform.title}
-          </span>
-          {showCaret(platform) && (
-            <button
-              className={styles['expand-button']}
-              type="button"
-              tabIndex={-1}
-              aria-label="Expand"
-              style={{marginLeft: 'auto'}}
-              onClick={e => {
-                e.stopPropagation();
-                onExpand?.(platform.key);
-              }}
-              data-expanded={platform.isExpanded}
-            >
-              <CaretRightIcon />
-            </button>
-          )}
-        </div>
-        {guides.map(guide => (
-          <GuideItem
-            key={guide.key}
-            guide={guide}
-            dropdownStyle={dropdownStyle}
-            listOnly
-          />
-        ))}
-      </Fragment>
-    );
-  }
   return (
     <Fragment>
       {/* This is a hack. The Label allows us to have a clickable button inside the item without triggering its selection */}
@@ -528,17 +382,13 @@ function PlatformItem({
             <RadixSelect.Item
               value={hasGuideWithPlatformKey ? `${platform.key}-redirect` : platform.key}
               asChild
-              className={
-                dropdownStyle
-                  ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
-                  : styles.item
-              }
+              className={styles.item}
               data-platform-with-guides
               ref={activeItemRef}
             >
               <ComboboxItem>
                 <RadixSelect.ItemText>
-                  <span className={dropdownStyle ? '' : styles['item-text']}>
+                  <span className={styles['item-text']}>
                     <PlatformIcon
                       platform={platform.icon ?? platform.key}
                       size={16}
@@ -569,7 +419,7 @@ function PlatformItem({
         </RadixSelect.Label>
       </RadixSelect.Group>
       {guides.map(guide => {
-        return <GuideItem key={guide.key} guide={guide} dropdownStyle={dropdownStyle} />;
+        return <GuideItem key={guide.key} guide={guide} />;
       })}
     </Fragment>
   );
@@ -577,66 +427,20 @@ function PlatformItem({
 
 type GuideItemProps = {
   guide: (PlatformGuide | PlatformIntegration) & {isLastGuide: boolean};
-  dropdownStyle?: boolean;
-  listOnly?: boolean;
 };
-function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemProps) {
-  if (listOnly) {
-    return (
-      <div
-        className={
-          dropdownStyle
-            ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
-            : styles.item
-        }
-        data-guide
-        data-last-guide={guide.type === 'guide' && guide.isLastGuide}
-        style={{
-          marginLeft: '1.5rem',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-        onClick={() => {
-          if (typeof window !== 'undefined') {
-            if (isLocalStorageAvailable()) {
-              localStorage.setItem('active-platform', guide.key);
-            }
-            window.location.href = guide.url;
-          }
-        }}
-      >
-        <span className={dropdownStyle ? '' : styles['item-text']}>
-          <PlatformIcon
-            platform={guide.icon ?? guide.key}
-            size={16}
-            format="sm"
-            className={styles['platform-icon']}
-          />
-          {/* replace dots with zero width space + period to allow text wrapping before periods
-            without breaking words in weird places
-          */}
-          {(guide.title ?? guide.name ?? guide.key).replace(/\./g, '\u200B.')}
-        </span>
-      </div>
-    );
-  }
+function GuideItem({guide}: GuideItemProps) {
   return (
     <RadixSelect.Item
       key={guide.key}
       value={guide.key}
       asChild
-      className={
-        dropdownStyle
-          ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
-          : styles.item
-      }
+      className={styles.item}
       data-guide
       data-last-guide={guide.type === 'guide' && guide.isLastGuide}
     >
       <ComboboxItem>
         <RadixSelect.ItemText>
-          <span className={dropdownStyle ? '' : styles['item-text']}>
+          <span className={styles['item-text']}>
             <PlatformIcon
               platform={guide.icon ?? guide.key}
               size={16}
