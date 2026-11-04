@@ -16,14 +16,84 @@ When setting up Sentry inside a library, the consuming app could use the Sentry 
 
 </Alert>
 
-In order to not conflict with other Sentry instances, you should use the `Scopes` API to create a new instance of Sentry.
+## Shade and Relocate the SDK
+
+The app that consumes your SDK may ship its own copy of the Sentry SDK, likely in a different version. If both copies share the `io.sentry` package, only one version ends up on the classpath, and the two copies share global state. To avoid this, depend on `sentry-android-core` only, and bundle a relocated copy of it into your SDK using the [Shadow Gradle plugin](https://gradleup.com/shadow/).
+
+<Alert level="warning">
+
+Don't depend on `sentry-android-ndk` or `sentry-android`, which includes it. The NDK integration ships native libraries (`libsentry.so`, `libsentry-android.so`) whose JNI bindings are tied to the original `io.sentry` class names, so they can't be relocated. They'd also clash with the native libraries of the host app's Sentry SDK, and native signal handlers are process-wide.
+
+</Alert>
+
+Shadow can't consume AAR files, so extract the `classes.jar` from the `sentry-android-core` AAR, and shade it together with the `sentry` JAR in a separate JVM module:
+
+```kotlin {filename:sentry-shaded/build.gradle.kts}
+plugins {
+  `java-library`
+  id("com.gradleup.shadow") version "9.6.1"
+}
+
+val sentryVersion = "{{@inject packages.version('sentry.java.android', '8.0.0') }}"
+
+// Shadow doesn't support AARs, so resolve the AAR on its own and extract its classes.jar
+val sentryAndroidCoreAar by configurations.creating {
+  isTransitive = false
+}
+
+val extractSentryAndroidCore by tasks.registering(Copy::class) {
+  from({ zipTree(sentryAndroidCoreAar.singleFile) }) {
+    include("classes.jar")
+    rename { "sentry-android-core.jar" }
+  }
+  into(layout.buildDirectory.dir("sentry-android-core"))
+}
+
+dependencies {
+  sentryAndroidCoreAar("io.sentry:sentry-android-core:$sentryVersion@aar")
+  implementation("io.sentry:sentry:$sentryVersion")
+  implementation(
+    files(extractSentryAndroidCore.map { it.destinationDir.resolve("sentry-android-core.jar") })
+  )
+}
+
+tasks.shadowJar {
+  relocate("io.sentry", "com.example.mysdk.internal.sentry")
+}
+```
+
+Then depend on the shaded JAR from your Android library module. The shaded JAR doesn't carry the AndroidX and other runtime dependencies of `sentry-android-core`, so declare them yourself. Match the versions in the [`sentry-android-core` POM](https://central.sonatype.com/artifact/io.sentry/sentry-android-core) of the SDK version you use:
+
+```kotlin {filename:mysdk/build.gradle.kts}
+dependencies {
+  implementation(project(path = ":sentry-shaded", configuration = "shadow"))
+
+  implementation("androidx.lifecycle:lifecycle-process:2.2.0")
+  implementation("androidx.lifecycle:lifecycle-common-java8:2.2.0")
+  implementation("androidx.core:core:1.3.2")
+  implementation("com.abovevacant:epitaph:0.1.1")
+}
+```
+
+If you publish your SDK to a Maven repository, publish the `sentry-shaded` module as well, since your SDK's POM references it as a dependency.
+
+Keep the following in mind:
+
+- **Keep string relocation enabled.** Shadow also relocates string constants by default, so don't set `skipStringConstants = true`. This way, your relocated copy won't pick up the host app's Sentry classes through reflection, such as the NDK or Session Replay integrations, and won't read the host app's `io.sentry.*` `AndroidManifest.xml` options.
+- **Add ProGuard rules for the relocated package.** The consumer ProGuard rules of `sentry-android-core` aren't part of `classes.jar`. Copy the [`sentry-android-core` rules](https://github.com/getsentry/sentry-java/blob/main/sentry-android-core/proguard-rules.pro) into your SDK's `consumerProguardFiles`, and replace `io.sentry` with your relocated package. Also add `-dontwarn com.example.mysdk.internal.sentry.**` for optional integrations that aren't bundled.
+- **Android resources and manifest entries aren't bundled.** Sentry's content providers aren't merged into the app, so your copy never initializes automatically. Features that rely on Sentry's Android resources, such as the User Feedback widget, won't work.
+- **Use a dedicated cache directory.** If you enable offline caching, set `cacheDirPath` to a directory that's unique to your SDK. Don't use `<cacheDir>/sentry`, which the host app's Sentry SDK uses by default.
+
+## Use the Scopes API
+
+In order to not conflict with other Sentry instances, you should use the `Scopes` API to create a new instance of Sentry. If you relocated the SDK, import the classes from your relocated package, for example `com.example.mysdk.internal.sentry.Scopes`.
 The Scopes API works the same way as the global Sentry instance, but it is not global and can be used within your component. If you want to capture uncaught exceptions, you can use the `UncaughtExceptionHandlerIntegration` to capture them. As this will capture all uncaught exceptions within an app, you should use the `BeforeSendCallback` to only accept events that are relevant for your SDK.
 
 ```kotlin
 import io.sentry.Scope
 import io.sentry.Scopes
+import io.sentry.SentryClient
 import io.sentry.SentryOptions
-import io.sentry.SentryOptions.BeforeSendCallback
 import io.sentry.UncaughtExceptionHandlerIntegration
 
 val options = SentryOptions().apply {
@@ -38,16 +108,15 @@ val options = SentryOptions().apply {
         // drop the event
         return@setBeforeSend null
     }
-
 }
 
-val globalScope = Scope(options);
-val isolationScope = Scope(options);
-val scope = Scope(options);
+val globalScope = Scope(options)
+val isolationScope = Scope(options)
+val scope = Scope(options)
 
-globalScope.bindClient(new SentryClient(options));
+globalScope.bindClient(SentryClient(options))
 
-Scopes scopes = Scopes(scope, isolationScope, globalScope, "MySentry.init");
+val scopes = Scopes(scope, isolationScope, globalScope, "MySentry.init")
 
 val integration = UncaughtExceptionHandlerIntegration()
 options.addIntegration(integration)
