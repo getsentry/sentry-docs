@@ -1,0 +1,25 @@
+## Symfony Scheduler
+
+<Alert>
+
+Symfony Scheduler monitoring ships in the next release of `sentry/sentry-symfony`.
+
+</Alert>
+
+The Symfony SDK can monitor the recurring messages of the [Symfony Scheduler](https://symfony.com/doc/current/scheduler.html) 6.4 or later. It sends a check-in when a worker starts a recurring message, and another when the message finishes or fails. (Please note, this creates a Cron Monitor for every recurring message, which counts against your quota.)
+
+Enable it in your bundle configuration:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    scheduler:
+        enabled: true
+```
+
+The monitor slug is the schedule name and a name for the message, for example `default-app-send-report`. The name is the command for scheduled console commands, the service and method for scheduled services, and the class name for other messages. When recurring messages in the same schedule have the same name, the ID that Symfony gives each recurring message is added to their slugs. That ID changes when the message or its schedule changes, which creates a new monitor.
+
+`RedispatchMessage` isn't monitored; the message it redispatches is monitored when a worker consumes it. Retried messages, cancelled runs, and messages of anonymous classes don't send check-ins.
+
+To monitor other jobs, send check-ins with the PHP SDK as shown below.
+
+<PlatformContent includePath="crons/setup" noGuides />
