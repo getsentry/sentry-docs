@@ -20,7 +20,7 @@ CommonOptions
 
 ## Component Name Capturing
 
-You can capture the names of React components in your application via a [Babel plugin](https://www.npmjs.com/package/@sentry/babel-plugin-component-annotate), which can unlock powerful workflows and decrease ambiguity. For example, you can search for replays where a specific React component was clicked on. You can also see the name of the component that was clicked on in breadcrumbs and spans on Sentry's **Performance** page. This significantly decreases the amount of ambiguity involved in figuring out which element was interacted with as compared to trying to figure it out by looking at the element's CSS selector alone (which becomes even more ambiguous after the minification process).
+You can capture the names of React components in your application via a Babel plugin, which can unlock powerful workflows and decrease ambiguity. For example, you can search for replays where a specific React component was clicked on. You can also see the name of the component that was clicked on in breadcrumbs and spans on Sentry's **Performance** page. This significantly decreases the amount of ambiguity involved in figuring out which element was interacted with as compared to trying to figure it out by looking at the element's CSS selector alone (which becomes even more ambiguous after the minification process).
 
 We're working to release more features that will leverage component name capturing in the future and highly recommended that you configure your project to use it.
 
@@ -35,18 +35,18 @@ Only React components in `.jsx` or `.tsx` files can be tracked.
 
 There are two different ways you can set up React component name capturing in your application:
 
-1. By installing [Sentry's bundler plugins](https://www.npmjs.com/package/@sentry/bundler-plugin-core)
-2. By directly installing [@sentry/babel-plugin-component-annotate](https://www.npmjs.com/package/@sentry/babel-plugin-component-annotate)
+1. By installing <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#reactComponentAnnotation.enabled">Sentry's bundler plugins</PlatformLink>
+2. By directly installing `@sentry/bundler-plugins/babel-plugin`
 
 We recommend that you use the first option because the Sentry bundler plugins come packed with additional useful features to enrich your Sentry workflows, including: automatic sourcemap upload,
 release creation, automatic release name discovery, and release injection.
 
 **Set up using bundler plugins**:
 
-Follow the instructions in the npm page for the bundler that your project uses:
-- [Rollup](https://www.npmjs.com/package/@sentry/rollup-plugin)
-- [Vite](https://www.npmjs.com/package/@sentry/vite-plugin)
-- [Webpack](https://www.npmjs.com/package/@sentry/webpack-plugin)
+Follow the instructions in the guide for the bundler that your project uses:
+- <PlatformLink to="/sourcemaps/uploading/rollup/">Rollup</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/vite/">Vite</PlatformLink>
+- <PlatformLink to="/sourcemaps/uploading/webpack/">Webpack</PlatformLink>
 
 Please note that although there is a Sentry bundler plugin for **esbuild**, React component name capturing is currently not supported.
 
@@ -77,6 +77,30 @@ To avoid these errors, you can exclude specific components from annotation by us
 **If you're using Rollup as your bundler**, ensure that you place `sentryRollupPlugin` before any other plugins that transform your JSX.
 
 </Alert>
+
+**Set up using the Babel plugin**:
+
+Install `@sentry/bundler-plugins`:
+
+```bash {tabTitle:npm}
+npm install @sentry/bundler-plugins --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/bundler-plugins --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/bundler-plugins --save-dev
+```
+
+Then add the plugin to your Babel config:
+
+```json {filename:.babelrc}
+{
+  "plugins": ["@sentry/bundler-plugins/babel-plugin"]
+}
+```
 
 Now, you will be able to see your component names in breadcrumbs, spans, and search for replays by component names.
 See [this page](/concepts/search/searchable-properties/session-replay/#clickcomponent_name) for more information on searching for Replays by component name.

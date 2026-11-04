@@ -26,7 +26,12 @@ Users will have the option to install your integrations on the [**Integrations**
 
 After installation, if your user has approved all permissions, Sentry will generate a grant code and an installation ID. This information is sent by way of the `installation.created` webhook to the webhook URL specified in your configuration.
 
-However, if your integration has a redirect URL configured, the integration redirects the user’s browser to the configured URL with the grant code and installation ID in the query params.
+However, if your integration has a redirect URL configured, the integration redirects the user’s browser to the configured URL with these query params:
+
+- `code` - The grant code to exchange for a token
+- `installationId` - The ID of the installation
+- `orgSlug` - The slug of the Sentry organization that installed your integration
+- `state` - Only present if the user started from your [external install URL](#external-install-url) with a `state` query param. Sentry passes the value back unchanged.
 
 Start building your integration by implementing the redirect URL endpoint, `/setup` — typically where you exchange the grant code for a token that allows you to make API calls to Sentry:
 
@@ -38,6 +43,7 @@ from flask import redirect, request
 def setup():
     code = request.args.get('code')
     install_id = request.args.get('installationId')
+    org_slug = request.args.get('orgSlug')
 
     url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
     url = url.format(install_id)
@@ -56,10 +62,14 @@ def setup():
     refresh_token = data['refreshToken']
     # ... Securely store the install_id, token and refresh_token in DB ...
 
-    return redirect('https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/')
+    return redirect(f'https://sentry.io/settings/{org_slug}/integrations/')
 ```
 
+### External Install URL
+
 All public integrations can be installed via a fixed external url: `https://sentry.io/sentry-apps/<your-integration-slug>/external-install/`, that you can expose to users. Check out this example for `Linear`: https://sentry.io/sentry-apps/linear/external-install/. Note, if a user has multiple organizations, they'll be asked to choose the one they want for the installation from a dropdown menu.
+
+You can add a `state` query param to this URL, for example to tie the installation to a user session in your app. Sentry includes the same `state` value when it redirects the user to your redirect URL.
 
 ## Auth Tokens
 
@@ -168,12 +178,13 @@ def refresh_token(install_id):
 
 ## Verifying Installations
 
-Typically, if you have the redirect URL configured, there is work happening on your end to "finalize" the installation. If this is the case, we recommend enabling the "Verify Install" option for your integration. Once enabled, you'll need to send a request marking the installation as officially "installed":
+Typically, if you have the redirect URL configured, there is work happening on your end to "finalize" the installation. If this is the case, we recommend enabling the "Verify Install" option for your integration. Once enabled, you'll need to send a request marking the installation as officially "installed". Authenticate the request with the token you received for this installation during the [OAuth process](#oauth-process):
 
 ```python
 requests.put(
     u'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
     json={'status': 'installed'},
+    headers={'Authorization': f'Bearer {token}'},
 )
 ```
 
