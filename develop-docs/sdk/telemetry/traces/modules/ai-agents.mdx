@@ -30,6 +30,47 @@ Automatic instrumentation considers an agent execution to be one run of the agen
 All span types can be children of a tool execution span because tools can be arbitrary functions (including starting subagents and performing handoffs).
 Chat, extraction and decision spans are basic building blocks and should not have GenAI spans as children.
 
+Valid examples:
+
+### Agent execution with extraction, decision and memory children
+
+```
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.memory
+├── gen_ai.extraction
+├── gen_ai.chat
+├── gen_ai.execute_tool
+├── gen_ai.chat
+└── gen_ai.decide
+```
+
+### Chat, memory, decision, and extraction spans outside of an agent execution
+
+```
+gen_ai.chat
+gen_ai.extraction
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.execute_tool
+└── gen_ai.chat
+gen_ai.decide
+gen_ai.memory
+```
+
+### Subagent
+
+```
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.execute_tool
+│   └── gen_ai.invoke_agent
+│       ├── gen_ai.chat
+│       ├── gen_ai.execute_tool
+│       └── gen_ai.chat
+└── gen_ai.chat
+```
+
 ## Invoke Agent Span
 
 Describes AI agent invocation.
