@@ -1,6 +1,6 @@
 ---
 title: Scopes
-description: "A scope holds the data the SDK attaches to your events. Learn how the Native SDK's global scope works, and when to create a scope of your own."
+description: "A scope holds the data the SDK attaches to your events. Learn how the Native SDK's isolation scope works, and when to create a scope of your own."
 notSupported:
   - native.breakpad
   - native.crashpad
@@ -14,31 +14,51 @@ Scopes store extra data that the SDK adds to your event when sending the event t
 
 A scope holds the data that rides along with your telemetry: <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, <PlatformLink to="/enriching-events/context/">contexts</PlatformLink>, <PlatformLink to="/enriching-events/breadcrumbs/">breadcrumbs</PlatformLink>, <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, severity level, fingerprint, <PlatformLink to="/enriching-events/attachments/">attachments</PlatformLink>, and  <PlatformLink to="/enriching-events/attributes/">attributes</PlatformLink> carried by [logs](/platforms/native/logs/) and [metrics](/platforms/native/metrics/). Each has a `sentry_scope_*` setter taking the scope as its first argument, alongside the `sentry_set_*` function that writes the same data globally.
 
-Two scopes can apply to a capture: the global scope, which the SDK creates during `sentry_init()` and applies to everything it sends, and, optionally, a scope you create and hand to a capture function. A scope you create doesn't replace the global scope, it layers on top of it, so the event still gets the global scope's release, environment, tags, and user.
+Three scopes can apply to a capture:
 
-<Alert level="warning" title="Crash Events Only Carry the Global Scope">
+- The read-only global scope, which holds SDK metadata and configured defaults such as the release and environment.
+- The isolation scope, which the SDK creates during `sentry_init()` and applies to everything it sends.
+- Optionally, a scope you create and hand to a capture function.
 
-A scope you create reaches Sentry only through the `sentry_scope_capture_*` functions. Crash events don't use it because, at crash time, the SDK can only rely on the global scope.
+A scope you create doesn't replace the isolation scope, it layers on top of it, so the event still gets the release, environment, tags, and user.
 
-Put anything a crash report needs — a build identifier, the signed-in user, or the asset being processed — on the global scope.
+<Alert level="warning" title="Crash Events Don't Carry Scopes You Create">
+
+A scope you create reaches Sentry only through the `sentry_scope_capture_*` functions. Crash events don't use it because, at crash time, the SDK can only rely on the isolation and global scopes.
+
+Put anything a crash report needs — a build identifier, the signed-in user, or the asset being processed — on the isolation scope.
 
 </Alert>
 
-## The Global Scope
+## The Isolation Scope
 
-The global scope applies to every event, log, metric, and crash, so it's where long-lived data belongs — the signed-in user, the build channel, a machine identifier. The SDK owns it: it's created during `sentry_init()` and released by `sentry_close()`.
+The isolation scope applies to every event, log, metric, and crash, so it's where long-lived data belongs — the signed-in user, the build channel, a machine identifier. The SDK owns it: it's created during `sentry_init()` and released by `sentry_close()`.
 
 <PlatformContent includePath="enriching-events/scopes/configure-scope" />
 
-<Alert level="warning" title="One Global Scope, Shared by All Threads">
+<Alert level="warning" title="One Isolation Scope, Shared by All Threads">
 
-The Native SDK keeps a single global scope shared by every thread, and no thread-local state. Writes to it are safe from a data-race perspective, but they aren't isolated: a tag one thread sets is visible to events captured on every other thread.
+The Native SDK keeps a single isolation scope shared by every thread, and no thread-local state. Writes to it are safe from a data-race perspective, but they aren't isolated: a tag one thread sets is visible to events captured on every other thread.
 
 If your program handles several users or requests concurrently, capture with a scope per unit of work instead.
 
 For how this affects tracing, see [Connect Errors With Spans](/platforms/native/tracing/instrumentation/custom-instrumentation/#connect-errors-with-spans).
 
 </Alert>
+
+### Acquiring the Isolation Scope
+
+<AvailableSince version="1.0.0" />
+
+The `sentry_set_*` functions write to the isolation scope. To use it with code that takes a `sentry_scope_t *`, such as a helper you also call with scopes you create, acquire a reference after `sentry_init()` and release it when you're done:
+
+```c
+sentry_scope_t *scope = sentry_scope_acquire();
+sentry_scope_set_tag(scope, "my-tag", "my value");
+sentry_scope_release(scope);
+```
+
+The reference stays valid after `sentry_close()`, but modifying the scope no longer has any effect.
 
 ## Creating a Scope
 
@@ -90,9 +110,31 @@ sentry_scope_capture_metric(
 
 ## How Scope Data Is Applied
 
-When you capture with a scope, the SDK combines that scope with the global scope. Data set in only one place is still included, so events captured with their own scope continue to carry global values such as release, environment, and user. When the same key is set in more than one place, the most specific one wins: **event data** > **passed scope** > **global scope**. Data you set directly on the event value therefore survives whatever the scopes carry.
+When you capture with a scope, the SDK combines that scope with the isolation and global scopes. Data set in only one place is still included, so events captured with their own scope continue to carry values such as release, environment, and user. When the same key is set in more than one place, the most specific one wins: **event data** > **passed scope** > **isolation scope** > **global scope**. Data you set directly on the event value therefore survives whatever the scopes carry.
 
-Logs and metrics resolve attributes from the call site as well, which is the most specific source of the three: **per-call attributes** > **passed scope** > **global scope**. See [Attributes](/platforms/native/enriching-events/attributes/) for how to build them.
+Logs and metrics resolve attributes from the call site as well, which is the most specific source: **per-call attributes** > **passed scope** > **isolation scope** > **global scope**. See [Attributes](/platforms/native/enriching-events/attributes/) for how to build them.
+
+## Batching Scope Access
+
+<AvailableSince version="1.0.0" />
+
+Every scope function locks the scope on its own, and every change to the isolation scope is flushed to the crash backend. To apply several changes with a single flush, wrap them in `sentry_scope_begin_write` and `sentry_scope_end_write`:
+
+```c
+sentry_scope_t *scope = sentry_scope_acquire();
+
+if (sentry_scope_begin_write(scope) == 0) {
+  sentry_scope_set_tag(scope, "level", "3");
+  sentry_scope_set_user(scope, user);
+  sentry_scope_end_write(scope);
+}
+
+sentry_scope_release(scope);
+```
+
+To read several properties consistently, use `sentry_scope_begin_read` and `sentry_scope_end_read` instead. Don't modify the scope inside a read batch: this triggers an assertion in debug builds and may deadlock in release builds. A read lock can't be upgraded, so `sentry_scope_begin_write` fails if the calling thread already holds a read lock on the scope.
+
+Both begin functions return `0` on success. Match each successful call with its end function on the same thread before freeing the scope.
 
 ## Clearing and Copying Scopes
 
