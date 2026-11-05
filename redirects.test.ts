@@ -20,10 +20,7 @@ async function redirectLocation(
 
 describe('withMarkdownRedirects', () => {
   it('folds the .md URL into the same rule', () => {
-    const list = [
-      {source: '/old/', destination: '/new/'},
-      {source: '/old/:path*', destination: '/new/'},
-    ];
+    const list = [{source: '/old/', destination: '/new/'}];
     expect(withMarkdownRedirects(list)).toHaveLength(list.length);
   });
 
@@ -84,13 +81,51 @@ describe('withMarkdownRedirects', () => {
     expect(await redirectLocation(list, '/oldx/')).toBeNull();
   });
 
-  it('prioritizes the specific Markdown redirect over the catch-all', async () => {
-    expect(await redirectLocation(userDocsRedirects, '/product/insights/mcp.md')).toBe(
-      'https://docs.sentry.io/product/mcp-servers.md'
+  it.each([
+    ['/old.md', '/new.md'],
+    ['/old/page.md', '/new.md'],
+    ['/old/nested/page.md', '/new.md'],
+    ['/old/page/', '/new/'],
+    ['/old/page.mdx', '/new/'],
+  ])('preserves the format of wildcard requests: %s', async (from, to) => {
+    expect(
+      await redirectLocation([{source: '/old/:path*', destination: '/new/'}], from)
+    ).toBe(`https://docs.sentry.io${to}`);
+  });
+
+  it.each([
+    ['/new/#section', 'https://docs.sentry.io/new.md#section'],
+    ['/', 'https://docs.sentry.io/index.md'],
+    ['/new/:path*', 'https://docs.sentry.io/new/nested/page.md'],
+    ['https://mcp.sentry.dev/', 'https://mcp.sentry.dev/'],
+    ['/platform-redirect/', 'https://docs.sentry.io/platform-redirect/'],
+    [
+      '/platform-redirect/?next=/x/',
+      'https://docs.sentry.io/platform-redirect/?next=%2Fx%2F',
+    ],
+  ])('handles wildcard destinations: %s', async (destination, expected) => {
+    expect(
+      await redirectLocation(
+        [{source: '/old/:path*', destination}],
+        '/old/nested/page.md'
+      )
+    ).toBe(expected);
+  });
+
+  it.each([
+    ['/product/insights/mcp.md', '/product/mcp-servers.md'],
+    ['/product/insights/http.md', '/product/dashboards/sentry-dashboards.md'],
+    [
+      '/platforms/python/guides/django/configuration/capture/context.md',
+      '/platforms/python/guides/django/usage.md',
+    ],
+  ])('redirects %s using the real redirect list', async (from, to) => {
+    expect(await redirectLocation(userDocsRedirects, from)).toBe(
+      `https://docs.sentry.io${to}`
     );
   });
 
-  it('leaves wildcard and root sources unchanged', () => {
+  it('leaves path-forwarding wildcards and root sources unchanged', () => {
     const list = [
       {source: '/', destination: '/new/'},
       {source: '/old/:path*', destination: '/new/:path*'},

@@ -3727,10 +3727,12 @@ const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
 /**
  * Every page has a `.md` export, so a redirected page's `.md` URL must redirect too.
  * Each redirect whose source ends in `/` also matches its `.md` URL and sends it to the
- * destination's `.md` export (external and query-string destinations stay as they are).
+ * destination's `.md` export (external, query-string and platform-picker destinations
+ * stay as they are).
  * Where possible this is folded into the same rule through `:mdSuffix`, so the route
  * count does not grow. Destinations ending in a param or pointing to the root need a
- * separate `.md` rule. Wildcard sources (`/foo/:path*`) are left as they are.
+ * separate `.md` rule. Wildcards with fixed destinations get a `.md` rule before the
+ * catch-all; wildcards forwarding `:path*` already preserve the requested extension.
  *
  * @template {{source: string, destination: string}} R
  * @param {R[]} list
@@ -3738,18 +3740,25 @@ const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
  */
 function withMarkdownRedirects(list) {
   return list.flatMap(r => {
-    if (r.source === '/' || !r.source.endsWith('/')) {
+    const isWildcard = r.source.endsWith('/:path*');
+    if (r.source === '/' || (!r.source.endsWith('/') && !isWildcard)) {
       return [r];
     }
-    const source = r.source.slice(0, -1);
     const keepDestination =
-      /^https?:\/\//.test(r.destination) || r.destination.includes('?');
+      /^https?:\/\//.test(r.destination) ||
+      r.destination.includes('?') ||
+      r.destination === '/platform-redirect/';
+    if (isWildcard && (keepDestination || r.destination.includes(':path*'))) {
+      return [r];
+    }
+    const source = isWildcard ? r.source : r.source.slice(0, -1);
     const [path, hash] = r.destination.split('#');
     const destination = path.replace(/\/+$/, '');
     const fragment = hash === undefined ? '' : `#${hash}`;
 
     const canFold =
-      keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination));
+      !isWildcard &&
+      (keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination)));
     if (canFold) {
       return [
         {
@@ -3761,16 +3770,14 @@ function withMarkdownRedirects(list) {
         },
       ];
     }
-    return [
-      r,
-      {
-        ...r,
-        source: `${source}.md`,
-        destination: keepDestination
-          ? r.destination
-          : `${destination || '/index'}.md${fragment}`,
-      },
-    ];
+    const markdownRedirect = {
+      ...r,
+      source: `${source}.md`,
+      destination: keepDestination
+        ? r.destination
+        : `${destination || '/index'}.md${fragment}`,
+    };
+    return isWildcard ? [markdownRedirect, r] : [r, markdownRedirect];
   });
 }
 
