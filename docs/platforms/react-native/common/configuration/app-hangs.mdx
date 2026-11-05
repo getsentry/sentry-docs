@@ -95,6 +95,38 @@ Sentry.resumeAppHangTracking();
 
 To read more about how app hangs are detected, check out the `sentry-cocoa` [documentation](/platforms/apple/configuration/app-hangs/).
 
+### JS Thread Hangs (iOS Only)
+
+App hang tracking watches the UI thread. If your JavaScript code blocks the JS thread, for example with an infinite loop, the UI thread can stay responsive, so no app hang is reported. Starting with version 8.34.0, you can report these hangs with the experimental `enableJsHangTracking` option:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableJsHangTracking: true,
+});
+```
+
+When the JS thread stays blocked for longer than `jsHangTimeoutInterval` (2 seconds by default), the SDK sends a `JS Thread Hang` error event with the `JSHang` mechanism type. With Hermes, the event includes the JavaScript stack trace of the blocking code, and Sentry symbolicates it with your uploaded source maps. You can change the timeout in seconds. Values below 0.25 seconds use 0.25 seconds:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "DSN",
+  enableJsHangTracking: true,
+  jsHangTimeoutInterval: 3,
+});
+```
+
+Keep in mind:
+
+- The native SDK creates the event, so your JavaScript `beforeSend` callback doesn't run for it.
+- Tracking is off in development builds (`__DEV__`), because a debugger that pauses at a breakpoint blocks the JS thread too.
+- Tracking pauses while the app is in the background or a native debugger is attached.
+- Android isn't supported yet.
+
 ## MetricKit Hang Diagnostics
 
 On iOS 15 and up, the operating system can also report hangs through MetricKit. These are separate from the app hangs described above, and the SDK reports them only if you enable the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> integration. If you enable both, a single unresponsive period may be reported twice, once from each source.
