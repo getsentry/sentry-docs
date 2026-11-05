@@ -35,8 +35,11 @@ export const CLI_INSTALL_METHODS = [
 
 export type CliInstallMethodId = (typeof CLI_INSTALL_METHODS)[number]['id'];
 
+export function setupTarget(sdkName?: string): string {
+  return sdkName ? `the Sentry ${sdkName} SDK` : 'Sentry';
+}
+
 export function buildPrompt(sdkName?: string): string {
-  const target = sdkName ? `the Sentry ${sdkName} SDK` : 'Sentry';
   const install = CLI_INSTALL_METHODS[0].command;
-  return `Set up ${target} with the Sentry CLI. Install the CLI with \`${install}\`, then follow ${SENTRY_CLI_URL} to finish setup.`;
+  return `Set up ${setupTarget(sdkName)} with the Sentry CLI. Install the CLI with \`${install}\`, then follow ${SENTRY_CLI_URL} to finish setup.`;
 }

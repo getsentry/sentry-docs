@@ -1,13 +1,14 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import {useCallback, useState} from 'react';
+import {Fragment, useCallback, useState} from 'react';
 import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 import {CliInstallCommand} from '../cliInstallCommand';
 import {ExternalLink} from '../externalLink';
+import {CliSetupMarkdown, InstructionMarkdown} from './markdown';
 import {SENTRY_CLI_URL} from './shared';
 import styles from './style.module.scss';
 
@@ -30,17 +31,20 @@ export function AgentSetupCallout({skill, platformName, instructions}: Props) {
   }
 
   return (
-    <div className={styles.wrapper} data-mdast="ignore">
-      <div className={styles.setup}>
-        <span className={styles.title}>Set up with the Sentry CLI</span>
-        <CliInstallCommand source="callout" skill={skill} platformName={platformName} />
+    <Fragment>
+      <div className={styles.wrapper} data-mdast="ignore">
+        <div className={styles.setup}>
+          <span className={styles.title}>Set up with the Sentry CLI</span>
+          <CliInstallCommand source="callout" skill={skill} platformName={platformName} />
+        </div>
+        <div className={styles.subRow}>
+          <ExternalLink href={SENTRY_CLI_URL} className={styles.viewDocs}>
+            Learn more about the Sentry CLI
+          </ExternalLink>
+        </div>
       </div>
-      <div className={styles.subRow}>
-        <ExternalLink href={SENTRY_CLI_URL} className={styles.viewDocs}>
-          Learn more about the Sentry CLI
-        </ExternalLink>
-      </div>
-    </div>
+      <CliSetupMarkdown platformName={platformName} />
+    </Fragment>
   );
 }
 
@@ -83,22 +87,29 @@ function InstructionPrompt({
   );
 
   return (
-    <div className={styles.wrapper} data-mdast="ignore">
-      <div className={styles.mainRow}>
-        <div className={styles.left}>
-          <span className={styles.title}>{instructions.title}</span>
+    <Fragment>
+      <div className={styles.wrapper} data-mdast="ignore">
+        <div className={styles.mainRow}>
+          <div className={styles.left}>
+            <span className={styles.title}>{instructions.title}</span>
+          </div>
+          <div className={styles.promptArea}>
+            <code className={styles.promptText}>{instructions.prompt}</code>
+          </div>
+          <button className={styles.copyButton} onClick={copyPrompt} type="button">
+            <Copy size={14} />
+            {copied ? 'Copied' : 'Copy Prompt'}
+          </button>
         </div>
-        <div className={styles.promptArea}>
-          <code className={styles.promptText}>{instructions.prompt}</code>
+        <div className={styles.subRow}>
+          <span className={styles.description}>{instructions.description}</span>
         </div>
-        <button className={styles.copyButton} onClick={copyPrompt} type="button">
-          <Copy size={14} />
-          {copied ? 'Copied' : 'Copy Prompt'}
-        </button>
       </div>
-      <div className={styles.subRow}>
-        <span className={styles.description}>{instructions.description}</span>
-      </div>
-    </div>
+      <InstructionMarkdown
+        title={instructions.title}
+        prompt={instructions.prompt}
+        description={instructions.description}
+      />
+    </Fragment>
   );
 }

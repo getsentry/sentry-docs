@@ -4,12 +4,17 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import {Theme} from '@radix-ui/themes';
 import * as Sentry from '@sentry/nextjs';
 import {useTheme} from 'next-themes';
-import {useCallback, useMemo, useState} from 'react';
+import {Fragment, useCallback, useMemo, useState} from 'react';
 import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
-import {buildPrompt} from '../agentSetupCallout/shared';
+import {
+  buildPrompt,
+  CLI_INSTALL_METHODS,
+  SENTRY_CLI_URL,
+  setupTarget,
+} from '../agentSetupCallout/shared';
 import styles from './style.module.scss';
 
 type Props = {
@@ -88,35 +93,42 @@ export function CopyPromptButton({skill, platformName}: Props) {
   );
 
   return (
-    <span className={styles.wrapper}>
-      <span className={styles.divider}>|</span>
-      <Tooltip.Provider delayDuration={200}>
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <button
-              className={styles.button}
-              onClick={copyPrompt}
-              type="button"
-              aria-label={copied ? 'Copied' : 'Set up with the CLI'}
-            >
-              <Copy size={14} />
-              <span className={styles.label}>
-                {copied ? 'Copied' : 'Set up with the CLI'}
-              </span>
-            </button>
-          </Tooltip.Trigger>
-          {!copied && (
-            <Tooltip.Portal>
-              <Theme accentColor="iris">
-                <Tooltip.Content style={tooltipContentStyle} sideOffset={6}>
-                  Set up with the CLI
-                  <Tooltip.Arrow style={tooltipArrowStyle} />
-                </Tooltip.Content>
-              </Theme>
-            </Tooltip.Portal>
-          )}
-        </Tooltip.Root>
-      </Tooltip.Provider>
-    </span>
+    <Fragment>
+      <span className={styles.wrapper} data-mdast="ignore">
+        <span className={styles.divider}>|</span>
+        <Tooltip.Provider delayDuration={200}>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <button
+                className={styles.button}
+                onClick={copyPrompt}
+                type="button"
+                aria-label={copied ? 'Copied' : 'Set up with the CLI'}
+              >
+                <Copy size={14} />
+                <span className={styles.label}>
+                  {copied ? 'Copied' : 'Set up with the CLI'}
+                </span>
+              </button>
+            </Tooltip.Trigger>
+            {!copied && (
+              <Tooltip.Portal>
+                <Theme accentColor="iris">
+                  <Tooltip.Content style={tooltipContentStyle} sideOffset={6}>
+                    Set up with the CLI
+                    <Tooltip.Arrow style={tooltipArrowStyle} />
+                  </Tooltip.Content>
+                </Theme>
+              </Tooltip.Portal>
+            )}
+          </Tooltip.Root>
+        </Tooltip.Provider>
+      </span>
+      <span className={styles.mdOnly} aria-hidden="true">
+        Set up {setupTarget(platformName)} with the Sentry CLI. Install the CLI with{' '}
+        <code>{CLI_INSTALL_METHODS[0].command}</code>, then follow{' '}
+        <a href={SENTRY_CLI_URL}>the Sentry CLI docs</a> to finish setup.
+      </span>
+    </Fragment>
   );
 }
