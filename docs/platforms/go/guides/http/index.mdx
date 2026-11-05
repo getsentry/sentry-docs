@@ -55,14 +55,14 @@ type handler struct{}
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	// capturing an error intentionally to simulate usage
-	sentry.CaptureMessage("It works!")
-	
+	sentry.CaptureMessage(r.Context(), "It works!")
+
 	rw.WriteHeader(http.StatusOK)
 }
 
 // Create an instance of sentryhttp
 sentryHandler := sentryhttp.New(sentryhttp.Options{
-// specify options here...
+	// specify options here...
 })
 
 // Once it's done, you can set up routes and attach the handler as one of your middleware
@@ -78,31 +78,24 @@ if err := http.ListenAndServe(":3000", nil); err != nil {
 
 ## Usage
 
-`sentryhttp` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
-You can access it by using the `sentry.GetHubFromContext()` method on the request itself in any of your proceeding middleware and routes.
-And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException`, or any other calls, as it keeps the separation of data between the requests.
+`sentryhttp` forks a scope for each request. Use `r.Context()` to get the request's Go context.
 
-<PlatformContent includePath="tracing/automatic-instrumentation/middleware-note" />
-
-**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryhttp`!**
+<Include name="go/request-scope-usage" />
 
 ```go
 type handler struct{}
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	if hub := sentry.GetHubFromContext(r.Context()); hub != nil {
-		hub.WithScope(func(scope *sentry.Scope) {
-			scope.SetAttributes(attribute.String("unwantedQuery", "someQueryDataMaybe"))
-			hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-		})
-	}
+	captureCtx, scope := sentry.WithScope(r.Context())
+	scope.SetContext("query", sentry.Context{"unwanted": "someQueryDataMaybe"})
+	sentry.CaptureMessage(captureCtx, "User provided unwanted query string, but we recovered just fine")
 	rw.WriteHeader(http.StatusOK)
 }
 
 func enhanceSentryEvent(handler http.HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		if hub := sentry.GetHubFromContext(r.Context()); hub != nil {
-			hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+		if scope := sentry.ScopeFromContext(r.Context()); scope != nil {
+			scope.SetTag("someRandomTag", "maybeYouNeedIt")
 		}
 		handler(rw, r)
 	}
