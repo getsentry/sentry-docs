@@ -3721,7 +3721,7 @@ const userDocsRedirects = [
 // Matches the trailing `/` of a page URL or the `.md` of its export.
 const MD_SUFFIX_PARAM = ':mdSuffix(/|\\.md)';
 
-// path-to-regexp rejects a param directly after another one (`/:guide:mdSuffix`).
+// Destination compilation rejects adjacent params (`/:guide:mdSuffix`).
 const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
 
 /**
@@ -3729,8 +3729,8 @@ const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
  * Each redirect whose source ends in `/` also matches its `.md` URL and sends it to the
  * destination's `.md` export (external and query-string destinations stay as they are).
  * Where possible this is folded into the same rule through `:mdSuffix`, so the route
- * count does not grow. A separate `.md` rule is added only when a path ends in a param.
- * Wildcard sources (`/foo/:path*`) are left as they are.
+ * count does not grow. Destinations ending in a param or pointing to the root need a
+ * separate `.md` rule. Wildcard sources (`/foo/:path*`) are left as they are.
  *
  * @template {{source: string, destination: string}} R
  * @param {R[]} list
@@ -3749,8 +3749,7 @@ function withMarkdownRedirects(list) {
     const fragment = hash === undefined ? '' : `#${hash}`;
 
     const canFold =
-      !ENDS_WITH_PARAM.test(source) &&
-      (keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination)));
+      keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination));
     if (canFold) {
       return [
         {
