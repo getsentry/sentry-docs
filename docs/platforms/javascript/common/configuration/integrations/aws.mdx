@@ -1,20 +1,61 @@
 ---
 title: Aws
-description: "Adds instrumentation for aws-sdk. (default)"
-supported:
-  - javascript.aws-lambda
+description: "Adds instrumentation for the AWS SDK for JavaScript v3. (default)"
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.cloudflare
+  - javascript.effect
+  - javascript.elysia
+  - javascript.gcp-functions
+  - javascript.hono
 ---
+
+<PlatformSection notSupported={["javascript.aws-lambda"]}>
+
+<Alert>
+
+Requires SDK version `11.0.0` or higher. Before version `11.10.0`, the integration is enabled by default but isn't exported from `@sentry/node`, `@sentry/bun`, or the framework SDKs built on them.
+
+</Alert>
+
+</PlatformSection>
 
 _Import name: `Sentry.awsIntegration`_
 
-This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+<PlatformSection notSupported={["javascript.aws-lambda"]}>
 
-Adds instrumentation for aws-sdk v2 and v3 to automatically create spans. Powered by [`@opentelemetry/instrumentation-aws-sdk`](https://www.npmjs.com/package/@opentelemetry/instrumentation-aws-sdk).
+This integration is enabled by default when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
 
-```JavaScript
-import * as Sentry from '@sentry/aws-serverless';
+</PlatformSection>
 
+<PlatformSection supported={["javascript.aws-lambda"]}>
+
+This integration is enabled by default, but it only creates spans when tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+</PlatformSection>
+
+The `awsIntegration` creates spans for commands that you send with AWS SDK for JavaScript v3 clients (`@aws-sdk/client-*`). Every command gets a span with the service, command, and region. S3, SQS, SNS, DynamoDB, Lambda, Kinesis, Secrets Manager, and Step Functions commands get service-specific spans and attributes.
+
+Calls made with the Amazon Bedrock Runtime client (`@aws-sdk/client-bedrock-runtime`) create `gen_ai` spans for <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink>. See <PlatformLink to="/agent-tracing/bedrock/">Amazon Bedrock</PlatformLink> for the supported commands and captured data.
+
+```javascript
 Sentry.init({
-  integrations: [Sentry.awsIntegration()],
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for AWS SDK spans to be created.
+  tracesSampleRate: 1.0,
 });
 ```
+
+<PlatformSection supported={["javascript.bun"]}>
+
+On Bun, the AWS SDK is only instrumented when you build your app with `sentryBunPlugin()` and the AWS SDK is part of the bundle. See <PlatformLink to="/#build-with-the-sentry-plugin-recommended">Build With the Sentry Plugin</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+On Deno, start your app with `--preload=npm:@sentry/deno/import` so the AWS SDK can be instrumented. See <PlatformLink to="/#start-your-app">Start Your App</PlatformLink>.
+
+</PlatformSection>
