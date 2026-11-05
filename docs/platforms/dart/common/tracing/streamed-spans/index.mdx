@@ -5,8 +5,7 @@ sidebar_order: 10
 new: true
 ---
 
-By default, the Sentry SDK collects all spans in memory and sends them to Sentry as a single transaction once the root span ends. This is called transaction mode.
-Stream mode changes this by sending spans to Sentry in batches as they finish, instead of waiting for the whole transaction to complete.
+Stream mode is the default. The Sentry SDK sends spans in batches as they finish. Transaction mode (`SentryTraceLifecycle.static`) instead collects spans in memory and sends them together once the root span ends.
 
 <Expandable title="Why use stream mode?">
 
@@ -46,11 +45,11 @@ You need:
 
 ## Migrate from Transaction Mode
 
-For most apps, switching to stream mode requires no code changes beyond the initial opt-in. Automatic instrumentation switches to the streaming span APIs for you.
+Automatic instrumentation uses the streaming span APIs without additional configuration.
 
 If you use custom instrumentation or transaction-specific configuration, follow these steps:
 
-1. [Enable stream mode](#enable-stream-mode).
+1. [Configure tracing](#configuration).
 2. Replace `Sentry.startTransaction` and `ISentrySpan.startChild` with the [streaming span APIs](#start-a-span).
 3. Replace span data and tags with [attributes](#add-attributes).
 4. Replace `beforeSendTransaction` and `ignoreTransactions` with [`beforeSendSpan`](#filter-spans) and [`ignoreSpans`](#drop-spans).
@@ -63,27 +62,18 @@ See the <PlatformLink to="/tracing/streamed-spans/migration-guide/">Migration Gu
 Copy the following prompt and paste it into your AI agent:
 
 ```txt
-Follow ___CURRENT_URL___ to enable and migrate to span streaming in the Sentry SDK.
+Follow ___CURRENT_URL___ to migrate custom instrumentation and filtering to span streaming in the Sentry SDK.
 ```
 
-## Enable Stream Mode
+## Configuration
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Opt in by setting `traceLifecycle` to `SentryTraceLifecycle.stream` when initializing the SDK. This is the only required config change:
-
-</SplitSectionText>
-<SplitSectionCode>
+<PlatformLink to="/tracing/#configure">Configure tracing</PlatformLink> with
+`tracesSampleRate` or `tracesSampler`. No additional lifecycle setting is
+required.
 
 <PlatformContent includePath="performance/span-streaming-enable" />
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-To revert to transaction mode, remove the option or set `traceLifecycle` to `SentryTraceLifecycle.static` (the default).
+To opt out of span streaming, set `options.traceLifecycle = SentryTraceLifecycle.static`. Transaction mode supports `beforeSendTransaction` and `ignoreTransactions`; these options have no effect in stream mode.
 
 Use only the APIs for the tracing mode you choose. Calls to APIs from the other mode are ignored:
 
@@ -121,14 +111,7 @@ The SDK instruments common operations for you, but you can wrap your own code in
 
 ### Start a Span
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.startSpan` to create a span that ends automatically when the callback completes:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 final result = await Sentry.startSpan(
@@ -143,15 +126,7 @@ final result = await Sentry.startSpan(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 Child spans created inside the callback are automatically associated with the parent through zones:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 await Sentry.startSpan('parent-operation', (_) async {
@@ -165,18 +140,10 @@ await Sentry.startSpan('parent-operation', (_) async {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 By default, a span inherits the currently active span as its parent. To change this, pass `parentSpan`:
 
 - `parentSpan: null` forces a service span with no local parent.
 - `parentSpan: someSpan` parents the new span under a specific span.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 // force a new service span
@@ -209,20 +176,9 @@ try {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 #### Create Spans for Synchronous Work
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 `Sentry.startSpan` takes an asynchronous callback (returning `Future<T>`). For synchronous work, use `Sentry.startSpanSync`, which takes a synchronous callback (returning `T`). Both variants can be freely nested, and parent-child relationships resolve correctly across sync and async boundaries:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 final config = Sentry.startSpanSync('parse-config', (_) {
@@ -230,22 +186,11 @@ final config = Sentry.startSpanSync('parse-config', (_) {
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 If a span isn't sampled, the callback still runs and receives a no-op span, so all span operations remain safe to call.
 
 #### Create Spans That Outlive a Callback
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Use `Sentry.startInactiveSpan` when the work can't be wrapped in a single callback — widget lifecycles, stream subscriptions, or platform channel round-trips. You have to call `end()` manually, and other spans do **not** automatically become its children — to nest a span under it, pass it explicitly via `parentSpan` when starting the child.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 final paymentSpan = Sentry.startInactiveSpan(
@@ -259,20 +204,9 @@ void onPaymentComplete() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 #### Retroactively Set Span Timing
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 When the real start or end of the work happened before you could create or end the span (for example, a duration measured by a platform channel) pass `startTimestamp` or an explicit `end` time:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 // startTimestamp is available on the callback variants
@@ -284,17 +218,9 @@ final paymentSpan = Sentry.startInactiveSpan('payment');
 paymentSpan.end(endTimestamp: nativeEnd);
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Add Attributes
 
 Attach structured metadata to spans using typed `SentryAttribute` values.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 You can set attributes when starting a span:
 
@@ -303,9 +229,6 @@ You can set attributes when starting a span:
 Sentry automatically sets several standard attributes on spans. To avoid accidentally overwriting these, refer to our <a href="https://getsentry.github.io/sentry-conventions/attributes/">Sentry Attribute Conventions</a>.
 
 </Alert>
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 await Sentry.startSpan(
@@ -322,15 +245,7 @@ await Sentry.startSpan(
 );
 ```
 
-</SplitSectionCode>
-</SplitSection>
-<SplitSection>
-<SplitSectionText>
-
 Or add them to an already running span with `setAttribute` or `setAttributes`. Use `removeAttribute` to remove an attribute:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 await Sentry.startSpan('handle-request', (span) async {
@@ -347,10 +262,6 @@ await Sentry.startSpan('handle-request', (span) async {
   await handleRequest();
 });
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Expandable title="SentryAttribute Factory">
 
@@ -410,35 +321,17 @@ You can shape what ends up in Sentry by filtering span data or dropping spans en
 
 ### Filter Spans
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To modify or redact span data before it's sent, use `beforeSendSpan`:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```dart
-options.beforeSendSpan = (span) {
+options.beforeSendSpan = (span, hint) {
   span.removeAttribute('http.request.body');
 };
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ### Drop Spans
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To prevent specific spans from being sent, use `ignoreSpans`. Rules are evaluated at span start and match against the span name. Attribute-based matching is not yet supported.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 options.ignoreSpans = [
@@ -448,10 +341,6 @@ options.ignoreSpans = [
   IgnoreSpanRule.nameEndsWith('.bg'),
 ];
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <Expandable title="IgnoreSpanRule Factory">
 
@@ -470,14 +359,7 @@ When an ignored span has children, the children are re-parented to the nearest r
 
 If you use `tracesSampleRate`, no changes are needed — it works the same way in stream mode.
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 If you use a custom `tracesSampler`, the shape of the sampling context is different in stream mode. Instead of a transaction context, read the span's `name` and `attributes` from `samplingContext.spanContext`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 options.tracesSampler = (samplingContext) {
@@ -488,10 +370,6 @@ options.tracesSampler = (samplingContext) {
   return 0.2;
 };
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 Only service spans are sampled and child spans inherit the service span's decision. When a service span isn't sampled, its callback still executes with a no-op span, so all span operations remain safe to call.
 

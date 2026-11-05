@@ -20,15 +20,15 @@ The `.md` suffix triggers content negotiation. Markdown files are pre-generated 
 
 Markdown exports are not just raw dumps of HTML content. They are adapted for LLM consumption:
 
-| Aspect                   | HTML Page                             | Markdown Export                                                              |
-| ------------------------ | ------------------------------------- | ---------------------------------------------------------------------------- |
-| **Navigation**           | Sidebar, breadcrumbs, prev/next links | Appended navigation sections with categorized links                          |
-| **Interactive elements** | Tabs, code switchers, copy buttons    | Removed (buttons stripped during conversion)                                 |
-| **Titles**               | In `<title>` tag and breadcrumbs      | H1 heading at top of document                                                |
-| **Links**                | Relative HTML paths                   | Absolute `.md` URLs (e.g., `https://docs.sentry.io/platforms/javascript.md`) |
-| **Images**               | Relative paths                        | Absolute URLs                                                                |
-| **Page structure**       | Header, sidebar, main content, footer | Title + main content + navigation sections                                   |
-| **Description**          | HTML meta tag only                    | YAML frontmatter block with title, description, and canonical URL            |
+| Aspect                   | HTML Page                              | Markdown Export                                                              |
+| ------------------------ | -------------------------------------- | ---------------------------------------------------------------------------- |
+| **Navigation**           | Sidebar, breadcrumbs, prev/next links  | Appended navigation sections with categorized links                          |
+| **Interactive elements** | Tabs, code switchers, copy buttons     | Removed (buttons stripped during conversion)                                 |
+| **Titles**               | Visible H1, `<title>` tag, breadcrumbs | SDK pages use their visible H1; other pages use `<title>` as the Markdown H1 |
+| **Links**                | Relative HTML paths                    | Absolute `.md` URLs (e.g., `https://docs.sentry.io/platforms/javascript.md`) |
+| **Images**               | Relative paths                         | Absolute URLs                                                                |
+| **Page structure**       | Header, sidebar, main content, footer  | Title + main content + navigation sections                                   |
+| **Description**          | HTML meta tag only                     | YAML frontmatter block with title, description, and canonical URL            |
 
 ## Page Customization Architecture
 
@@ -144,6 +144,8 @@ Pages without a matching override get a generic "Pages in this section" listing 
 ## YAML Frontmatter
 
 Every markdown export includes a YAML frontmatter block with metadata from the doctree. This gives LLM agents a relevance signal before the content begins and provides the canonical URL for navigation.
+
+The YAML `title` keeps the short doctree title. For SDK/platform pages, the Markdown H1 instead uses the rendered browser H1 (including platform, section, and version context); the HTML metadata title is unchanged. The exporter reads the marked heading outside `div#main` and excludes badges from the Markdown H1.
 
 **How it works:**
 

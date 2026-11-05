@@ -1,21 +1,121 @@
 ---
 title: WebView
-description: "Learn how to set up the Sentry Cocoa and Browser SDKs with WebView."
+description: "Learn how to connect traces and monitor errors and performance across the Sentry Cocoa and Browser SDKs with WebView."
 ---
 
-To monitor errors and performance in web views of iOS, iPadOS, and macOS applications, you need to set up Sentry SDKs in both the mobile application and the web projects running in the web views.
+To monitor errors and performance in web views of iOS, iPadOS, macOS, and visionOS applications, you set up Sentry SDKs in both the mobile application and the web projects running in the web views. You can also connect their traces, so a single distributed trace spans your app and the web content it embeds.
 
 ## Application Monitoring
 
-The Sentry Cocoa SDK doesn't interact with the mobile application's web views. To monitor errors and performance in the native part of the application follow the [Sentry Cocoa SDK setup instructions](/platforms/apple/).
+To monitor errors and performance in the native part of the application, follow the [Sentry Cocoa SDK setup instructions](/platforms/apple/). The Cocoa SDK doesn't capture errors that happen inside a web view — those are captured by the JavaScript SDK running in the web project (see [WebView Monitoring](#webview-monitoring)).
 
 ## WebView Monitoring
 
-To monitor errors and performance in web views choose the appropriate Sentry JavaScript SDK depending on the framework used in the web project.
+To monitor errors and performance in web views, choose the appropriate Sentry JavaScript SDK depending on the framework used in the web project.
 
 - [Sentry React SDK](/platforms/javascript/guides/react/) (if the web project uses React)
 - [Sentry Angular SDK](/platforms/javascript/guides/angular/) (if the web project uses Angular)
-- [Other Sentry JavaScript SDKs](/platforms/javascript)
+- [Other Sentry JavaScript SDKs](/platforms/javascript/)
+
+## Connect Traces
+
+<Alert>
+
+`SentryWebViewTracing` is available from Cocoa SDK version `9.33.0`.
+
+</Alert>
+
+Use `SentryWebViewTracing.addTracePropagation` to inject your app's trace into a `WKWebView`. The Browser SDK running in the web page picks it up on pageload and continues the same trace, so the web page's pageload transaction and errors share the trace of your app. The result is a single connected trace across the native and web parts of the user journey.
+
+Call it before the web view loads the page, for example on the configuration before you create the web view:
+
+```swift {tabTitle:Swift}
+import Sentry
+import WebKit
+
+let configuration = WKWebViewConfiguration()
+SentryWebViewTracing.addTracePropagation(
+    to: configuration,
+    options: SentryWebViewTracingOptions(allowedHosts: ["example.com"])
+)
+let webView = WKWebView(frame: .zero, configuration: configuration)
+webView.load(URLRequest(url: URL(string: "https://example.com")!))
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+@import WebKit;
+
+WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
+SentryObjCWebViewTracingOptions *options =
+    [[SentryObjCWebViewTracingOptions alloc] initWithAllowedHosts:@[ @"example.com" ]];
+[SentryObjCWebViewTracing addTracePropagationToConfiguration:configuration options:options];
+WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:configuration];
+[webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://example.com"]]];
+```
+
+You can also pass an existing `WKWebView` or any `WKUserContentController`. Trace propagation applies from the web view's next navigation. The method returns `false` (`NO`) if nothing was added, for example when `allowedHosts` has no valid entry or the SDK isn't started. Call it from the main thread. In Objective-C, a call from another thread returns `NO`.
+
+For the connection to take effect:
+
+- The web page must run a Sentry [Browser SDK](/platforms/javascript/) with tracing enabled (the `browserTracingIntegration`). It continues the trace from the injected `sentry-trace` and `baggage` `<meta>` tags automatically, the same way it continues a trace started by a server (see [Distributed Tracing](/platforms/javascript/tracing/distributed-tracing/)) — no additional configuration is needed on the web page. The SDK writes the tags with a `WKUserScript` at document start, before any page script runs, so the Browser SDK can be initialized anywhere in the page.
+- `allowedHosts` declares the hosts you trust to load in this web view. A page is matched when its hostname equals an entry or is a subdomain of it (for example, `"example.com"` matches both `example.com` and `app.example.com`). Matching is case-insensitive. Entries are normalized, so a scheme, path, port, trailing dot, or leading `*.` is ignored. The trace context is only written on matching pages, and only in the main frame, not in iframes.
+
+<Alert level="warning">
+
+Only list hosts whose content you trust in `allowedHosts`. The trace context is injected into every matching page, so an allow-listed page that runs untrusted JavaScript can read it back and feed misleading or polluted data into the connected trace. This risk is bounded by `allowedHosts` — don't allow-list pages that render untrusted or third-party content.
+
+`allowedHosts` is also checked inside the web page as defense-in-depth for honest cross-host navigation, but it is **not a strict security boundary**, since a hostile page sharing the web view could bypass an in-page check.
+
+The injected trace context carries no secrets or PII by default: the root span name (`sentry-transaction`), which can contain parameterized URLs, is stripped from `baggage` before it is injected. Still, don't put sensitive data in `baggage` for web views that may load untrusted pages.
+
+</Alert>
+
+<Alert level="info">
+
+The injected trace is a snapshot taken when you call `addTracePropagation`, and every later page load in that web view reuses it. To connect a later page load to a newer trace, call `addTracePropagation` again before the navigation. It replaces the script Sentry added earlier and keeps your own user scripts.
+
+</Alert>
+
+### SwiftUI
+
+On iOS, macOS, and visionOS 26 and later, you can connect traces of a SwiftUI `WebView`. Pass the `WebPage.Configuration` before you create the `WebPage`, because a `WebPage` doesn't expose its configuration afterwards:
+
+```swift
+import Sentry
+import SwiftUI
+import WebKit
+
+@available(iOS 26.0, macOS 26.0, visionOS 26.0, *)
+struct ContentView: View {
+    @State private var page: WebPage = {
+        let configuration = WebPage.Configuration()
+        SentryWebViewTracing.addTracePropagation(
+            to: configuration,
+            options: SentryWebViewTracingOptions(allowedHosts: ["example.com"])
+        )
+        return WebPage(configuration: configuration)
+    }()
+
+    var body: some View {
+        WebView(page)
+            .onAppear { page.load(URLRequest(url: URL(string: "https://example.com")!)) }
+    }
+}
+```
+
+`WebView(url:)` creates its page internally, so it can't receive the trace. Create a `WebPage` as shown above instead. This requires Xcode 26 or later.
+
+### Limitations
+
+- Trace propagation is available on iOS, iPadOS, macOS (including Mac Catalyst), and visionOS. tvOS and watchOS don't support WebKit.
+- Only `WKWebView`-based content is supported. `SFSafariViewController` and `ASWebAuthenticationSession` run outside your app's process, so scripts can't be injected into them.
+- Pages without a hostname don't receive the trace, for example `file://` pages or HTML loaded with `loadHTMLString(_:baseURL:)` and a `nil` base URL. Pages served through a custom URL scheme receive it when their host is in `allowedHosts`.
+- When no span is active, the injected trace doesn't carry a sampling decision, so the Browser SDK makes its own sampling decision for the web page.
+
+The trace is connected on the web page's initial load. Client-side navigations within a single-page app in the web view start their own traces, as they do in a regular browser.
+
+The app and the web project can report to different Sentry projects — as long as they're in the same organization, the trace view stitches the transactions together by trace ID.
 
 ## Notes
 

@@ -94,14 +94,20 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 <SdkOption name="AttachScreenshot" type="bool" defaultValue="false">
 
-Takes a screenshot of the application when an error happens and includes it as an attachment.
+Attaches a screenshot of the game to events, such as errors and messages, and sends it in the same envelope as the event. Screenshots aren't attached in the Editor, in batch mode, or on WebGL.
 Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
 
 <SdkOption name="ScreenshotQuality" type="enum" defaultValue="high">
 
-The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`.
+The resolution of the attached screenshot. `Full` keeps the game's resolution, while `High`, `Medium`, and `Low` scale it down so that its longest side is at most 1920, 1280, or 854 pixels.
+
+</SdkOption>
+
+<SdkOption name="ScreenshotCompression" type="int" defaultValue="75">
+
+The JPEG quality of the attached screenshot, from 1 to 100. Higher values result in better quality and larger files.
 
 </SdkOption>
 
@@ -191,7 +197,13 @@ By the time <PlatformIdentifier name="SetBeforeSendTransaction" /> is executed, 
 
 <SdkOption name="SetBeforeCaptureScreenshot" type="function">
 
-A callback function that controls screenshot capture behavior. Return `false` to prevent a screenshot from being captured for a specific event. This allows for fine-grained control over when screenshots are included with error reports.
+A callback function that controls screenshot capture behavior. Return `false` to prevent a screenshot from being attached to a specific event. It can run on a background thread and runs before <PlatformIdentifier name="SetBeforeSend" /> and sampling. Learn more in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="SetBeforeSendScreenshot" type="function">
+
+A callback function that receives the screenshot as a `Texture2D` before it gets compressed, along with the event it belongs to. Modify or replace the texture and return it, or return `null` to discard the screenshot. Setting it makes the SDK read and compress screenshots on the main thread. Learn more in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
 
@@ -269,15 +281,13 @@ Use these options to configure app hang and ANR detection. For supported platfor
 
 <SdkOption name="EnableAppHangTracking" type="bool" defaultValue="false">
 
-Enables app hang detection. On iOS and macOS with the default backend, the SDK uses sentry-cocoa. On Android, Windows, Linux, and macOS with the native backend, it uses sentry-native. On Android, this also requires <PlatformIdentifier name="NdkIntegrationEnabled" />.
-
-When the tracked thread is unresponsive for longer than <PlatformIdentifier name="AppHangTimeout" />, the SDK captures an `AppHang` event with a native stack trace.
+Enables experimental app hang detection. When the main thread is unresponsive for longer than <PlatformIdentifier name="AppHangTimeout" />, the SDK captures an `AppHang` event with a native stack trace.
 
 </SdkOption>
 
 <SdkOption name="AppHangTimeout" type="TimeSpan" defaultValue="TimeSpan.FromSeconds(5)">
 
-Sets how long the main thread must be unresponsive before the SDK captures an app hang. This timeout is also used by native app hang tracking.
+Sets how long the main thread must be unresponsive before the SDK captures an app hang. This timeout is also used by native app hang tracking. With sentry-native, keep it at 2 seconds or more, since the SDK sends a heartbeat once per second.
 
 </SdkOption>
 
