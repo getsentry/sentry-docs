@@ -4,7 +4,7 @@ sidebar_order: 10
 description: "Learn which transactions and spans the Bref integration captures automatically: event handlers, cold starts, and restarts."
 ---
 
-Once [tracing is enabled](/platforms/php/guides/bref/tracing/), the integration traces event handlers and cold starts without any code.
+Once [tracing is enabled](/platforms/php/guides/bref/tracing/), the integration traces event handlers and cold starts without any additional code.
 
 ## Event Handlers
 
@@ -25,11 +25,11 @@ On a cold start, Lambda creates a new instance before it handles the request, an
 
 ![Cold start spans in an HTTP transaction](./img/cold-start.png)
 
-The cold start span begins when PHP starts. The time Lambda spends before that, to create the instance, is missing.
+The cold start span begins when PHP starts, so it doesn't include the time Lambda spends creating the instance before PHP starts.
 
-When Lambda [initializes an instance proactively](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html), before any request needs it, nobody waits for it. These cold starts aren't added to transactions.
+Lambda sometimes [initializes an instance proactively](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html), before a request arrives. Because no request waits for this initialization to finish, these cold starts aren't included in transactions.
 
-## Restarts of Event Handlers
+## Event Handler Restarts
 
 By default, Bref restarts the PHP process of event handlers after each invocation (see [`BREF_LOOP_MAX`](https://bref.sh/docs/environment/performances#bref-for-event-driven-functions)). The restart happens after the invocation's response, so it's not part of its transaction. The integration reports it as a separate `bref.startup` transaction, in the same trace as the previous invocation.
 
