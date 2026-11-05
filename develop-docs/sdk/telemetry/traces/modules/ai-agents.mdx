@@ -85,11 +85,11 @@ Agent invocations represent operations that can include multiple model calls, or
 
 ## AI Client Span
 
-This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
+This span represents a chat model or text completion request.
 
 - Span `op` is `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
 - Span `name` is `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` is `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
+- Attribute `gen_ai.operation.name` is `"chat"`, `"generate_content"` or `"text_completion"`.
 - Attribute `gen_ai.provider.name` is the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
 - Attribute `gen_ai.request.model` is the requested model. (e.g. `"gpt-4o"`)
 - Attribute `gen_ai.response.model` is the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
@@ -134,6 +134,24 @@ Additional attributes on the span:
 | `gen_ai.usage.output_tokens`               | int  | The number of tokens used in the AI output, including reasoning tokens. **[3]**                                                | `130`   |
 | `gen_ai.usage.reasoning.output_tokens`     | int  | The number of tokens used for reasoning.                                                                                       | `30`    |
 | `gen_ai.usage.total_tokens`                | int  | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.                                                       | `190`   |
+
+## Embedding Span
+
+This span represents a request to encode input into numeric vector embeddings.
+
+- Span `op` is `"gen_ai.embeddings"`.
+- Span `name` is `"embeddings {gen_ai.request.model}"`. (e.g. `"embeddings text-embedding-3-small"`)
+- Attribute `gen_ai.operation.name` is `"embeddings"`.
+- Attribute `gen_ai.provider.name` is the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"text-embedding-3-small"`)
+- Attribute `gen_ai.response.model` is the concrete response model. (e.g. `"text-embedding-3-small-001"`)
+
+Additional attributes on the span:
+
+| Attribute                   | Type   | Description                             | Example         |
+| :-------------------------- | :----- | :-------------------------------------- | :-------------- |
+| `gen_ai.embeddings.input`   | string | Input to embed.                         | "Hello, world!" |
+| `gen_ai.usage.input_tokens` | int    | The number of tokens used in the input. | `60`            |
 
 ## Execute Tool Span
 
