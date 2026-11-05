@@ -97,17 +97,19 @@ export function CopyPromptButton({skill, platformName}: Props) {
               className={styles.button}
               onClick={copyPrompt}
               type="button"
-              aria-label="Copy setup prompt for AI agents"
+              aria-label={copied ? 'Copied' : 'Set up with the CLI'}
             >
               <Copy size={14} />
-              <span className={styles.label}>{copied ? 'Copied!' : 'Copy Prompt'}</span>
+              <span className={styles.label}>
+                {copied ? 'Copied' : 'Set up with the CLI'}
+              </span>
             </button>
           </Tooltip.Trigger>
           {!copied && (
             <Tooltip.Portal>
               <Theme accentColor="iris">
                 <Tooltip.Content style={tooltipContentStyle} sideOffset={6}>
-                  Copy setup prompt for AI agents
+                  Set up with the CLI
                   <Tooltip.Arrow style={tooltipArrowStyle} />
                 </Tooltip.Content>
               </Theme>

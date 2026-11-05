@@ -1,50 +1,9 @@
-'use client';
-
-import * as Sentry from '@sentry/nextjs';
-import Link from 'next/link';
-import {useCallback, useState} from 'react';
-import {Check, Copy} from 'react-feather';
-import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-import Claude from 'sentry-docs/icons/claude';
-import Codex from 'sentry-docs/icons/codex';
-import Cursor from 'sentry-docs/icons/cursor';
-import {DocMetrics} from 'sentry-docs/metrics';
-
+import {SENTRY_CLI_URL} from './agentSetupCallout/shared';
+import {CliInstallCommand} from './cliInstallCommand';
 import {ExternalLink} from './externalLink';
 import styles from './home.module.scss';
 
-/** Keep in sync with /ai/agent-plugin/. */
-const INSTALL_COMMAND = 'npx @sentry/agent-plugin install';
-
 export function HomeAiSetupCard() {
-  const [copied, setCopied] = useState(false);
-  const {emit} = usePlausibleEvent();
-
-  const copyCommand = useCallback(async () => {
-    emit('Copy AI Prompt', {
-      props: {page: window.location.pathname, title: 'Homepage Setup Card'},
-    });
-
-    try {
-      await navigator.clipboard.writeText(INSTALL_COMMAND);
-      setCopied(true);
-      DocMetrics.copyAIPrompt(window.location.pathname, undefined, true, 'homepage_card');
-      setTimeout(() => setCopied(false), 1500);
-    } catch (error) {
-      Sentry.logger.warn('clipboard.writeText failed', {
-        error: (error as Error)?.message,
-        errorName: (error as Error)?.name,
-      });
-      DocMetrics.copyAIPrompt(
-        window.location.pathname,
-        undefined,
-        false,
-        'homepage_card'
-      );
-      setCopied(false);
-    }
-  }, [emit]);
-
   return (
     <div className={`${styles.setupCard} ${styles.agentHeader}`}>
       <div className={styles.setupIcon}>
@@ -53,42 +12,15 @@ export function HomeAiSetupCard() {
           <path d="M18.5 13.5l.95 2.3 2.3.95-2.3.95-.95 2.3-.95-2.3-2.3-.95 2.3-.95.95-2.3z" />
         </svg>
       </div>
-      <h2 className={styles.setupTitle}>Set up with a coding agent</h2>
-      <button
-        type="button"
-        className={styles.commandPill}
-        onClick={copyCommand}
-        aria-label={`Copy "${INSTALL_COMMAND}" to the clipboard`}
-      >
-        <span className={styles.agentIcons} aria-hidden>
-          <Claude width={15} height={15} />
-          <Codex width={15} height={15} />
-          <Cursor width={14} height={14} />
-        </span>
-        <code className={styles.commandText}>{INSTALL_COMMAND}</code>
-        <span className={styles.commandAction}>
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-        </span>
-      </button>
+      <h2 className={styles.setupTitle}>Set up with the Sentry CLI</h2>
+      <div className={styles.cliInstall}>
+        <CliInstallCommand source="homepage_card" />
+      </div>
       <div className={styles.setupRowCopy}>
         <p className={styles.setupDesc}>
-          One command teaches Claude Code, Cursor, Codex, and Grok how to install and
-          configure Sentry for you.{' '}
-          <Link href="/ai/agent-plugin/" className={styles.seeAllLink}>
-            Read about the agent plugin
-          </Link>
-          .
-        </p>
-        <p className={styles.setupDesc}>
-          Use Sentry without leaving your agent conversations by setting up the{' '}
-          <ExternalLink href="https://mcp.sentry.dev/" className={styles.seeAllLink}>
-            Sentry MCP server
-          </ExternalLink>{' '}
-          and{' '}
-          <ExternalLink href="https://cli.sentry.dev/" className={styles.seeAllLink}>
-            Sentry CLI
+          <ExternalLink href={SENTRY_CLI_URL} className={styles.seeAllLink}>
+            Learn more about the Sentry CLI
           </ExternalLink>
-          .
         </p>
       </div>
     </div>

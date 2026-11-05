@@ -162,7 +162,7 @@ export const DocMetrics = {
   },
 
   /**
-   * Track "Copy Prompt" button clicks in the Agent Setup Callout
+   * Track Sentry CLI setup copies from the callout, homepage card, and inline buttons
    * @param pathname - Page where the prompt was copied
    * @param skill - Skill name if present (e.g., "sentry-nextjs-sdk")
    * @param success - Whether the clipboard copy succeeded
