@@ -12,6 +12,7 @@ import {CommunitySupportedPlatforms} from './components/communitySupportedPlatfo
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {ContentSeparator} from './components/contentSeparator';
+import {ConventionAttributes} from './components/conventionAttributes';
 import {CopyableCard} from './components/copyableCard';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
@@ -82,6 +83,7 @@ export function mdxComponents(
     CliChecksumTable,
     CommunitySupportedPlatforms,
     ContentSeparator,
+    ConventionAttributes,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
