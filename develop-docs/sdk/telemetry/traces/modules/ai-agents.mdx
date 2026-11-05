@@ -77,7 +77,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` is `"gen_ai.invoke_agent"`.
-- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[4]**
+- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[2]**
 - Attribute `gen_ai.operation.name` is `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` is the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
 - If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
@@ -102,7 +102,7 @@ Additional attributes on the span:
 
 | Attribute                          | Type   | Description                                                                                                                          | Example                                                               |
 | :--------------------------------- | :----- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
+| `gen_ai.input.messages`            | string | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**,                                            | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
 | `gen_ai.tool.definitions`          | string | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
 | `gen_ai.system_instructions`       | string | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
 | `gen_ai.request.max_tokens`        | int    | Model configuration parameter.                                                                                                       | `500`                                                                 |
@@ -128,10 +128,10 @@ Additional attributes on the span:
 
 | Attribute                                  | Type | Description                                                                                                                    | Example |
 | :----------------------------------------- | :--- | :----------------------------------------------------------------------------------------------------------------------------- | :------ |
-| `gen_ai.usage.input_tokens`                | int  | The number of tokens used in the AI input (prompt), including cached tokens. **[2]**                                           | `60`    |
+| `gen_ai.usage.input_tokens`                | int  | The number of tokens used in the AI input (prompt), including cached tokens.                                                   | `60`    |
 | `gen_ai.usage.cache_read.input_tokens`     | int  | The number of cached tokens used in the AI input (prompt).                                                                     | `50`    |
 | `gen_ai.usage.cache_creation.input_tokens` | int  | Tokens written to cache when processing input.                                                                                 | `20`    |
-| `gen_ai.usage.output_tokens`               | int  | The number of tokens used in the AI output, including reasoning tokens. **[3]**                                                | `130`   |
+| `gen_ai.usage.output_tokens`               | int  | The number of tokens used in the AI output, including reasoning tokens.                                                        | `130`   |
 | `gen_ai.usage.reasoning.output_tokens`     | int  | The number of tokens used for reasoning.                                                                                       | `30`    |
 | `gen_ai.usage.total_tokens`                | int  | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.                                                       | `190`   |
 
@@ -193,15 +193,7 @@ Span attributes only allow primitive data types (like `int`, `float`, `boolean`,
 
 Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
 
-**[2]:**
-
-Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
-
-**[3]:**
-
-Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
-
-**[4]**
+**[2]**
 
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
 In these cases, the span name is `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
