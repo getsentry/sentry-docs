@@ -175,9 +175,59 @@ If you [link against the NDK libraries](#allowing-the-compiler-to-link-libraries
 Keep in mind:
 
 - The crash service runs in a separate process, `<applicationId>.sentry_ndk_crash`, while your app runs, and uses additional memory.
-- Android creates your `Application` in that process too. The SDK skips its own initialization there. If your `Application.onCreate` does other startup work, check `Application.getProcessName()` and skip that work in the crash service process.
+- Android creates a second instance of your `Application` in that process. See [Second Application Instance](#second-application-instance).
 - With the [Tombstone Integration](/platforms/android/configuration/tombstones/) enabled on Android 12 (API level 31) or later, the crash service merges the tombstone into the native crash event before it sends it.
 - If the crash service can't finish sending the crash, the SDK sends it on a later app start. This can happen without a network connection, or on Android 14 (API level 34) and later, where Android freezes the service 10 seconds after the app exits.
+
+### Second Application Instance
+
+Android creates a second instance of your `Application` class in the crash service process. The SDK skips its own initialization there, so only one SDK runs and sessions aren't tracked twice.
+
+<Alert level="warning">
+
+Code in `Application.onCreate` also runs in the crash service process, which can initialize libraries twice, repeat background work, or cause conflicts over shared files.
+
+</Alert>
+
+To run startup code only in the main process, return early from `Application.onCreate` in other processes:
+
+```kotlin {filename:MyApplication.kt}
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        if (!isMainProcess()) return
+
+        // your startup work
+    }
+
+    private fun isMainProcess() =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+            Application.getProcessName() == applicationInfo.processName
+            // or, to skip only the crash service process:
+            // !Application.getProcessName().endsWith(".sentry_ndk_crash")
+}
+```
+
+```java {filename:MyApplication.java}
+public class MyApplication extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        if (!isMainProcess()) {
+            return;
+        }
+
+        // your startup work
+    }
+
+    private boolean isMainProcess() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.P
+            || Application.getProcessName().equals(getApplicationInfo().processName);
+            // or, to skip only the crash service process:
+            // || !Application.getProcessName().endsWith(".sentry_ndk_crash");
+    }
+}
+```
 
 ## Disable NDK Integration
 
