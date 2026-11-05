@@ -34,22 +34,28 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     </root>
 </configuration>
 ```
-### SDK Configuration
 
-Configure the SDK using a `sentry.properties` file:
+Sentry Logs must be enabled for the appender to send log messages as Logs. If Sentry is initialized elsewhere, make sure Logs are enabled there. If the appender initializes the SDK, the `sentry.properties` file as shown in the section below enables them.
+
+### Set the DSN If Nothing Else Initializes Sentry
+
+You can skip this section if your application already initializes Sentry through [`Sentry.init`](/platforms/java/), the [Spring](/platforms/java/guides/spring/) or [Spring Boot](/platforms/java/guides/spring-boot/) integration, or the [Sentry OpenTelemetry agent](/platforms/java/opentelemetry/setup/agent/).
+
+If you haven't initialized Sentry elsewhere, the handler initializes the SDK for you. Configure it with a `sentry.properties` file:
 
 ```properties {filename:sentry.properties}
 dsn=___PUBLIC_DSN___
-traces-sample-rate=1.0
-profile-session-sample-rate=1.0
-profile-lifecycle=TRACE
+
+# Enable logs
+logs.enabled=true
+
 # Use Data Collection defaults but don't collect automatic user information.
-# https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/
+# https://docs.sentry.io/platforms/java/guides/jul/data-management/data-collected/
 data-collection.user-info=false
-# Configure other data categories here.
 ```
 
 You can also provide the DSN through the `sentry.dsn` system property or the `SENTRY_DSN` environment variable. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+
 ### Minimum Log Level
 
 Two log levels are used to configure this integration:
