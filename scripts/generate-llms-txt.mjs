@@ -166,7 +166,7 @@ function buildPlatformsExpanded(platformsNode) {
     return '## Platforms';
   }
   const platforms = getVisibleChildren(platformsNode);
-  const lines = ['## Platforms', ''];
+  const lines = ['## Platforms', '', LIST_SETUP_NOTE, ''];
   for (const platform of platforms) {
     lines.push(`- [${getTitle(platform)}](${mdUrl(platform.path)})`);
   }
@@ -184,7 +184,14 @@ function buildPlatformsExpanded(platformsNode) {
     frameworkBlocks.push(block.join('\n'));
   }
   if (frameworkBlocks.length > 0) {
-    lines.push('', '## Frameworks', '', frameworkBlocks.join('\n\n'));
+    lines.push(
+      '',
+      '## Frameworks',
+      '',
+      LIST_SETUP_NOTE,
+      '',
+      frameworkBlocks.join('\n\n')
+    );
   }
   return lines.join('\n');
 }
@@ -194,8 +201,19 @@ function buildPlatformsExpanded(platformsNode) {
 const SUMMARY =
   'Sentry is an application monitoring platform that helps developers and their agents have the context needed to identify and fix bugs, errors, and performance issues in real-time using a trace-id to create a connected data model across all telemetry.';
 
+const SETUP_GUIDE_URL = `${DOCS_ORIGIN}/ai/agent-setup/get-started.md`;
+
+// Agents often read llms.txt through a summarizer (WebFetch) that keeps only what answers
+// their question, such as "the Next.js setup URLs". So the setup instruction also sits
+// under the summary and above the platform and framework lists, not only under "For AI
+// Agents".
+const SETUP_NOTE = `**AI agents setting up Sentry in a project: fetch and follow ${SETUP_GUIDE_URL} before any platform or framework page.** It says which page to use and what to set up first.`;
+const LIST_SETUP_NOTE = `AI agents setting up Sentry in a project: start with ${SETUP_GUIDE_URL}, which says which of these pages to use and how.`;
+
 const DESCRIPTION = `\
 > ${SUMMARY}
+
+${SETUP_NOTE}
 
 Key Sentry capabilities include:
 
@@ -214,7 +232,7 @@ const INSTRUCTIONS = `\
 
 When helping a developer set up or use Sentry, follow these guidelines:
 
-- **Setting up Sentry in a project**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/get-started.md before you start. It covers agents with the Sentry CLI, the Sentry MCP server, or neither.
+- **Setting up Sentry in a project**: Fetch and follow ${SETUP_GUIDE_URL} before any platform or framework page. It covers agents with the Sentry CLI, the Sentry MCP server, or neither.
 - **Adding a feature to a project that already uses Sentry** (tracing, logs, Session Replay, metrics, profiling, crons, uptime, AI agent monitoring): Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/instrument.md.
 - **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, etc.) for the latest Sentry SDK version. Do not rely on memorized version numbers from training data. Get up to date information on SDKs in the docs (${DOCS_ORIGIN}/platforms/)
 - **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`).
