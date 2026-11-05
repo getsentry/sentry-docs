@@ -20,6 +20,57 @@ Sentry Conventions is the single source of truth.
 
 </Alert>
 
+
+## Span Relationships
+
+An agent invocation span has tool execution and chat span children, but chat spans need not have an agent invocation parent (not all chat requests are triggered by an agent).
+Agents can have other children such as extraction, decision and memory spans, depending on what's considered part of an agent execution in a given application.
+Automatic instrumentation considers an agent execution to be one run of the agent as represented by the supported library.
+
+All span types can be children of a tool execution span because tools can be arbitrary functions (including starting subagents and performing handoffs).
+Chat, extraction and decision spans are basic building blocks and should not have GenAI spans as children.
+
+Valid examples:
+
+### Agent execution with extraction, decision and memory children
+
+```
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.memory
+├── gen_ai.extraction
+├── gen_ai.chat
+├── gen_ai.execute_tool
+├── gen_ai.chat
+└── gen_ai.decide
+```
+
+### Chat, memory, decision, and extraction spans outside of an agent execution
+
+```
+gen_ai.chat
+gen_ai.extraction
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.execute_tool
+└── gen_ai.chat
+gen_ai.decide
+gen_ai.memory
+```
+
+### Subagent
+
+```
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.execute_tool
+│   └── gen_ai.invoke_agent
+│       ├── gen_ai.chat
+│       ├── gen_ai.execute_tool
+│       └── gen_ai.chat
+└── gen_ai.chat
+```
+
 ## Invoke Agent Span
 
 Describes AI agent invocation.
@@ -102,6 +153,19 @@ Additional attributes on the span:
 | `gen_ai.tool.description`    | string | Description of the tool executed.                                                                              | `"Tool returning a random number"`         |
 | `gen_ai.tool.call.arguments` | string | Arguments of the tool call (stringified).                                                                      | `'{"max":10}'`                             |
 | `gen_ai.tool.call.result`    | string | Result of the tool call (stringified).                                                                         | `"7"`                                      |
+
+## Derived by Relay
+
+Relay sets these attributes during ingestion:
+
+- `gen_ai.operation.type` is inferred from `gen_ai.operation.name` with a `sentry.op` fallback.
+- `gen_ai.response.model` is set to `gen_ai.request.model` if not already present.
+- `gen_ai.usage.total_tokens` is computed as `gen_ai.usage.input_tokens + gen_ai.usage.output_tokens`.
+- `gen_ai.response.tokens_per_second` is computed as `gen_ai.usage.output_tokens` divided by the span duration.
+- `gen_ai.context.window_size` is looked up from the model metadata registry by `gen_ai.response.model`.
+- `gen_ai.context.utilization` is computed as `gen_ai.usage.total_tokens / gen_ai.context.window_size`.
+- `gen_ai.cost.input_tokens`, `gen_ai.cost.output_tokens`, and `gen_ai.cost.total_tokens` are calculated from token counts and per-token pricing in the model registry.
+
 
 **[0]:**
 
