@@ -11,15 +11,22 @@ description: "Symfony is a set of reusable PHP components and a PHP framework to
 
 ## Install
 
-Install the `sentry/sentry-symfony` bundle:
+Install Sentry Symfony SDK 5.13.0 or later. This requires PHP SDK 4.31.0 or later, where Logs and Application Metrics don't need enable options:
 
 ```bash
-composer require sentry/sentry-symfony
+composer require "sentry/sentry-symfony:^5.13"
 ```
 
-If you're already using [Monolog](https://github.com/Seldaek/monolog), see the [Monolog integration docs](integrations/monolog/) for Monolog-related configuration.
+The logging configuration below also requires MonologBundle. If it isn't already installed, add it:
+
+```bash
+composer require symfony/monolog-bundle
+```
 
 ## Configure
+
+**Error Monitoring** starts working as soon as the bundle is enabled and your DSN is set. **Logs** need Sentry's Monolog `LogsHandler`, which the snippet below registers. **Application Metrics** need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**. Symfony also supports <PlatformLink to="/crons/">Crons</PlatformLink>, <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>, and <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
 
 Add your DSN to your `.env` file:
 
@@ -29,16 +36,104 @@ SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
 ```
 
-When using Symfony Flex, the Sentry bundle is configured to be enabled in the `prod` environment only by default. You can change this behaviour in your `config/packages/sentry.yaml` and `config/bundles.php` files.
+Then configure the bundle in `config/packages/sentry.yaml`:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+when@prod:
+    sentry:
+        dsn: '%env(SENTRY_DSN)%'
+        options:
+            # Send request headers, cookies, and IP address.
+            send_default_pii: true
+
+            # Enables Tracing.
+            # Set to 1.0 to capture 100% of spans for tracing.
+            # We recommend reducing this value in production.
+            traces_sample_rate: 1.0
+
+            # Enables Profiling.
+            # Profiles are sampled relative to traces_sample_rate.
+            profiles_sample_rate: 1.0
+
+    # Sends Monolog records to Sentry as Logs.
+    monolog:
+        handlers:
+            sentry_logs:
+                type: service
+                id: Sentry\SentryBundle\Monolog\LogsHandler
+
+    services:
+        Sentry\SentryBundle\Monolog\LogsHandler:
+            arguments:
+                # The minimum level of logs to send to Sentry.
+                - !php/const Monolog\Logger::INFO
+```
+
+The snippet also turns on:
+
+- Request headers, cookies, and IP address: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
+- Logs: via the `sentry_logs` Monolog handler and its `LogsHandler` service, which require MonologBundle (`symfony/monolog-bundle`)
+
+Don't need a feature? Remove its options from the snippet.
+
+### Enable Sentry in Other Environments
+
+When using Symfony Flex, the Sentry bundle is enabled in the `prod` environment only by default, which is why the snippet uses `when@prod`. To use Sentry in other environments, update `config/packages/sentry.yaml` and the Sentry bundle entry in `config/bundles.php`.
+
+### Install Excimer for Profiling
+
+Profiling requires the Excimer PHP extension. Install it with PECL:
+
+```bash
+pecl install excimer
+```
+
+Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
+
+Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
+
+### Capture Stack Trace Arguments
 
 <Alert level="warning">
-  In order to receive stack trace arguments in your errors, make sure to set
-  `zend.exception_ignore_args: Off` in your php.ini
+  To receive stack trace arguments in your errors, set
+  `zend.exception_ignore_args = Off` in your `php.ini`.
 </Alert>
 
-## Verify
+### Use Sentry With Monolog
 
-To test that Sentry is capturing unhandled exceptions, you can create the following controller:
+If you already use [Monolog](https://github.com/Seldaek/monolog) to report errors or record breadcrumbs, see the <PlatformLink to="/integrations/monolog/">Monolog integration docs</PlatformLink> for related configuration.
+
+## Send Logs
+
+Once the `sentry_logs` handler is registered, logs sent through `Psr\Log\LoggerInterface` go to Sentry. Symfony flushes logs automatically when a request or command finishes. For example, inject the logger into a controller action:
+
+```php
+public function checkout(\Psr\Log\LoggerInterface $logger): \Symfony\Component\HttpFoundation\Response
+{
+    $logger->info('Checkout completed', ['order_id' => 12345]);
+
+    return new \Symfony\Component\HttpFoundation\Response('Checkout completed');
+}
+```
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for log levels, filtering, and all available options.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. Metrics are enabled by default after you install the SDK; no metrics option is required. Symfony flushes metrics automatically at the end of each request or command.
+
+```php
+\Sentry\traceMetrics()->count('checkout.failed', 1);
+```
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+## Verify Your Setup
+
+Create the following controller, then visit `/_sentry-test` in an environment where Sentry is enabled to confirm that Sentry captures the error:
 
 ```php
 <?php
@@ -58,8 +153,26 @@ class SentryTestController extends AbstractController
 }
 ```
 
-After you visit the `/_sentry-test` page, you can view and resolve the recorded error by logging into [sentry.io](https://sentry.io) and opening your project.
+### View Captured Data in Sentry
+
+Run the logging and metrics examples above in a request or command in an environment where Sentry is enabled. If you kept Tracing and Profiling enabled, make a request to a route in that environment. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
+
+- **Issues** for the test error.
+- **Logs** for `Checkout completed`.
+- **Application Metrics** for the `checkout.failed` counter.
+- **Tracing and Profiling** for the request's trace and its associated profile. Very short requests may not collect enough profiling samples to produce a profile.
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Symfony application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/usage/">Learn how to manually capture errors</PlatformLink>
+- Review all <PlatformLink to="/configuration/symfony-options/">Symfony options</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>

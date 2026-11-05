@@ -11,19 +11,62 @@ og_image: /og-images/platforms-php-guides-laravel.png
 ## Prerequisites
 
 - You need a [Sentry account](https://sentry.io/signup/) and project
-- Your Laravel application needs to run on PHP 7.2 or later
+- Your application needs to meet your Laravel version's PHP requirements (PHP 8.2 or later for Laravel 11)
 - Your Laravel version needs to be 11.x or higher
 - Read one of these guides if you use an [older version](/platforms/php/guides/laravel/other-versions/) or need [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/)
 
 ## Install
 
-Install the `sentry/sentry-laravel` package:
+Install Sentry Laravel SDK 4.28.0 or later. This requires PHP SDK 4.31.0 or later, where Logs and Application Metrics don't need enable options:
 
 ```bash
-composer require sentry/sentry-laravel
+composer require "sentry/sentry-laravel:^4.28"
 ```
 
-Enable capturing unhandled exception to report to Sentry by making the following change to your `bootstrap/app.php`:
+## Configure
+
+**Error Monitoring** starts working once you add your DSN and register Sentry's exception handler. **Logs** need the `sentry_logs` log channel in your log stack, which the snippet below sets up. **Application Metrics** need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**. Laravel also supports <PlatformLink to="/crons/">Crons</PlatformLink>, <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink>, <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>, and <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
+
+Publish the Sentry config file and set your DSN with this command:
+
+```shell
+php artisan sentry:publish --dsn=___PUBLIC_DSN___
+```
+
+It creates the config file (`config/sentry.php`) and adds your DSN, along with any options you confirm at the prompts, to your `.env` file. Make sure your `.env` file includes the following:
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+# Send request headers, cookies, and IP address.
+SENTRY_SEND_DEFAULT_PII=true
+
+# Enables Tracing.
+# Set to 1.0 to capture 100% of spans for tracing.
+# We recommend reducing this value in production.
+SENTRY_TRACES_SAMPLE_RATE=1.0
+
+# Enables Profiling.
+# Profiles are sampled relative to SENTRY_TRACES_SAMPLE_RATE.
+SENTRY_PROFILES_SAMPLE_RATE=1.0
+
+# Sends Laravel logs to Sentry through the sentry_logs channel.
+LOG_CHANNEL=stack
+LOG_STACK=single,sentry_logs
+```
+
+The snippet also turns on:
+
+- Request headers, cookies, and IP address: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
+- Logs: via the `sentry_logs` channel in `LOG_STACK`
+
+Don't need a feature? Remove its lines from your `.env` file.
+
+### Report Unhandled Exceptions
+
+Enable capturing unhandled exceptions to report to Sentry by making the following change to your `bootstrap/app.php`:
 
 ```php {filename:bootstrap/app.php}
 <?php
@@ -48,40 +91,62 @@ return Application::configure(basePath: dirname(__DIR__))
     ->create();
 ```
 
-If you also want to send structured logs to Sentry, see the [Logs guide](logs/).
+### Install Excimer for Profiling
 
-## Configure
+Profiling requires the Excimer PHP extension. Install it with PECL:
 
-Configure the Sentry DSN with this command:
-
-```shell
-php artisan sentry:publish --dsn=___PUBLIC_DSN___
+```bash
+pecl install excimer
 ```
 
-It creates the config file (`config/sentry.php`) and adds the `DSN` to your `.env` file.
+Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
 
-```shell {filename:.env}
-SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
-```
+Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
+
+### Capture Stack Trace Arguments
 
 <Alert level="warning">
-  In order to receive stack trace arguments in your errors, make sure to set
-  `zend.exception_ignore_args: Off` in your php.ini
+  To receive stack trace arguments in your errors, set
+  `zend.exception_ignore_args = Off` in your `php.ini`.
 </Alert>
 
-## Verify
+### Disable Sentry During Local Development and Testing
 
-### Verify With Artisan
+When Sentry is installed in your application, it's also active when you're developing or running tests. This can send unwanted events to Sentry and slow down your application or test suite.
 
-You can test your configuration using the provided `sentry:test` artisan command:
+To stop sending events to Sentry, set the DSN to `null`. You can do this by leaving `SENTRY_LARAVEL_DSN` out of your `.env` file or by setting `SENTRY_LARAVEL_DSN=null`.
 
-```shell
-php artisan sentry:test
+### Set Up Sentry Through Forge
+
+If you use Laravel Forge to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry).
+
+![Sentry and Forge](./img/forge-sentry.png)
+
+## Send Logs
+
+Once the `sentry_logs` channel is in your log stack, Laravel's `Log` facade sends logs to Sentry. Laravel flushes logs automatically when a request, command, or job finishes.
+
+```php
+use Illuminate\Support\Facades\Log;
+
+Log::info('Checkout completed', ['order_id' => 12345]);
 ```
 
-### Verify With Code
+If your `config/logging.php` defines the stack's `channels` array directly instead of reading `LOG_STACK`, add `sentry_logs` to that array. See <PlatformLink to="/logs/#setup">Set Up Logs</PlatformLink> for older SDK versions, custom channel configuration, log levels, and filtering.
 
-You can verify that Sentry is capturing errors in your Laravel application by creating a route that will throw an exception:
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. Metrics are enabled by default after you install the SDK; no metrics option is required. Laravel flushes metrics automatically at the end of each request or command.
+
+```php
+\Sentry\traceMetrics()->count('checkout.failed', 1);
+```
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+## Verify Your Setup
+
+Add a route that throws an exception, then visit it to confirm that Sentry captures the error:
 
 ```php {filename:routes/web.php}
 Route::get('/debug-sentry', function () {
@@ -89,41 +154,33 @@ Route::get('/debug-sentry', function () {
 });
 ```
 
-Visiting this route will trigger an exception that will be captured by Sentry.
+To check your DSN and connectivity from the command line, you can also run:
 
-## Tracing
-
-Set `traces_sample_rate` in `config/sentry.php` or `SENTRY_TRACES_SAMPLE_RATE` in your `.env` to a value greater than `0.0`. Setting a value greater than `0.0` will enable Tracing, `null` (the default) will disable Tracing.
-
-```shell {filename:.env}
-# Be sure to lower this value in production otherwise you could burn through your quota quickly.
-SENTRY_TRACES_SAMPLE_RATE=1.0
+```shell
+php artisan sentry:test
 ```
 
-The example configuration above will transmit 100% of captured traces. Be sure to lower this value in production or you could use up your quota quickly.
+### View Captured Data in Sentry
 
-You can also be more granular with the sample rate by using the `traces_sampler` option. Learn more in [Using Sampling to Filter Transaction Events](configuration/filtering/#using-sampling-to-filter-transaction-events).
+Run the logging and metrics examples above in a request, command, or job. If you kept Tracing and Profiling enabled, make a request to a route in your application. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
 
-If your queued jobs generate more traces than your web requests, you can also lower the sample rate for specific jobs with `Sentry\Laravel\Jobs\Middleware\SentryTracesSampleRate`. See [Laravel Options](configuration/laravel-options/#lower-sample-rate-for-specific-jobs).
-
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans).
-
-## Local Development and Testing
-
-When Sentry is installed in your application, it will also be active when you are developing or running tests.
-
-You most likely don't want errors to be sent to Sentry when you are developing or running tests. To avoid this, set the DSN value to `null` to disable sending errors to Sentry.
-
-You can also do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or by defining it as `SENTRY_LARAVEL_DSN=null`.
-
-If you do leave Sentry enabled when developing or running tests, it's possible for it to have a negative effect on the performance of your application or test suite.
-
-## Set up Sentry through Forge
-
-If you're using Laravel's Forge platform to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry).
-
-![Sentry and Forge](./img/forge-sentry.png)
+- **Issues** for the test error.
+- **Logs** for `Checkout completed`.
+- **Application Metrics** for the `checkout.failed` counter.
+- **Tracing and Profiling** for the request's trace and its associated profile. Very short requests may not collect enough profiling samples to produce a profile.
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Laravel application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/usage/">Learn how to manually capture errors</PlatformLink>
+- Fine-tune Tracing with <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">`traces_sampler`</PlatformLink> or <PlatformLink to="/configuration/laravel-options/#lower-sample-rate-for-specific-jobs">lower the sample rate for specific jobs</PlatformLink>
+- Review all <PlatformLink to="/configuration/laravel-options/">Laravel options</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
