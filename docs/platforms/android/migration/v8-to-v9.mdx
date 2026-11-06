@@ -1,0 +1,73 @@
+---
+title: Migrate from Sentry 8.x to 9.0.0
+description: "Learn how to migrate from Sentry Android SDK 8.x to 9.0.0."
+sidebar_order: 8890
+---
+
+Version 9 removes the deprecated Hub compatibility APIs and the global Logs and Metrics enable options. Migrate remaining Hub references to Scopes, then update your telemetry configuration.
+
+## Removed Hub APIs
+
+Version 8 deprecated Hub and introduced Scopes. Version 9 removes the Hub compatibility layer:
+
+- `IHub` has been removed. Use `IScopes` instead.
+- `HubAdapter.getInstance()` has been removed. Use `ScopesAdapter.getInstance()` instead.
+- `HubScopesWrapper` has been removed. Use the wrapped `IScopes` instance directly.
+- `NoOpHub.getInstance()` has been removed. Use `NoOpScopes.getInstance()` instead.
+- `Sentry.getCurrentHub()` and `Sentry.setCurrentHub(...)` have been removed. Use `Sentry.getCurrentScopes()` and `Sentry.setCurrentScopes(...)` instead.
+- `IHub.clone()` and `IScopes.clone()` have been removed. Use `forkedScopes(...)` or `forkedCurrentScope(...)` when you need an independent Scopes instance. For temporary scope changes, use `withScope()` or `withIsolationScope()`.
+
+### Remove `popScope()` Calls
+
+`Sentry.popScope()` and `IScopes.popScope()` have been removed. Use `Sentry.withScope()` or `Sentry.withIsolationScope()` for temporary scope changes instead. Both methods restore the previous scopes after the callback finishes.
+
+### Scopes Model
+
+The Scopes model introduced in version 8 is the supported context model in version 9:
+
+- The global scope is attached to all events created by the SDK. To modify it before `SentryAndroid.init()`, call methods directly on `Sentry.getGlobalScope()`, such as `Sentry.getGlobalScope().setTag(...)`.
+- The isolation scope attaches data to events within an isolated lifecycle.
+- The current scope contains data for the active operation. Child scopes inherit its data, but parent scopes don't receive changes made in a child scope.
+
+On Android, APIs such as `Sentry.configureScope()` and `Sentry.setTag()` use the current scope by default.
+
+## Manual Logs and Metrics
+
+Calls to `Sentry.logger()` and `Sentry.metrics()` no longer require a global enable option. Remove calls to:
+
+- `options.getLogs().setEnabled(...)`
+- `options.getMetrics().setEnabled(...)`
+
+The `beforeSendLog` and `beforeSendMetric` callbacks remain available for filtering or modifying telemetry.
+
+## Android Manifest Options
+
+Remove these manifest entries:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.logs.enabled" android:value="true" />
+<meta-data android:name="io.sentry.metrics.enabled" android:value="false" />
+```
+
+To capture logs from an automatic Android integration, use its integration-specific option instead:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.timber.log-capture.enabled" android:value="true" />
+<meta-data android:name="io.sentry.logcat.log-capture.enabled" android:value="true" />
+```
+
+The equivalent `SentryAndroidOptions` properties are `timberLogCaptureEnabled` and `logcatLogCaptureEnabled`. Both default to `false`.
+
+## Timber Constructor Changes
+
+Manual `SentryTimberIntegration` and `SentryTimberTree` construction now requires a `logsEnabled` argument. Pass `false` to keep automatic Sentry Logs capture disabled:
+
+```kotlin {tabTitle:Kotlin}
+SentryTimberIntegration(logsEnabled = false)
+```
+
+```java {tabTitle:Java}
+new SentryTimberIntegration(false);
+```
+
+Pass `true` only when Timber records should also be sent as Sentry Logs.

@@ -1,0 +1,102 @@
+---
+title: Migrating Version 8.x to 9.0
+description: "Learn how to migrate from version 8.x to 9.0 of the Sentry Java SDK."
+sidebar_order: 994
+---
+
+Version 9 removes deprecated Hub compatibility and OpenTelemetry APIs, along with the global Logs and Metrics enable options. Migrate remaining Hub and OpenTelemetry references, then update your telemetry configuration.
+
+## Removed Hub APIs
+
+Version 8 deprecated Hub and introduced Scopes. Version 9 removes the Hub compatibility layer:
+
+- `IHub` has been removed. Use `IScopes` instead.
+- `HubAdapter.getInstance()` has been removed. Use `ScopesAdapter.getInstance()` instead.
+- `HubScopesWrapper` has been removed. Use the wrapped `IScopes` instance directly.
+- `NoOpHub.getInstance()` has been removed. Use `NoOpScopes.getInstance()` instead.
+- `Sentry.getCurrentHub()` and `Sentry.setCurrentHub(...)` have been removed. Use `Sentry.getCurrentScopes()` and `Sentry.setCurrentScopes(...)` instead.
+- `IHub.clone()` and `IScopes.clone()` have been removed. Use `forkedScopes(...)` or `forkedCurrentScope(...)` when you need an independent Scopes instance. For temporary scope changes, use `pushScope()`, `pushIsolationScope()`, `withScope()`, or `withIsolationScope()`.
+- Spring WebFlux's `SENTRY_HUB_KEY` has been removed. Use `SENTRY_SCOPES_KEY` instead.
+- GraphQL's `ExceptionDetails.getHub()` has been removed. Use `ExceptionDetails.getScopes()` instead.
+
+### Remove `popScope()` Calls
+
+`Sentry.popScope()` and `IScopes.popScope()` have been removed. Close the lifecycle token returned by `pushScope()` or `pushIsolationScope()` to restore the previous scopes:
+
+```java
+try (ISentryLifecycleToken ignored = Sentry.pushScope()) {
+  // This block has its own current scope.
+}
+```
+
+Use the same pattern for an isolation scope:
+
+```java
+try (ISentryLifecycleToken ignored = Sentry.pushIsolationScope()) {
+  // This block has its own isolation scope.
+}
+```
+
+If you can't use try-with-resources, close the token in a `finally` block.
+
+### Scopes Model
+
+The Scopes model introduced in version 8 is the supported context model in version 9:
+
+- The global scope is attached to all events created by the SDK. To modify it before `Sentry.init()`, call methods directly on `Sentry.getGlobalScope()`, such as `Sentry.getGlobalScope().setTag(...)`.
+- The isolation scope attaches data to events within an isolated lifecycle, such as an incoming request. The SDK automatically forks this scope for incoming requests, CRON jobs, Spring `@Async`, and other integrations.
+- The current scope contains data for the active operation. Child scopes inherit its data, but parent scopes don't receive changes made in a child scope.
+
+For backend and other JVM applications, APIs such as `Sentry.configureScope()` and `Sentry.setTag()` use the isolation scope by default.
+
+## Removed OpenTelemetry APIs
+
+Version 9 removes these deprecated OpenTelemetry integration classes:
+
+- `SentrySpanProcessor`
+- `SentryPropagator`
+- `OpenTelemetryLinkErrorEventProcessor`
+- `Instrumenter`, including its `SentryOptions` option, `SpanContext` property, and `startChild` overloads
+- `SentrySpanStorage` (internal)
+- `TraceData` (internal)
+
+See the <PlatformLink to="/opentelemetry/">OpenTelemetry documentation</PlatformLink> for supported setup options.
+
+## Manual Logs and Metrics
+
+Calls to `Sentry.logger()` and `Sentry.metrics()` no longer require a global enable option. Remove calls to:
+
+- `options.getLogs().setEnabled(...)`
+- `options.getMetrics().setEnabled(...)`
+
+The `beforeSendLog` and `beforeSendMetric` callbacks remain available for filtering or modifying telemetry.
+
+## Removed External Configuration
+
+Remove these options from your configuration:
+
+| Configuration        | Removed Logs Option   | Removed Metrics Option   |
+| -------------------- | --------------------- | ------------------------ |
+| `sentry.properties`  | `logs.enabled`        | `metrics.enabled`        |
+| Java system property | `sentry.logs.enabled` | `sentry.metrics.enabled` |
+| Environment variable | `SENTRY_LOGS_ENABLED` | `SENTRY_METRICS_ENABLED` |
+| Spring Boot          | `sentry.logs.enabled` | `sentry.metrics.enabled` |
+
+Metrics are sent only when your application calls `Sentry.metrics()`. To discard selected metrics, use `beforeSendMetric`.
+
+## Automatic Logging Integrations
+
+Automatic Sentry Logs capture is disabled by default. Enable it on each logging integration that should forward records:
+
+| Integration                            | Version 9 Opt-In                                          |
+| -------------------------------------- | --------------------------------------------------------- |
+| Logback                                | Set `<logsEnabled>true</logsEnabled>` on `SentryAppender` |
+| Log4j 2                                | Set `logsEnabled="true"` on the `<Sentry>` appender       |
+| `java.util.logging`                    | Set `io.sentry.jul.SentryHandler.logsEnabled=true`        |
+| Spring Boot logging auto-configuration | Set `sentry.logging.logs-enabled=true`                    |
+
+The minimum-level options only select eligible records. They do not enable Sentry Logs capture.
+
+## Constructor Changes
+
+The Log4j 2 `SentryAppender` constructor and `createAppender` factory now require a `logsEnabled` argument. Pass `true` to capture Sentry Logs or `false` to keep capture disabled. The deprecated constructor without `minimumLevel` has been removed.
