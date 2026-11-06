@@ -58,12 +58,9 @@ export function ConventionAttributes({attributes}: Props) {
                   dangerouslySetInnerHTML={{__html: inlineMarkdown(attribute.brief)}}
                 />
                 {noteNumbers.map(n => (
-                  <Fragment key={n}>
-                    {' '}
-                    <a href={`#${noteId(n)}`}>
-                      <strong>[{n}]</strong>
-                    </a>
-                  </Fragment>
+                  <sup key={n}>
+                    <a href={`#${noteId(n)}`}>[{n}]</a>
+                  </sup>
                 ))}
               </td>
               <td>

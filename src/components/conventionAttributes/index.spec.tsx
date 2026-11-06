@@ -31,7 +31,9 @@ describe('ConventionAttributes', () => {
 
     expect(notes.length).toBeGreaterThan(0);
     expect(html.match(/<li /g)).toHaveLength(notes.length);
-    expect(html).toContain('href="#gen_ai-usage-input_tokens-note-1"');
+    expect(html).toContain(
+      '<sup><a href="#gen_ai-usage-input_tokens-note-1">[1]</a></sup>'
+    );
     expect(html).toContain('id="gen_ai-usage-input_tokens-note-1"');
   });
 
