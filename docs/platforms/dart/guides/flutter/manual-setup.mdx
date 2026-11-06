@@ -12,23 +12,27 @@ If you can't (or prefer not to) run the [automatic setup](/platforms/dart/guides
 
 ## Install
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Add the Sentry Flutter SDK to your `pubspec.yaml`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```yml {filename:pubspec.yaml}
 dependencies:
   sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter') }}
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+### Apple Platform Setup
+
+The Flutter plugin installs the native Sentry SDK through Swift Package Manager. CocoaPods is not supported for this plugin.
+
+Flutter 3.44 enables Swift Package Manager by default and migrates the Xcode project when you run your app. If you previously disabled it, remove any project-level `enable-swift-package-manager: false` setting and run:
+
+```bash
+flutter config --enable-swift-package-manager
+flutter pub get
+```
+
+Set your Xcode deployment targets to iOS 15.0 or macOS 12.0 or later. For custom targets, flavors, or manual migration, follow [Flutter's Swift Package Manager guide](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers/).
+
+Keep CocoaPods if other plugins still require it. Flutter can use both dependency managers in the same application.
 
 ## Configure
 
@@ -42,16 +46,9 @@ Choose the features you want to configure, and this guide will show you how:
 
 ### Initialize the Sentry SDK
 
-Configuration should happen as **early as possible** in your application's lifecycle.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
+Configuration should happen as **early as possible** in your application's lifecycle. Logs and metrics are enabled by default; use `Sentry.logger` and `Sentry.metrics` after initialization without an enable flag.
 
 Import and initialize the SDK in your app's `main` function:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -87,24 +84,13 @@ Future<void> main() async {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 ## Verify Your Setup
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
 ### Issues
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```dart
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -118,10 +104,6 @@ try {
   );
 }
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 <OnboardingOption optionId="performance">
 
@@ -148,7 +130,7 @@ Our next recommended steps for you are:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Add readable <PlatformLink to="/upload-debug/#when-to-upload/">stack traces</PlatformLink> to errors
+- Add readable <PlatformLink to="/debug-symbols/#when-to-upload-debug-symbols">stack traces</PlatformLink> to errors
 - Learn about the <PlatformLink to="/features/">features of Sentry's Flutter SDK</PlatformLink>
 - Add <PlatformLink to="/tracing/instrumentation/">performance instrumentation to your app</PlatformLink>
 

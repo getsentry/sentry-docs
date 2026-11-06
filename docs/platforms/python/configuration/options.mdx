@@ -102,7 +102,7 @@ If this flag is enabled, [certain personally identifiable information (PII)](/pl
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 <Alert>
-  We plan to eventually deprecate `send_default_pii` in favor of the [`data_collection`](#data_collection) option, but that won't happen until a future major version. Until then, `send_default_pii` remains fully supported.
+  `send_default_pii` will be removed in version 3.0 of the SDK. Use the [`data_collection`](#data_collection) option instead.
 
 If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`.
 
@@ -203,8 +203,8 @@ This option can be overridden using `in_app_include`.
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
 - `never`: Request bodies are never sent.
-- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
-- `medium`: Medium and small requests will be captured (typically 10KB).
+- `small`: Only small request bodies (up to 1,000 bytes) will be captured.
+- `medium`: Medium and small request bodies (up to 10,000 bytes) will be captured.
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
 Please note that the Sentry server [limits HTTP request body size](https://develop.sentry.dev/sdk/foundations/transport/event-payloads/#variable-size). The server always enforces its size limit, regardless of how you configure this option.
@@ -534,10 +534,10 @@ The organization ID is used for features like <PlatformLink to="/configuration/o
 
 </SdkOption>
 
-<SdkOption name="functions_to_trace" type='list[str]' defaultValue='[]'>
+<SdkOption name="functions_to_trace" type='list[dict[str, str]]' defaultValue='[]'>
 
 An optional list of functions that should be set up for tracing. For each function in the list, a span will be created when the function is executed.
-Functions in the list are represented as strings containing the fully qualified name of the function.
+Each entry is a dictionary with a `qualified_name` key that holds the fully qualified name of the function, for example `{"qualified_name": "myapp.utils.my_function"}`.
 
 This is a convenient option, making it possible to have one central place for configuring what functions to trace, instead of having custom instrumentation scattered all over your code base.
 
@@ -577,7 +577,7 @@ The threshold in milliseconds for adding the source location to an outgoing HTTP
 
 </SdkOption>
 
-<SdkOption name="trace_ignore_status_codes" type='bool' defaultValue='frozenset()'>
+<SdkOption name="trace_ignore_status_codes" type='set[int]' defaultValue='frozenset()'>
 
 An optional property that disables tracing for HTTP requests with certain status codes.
 
