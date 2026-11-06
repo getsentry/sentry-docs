@@ -1203,9 +1203,9 @@ Learn more in the <PlatformLink to="/configuration/app-hangs/">App Hangs</Platfo
 
 <SdkOption name="enableMetricKit" type="bool" defaultValue="false">
 
-When enabled, the SDK subscribes to MetricKit diagnostic reports and sends MXHangDiagnostic, MXDiskWriteExceptionDiagnostic, and MXCPUExceptionDiagnostic to Sentry.
+When enabled, the SDK subscribes to MetricKit diagnostic reports and sends MXHangDiagnostic, MXDiskWriteExceptionDiagnostic, and MXCPUExceptionDiagnostic to Sentry. A non-empty `options.experimental.metrickit.enabledDiagnosticReports` takes precedence over this option.
 
-This feature is available on SDK version 8.14.0 and up. The SDK supports this feature from iOS 15 and up and macOS 12 and up because in these versions, MetricKit delivers diagnostic reports immediately, which allows the Sentry SDK to apply current data from the scope.
+This feature is available on SDK version 8.14.0 and up. The SDK supports this feature from iOS 15 and up and macOS 12 and up because in these versions, MetricKit delivers diagnostic reports on the next launch of the app.
 
 Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> documentation.
 
@@ -1213,11 +1213,41 @@ Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</Platf
 
 <SdkOption name="enableMetricKitRawPayload" type="bool" defaultValue="false">
 
-When enabled, the SDK adds the raw MXDiagnosticPayloads as an attachment to the converted SentryEvent. You need to enable `enableMetricKit` for this flag to work.
+When enabled, the SDK adds the raw MXDiagnosticPayloads as an attachment to the converted SentryEvent. The MetricKit integration must be enabled for this flag to work.
 
 This feature is available on SDK version 8.29.0 and up.
 
 Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.metrickit.enabledDiagnosticReports" type="array" defaultValue="[]" availableSince="9.32.0">
+
+The MetricKit diagnostic reports the SDK captures as events: `.hang`, `.cpuException`, `.diskWriteException`, `.appLaunch` and `.crash`. A non-empty set enables the MetricKit integration and captures exactly these reports, regardless of `enableMetricKit`. When the set is empty, `enableMetricKit` decides whether the integration is enabled.
+
+Enabling `.crash` sends the crashes MetricKit reports in addition to the ones the SDK's crash handler reports, so the same crash can show up twice.
+
+This option is available from Swift and through the SentryObjC SDK as the `SentryObjCMetricKitDiagnosticReport` bitmask.
+
+Learn more in the <PlatformLink to="/configuration/metric-kit/#choose-diagnostic-reports">MetricKit</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.metrickit.enabledMetricReports" type="array" defaultValue="[]" availableSince="9.32.0">
+
+The MetricKit metric reports the SDK sends as Sentry metrics, such as `.cpuCumulativeTime`, `.memoryPeakUsage` or `.exitForegroundWatchdog`. Use `.all` to send every metric report. A non-empty set enables the MetricKit integration, even when no diagnostic reports are enabled.
+
+MetricKit delivers metric payloads about once a day, and each enabled report adds up to one metric per payload, which counts towards your metrics quota. This option is only available from Swift.
+
+Learn more in the <PlatformLink to="/configuration/metric-kit/#metric-reports">MetricKit</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="experimental.metrickit.hangReportingMode" type="enum" defaultValue=".legacy" availableSince="9.31.0">
+
+How the SDK reports MetricKit hang diagnostics. `.legacy` flattens the call stack tree into the stack traces of the event. `.flamegraphAttachment` attaches the aggregated call trees as a flame graph instead. Configure this option before starting the SDK.
+
+Learn more in the <PlatformLink to="/configuration/metric-kit/#hang-flame-graphs">MetricKit</PlatformLink> documentation.
 
 </SdkOption>
 

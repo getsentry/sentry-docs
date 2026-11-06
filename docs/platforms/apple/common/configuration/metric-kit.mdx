@@ -1,19 +1,19 @@
 ---
 title: MetricKit
 sidebar_order: 20
-description: "This feature, once enabled, subscribes to MXDiagnosticPayload data of MetricKit and it to Sentry."
+description: "Capture MetricKit diagnostic reports as Sentry errors and send MetricKit metric reports as Sentry metrics."
 ---
 
-The [MetricKit](https://developer.apple.com/documentation/metrickit) integration subscribes to [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic), [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic)
-and [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic), which it converts to Sentry events.
+The [MetricKit](https://developer.apple.com/documentation/metrickit) integration converts two kinds of MetricKit data:
 
-This feature is available on Cocoa 8.14.0 and up. The SDK supports this feature from iOS 15 and up and macOS 12 and up because in these versions, MetricKit delivers diagnostic reports immediately, which allows the Sentry SDK to apply current data from the scope.
+- **Diagnostic reports**, such as hangs, CPU and disk write exceptions, or slow app launches, become Sentry error events.
+- **Metric reports**, such as CPU time, network transfer, memory and app exit counts, become <PlatformLink to="/metrics/">Sentry metrics</PlatformLink>.
 
-Note that the Cocoa SDK has no control over the stack traces provided by MetricKit. Some only offer a couple of frames. If these aren't useful to you, you can drop them in <PlatformLink to="/configuration/filtering/#filtering-error-events">`beforeSend`</PlatformLink>.
+This feature is available on Cocoa 8.14.0 and up. The SDK supports it from iOS 15 and up and macOS 12 and up, and on visionOS. MetricKit only collects data from users who agreed to share analytics with app developers.
 
-You can identify MetricKit events by looking at the `mx_hang_diagnostic`, `mx_cpu_exception`, and `mx_disk_write_exception` `mechanism.type`.
+## Diagnostic Reports
 
-Enable this feature by setting the `enableMetricKit` option to `true`:
+Enable the integration by setting the `enableMetricKit` option to `true`. It captures [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic), [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic) and [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic):
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -42,7 +42,57 @@ SentrySDK.start { options in
 }];
 ```
 
-You can enable `enableMetricKitRawPayload` to view the raw MetricKit diagnostic payload in JSON format as an attachment on the converted event in Sentry. This feature is available on Cocoa 8.29.0 and up.
+### Choose Diagnostic Reports
+
+<Alert level="warning" title="Experimental">
+
+This option is experimental and may change in future releases. It's available on Cocoa 9.32.0 and up.
+
+</Alert>
+
+Use `options.experimental.metrickit.enabledDiagnosticReports` to choose which diagnostic reports the SDK captures. A non-empty set enables the integration and captures exactly these reports, regardless of `enableMetricKit`. When the set is empty, which is the default, `enableMetricKit` decides whether the integration captures hangs, CPU exceptions and disk write exceptions.
+
+| Report                | MetricKit diagnostic                                                                                                 | `mechanism.type`           | Availability            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------- | ----------------------- |
+| `.hang`               | [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic)                             | `mx_hang_diagnostic`       | All                     |
+| `.cpuException`       | [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic)             | `mx_cpu_exception`         | All                     |
+| `.diskWriteException` | [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic) | `mx_disk_write_exception`  | All                     |
+| `.appLaunch`          | [MXAppLaunchDiagnostic](https://developer.apple.com/documentation/metrickit/mxapplaunchdiagnostic)                   | `mx_app_launch_diagnostic` | iOS 16 and up, visionOS |
+| `.crash`              | [MXCrashDiagnostic](https://developer.apple.com/documentation/metrickit/mxcrashdiagnostic)                           | `MXCrashDiagnostic`        | All                     |
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.metrickit.enabledDiagnosticReports = [.hang, .cpuException, .diskWriteException, .appLaunch]
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.metrickit.enabledDiagnosticReports =
+        SentryObjCMetricKitDiagnosticReportHang
+        | SentryObjCMetricKitDiagnosticReportCPUException
+        | SentryObjCMetricKitDiagnosticReportDiskWriteException
+        | SentryObjCMetricKitDiagnosticReportAppLaunch;
+}];
+```
+
+The option is available from Swift and through the <PlatformLink to="/install/swift-package-manager/#sentryobjc-objective-c">SentryObjC</PlatformLink> SDK. Objective-C apps that import `Sentry` can only use `enableMetricKit`.
+
+<Alert level="warning" title="Crash diagnostics">
+
+The SDK's crash handler already reports crashes. Enabling `.crash` sends the crashes MetricKit reports in addition, so the same crash can show up twice in Sentry.
+
+</Alert>
+
+### Raw Payloads
+
+Enable `enableMetricKitRawPayload` to view the raw MetricKit diagnostic payload in JSON format as an attachment on the converted event in Sentry. This feature is available on Cocoa 8.29.0 and up.
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -73,3 +123,128 @@ SentrySDK.start { options in
     options.enableMetricKitRawPayload = YES;
 }];
 ```
+
+### Hang Flame Graphs
+
+<Alert level="warning" title="Experimental">
+
+This option is experimental and may change in future releases. It's available on Cocoa 9.31.0 and up.
+
+</Alert>
+
+By default, the SDK flattens the call stack tree of a hang diagnostic into the stack traces of the event. Set `options.experimental.metrickit.hangReportingMode` to `.flamegraphAttachment` to attach the aggregated call trees as a flame graph instead. The event keeps the flattened stack traces when the SDK can't create the flame graph.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetricKit = true
+    options.experimental.metrickit.hangReportingMode = .flamegraphAttachment
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+    options.experimental.metrickit.hangReportingMode =
+        SentryObjCMetricKitHangReportingModeFlamegraphAttachment;
+}];
+```
+
+### Stack Traces
+
+The Cocoa SDK has no control over the stack traces MetricKit provides. Some only offer a couple of frames. If these aren't useful to you, you can drop them in <PlatformLink to="/configuration/filtering/#filtering-error-events">`beforeSend`</PlatformLink> by checking the `mechanism.type` of the event's exception.
+
+## Metric Reports
+
+<Alert level="warning" title="Experimental">
+
+This option is experimental and may change in future releases. It's available on Cocoa 9.32.0 and up, and only from Swift.
+
+</Alert>
+
+Use `options.experimental.metrickit.enabledMetricReports` to send MetricKit metric payloads as Sentry metrics. A non-empty set enables the integration, even when no diagnostic reports are enabled. Use `.all` to send every metric report. The option defaults to an empty set.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.metrickit.enabledMetricReports = [
+        .cpuCumulativeTime,
+        .memoryPeakUsage,
+        .exitForegroundWatchdog,
+        .exitForegroundMemoryResourceLimit,
+    ]
+}
+```
+
+MetricKit delivers metric payloads about once a day. Each enabled report adds up to one metric per payload, which counts towards your metrics quota. Counts of zero aren't sent. Every metric is placed in the middle of the payload's reporting interval and carries these attributes:
+
+- `app.version` and `app.build`: the app version the values were recorded with. They're left out when the payload spans an app update.
+- `sentry.release`: the release of that app version, when it differs from the running release.
+- `os.version`: the OS version the values were recorded on.
+
+On macOS, MetricKit delivers metric payloads from macOS 26, and only to apps built with Xcode 26 or later.
+
+| Report                                   | Metric                                          | Type         | Unit                |
+| ---------------------------------------- | ----------------------------------------------- | ------------ | ------------------- |
+| `.cpuCumulativeTime`                     | `metrickit.cpu.cumulative_time`                 | distribution | second              |
+| `.cpuCumulativeInstructions`             | `metrickit.cpu.cumulative_instructions`         | distribution | none (instructions) |
+| `.gpuCumulativeTime`                     | `metrickit.gpu.cumulative_time`                 | distribution | second              |
+| `.appTimeForeground`                     | `metrickit.app_time.foreground`                 | distribution | second              |
+| `.appTimeBackground`                     | `metrickit.app_time.background`                 | distribution | second              |
+| `.appTimeBackgroundAudio`                | `metrickit.app_time.background_audio`           | distribution | second              |
+| `.appTimeBackgroundLocation`             | `metrickit.app_time.background_location`        | distribution | second              |
+| `.networkWifiUpload`                     | `metrickit.network.wifi_upload`                 | distribution | byte                |
+| `.networkWifiDownload`                   | `metrickit.network.wifi_download`               | distribution | byte                |
+| `.networkCellularUpload`                 | `metrickit.network.cellular_upload`             | distribution | byte                |
+| `.networkCellularDownload`               | `metrickit.network.cellular_download`           | distribution | byte                |
+| `.diskIOLogicalWrites`                   | `metrickit.disk_io.logical_writes`              | distribution | byte                |
+| `.locationBestAccuracyTime`              | `metrickit.location.best_accuracy_time`         | distribution | second              |
+| `.locationBestAccuracyForNavigationTime` | `metrickit.location.best_accuracy_for_nav_time` | distribution | second              |
+| `.locationNearestTenMetersTime`          | `metrickit.location.nearest_ten_meters_time`    | distribution | second              |
+| `.locationHundredMetersTime`             | `metrickit.location.hundred_meters_time`        | distribution | second              |
+| `.locationKilometerTime`                 | `metrickit.location.kilometer_time`             | distribution | second              |
+| `.locationThreeKilometersTime`           | `metrickit.location.three_kilometers_time`      | distribution | second              |
+| `.memoryPeakUsage`                       | `metrickit.memory.peak_usage`                   | gauge        | byte                |
+| `.memoryAverageSuspended`                | `metrickit.memory.avg_suspended`                | gauge        | byte                |
+| `.displayAveragePixelLuminance`          | `metrickit.display.avg_pixel_luminance`         | gauge        | `apl`               |
+| `.animationScrollHitchTimeRatio`         | `metrickit.animation.scroll_hitch_time_ratio`   | gauge        | ratio               |
+| `.animationHitchTimeRatio`¹              | `metrickit.animation.hitch_time_ratio`          | gauge        | ratio               |
+| `.diskSpaceBinaryFileSize`¹              | `metrickit.disk_space.binary_file_size`         | gauge        | byte                |
+| `.diskSpaceBinaryFileCount`¹             | `metrickit.disk_space.binary_file_count`        | gauge        | none                |
+| `.diskSpaceDataFileSize`¹                | `metrickit.disk_space.data_file_size`           | gauge        | byte                |
+| `.diskSpaceDataFileCount`¹               | `metrickit.disk_space.data_file_count`          | gauge        | none                |
+| `.diskSpaceCacheFolderSize`¹             | `metrickit.disk_space.cache_folder_size`        | gauge        | byte                |
+| `.diskSpaceCloneSize`¹                   | `metrickit.disk_space.clone_size`               | gauge        | byte                |
+| `.diskSpaceTotalUsed`¹                   | `metrickit.disk_space.total_used`               | gauge        | byte                |
+| `.diskSpaceTotalCapacity`¹               | `metrickit.disk_space.total_capacity`           | gauge        | byte                |
+| `.exitForegroundNormal`                  | `metrickit.exit.fg.normal`                      | count        |                     |
+| `.exitForegroundMemoryResourceLimit`     | `metrickit.exit.fg.memory_resource_limit`       | count        |                     |
+| `.exitForegroundBadAccess`               | `metrickit.exit.fg.bad_access`                  | count        |                     |
+| `.exitForegroundAbnormal`                | `metrickit.exit.fg.abnormal`                    | count        |                     |
+| `.exitForegroundIllegalInstruction`      | `metrickit.exit.fg.illegal_instruction`         | count        |                     |
+| `.exitForegroundWatchdog`                | `metrickit.exit.fg.watchdog`                    | count        |                     |
+| `.exitBackgroundNormal`                  | `metrickit.exit.bg.normal`                      | count        |                     |
+| `.exitBackgroundMemoryResourceLimit`     | `metrickit.exit.bg.memory_resource_limit`       | count        |                     |
+| `.exitBackgroundCPUResourceLimit`        | `metrickit.exit.bg.cpu_resource_limit`          | count        |                     |
+| `.exitBackgroundMemoryPressure`          | `metrickit.exit.bg.memory_pressure`             | count        |                     |
+| `.exitBackgroundBadAccess`               | `metrickit.exit.bg.bad_access`                  | count        |                     |
+| `.exitBackgroundAbnormal`                | `metrickit.exit.bg.abnormal`                    | count        |                     |
+| `.exitBackgroundIllegalInstruction`      | `metrickit.exit.bg.illegal_instruction`         | count        |                     |
+| `.exitBackgroundWatchdog`                | `metrickit.exit.bg.watchdog`                    | count        |                     |
+| `.exitBackgroundSuspendedWithLockedFile` | `metrickit.exit.bg.suspended_with_locked_file`  | count        |                     |
+| `.exitBackgroundTaskTimeout`             | `metrickit.exit.bg.background_task_timeout`     | count        |                     |
+
+¹ Requires iOS 26, macOS 26 or visionOS 26 and up.
+
+## Delayed Data
+
+MetricKit reports data after it was recorded. Since iOS 15 and macOS 12, MetricKit delivers diagnostic reports on the next launch of the app. It delivers metric payloads about once a day, so metrics can arrive up to a day after the values were recorded.
+
+Diagnostic reports from an earlier run of the app carry the app and OS versions they were recorded with, instead of the versions running when MetricKit delivered them. Since Cocoa 9.31.0, the SDK doesn't apply the current scope to these events, so they don't get the breadcrumbs, user, tags, extras or attachments of the running app. Diagnostic reports recorded by the running process keep the scope data.
