@@ -97,13 +97,15 @@ sentryTanstackStart({
 
 <AvailableSince version="10.51.0" />
 
-The `tunnelRoute` option registers a same-origin TanStack Start server route that forwards Sentry envelopes to Sentry's ingest servers. It also automatically sets the client `tunnel` option in `Sentry.init()` so browser events go through that route. This helps avoid ad blockers and corporate firewalls that block requests to `*.sentry.io`. It forwards only the request body to Sentry.
+The `tunnelRoute` option serves a same-origin tunnel that forwards Sentry envelopes to Sentry's ingest servers. It also automatically sets the client `tunnel` option in `Sentry.init()` so browser events go through it. This helps avoid ad blockers and corporate firewalls that block requests to `*.sentry.io`.
+
+Since version `11.10.0`, the tunnel answers in the server entry, before TanStack Start's request middleware and routing. It works the same way as <PlatformLink to="/configuration/integrations/servetunnel/">`serveTunnelIntegration`</PlatformLink>, which you can use instead of this option.
 
 `tunnelRoute` accepts three shapes:
 
 #### `tunnelRoute: true` (recommended)
 
-Generates an opaque, unguessable route path for each dev session and production build. Because the path changes between builds, ad blockers can't reliably target it.
+Serves a path derived from the DSN, under your router's base path. It's the same path that `Sentry.init({ tunnel: true })` uses.
 
 ```typescript {filename:vite.config.ts}
 sentryTanstackStart({
@@ -111,9 +113,14 @@ sentryTanstackStart({
 }),
 ```
 
+<Alert>
+  Before version `11.10.0`, `tunnelRoute: true` generated a new random path for
+  each dev session and production build.
+</Alert>
+
 #### Static path
 
-Pass a string to use a fixed route path. This is easier to reason about, but a known path is easier for ad blockers to add to a list.
+Pass a string to use a fixed route path. The SDK serves it as written, without the base path.
 
 ```typescript {filename:vite.config.ts}
 sentryTanstackStart({
@@ -123,7 +130,7 @@ sentryTanstackStart({
 
 #### Object form
 
-Use the object form to control the DSN allowlist or set a static path explicitly:
+Use the object form to allow more DSNs or set a static path explicitly:
 
 ```typescript {filename:vite.config.ts}
 sentryTanstackStart({
@@ -134,19 +141,14 @@ sentryTanstackStart({
 }),
 ```
 
-- **`allowedDsns`** — only envelopes targeting one of these DSNs are forwarded. If omitted or empty, the route falls back to the DSN of the active server-side Sentry SDK at runtime.
-- **`path`** — the public route path. If omitted, an opaque path is generated (same behavior as `tunnelRoute: true`).
+- **`allowedDsns`**: envelopes for these DSNs are forwarded, in addition to the DSN of the active server-side Sentry SDK.
+- **`path`**: the public route path. If omitted, the path is derived from the DSN (same behavior as `tunnelRoute: true`).
 
 <Alert
   level="info"
   title="Setting `tunnel` in `Sentry.init()` overrides this option"
 >
-  If you also pass `tunnel` to `Sentry.init()`, the runtime option wins and the
-  managed tunnel route is bypassed. The SDK logs a warning when this happens.
-</Alert>
-
-<Alert level="warning" title="Opaque paths are not stable">
-  When using `tunnelRoute: true` (or the object form without `path`), the
-  generated path changes for each dev session and each production build. Don't
-  hard-code it elsewhere in your app or infrastructure.
+  If you also pass a different `tunnel` to `Sentry.init()`, the runtime option
+  wins and the managed tunnel route is bypassed. The SDK logs a warning when
+  this happens.
 </Alert>
