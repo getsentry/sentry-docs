@@ -3,9 +3,9 @@
 /**
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
- * Both files share the same body: product description, AI instructions,
- * platforms and frameworks, and the doc sections listed for agents.
- * index.md adds YAML frontmatter for the Markdown export.
+ * Both files include a product description, AI instructions, platforms and
+ * frameworks, and doc sections. index.md also includes setup guidance for
+ * agents and YAML frontmatter for the Markdown export.
  *
  * Platforms with a guides/ directory list those guides as frameworks.
  * Platforms that document frameworks as integrations (Python, Elixir, and
@@ -218,6 +218,10 @@ When helping a developer set up or use Sentry, follow these guidelines:
 - **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`).
 - **Pricing questions**: Don't quote prices or quotas from memory; fetch ${DOCS_ORIGIN}/pricing.md. Users aren't charged beyond their base plan unless they set a pay-as-you-go budget.`;
 
+const SETUP_INSTRUCTIONS = `\
+- **Setting up Sentry in a project**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/get-started.md before the platform or framework guide. It covers setup through the Sentry CLI, the Sentry MCP server, or neither, from choosing a project to confirming a real error reaches Sentry.
+- **Adding a feature to a project that already uses Sentry**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/instrument.md for tracing, logs, Session Replay, metrics, profiling, crons, uptime, or AI agent monitoring.`;
+
 const ABOUT_SENTRY_DOCS = `\
 ## About Sentry Docs
 
@@ -245,21 +249,23 @@ async function main() {
   );
   const sectionListings = buildSectionListings(otherSections, docTree);
 
-  const body = [
-    '# Sentry',
-    '',
-    DESCRIPTION,
-    '',
-    INSTRUCTIONS,
-    '',
-    buildPlatformsExpanded(platformsNode),
-    '',
-    sectionListings,
-    '',
-    ABOUT_SENTRY_DOCS,
-    '',
-  ].join('\n');
+  const buildBody = instructions =>
+    [
+      '# Sentry',
+      '',
+      DESCRIPTION,
+      '',
+      instructions,
+      '',
+      buildPlatformsExpanded(platformsNode),
+      '',
+      sectionListings,
+      '',
+      ABOUT_SENTRY_DOCS,
+      '',
+    ].join('\n');
 
+  const body = buildBody(INSTRUCTIONS);
   const llmsTxtPath = path.join(ROOT, 'public', 'llms.txt');
   await writeFile(llmsTxtPath, body, 'utf8');
   console.log(`Generated ${llmsTxtPath} (${body.length} bytes)`);
@@ -272,7 +278,8 @@ async function main() {
     '---',
   ].join('\n');
 
-  const indexMd = `${indexFrontmatter}\n\n${body}`;
+  const indexBody = buildBody(`${INSTRUCTIONS}\n${SETUP_INSTRUCTIONS}`);
+  const indexMd = `${indexFrontmatter}\n\n${indexBody}`;
   const mdExportsDir = path.join(ROOT, 'public', 'md-exports');
   if (!existsSync(mdExportsDir)) {
     await mkdir(mdExportsDir, {recursive: true});
