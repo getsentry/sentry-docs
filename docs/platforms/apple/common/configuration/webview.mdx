@@ -73,7 +73,46 @@ The injected trace context carries no secrets or PII by default: the root span n
 
 <Alert level="info">
 
-The injected trace is a snapshot taken when you call `addTracePropagation`, and every later page load in that web view reuses it. To connect a later page load to a newer trace, call `addTracePropagation` again before the navigation. It replaces the script Sentry added earlier and keeps your own user scripts.
+The injected trace is a snapshot taken when you call `addTracePropagation`, and every later page load in that web view reuses it. To connect a later page load to a newer trace, call `addTracePropagation` again before the navigation, or use [automatic trace propagation](#automatic-trace-propagation), which does this for you. It replaces the script Sentry added earlier and keeps your own user scripts.
+
+</Alert>
+
+### Automatic Trace Propagation
+
+<Alert>
+
+`options.webViewTracing` is available from Cocoa SDK version `9.34.0`.
+
+</Alert>
+
+Instead of calling `addTracePropagation` for each web view, you can set `webViewTracing` when you start the SDK. The SDK then adds trace propagation to every `WKWebView` in the app, including SwiftUI `WebPage` and `WebView(url:)`, right before it loads a page:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.webViewTracing = SentryWebViewTracingOptions(allowedHosts: ["example.com"])
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.webViewTracing =
+        [[SentryObjCWebViewTracingOptions alloc] initWithAllowedHosts:@[ @"example.com" ]];
+}];
+```
+
+The SDK also keeps the injected trace current: when the app's current trace changes, it updates the trace for later page loads, including links followed and reloads inside the web view. A page restored from the back/forward cache keeps the trace it was loaded with, because the Browser SDK doesn't start a new pageload for it either.
+
+Automatic trace propagation requires `enableSwizzling`, which is enabled by default. Web views you pass to `addTracePropagation` keep the `allowedHosts` of that call, and the SDK keeps their trace current too.
+
+<Alert level="warning">
+
+`webViewTracing` applies to every `WKWebView` in the app, including in-app browsers and web views created by other SDKs, such as ads, payments, or sign-in. They receive the trace when they load a host in `allowedHosts`, so only list hosts whose content you trust. If your app has a web view that loads untrusted content alongside allowed hosts, use `addTracePropagation` on specific web views instead.
 
 </Alert>
 
@@ -104,7 +143,7 @@ struct ContentView: View {
 }
 ```
 
-`WebView(url:)` creates its page internally, so it can't receive the trace. Create a `WebPage` as shown above instead. This requires Xcode 26 or later.
+`WebView(url:)` creates its page internally, so `addTracePropagation` can't reach it. Create a `WebPage` as shown above instead, or use [automatic trace propagation](#automatic-trace-propagation), which also covers `WebView(url:)`. This requires Xcode 26 or later.
 
 ### Limitations
 
