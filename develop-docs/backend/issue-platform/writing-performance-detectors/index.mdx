@@ -22,7 +22,7 @@ Error events are categorized using various strategies such as stack traces. User
 
 For new types of issues, it is recommended to start with a simpler one-level grouping strategy. Fingerprinting strategies should be allowed to evolve gradually, as an incremental approach works best. It is difficult to anticipate all edge cases until actual data can be fingerprinted.
 
-A fingerprint represents a unique problem. Each occurrence with that fingerprint has the same root cause and the same fix. For N+1 DB Query Issues, a fingerprint is a hash of parameterized repeated `db` span description, source span description, parent span description and a problem class (N+1 DB Query). <Link to="https://github.com/getsentry/sentry/blob/master/src/sentry/utils/performance_issues/detectors/n_plus_one_db_span_detector.py#L253-L258">Code</Link>.
+A fingerprint represents a unique problem. Each occurrence with that fingerprint has the same root cause and the same fix. For N+1 DB Query Issues, a fingerprint is a hash of parameterized repeated `db` span description, source span description, parent span description and a problem class (N+1 DB Query). <Link to="https://github.com/getsentry/sentry/blob/master/src/sentry/issue_detection/detectors/n_plus_one_db_span_detector.py">Code</Link>.
 
 If an issue has 3 events, it means that this specific problem has occurred 3 times with the same cause. Fixing this one issue should prevent all 3 instances from recurring.
 
@@ -123,14 +123,13 @@ A safe rollout strategy will depend on your team's implementation of detection a
     - This capability allows us to fine-tune our detectors and observe their effects in real-time within the production environment. By adjusting the detection parameters and thresholds, we can monitor how these changes impact the detection accuracy and the number of detected issues.
 
 ```python
-# projectoptions/defaults.py
-key="sentry:performance_issue_creation_rate", default=1.0
+# options/defaults.py: system-wide detection rates and thresholds
+register("performance.issues.n_plus_one_db.problem-creation", default=1.0, flags=FLAG_AUTOMATOR_MODIFIABLE)
+register("performance.issues.n_plus_one_db.count_threshold", default=5, flags=FLAG_AUTOMATOR_MODIFIABLE)
+register("performance.issues.n_plus_one_db.duration_threshold", default=50.0, flags=FLAG_AUTOMATOR_MODIFIABLE)
 
-key="sentry:performance_issue_settings",
-default={
-"n_plus_one_db_count": 5,
-"n_plus_one_db_duration_threshold": 500,
-}
+# projectoptions/defaults.py: per-project settings, which override the system-wide values
+register(key="sentry:performance_issue_settings", default=DEFAULT_PROJECT_PERFORMANCE_DETECTION_SETTINGS)
 ```
 
 ![Project options settings screenshot](img/issuePlatformFingerprinting02.png)
