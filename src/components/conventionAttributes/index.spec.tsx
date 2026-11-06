@@ -45,6 +45,16 @@ describe('ConventionAttributes', () => {
     expect(html).not.toContain('<ol>');
   });
 
+  it('single-quotes string examples that contain double quotes', () => {
+    const html = renderToStaticMarkup(
+      <ConventionAttributes attributes={['gen_ai.tool.call.arguments']} />
+    );
+    const example = String(ATTRIBUTE_METADATA['gen_ai.tool.call.arguments'].example);
+
+    expect(example).toContain('"');
+    expect(html).toContain(`<code>&#x27;${example.replace(/"/g, '&quot;')}&#x27;</code>`);
+  });
+
   it('throws on unknown attributes so the build fails', () => {
     expect(() =>
       renderToStaticMarkup(<ConventionAttributes attributes={['gen_ai.not.a.thing']} />)

@@ -102,6 +102,11 @@ function inlineMarkdown(text: string) {
     .replace(/<\/p>$/, '');
 }
 
+// Single-quote strings that contain double quotes, such as stringified JSON,
+// so they read as `'{"max":10}'` instead of escaped JSON.
 function formatExample(example: AttributeValue) {
-  return typeof example === 'string' ? `"${example}"` : JSON.stringify(example);
+  if (typeof example === 'string' && example.includes('"') && !example.includes("'")) {
+    return `'${example}'`;
+  }
+  return JSON.stringify(example);
 }
