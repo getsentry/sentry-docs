@@ -454,6 +454,18 @@ type Redirect = {
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/javascript/guides/python-django/sourcemaps/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/guides/php/sourcemaps/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
+    from: '/platforms/javascript/guides/ruby-rails/sourcemaps/',
+    to: '/platforms/javascript/sourcemaps/',
+  },
+  {
     from: '/platforms/python/http_errors/',
     to: '/platforms/python/integrations/django/http_errors/',
   },
