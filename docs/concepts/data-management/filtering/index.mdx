@@ -154,6 +154,32 @@ Inbound data filters have partial support for [Application Metrics](/product/met
 
 A [custom filter](#custom-filters) on the **Metrics** data type drops Application Metrics by metric name, release, or IP address.
 
+## Session Filtering
+
+Inbound data filters have partial support for the sessions that power [release health](/product/releases/health/). A session carries a release, an environment, and, if the SDK sends them, the IP address and user agent of the user. Only the filters that read these fields apply.
+
+The following inbound filters **do** apply to sessions:
+
+- **IP Addresses** - Filters sessions by the originating IP address of the request
+- **Releases** - Filters sessions from specific release versions
+- **Legacy Browsers** and **Web Crawlers** - Filter sessions by the user agent, if the SDK sends it with the session
+- **Localhost** - Filters sessions whose IP address is a loopback address, if the SDK sends it with the session
+
+The following inbound filters **do not** apply to sessions:
+
+- Error messages
+- Browser extension errors
+- React hydration errors
+- ChunkLoadErrors
+- Health check transactions
+- Allowed domains
+
+A [custom filter](#custom-filters) drops sessions only through its **Release** and **IP Address** conditions. A Release condition reaches sessions on the **Errors** and **All Data Types** data types. An IP Address condition reaches sessions on every data type. A filter that also has a condition of another kind never drops a session, because that condition cannot match.
+
+A filter drops the whole session. It does not change the status of a session that passes. The SDK marks a session as crashed or errored before it sends the session, so a session still counts as crashed when a filter drops its crash event. This is why the number of crashes on the [Release Details](/product/releases/release-details/) page can differ from the number of crashed sessions.
+
+Sentry does not record outcomes for sessions. Dropped sessions do not appear in the graph at the top of the Inbound Data Filters view or on the [Stats](/product/stats/) page.
+
 ## Custom Filters
 
 <Include name="feature-available-for-plan-trial-business.mdx" />
@@ -180,6 +206,8 @@ A project can have up to 50 custom filters. If your organization leaves a plan t
 | Metrics        | [Application Metrics](/product/metrics/) |
 | Spans          | Spans                                    |
 | All Data Types | All the above                            |
+
+Sessions are not a data type of their own. See [Session Filtering](#session-filtering) for the conditions that reach them.
 
 ### Conditions
 
