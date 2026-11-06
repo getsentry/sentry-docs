@@ -4,8 +4,8 @@
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
  * Both files include a product description, AI instructions, platforms and
- * frameworks, and doc sections. index.md also includes setup guidance for
- * agents and YAML frontmatter for the Markdown export.
+ * frameworks, setup guidance for agents, and doc sections. index.md adds
+ * YAML frontmatter for the Markdown export.
  *
  * Platforms with a guides/ directory list those guides as frameworks.
  * Platforms that document frameworks as integrations (Python, Elixir, and
@@ -249,23 +249,22 @@ async function main() {
   );
   const sectionListings = buildSectionListings(otherSections, docTree);
 
-  const buildBody = instructions =>
-    [
-      '# Sentry',
-      '',
-      DESCRIPTION,
-      '',
-      instructions,
-      '',
-      buildPlatformsExpanded(platformsNode),
-      '',
-      sectionListings,
-      '',
-      ABOUT_SENTRY_DOCS,
-      '',
-    ].join('\n');
+  const body = [
+    '# Sentry',
+    '',
+    DESCRIPTION,
+    '',
+    INSTRUCTIONS,
+    SETUP_INSTRUCTIONS,
+    '',
+    buildPlatformsExpanded(platformsNode),
+    '',
+    sectionListings,
+    '',
+    ABOUT_SENTRY_DOCS,
+    '',
+  ].join('\n');
 
-  const body = buildBody(INSTRUCTIONS);
   const llmsTxtPath = path.join(ROOT, 'public', 'llms.txt');
   await writeFile(llmsTxtPath, body, 'utf8');
   console.log(`Generated ${llmsTxtPath} (${body.length} bytes)`);
@@ -278,8 +277,7 @@ async function main() {
     '---',
   ].join('\n');
 
-  const indexBody = buildBody(`${INSTRUCTIONS}\n${SETUP_INSTRUCTIONS}`);
-  const indexMd = `${indexFrontmatter}\n\n${indexBody}`;
+  const indexMd = `${indexFrontmatter}\n\n${body}`;
   const mdExportsDir = path.join(ROOT, 'public', 'md-exports');
   if (!existsSync(mdExportsDir)) {
     await mkdir(mdExportsDir, {recursive: true});
