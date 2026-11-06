@@ -7,29 +7,33 @@ import {micromark} from 'micromark';
 import {Fragment} from 'react';
 
 type Props = {
-  attributes: (string | {key: string; notes?: string})[];
+  attributes: string[];
 };
 
 const metadata: Record<string, AttributeMetadata> = ATTRIBUTE_METADATA;
 
 /**
  * Renders attribute details from `@sentry/conventions`, so pages don't copy
- * types, descriptions, and examples that drift from the source of truth.
+ * types, descriptions, examples, and notes that drift from the source of truth.
+ * Each attribute's `additionalContext` becomes a numbered note under the table.
+ * Attributes that share a note point to the same number.
  */
 export function ConventionAttributes({attributes}: Props) {
-  const rows = attributes.map(row => {
-    const {key, notes} = typeof row === 'string' ? {key: row} : row;
+  const notes: string[] = [];
+  const rows = attributes.map(key => {
     const attribute = metadata[key];
     if (!attribute) {
       throw new Error(`<ConventionAttributes>: unknown attribute "${key}"`);
     }
-    const description = micromark([attribute.brief, notes].filter(Boolean).join(' '))
-      .replace(/^<p>/, '')
-      .replace(/<\/p>$/, '');
-    return {key, attribute, description};
+    const noteNumbers = (attribute.additionalContext ?? []).map(note => {
+      const index = notes.indexOf(note);
+      return index === -1 ? notes.push(note) : index + 1;
+    });
+    return {key, attribute, noteNumbers};
   });
   const firstKey = rows[0].key;
   const category = firstKey.includes('.') ? firstKey.split('.')[0] : 'general';
+  const noteId = (n: number) => `${firstKey.replace(/\./g, '-')}-note-${n}`;
 
   return (
     <Fragment>
@@ -43,13 +47,25 @@ export function ConventionAttributes({attributes}: Props) {
           </tr>
         </thead>
         <tbody>
-          {rows.map(({key, attribute, description}) => (
+          {rows.map(({key, attribute, noteNumbers}) => (
             <tr key={key}>
               <td>
                 <code>{key}</code>
               </td>
               <td>{attribute.type}</td>
-              <td dangerouslySetInnerHTML={{__html: description}} />
+              <td>
+                <span
+                  dangerouslySetInnerHTML={{__html: inlineMarkdown(attribute.brief)}}
+                />
+                {noteNumbers.map(n => (
+                  <Fragment key={n}>
+                    {' '}
+                    <a href={`#${noteId(n)}`}>
+                      <strong>[{n}]</strong>
+                    </a>
+                  </Fragment>
+                ))}
+              </td>
               <td>
                 {attribute.example !== undefined && (
                   <code>{formatExample(attribute.example)}</code>
@@ -59,6 +75,17 @@ export function ConventionAttributes({attributes}: Props) {
           ))}
         </tbody>
       </table>
+      {notes.length > 0 && (
+        <ol>
+          {notes.map((note, i) => (
+            <li
+              key={note}
+              id={noteId(i + 1)}
+              dangerouslySetInnerHTML={{__html: inlineMarkdown(note)}}
+            />
+          ))}
+        </ol>
+      )}
       <p>
         See all{' '}
         <a
@@ -70,6 +97,12 @@ export function ConventionAttributes({attributes}: Props) {
       </p>
     </Fragment>
   );
+}
+
+function inlineMarkdown(text: string) {
+  return micromark(text)
+    .replace(/^<p>/, '')
+    .replace(/<\/p>$/, '');
 }
 
 function formatExample(example: AttributeValue) {

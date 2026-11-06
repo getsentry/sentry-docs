@@ -22,14 +22,25 @@ describe('ConventionAttributes', () => {
     );
   });
 
-  it('appends page-specific notes to the description', () => {
+  it('renders additional context as numbered notes, shared notes once', () => {
+    const keys = ['gen_ai.usage.input_tokens', 'gen_ai.usage.output_tokens'];
+    const html = renderToStaticMarkup(<ConventionAttributes attributes={keys} />);
+    const notes = [
+      ...new Set(keys.flatMap(key => ATTRIBUTE_METADATA[key].additionalContext ?? [])),
+    ];
+
+    expect(notes.length).toBeGreaterThan(0);
+    expect(html.match(/<li /g)).toHaveLength(notes.length);
+    expect(html).toContain('href="#gen_ai-usage-input_tokens-note-1"');
+    expect(html).toContain('id="gen_ai-usage-input_tokens-note-1"');
+  });
+
+  it('renders no notes list when attributes have no additional context', () => {
     const html = renderToStaticMarkup(
-      <ConventionAttributes
-        attributes={[{key: 'gen_ai.usage.input_tokens', notes: '**[2]**'}]}
-      />
+      <ConventionAttributes attributes={['gen_ai.tool.name']} />
     );
 
-    expect(html).toContain('<strong>[2]</strong>');
+    expect(html).not.toContain('<ol>');
   });
 
   it('throws on unknown attributes so the build fails', () => {
