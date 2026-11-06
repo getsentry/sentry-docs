@@ -207,6 +207,7 @@ export function LayerDetailClient({
           <Select
             instanceId="layer-region"
             inputId="layer-region"
+            classNamePrefix="layer-select"
             placeholder="Select a region"
             isDisabled={isLoading}
             options={regionOptions}
@@ -220,6 +221,7 @@ export function LayerDetailClient({
             <Select
               instanceId="layer-runtime"
               inputId="layer-runtime"
+              classNamePrefix="layer-select"
               placeholder="Runtime compatibility unavailable"
               isDisabled={isLoading || !runtimeOptions.length}
               options={runtimeOptions}
@@ -233,6 +235,7 @@ export function LayerDetailClient({
           <Select<SelectOption>
             instanceId="layer-sdk-version"
             inputId="layer-sdk-version"
+            classNamePrefix="layer-select"
             isDisabled={isLoading}
             options={sdkVersionOptions}
             value={selectedSdkVersionOption}
@@ -290,6 +293,48 @@ const SelectionField = styled('div')`
 
   &:focus-within {
     z-index: 1;
+  }
+
+  /* react-select defaults to white control and menu backgrounds and dark text
+     (https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/theme.ts#L12-L21,
+     https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/Control.tsx#L55,
+     https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/Menu.tsx#L297,
+     https://github.com/JedWatson/react-select/blob/4b6948078684bee394e09dd8e7cdc2d7f89e0fad/packages/react-select/src/components/SingleValue.tsx#L46);
+     map them to the site's dark theme. */
+  .dark & {
+    .layer-select__control {
+      background-color: var(--gray-a2);
+      border-color: var(--gray-4);
+    }
+    .layer-select__control--is-focused {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 0 0.2rem var(--accent-purple-light);
+    }
+    .layer-select__control--is-disabled {
+      opacity: 0.6;
+    }
+    .layer-select__single-value,
+    .layer-select__input-container {
+      color: var(--foreground);
+    }
+    .layer-select__placeholder {
+      color: var(--foreground-secondary);
+    }
+    .layer-select__menu {
+      background-color: var(--gray-2);
+      box-shadow: var(--shadow-6);
+    }
+    .layer-select__option {
+      background-color: transparent;
+      color: var(--foreground);
+    }
+    .layer-select__option--is-focused {
+      background-color: var(--gray-a4);
+    }
+    .layer-select__option--is-selected {
+      background-color: var(--accent-purple);
+      color: white;
+    }
   }
 `;
 
