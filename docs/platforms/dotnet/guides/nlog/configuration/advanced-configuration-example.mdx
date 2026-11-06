@@ -10,7 +10,32 @@ For more information on how to dynamically set event data via `NLog.config`, see
 
 </Alert>
 
-The SDK can be configured via `NLog.config` XML file:
+Call `SentrySdk.Init` to  initialize the SDK first. SDK options, such as the environment and release, go here:
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Environment = "Development";
+    options.Release = "my-project-name@2.3.12";
+    options.AttachStacktrace = true;
+    options.SendDefaultPii = true; // Send Personal Identifiable information like the username of the user logged in to the device
+    options.ShutdownTimeout = TimeSpan.FromSeconds(5);
+});
+```
+
+```fsharp
+SentrySdk.Init(fun options ->
+    options.Dsn <- "___PUBLIC_DSN___"
+    options.Environment <- "Development"
+    options.Release <- "my-project-name@2.3.12"
+    options.AttachStacktrace <- true
+    options.SendDefaultPii <- true // Send Personal Identifiable information like the username of the user logged in to the device
+    options.ShutdownTimeout <- TimeSpan.FromSeconds 5.0)
+|> ignore
+```
+
+Then configure the Sentry target in an `NLog.config` XML file:
 
 
 ```xml {tabTitle:NLog.config}
@@ -26,28 +51,14 @@ The SDK can be configured via `NLog.config` XML file:
     <target
         xsi:type="Sentry"
         name="sentry"
-        dsn="___PUBLIC_DSN___"
-        environment="Development"
-        release="my-project-name@2.3.12"
         includeEventProperties="True"
         layout="${message}"
         breadcrumbLayout="${message}"
         minimumBreadcrumbLevel="Debug"
         ignoreEventsWithNoException="False"
-        includeEventDataOnBreadcrumbs="False"
+        includeEventDataOnBreadcrumbs="True"
         includeEventPropertiesAsTags="True"
         minimumEventLevel="Error">
-
-      <!-- Advanced options can be configured here-->
-      <options
-          sendDefaultPii="true"
-          attachStacktrace="false"
-          shutdownTimeoutSeconds="5"
-          debug="false"
-        >
-        <!--Advanced options can be specified as attributes or elements-->
-        <includeEventDataOnBreadcrumbs>true</includeEventDataOnBreadcrumbs>
-      </options>
 
       <!-- Optionally specify user properties via NLog
           (here using MappedDiagnosticsLogicalContext as an example) -->
@@ -77,10 +88,9 @@ The SDK can be configured via `NLog.config` XML file:
 </nlog>
 ```
 
-Or the SDK can be configured via code:
+Or configure the target in code:
 
 ```csharp
-// Other overloads exist, for example, configure the SDK with only the DSN or no parameters at all.
 LogManager.Configuration.AddSentry(o =>
 {
     o.Layout = "${message}";
@@ -89,15 +99,7 @@ LogManager.Configuration.AddSentry(o =>
     o.MinimumBreadcrumbLevel = LogLevel.Debug; // Debug and higher are stored as breadcrumbs (default is Info)
     o.MinimumEventLevel = LogLevel.Error; // Error and higher is sent as event (default is Error)
 
-    // If DSN is not set, the SDK will look for an environment variable called SENTRY_DSN. If
-    // nothing is found, SDK is disabled.
-    o.Dsn = DsnSample;
-
-    o.AttachStacktrace = true;
-    o.SendDefaultPii = true; // Send Personal Identifiable information like the username of the user logged in to the device
-
     o.IncludeEventDataOnBreadcrumbs = true; // Optionally include event properties with breadcrumbs
-    o.ShutdownTimeoutSeconds = 5;
 
     //Optionally specify user properties via NLog (here using MappedDiagnosticsLogicalContext as an example)
     o.User = new SentryNLogUser
@@ -119,7 +121,6 @@ LogManager.Configuration.AddSentry(o =>
 ```
 
 ```fsharp
-// Other overloads exist, for example, configure the SDK with only the DSN or no parameters at all.
 LogManager.Configuration.AddSentry(
   fun o ->
     o.Layout <- "${message}"
@@ -128,15 +129,7 @@ LogManager.Configuration.AddSentry(
     o.MinimumBreadcrumbLevel <- LogLevel.Debug // Debug and higher are stored as breadcrumbs (default is Info)
     o.MinimumEventLevel <- LogLevel.Error // Error and higher is sent as event (default is Error)
 
-    // If DSN is not set, the SDK will look for an environment variable called SENTRY_DSN. If
-    // nothing is found, SDK is disabled.
-    o.Dsn <- DsnSample
-
-    o.AttachStacktrace <- true
-    o.SendDefaultPii <- true // Send Personal Identifiable information like the username of the user logged in to the device
-
     o.IncludeEventDataOnBreadcrumbs <- true // Optionally include event properties with breadcrumbs
-    o.ShutdownTimeoutSeconds <- 5
 
     //Optionally specify user properties via NLog (here using MappedDiagnosticsLogicalContext as an example)
     o.User <-

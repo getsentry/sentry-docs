@@ -1,0 +1,12 @@
+In an app that calls `UseSentry`, add Serilog to the builder's services with `AddSerilog` from the `Serilog.Extensions.Hosting` package, and add the sink there:
+
+```csharp {filename:Program.cs}
+builder.Services.AddSerilog(config => config.WriteTo.Sentry());
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.UseSerilog();
+});
+```
+
+`AddSerilog` replaces the app's `ILogger` factory with Serilog's, so each `ILogger` entry reaches Sentry once, through the sink. Don't use `builder.Logging.AddSerilog()` or `writeToProviders: true` instead. Both also send each entry through the `ILogger` integration that `UseSentry` adds, so Sentry receives it twice.

@@ -1,0 +1,15 @@
+In an app that calls `UseSentry`, add NLog with `AddNLog` from the `NLog.Extensions.Logging` package, and set `ReplaceLoggerFactory`:
+
+```csharp {filename:Program.cs}
+var config = new LoggingConfiguration();
+config.AddSentry();
+LogManager.Configuration = config;
+
+builder.Logging.AddNLog(new NLogProviderOptions { ReplaceLoggerFactory = true });
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+});
+```
+
+`ReplaceLoggerFactory` replaces the app's `ILogger` factory with NLog's, so each `ILogger` entry reaches Sentry once, through the target. Without it, NLog runs alongside the `ILogger` integration that `UseSentry` adds, and Sentry receives every entry twice. NLog's rules then decide which entries are logged, instead of the `Logging` section of your configuration. In ASP.NET Core, `UseNLog` from the `NLog.Web.AspNetCore` package takes the same option.
