@@ -1,0 +1,63 @@
+---
+title: Tunneling
+description: Send Sentry events from Godot Web exports through your own server to help avoid ad blockers.
+---
+
+Ad blockers can prevent your Web game from sending events to Sentry. Tunneling helps avoid this by sending uploads through a route on your game's origin, where your server forwards them to Sentry.
+
+Tunneling applies only to Web exports. Your server must provide an endpoint that forwards uploads to Sentry; enabling tunneling in Godot doesn't create that endpoint.
+
+## Configure the Game
+
+In **Project Settings > Sentry > Web**, enable tunneling and set the tunnel path to `/events`. Keep your Sentry DSN configured as usual. Leave **Base Path** empty and **Trailing Slash** disabled for this example.
+
+Alternatively, follow the <PlatformLink to="/configuration/options/#programmatic-configuration">programmatic initialization instructions</PlatformLink> and set the options in your initialization callback:
+
+```GDScript
+SentrySDK.init(func(options: SentryOptions) -> void:
+	options.dsn = "___PUBLIC_DSN___"
+	options.web.enable_tunnel = true
+	options.web.tunnel_path = "/events"
+)
+```
+
+This sends uploads to `/events` on the game's origin. For example, a game at `https://example.com/game/` sends uploads to `https://example.com/events`.
+
+## Configure the Server
+
+Your server must accept uploads at `/events` and forward them to Sentry. For a JavaScript server that uses Fetch API `Request` and `Response` objects, install `@sentry/core` and use its `handleTunnelRequest` helper:
+
+```javascript
+import { handleTunnelRequest } from "@sentry/core";
+
+export default {
+  async fetch(request) {
+    if (
+      request.method === "POST" &&
+      new URL(request.url).pathname === "/events"
+    ) {
+      return handleTunnelRequest({
+        request,
+        allowedDsns: ["___PUBLIC_DSN___"],
+      });
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+};
+```
+
+Set `allowedDsns` to the same DSN configured in Godot.
+
+Preserve the incoming `Content-Length` header when creating the Fetch API request. The handler returns `411 Length required` when this header is missing. Configure request size limits in your server or hosting platform.
+
+The handler validates the envelope's DSN and forwards it to Sentry. For other server implementations and credential handling, see the [JavaScript tunnel guide](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
+
+## Verify the Setup
+
+To check that events reach Sentry through your tunnel:
+
+1. Export and run your game on Web.
+2. Capture a test event with `SentrySDK.capture_message("Tunnel test")`.
+3. In the browser's network panel, confirm that the upload goes to your tunnel route and receives a successful response.
+4. Confirm that the event appears in Sentry. A successful HTTP response alone doesn't prove that your server forwarded the envelope.
