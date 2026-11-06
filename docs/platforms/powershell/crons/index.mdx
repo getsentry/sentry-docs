@@ -1,0 +1,58 @@
+---
+title: Set Up Crons
+sidebar_title: Crons
+description: "Monitor scheduled PowerShell jobs with Sentry Crons and detect missed runs, failures, and timeouts."
+sidebar_order: 6
+sidebar_section: features
+---
+
+Use [Sentry Crons](/product/monitors-and-alerts/monitors/crons/) to track whether a scheduled PowerShell job starts and finishes on time. The PowerShell SDK includes the .NET SDK's `SentrySdk.CaptureCheckIn` API, which you can call directly from your script.
+
+## Requirements
+
+Install and configure the <PlatformLink to="/">PowerShell SDK</PlatformLink>. The following example uses Sentry PowerShell `0.5.0` or later.
+
+[Create a monitor](/product/monitors-and-alerts/monitors/crons/getting-started/) in Sentry and copy its slug. Use the same slug in your script.
+
+## Send Check-Ins
+
+Send an `InProgress` check-in before the job runs, then send `Ok` or `Error` with the same check-in ID. This lets Sentry detect missed runs and jobs that exceed the monitor's maximum runtime.
+
+```powershell
+Import-Module Sentry
+
+# Catch non-terminating PowerShell errors as well as terminating errors.
+$ErrorActionPreference = 'Stop'
+
+Start-Sentry -Dsn '___PUBLIC_DSN___'
+$monitorSlug = '<monitor-slug>'
+
+try {
+    $checkInId = [Sentry.SentrySdk]::CaptureCheckIn(
+        $monitorSlug, [Sentry.CheckInStatus]::InProgress
+    )
+
+    try {
+        # Execute your scheduled task here.
+
+        [Sentry.SentrySdk]::CaptureCheckIn(
+            $monitorSlug, [Sentry.CheckInStatus]::Ok, $checkInId
+        ) | Out-Null
+    } catch {
+        [Sentry.SentrySdk]::CaptureCheckIn(
+            $monitorSlug, [Sentry.CheckInStatus]::Error, $checkInId
+        ) | Out-Null
+        throw
+    }
+} finally {
+    Stop-Sentry
+}
+```
+
+`Stop-Sentry` closes the SDK before the script exits. The `throw` preserves the job's failure instead of swallowing it after reporting the check-in.
+
+By default, PowerShell does not throw when a native executable returns a nonzero exit code. If your job runs an external command, check `$LASTEXITCODE` and throw on failure so the script sends an `Error` check-in.
+
+For programmatic monitor configuration and other check-in options, see the [.NET Crons documentation](/platforms/dotnet/crons/).
+
+<Include name="crons-rate-limits" />
