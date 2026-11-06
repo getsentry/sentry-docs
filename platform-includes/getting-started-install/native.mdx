@@ -24,8 +24,11 @@ install
 │  └── sentry.h
 └── lib
    ├── cmake
-   ├── libsentry.dylib
-   └── libsentry.dylib.dSYM
+   ├── libsentry.1.0.0.dylib
+   ├── libsentry.1.0.0.dylib.dSYM
+   ├── libsentry.1.dylib -> libsentry.1.0.0.dylib
+   ├── libsentry.dylib -> libsentry.1.dylib
+   └── pkgconfig
 ```
 
 ```shell {tabTitle:Linux}
@@ -46,9 +49,12 @@ install
 │   └── sentry.h
 └── lib
     ├── cmake
-    └── libsentry.so
+    ├── libsentry.so -> libsentry.so.1
+    ├── libsentry.so.1 -> libsentry.so.1.0.0
+    ├── libsentry.so.1.0.0
+    └── pkgconfig
 
-5 directories, 3 files
+6 directories, 5 files
 ```
 
 ```shell {tabTitle:Windows}
@@ -80,6 +86,10 @@ tree /f install
 ```
 
 (For further details on the `SDKROOT` usage with CMake please consult the [macOS build section in the SDK README](https://github.com/getsentry/sentry-native?tab=readme-ov-file#building-and-installation))
+
+On macOS and Linux, shared libraries use ABI-versioned names, such as `libsentry.1.dylib` or `libsentry.so.1`. Applications link to and load the versioned name, so package the real library and its symlinks.
+
+Shared builds also install a `sentry.pc` file for `pkg-config`. To skip it, set the `SENTRY_INSTALL_PKGCONFIG` CMake option to `OFF`.
 
 [cmake]: https://cmake.org/cmake/help/latest/
 
