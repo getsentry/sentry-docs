@@ -695,7 +695,11 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/vanta-eu/',
-    destination: '/integrations/compliance/vanta-eu/',
+    destination: '/integrations/compliance/vanta/',
+  },
+  {
+    source: '/organization/integrations/vanta-eu/',
+    destination: '/integrations/compliance/vanta/',
   },
   {
     source: '/integrations/amazon-sqs/',
