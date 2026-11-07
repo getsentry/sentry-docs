@@ -72,3 +72,26 @@ Sentry.init({
   ],
 });
 ```
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare, this integration needs the Sentry Cloudflare <PlatformLink to="/install/vite-plugin/">Vite plugin</PlatformLink>. When the plugin bundles `together-ai`, the SDK adds `togetherAIIntegration` with its default options. To change the options, pass the integration in `integrations`. Your configured integration replaces the default one. This requires SDK version `11.10.0` or higher.
+
+```typescript {filename:instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.togetherAIIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+}));
+```
+
+Without the Vite plugin, the integration records nothing. With `debug: true`, the SDK logs a warning that names the integration.
+
+</PlatformSection>

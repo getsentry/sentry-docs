@@ -7,7 +7,7 @@ description: "Learn how to use the Sentry Cloudflare Vite plugin to instrument b
 
 The Sentry Cloudflare Vite plugin (`sentryCloudflareVitePlugin`) instruments your Worker at build time. It can:
 
-1. **Instrument bundled dependencies**: instruments supported packages in your bundle, such as database clients and AI SDKs, giving you more traces out of the box.
+1. **Instrument bundled dependencies**: instruments supported packages in your bundle, such as database clients and AI SDKs, giving you more traces out of the box. You can [configure these integrations](#configure-integrations).
 2. **Auto-instrument your Worker entry**: wraps your default export with `Sentry.withSentry()`, and Durable Object, Workflow, and Agents SDK classes with the matching `instrument*WithSentry` helper at build time, so you don't need to modify your code.
 
 Both are on by default. Turn either off with [`buildTimeInstrumentation`](#buildtimeinstrumentation) and [`autoInstrumentation`](#autoinstrumentation).
@@ -48,6 +48,34 @@ Bindings to _other_ Workers stay opt-in, because their receivers may not run Sen
 The plugin derives only the classes it wrapped itself. A class you wrapped by hand runs on its own options and stays out.
 
 This applies to Vite builds only. At runtime a `DurableObjectNamespace` exposes no origin and a `Fetcher` does not say which service it points at, so a plain wrangler build still has to list its bindings.
+
+## Configure Integrations
+
+<AvailableSince version="11.10.0" />
+
+When the plugin bundles a supported package, such as `pg`, `mysql2`, `redis`, `openai`, `@anthropic-ai/sdk`, `@langchain/core`, `express`, or `hono`, the SDK adds the matching integration with its default options. To change the options, pass the integration in `integrations`. Your configured integration replaces the default one. The options are the same as in the Node.js SDK.
+
+For example, to turn off prompt and response capture for OpenAI:
+
+```typescript {filename:instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.openAIIntegration({ recordInputs: false, recordOutputs: false }),
+  ],
+}));
+```
+
+These integrations get data only from the plugin's build-time instrumentation. Without the plugin, or with [`buildTimeInstrumentation`](#buildtimeinstrumentation) set to `false`, an integration you add to `integrations` records nothing. With `debug: true`, the SDK logs a warning that names the integration.
+
+Your Worker only bundles the integrations it imports. Importing one integration doesn't add code for the others.
+
+`@sentry/cloudflare` exports these integrations:
+
+`amqplibIntegration`, `anthropicAIIntegration`, `awsIntegration`, `dataloaderIntegration`, `expressIntegration`, `firebaseIntegration`, `genericPoolIntegration`, `googleGenAIIntegration`, `graphqlIntegration`, `groqIntegration`, `hapiIntegration`, `honoIntegration`, `kafkaIntegration`, `knexIntegration`, `koaIntegration`, `langChainIntegration`, `langGraphIntegration`, `lruMemoizerIntegration`, `mastraIntegration`, `mcpServerIntegration`, `mistralAIIntegration`, `mongoIntegration`, `mongooseIntegration`, `mysql2Integration`, `mysqlIntegration`, `neonIntegration`, `nitroIntegration`, `openAIIntegration`, `piDurableIntegration`, `postgresIntegration`, `postgresJsIntegration`, `prismaIntegration`, `redisIntegration`, `tediousIntegration`, `togetherAIIntegration`, `typesafeIntegration`, and `vercelAIIntegration`.
 
 ## Options
 
