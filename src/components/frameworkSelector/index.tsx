@@ -33,6 +33,7 @@ import styles from '../versionSelector/style.module.scss';
 import {
   Framework,
   FRAMEWORK_QUERY_PARAM,
+  FrameworkGuide,
   PlatformContentPayload,
   platformContentUrl,
   RUNTIMES,
@@ -71,6 +72,30 @@ function ItemLabel({icon, title}: {icon: string; title: string}) {
       />
       {title}
     </span>
+  );
+}
+
+function GuideGroup({guides, label}: {guides: FrameworkGuide[]; label: string}) {
+  if (guides.length === 0) {
+    return null;
+  }
+
+  return (
+    <RadixSelect.Group>
+      <RadixSelect.Label className={groupLabelClassName}>{label}</RadixSelect.Label>
+      {guides.map(g => (
+        <RadixSelect.Item
+          key={g.url}
+          value={`${GUIDE_VALUE_PREFIX}${g.url}`}
+          className={styles.item}
+        >
+          <RadixSelect.ItemText>
+            <ItemLabel icon={g.icon} title={g.title} />
+          </RadixSelect.ItemText>
+          <ArrowRightIcon className="ml-auto" />
+        </RadixSelect.Item>
+      ))}
+    </RadixSelect.Group>
   );
 }
 
@@ -165,7 +190,6 @@ export function FrameworkSelector({
   const router = useRouter();
   const runtimeConfig = RUNTIMES[runtime];
   const frameworks = useMemo(() => runtimeConfig?.frameworks ?? [], [runtimeConfig]);
-  const frameworkGuides = runtimeConfig?.frameworkGuides ?? [];
   const [framework, setFramework] = useState<Framework | null>(null);
   const [contents, setContents] = useState<Record<string, ContentStatus>>({});
 
@@ -248,25 +272,14 @@ export function FrameworkSelector({
                   ))}
                 </RadixSelect.Group>
               )}
-              {frameworkGuides.length > 0 && (
-                <RadixSelect.Group>
-                  <RadixSelect.Label className={groupLabelClassName}>
-                    Set up with its own guide
-                  </RadixSelect.Label>
-                  {frameworkGuides.map(g => (
-                    <RadixSelect.Item
-                      key={g.url}
-                      value={`${GUIDE_VALUE_PREFIX}${g.url}`}
-                      className={styles.item}
-                    >
-                      <RadixSelect.ItemText>
-                        <ItemLabel icon={g.icon} title={g.title} />
-                      </RadixSelect.ItemText>
-                      <ArrowRightIcon className="ml-auto" />
-                    </RadixSelect.Item>
-                  ))}
-                </RadixSelect.Group>
-              )}
+              <GuideGroup
+                label="Agent frameworks"
+                guides={runtimeConfig?.agentGuides ?? []}
+              />
+              <GuideGroup
+                label="Set up with its own guide"
+                guides={runtimeConfig?.frameworkGuides ?? []}
+              />
             </RadixSelect.Content>
           </RadixSelect.Root>
         </div>

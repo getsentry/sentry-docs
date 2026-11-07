@@ -1,0 +1,120 @@
+---
+title: Deno Quick Start
+sidebar_order: 0.6
+description: Learn how to send Pi Durable agent runs, model requests, tool calls, and errors to Sentry from a Deno app.
+runtime: deno
+---
+
+[Pi Durable](https://earendil.com/posts/pi-durable/) is Earendil's durable agent harness, built on the same foundations as the Pi coding agent. This guide sets up the Sentry SDK in a Deno app that runs Pi Durable, so agent runs, model requests, tool calls, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="pi-durable/experimental-alert" />
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Deno application using `@earendil-works/pi-durable` version `1.0.0` or later. Deno must be version `2.8.3` or later.
+- `@sentry/deno` version `11.6.0` or later.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+  defaults={["performance"]}
+/>
+
+Deno loads the Sentry Deno SDK from npm through the `npm:` specifier. Add it to the imports in your `deno.json`, so Deno uses version `11.6.0` or later.
+
+The Sentry import hook, which you load when you start your app, reads `@earendil-works/pi-durable` from a local `node_modules` directory, not from Deno's global npm cache. Set `nodeModulesDir` in your `deno.json` too:
+
+```json {filename:deno.json}
+{
+  "imports": {
+    "@sentry/deno": "npm:@sentry/deno@^11.6.0"
+  },
+  "nodeModulesDir": "auto"
+}
+```
+
+## Configure
+
+Initialize the Sentry SDK at the top of your entry file. The Pi Durable integration is enabled by default, so you don't add it to `integrations`:
+
+```typescript {filename:main.ts}
+import * as Sentry from "npm:@sentry/deno";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/deno/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+Load the Sentry import hook with the `--preload` flag when you start your app. Deno blocks access to the network, the file system, and system information until you grant it. Add the hosts your agents call, such as your model provider, to `--allow-net`, separated by commas, and add any other access your app needs:
+
+```bash
+deno run \
+  --preload=npm:@sentry/deno/import \
+  --allow-net=___ORG_INGEST_DOMAIN___,api.openai.com \
+  --allow-env \
+  --allow-read=. \
+  --allow-sys=hostname,osRelease \
+  main.ts
+```
+
+The import hook instruments `Harness.open()` while Deno loads `@earendil-works/pi-durable`. `Sentry.init()` in your entry file alone is too late, because Deno loads every module that your entry file imports before it runs any of them.
+
+Your Pi Durable code doesn't change. Every Harness your app opens is traced, whichever storage it uses.
+
+<Include name="pi-durable/captured-summary" />
+
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+To change recording for Pi Durable only, pass `recordInputs` and `recordOutputs` to the integration. They take precedence over `dataCollection`:
+
+```typescript {filename:main.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.piDurableIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+<Include name="pi-durable/link-conversations" />
+
+<Include name="pi-durable/verify" />
+
+</StepConnector>
+
+## Troubleshooting
+
+- **No AI spans at all.** Confirm that you start your app with `--preload=npm:@sentry/deno/import` and that `deno.json` sets `nodeModulesDir`. Without the import hook, `@earendil-works/pi-durable` is loaded before `Sentry.init()` runs, so the SDK can't instrument it.
+- **Your app stops at start with `NotCapable`.** Deno names the missing permission in the error. The import hook needs `--allow-env` and `--allow-read`. If the error asks for read access to a file in Deno's npm cache, set `nodeModulesDir` in your `deno.json` instead of granting more access.
+
+<Include name="pi-durable/next-steps" />
+
+<Include name="pi-durable/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/deno`: `>=11.6.0`
+- `@earendil-works/pi-durable`: `>=1.0.0 <2.0.0`
+- Deno: `>=2.8.3`
