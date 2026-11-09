@@ -77,7 +77,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` is `"gen_ai.invoke_agent"`.
-- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[0]**
+- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents. In these cases, the span name is `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
 - Attribute `gen_ai.operation.name` is `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` is the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
 - If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
@@ -190,9 +190,3 @@ Relay sets these attributes during ingestion:
 - `gen_ai.context.window_size` is looked up from the model metadata registry by `gen_ai.response.model`.
 - `gen_ai.context.utilization` is computed as `gen_ai.usage.total_tokens / gen_ai.context.window_size`.
 - `gen_ai.cost.input_tokens`, `gen_ai.cost.output_tokens`, and `gen_ai.cost.total_tokens` are calculated from token counts and per-token pricing in the model registry.
-
-
-**[0]**
-
-In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
-In these cases, the span name is `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
