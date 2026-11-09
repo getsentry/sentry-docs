@@ -33,6 +33,7 @@ import styles from '../versionSelector/style.module.scss';
 import {
   Framework,
   FRAMEWORK_QUERY_PARAM,
+  FrameworkGuide,
   PlatformContentPayload,
   platformContentUrl,
   RUNTIMES,
@@ -73,6 +74,31 @@ function ItemLabel({icon, title}: {icon: string; title: string}) {
       />
       {title}
     </span>
+  );
+}
+
+/**
+ * The guides of a dropdown group as plain links. The dropdown renders its options only while
+ * it's open, so without these the page's HTML, and its Markdown export for AI agents, would
+ * not link the guides. People use the dropdown, so the links are hidden from them.
+ */
+function GuideLinks({guides, label}: {guides: FrameworkGuide[]; label: string}) {
+  if (guides.length === 0) {
+    return null;
+  }
+  return (
+    <div className="sr-only" aria-hidden="true">
+      <p>{`${label}:`}</p>
+      <ul>
+        {guides.map(g => (
+          <li key={g.url}>
+            <a href={g.url} tabIndex={-1}>
+              {g.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -282,6 +308,10 @@ export function FrameworkSelector({
           </RadixSelect.Root>
         </div>
       </div>
+      <GuideLinks
+        guides={frameworkGuides}
+        label="Frameworks with their own setup guide"
+      />
       <div role="status">
         {framework && (
           <FrameworkSummary
