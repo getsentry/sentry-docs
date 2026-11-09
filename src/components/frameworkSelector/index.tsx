@@ -234,7 +234,11 @@ export function FrameworkSelector({
 
   return (
     <FrameworkContext.Provider value={contextValue}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 my-4">
+      {/* Left out of the Markdown export, which gets the guides from `GuideLinks` */}
+      <div
+        data-mdast="ignore"
+        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 my-4"
+      >
         <label htmlFor="framework-selector" className="font-medium">
           Framework
         </label>
