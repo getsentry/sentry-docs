@@ -11,16 +11,16 @@ og_image: /og-images/platforms-php-guides-laravel.png
 ## Prerequisites
 
 - You need a [Sentry account](https://sentry.io/signup/) and project
-- Your application needs to meet your Laravel version's PHP requirements (PHP 8.2 or later for Laravel 11)
+- The Sentry SDK requires PHP 7.2 or later
 - Your Laravel version needs to be 11.x or higher
 - Read one of these guides if you use an [older version](/platforms/php/guides/laravel/other-versions/) or need [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/)
 
 ## Install
 
-Install Sentry Laravel SDK 4.28.0 or later. This requires PHP SDK 4.31.0 or later, where Logs and Application Metrics don't need enable options:
+Install the latest `sentry/sentry-laravel` package:
 
 ```bash
-composer require "sentry/sentry-laravel:^4.28"
+composer require sentry/sentry-laravel
 ```
 
 ## Configure
@@ -38,8 +38,6 @@ It creates the config file (`config/sentry.php`) and adds your DSN, along with a
 
 ```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
-# Send request headers, cookies, and IP address.
-SENTRY_SEND_DEFAULT_PII=true
 
 # Enables Tracing.
 # Set to 1.0 to capture 100% of spans for tracing.
@@ -57,12 +55,13 @@ LOG_STACK=single,sentry_logs
 
 The snippet also turns on:
 
-- Request headers, cookies, and IP address: via <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>
 - Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
 - Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
 - Logs: via the `sentry_logs` channel in `LOG_STACK`
 
 Don't need a feature? Remove its lines from your `.env` file.
+
+To control the data the SDK collects, set the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> directly in `config/sentry.php`. See <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink> for the available categories and their defaults.
 
 ### Report Unhandled Exceptions
 
