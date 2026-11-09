@@ -77,7 +77,7 @@ Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
 - Span `op` is `"gen_ai.invoke_agent"`.
-- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[2]**
+- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[0]**
 - Attribute `gen_ai.operation.name` is `"invoke_agent"`.
 - Attribute `gen_ai.agent.name` is the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
 - If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
@@ -102,8 +102,8 @@ Additional attributes on the span:
 
 <ConventionAttributes
   attributes={[
-    {key: 'gen_ai.input.messages', notes: '**[1]**'},
-    {key: 'gen_ai.tool.definitions', notes: '**[0]**'},
+    'gen_ai.input.messages',
+    'gen_ai.tool.definitions',
     'gen_ai.system_instructions',
     'gen_ai.request.max_tokens',
     'gen_ai.request.seed',
@@ -120,7 +120,7 @@ Additional attributes on the span:
 
 <ConventionAttributes
   attributes={[
-    {key: 'gen_ai.output.messages', notes: '**[1]**'},
+    'gen_ai.output.messages',
     'gen_ai.response.finish_reasons',
     'gen_ai.response.id',
     'gen_ai.response.streaming',
@@ -192,15 +192,7 @@ Relay sets these attributes during ingestion:
 - `gen_ai.cost.input_tokens`, `gen_ai.cost.output_tokens`, and `gen_ai.cost.total_tokens` are calculated from token counts and per-token pricing in the model registry.
 
 
-**[0]:**
-
-Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
-
-**[1]:**
-
-Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
-
-**[2]**
+**[0]**
 
 In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
 In these cases, the span name is `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
