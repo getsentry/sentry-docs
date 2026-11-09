@@ -9,7 +9,7 @@ import {ConventionAttributes} from './index';
 vi.stubGlobal('React', React);
 
 describe('ConventionAttributes', () => {
-  it('renders attributes from the conventions package with a category link', () => {
+  it('renders attributes from the conventions package', () => {
     const html = renderToStaticMarkup(
       <ConventionAttributes attributes={['gen_ai.tool.name']} />
     );
@@ -17,9 +17,6 @@ describe('ConventionAttributes', () => {
     expect(html).toContain('<code>gen_ai.tool.name</code>');
     expect(html).toContain(ATTRIBUTE_METADATA['gen_ai.tool.name'].type);
     expect(html).toContain(ATTRIBUTE_METADATA['gen_ai.tool.name'].brief);
-    expect(html).toContain(
-      'href="https://getsentry.github.io/sentry-conventions/attributes/gen_ai/"'
-    );
   });
 
   it('appends page-specific notes to the description', () => {
@@ -36,5 +33,29 @@ describe('ConventionAttributes', () => {
     expect(() =>
       renderToStaticMarkup(<ConventionAttributes attributes={['gen_ai.not.a.thing']} />)
     ).toThrow('unknown attribute "gen_ai.not.a.thing"');
+  });
+
+  it('throws on keys inherited from Object.prototype', () => {
+    expect(() =>
+      renderToStaticMarkup(<ConventionAttributes attributes={['constructor']} />)
+    ).toThrow('unknown attribute "constructor"');
+  });
+
+  it('single-quotes stringified JSON examples', () => {
+    const html = renderToStaticMarkup(
+      <ConventionAttributes
+        attributes={['gen_ai.tool.call.arguments', 'gen_ai.tool.name']}
+      />
+    );
+
+    expect(html).toContain(
+      `<code>&#x27;${ATTRIBUTE_METADATA['gen_ai.tool.call.arguments'].example}&#x27;</code>`.replaceAll(
+        '"',
+        '&quot;'
+      )
+    );
+    expect(html).toContain(
+      `<code>&quot;${ATTRIBUTE_METADATA['gen_ai.tool.name'].example}&quot;</code>`
+    );
   });
 });

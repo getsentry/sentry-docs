@@ -4,7 +4,6 @@ import {
   type AttributeValue,
 } from '@sentry/conventions/attributes';
 import {micromark} from 'micromark';
-import {Fragment} from 'react';
 
 type Props = {
   attributes: (string | {key: string; notes?: string})[];
@@ -19,7 +18,8 @@ const metadata: Record<string, AttributeMetadata> = ATTRIBUTE_METADATA;
 export function ConventionAttributes({attributes}: Props) {
   const rows = attributes.map(row => {
     const {key, notes} = typeof row === 'string' ? {key: row} : row;
-    const attribute = metadata[key];
+    // `Object.hasOwn` so keys like `constructor` don't pass as known attributes.
+    const attribute = Object.hasOwn(metadata, key) ? metadata[key] : undefined;
     if (!attribute) {
       throw new Error(`<ConventionAttributes>: unknown attribute "${key}"`);
     }
@@ -28,50 +28,45 @@ export function ConventionAttributes({attributes}: Props) {
       .replace(/<\/p>$/, '');
     return {key, attribute, description};
   });
-  const firstKey = rows[0].key;
-  const category = firstKey.includes('.') ? firstKey.split('.')[0] : 'general';
 
   return (
-    <Fragment>
-      <table>
-        <thead>
-          <tr>
-            <th>Attribute</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Example</th>
+    <table>
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({key, attribute, description}) => (
+          <tr key={key}>
+            <td>
+              <code>{key}</code>
+            </td>
+            <td>{attribute.type}</td>
+            {/* Briefs are long; override the site's nowrap rule for non-last columns. */}
+            <td
+              style={{whiteSpace: 'normal', minWidth: '300px'}}
+              dangerouslySetInnerHTML={{__html: description}}
+            />
+            <td>
+              {attribute.example !== undefined && (
+                <code>{formatExample(attribute.example)}</code>
+              )}
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {rows.map(({key, attribute, description}) => (
-            <tr key={key}>
-              <td>
-                <code>{key}</code>
-              </td>
-              <td>{attribute.type}</td>
-              <td dangerouslySetInnerHTML={{__html: description}} />
-              <td>
-                {attribute.example !== undefined && (
-                  <code>{formatExample(attribute.example)}</code>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p>
-        See all{' '}
-        <a
-          href={`https://getsentry.github.io/sentry-conventions/attributes/${category}/`}
-        >
-          <code>{category}</code> attributes in Sentry Conventions
-        </a>
-        .
-      </p>
-    </Fragment>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
 function formatExample(example: AttributeValue) {
-  return typeof example === 'string' ? `"${example}"` : JSON.stringify(example);
+  if (typeof example !== 'string') {
+    return JSON.stringify(example);
+  }
+  // Single-quote stringified JSON so its inner double quotes stay readable.
+  return /^[[{]/.test(example) ? `'${example}'` : `"${example}"`;
 }
