@@ -31,11 +31,44 @@ const guidePages = (guide: string) => {
   return {path, frontmatter: frontmatter('index.mdx'), children};
 };
 
+const PLATFORM_CONTENT_RE = /<PlatformContent\s+includePath=["']([^"']+)["']([^>]*)\/>/g;
+
+/**
+ * The `switchable` include paths of a runtime's quick start: the ones on its page and in the
+ * `platform-includes` files the page includes directly.
+ */
+const switchableIncludePaths = (runtime: string) => {
+  const found = new Set<string>();
+  const scan = (source: string, nested: boolean) => {
+    for (const [, includePath, attributes] of source.matchAll(PLATFORM_CONTENT_RE)) {
+      if (/\bswitchable\b/.test(attributes)) {
+        found.add(includePath);
+      } else if (nested) {
+        const file = [`javascript.${runtime}.mdx`, 'javascript.mdx']
+          .map(name => join('platform-includes', includePath, name))
+          .find(existsSync);
+        if (file) {
+          scan(readFileSync(file, 'utf8'), false);
+        }
+      }
+    }
+  };
+  scan(readFileSync(join(GUIDES_DIR, runtime, 'index.mdx'), 'utf8'), true);
+  return [...found].sort();
+};
+
 describe('RUNTIMES', () => {
   it.each(Object.entries(RUNTIMES))('%s links only to existing pages', (_, runtime) => {
     const urls = (runtime.frameworkGuides ?? []).map(g => g.url);
     expect(urls.filter(url => !pageExists(url))).toEqual([]);
   });
+
+  it.each(Object.entries(RUNTIMES))(
+    '%s lists every switchable include path of its quick start',
+    (runtime, {includePaths}) => {
+      expect(switchableIncludePaths(runtime)).toEqual([...includePaths].sort());
+    }
+  );
 
   it('links every quick start of a guide with quick starts for more than one runtime', () => {
     const guides = readdirSync(GUIDES_DIR).filter(guide =>
