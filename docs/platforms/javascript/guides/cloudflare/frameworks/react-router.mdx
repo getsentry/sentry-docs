@@ -7,7 +7,7 @@ description: "Learn how to instrument your React Router framework app on Cloudfl
 
 <Alert level="info">
 
-This guide is for React Router apps in [framework mode](https://reactrouter.com/start/modes#framework) that you deploy to Cloudflare Workers with the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/). For Node.js deployments, see the [React Router guide](/platforms/javascript/guides/react-router/). For Shopify Oxygen, see [Hydrogen with React Router](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/).
+This guide is for React Router [framework mode](https://reactrouter.com/start/modes#framework) apps on Cloudflare Workers. For Node.js, see the [React Router guide](/platforms/javascript/guides/react-router/). For Shopify Oxygen, see [Hydrogen with React Router](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/).
 
 </Alert>
 
@@ -16,13 +16,13 @@ This guide is for React Router apps in [framework mode](https://reactrouter.com/
 You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- A React Router app (version `7.15.0` or above) configured for Cloudflare Workers, for example one created with Cloudflare's [React Router guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/)
+- A React Router app (version `7.15.0` or above) on Cloudflare Workers ([Cloudflare's setup guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/))
 
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Install `@sentry/react-router` for the client and the React Router server entry, and `@sentry/cloudflare` for the Worker:
+Install the Sentry SDKs:
 
 ```bash {tabTitle:npm}
 npm install @sentry/react-router @sentry/cloudflare
@@ -45,7 +45,7 @@ This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 
 ### Expose Entry Point Files
 
-Sentry hooks into React Router's entry files (`entry.client.tsx` and `entry.server.tsx`). If your app doesn't have them yet, run this command to expose them:
+If your app doesn't have `entry.client.tsx` and `entry.server.tsx` yet, expose them:
 
 ```bash
 npx react-router reveal
@@ -53,7 +53,7 @@ npx react-router reveal
 
 ### Configure Client-Side Sentry
 
-The client setup is the same as on Node.js. Initialize Sentry in your `entry.client.tsx` file.
+Initialize Sentry in `entry.client.tsx`.
 
 The snippet also turns on:
 
@@ -62,8 +62,6 @@ The snippet also turns on:
 - User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
 
 Don't need a feature? Remove its integration and options from the snippet.
-
-The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to capture client-side errors.
 
 ```tsx {filename:app/entry.client.tsx}
 import * as Sentry from "@sentry/react-router";
@@ -108,6 +106,7 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
+      {/* Captures client-side errors */}
       <HydratedRouter onError={Sentry.sentryOnError} />
     </StrictMode>
   );
@@ -160,11 +159,7 @@ export default defineCloudflareOptions((env) => ({
 }));
 ```
 
-Next, replace the contents of `app/entry.server.tsx` so Sentry captures server errors, names requests after their route, and connects server and client traces. On Workers, import from `@sentry/react-router/cloudflare`:
-
-- Replace your `handleRequest` function with `createSentryHandleRequest`, which renders with `renderToReadableStream` and injects the trace meta tags.
-- Report errors from `handleError`.
-- Export `instrumentations` to create spans for all loaders, actions, middleware, and request handlers through React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation).
+Next, replace the contents of `app/entry.server.tsx`. On Workers, import from `@sentry/react-router/cloudflare`:
 
 ```tsx {filename:app/entry.server.tsx}
 import { captureException } from "@sentry/cloudflare";
@@ -172,6 +167,7 @@ import * as Sentry from "@sentry/react-router/cloudflare";
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter, type HandleErrorFunction } from "react-router";
 
+// Renders the app and connects server and client traces
 export default Sentry.createSentryHandleRequest({
   ServerRouter,
   renderToReadableStream,
@@ -191,11 +187,11 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 export const instrumentations = [Sentry.createSentryServerInstrumentation()];
 ```
 
-On Cloudflare, `createSentryHandleRequest` needs SDK version `11.10.0` or above. If your app uses a nonce-based Content Security Policy, pass `getNonce` to it as described in the [React Router guide](/platforms/javascript/guides/react-router/manual-setup/#configure-server-side-sentry).
+`createSentryHandleRequest` needs SDK version `11.10.0` or above. For CSP nonces, pass [`getNonce`](/platforms/javascript/guides/react-router/manual-setup/#configure-server-side-sentry).
 
 <Expandable title="Do you need to keep your own handleRequest function?">
 
-If you need custom rendering logic, or you're on SDK version `11.5.0` to `11.9.x`, keep your `handleRequest` function and add Sentry to it yourself. Wrap it with `wrapSentryHandleRequest` and pass the rendered stream through `injectTraceMetaTags`:
+For custom rendering logic or SDK versions `11.5.0` to `11.9.x`, wrap your own `handleRequest` instead:
 
 ```tsx {diff} {filename:app/entry.server.tsx}
 +import * as Sentry from "@sentry/react-router/cloudflare";
@@ -217,13 +213,13 @@ If you need custom rendering logic, or you're on SDK version `11.5.0` to `11.9.x
 +export default Sentry.wrapSentryHandleRequest(handleRequest);
 ```
 
-Keep the `handleError` and `instrumentations` exports from the snippet above.
+Keep the `handleError` and `instrumentations` exports from above.
 
 </Expandable>
 
 ### Add Readable Stack Traces With Source Maps
 
-To upload source maps, add the `sentryReactRouter` Vite plugin and the `sentryOnBuildEnd` hook as described in the [React Router guide](/platforms/javascript/guides/react-router/manual-setup/#add-readable-stack-traces-with-source-maps).
+Follow the [React Router source maps setup](/platforms/javascript/guides/react-router/manual-setup/#add-readable-stack-traces-with-source-maps).
 
 ### Control the Data You Send to Sentry
 
@@ -233,7 +229,7 @@ To upload source maps, add the `sentryReactRouter` Vite plugin and the `sentryOn
 
 <PlatformContent includePath="getting-started-logs" />
 
-If you're already logging with `console` or Consola, you can capture those logs with <PlatformLink to="/logs/#console-integration">our console integrations</PlatformLink>.
+Already logging with `console` or Consola? Capture those logs with the <PlatformLink to="/logs/#console-integration">console integrations</PlatformLink>.
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
@@ -241,7 +237,7 @@ If you're already logging with `console` or Consola, you can capture those logs 
 
 ## Verify Your Setup
 
-To confirm that Sentry captures errors, add a test button to one of your pages:
+Add a test button to one of your pages:
 
 ```tsx
 <button
@@ -254,7 +250,7 @@ To confirm that Sentry captures errors, add a test button to one of your pages:
 </button>
 ```
 
-Start your app locally or deploy it to Cloudflare Workers, then click the button.
+Run your app and click the button.
 
 ### View Captured Data in Sentry
 
@@ -264,7 +260,7 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your React Router app on Cloudflare Workers. Here's what to explore next:
+Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
