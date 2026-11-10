@@ -74,6 +74,49 @@ The injected trace is a snapshot taken when you call `addTracePropagation`, and 
 
 </Alert>
 
+### Set the Allowed Hosts in the SDK Options
+
+To avoid listing the hosts on every call, set them once in the SDK options and call `addTracePropagation` without hosts:
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+import io.sentry.android.core.SentryWebViewTracing
+
+SentryAndroid.init(context) { options ->
+    options.webViewTracing.allowedHosts = listOf("example.com")
+}
+
+SentryWebViewTracing.addTracePropagation(webView)
+webView.loadUrl("https://example.com")
+```
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+import io.sentry.android.core.SentryWebViewTracing;
+import java.util.Collections;
+
+SentryAndroid.init(context, options -> {
+    options.getWebViewTracing().setAllowedHosts(Collections.singletonList("example.com"));
+});
+
+SentryWebViewTracing.addTracePropagation(webView);
+webView.loadUrl("https://example.com");
+```
+
+You can also set them in your manifest, as a comma-separated list:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data
+        android:name="io.sentry.webview-tracing.allowed-hosts"
+        android:value="example.com,example.org" />
+</application>
+```
+
+The list is empty by default, so without hosts `addTracePropagation(webView)` logs a warning and returns `false`. Hosts you pass to `addTracePropagation` are used instead of the ones in the options. The same matching rules and the warning above apply to both.
+
+`allowedHosts` is separate from [`tracePropagationTargets`](/platforms/android/configuration/options/#tracePropagationTargets), which controls outgoing HTTP requests. Setting one doesn't affect the other.
+
 ### Pages Bundled With Your App
 
 Pages loaded with `loadData`, with `loadDataWithBaseURL` and a base URL that isn't HTTPS, or from `file://` URLs don't receive the trace. To show pages bundled with your app, serve them over HTTPS with [`WebViewAssetLoader`](https://developer.android.com/reference/androidx/webkit/WebViewAssetLoader) and allow its domain:
