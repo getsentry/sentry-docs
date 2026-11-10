@@ -52,6 +52,8 @@ If your app uses one of these integrations, skip this setup. Call that integrati
 - [ASP.NET Core](/platforms/dotnet/guides/aspnetcore/)
 - [MAUI](/platforms/dotnet/guides/maui/)
 
+.NET Framework apps that call `Host.CreateApplicationBuilder()` can't use the Generic Host integration's `UseSentry`. See [.NET Framework](/platforms/dotnet/guides/extensions-hosting/#net-framework) in the Generic Host guide.
+
 Apps without a host initialize Sentry with `SentrySdk.Init`, then add the integration with `AddSentry()`:
 
 ```csharp {tabTitle:LoggerFactory}
@@ -84,7 +86,7 @@ var logger = provider.GetRequiredService<ILogger<Program>>();
 
 Set other [SDK options](/platforms/dotnet/guides/extensions-logging/configuration/options/) in `SentrySdk.Init` too. Disposing the object it returns sends any pending events before your app exits.
 
-Every `ILogger` entry that passes your filters is also sent as a structured log. To send fewer, set `LogLevel` under `Logging:Sentry`, as shown in [Logging Configuration](#logging-configuration), or return `null` from `SetBeforeSendLog`.
+Every `ILogger` entry that passes your `Microsoft.Extensions.Logging` filters is also sent as a structured log. To send fewer, set `LogLevel` under `Logging:Sentry`, as shown in [Logging Configuration](#logging-configuration), or return `null` from `SetBeforeSendLog`.
 
 `AddSentry()` doesn't register `IHub`, `ISentryClient` or `Func<IHub>`. If your services inject them, register them with `HubAdapter.Instance`. Otherwise resolving those services fails with `Unable to resolve service for type 'Sentry.IHub'`:
 
@@ -98,11 +100,9 @@ services.AddSingleton<Func<IHub>>(() => HubAdapter.Instance);
 
 You only need the lines for the types your services inject.
 
-.NET Framework apps that call `Host.CreateApplicationBuilder()` can't use the Generic Host integration's `UseSentry`. See [.NET Framework](/platforms/dotnet/guides/extensions-hosting/#net-framework) in the Generic Host guide.
-
 <Alert title="Changed in Version 7.0.0">
 
-Prior to version 7.0.0, `AddSentry` could also initialize the SDK itself, registered `IHub` and `ISentryClient`, and only sent log entries as structured logs when `EnableLogs` was `true`. On those versions, set the DSN in `AddSentry(options => ...)` instead of calling `SentrySdk.Init`.
+Prior to version 7.0.0, `AddSentry` could also initialize the SDK itself, registered `IHub` and `ISentryClient`, and only sent log entries as structured logs when `EnableLogs` was `true`. On those versions, set the DSN in `AddSentry(options => ...)` instead of calling `SentrySdk.Init`. To upgrade, see <PlatformLink to="/migration/v6-to-v7/">Migrate from 6.x to 7.x</PlatformLink>.
 
 </Alert>
 
@@ -163,11 +163,9 @@ These filters only apply to breadcrumbs and events. They don't control which log
 
 </Alert>
 
-#### TagFilters
+### TagFilters
 
-A list of filters which are invoked before processing any log message to filter out undesired tags.
-
-`TagFilters` is an SDK option, so set it in `SentrySdk.Init`. For example, to remove all tags starting with `PROC_`:
+`TagFilters` is an SDK option, so set it in `SentrySdk.Init`. It drops any tag set on the scope whose key contains one of its entries, including the tags this integration adds from `BeginScope` state. An entry can also be a `Regex`, such as `new Regex("^PROC_")` to match only keys that start with `PROC_`. For example, to drop tags whose key contains `PROC_`:
 
 ```csharp
 options.TagFilters.Add("PROC_");
