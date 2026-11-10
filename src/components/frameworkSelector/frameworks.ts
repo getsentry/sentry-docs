@@ -37,6 +37,11 @@ export type Runtime = {
   /** Frameworks with their own Sentry SDK that the selector links to. */
   frameworkGuides?: FrameworkGuide[];
   /**
+   * Agent frameworks that the selector links to in the "Agent frameworks" group. Each URL is
+   * the framework's quick start for this runtime.
+   */
+  agentGuides?: FrameworkGuide[];
+  /**
    * `<PlatformContent switchable />` include paths on the runtime's getting started page.
    * Each one is pre-built per framework as a static JSON file that the page loads on demand.
    */
@@ -62,6 +67,12 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('SvelteKit', 'sveltekit'),
       guide('TanStack Start', 'tanstackstart-react'),
     ],
+    agentGuides: [
+      guide('Eve', 'eve'),
+      guide('Flue', 'flue'),
+      guide('Mastra', 'mastra'),
+      guide('Pi Durable', 'pi-durable'),
+    ],
     includePaths: [
       'getting-started-prerequisites',
       'getting-started-install',
@@ -76,12 +87,14 @@ export const RUNTIMES: Record<string, Runtime> = {
     title: 'Bun',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
     frameworkGuides: [guide('Elysia', 'elysia'), guide('Hono', 'hono')],
+    agentGuides: [guide('Pi Durable', 'pi-durable/bun')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   deno: {
     title: 'Deno',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
     frameworkGuides: [guide('Hono', 'hono')],
+    agentGuides: [guide('Pi Durable', 'pi-durable/deno')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   cloudflare: {
@@ -96,6 +109,11 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('Remix', 'remix/cloudflare'),
       guide('SvelteKit', 'sveltekit/cloudflare'),
       guide('TanStack Start', 'tanstackstart-react/cloudflare'),
+    ],
+    agentGuides: [
+      guide('Flue', 'flue/cloudflare'),
+      guide('Mastra', 'mastra/cloudflare'),
+      guide('Pi Durable', 'pi-durable/cloudflare'),
     ],
     includePaths: [],
   },
