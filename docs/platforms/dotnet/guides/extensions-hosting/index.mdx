@@ -234,7 +234,7 @@ Disposing the object that `SentrySdk.Init` returns sends any pending events befo
 
 ### Replacing SentrySdk.Init
 
-If your app calls `SentrySdk.Init`, remove that call when you add `UseSentry`, and move its options into the `UseSentry` callback or the `Sentry` section. Whichever initialization runs last wins, and the two don't merge their options. The exception is [capturing startup crashes](#capturing-startup-crashes).
+If your app calls `SentrySdk.Init`, remove that call when you add `UseSentry`, unless it's there for [capturing startup crashes](#capturing-startup-crashes). Move its options into the `UseSentry` callback or the `Sentry` section. Whichever initialization runs last wins, and the two don't merge their options.
 
 ### Capturing Startup Crashes
 
@@ -268,7 +268,7 @@ catch (Exception ex)
 
 The two initializations don't share anything:
 
-- `SentrySdk.Init` runs before the app reads `appsettings.json`, so set its DSN in code or with the `SENTRY_DSN` environment variable.
+- `SentrySdk.Init` runs before the app reads `appsettings.json` or the host environment. Set its DSN in code or with the `SENTRY_DSN` environment variable. To report startup crashes in the same environment as the rest of the app, set `SENTRY_ENVIRONMENT`, which `UseSentry` reads too.
 - `UseSentry` doesn't reuse those options. Give it a DSN as well, in its callback or the `Sentry` section.
 - In `Build()`, `UseSentry` replaces the first initialization. Crashes before then are sent with the first initialization's options, such as its release and environment. Breadcrumbs added before then aren't carried over.
 - Errors after `Build()`, such as a hosted service that fails to start, are sent by `UseSentry`. `CaptureException` doesn't send them a second time.
