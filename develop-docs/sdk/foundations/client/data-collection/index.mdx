@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.15.0
+spec_version: 0.16.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.16.0
+    date: 2026-10-12
+    summary: "Attach text bodies unchanged. SDKs no longer parse bodies to scrub them. Server-side scrubbing applies to the body."
   - version: 0.15.0
     date: 2026-09-29
     summary: "Attach cookie headers as one string-array span attribute (`name=value` elements) instead of one attribute per cookie name. Filter nameless cookie segments and unparseable cookie strings."
@@ -72,7 +75,8 @@ The new `dataCollection` configuration collects rich context for debugging by de
 
 Related specs:
 
-- [Data Scrubbing](/sdk/foundations/data-scrubbing/) — structuring data for scrubbing (spans, breadcrumbs), variable size limits
+- [Data Scrubbing](/sdk/foundations/data-scrubbing/) — which data the SDK scrubs, which data server-side scrubbing removes, and parameterization
+- [Variable Size](/sdk/foundations/envelopes/event-payloads/#variable-size) — size limits for variable-size data
 - [Client](/sdk/foundations/client/) — client lifecycle and event pipeline
 - [Configuration](/sdk/foundations/client/configuration/) — top-level init options including `send_default_pii` (deprecated in favor of this spec)
 
@@ -222,7 +226,7 @@ init({
 
 URL strings in span descriptions follow the format defined in [Structuring Data](/sdk/telemetry/traces/structuring-data/): `METHOD scheme://host/path` — query strings and fragments are excluded.
 
-The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings. For general data scrubbing rules (variable size limits, structuring for server-side scrubbing), see [Data Scrubbing](/sdk/foundations/data-scrubbing/).
+The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings.
 
 Encoded query parameters **MUST** be stored exactly as they appear in the URL.
 
@@ -276,8 +280,8 @@ Unfiltered, raw cookie header values **MUST NOT** be sent. When in doubt, treat 
 
 When bodies are collected via the `httpBodies` option (enabled by default; see [Body Type Collection](#body-type-collection)):
 
-- **Parseable as JSON or form data:** SDKs **MAY** extract key-value pairs and apply the same denylist rules to keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`. This allows selective scrubbing while retaining non-sensitive fields.
-- **Not parseable (raw bodies):** The body **MUST NOT** be attached to the event. When the SDK cannot parse the body into a key-value structure, the entire body **MUST** be replaced with `"[Filtered]"`.
+- **Text bodies:** SDKs **SHOULD** attach the body unchanged. SDKs **SHOULD NOT** parse the body to scrub it. Server-side scrubbing applies to the body (see [Server-Side Scrubbing](/sdk/foundations/data-scrubbing/#server-side-scrubbing)).
+- **Bodies that the framework already parsed:** SDKs **MAY** apply the denylist to the keys. Values for matching keys **MUST** be replaced with `"[Filtered]"`.
 
 No built-in option scrubs **keys**; users who need to hide header or cookie names **MUST** use `beforeSend` (or equivalent).
 
@@ -536,7 +540,7 @@ SDKs **MUST** support configuring body collection for specific body types. The o
 Valid body type values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`.
 
 Body collection **MAY** not support allow/deny filtering. Unlike cookies or headers, body content has no predictable key structure for the SDK to filter at collection time.
-The entire body is either collected (and scrubbed based on the key **if parseable** as JSON or form data) or not. Body data can still be redacted in `beforeSend` or event processors if needed.
+The entire body is either collected or not. For how the SDK and server-side scrubbing handle a collected body, see [Request and Response Bodies](#request-and-response-bodies). Body data can still be redacted in `beforeSend` or event processors if needed.
 
 <Expandable title="Language-specific type examples for body collection">
 

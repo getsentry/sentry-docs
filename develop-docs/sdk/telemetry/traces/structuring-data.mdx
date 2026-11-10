@@ -3,18 +3,16 @@ title: Structuring Data
 sidebar_order: 20
 ---
 
-For better data scrubbing on the server side, SDKs should save data in a structured way, when possible. Starting point of the discussion was [RFC-0038](https://github.com/getsentry/rfcs/blob/main/text/0038-scrubbing-sensitive-data.md)
+SDKs store span data in a structured way, so that server-side scrubbing can scrub it. [Data Scrubbing](/sdk/foundations/data-scrubbing/) defines which data the SDK scrubs and which data server-side scrubbing removes.
 
-See also: [Data Scrubbing](/sdk/foundations/data-scrubbing/) for general sensitive data handling requirements.
+This page started with [RFC-0038](https://github.com/getsentry/rfcs/blob/main/text/0038-scrubbing-sensitive-data.md). The RFC uses `sendDefaultPii`, which [`dataCollection`](/sdk/foundations/client/data-collection/) replaces.
 
 ### Spans
-
-This helps Relay to know what kind of data it receives and this helps with scrubbing sensitive data.
 
 - `http` spans containing urls:
 
   The description of spans with `op` set to `http` must follow the format `HTTP_METHOD scheme://host/path` (ex. `GET https://example.com/foo`).
-  If an authority is present in the URL (`https://username:password@example.com`), the authority must be replaced with a placeholder regardless of `sendDefaultPii`, leading to a new URL of `https://[Filtered]:[Filtered]@example.com`.
+  If an authority is present in the URL (`https://username:password@example.com`), the authority must be replaced with a placeholder regardless of the `dataCollection` options, leading to a new URL of `https://[Filtered]:[Filtered]@example.com`.
   If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both are set into the data attribute of the span.
 
   ```js
@@ -33,8 +31,8 @@ This helps Relay to know what kind of data it receives and this helps with scrub
 
 - `db` spans containing database queries: (sql, graphql, elasticsearch, mongodb, ...)
 
-  The description of spans with `op` set to `db` must not include any query parameters.
-  Instead, use placeholders like `SELECT FROM 'users' WHERE id = ?`
+  The description of spans with `op` set to `db` must not contain literal values. Use the parameterized query, for example `SELECT * FROM users WHERE id = ?`.
+  See [Query Parameterization](/sdk/telemetry/traces/modules/queries/#query-parameterization) for the rules and the fallback.
 
 Additionally all semantic conventions of OpenTelemetry for database spans should be set in the `span.data` if applicable:
 https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/
