@@ -107,9 +107,39 @@ In the example above, the `SendIdentity` flag was switched on. The SDK then will
 
 ## Verify
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Ensure log4net loads your configuration and the appender is referenced by a logger. For example, add this inside your `<log4net>` element alongside the appender:
 
-<PlatformContent includePath="getting-started-verify" />
+```xml {filename:app.config}
+<root>
+  <level value="INFO" />
+  <appender-ref ref="SentryAppender" />
+</root>
+```
+
+After initializing Sentry, run this code to verify error capture:
+
+```csharp
+using System;
+using log4net;
+using log4net.Config;
+using Sentry;
+
+XmlConfigurator.Configure();
+var logger = LogManager.GetLogger("SentryVerification");
+
+try
+{
+    throw new InvalidOperationException("Sentry log4net verification");
+}
+catch (Exception exception)
+{
+    logger.Error("Sentry error-event verification", exception);
+}
+
+SentrySdk.FlushAsync().GetAwaiter().GetResult();
+```
+
+Check **Issues** for the error event and **Logs** for the log entry.
 
 ## Sample
 

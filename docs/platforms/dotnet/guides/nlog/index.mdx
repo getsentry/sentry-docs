@@ -18,7 +18,7 @@ By default, Sentry will keep any message with log level `Info` or higher as a `B
 
 The default value to report a log entry as an event to Sentry is `Error`.
 
-This means that out of the box, any `Error` call will create an `Event` which will include all log messages of level `Info`, `Warn` and also `Error` and `Critical`.
+This means that out of the box, any `Error` call will create an `Event` which will include all log messages of level `Info`, `Warn`, `Error`, and `Fatal` stored as breadcrumbs.
 
 Log messages are also sent to Sentry as [Structured Logs](logs/).
 
@@ -36,12 +36,6 @@ dotnet add package Sentry.NLog -v {{@inject packages.version('sentry.dotnet.nlog
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
-<Alert level="warning" title="Note">
-
-Messages logged from assemblies with the name starting with `Sentry` will not generate events.
-
-</Alert>
-
 ## Configure
 
 <Alert title="NLog Layouts">
@@ -53,6 +47,9 @@ For more information on how to dynamically set event data via `NLog.config`, see
 Initialize Sentry first, with `SentrySdk.Init` or a host integration such as [ASP.NET Core](/platforms/dotnet/guides/aspnetcore/), then add the target. You can add it in code:
 
 ```csharp
+using NLog;
+using NLog.Config;
+
 SentrySdk.Init(options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
@@ -226,9 +223,16 @@ You can provide a `user` entry matching the following example user. See [Identif
 
 ## Verify
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+After configuring NLog, send an informational log and an error:
 
-<PlatformContent includePath="getting-started-verify" />
+```csharp
+var logger = LogManager.GetCurrentClassLogger();
+logger.Info("Sentry logging verification");
+logger.Error("Sentry error-event verification");
+LogManager.Flush();
+```
+
+The informational message appears in **Logs**. The error message also creates an event in **Issues**. Call `LogManager.Shutdown()` when your application exits to dispose the target and flush pending data.
 
 ## Samples
 
