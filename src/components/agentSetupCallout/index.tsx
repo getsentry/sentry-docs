@@ -34,7 +34,7 @@ export function AgentSetupCallout({skill, platformName, instructions}: Props) {
     <Fragment>
       <div className={styles.wrapper} data-mdast="ignore">
         <div className={styles.setup}>
-          <span className={styles.title}>Set up with the Sentry CLI</span>
+          <span className={styles.title}>Set up with Sentry CLI</span>
           <CliInstallCommand source="callout" skill={skill} platformName={platformName} />
         </div>
         <div className={styles.subRow}>

@@ -16,7 +16,7 @@ function commandLanguage(id: string) {
 export function CliSetupMarkdown({platformName}: SetupProps) {
   return (
     <div className={styles.mdOnly} aria-hidden="true">
-      <h2>Set up with the Sentry CLI</h2>
+      <h2>Set up with Sentry CLI</h2>
       <p>
         Set up {setupTarget(platformName)} with the Sentry CLI. Install the CLI with one
         of these commands, then follow the Sentry CLI docs to finish setup.

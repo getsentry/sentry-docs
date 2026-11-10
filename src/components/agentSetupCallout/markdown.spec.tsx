@@ -37,7 +37,7 @@ describe('CLI setup markdown export', () => {
     const markdown = htmlToMarkdown(html);
 
     expect(markdown).not.toContain('interactive card');
-    expect(markdown).toContain('## Set up with the Sentry CLI');
+    expect(markdown).toContain('## Set up with Sentry CLI');
     expect(markdown).toContain('the Sentry Next.js SDK');
     expect(markdown).toContain(
       '```bash\ncurl https://cli.sentry.dev/install -fsS | bash'

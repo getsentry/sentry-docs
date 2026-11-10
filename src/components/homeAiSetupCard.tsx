@@ -16,7 +16,7 @@ export function HomeAiSetupCard() {
             <path d="M18.5 13.5l.95 2.3 2.3.95-2.3.95-.95 2.3-.95-2.3-2.3-.95 2.3-.95.95-2.3z" />
           </svg>
         </div>
-        <h2 className={styles.setupTitle}>Set up with the Sentry CLI</h2>
+        <h2 className={styles.setupTitle}>Set up with Sentry CLI</h2>
         <div className={styles.cliInstall}>
           <CliInstallCommand source="homepage_card" />
         </div>
