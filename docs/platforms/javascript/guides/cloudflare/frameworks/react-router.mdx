@@ -1,0 +1,278 @@
+---
+title: React Router on Cloudflare
+description: "Learn how to instrument your React Router framework app on Cloudflare Workers with Sentry."
+---
+
+<AvailableSince version="11.5.0" />
+
+<Alert level="info">
+
+This guide is for React Router [framework mode](https://reactrouter.com/start/modes#framework) apps on Cloudflare Workers. For Node.js, see the [React Router guide](/platforms/javascript/guides/react-router/). For Shopify Oxygen, see [Hydrogen with React Router](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/).
+
+</Alert>
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running on Cloudflare Workers ([Cloudflare's setup guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/))
+- React Router version `7.15.0` or above (framework mode)
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Install the Sentry SDKs:
+
+```bash {tabTitle:npm}
+npm install @sentry/react-router @sentry/cloudflare
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router @sentry/cloudflare
+```
+
+## Configure
+
+**Error Monitoring** starts working as soon as you configure Sentry. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+### Expose Entry Point Files
+
+If your app doesn't have `entry.client.tsx` and `entry.server.tsx` yet, expose them:
+
+```bash
+npx react-router reveal
+```
+
+### Configure Client-Side Sentry
+
+Initialize Sentry in `entry.client.tsx`.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `reactRouterTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
+```tsx {filename:app/entry.client.tsx}
+import * as Sentry from "@sentry/react-router";
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    // Registers and configures the Tracing integration,
+    // which automatically instruments your application to monitor its
+    // performance, including custom React Router routing instrumentation
+    Sentry.reactRouterTracingIntegration(),
+    // Registers the Replay integration,
+    // which automatically captures Session Replays
+    Sentry.replayIntegration(),
+    // Registers the User Feedback integration
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+startTransition(() => {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      {/* Captures client-side errors */}
+      <HydratedRouter onError={Sentry.sentryOnError} />
+    </StrictMode>
+  );
+});
+```
+
+### Add the Vite Plugin
+
+Add the Sentry Cloudflare Vite plugin at the end of the `plugins` array in your `vite.config.ts`. To learn what it does and see its options, see <PlatformLink to="/install/vite-plugin/">Vite Plugin</PlatformLink>.
+
+```typescript {diff} {filename:vite.config.ts}
++import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+
+ export default defineConfig({
+   plugins: [
+     cloudflare({ viteEnvironment: { name: "ssr" } }),
+     reactRouter(),
++    sentryCloudflareVitePlugin(),
+   ],
+ });
+```
+
+### Wrangler Configuration
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare"
+/>
+
+### Configure Server-Side Sentry
+
+Create a `workers/instrument.server.ts` file to initialize Sentry on the server.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
+
+```typescript {filename:workers/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+}));
+```
+
+Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's versions, and export `instrumentations` to enable automatic tracing. On Workers, import from `@sentry/react-router/cloudflare`:
+
+```tsx {filename:app/entry.server.tsx}
+import { captureException } from "@sentry/cloudflare";
+import * as Sentry from "@sentry/react-router/cloudflare";
+import { renderToReadableStream } from "react-dom/server";
+import { ServerRouter, type HandleErrorFunction } from "react-router";
+
+// Renders the app and connects server and client traces
+export default Sentry.createSentryHandleRequest({
+  ServerRouter,
+  renderToReadableStream,
+});
+
+export const handleError: HandleErrorFunction = (error, { request }) => {
+  // React Router also calls handleError for aborted requests, skip those
+  if (!request.signal.aborted) {
+    captureException(error, {
+      mechanism: { type: "react-router", handled: false },
+    });
+  }
+};
+
+// Automatically instruments all server loaders, actions, middleware,
+// and request handlers.
+export const instrumentations = [Sentry.createSentryServerInstrumentation()];
+```
+
+`createSentryHandleRequest` needs SDK version `11.10.0` or above. For CSP nonces, pass [`getNonce`](/platforms/javascript/guides/react-router/manual-setup/#configure-server-side-sentry).
+
+<Expandable title="Do you need to keep your own handleRequest function?">
+
+For custom rendering logic or SDK versions `11.5.0` to `11.9.x`, wrap your own `handleRequest` instead:
+
+```tsx {diff} {filename:app/entry.server.tsx}
++import * as Sentry from "@sentry/react-router/cloudflare";
+ // ... your existing imports
+
+-export default async function handleRequest(
++async function handleRequest(
+   // ... your existing parameters
+ ) {
+   // ... your existing rendering logic
+
+-  return new Response(body, {
++  return new Response(Sentry.injectTraceMetaTags(body), {
+     headers: responseHeaders,
+     status: responseStatusCode,
+   });
+ }
+
++export default Sentry.wrapSentryHandleRequest(handleRequest);
+```
+
+Keep the `handleError` and `instrumentations` exports from above.
+
+</Expandable>
+
+### Add Readable Stack Traces With Source Maps
+
+Follow the [React Router source maps setup](/platforms/javascript/guides/react-router/manual-setup/#add-readable-stack-traces-with-source-maps).
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+Already logging with `console` or Consola? Capture those logs with the <PlatformLink to="/logs/#console-integration">console integrations</PlatformLink>.
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+To confirm events are reaching Sentry, add a test button to your app and click it:
+
+```tsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Test Sentry Error
+</button>
+```
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable-cloudflare-frameworks" />
+
+## Next Steps
+
+Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Check out setup instructions for other popular [frameworks on Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/)
+- Find various support topics in <PlatformLink to="/troubleshooting/">troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
