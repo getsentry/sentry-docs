@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {getRuntimeLinks} from './runtimeLinks';
+import {getQuickStartTitle, getRuntimeLinks} from './runtimeLinks';
 
 const G = 'platforms/javascript/guides';
 
@@ -46,5 +46,25 @@ describe('getRuntimeLinks', () => {
     expect(getRuntimeLinks(page(`${G}/node`, 'node'), path(`${G}/node`))).toBeNull();
     expect(getRuntimeLinks(page(`${G}/eve`), path(`${G}/eve`))).toBeNull();
     expect(getRuntimeLinks(undefined, path('product/agents'))).toBeNull();
+  });
+});
+
+describe('getQuickStartTitle', () => {
+  it('names the runtime of the guide page if the guide has quick starts for more runtimes', () => {
+    expect(getQuickStartTitle(piDurable)).toBe('Quick Start (Node.js)');
+  });
+
+  it('returns "Quick Start" for a guide with quick starts for fewer than two runtimes', () => {
+    expect(getQuickStartTitle(page(`${G}/node`, 'node'))).toBe('Quick Start');
+    expect(getQuickStartTitle(page(`${G}/eve`))).toBe('Quick Start');
+    expect(getQuickStartTitle(undefined)).toBe('Quick Start');
+  });
+
+  it('returns "Quick Start" if only the child pages set a runtime', () => {
+    const hono = page(`${G}/hono`, undefined, [
+      page(`${G}/hono/cloudflare`, 'cloudflare'),
+      page(`${G}/hono/bun`, 'bun'),
+    ]);
+    expect(getQuickStartTitle(hono)).toBe('Quick Start');
   });
 });
