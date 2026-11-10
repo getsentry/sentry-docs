@@ -144,6 +144,33 @@ SentrySDK.replay.resume()
 [SentryObjCSDK.replay resume];
 ```
 
+### Pause Touch Tracking on Sensitive Screens
+
+Starting with version 9.34.0, the SDK can stop recording touches while it continues to record the screen. Use this on screens where masking hides the content, but the touch positions could reveal the input, such as a custom PIN pad or a masked `WKWebView`.
+
+Call `pauseTouchTracking()` before showing the sensitive content and `resumeTouchTracking()` after the content is hidden. Touch tracking stays paused for all replays in the same app process, including new replays and replays restarted with `stop()` and `start()`, until you call `resumeTouchTracking()`. Calling `resume()` doesn't resume touch tracking, and `resumeTouchTracking()` doesn't record touches while the replay is paused with `pause()`. You can call `pauseTouchTracking()` before a replay starts. Breadcrumbs aren't affected; use [`beforeBreadcrumb`](/platforms/apple/enriching-events/breadcrumbs/#customize-breadcrumbs) to filter them.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+SentrySDK.replay.pauseTouchTracking()
+
+// Record touches again after leaving the sensitive screen.
+SentrySDK.replay.resumeTouchTracking()
+```
+
+```objc {tabTitle:Objective-C}
+[SentrySDK.replay pauseTouchTracking];
+
+// Record touches again after leaving the sensitive screen.
+[SentrySDK.replay resumeTouchTracking];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+[SentryObjCSDK.replay pauseTouchTracking];
+
+// Record touches again after leaving the sensitive screen.
+[SentryObjCSDK.replay resumeTouchTracking];
+```
+
 ### Stop or Flush Recording
 
 Call `stop()` to end the current replay. A later call to `start()` or `startBuffering()` creates a new replay instead of resuming the stopped one.
