@@ -1,0 +1,120 @@
+---
+title: Sentry for Pi Durable (Bun)
+sidebar_title: Quick Start (Bun)
+sidebar_order: 0.7
+description: Learn how to send Pi Durable agent runs, model requests, tool calls, and errors to Sentry from a Bun app.
+runtime: bun
+---
+
+[Pi Durable](https://earendil.com/posts/pi-durable/) is Earendil's durable agent harness, built on the same foundations as the Pi coding agent. This guide sets up the Sentry SDK in a Bun app that runs Pi Durable, so agent runs, model requests, tool calls, and errors flow into [Sentry Agent Tracing](/product/agents/).
+
+<Include name="pi-durable/experimental-alert" />
+
+## Prerequisites
+
+Before you begin, you need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/). The project's DSN tells the SDK where to send data.
+- A Bun application using `@earendil-works/pi-durable` version `1.0.0` or later.
+- `@sentry/bun` version `11.6.0` or later.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+  defaults={["performance"]}
+/>
+
+Install the Sentry Bun SDK:
+
+```bash
+bun add @sentry/bun@^11.6.0
+```
+
+## Configure
+
+Create an `instrument.ts` file in the root of your project. The Pi Durable integration is enabled by default, so you don't add it to `integrations`:
+
+```typescript {filename:instrument.ts}
+import * as Sentry from "@sentry/bun";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of spans for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/bun/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+Bun has no runtime hook that Sentry can use to instrument Pi Durable, so build your app with `sentryBunPlugin` from `@sentry/bun/plugin`. The plugin instruments `Harness.open()` while `Bun.build()` bundles `@earendil-works/pi-durable`:
+
+```typescript {filename:build.ts}
+import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+await Bun.build({
+  entrypoints: ["./app.ts"],
+  outdir: "./dist",
+  target: "bun",
+  plugins: [sentryBunPlugin()],
+});
+```
+
+Build your app, then run the output with the instrument file preloaded:
+
+```bash
+bun build.ts
+bun --preload ./instrument.ts dist/app.js
+```
+
+If you run your source directly, for example with `bun app.ts`, the plugin doesn't run, and Pi Durable isn't traced.
+
+Your Pi Durable code doesn't change. Every Harness your app opens is traced, whichever storage it uses.
+
+<Include name="pi-durable/captured-summary" />
+
+### Control the Data You Send to Sentry (Optional)
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+To change recording for Pi Durable only, pass `recordInputs` and `recordOutputs` to the integration. They take precedence over `dataCollection`:
+
+```typescript {filename:instrument.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.piDurableIntegration({
+      recordInputs: false,
+      recordOutputs: false,
+    }),
+  ],
+});
+```
+
+<Include name="pi-durable/link-conversations" />
+
+<Include name="pi-durable/verify" />
+
+</StepConnector>
+
+## Troubleshooting
+
+- **No AI spans at all.** Confirm that `sentryBunPlugin()` is in your `Bun.build()` call and that you run the built output, not your source files.
+
+<Include name="pi-durable/next-steps" />
+
+<Include name="pi-durable/what-gets-captured" />
+
+## Supported Versions
+
+- `@sentry/bun`: `>=11.6.0`
+- `@earendil-works/pi-durable`: `>=1.0.0 <2.0.0`

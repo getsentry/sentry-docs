@@ -40,7 +40,7 @@ Generic host apps install the `Sentry.Extensions.Hosting` package instead, which
 
 <Alert>
 
-Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+The integration excludes the Sentry SDK's own logger categories to avoid capturing its diagnostic messages as events. Application categories that happen to start with `Sentry` aren't excluded solely because of that prefix.
 
 </Alert>
 
@@ -175,9 +175,14 @@ options.TagFilters.Add("PROC_");
 
 ## Verify
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+After creating a logger with one of the configurations above, send an informational log and an error to verify both providers:
 
-<PlatformContent includePath="getting-started-verify" />
+```csharp
+logger.LogInformation("Sentry logging verification");
+logger.LogError("Sentry error-event verification");
+```
+
+Check **Logs** for the informational log and **Issues** for the error event. Run this code before disposing the logger factory or service provider.
 
 ## Samples
 
