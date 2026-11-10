@@ -70,7 +70,7 @@ Under the hood, the OTLP exporter sets up the following parts:
 * An OTLP exporter that automatically configures the ingestion endpoint from your Sentry DSN. This enables tracing in Sentry.
 * Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
 
-Calling `UseOtlp()` on `SentryOptions` sets `DisableSentryTracing = true`, which turns off Sentry's automatic span creation from `SentryHttpMessageHandler`, `DiagnosticSource` listener, and Entity Framework interception to avoid duplicate spans.
+Calling `UseOtlp()` on `SentryOptions` turns off Sentry's automatic span creation from `SentryHttpMessageHandler`, `DiagnosticSource` listener, and Entity Framework interception to avoid duplicate spans.
 
 ## Sampling
 
@@ -94,13 +94,13 @@ Earlier versions of `AddSentryOtlpExporter` set `SentryPropagator` as OpenTeleme
 
 </Alert>
 
-Requests sent through `SentryHttpMessageHandler` also get `sentry-trace` and `baggage` headers. `UseOtlp()` stops the handler from creating spans, but not from adding headers. Sentry adds this handler to `IHttpClientFactory` clients automatically when you initialize Sentry through dependency injection, for example with `UseSentry()` in ASP.NET Core.
+Requests sent through `SentryHttpMessageHandler` also get a `sentry-trace` header. `UseOtlp()` stops the handler from creating spans, but not from adding headers. Sentry adds this handler to `IHttpClientFactory` clients automatically when you initialize Sentry through dependency injection, for example with `UseSentry()` in ASP.NET Core.
 
 ### Services That Use Sentry's Tracing
 
 Services that use a Sentry SDK's own tracing, rather than OpenTelemetry, continue traces from `sentry-trace` and `baggage` headers. When they receive a request that didn't go through `SentryHttpMessageHandler`, they start a new trace.
 
-To send `sentry-trace` and `baggage` on every request OpenTelemetry instruments, and to continue traces from incoming `sentry-trace` headers, add `SentryPropagator` (included in `Sentry.OpenTelemetry.Exporter`) next to the W3C propagator when configuring the OpenTelemetry SDK at startup:
+To send a `sentry-trace` header on every request OpenTelemetry instruments, and to continue traces from incoming `sentry-trace` headers, add `SentryPropagator` (included in `Sentry.OpenTelemetry.Exporter`) next to the W3C propagator when configuring the OpenTelemetry SDK at startup:
 
 ```csharp
 using OpenTelemetry;
@@ -115,6 +115,8 @@ Sdk.SetDefaultTextMapPropagator(new CompositeTextMapPropagator(new TextMapPropag
 ```
 
 If you only need to continue traces from services that call this one, enable [`propagateTraceparent`](/concepts/otlp/sentry-with-otel/#linking-sentry-and-otlp-traces) in their Sentry SDKs instead. They then also send a `traceparent` header, which OpenTelemetry reads by default. In .NET, that's the <PlatformLink to="/configuration/options/#PropagateTraceparent">`PropagateTraceparent`</PlatformLink> option. You don't need it in the service that uses the OTLP exporter, because OpenTelemetry already sends `traceparent` from there.
+
+If the calling service hasn't made a sampling decision, for example because tracing is turned off there, its `traceparent` header is marked as not sampled (`-00`), since W3C trace context can't express an undecided state. OpenTelemetry's parent-based sampler then doesn't record this service's spans for those requests.
 
 ## Options
 
