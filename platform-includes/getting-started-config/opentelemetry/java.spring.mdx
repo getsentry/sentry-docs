@@ -1,34 +1,29 @@
-The Spring integration initializes the SDK and the OpenTelemetry agent provides automatic instrumentation. Add `@EnableSentry` to a Spring configuration class and set the DSN:
+### Add the OpenTelemetry Agent (Optional)
 
-```java {tabTitle: Spring 5}
-import io.sentry.spring.EnableSentry;
+<PlatformLink to="/opentelemetry/">Sentry's OpenTelemetry</PlatformLink> support lets Sentry use OpenTelemetry instrumentation to trace your application.
+Sentry's agent attaches when the JVM starts. Your configuration stays the same, but Sentry is still initialized by `@EnableSentry`, so set `SENTRY_AUTO_INIT=false` to stop the agent from initializing it as well.
 
-@EnableSentry(dsn = "___PUBLIC_DSN___")
-@Configuration
-class SentryConfiguration {}
+Download the latest version of the `sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar` from [MavenCentral](https://search.maven.org/artifact/io.sentry/sentry-opentelemetry-agent):
+```bash
+curl https://repo1.maven.org/maven2/io/sentry/sentry-opentelemetry-agent/{{@inject packages.version('sentry.java.opentelemetry-agent') }}/sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar -o sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar
 ```
 
-```java {tabTitle: Spring 6}
-import io.sentry.spring.jakarta.EnableSentry;
-
-@EnableSentry(dsn = "___PUBLIC_DSN___")
-@Configuration
-class SentryConfiguration {}
+Then run your application with:
+```bash {tabTitle: Environment variable}
+SENTRY_AUTO_INIT=false JAVA_TOOL_OPTIONS="-javaagent:sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar" java -jar your-application.jar
 ```
 
-```java {tabTitle: Spring 7}
-import io.sentry.spring7.EnableSentry;
-
-@EnableSentry(dsn = "___PUBLIC_DSN___")
-@Configuration
-class SentryConfiguration {}
+```bash {tabTitle: Java CLI argument}
+SENTRY_AUTO_INIT=false java -javaagent:sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar -jar your-application.jar
 ```
 
-Configure Tracing, Profiling, and Logs in `sentry.properties`:
-
-```properties {filename:sentry.properties}
-traces-sample-rate=1.0
-profile-session-sample-rate=1.0
-profile-lifecycle=TRACE
-logs.enabled=true
+If you run a `.WAR` file on an application server, add the agent to the server's `JAVA_OPTS` instead:
+```bash {tabTitle: Environment variable}
+JAVA_OPTS="${JAVA_OPTS} JAVA_TOOL_OPTIONS="-javaagent:sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar"
 ```
+
+```bash {tabTitle: Java CLI argument}
+JAVA_OPTS="${JAVA_OPTS} JAVA_TOOL_OPTIONS="-javaagent:sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar"
+```
+
+See the <PlatformLink to="/opentelemetry/setup/agent/">agent setup guide</PlatformLink> or <PlatformLink to="/opentelemetry/setup/agentless/">agentless setup guide</PlatformLink> for details.

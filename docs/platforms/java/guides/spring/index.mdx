@@ -1,79 +1,76 @@
 ---
 title: "Spring"
 description: "Learn how to set up Sentry in your Spring application and capture your first events."
+caseStyle: camelCase
+supportLevel: production
 sdk: sentry.java.spring
 ---
 
 <PlatformContent includePath="getting-started-primer" />
 
+<PlatformContent includePath="getting-started-prerequisites" />
+
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
+
+<Alert>
+There are multiple variants of Sentry available for Spring:
+- For Spring 5, use `sentry-spring` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring))
+- For Spring 6, use `sentry-spring-jakarta` ([GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring-jakarta))
+- For Spring 7, use `sentry-spring-7` ([GitHub](https://github.com/getsentry/sentry-java/tree/main/sentry-spring-7))
+</Alert>
 
 Install the Sentry Spring integration:
 
 <PlatformContent includePath="getting-started-install" />
 
-<PlatformContent includePath="getting-started-install/opentelemetry" />
-
-If you use the plain SDK setup in Configure, skip the agent download and launch command.
-
 ## Configure
 
-**Error Monitoring** starts when the Spring integration initializes. This guide configures **Tracing** and **Profiling**. **Logs** require an explicit enable option, which the setup below includes. **Application Metrics** need no extra configuration; send them in [step 4](#send-application-metrics-).
+**Error Monitoring** starts once Sentry is configured. **Application Metrics** need no extra configuration, and you'll learn how to send them in step [#4](#send-application-metrics-). This guide also configures **Tracing**, **Logs**, and **Profiling**.
 
-Don't need a feature? Remove its configuration. Remove the `sentry-async-profiler` dependency to disable Profiling.
-
-The default setup uses the Sentry OpenTelemetry agent. See the [agent setup guide](/platforms/java/opentelemetry/setup/agent/) or [agentless setup guide](/platforms/java/opentelemetry/setup/agentless/) for details.
-
-<PlatformContent includePath="getting-started-config/opentelemetry" />
-
-<Expandable title="Not using OpenTelemetry?">
-
-The following setup initializes Sentry through the Spring integration without the OpenTelemetry agent. It configures Error Monitoring, Tracing, Profiling, and Logs. Logs are enabled with `logs.enabled=true`; Metrics are available after SDK initialization and have no enable option.
+<Include name="quick-start-features-expandable" />
 
 <PlatformContent includePath="getting-started-config" />
 
-</Expandable>
+<PlatformContent includePath="getting-started-config/opentelemetry" />
 
 ## Send Logs
 
-Logs must be enabled in your configuration; the snippets in Configure already do this. Use `Sentry.logger()` to send logs at different levels:
+<PlatformContent includePath="getting-started-logs" />
 
-```java
-import io.sentry.Sentry;
-
-Sentry.logger().info("User example action completed");
-Sentry.logger().warn("Slow operation detected");
-Sentry.logger().error("Validation failed");
-```
-
-If you already log with JUL, Log4j2, or Logback, see the [JUL](/platforms/java/guides/jul/), [Log4j2](/platforms/java/guides/log4j2/), and [Logback](/platforms/java/guides/logback/) guides to send those logs to Sentry. Spring Boot users can also use the [logging framework integrations](/platforms/java/guides/spring-boot/logging-frameworks/).
-
-See [Set Up Logs](/platforms/java/logs/) for all logging methods and configuration options.
+We also provide integrations for:
+- [Logback](/platforms/java/guides/logback/logs/)
+- [Log4j2](/platforms/java/guides/log4j2/logs/)
+- [java.util.logging](/platforms/java/guides/jul/logs/)
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Metrics are available after SDK initialization; no additional option is required. Use `Sentry.metrics()` to send counters, gauges, and distributions. Add attributes to filter and group metrics.
-
-See [Set Up Metrics](/platforms/java/metrics/) for all metric types and configuration options.
-
-```java
-import io.sentry.Sentry;
-
-Sentry.metrics().count("checkout.failed", 1.0);
-Sentry.metrics().gauge("queue_depth", 42.0);
-Sentry.metrics().distribution("response_time", 187.5);
-```
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
-Run the following code after initializing the SDK. It captures a test error that you can find in your Sentry project.
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add this intentional error to your application:
 
 <PlatformContent includePath="getting-started-verify" />
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 
 </StepConnector>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK or integration?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
