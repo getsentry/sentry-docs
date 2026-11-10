@@ -1,6 +1,11 @@
 Configuration should happen as early as possible in your application's lifecycle.
-
 The following example configures a `SentryInitializer` servlet container initializer that initializes Sentry on application startup.
+
+The snippet also turns on:
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#profileLifecycle">`profileLifecycle`</PlatformLink>
+- Data Collection: via <PlatformLink to="/data-management/data-collected/">`dataCollection`</PlatformLink>
+- Logs: via <PlatformLink to="/logs/">`logs.enabled`</PlatformLink>
 
 ```java
 package sentry.sample;
@@ -19,7 +24,6 @@ public final class SentryInitializer implements ServletContainerInitializer {
       options.setDsn("___PUBLIC_DSN___");
 
       // Use Data Collection defaults but don't collect automatic user information.
-      // https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/
       options.getDataCollection().forceDataCollection();
       options.getDataCollection().setUserInfo(false);
       // Configure other data categories here.
@@ -33,7 +37,7 @@ public final class SentryInitializer implements ServletContainerInitializer {
       options.setProfileSessionSampleRate(1.0);
       options.setProfileLifecycle(ProfileLifecycle.TRACE);
 
-      // Enable logs to be sent to Sentry
+      // Enable logs
       options.getLogs().setEnabled(true);
     });
   }
