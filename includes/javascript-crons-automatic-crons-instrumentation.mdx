@@ -67,7 +67,7 @@ scheduleWithCheckIn.scheduleJob(
 
 ### BullMQ
 
-Requires SDK version `11.9.0` or higher and `bullmq` version `5.16.0` or higher.
+Requires the next SDK release after `11.12.0`, and `bullmq` version `5.16.0` or higher.
 
 Use `Sentry.cron.instrumentBullMQWorker` to send check-ins for every job a BullMQ `Worker` runs from a [job scheduler](https://docs.bullmq.io/guide/job-schedulers). The job scheduler ID is the monitor slug, and the scheduler's `pattern` or `every` is sent as the monitor schedule. Jobs that weren't created by a job scheduler aren't monitored.
 
@@ -88,4 +88,12 @@ Sentry.cron.instrumentBullMQWorker(worker, {
 });
 ```
 
-Sentry creates the monitor from `pattern` schedules and from `every` intervals that are a whole number of minutes. Schedulers with schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), with a `limit` or `endDate`, or with a time zone given as an offset like `UTC+5` rather than an IANA name like `Europe/Vienna` aren't monitored. Repeatable jobs added with `queue.add` and the `repeat` option aren't monitored.
+Patterns use the scheduler's `tz` time zone, or the server's time zone without one. A job that BullMQ retries shows as one check-in, which fails only if the last attempt fails.
+
+These aren't monitored:
+
+- Schedules Sentry can't express, like an `every` interval that isn't a whole number of minutes or a pattern that runs every few seconds
+- Time zones given as an offset like `UTC+5` rather than an IANA name like `Europe/Vienna`
+- Schedulers with a `limit` or `endDate`
+- Patterns on a worker with a custom `repeatStrategy`
+- Repeatable jobs added with `queue.add` and the `repeat` option
