@@ -58,13 +58,7 @@ sentry_monitor_check_ins monitor_config: Sentry::Cron::MonitorConfig.from_cronta
 
 ### rufus-scheduler
 
-<Alert>
-
-The rufus-scheduler integration ships in the next release of `sentry-ruby`.
-
-</Alert>
-
-If you're using `rufus-scheduler`, enable the `:rufus_scheduler` patch to capture check-ins for `cron`, `every`, and `interval` jobs:
+If you're using `rufus-scheduler`, enable the `:rufus_scheduler` patch to capture check-ins for `cron` and `every` jobs:
 
 ```rb
 Sentry.init do |config|
@@ -91,15 +85,9 @@ end
 
 The monitor slug comes from the job's `name` option, or from the handler's class or method name when you pass one instead of a block. Blocks without a `name` aren't monitored, so set `name` on every block you want to monitor.
 
-Sentry creates the monitor from `cron` jobs and from `every` jobs whose frequency is a whole number of minutes, hours, or days. `interval` jobs wait a fixed time after each run ends, so they don't have a fixed schedule. For those, and for schedules that can't be expressed in the Crons schedule format, such as a job that runs every 10 seconds, the SDK sends check-ins without a monitor config, and you need to create the monitor in Sentry with the same slug. The same applies when the job's time zone is an offset like `+05:30` rather than an IANA name like `Europe/Vienna`. One-off `in` and `at` jobs are not monitored, and jobs scheduled by `sidekiq-scheduler` are left to the `:sidekiq_scheduler` patch.
+Sentry creates the monitor from `cron` jobs and from `every` jobs whose frequency is a whole number of minutes, hours, or days. Jobs whose schedule can't be expressed in the Crons schedule format aren't monitored, such as a job that runs every 10 seconds or one whose time zone is an offset like `+05:30` rather than an IANA name like `Europe/Vienna`. `interval` jobs aren't monitored either, since they wait a fixed time after each run ends and have no fixed schedule. One-off `in` and `at` jobs are not monitored, and jobs scheduled by `sidekiq-scheduler` are left to the `:sidekiq_scheduler` patch.
 
 ### Solid Queue
-
-<Alert>
-
-The Solid Queue integration ships in the next release of `sentry-rails`.
-
-</Alert>
 
 If you're using Solid Queue recurring tasks, enable the `:solid_queue_recurring` patch to capture check-ins for every task in `config/recurring.yml`, as well as dynamic tasks:
 
@@ -126,7 +114,7 @@ production:
 
 The monitor slug is the task key, so this example creates three monitors: `nightly_report`, `weekly_report`, and `clear_cache`. Each task gets its own monitor, even when tasks share a job class. Both `class` and `command` tasks are monitored.
 
-Sentry creates and updates each monitor from the task's schedule and time zone. Schedules that can't be expressed in the Crons schedule format, such as a task that runs every 10 seconds, still send check-ins, but without a monitor config. Create those monitors in Sentry first, using the same slug. Jobs that already call `sentry_monitor_check_ins` are left as they are.
+Sentry creates and updates each monitor from the task's schedule and time zone. Tasks whose schedule can't be expressed in the Crons schedule format, such as a task that runs every 10 seconds, aren't monitored. Jobs that already call `sentry_monitor_check_ins` are left as they are.
 
 To skip tasks, list their keys in `config.rails.solid_queue_exclude_recurring_tasks`. Strings match a task key exactly, and regular expressions are matched against it:
 

@@ -13,7 +13,7 @@ In-process app-hang detection is experimental and may change in a future release
 
 An unresponsive application is one of the most frustrating experiences for your users. A long-running computation, a blocking I/O call, or an infinite loop on a critical thread can freeze your app without ever crashing, so it never surfaces as an error. App-hang detection catches these cases and reports them to Sentry as app-hang events.
 
-On macOS, Windows, Linux, and Android, the Native SDK detects hangs entirely in-process: a background watchdog thread monitors a single thread of your choosing and captures an event when that thread stops making progress. Because the SDK can't know which of your threads represents responsiveness, you tell it by sending heartbeats from the thread you want watched (typically your UI or main loop).
+On macOS, Windows, Linux, and Android, the Native SDK detects hangs entirely in-process: a background watchdog thread monitors a single thread of your choosing and captures an event when that thread stops making progress. On other platforms, `sentry_app_hang_heartbeat()` and `sentry_app_hang_pause()` do nothing. Because the SDK can't know which of your threads represents responsiveness, you tell it by sending heartbeats from the thread you want watched (typically your UI or main loop).
 
 ## Enabling App-Hang Detection
 
@@ -49,7 +49,7 @@ The minimum `app_hang_timeout` is `1000` ms. Setting a lower value (including `0
 
 </Alert>
 
-If the watched thread doesn't send a heartbeat within the configured [`app_hang_timeout`](/platforms/native/configuration/options/#app_hang_timeout), the watchdog samples the hung thread's stack trace and captures an app-hang event.
+If the watched thread doesn't send a heartbeat within the configured [`app_hang_timeout`](/platforms/native/configuration/options/#app_hang_timeout), the watchdog samples the hung thread's stack trace and captures an app-hang event. The watchdog checks every 500 ms, so the event arrives up to 500 ms after the timeout.
 
 ## How Heartbeats Work
 
@@ -58,5 +58,44 @@ The SDK monitors exactly one thread, chosen at runtime by your heartbeats:
 - **The first call to `sentry_app_hang_heartbeat()` latches the calling thread** as the monitored thread. Make sure the first heartbeat comes from the thread most representative of responsiveness, such as your UI or main loop.
 - **Heartbeats from any other thread are ignored.** Only the latched thread is watched.
 - **Calls are no-ops unless app-hang detection is enabled** via `sentry_options_set_enable_app_hang_tracking()`, so you can leave the heartbeat calls in place even when the feature is turned off.
+- **Detection starts with the first heartbeat.** The SDK doesn't report hangs that happen before it, for example during startup.
+- **The monitored thread stays the same until `sentry_close()`.** After you initialize the SDK again, the next first heartbeat chooses the thread anew.
+- **Each freeze is reported once.** The watched thread has to send a heartbeat again before the SDK reports another hang. The SDK doesn't send an event when the hang ends.
 
 Because detection relies on heartbeats, place them where they reflect your application's responsiveness, for example, at the top of each iteration of your main loop. A thread that's busy but still ticking the loop will keep sending heartbeats; a thread genuinely stuck past the timeout will not.
+
+## Pausing Detection
+
+When the watched thread stops sending heartbeats on purpose, for example while your app is in the background or its main loop is suspended, call `sentry_app_hang_pause()` so the SDK doesn't report it as a hang. You can call it from any thread:
+
+```c
+void on_enter_background(void) {
+  sentry_app_hang_pause();
+}
+```
+
+The next regular heartbeat from the watched thread resumes detection. Only call `sentry_app_hang_heartbeat()` from the watched thread, not from lifecycle callbacks that run on other threads. If such a callback sends the first heartbeat, the SDK watches the callback's thread instead.
+
+`sentry_app_hang_pause()` is available since version `0.16.1`.
+
+## App-Hang Events
+
+App-hang events have:
+
+- the level `error` and the message `App hung for at least <duration> ms.`, where the duration is the time since the last heartbeat, not the length of the whole freeze
+- an exception of type `AppHang` with the watched thread's stack trace
+- the mechanism `AppHang`, marked as handled
+
+Upload your [debug information files](/platforms/native/data-management/debug-files/) to symbolicate the stack trace. The SDK captures these events on its watchdog thread, so `before_send` and sampling apply and run on that thread.
+
+To find app-hang events, search for:
+
+```
+error.mechanism.type:AppHang
+```
+
+## Limitations
+
+- If the SDK can't capture the watched thread's stack trace, it doesn't send an event.
+- On Linux and Android, the SDK captures the stack trace through the real-time signal `SIGRTMIN+4`. If the watched thread blocks this signal, or another library handles it, the SDK can't capture the stack trace.
+- On Windows, stack traces are validated on x64. On x86 and ARM64, they might be incomplete.

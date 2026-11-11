@@ -1,15 +1,6 @@
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 ### Install the Sentry SDK
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Install and add the Sentry integration using the `astro` CLI:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npx astro add @sentry/astro
@@ -23,17 +14,9 @@ yarn astro add @sentry/astro
 pnpm astro add @sentry/astro
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
 <OnboardingOption optionId="profiling">
-<SplitSection>
-<SplitSectionText>
 
 Next, install the Profiling package using your preferred package manager:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```bash {tabTitle:npm}
 npm install @sentry/profiling-node
@@ -47,145 +30,14 @@ yarn add @sentry/profiling-node
 pnpm add @sentry/profiling-node
 ```
 
-</SplitSectionCode>
-</SplitSection>
 </OnboardingOption>
-
-</SplitLayout>
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-### Install the Sentry SDKs
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Install both `@sentry/astro` and `@sentry/cloudflare`:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```bash {tabTitle:npm}
-npm install @sentry/astro @sentry/cloudflare
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/astro @sentry/cloudflare
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/astro @sentry/cloudflare
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-</PlatformSection>
 
 ## Configure
 
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-### Wrangler Configuration
-
-<PlatformContent
-  includePath="getting-started-config"
-  platform="javascript.cloudflare"
-/>
-
-### Configure Custom Entry Point
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Astro 6 with `@astrojs/cloudflare` v13+ supports custom entry points directly from `wrangler.jsonc`. Update your wrangler configuration to point to a custom Sentry entry point:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```jsonc {filename:wrangler.jsonc}
-{
-  "main": "./sentry.server.config.ts",
-  // ... other configuration
-}
-```
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
-
-Create a `sentry.server.config.ts` file in the root of your project that wraps the Astro Cloudflare handler with Sentry:
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```typescript {filename:sentry.server.config.ts}
-import * as Sentry from "@sentry/cloudflare";
-import handler from "@astrojs/cloudflare/entrypoints/server";
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: env.SENTRY_DSN,
-    // ___PRODUCT_OPTION_START___ performance
-    // Define how likely traces are sampled. Adjust this value in production,
-    // or use tracesSampler for greater control.
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-  }),
-  handler
-);
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-### Register the Sentry Integration
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-Follow [Astro's Cloudflare deployment guide](https://docs.astro.build/en/guides/deploy/cloudflare/) if you haven't already. Then add the Sentry integration to your `astro.config.mjs` alongside the Cloudflare adapter.
-
-</SplitSectionText>
-<SplitSectionCode>
-
-```javascript {filename:astro.config.mjs}
-import { defineConfig } from "astro/config";
-import cloudflare from "@astrojs/cloudflare";
-import sentry from "@sentry/astro";
-
-export default defineConfig({
-  adapter: cloudflare(),
-  integrations: [sentry()],
-});
-```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-</PlatformSection>
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 ### Apply Instrumentation to Your App
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Register the Sentry integration in your `astro.config.mjs` file:
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
 import sentry from "@sentry/astro";
@@ -195,21 +47,9 @@ export default defineConfig({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-</PlatformSection>
-
 ### Configure Client-side Sentry
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Create a `sentry.client.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the client:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript {filename:sentry.client.config.(ts|js)}
 import * as Sentry from "@sentry/astro";
@@ -250,23 +90,10 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 <Expandable title="Want to change your Sentry config files location or name?">
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 Sentry automatically detects configuration files named `sentry.(client|server).config.(ts|js)` in the root of your project. You can rename these files or move them to a custom folder within your project.
 To change their location or names, specify the paths in the Sentry Astro integration options in your `astro.config.mjs`:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript {filename:astro.config.mjs}
 export default defineConfig({
@@ -280,24 +107,11 @@ export default defineConfig({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 </Expandable>
-
-</PlatformSection>
 
 ### Configure Server-side Sentry
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Create a `sentry.server.config.(ts|js)` file in the root of your project. In this file, import and initialize Sentry for the server:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript {filename:sentry.server.config.(ts|js)}
 import * as Sentry from "@sentry/astro";
@@ -329,52 +143,10 @@ Sentry.init({
 });
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-Server-side Sentry is already configured in your custom entry point file (`sentry.server.config.ts`) created in the previous step.
-
-</PlatformSection>
-
 ### Add Readable Stack Traces With Source Maps
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry` options inside `astro.config.mjs`:
 
-</SplitSectionText>
-<SplitSectionCode>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-```javascript {filename:astro.config.mjs}
-import { defineConfig } from "astro/config";
-import cloudflare from "@astrojs/cloudflare";
-import sentry from "@sentry/astro";
-
-export default defineConfig({
-  adapter: cloudflare(),
-  integrations: [
-    sentry({
-      org: "___ORG_SLUG___",
-      project: "___PROJECT_SLUG___",
-      // store your auth token in an environment variable
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    }),
-  ],
-});
-```
-
-</PlatformSection>
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
 import sentry from "@sentry/astro";
@@ -390,39 +162,20 @@ export default defineConfig({
   ],
 });
 ```
-
-</PlatformSection>
-
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
 
 To keep your auth token secure, set the `SENTRY_AUTH_TOKEN` environment variable in your build environment:
 
 <OrgAuthTokenNote />
 
-</SplitSectionText>
-<SplitSectionCode>
-
 ```bash {filename:.env.sentry-build-plugin}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ### Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
-
-</PlatformSection>
 
 ### Control the Data You Send to Sentry (Optional)
 
@@ -434,16 +187,9 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 
 ### Issues
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
 To verify that Sentry captures errors and creates issues in your Sentry project,
 create a test page, for example, at `src/pages/test.astro` with two buttons.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```html {filename: test.astro}
 <script>
@@ -466,17 +212,9 @@ create a test page, for example, at `src/pages/test.astro` with two buttons.
 <button id="two" type="button">Throw an API error</button>
 ```
 
-</SplitSectionCode>
-</SplitSection>
-
-<SplitSection>
-<SplitSectionText>
 Then also create the route we're calling in our test page, like `src/pages/api/test-error.(js|ts)`:
 
 Next, open your test page in a browser and click the buttons to trigger a frontend error and an error in the API route.
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```javascript {filename: test-error.(js|ts)}
 export async function GET() {
@@ -484,22 +222,11 @@ export async function GET() {
 }
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 <OnboardingOption optionId="performance">
 
 ### Tracing
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 To test tracing, create a custom span to measure the time it takes for the API request to complete:
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```html {filename: test.astro}
 <script>
@@ -525,10 +252,6 @@ To test tracing, create a custom span to measure the time it takes for the API r
 <button id="one" type="button">Throw an API error with a trace</button>
 ```
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
 </OnboardingOption>
 
 <OnboardingOption optionId="logs">
@@ -543,17 +266,7 @@ To test tracing, create a custom span to measure the time it takes for the API r
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-<Include name="quick-start-locate-data-expandable-cloudflare-frameworks" />
-
-</PlatformSection>
-
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 <Include name="quick-start-locate-data-expandable" />
-
-</PlatformSection>
 
 ## Next Steps
 
@@ -562,24 +275,11 @@ At this point, you should have integrated Sentry into your Astro application and
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
-<PlatformSection notSupported={["javascript.cloudflare"]}>
-
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
 - Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Learn more about [deploying Astro apps to Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/astro/)
+- Learn more about [deploying Astro apps to Cloudflare](/platforms/javascript/guides/astro/cloudflare/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.cloudflare"]}>
-
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Continue to <PlatformLink to="/configuration/">customize your configuration</PlatformLink>
-- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
-
-</PlatformSection>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

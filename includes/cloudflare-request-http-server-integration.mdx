@@ -1,0 +1,31 @@
+<AvailableSince version="11.1.0" />
+
+By default, the SDK attaches the body of incoming requests to events (except `GET`, `HEAD`, and `OPTIONS` requests), up to 10,000 bytes and only for text content types such as JSON or form data. To capture less, or to skip routes that handle sensitive data, add `httpServerIntegration` from `@sentry/cloudflare/request` to `integrations`. It replaces the default instance of the integration:
+
+```ts {filename:server.ts}
+import {
+  httpServerIntegration,
+  wrapRequestHandler,
+} from "@sentry/cloudflare/request";
+
+// In your fetch handler:
+return wrapRequestHandler(
+  {
+    options: {
+      dsn: "___PUBLIC_DSN___",
+      integrations: [
+        httpServerIntegration({
+          // "none", "small" (1,000 bytes), "medium" (default), or "always"
+          maxRequestBodySize: "small",
+          ignoreRequestBody: (url) => url.includes("/account"),
+        }),
+      ],
+    },
+    request: request as any,
+    context: executionContext,
+  },
+  async () => handleRequest(request)
+);
+```
+
+To stop capturing request bodies entirely, set <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.httpBodies`</PlatformLink> to `[]` instead.
