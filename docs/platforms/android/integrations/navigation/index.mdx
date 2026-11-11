@@ -8,27 +8,23 @@ categories:
   - mobile
 ---
 
-The `sentry-android-navigation` and `sentry-android-navigation3` libraries provide support for Sentry's Android navigation instrumentation. Use them to automatically add breadcrumbs, track screen names, and start navigation transactions whenever users navigate around your app.
+The `sentry-android-navigation`, `sentry-android-navigation3`, and `sentry-compose-android` libraries provide support for Sentry's Android navigation instrumentation. Use them to automatically add breadcrumbs, track screen names, and start navigation transactions whenever users navigate around your app.
 
 This page covers:
 
-- **[Navigation 2](https://developer.android.com/guide/navigation/)** (`androidx.navigation`) for classic Views and Jetpack Compose via `SentryNavigationListener`
-- **[Navigation 3](https://developer.android.com/guide/navigation/navigation-3)** (`androidx.navigation3`) for Jetpack Compose via `SentryNavEffect`
-
-If you're using `NavController`, follow the Navigation 2 setup below. If you're using `NavDisplay`, skip to [Navigation 3](#navigation-3).
+- **[Navigation 2](#classic-views)** for classic Views via `SentryNavigationListener`
+- **[Navigation 2](#jetpack-compose)** for Jetpack Compose via `NavHostController.withSentryObservableEffect`
+- **[Navigation 3](#navigation-3)** for Jetpack Compose via `SentryNavEffect`
 
 ## Navigation 2
 
-`SentryNavigationListener` for Navigation 2 integrations lets you observe destination changes reported by your `NavController`. Upon every destination change the listener:
+`SentryNavigationListener` for [Navigation 2](https://developer.android.com/guide/navigation/) integrations lets you observe destination changes reported by your `NavController`. Upon every destination change the listener:
 
 - starts a new navigation transaction and binds it to the current [Sentry scope](https://docs.sentry.io/platforms/android/enriching-events/scopes/)<sup>†</sup>
 - emits a breadcrumb
 - updates the currently tracked screen name
 
-`SentryNavigationListener` can be used with:
-
-- [Classic Views](#classic-views)
-- [Jetpack Compose](#jetpack-compose)
+`SentryNavigationListener` can be used directly with [classic Views](#classic-views) or in wrapped form with [Jetpack Compose](#jetpack-compose).
 
 <small>
   † A new navigation transaction will *not* be bound if another unfinished
@@ -384,7 +380,7 @@ SentryAndroid.init(this) { options ->
 
 Navigation 3 support is available in `sentry-android-navigation3` `8.60.0` and later.
 
-See the [Limitations](#limitations) section below for additional restrictions.
+Review [Supported Setups](#supported-setups) and [Limitations](#limitations) before configuring `SentryNavEffect`.
 
 </Alert>
 
@@ -405,6 +401,8 @@ See [Customize Nav3 Options](#customize-nav3-options) to learn how to modify tho
 ### Install
 
 Install the Android SDK and add the `sentry-android-navigation3` library:
+
+At runtime, this integration requires Compose UI `1.7` or later, or `lifecycle-runtime-compose` `2.8.3` or later.
 
 ```groovy {filename:build.gradle}
 dependencies {
@@ -466,12 +464,6 @@ Provide a `BackStackEntryMapper` that maps each entry in your back stack to the 
 <Alert>
 
 Values returned from `BackStackEntryMapper` are **not** scrubbed by the Sentry SDK of PII or other potentially sensitive information before being sent to Sentry. Only return names and arguments known to be safe, or sanitize them yourself in your `BackStackEntryMapper`.
-
-</Alert>
-
-<Alert>
-
-Multiple, simultaneously active `SentryNavEffect` instances writing to the same [Sentry scope](https://docs.sentry.io/platforms/android/enriching-events/scopes/) are **_not_** supported. Violating this restriction can result in duplicated or interleaved data and undefined transaction behavior.
 
 </Alert>
 
@@ -634,13 +626,41 @@ val backStackItemMapper = BackStackEntryMapper<NavKey> { entry ->
 }
 ```
 
+### Supported Setups
+
+The setups below require `sentry-android-navigation3` `8.62.0` or later. Earlier versions support only one active `SentryNavEffect` per [Sentry scope](/platforms/android/enriching-events/scopes/).
+
+`SentryNavEffect` is compatible with most, but not all, Nav3 setups. Each effect uses the lifecycle of its nearest `LocalLifecycleOwner` to decide when it can write to Sentry's shared scope, and compatibility between effects depends on how those lifecycle owners interact. Incompatible effects won't crash, but they can generate stale navigation data, produce interleaved breadcrumbs, or interfere with each other's transactions.
+
+**Supported:**
+
+- A single-Activity app with one `NavDisplay` and `SentryNavEffect` pair.
+- A multi-Activity app where each Activity has at most one `NavDisplay` and `SentryNavEffect` pair.
+- A multi-Fragment app where each Fragment has at most one `NavDisplay` and `SentryNavEffect` pair (and the host Activity or Activities have no `SentryNavEffect`(s) of their own).
+- A `ViewPager2` whose pages are Fragments, each with at most one `NavDisplay` and `SentryNavEffect` pair.
+- An Activity or Fragment with its own `NavDisplay` and `SentryNavEffect` pair that stays visible beneath a `DialogFragment` or translucent Activity with its own pair.
+
+<Alert>
+
+All supported setups assume that each `SentryNavEffect` is called in the same composable as the `NavDisplay` it observes, and that the effect is called before it.
+
+They also assume that `SentryNavEffect` is **_not_** called from content rendered by `NavDisplay`, such as a `NavEntry`, `NavEntryDecorator`, or `Scene`. (`SentryNavEffect` needs the lifecycle of the Activity or Fragment hosting a `NavDisplay`, rather than the navigation-scoped lifecycle that `NavDisplay` provides to its content.)
+
+</Alert>
+
+**Not supported:**
+
+- Sibling `NavDisplay` and `SentryNavEffect` pairs in the same Activity or Fragment.
+- Nested `NavDisplay` and `SentryNavEffect` pairs in the same Activity or Fragment. (If you nest `NavDisplay`s, consider using `SentryNavEffect` only with the outermost one.)
+- `SentryNavEffect` instances in multiple Activities or Fragments that users can interact with at the same time, such as two Activities from the same app in [multi-resume mode](https://developer.android.com/develop/ui/views/layout/support-multi-window-mode#multi-resume), or an Activity and hosted Fragments where the Activity and Fragments each have their own `NavDisplay` and `SentryNavEffect` pairs.
+- `SentryNavEffect` instances in pages or tabs that share their host's lifecycle, such as Compose `HorizontalPager` pages, `ViewPager2` pages that aren't Fragments, or tabs that are kept in the composition when inactive. Those pages or tabs share one `LifecycleOwner`, so at most one can call `SentryNavEffect`.
+
 ### Limitations
 
 `SentryNavEffect` treats the top entry in your back stack as the current screen. That works well for most Nav3 setups, but it means that `SentryNavEffect` does **_not_**:
 
 - understand the concept of Nav3 [Scenes](https://developer.android.com/guide/navigation/navigation-3/scenes) or multi-pane layouts
-- track multiple back stacks
-- permit multiple, simultaneously active `SentryNavEffect` instances
+- track multiple back stacks with one `SentryNavEffect` instance
 - make special accommodations for [predictive back](https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture) gestures (e.g., spans produced by predictively rendered composables may appear under the current destination's transaction)
 
 ## Navigation 2 and Navigation 3 Interoperability

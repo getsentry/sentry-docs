@@ -625,11 +625,6 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
   },
-  {
-    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
-  },
 
   // Guides → Get Started restructure
   {
@@ -1051,7 +1046,38 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/nuxt/cloudflare/',
+  },
+  // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
+    destination: '/platforms/javascript/guides/:framework/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
+    destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/',
+    destination: '/platforms/javascript/guides/remix/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/',
+    destination: '/platforms/javascript/guides/remix/hydrogen/',
+  },
+  {
+    // The Cloudflare quick start links to every framework page.
+    source: '/platforms/javascript/guides/cloudflare/frameworks/',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -1069,17 +1095,17 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/express/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/express/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/fastify/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/fastify/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hapi/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/hapi/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hono/install/lightweight/',
@@ -1089,7 +1115,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/koa/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source:
@@ -1100,6 +1126,20 @@ const userDocsRedirects = [
     source:
       '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
+  },
+  // Express, Fastify, Hapi and Koa are single landing pages, their subpages moved to Node.js.
+  {
+    source: '/platforms/javascript/guides/fastify/features/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/fastify/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)__v:version/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)/:path+',
+    destination: '/platforms/javascript/guides/node/:path+/',
   },
   {
     source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',
@@ -1961,21 +2001,10 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
   },
   {
-    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor.md',
-    destination:
-      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
-  },
-  {
     source:
       '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
     destination:
       '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
-  },
-  {
-    source:
-      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor.md',
-    destination:
-      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor.md',
   },
   {
     source:
@@ -2123,13 +2152,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
@@ -2172,14 +2199,6 @@ const userDocsRedirects = [
   {
     source: '/product/explore/logs/:path*',
     destination: '/product/logs/:path*',
-  },
-  {
-    source: '/product/explore',
-    destination: '/product/trace-explorer/',
-  },
-  {
-    source: '/product/explore/',
-    destination: '/product/trace-explorer/',
   },
   {
     source: '/platforms/javascript/best-practices/browser-extensions/',
@@ -2326,10 +2345,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/expo/',
     destination: '/platforms/react-native/guides/expo/',
-  },
-  {
-    source: '/platforms/react-native/manual-setup/expo.md',
-    destination: '/platforms/react-native/guides/expo.md',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
@@ -3121,16 +3136,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-monitoring.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
@@ -3178,16 +3185,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-tracing.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',
@@ -3762,6 +3761,69 @@ const userDocsRedirects = [
   },
 ];
 
+// Matches the trailing `/` of a page URL or the `.md` of its export.
+const MD_SUFFIX_PARAM = ':mdSuffix(/|\\.md)';
+
+// Destination compilation rejects adjacent params (`/:guide:mdSuffix`).
+const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
+
+/**
+ * Every page has a `.md` export, so a redirected page's `.md` URL must redirect too.
+ * Each redirect whose source ends in `/` also matches its `.md` URL and sends it to the
+ * destination's `.md` export (external, query-string and platform-picker destinations
+ * stay as they are).
+ * Where possible this is folded into the same rule through `:mdSuffix`, so the route
+ * count does not grow. Destinations ending in a param or pointing to the root need a
+ * separate `.md` rule. Wildcards with fixed destinations get a `.md` rule before the
+ * catch-all; wildcards forwarding `:path*` already preserve the requested extension.
+ *
+ * @template {{source: string, destination: string}} R
+ * @param {R[]} list
+ * @returns {R[]}
+ */
+function withMarkdownRedirects(list) {
+  return list.flatMap(r => {
+    const isWildcard = r.source.endsWith('/:path*');
+    if (r.source === '/' || (!r.source.endsWith('/') && !isWildcard)) {
+      return [r];
+    }
+    const keepDestination =
+      /^https?:\/\//.test(r.destination) ||
+      r.destination.includes('?') ||
+      r.destination === '/platform-redirect/';
+    if (isWildcard && (keepDestination || r.destination.includes(':path*'))) {
+      return [r];
+    }
+    const source = isWildcard ? r.source : r.source.slice(0, -1);
+    const [path, hash] = r.destination.split('#');
+    const destination = path.replace(/\/+$/, '');
+    const fragment = hash === undefined ? '' : `#${hash}`;
+
+    const canFold =
+      !isWildcard &&
+      (keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination)));
+    if (canFold) {
+      return [
+        {
+          ...r,
+          source: `${source}${MD_SUFFIX_PARAM}`,
+          destination: keepDestination
+            ? r.destination
+            : `${destination}:mdSuffix${fragment}`,
+        },
+      ];
+    }
+    const markdownRedirect = {
+      ...r,
+      source: `${source}.md`,
+      destination: keepDestination
+        ? r.destination
+        : `${destination || '/index'}.md${fragment}`,
+    };
+    return isWildcard ? [markdownRedirect, r] : [r, markdownRedirect];
+  });
+}
+
 /**
  * @type {import('next').NextConfig['redirects']}
  *
@@ -3774,9 +3836,16 @@ const redirects = async () => {
     isDeveloperDocs ? 'developer' : 'sdk',
     'docs redirects in next.config.js'
   );
-  return (isDeveloperDocs ? developerDocsRedirects : userDocsRedirects).map(r => {
+  return withMarkdownRedirects(
+    isDeveloperDocs ? developerDocsRedirects : userDocsRedirects
+  ).map(r => {
     return {...r, permanent: true};
   });
 };
 
-module.exports = {redirects, developerDocsRedirects, userDocsRedirects};
+module.exports = {
+  redirects,
+  developerDocsRedirects,
+  userDocsRedirects,
+  withMarkdownRedirects,
+};
