@@ -748,9 +748,9 @@ init({
 
 ### Migration from `sendDefaultPii`
 
-If the SDK can cleanly map what `sendDefaultPii` did to data collection options, it **MAY** backfill data collection options from the configured `sendDefaultPii` value:
-- **`sendDefaultPii: true`** (legacy) → omit `dataCollection` entirely; the new defaults already populate `user.*` and collect HTTP bodies. Add overrides only to restrict collection.
-- **`sendDefaultPii: false`** (legacy) → opt out of the categories the new defaults collect.
+#### Migration guidance for users
+- Previous **`sendDefaultPii: true`** → users can omit `dataCollection` entirely; the new defaults already populate `user.*` and collect HTTP bodies. Add overrides only to restrict collection.
+- Previous **`sendDefaultPii: false`** → users should opt out of the categories the new defaults collect.
 
 The new defaults collect **more data** than either legacy setting did. User identity, generative AI content, HTTP request/response bodies, and file paths are now on by default, and more HTTP headers and cookies are collected. This config restricts collection to roughly match the previous behavior of `sendDefaultPii: false`:
 
@@ -782,8 +782,13 @@ init({
 });
 ```
 
+#### Migration in SDKs
+
+If the SDK can cleanly map what `sendDefaultPii` did to data collection options, it **MAY** backfill data collection options from the configured `sendDefaultPii` value.
+
 If the SDK cannot cleanly map the `sendDefaultPii` behavior to data collection options, it **MUST NOT** derive data collection options from the configured `sendDefaultPii` value. Instead, the following rules apply:
-- if the user sets at least one data collection option, the SDK **MUST** ignore `sendDefaultPii`. The SDK **MUST** apply the options the user set, and the spec defaults for all other options. This also means that the SDK might send more data when `sendDefaultPii` was `false` before, so users should be made aware of that.
+- If the user sets at least one data collection option, the SDK **MUST** ignore `sendDefaultPii`. The SDK **MUST** apply the options the user set, and the spec defaults for all `dataCollection` options. This also means that the SDK might send more data when `sendDefaultPii` was set to `false` before, so users should be made aware of that.
+ 
 - If the user sets no data collection options, the SDK **MUST** keep the legacy `sendDefaultPii` behavior unchanged.
 This prevents breaking changes in PII filtering and allows customers to migrate to data collection at their own pace. Customers may keep using `sendDefaultPii` without changes to SDK behavior as long as they don't opt into data collection.
 
