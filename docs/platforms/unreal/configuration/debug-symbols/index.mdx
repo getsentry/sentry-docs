@@ -4,7 +4,13 @@ description: Learn how the Unreal Engine SDK handles debug symbols upload.
 og_image: /og-images/platforms-unreal-configuration-debug-symbols.png
 ---
 
-Sentry requires [debug information files](/platforms/unreal/data-management/debug-files/) to symbolicate crashes. The Unreal Engine SDK provides an automated upload functionality for those symbol files that rely on the [sentry-cli](/cli/). This is done automatically, so running the `sentry-cli` manually isn't required. The symbol upload happens during the execution of `PostBuildSteps`, as specified in the `Sentry.uplugin` file. The `sentry-cli` executables for Windows, macOS, and Linux are included as part of the Unreal Engine SDK package. They can also be downloaded manually via the settings menu if the plugin was installed from the UE Marketplace.
+Sentry requires [debug information files](/platforms/unreal/data-management/debug-files/) to symbolicate crashes. The Unreal Engine SDK provides an automated upload functionality for those symbol files that relies on the [Sentry CLI](https://cli.sentry.dev). This is done automatically, so running the Sentry CLI manually isn't required. The symbol upload happens during the execution of `PostBuildSteps`, as specified in the `Sentry.uplugin` file. The Sentry CLI executables for Windows (x64), macOS (Apple silicon), and Linux (x64) are included as part of the Unreal Engine SDK package. They can also be downloaded manually via the settings menu if the plugin was installed from the UE Marketplace.
+
+<Alert>
+
+Automatic debug symbols upload isn't supported on Intel Macs.
+
+</Alert>
 
 <Alert>
 
@@ -26,15 +32,15 @@ Sentry will upload debug symbols only for build configurations and target types 
 
 ![The Unreal Engine debug symbols upload configuration](./img/unreal-debug-symbols.png)
 
-The `sentry-cli` require you to specify the organization and project to work with as well as a token to authenticate with Sentry. The Unreal Engine SDK provides two ways to configure these settings - either by using a properties file (default) or environment variables.
+The Sentry CLI requires you to specify the organization and project to work with as well as a token to authenticate with Sentry. The Unreal Engine SDK provides two ways to configure these settings - either by using a properties file (default) or environment variables. Environment variables take priority over the values in the properties file.
 
 ### Properties File
 
-To configure the `sentry-cli` using properties file enter the [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/), Organization Slug, and Project Name. Note, that the Unreal Engine SDK automatically creates a `sentry.properties` file at the root of your project directory to store the configuration. This configuration file should **never** be made publicly available.
+To configure the upload using the properties file, enter the [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/), Organization Slug, and Project Name. Note, that the Unreal Engine SDK automatically creates a `sentry.properties` file at the root of your project directory to store the configuration. This configuration file should **never** be made publicly available.
 
 ### Environment Variables
 
-The `sentry-cli` can be configured by setting the following environment variables which will be automatically picked up during the debug symbol upload if the properties file is not found:
+The upload can be configured by setting the following environment variables, which are automatically picked up during the debug symbols upload. If the properties file isn't found, the environment variables are the only source of these settings. If it's found, each variable that has a value takes priority over the matching value in the properties file:
 
 ```bash
 export SENTRY_ORG=___ORG_SLUG___
@@ -42,14 +48,18 @@ export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-## Manual Upload Using sentry-cli
+## Manual Upload Using Sentry CLI
 
-To upload debug symbols to Sentry manually, run `sentry-cli` through the command line. You can either use the provided executables from within the package, or follow the [sentry-cli documentation](/cli/installation/) to make it available globally. To upload debug symbols run the following command:
+To upload debug symbols to Sentry manually, run the Sentry CLI through the command line. You can either use the provided executables from within the package, or follow the [Sentry CLI documentation](https://cli.sentry.dev/install) to make it available globally. To upload debug symbols, set the organization, project, and auth token, then run the following command:
 
 <OrgAuthTokenNote />
 
 ```bash
-sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+
+sentry debug-files upload PATH_TO_SYMBOLS
 ```
 
 ## Debug symbols for macOS and iOS
