@@ -24,10 +24,11 @@ Sentry creates each monitor from the message's schedule on its first check-in:
 
 - `RecurringMessage::cron()` and `#[AsCronTask]` send the cron expression and its timezone.
 - `RecurringMessage::every()` and `#[AsPeriodicTask]` send the interval when it's a whole number of minutes.
-- Intervals of `1 day`, `1 week`, `1 month` or `1 year` (and months that divide a year, such as `3 months`) send a cron expression at the time of the trigger's `from` (or its first run) in its timezone, so the time of day stays the same across DST changes. Monthly intervals need that date to be on day 28 or earlier.
+- Intervals of `1 day`, `1 week`, `1 month` or `1 year` (and months that divide a year, such as `3 months`) send a cron expression at the time of the trigger's `from` (or its first run) in its timezone, so the time of day stays the same across DST changes. Monthly intervals need that date to be on day 28 or earlier. When a run falls in the hour that a DST change skips, Symfony moves it and every later run to the next hour, so the message isn't monitored from then on.
+- With a jitter and no `from`, these intervals aren't monitored when the schedule provider builds a new schedule each time, or when a worker consumes the message from another transport, since the SDK can't tell when the interval started.
 - A jitter widens the check-in margin to cover it.
 
-The SDK doesn't send check-ins for schedules that Crons can't express or would read differently. This includes intervals under a minute, other intervals in days or weeks, such as `'2 days'`, unless the timezone has no DST, cron expressions with `W`, triggers that skip runs, such as excluded time ranges, and custom triggers.
+The SDK doesn't send check-ins for schedules that Crons can't express or would read differently. This includes intervals under a minute, other intervals in days or weeks, such as `'2 days'`, unless the timezone has no DST, cron expressions that `dragonmantank/cron-expression` and Crons read differently (`W`, minute or hour lists that aren't in ascending order, minute lists with ranges or steps, single-value ranges with a step such as `5-5/2`, and the day-of-week ranges `0-0`, `7-7` and `0-7/2`), triggers that skip runs, such as excluded time ranges, and custom triggers.
 
 When a `RedispatchMessage` or Messenger routing sends a message to another transport, the message is monitored when a worker consumes it there. Messages that the scheduler's worker handles itself, including ones sent to the `sync` transport, are monitored right away. Cancelled runs and messages of anonymous classes don't send check-ins.
 
