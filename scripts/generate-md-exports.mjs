@@ -744,19 +744,40 @@ async function createWork() {
     }
   }
 
-  // Warn about MDX overrides that didn't match any HTML file
+  // Emit `standalone` overrides that have no HTML page (e.g. dynamic routes such as
+  // /platform-redirect/), and warn about other overrides that didn't match any file.
   const usedOverrides = new Set(
     workerTasks
       .flat()
       .filter(t => mdxOverrides.has(t.relativePath))
       .map(t => t.relativePath)
   );
-  for (const [key] of mdxOverrides) {
-    if (!usedOverrides.has(key)) {
+  for (const [key, override] of mdxOverrides) {
+    if (usedOverrides.has(key)) {
+      continue;
+    }
+    if (!override.frontmatter.standalone) {
       console.warn(
         `⚠️ MDX override "${key}" did not match any HTML file and will be ignored`
       );
+      continue;
     }
+    const targetPath = path.join(OUTPUT_DIR, key);
+    await mkdir(path.dirname(targetPath), {recursive: true});
+    const urlPath = key.replace(/\.md$/, '');
+    workerTasks[workerIdx].push({
+      sourcePath: override.htmlPath,
+      targetPath,
+      relativePath: key,
+      r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(key) : null,
+      frontmatter: {
+        title: override.frontmatter.title || '',
+        description: override.frontmatter.description || '',
+        url: `${DOCS_ORIGIN}/${urlPath}/`,
+      },
+    });
+    workerIdx = (workerIdx + 1) % numWorkers;
+    numFiles++;
   }
 
   console.log(`📄 Converting ${numFiles} files with ${numWorkers} workers...`);
