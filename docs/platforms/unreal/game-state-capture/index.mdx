@@ -1,0 +1,128 @@
+---
+title: Set Up Game State Capture
+sidebar_title: Game State Capture
+description: "Learn how to record the game state in the moments leading up to a crash with Sentry's Unreal Engine SDK."
+sidebar_order: 5550
+sidebar_section: features
+---
+
+<Alert level="warning">
+
+Game State Capture for Unreal Engine is **experimental**. The API, the settings, and the format of the captured file may change in future releases.
+
+</Alert>
+
+Game State Capture records what was happening in your game in the moments leading up to a crash. The SDK samples the game world at a fixed interval and keeps a rolling window of samples. When a crash occurs, the window is attached to the crash event as a `game_state.jsonl` file, which you can download from the event's **Attachments** tab in Sentry.
+
+Each sample records:
+
+- The frame rate and frame time, and whether the game is paused.
+- The location and rotation of the local player's pawn and camera, and the camera's field of view.
+- The location and rotation of actors that you choose to track.
+- Game state attributes that you set, such as score, wave, or quest step.
+- Optionally, the layout of the UMG widgets on screen and the mouse position.
+
+The SDK also records events, such as when a tracked actor is destroyed, when the map changes, or when a UI widget opens or closes.
+
+Unlike [Session Replay](/platforms/unreal/session-replay/), Game State Capture doesn't record video. The captured data is small, doesn't need a video encoder or a plugin rebuild, and contains only the values listed above.
+
+## Platform Support
+
+Game State Capture is supported on Windows, Linux, macOS, iOS, and Android. The captured file is attached to crash events only; errors, ensures, and other non-fatal events don't include it.
+
+On Windows and Linux, and on macOS with the <PlatformLink to="/configuration/native-backend/">native backend</PlatformLink>, the file is added to the crash report when the crash occurs. On iOS, Android, and macOS with the default backend, the crash report is sent on the next app launch, and the SDK keeps the file from the crashed session until then.
+
+## Enabling Game State Capture
+
+To enable Game State Capture, navigate to **Project Settings > Plugins > Sentry** and expand the **Game State Capture** section, then toggle **Attach game state**.
+
+Alternatively, add the following to your project's configuration `.ini` file:
+
+```ini
+[/Script/Sentry.SentrySettings]
+AttachGameState=True
+```
+
+## Configuration
+
+The following settings are available under the **Game State Capture** section in the plugin settings:
+
+- **Attach game state** (`AttachGameState`, default `False`) — Master toggle for the feature.
+
+The **Capture options** group (`GameStateOptions`) controls what is recorded and how much:
+
+- **Capture window (seconds)** (`WindowSeconds`, default `30`, range `5`–`120`) — Length of the rolling window of game state attached to the crash event.
+- **Sample interval (seconds)** (`SampleInterval`, default `0.2`, range `0.05`–`1.0`) — How often the SDK records a sample.
+- **Max size (KiB)** (`MaxSizeKb`, default `1024`, range `64`–`10240`) — Maximum size of the captured window. When the limit is reached, the oldest samples are dropped first, so the window can be shorter than the capture window.
+- **Capture UI** (`CaptureUI`, default `False`) — Records the UMG widgets in the viewport (position, type, hover and enabled state, and progress bar values) and widget open and close events. This increases the size of the captured file noticeably.
+- **Capture UI text** (`CaptureUIText`, default `False`) — Records the text of text blocks. Requires **Capture UI** and the **Send default PII** option. See [Privacy](#privacy).
+- **Capture UI clicks** (`CaptureUIClicks`, default `True`) — Records mouse clicks and the widget under the cursor. Requires **Capture UI**.
+
+```ini
+[/Script/Sentry.SentrySettings]
+AttachGameState=True
+GameStateOptions=(WindowSeconds=30,SampleInterval=0.200000,MaxSizeKb=1024,CaptureUI=False,CaptureUIText=False,CaptureUIClicks=True)
+```
+
+<Alert>
+
+With **Capture UI** enabled, a sample of a typical game UI can be several kilobytes. At a short sample interval, the default size limit can be reached before the capture window is full. Increase **Max size** or the sample interval if you need the full window.
+
+</Alert>
+
+## Tracking Actors and Attributes
+
+The player and camera are recorded automatically. To record other actors, such as enemies or pickups, add them to the tracked actors. To record values from your game logic, set game state attributes. All of the functions below are also available in Blueprints.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Record the actor's transform in every sample
+SentrySubsystem->AddGameStateTrackedActor(Enemy, TEXT("boss"), TEXT("enemy"));
+
+// Record a value in every sample
+SentrySubsystem->SetGameStateAttribute(TEXT("wave"), 4);
+SentrySubsystem->SetGameStateAttribute(TEXT("phase"), TEXT("combat"));
+
+// Stop recording them
+SentrySubsystem->RemoveGameStateTrackedActor(Enemy);
+SentrySubsystem->RemoveGameStateAttribute(TEXT("phase"));
+```
+
+- **`AddGameStateTrackedActor`** takes an optional ID and tag. The ID identifies the actor in the captured file and defaults to the actor name. The tag groups actors, for example `enemy` or `pickup`, and defaults to the actor class name. A tracked actor stops being recorded automatically when it's destroyed.
+- **`SetGameStateAttribute`** takes a `FSentryVariant` value, so you can set numbers, strings, booleans, arrays, and maps.
+
+These functions must be called on the game thread. They have no effect if Game State Capture is disabled or if the SDK isn't initialized yet.
+
+## Captured File Format
+
+The captured file is in the [JSON Lines](https://jsonlines.org/) format: each line is a JSON object with a `type` field.
+
+- The first line is a `header` with information about the capture, such as the game, map, engine version, sample interval, and capture start time.
+- `frame` lines contain the samples. The `t` field is the time in seconds since the capture started.
+- `event` lines contain events, such as `track`, `untrack`, and `destroyed` for tracked actors, `map_changed`, and the UI events `open`, `close`, and `click`.
+
+```json
+{"type":"header","schema":1,"sdk":"sentry.unreal","game":"MyGame","map":"Arena","sampleInterval":0.2,"windowSeconds":30,"units":"cm",...}
+{"type":"event","t":3.05,"category":"actor","name":"destroyed","data":{"id":"boss","tag":"enemy"}}
+{"type":"frame","t":3.2,"perf":{"fps":60,"ms":16.6},"player":{"loc":[120,40,90],"rot":[0,90,0]},"actors":[...],"attributes":{"wave":4}}
+```
+
+Locations are in centimeters in Unreal Engine world coordinates, and rotations are pitch, yaw, and roll in degrees.
+
+## Behavior in the Editor
+
+Game State Capture also works in Play In Editor (PIE) sessions. The capture starts when the PIE session starts, and the captured data is discarded when the PIE session ends, so a later editor crash doesn't include game state from a previous session. If you run several PIE instances in one editor process, only the first instance with a local player is captured.
+
+## Limitations
+
+- The file on disk is refreshed about once per second, so up to the last second of game state before the crash may be missing.
+- In rare cases, a crash that occurs while the file is being refreshed is sent without the file.
+
+## Privacy
+
+Game State Capture doesn't record screen content. It records actor transforms, the values that you set as attributes, and IDs and tags that you choose for tracked actors. Don't put personal data in attributes, IDs, or tags.
+
+With **Capture UI** enabled, the SDK records the names and types of the widgets on screen, but not their text. The text of text blocks is recorded only if both **Capture UI text** and **Send default PII** are enabled, since UI text can contain personal data such as player names or chat messages. The text of editable text boxes is never recorded.
+
+If you run into issues or have feedback about Game State Capture on Unreal Engine, please open a [GitHub issue](https://github.com/getsentry/sentry-unreal/issues).

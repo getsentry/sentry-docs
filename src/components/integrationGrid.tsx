@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {DOCS_ORIGIN} from 'sentry-docs/docsSite.mjs';
 import {getCurrentPlatformOrGuide, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
@@ -55,8 +56,8 @@ export function IntegrationGrid({integrations}: Props) {
           return false;
         }
 
-        const targetUrl = new URL(hrefFor(to, href), 'https://docs.sentry.io');
-        if (targetUrl.hostname !== 'docs.sentry.io') {
+        const targetUrl = new URL(hrefFor(to, href), DOCS_ORIGIN);
+        if (targetUrl.origin !== DOCS_ORIGIN) {
           return true;
         }
 

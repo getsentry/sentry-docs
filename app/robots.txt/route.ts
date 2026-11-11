@@ -1,13 +1,9 @@
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-
-const sitemap = isDeveloperDocs
-  ? 'https://develop.sentry.dev/sitemap.xml'
-  : 'https://docs.sentry.io/sitemap.xml';
+import {DOCS_ORIGIN} from 'sentry-docs/docsSite.mjs';
 
 export const GET = (_request: Request) => {
   return new Response(
     `
-Sitemap: ${sitemap}
+Sitemap: ${DOCS_ORIGIN}/sitemap.xml
 
 User-agent: *
 Allow: /
