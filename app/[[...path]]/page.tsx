@@ -15,6 +15,7 @@ import {SpecChangelog} from 'sentry-docs/components/specChangelog';
 import {isSpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {isDevelopDocsIndexablePath} from 'sentry-docs/developDocsConfig';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -24,7 +25,6 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
@@ -327,13 +327,10 @@ function resolveOgImageUrl(
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const domain = isDeveloperDocs
-    ? 'https://develop.sentry.dev'
-    : 'https://docs.sentry.io';
   // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : domain;
+    : DOCS_ORIGIN;
   let title =
     'Sentry Docs | Application Performance Monitoring & Error Tracking Software';
   let customCanonicalTag: string = '';
@@ -382,7 +379,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       if (pageNode.frontmatter.og_image) {
         ogImageUrl = resolveOgImageUrl(
           pageNode.frontmatter.og_image,
-          previewDomain ?? domain,
+          previewDomain,
           params.path
         );
       }
@@ -391,12 +388,12 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   // Default fallback
   if (!ogImageUrl) {
-    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+    ogImageUrl = `${previewDomain}/og.png`;
   }
 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
-  const canonical = `${domain}${canonicalPath(
+  const canonical = `${DOCS_ORIGIN}${canonicalPath(
     customCanonicalTag || params.path?.join('/') || ''
   )}`;
 
