@@ -16,11 +16,13 @@ sentry:
         enabled: true
 ```
 
-The monitor slug is the schedule name and a name for the message, for example `default-app-send-report`. The name is the full command for scheduled console commands, the service and method for scheduled services, and the class name for other messages. Slugs are cut to 50 characters. When more than one recurring message in a schedule has the same slug, none of them are monitored and the SDK logs a warning. To monitor them, give each one its own message class or command, or move it to another schedule.
+The monitor slug is the schedule name and a name for the message, for example `default-app-send-report`. The name is the full command for scheduled console commands, the service and method for scheduled services, and the class name for other messages. Slugs are cut to 50 characters. When more than one recurring message in a schedule has the same slug, none of them are monitored and the SDK logs a warning with the logger set in `sentry.options.logger`. To monitor them, give each one its own message class or command, or move it to another schedule.
 
 Messages from a custom message provider are only known when they run, so they're monitored unless their slug matches a message added to the schedule directly.
 
-`RedispatchMessage` isn't monitored; the message it redispatches is monitored when a worker consumes it. Messages that Messenger routes to another transport are monitored the same way. Retried messages, cancelled runs, and messages of anonymous classes don't send check-ins.
+When a `RedispatchMessage` or Messenger routing sends a message to another transport, the message is monitored when a worker consumes it there. Messages that the scheduler's worker handles itself, including ones sent to the `sync` transport, are monitored right away. Cancelled runs and messages of anonymous classes don't send check-ins.
+
+Retries aren't reported. If the first attempt of a message on an async transport fails, its check-in is `error`, even when a retry succeeds.
 
 To monitor other jobs, send check-ins with the PHP SDK as shown below.
 
