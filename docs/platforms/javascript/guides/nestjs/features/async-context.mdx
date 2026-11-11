@@ -3,30 +3,44 @@ title: Isolate Background Job Scopes
 description: "Learn how to isolate Sentry scopes in NestJS background jobs to prevent breadcrumb leakage into HTTP request events."
 ---
 
-In NestJS, background job handlers like `@Cron()`, `@Interval()`, `@OnEvent()`, or BullMQ `@Processor()` handlers share the default isolation scope with incoming HTTP requests. This means breadcrumbs and tags added inside background jobs can leak into error events from unrelated HTTP requests, making it harder to debug issues.
+Background jobs need their own isolation scopes to prevent breadcrumbs and tags from leaking into unrelated HTTP request events.
 
-To prevent this, wrap each background job handler with `Sentry.withIsolationScope()` to give it its own isolated scope. Here's an example using `@Cron()`:
+## Automatic Isolation
 
-```typescript
+Sentry automatically forks an isolation scope for each invocation of:
+
+- `@Cron()`, `@Interval()`, and `@Timeout()` handlers from `@nestjs/schedule`
+- `@OnEvent()` handlers from `@nestjs/event-emitter`
+- The `process()` method of `@Processor()` classes from `@nestjs/bullmq`
+
+These handlers do not need a manual `Sentry.withIsolationScope()` wrapper.
+
+## Manual Isolation
+
+For other background tasks, wrap each handler with `Sentry.withIsolationScope()` to give it its own isolated scope.
+
+For example, BullMQ lifecycle event listeners such as `@OnWorkerEvent('completed')` can run outside the isolation scope created for `process()` and need their own wrapper:
+
+```typescript {filename: my.processor.ts}
 import * as Sentry from "@sentry/nestjs";
-import { Injectable } from "@nestjs/common";
-import { Cron, CronExpression } from "@nestjs/schedule";
+import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Job } from "bullmq";
 
-@Injectable()
-export class MyJobService {
-  @Cron(CronExpression.EVERY_HOUR)
-  handleCron() {
-    Sentry.withIsolationScope(() => {
-      // Breadcrumbs and tags added here won't leak into HTTP request events
-      Sentry.addBreadcrumb({ message: "Processing scheduled job" });
-      this.doWork();
-    });
+@Processor("my-queue")
+export class MyProcessor extends WorkerHost {
+  async process(job: Job) {
+    // Your job processing logic runs in an automatically isolated scope.
   }
 
-  private doWork() {
-    // your job logic
+  @OnWorkerEvent("completed")
+  onCompleted(job: Job) {
+    return Sentry.withIsolationScope(() => {
+      Sentry.addBreadcrumb({
+        message: "Job completed",
+        data: { jobId: job.id },
+      });
+      // Your completion handler logic.
+    });
   }
 }
 ```
-
-Apply the same pattern to `@Interval()`, `@OnEvent()`, `@Processor()`, and any other background task that runs outside the context of a request lifecycle.

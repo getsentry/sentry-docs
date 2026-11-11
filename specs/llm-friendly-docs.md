@@ -78,6 +78,7 @@ Sentry is a developer-first application monitoring platform...
 
 - `title` — becomes `<title>` in the HTML shell → H1 in the converted markdown
 - `append_sections` — `false` to skip auto-appended navigation sections (default: `true`). Set to `false` when the template already includes all navigation via components.
+- `standalone` — `true` to emit the export even when no static HTML page matches, for dynamic routes such as `/platform-redirect/`. Without it, an unmatched override is skipped with a warning.
 
 The canonical URL is derived from the file path (`md-overrides/platforms.mdx` → `https://docs.sentry.io/platforms`).
 

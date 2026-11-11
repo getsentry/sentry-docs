@@ -1,0 +1,1859 @@
+---
+title: Investigate Dropped Data in Sentry
+sidebar_title: Dropped Data
+sidebar_order: 1
+description: >-
+  Learn how to investigate and troubleshoot dropped data in Sentry.
+---
+
+<Include name="feature-available-for-user-group-limited-avail.mdx" />
+
+When data is ingested into Sentry, it can be dropped intentionally or unintentionally for a number of reasons. Sample rate (most commonly on purpose), queue overflow, inbound filters, and invalid or malformed data are some top examples for why data might be dropped. 
+
+## Troubleshooting Dropped Data
+Traces, Logs, and Application Metrics charts in [Explore](/product/explore/) can show data that Sentry did not store. Hover over the dropped data line at the bottom of the chart to see the summary. Click on the line to see the details and troubleshoot.
+
+**Note: The dropped data you see on your chart, and in the details list, is only filtered by time and project.**
+
+The dropped data line leaves out data you chose to drop: everything in [Client Sampled](#category-client-sampled) and [Inbound Filters](#category-inbound-filters), plus [Disallowed Origin](#disallowed-origin), [Missing Signature](#missing-signature), and [DSN Rate Limit](#dsn-rate-limit). These reasons still appear in the details list.
+
+Below are all the possible reasons why data might be dropped. They correspond with the title you will see when exploring dropped data in Sentry. 
+
+Each reason includes what happened, why it happens, and what to change so less data is dropped. Reasons marked **Legacy** are no longer reported by current Sentry ingestion, so you'll only see them in older data.
+
+### Category: Client Sampled
+
+The SDK dropped the data on purpose, because of your configuration or an SDK default. In Sentry, these reasons currently appear under **Client Discard**.
+
+#### Dropped by Before Send
+
+Reason code: `before_send`.
+
+Your [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) function omitted the event. If that was not intentional, check your Sentry config.
+
+Before JavaScript SDK v11, spans dropped by [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) are also reported under this reason. Starting with v11, they're reported as [Dropped by Ignored Spans](#dropped-by-ignored-spans).
+
+- **Short:** Event dropped by your before send function. See [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend).
+- **Causes:**
+  - Your before-send filter is behaving as written.
+  - Before JavaScript SDK v11, [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) omitted spans before they were sent.
+  - Application code in a before-send hook returned `false` or `null`.
+- **Actions:**
+  - Update [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) if it is blocking spans you want to receive.
+  - Correct before-send logic that is omitting spans unintentionally.
+
+#### Dropped by Ignored Spans
+
+Reason code: `ignored`.
+
+Spans matched an ignore rule in your SDK configuration and were not sent. See [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans).
+
+{/* TODO: Update this copy when SDK versions that emit ignored are widely adopted. */}
+
+This reason is only reported in span-first mode, which is the default starting with JavaScript SDK v11. In earlier versions, ignored spans are reported as [Dropped by Before Send](#dropped-by-before-send).
+
+- **Short:** Span dropped by your ignored spans configuration. See [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans).
+- **Causes:**
+  - [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) omitted specific spans before they were sent to Sentry.
+- **Actions:**
+  - Update [`ignoreSpans`](/platform-redirect/?next=/configuration/options/#ignoreSpans) if it is blocking spans you want to receive.
+
+#### Dropped by Sample Rate
+
+Reason code: `sample_rate`.
+
+Events were dropped because of the sample rate configured in the SDK.
+
+- **Short:** Event dropped by your configured sample rate.
+- **Causes:**
+  - The sample rate in your SDK config. See [`tracesSampleRate`](/platform-redirect/?next=/configuration/options/#tracesSampleRate).
+- **Actions:**
+  - Raise the sample rate if you want more events sampled.
+
+#### Missing Parent Span
+
+Reason code: `no_parent_span`.
+
+Your SDK skipped a span because no parent span was active when it started. For automatically traced `fetch` and XHR requests, this is default SDK behavior.
+
+- **Short:** Span skipped because no parent span was active.
+- **Causes:**
+  - A `fetch` or XHR request ran while no span was active. The JavaScript SDK skips those request spans by default.
+  - Your code started a span with the `onlyIfParent` option while no parent span was active.
+- **Actions:**
+  - For automatic `fetch` and XHR spans, you usually don't need to do anything.
+  - Wrap the work in a parent span if you need it traced.
+
+#### Event Processor
+
+Reason code: `event_processor`.
+
+Your SDK dropped data in an event processor, a step that can change or discard data before it's sent. This includes filters you configure, your own custom event processors, and built-in ones like the Dedupe integration.
+
+- **Short:** Dropped by an SDK event processor.
+- **Causes:**
+  - In JavaScript, the event matched your [`ignoreErrors`](/platform-redirect/?next=/configuration/options/#ignoreErrors) or [`ignoreTransactions`](/platform-redirect/?next=/configuration/options/#ignoreTransactions) filter, or a custom event processor you added discarded it.
+  - A built-in default dropped it. For example, the Dedupe integration removed a duplicate, or the JavaScript SDK filtered a known noisy error or an error with no message, type, or stack trace.
+  - In the Cocoa SDK, a profile had fewer than two samples.
+- **Actions:**
+  - If the drops are unexpected, review your `ignoreErrors`, `ignoreTransactions`, and custom event processors.
+  - If you need that data, turn off the Dedupe integration or the JavaScript SDK's default filters in your SDK setup.
+  - For Cocoa profiles with too few samples, you usually don't need to do anything.
+
+### Category: Client Discard
+
+The SDK dropped the data before it left your application.
+
+#### SDK Backpressure Drop
+
+Reason code: `backpressure`.
+
+Your SDK detected that it was under load and reduced trace sampling so telemetry processing would not add pressure on your application. The discarded spans never left your application.
+
+- **Short:** SDK reduced trace sampling under load.
+- **Causes:**
+  - A slow or degraded network path to Sentry, so telemetry builds up faster than the SDK can send it.
+  - The application is producing an unusually large amount of tracing data, such as a traffic spike or an N+1 query that generates many spans.
+  - The application or runtime is under resource pressure, so the SDK cannot process and send telemetry quickly enough.
+- **Actions:**
+  - Check for unusual increases in application traffic or span volume around the time backpressure occurred.
+  - Look for instrumentation that produces unexpectedly large numbers of spans, such as N+1 queries, tight loops, or high-frequency operations.
+
+#### SDK Queue Overflow
+
+Reason code: `queue_overflow`.
+
+Your application is generating events faster than the SDK can buffer and send them. The SDK allows a limited number of operations in flight at once. Beyond that, new events are dropped immediately rather than queued.
+
+- **Short:** SDK's send queue was full.
+- **Causes:**
+  - Application code sending events in a tight loop, for example an exception inside a `while` loop.
+  - Requests to Sentry are slow or hanging. A proxy, firewall, misconfigured Relay, or a request without a timeout can cause this.
+- **Actions:**
+  - Confirm that requests to Sentry are completing.
+  - Look for suspect code, including async work that does not finish inside [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) filters.
+  - If this volume of events is expected, [contact Sentry support](https://www.sentry.help/en/).
+
+#### SDK Buffer Overflow
+
+Reason code: `buffer_overflow`.
+
+A fixed-size in-memory buffer in the SDK reached its limit and dropped data. This is most often a session replay that exceeded its size cap.
+
+- **Short:** SDK buffer filled before data could be sent.
+- **Causes:**
+  - A replay grew larger than the maximum replay buffer before the SDK sent the final replay to Sentry.
+- **Actions:**
+  - For replays, record less. Use [block or ignore](/platforms/javascript/session-replay/privacy/#blocking) to skip high-churn elements, `blockAllMedia` for heavy media, [`mutationLimit`](/platforms/javascript/session-replay/configuration/#mutation-limits) to cap mutation storms from animations or infinite scroll, and [`maxReplayDuration`](/platforms/javascript/session-replay/configuration/#general-integration-configuration) to shorten sessions. If canvas recording is enabled, lower its sampling rate and quality.
+
+#### Unretried Network Error
+
+Reason code: `network_error`.
+
+The request failed without a response. Ad blockers and browser extensions are a common cause.
+
+- **Short:** Request failed before reaching Sentry.
+- **Causes:**
+  - **Browser:** Ad blockers, browser extensions, and similar client-side blockers.
+  - **Browser:** A CORS misconfiguration, the user being offline, or the page unloading before the request completes.
+  - **Server:** No outbound network access from the host or container, an egress firewall, a DNS failure, TLS errors from an intercepting proxy, or proxy settings the SDK is not using.
+- **Actions:**
+  - For ad blockers, route events through your own domain with the [`tunnel` option](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
+  - For browsers, confirm in devtools that requests to your ingest domain are not blocked, and check your CORS configuration.
+  - For servers, verify outbound connectivity to your ingest domain from the host or container.
+
+#### SDK Send Failure
+
+Reason code: `send_error`.
+
+The event reached Sentry and Sentry rejected it with an error status.
+
+- **Short:** Sentry rejected the event with an error response.
+- **Causes:**
+  - Large `extra` or `contexts` data on events, such as full configuration objects or API responses, which can produce a `413`.
+  - Large attachments.
+- **Actions:**
+  - Enable debug mode in your SDK and look for `Sentry responded with status code 413`. The log identifies which events were rejected.
+  - Reduce the size of those events. Trim large objects in [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend), and lower `maxValueLength`, `normalizeDepth`, or `maxBreadcrumbs` as needed.
+
+#### Cache Overflow
+
+Reason code: `cache_overflow`.
+
+Your SDK deleted data it had cached offline, usually the oldest items once the cache reached its limit. The offline cache holds data the SDK could not send yet, so long offline periods can fill it.
+
+- **Short:** SDK's offline cache was full.
+- **Causes:**
+  - In the Java and Cocoa SDKs, the offline cache reached its `maxCacheItems` limit, so the oldest items were deleted.
+  - In the .NET SDK, sending a cached item failed with an unexpected error.
+- **Actions:**
+  - Increase [`maxCacheItems`](/platform-redirect/?next=/configuration/options/#maxCacheItems) in your SDK options to keep more data while offline.
+  - Confirm the device can reach Sentry so cached data is sent before the cache fills.
+
+#### Internal SDK Error
+
+Reason code: `internal_sdk_error`.
+
+Your SDK dropped data because of an error inside the SDK itself, such as a Session Replay buffer or web worker failure, or a failure building the request to Sentry.
+
+- **Short:** SDK hit an internal error.
+- **Causes:**
+  - In JavaScript, the Session Replay event buffer failed, for example because its web worker crashed.
+  - In Python, the async transport was called with no running event loop. This is often caused by app shutdown timing rather than an SDK bug.
+  - In Go, the SDK failed to build the payload or HTTP request to send to Sentry.
+- **Actions:**
+  - Update to the latest version of your SDK.
+  - If you use Python's async transport, check whether the drops happen while your app is shutting down.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Insufficient Data
+
+Reason code: `insufficient_data`.
+
+Your SDK dropped data that didn't have enough content to send, such as a profile with too few samples. This is often expected for very short operations.
+
+- **Short:** Not enough data to send.
+- **Causes:**
+  - In the Python SDK, a profile captured fewer than two samples, usually because the profiled operation was very short.
+  - In the Cocoa SDK, a session replay could not be packaged for sending.
+  - In the Cocoa SDK, a user feedback submission was invalid.
+- **Actions:**
+  - For very short profiled operations, you usually don't need to do anything.
+  - Update the Cocoa SDK if replays or feedback are being dropped.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Failed SDK Validation
+
+Reason code: `invalid`.
+
+Your SDK dropped data that failed its own checks before sending, such as a replay that ran too long, a child span left open when its parent ended, or a malformed log or metric. The SDK made this decision, not Sentry's servers.
+
+- **Short:** Data failed the SDK's validation checks.
+- **Causes:**
+  - In JavaScript, a child span was still open when its parent span ended.
+  - In JavaScript, a session replay passed its maximum duration by the time it was sent, often because the browser was suspended.
+  - In .NET, a structured log's message template failed to format, or a metric had an empty name or an unsupported value type.
+- **Actions:**
+  - End child spans before ending their parent span.
+  - For overlong replays after a suspended browser, you usually don't need to do anything.
+  - Fix log message templates that fail to format, and metrics with an empty name or unsupported value type.
+
+#### Callback Error
+
+Reason code: `callback_error`.
+
+Your SDK dropped data because one of your callbacks, such as `beforeSend`, `tracesSampler`, or a custom event processor, threw an error while handling it.
+
+- **Short:** An SDK callback threw an error.
+- **Causes:**
+  - A [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend) callback, or a similar hook for transactions, replays, feedback, logs, or metrics, threw an error.
+  - A [`tracesSampler`](/platform-redirect/?next=/configuration/options/#tracesSampler) function threw an error while making a sampling decision.
+  - A custom event processor threw an error while processing the event.
+- **Actions:**
+  - Find the callback that threw and fix the error. An error in any of these callbacks drops the data.
+
+#### SDK Rate-Limit Backoff
+
+Reason code: `ratelimit_backoff`.
+
+Your SDK discarded data locally while backing off, usually because Sentry had earlier told it to pause sending that data type. The real cause is whatever triggered that original limit.
+
+- **Short:** SDK backed off due to a rate limit.
+- **Causes:**
+  - Your organization ran out of quota for that data type, or [spike protection](#spike-protection) started during a sudden surge.
+  - Your [DSN rate limit](#dsn-rate-limit), your [project abuse limit](#project-abuse-limit), or a [generic rate limit](#generic-rate-limit) was hit.
+  - The SDK's own internal rate limiter dropped the data.
+- **Actions:**
+  - Find which limit triggered the backoff, such as quota, spike protection, or a DSN rate limit, and fix it there.
+  - Reduce traffic, adjust sampling, or increase your quota so you stay within your limits.
+  - Avoid sudden event spikes, such as errors sent in a tight loop.
+
+### Category: Invalid or Malformed
+
+Sentry received the payload and could not accept it.
+
+#### Sentry Processing Error
+
+Reason code: `internal`.
+
+This indicates a bug or an infrastructure problem during ingestion. During healthy operation this count should be zero.
+
+- **Short:** Sentry failed to process the event.
+- **Causes:**
+  - A problem in Sentry's ingestion service.
+- **Actions:**
+  - Check the [Sentry status page](https://status.sentry.io/) for an ongoing incident.
+  - [Contact Sentry support](https://www.sentry.help/en/) if this happens at a high rate.
+
+#### Invalid Trace Context
+
+Reason code: `invalid_dsc`.
+
+The trace ID in the metadata header did not match the trace ID on the spans.
+
+- **Short:** Trace header did not match the spans sent.
+- **Causes:**
+  - A custom implementation of Sentry's transport protocol.
+  - An outdated SDK.
+- **Actions:**
+  - If you use an official Sentry SDK, upgrade to the latest version. This is not fixable through configuration.
+  - [Contact Sentry support](https://www.sentry.help/en/) if this continues after the upgrade.
+
+#### Missing Trace Context
+
+Reason code: `missing_dsc`.
+
+The envelope contained spans and no trace header.
+
+- **Short:** Envelope was missing the required trace header.
+- **Causes:**
+  - An outdated SDK.
+  - A custom implementation of Sentry's transport protocol.
+- **Actions:**
+  - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+  - If you are not running a custom SDK and upgrading does not help, [contact Sentry support](https://www.sentry.help/en/).
+
+#### Malformed JSON Payload
+
+Reason code: `invalid_json`.
+
+Sentry could not parse the event that was sent.
+
+- **Short:** Event rejected due to invalid JSON.
+- **Causes:**
+  - A truncated or incomplete payload.
+  - Unescaped control characters or non-UTF-8 bytes in string fields.
+  - A mismatch between the body encoding and the declared `Content-Encoding`.
+- **Actions:**
+  - If you send payloads directly, log the raw body on failure and parse it locally. Confirm that envelope item length headers match the actual byte lengths.
+  - If you use an official Sentry SDK, upgrade to the latest version. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Invalid Transaction Data
+
+Reason code: `invalid_transaction`.
+
+The transaction was valid JSON, but Sentry could not accept its contents.
+
+- **Short:** Transaction contained invalid data.
+- **Causes:**
+  - Timestamps outside the accepted ingestion window.
+  - A negative duration, where the end timestamp is before the start timestamp.
+- **Actions:**
+  - Verify clock synchronization (NTP) on the hosts that send the data. [Clock skew](/concepts/key-terms/tracing/distributed-tracing/#clock-skew) across machines can produce timestamps Sentry rejects.
+  - Check whether the affected transactions are backdated. Sentry does not ingest transactions older than the accepted window. See [How far back can errors and transactions be backdated?](https://www.sentry.help/en/articles/13964214-how-far-back-can-errors-and-transactions-be-backdated-when-uploaded-to-sentry)
+
+#### Invalid Timestamp
+
+Reason code: `timestamp`.
+
+Sentry dropped data because its timestamp was older than its retention period, or because a span had a missing start or end time, or an end time before its start. Only logs, spans, application metrics, and replays are dropped for an old timestamp. Future timestamps are shifted rather than dropped, and error events are never dropped for their timestamp.
+
+- **Short:** Event timestamp was too far in the past or future.
+- **Causes:**
+  - Device or server clocks are set so far in the past that the data looks older than the retention period.
+  - Span instrumentation records a missing start or end time, or an end time earlier than the start time.
+  - A backlog in Sentry's ingestion pipeline held the data for more than 24 hours before it could be processed.
+- **Actions:**
+  - Check that device and server clocks are set correctly.
+  - Make sure span instrumentation sets both a start and an end time, with the end after the start.
+  - [Contact Sentry support](https://www.sentry.help/en/) if drops spike with no clock or span problem on your side, since it may be an ingestion backlog.
+
+#### Disallowed Origin
+
+Reason code: `cors`.
+
+The request's `Origin` header, or its `Referer` header when there is no `Origin`, didn't match any entry in your project's [Allowed Domains](/concepts/data-management/filtering/#allowed-domains). Requests that send neither header always pass. Because this is a setting you control, it's left out of the dropped data line.
+
+- **Short:** Origin not in project's Allowed Domains.
+- **Causes:**
+  - Your app runs on a domain that isn't in Allowed Domains, such as a new staging or production domain.
+  - A non-browser client sends a `Referer` header that doesn't match Allowed Domains.
+  - Allowed Domains is empty, which rejects every request that sends an `Origin` or `Referer`.
+- **Actions:**
+  - Add the expected origin to your project's Allowed Domains.
+  - To accept data from any origin, set Allowed Domains back to `*`, which is the default.
+  - If you don't recognize the origin, leave the setting as is. The filter is working as intended.
+
+#### Invalid or Disabled Project
+
+Reason code: `project_id`.
+
+Sentry rejected the data because the project ID in your DSN didn't match its key, or because the project is disabled or the client key is disabled or deleted. Drops caused by a disabled project or key likely won't appear in your organization's stats. Only the ID mismatch case does.
+
+- **Short:** DSN mismatch or disabled project or key.
+- **Causes:**
+  - The DSN's project ID doesn't belong to its key, for example because the DSN was mistyped or edited by hand.
+  - The client key in the DSN was disabled or deleted.
+  - The project the DSN points to was disabled.
+- **Actions:**
+  - Copy the active DSN exactly as shown in [Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/).
+  - If you disabled the key or project on purpose, remove its DSN from any apps still using it.
+
+#### Invalid Event ID
+
+Reason code: `invalid_event_id`.
+
+Your SDK or upload code sent an item with a malformed or missing event ID, so Sentry couldn't accept it. This happens with attachments, user reports, and replays sent without an event ID, or with an upload whose `sentry[event_id]` form field can't be parsed.
+
+- **Short:** Event ID was malformed or missing.
+- **Causes:**
+  - An outdated or custom SDK sends attachments, user reports, or replays without an event ID.
+  - Custom upload code sets a `sentry[event_id]` form field that isn't a valid event ID.
+- **Actions:**
+  - Update your Sentry SDK to the latest version.
+  - If you upload files with custom code, set `sentry[event_id]` to a valid event ID.
+
+#### Request Too Large
+
+Reason code: `request_too_large`.
+
+Sentry rejected a whole request that was over the endpoint's size limit, or a batch of logs, spans, or metrics that needed more parsing work than Sentry allows. This is separate from the `too_large:<item>` reasons, which drop individual items rather than the whole request.
+
+- **Short:** Request exceeded a size or parsing limit.
+- **Causes:**
+  - A request is over the endpoint's size limit, for example an upload with oversized attachments.
+  - A batch of logs, spans, or metrics needs more parsing work than Sentry allows.
+- **Actions:**
+  - Check for a matching `too_large:attachment` drop, which means oversized attachments caused the request to fail.
+  - Reduce attachment sizes or send less data per request.
+  - Send logs, spans, and metrics in smaller batches.
+
+#### Feature Disabled
+
+Reason code: `feature_disabled`.
+
+Sentry dropped data that relies on a feature that isn't enabled for your organization or project, such as PlayStation ingestion, resumable minidump uploads, or logs sent over OpenTelemetry (OTLP). Sentry controls these features, so you can't turn them on yourself.
+
+- **Short:** Feature not enabled for org or project.
+- **Causes:**
+  - Your app sends data to the PlayStation endpoint before PlayStation ingestion is enabled for your organization.
+  - Your app sends logs over OTLP before log ingestion is enabled for your organization.
+  - Your app uses resumable minidump uploads before they're enabled for your project.
+- **Actions:**
+  - Stop sending that data type if you don't need it.
+  - [Contact Sentry support](https://www.sentry.help/en/) if you expected the feature to be available.
+
+#### Duplicate ID
+
+Reason code: `duplicate`.
+
+A span was dropped because another span in the same envelope (the bundle of data an SDK sends in one request) had the same span ID. Sentry keeps the later span and drops the earlier one.
+
+- **Short:** Span ID repeated in the same envelope.
+- **Causes:**
+  - Custom instrumentation reuses span IDs or generates them in a way that isn't unique.
+  - The same span is sent more than once in a single envelope.
+- **Actions:**
+  - Make sure every span gets a unique span ID.
+  - Check custom instrumentation or exporters for code that sends the same span twice.
+
+#### Duplicate Envelope Item
+
+Reason code: `duplicate_item`.
+
+An envelope held more than one event or check-in, repeated or mixed log or span batches, repeated metric batches, or an invalid mix of replay items. Only the extra events and check-ins are dropped. For logs, spans, metrics, and replays, every item of that type in the envelope is dropped.
+
+- **Short:** Envelope had duplicate or mixed items.
+- **Causes:**
+  - An outdated or custom SDK puts more than one event or check-in into one envelope.
+  - Custom code puts repeated or mixed log or span batches, or repeated metric batches, into one envelope.
+  - An envelope contains an invalid mix of replay items.
+- **Actions:**
+  - Update your Sentry SDK to the latest version.
+  - If you build envelopes yourself, send at most one event or check-in, and at most one batch each of logs, spans, and metrics, per envelope.
+
+#### Unsupported Envelope Item
+
+Reason code: `invalid_envelope`.
+
+Sentry dropped an item that was not allowed or supported in the envelope it arrived in. Envelopes are the container format SDKs use to send events and related data to Sentry.
+
+- **Short:** Envelope item was not allowed or supported.
+- **Causes:**
+  - Extra items in an error envelope that aren't supported alongside the error. These make up the counts you see.
+  - An outdated SDK putting items into an envelope that doesn't support them.
+  - Custom code that builds envelopes by hand with unknown item types. These are dropped but add nothing to the counts.
+- **Actions:**
+  - Update your SDK.
+  - Fix any custom code that builds envelopes so it only includes supported items.
+
+#### No Data
+
+Reason code: `no_data`.
+
+Sentry dropped a span, log, or application metric because nothing valid was left after checking it against the expected format. This often happens when a required field is missing, so the whole item is removed.
+
+- **Short:** No valid data was left after validation.
+- **Causes:**
+  - A span, log, or metric is missing a required field, which removes it during validation.
+  - An outdated SDK sends spans, logs, or metrics that don't match the expected format.
+- **Actions:**
+  - Update your SDK.
+  - Check custom span, log, or metric instrumentation for missing required fields.
+
+#### Invalid Span
+
+Reason code: `invalid_span`.
+
+Sentry dropped a span that was missing required fields or had an invalid span ID or segment ID. This also covers spans taken from transactions that could not be converted.
+
+- **Short:** Span was missing fields or had a bad ID.
+- **Causes:**
+  - Manual span instrumentation that leaves out the span ID or another required field.
+  - A span with an invalid segment ID.
+  - An outdated SDK sending spans without the required fields.
+- **Actions:**
+  - Update your SDK.
+  - Fix manual span instrumentation so every span has a valid span ID, a valid segment ID, and its required fields.
+
+#### Invalid Log
+
+Reason code: `invalid_log`.
+
+Sentry dropped a log that was missing a required field, such as its timestamp or level, after normalization. Normalization is the step where Sentry cleans up incoming data before storing it.
+
+- **Short:** Log was missing a required field.
+- **Causes:**
+  - An outdated SDK sending logs without a required field.
+  - Custom log ingestion code that leaves out the timestamp or level.
+- **Actions:**
+  - Update your SDK.
+  - Fix custom log ingestion so every log includes a timestamp and level.
+
+#### Invalid Metric
+
+Reason code: `invalid_trace_metric`.
+
+Sentry dropped an application metric that had an empty name, an unknown or missing type, a non-numeric value, or a missing required field. This applies to [Application Metrics](/product/metrics/), not legacy custom metrics.
+
+- **Short:** Metric had no name or a bad type or value.
+- **Causes:**
+  - A metric sent with a missing or blank name.
+  - A metric with no type, or a type other than counter, gauge, or distribution.
+  - A metric with a non-numeric value.
+- **Actions:**
+  - Give every metric a non-empty name.
+  - Use counter, gauge, or distribution types with numeric values.
+
+#### Invalid Check-In
+
+Reason code: `invalid_check_in`.
+
+Sentry dropped a [cron monitor](/product/monitors-and-alerts/monitors/crons/) check-in that had an empty monitor slug or an environment name longer than 64 characters. Slugs longer than 50 characters are shortened automatically, so only an empty slug is rejected.
+
+- **Short:** Check-in had a bad slug or environment.
+- **Causes:**
+  - A check-in sent without a monitor slug.
+  - A check-in with an environment name longer than 64 characters.
+- **Actions:**
+  - Set a monitor slug on every check-in.
+  - Shorten the environment name to 64 characters or fewer.
+
+#### Invalid Span Attachment
+
+Reason code: `invalid_span_attachment`.
+
+Sentry dropped a span attachment that had no span ID, or that pointed to a span not sent in the same envelope. A span attachment has to arrive together with the span it belongs to.
+
+- **Short:** Span attachment had no matching span.
+- **Causes:**
+  - A span attachment sent without a span ID.
+  - A span attachment sent in a different envelope from its span.
+- **Actions:**
+  - Update your SDK.
+  - If you send span attachments yourself, set the span ID and include the span in the same envelope.
+
+#### Invalid Trace Attachment
+
+Reason code: `invalid_trace_attachment`.
+
+Sentry dropped a trace attachment whose `meta_length` header was missing or larger than the attachment itself, or that lacked required metadata such as its trace ID or content type.
+
+- **Short:** Trace attachment metadata was invalid.
+- **Causes:**
+  - A trace attachment with a missing `meta_length` header, or one larger than the payload.
+  - A trace attachment missing required metadata, such as its trace ID or content type.
+- **Actions:**
+  - Update your SDK.
+  - If you build trace attachments yourself, set a correct `meta_length` header and include the trace ID and content type.
+
+#### Invalid Replay
+
+Reason code: `invalid_replay`.
+
+Sentry dropped a [session replay](/product/session-replay/) event that was not valid JSON, was missing its `replay_id` or `segment_id`, or had invalid error or trace IDs. A `segment_id` that's too large is also rejected.
+
+- **Short:** Replay event was malformed or missing IDs.
+- **Causes:**
+  - A replay event missing its `replay_id` or `segment_id`, or with invalid error or trace IDs.
+  - A replay event that isn't valid JSON, including one bundled with a mobile replay video.
+- **Actions:**
+  - Update the Replay SDK.
+
+#### Empty Replay Event
+
+Reason code: `invalid_replay_no_payload`.
+
+Sentry dropped a replay event that parsed correctly but contained no data, for example a JSON `null`.
+
+- **Short:** Replay event contained no data.
+- **Causes:**
+  - An SDK sending a replay event with empty content, such as JSON `null`.
+- **Actions:**
+  - Update the Replay SDK.
+
+#### Replay Scrubbing Failed
+
+Reason code: `invalid_replay_pii_scrubber_failed`.
+
+Sentry dropped a replay because applying data scrubbing rules to the replay event failed. This isn't expected to happen in practice, so it points to a problem on Sentry's side rather than with your data.
+
+- **Short:** PII scrubbing of the replay event failed.
+- **Causes:**
+  - An unexpected failure inside Sentry while scrubbing sensitive data from the replay event.
+- **Actions:**
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Invalid Replay Recording
+
+Reason code: `invalid_replay_recording`.
+
+Sentry couldn't parse or decompress a replay recording while scrubbing it for sensitive data, so the recording was dropped. This only happens when Sentry scrubs replay recordings for your project, which requires your project to have data scrubbing rules or settings.
+
+- **Short:** Replay recording could not be parsed.
+- **Causes:**
+  - A replay recording that isn't valid JSON.
+  - A replay recording with broken compression.
+  - A replay recording with an empty body or missing headers.
+- **Actions:**
+  - Update the Replay SDK.
+
+#### Invalid Replay Video
+
+Reason code: `invalid_replay_video`.
+
+Sentry dropped a mobile replay video that couldn't be decoded or was empty. These videos arrive as a single bundle of the replay event, recording, and video. A broken replay event inside the bundle is reported as [Invalid Replay](#invalid-replay) instead.
+
+- **Short:** Replay video was empty or undecodable.
+- **Causes:**
+  - A replay video bundle that couldn't be decoded.
+  - A replay video bundle with an empty video.
+- **Actions:**
+  - Update the mobile Replay SDK.
+
+#### Replay Missing Recording
+
+Reason code: `invalid_replay_missing_recording`.
+
+Sentry dropped a replay event that was sent without its recording in the same envelope. Recordings sent on their own are still accepted, but a replay event must come with its recording.
+
+- **Short:** Replay event arrived without its recording.
+- **Causes:**
+  - An SDK sending a replay event and its recording in separate envelopes.
+- **Actions:**
+  - Update the Replay SDK so the event and recording are sent together.
+
+#### Missing Event Payload
+
+Reason code: `no_event_payload`.
+
+Sentry received a crash upload but couldn't build an event from it, or received a profile without the transaction it belongs to. Without that primary data, there was nothing to ingest.
+
+- **Short:** Crash or profile was missing its event.
+- **Causes:**
+  - A crash upload whose items couldn't be turned into an event.
+  - A profile sent without its transaction in the same envelope.
+- **Actions:**
+  - Check the SDK or crash reporter sending the crash upload.
+  - Send each profile in the same envelope as its transaction.
+
+#### Unprocessable Crash Payload
+
+Reason code: `payload`.
+
+Sentry couldn't process a Nintendo Switch crash or a PlayStation crash dump that your app sent, for example because the file was corrupt, cut off, or badly compressed.
+
+- **Short:** Console crash data could not be processed.
+- **Causes:**
+  - A Nintendo Switch crash that's corrupt, cut off, or contains unexpected values.
+  - A PlayStation crash dump that's corrupt and can't be read.
+  - Crash data that's badly compressed and fails to decompress.
+- **Actions:**
+  - Check the SDK or tool that sends your Switch or PlayStation crashes.
+  - Confirm the crash files it uploads are complete and not corrupted.
+
+#### Missing Minidump Upload
+
+Reason code: `missing_minidump_upload`.
+
+Sentry rejected a minidump upload because the request didn't include a minidump file. This only happens with multipart form uploads, and any other attachments or breadcrumbs in the same upload are dropped under this reason too.
+
+- **Short:** Minidump upload had no minidump file.
+- **Causes:**
+  - The multipart upload didn't include the crash file at all.
+  - The crash file was sent under a form field other than `upload_file_minidump`, so Sentry didn't recognize it as the minidump.
+- **Actions:**
+  - Send the crash file in the `upload_file_minidump` form field.
+  - Or send the raw minidump as the request body with the content type `application/octet-stream` or `application/x-dmp`.
+
+#### Invalid Minidump
+
+Reason code: `invalid_minidump`.
+
+Sentry rejected a minidump because the file didn't start with a valid minidump header. Large minidumps whose compressed file is corrupt are also reported this way. Corrupt compression on other minidumps is reported as [Invalid Compression](#invalid-compression).
+
+- **Short:** Minidump lacked a valid file header.
+- **Causes:**
+  - The uploaded file isn't a minidump, or it was modified before upload.
+  - A large minidump was uploaded compressed, and the compressed file was corrupt.
+- **Actions:**
+  - Check that your crash reporter uploads the unmodified minidump file.
+  - If you compress minidumps before upload, confirm the compressed files are intact.
+
+#### Unreadable Request Body
+
+Reason code: `invalid_body`.
+
+Sentry couldn't read the body of a minidump uploaded directly rather than as multipart form data, for example because the stream was cut off. Each failed upload is counted as a single error as a best-effort estimate.
+
+- **Short:** Minidump upload body could not be read.
+- **Causes:**
+  - A raw minidump upload stream that was cut off before it finished.
+  - A proxy between the crash reporter and Sentry that cut off or changed the upload.
+  - Possibly, a compressed upload (HTTP `Content-Encoding`) that Sentry couldn't decode.
+- **Actions:**
+  - Check that the crash reporter sends the complete minidump.
+  - Check any proxy between the crash reporter and Sentry for cut-off or changed requests.
+
+#### Invalid Compression
+
+Reason code: `invalid_compression`.
+
+Sentry couldn't decompress a minidump or an Unreal Engine crash report your app sent. For minidumps, Sentry detects the format (gzip, zstd, bzip2, or xz) from the file header. Large minidumps that fail to decompress are reported as [Invalid Minidump](#invalid-minidump) instead.
+
+- **Short:** Crash file could not be decompressed.
+- **Causes:**
+  - A minidump whose gzip, zstd, bzip2, or xz data is corrupt or incomplete.
+  - An Unreal crash report whose compression is invalid.
+- **Actions:**
+  - Check the crash reporter or tool sending the file.
+  - For minidumps, make sure the file is valid gzip, zstd, bzip2, or xz data.
+
+#### Invalid Multipart Upload
+
+Reason code: `invalid_multipart`.
+
+Sentry couldn't parse a multipart form-data upload, such as a minidump or PlayStation crash report. Each failed upload is counted as a single error as a best-effort estimate.
+
+- **Short:** Multipart upload could not be parsed.
+- **Causes:**
+  - A crash reporter or upload client sending a malformed multipart body.
+  - An upload with a missing or invalid multipart boundary.
+- **Actions:**
+  - Check the crash reporter or upload client.
+  - Make sure uploads are valid multipart form data with a correct boundary.
+
+#### Nesting Too Deep
+
+Reason code: `nesting_too_deep`.
+
+Sentry dropped a crash report because its form-data keys (like `sentry[a][b]...`) were nested more than 15 levels deep. This applies to Breakpad- or Crashpad-style uploads that send event fields as form data.
+
+- **Short:** Form-data keys nested over 15 levels deep.
+- **Causes:**
+  - A crash reporter sending event fields as bracketed form keys nested more than 15 levels after `sentry`.
+- **Actions:**
+  - Flatten the fields your crash reporter sends so keys stay within 15 levels.
+
+#### Invalid MessagePack
+
+Reason code: `invalid_msgpack`.
+
+Sentry couldn't decode the event or breadcrumbs attached to a native crash. These are sent in MessagePack, a compact binary format.
+
+- **Short:** Crash event or breadcrumbs failed to parse.
+- **Causes:**
+  - An outdated native SDK or crash reporter sending malformed MessagePack in the `__sentry-event`, `__sentry-breadcrumb1`, or `__sentry-breadcrumb2` fields.
+  - MessagePack data nested more than 128 levels deep, which likely also fails to decode.
+- **Actions:**
+  - Update the native SDK or crash reporter.
+  - If you attach these fields yourself, make sure they contain valid MessagePack.
+
+#### Invalid OTLP Protobuf
+
+Reason code: `invalid_proto`.
+
+Sentry couldn't decode an OpenTelemetry (OTLP) payload for traces or logs sent in protobuf binary encoding. JSON-encoded OTLP payloads that fail to parse are reported as [Malformed JSON Payload](#malformed-json-payload) instead.
+
+- **Short:** OTLP protobuf payload could not be decoded.
+- **Causes:**
+  - An OpenTelemetry exporter whose protocol or encoding settings are misconfigured.
+  - A malformed protobuf payload sent to Sentry's OTLP traces or logs endpoint.
+- **Actions:**
+  - Check your OpenTelemetry exporter's protocol and encoding settings.
+  - Confirm the data sent to the OTLP traces or logs endpoint is valid OTLP protobuf.
+
+#### Invalid Unreal Report
+
+Reason code: `invalid_unreal_report`.
+
+**Legacy:** This reason was defined for unreadable Unreal Engine crash reports, but Sentry never recorded it as a dropped event, so it shouldn't appear in your stats. Unreadable Unreal crash reports are recorded as [Unreal Processing Failed](#unreal-processing-failed) instead.
+
+- **Short:** Unreal report unreadable; not recorded.
+- **Causes:**
+  - A short-lived, feature-gated version of Sentry's Unreal endpoint returned this error to the client but never recorded a dropped event.
+- **Actions:**
+  - You don't need to do anything for this reason.
+  - For real Unreal crash report failures, see [Unreal Processing Failed](#unreal-processing-failed), [Invalid Compression](#invalid-compression), and [Unreal Crash Report Too Large](#unreal-crash-report-too-large).
+
+#### Unreal Processing Failed
+
+Reason code: `process_unreal`.
+
+Sentry couldn't extract an Unreal Engine crash report from the upload during processing, so the crash was dropped. This is recorded by Sentry's servers or by self-hosted Sentry, never by a Relay you run in front of Sentry.
+
+- **Short:** Unreal crash report couldn't be read.
+- **Causes:**
+  - The Unreal Engine Crash Reporter sent an incomplete or corrupted report.
+  - The upload sent to the Unreal endpoint isn't a valid Unreal crash report.
+- **Actions:**
+  - Check that the Unreal Engine Crash Reporter sends a complete, valid report.
+  - For badly compressed or oversized Unreal reports, see [Invalid Compression](#invalid-compression) and [Unreal Crash Report Too Large](#unreal-crash-report-too-large).
+
+#### Missing PlayStation Dump
+
+Reason code: `missing_prosperodump_upload`.
+
+Sentry rejected a PlayStation crash upload because it didn't include a `.prosperodmp` core dump file. Sentry recognizes the dump only by a filename ending in `.prosperodmp`, and any other files in the upload are dropped with it.
+
+- **Short:** PlayStation upload had no .prosperodmp.
+- **Causes:**
+  - The crash upload didn't include the core dump file.
+  - The dump was attached with a filename that doesn't end in `.prosperodmp`.
+- **Actions:**
+  - Make sure the upload includes the core dump file.
+  - Check that the dump's filename ends in `.prosperodmp`.
+
+#### Invalid PlayStation Dump
+
+Reason code: `invalid_prosperodump`.
+
+Sentry rejected a PlayStation crash dump because the `.prosperodmp` file didn't start with an ELF or LZ4 header. This check only looks at the start of the file. A dump that fails later during processing is reported as [Unprocessable Crash Payload](#unprocessable-crash-payload) instead.
+
+- **Short:** PlayStation dump had an invalid header.
+- **Causes:**
+  - The `.prosperodmp` file was modified before upload and its header was damaged.
+  - A file that isn't a PlayStation core dump was uploaded with a `.prosperodmp` filename.
+- **Actions:**
+  - Check that the `.prosperodmp` file is an unmodified core dump.
+  - Use the `.prosperodmp` extension only for PlayStation core dump files.
+
+#### Invalid Security Report
+
+Reason code: `security_report`.
+
+Sentry rejected a Content Security Policy (CSP) report because its JSON didn't match the expected report format. Browsers and extensions generate these reports, so you rarely control the payload.
+
+- **Short:** CSP report didn't match expected format.
+- **Causes:**
+  - The CSP report body had a shape Sentry didn't recognize.
+  - Sentry couldn't work out which CSP directive was violated.
+- **Actions:**
+  - Check what is posting to your security endpoint.
+  - Treat occasional drops as expected noise, since browsers and extensions generate these reports.
+
+#### Unrecognized Security Report Type
+
+Reason code: `security_report_type`.
+
+Sentry couldn't tell what kind of security report it received because the JSON had neither a `csp-report` key nor a `type` field. This is the shape of legacy Expect-CT, HPKP, and Expect-Staple reports, and only CSP reports are accepted.
+
+- **Short:** Security report type wasn't recognized.
+- **Causes:**
+  - Your site still sends legacy Expect-CT, HPKP (`Public-Key-Pins`), or Expect-Staple reports to Sentry.
+  - An older Relay in front of Sentry forwarded a security report that wasn't CSP.
+  - A Sentry ingestion change shipped in mid-September 2026, so you may see a step change in volume from then.
+- **Actions:**
+  - Remove legacy `Expect-CT` or `Public-Key-Pins` `report-uri` headers that point at Sentry.
+  - Send only CSP reports to your security endpoint.
+
+#### Unsupported Protocol Version
+
+Reason code: `auth_version`.
+
+**Legacy:** Sentry no longer reports this reason, so it only appears in historical data. It was recorded when an SDK sent an unsupported Sentry protocol version in its auth header. Today those requests are rejected with an HTTP `400` and no dropped data record.
+
+- **Short:** Legacy: unsupported protocol version.
+- **Causes:**
+  - An SDK sent an auth header with a Sentry protocol version that Sentry didn't support.
+- **Actions:**
+  - No action is needed for historical data.
+  - If the SDK that sent this data is still in use, update it to the latest version.
+
+#### Unsupported Content Type
+
+Reason code: `content_type`.
+
+**Legacy:** Sentry no longer reports this reason, so it only appears in historical data. It was recorded when a request's `Content-Type` wasn't allowed for the endpoint it was sent to.
+
+- **Short:** Legacy: unsupported content type.
+- **Causes:**
+  - A request was sent with a `Content-Type` the endpoint didn't accept.
+- **Actions:**
+  - No action is needed for historical data.
+  - If you send data with custom code, use the content type the endpoint expects.
+
+#### Empty Request Body
+
+Reason code: `empty_body`.
+
+**Legacy:** Sentry received a request with an empty body, so there was nothing to ingest. This reason isn't reported today, because Sentry rejects empty requests with an HTTP `400` error before recording them.
+
+- **Short:** Request body was empty.
+- **Causes:**
+  - An SDK, or a proxy forwarding requests to Sentry, sending requests with no body.
+- **Actions:**
+  - You usually don't need to do anything, since this reason isn't expected to appear.
+  - If requests to Sentry fail with HTTP `400` errors, check the SDK and any proxy forwarding them.
+
+#### Transaction Attachment
+
+Reason code: `transaction_attachment`.
+
+**Legacy:** Sentry no longer reports this reason, so it only appears in historical data. It was recorded when an attachment sent alongside a transaction was dropped while an internal Sentry option disallowed it. That option has since been removed.
+
+- **Short:** Legacy: attachment sent with transaction.
+- **Causes:**
+  - Your SDK sent an attachment with a transaction while Sentry had transaction attachments turned off on its side.
+- **Actions:**
+  - You don't need to do anything. Sentry no longer drops attachments for this reason.
+
+#### Dynamic Sampling (Legacy)
+
+Reason code: `transaction_sampled`.
+
+**Legacy:** Sentry no longer reports this reason, so it only appears in historical data. It was recorded when [dynamic sampling](/organization/dynamic-sampling/) dropped a transaction under the rules in effect at the time. Current sampling drops are reported as [Dynamic Sampling](#dynamic-sampling) under Inbound Filters. Because this is expected sampling, it's left out of the dropped data line.
+
+- **Short:** Legacy: dropped by dynamic sampling.
+- **Causes:**
+  - A transaction was dropped by the dynamic sampling rules in effect at the time.
+- **Actions:**
+  - No action is needed for historical data.
+  - For current dynamic sampling drops, see [Dynamic Sampling](#dynamic-sampling).
+
+#### Internal Envelope
+
+Reason code: `internal_envelope`.
+
+**Legacy:** Sentry never records this reason in your stats. It only returns an HTTP `400` error to the client. It applies when an envelope sent to the regular envelope or store endpoint contains internal-only integration items, which only Sentry's own integration endpoints, such as OTLP and Vercel, create.
+
+- **Short:** Envelope had internal-only items.
+- **Causes:**
+  - A client or proxy sent internal integration items to the regular envelope or store endpoint.
+- **Actions:**
+  - Send that data to its integration endpoint, such as OTLP, instead.
+  - Check any proxy or custom client that forwards envelopes to Sentry.
+
+#### Project Config Unreadable
+
+Reason code: `project_state`.
+
+**Legacy:** Sentry couldn't read this project's configuration, so it dropped the data. Current Sentry no longer reports this reason. It can only come from very old Relays you run yourself.
+
+- **Short:** Project config couldn't be read.
+- **Causes:**
+  - A very old Relay couldn't parse the project configuration it received from Sentry.
+  - A Sentry-side bug or infrastructure problem, not something in your setup.
+- **Actions:**
+  - If you run your own Relays, upgrade any very old versions.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Data Scrubbing Config Error
+
+Reason code: `project_state_pii`.
+
+**Legacy:** Sentry couldn't convert this project's data scrubbing settings into a usable configuration, so it dropped the data. Current Sentry can no longer fail this way. It can only come from old Relays.
+
+- **Short:** Data scrubbing config failed to convert.
+- **Causes:**
+  - A regular expression in the project's data scrubbing settings failed to compile during conversion.
+  - An old Relay processed the data. Current versions can't hit this error.
+- **Actions:**
+  - Check your [Security & Privacy](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) data scrubbing settings for invalid regular expressions.
+  - If you run your own Relays, upgrade any old versions.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Project Unavailable
+
+Reason code: `project_unavailable`.
+
+Sentry couldn't load the project's configuration in time, so it rejected a minidump or PlayStation crash upload. This is a Sentry-side infrastructure issue, and your SDK may retry the upload.
+
+- **Short:** Project config couldn't load in time.
+- **Causes:**
+  - Sentry's infrastructure couldn't provide the project configuration in time when a crash upload arrived.
+- **Actions:**
+  - You usually don't need to do anything, since the SDK may retry the upload.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Queue Failed
+
+Reason code: `queue_failed`.
+
+**Legacy:** This reason is defined for when Sentry's ingestion queue is full or shutting down, but those failures are always recorded as [Sentry Processing Error](#sentry-processing-error) instead. You shouldn't see it in your stats.
+
+- **Short:** Sentry queue full; shown as internal.
+- **Causes:**
+  - Sentry's ingestion queue was full, shutting down, or out of memory, and the drop was recorded under `internal`.
+- **Actions:**
+  - Look under [Sentry Processing Error](#sentry-processing-error) for queue-related drops instead.
+  - [Contact Sentry support](https://www.sentry.help/en/) if those drops continue, since queue failures are a Sentry-side issue.
+
+#### Upload Failed
+
+Reason code: `upload_failed`.
+
+Sentry failed to save an attachment or crash file to its storage, so the data was dropped. If a minidump fails to save, the whole crash upload is rejected. A failed extra attachment is dropped on its own.
+
+- **Short:** Sentry couldn't store an attachment.
+- **Causes:**
+  - Sentry's attachment storage returned an error during the upload.
+  - Sentry's attachment storage was shedding load and refused the upload.
+- **Actions:**
+  - You don't need to do anything for occasional drops, since this is a Sentry-side issue.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Invalid Signature
+
+Reason code: `invalid_signature`.
+
+Sentry rejected data signed by a [Relay](/product/relay/) that isn't registered with your organization, or whose signature had expired. This check only runs when your organization has **Ingest Through Trusted Relays Only** turned on.
+
+- **Short:** Relay signature unknown or expired.
+- **Causes:**
+  - The Relay's public key isn't registered with your organization.
+  - The Relay's clock is wrong, so its signatures look expired.
+- **Actions:**
+  - [Register the Relay's public key](/product/relay/getting-started/#registering-relay-with-sentry) in your organization's [Relay settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/relay/).
+  - Check that the Relay's system clock is accurate.
+
+#### Missing Signature
+
+Reason code: `missing_signature`.
+
+Your organization only accepts data through trusted [Relays](/product/relay/), so data sent directly without a Relay signature was rejected. This is the **Ingest Through Trusted Relays Only** setting working as intended, so it's left out of the dropped data line.
+
+- **Short:** Unsigned data bypassed trusted Relays.
+- **Causes:**
+  - Some SDKs or DSNs send data straight to Sentry instead of through your Relay.
+  - Your organization turned on **Ingest Through Trusted Relays Only**, which rejects all unsigned direct traffic by design.
+- **Actions:**
+  - Route all SDKs through your trusted Relay.
+  - If you don't need this restriction, turn off **Ingest Through Trusted Relays Only** in your organization's [Relay settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/relay/).
+
+#### Event Payload Too Large
+
+Reason code: `too_large:event`.
+
+The event exceeded the maximum payload size. Other item types have their own reason codes, such as `too_large:log` or `too_large:span`, and attachments are broken down by attachment type, such as `too_large:attachment:minidump`. Each one is listed below.
+
+- **Short:** The event exceeded maximum payload size.
+- **Causes:**
+  - Very deep stack traces, typically from recursion or stack-overflow errors.
+  - Too much data in `contexts` (for example, set with `setContext`) or added as `extra`.
+- **Actions:**
+  - Trim the payload in [`beforeSend`](/platform-redirect/?next=/configuration/options/#beforeSend). That lets you drop the largest fields and still keep the event.
+
+#### Log Payload Too Large
+
+Reason code: `too_large:log`.
+
+The log exceeded the maximum payload size.
+
+- **Short:** The log event exceeded maximum payload size.
+- **Causes:**
+  - Large attributes or messages, such as request bodies or application configuration.
+- **Actions:**
+  - Trim the payload in [`beforeSendLog`](/platform-redirect/?next=/configuration/options/#beforeSendLog).
+  - Do not attach an entire large JSON payload as log attributes. Pick the fields you need.
+
+#### Span Payload Too Large
+
+Reason code: `too_large:span`.
+
+The span exceeded the maximum payload size.
+
+- **Short:** The span event exceeded maximum payload size.
+- **Causes:**
+  - Large span attributes, such as a full request body instead of individual HTTP fields.
+  - Large context windows from AI agents attached to spans.
+- **Actions:**
+  - Trim the payload in [`beforeSendSpan`](/platform-redirect/?next=/configuration/options/#beforeSendSpan).
+  - Use attachments instead of attributes for large payload data, such as images or videos.
+
+#### Application Metric Payload Too Large
+
+Reason code: `too_large:trace_metric`.
+
+The metric event exceeded the maximum payload size.
+
+- **Short:** The application metric event exceeded maximum payload size.
+- **Causes:**
+  - Large metric attributes, such as a full request body instead of individual fields.
+- **Actions:**
+  - Audit attributes on application metrics. Set the specific parameters you need, not an entire HTTP request object.
+
+#### Transaction Payload Too Large
+
+Reason code: `too_large:transaction`.
+
+The transaction exceeded the maximum payload size. Transactions carry their spans inline, so size usually comes from span count rather than one large field.
+
+- **Short:** The transaction exceeded maximum payload size.
+- **Causes:**
+  - A very high number of spans on one transaction.
+  - Long span descriptions, large span attributes, or both.
+- **Actions:**
+  - Trim the payload in [`beforeSendTransaction`](/platform-redirect/?next=/configuration/options/#beforeSendTransaction).
+  - Reduce span volume at the source. Address N+1 query patterns, or narrow auto-instrumentation that creates a span per database call.
+
+#### Profile Payload Too Large
+
+Reason code: `too_large:profile`.
+
+The profile exceeded the maximum payload size.
+
+- **Short:** The profile event exceeded maximum payload size.
+- **Causes:**
+  - A long-running transaction profile with many samples or deep stacks.
+- **Actions:**
+  - Profile shorter operations, or lower your profile sample rate.
+
+#### Profile Chunk Too Large
+
+Reason code: `too_large:profile_chunk`.
+
+Sentry rejected a continuous [profiling](/product/profiling/) chunk because it was over the profile size limit (50 MiB by default), or because it was sent in the same envelope (one SDK upload) as another profile or profile chunk. The whole envelope is rejected.
+
+- **Short:** Profile chunk over size or count limit.
+- **Causes:**
+  - A single profile chunk is larger than the 50 MiB profile size limit.
+  - More than one profile or profile chunk was sent in the same envelope, where only one is allowed.
+- **Actions:**
+  - Update your SDK to the latest version.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues after updating.
+
+#### Replay Event Too Large
+
+Reason code: `too_large:replay_event`.
+
+Sentry rejected a replay's metadata event because it was over the event size limit (1 MiB by default), or because it was sent in the same envelope (one SDK upload) as another event. The whole envelope is rejected, including the replay recording sent with it, so that replay segment is lost.
+
+- **Short:** Replay metadata event over size limit.
+- **Causes:**
+  - The replay event carried more than 1 MiB of data, for example from custom data added to it.
+  - The replay event was sent in the same envelope as another event, such as an error, transaction, or user feedback.
+- **Actions:**
+  - Reduce custom data added to replay events.
+  - Update your SDK to the latest version if it continues.
+
+#### Replay Recording Too Large
+
+Reason code: `too_large:replay_recording`.
+
+Sentry dropped a replay segment because its recording was over 10 MiB compressed (the default limit), because more than one recording was sent in the same envelope (one SDK upload), or because the replay event, recording, and video together reached 15 MiB. Oversized mobile video segments can also show up under this reason.
+
+- **Short:** Replay recording over size limit.
+- **Causes:**
+  - Very large or rapidly changing page elements made the recorded segment too big.
+  - More than one replay recording was sent in the same envelope.
+  - On mobile, a segment's replay event, recording, and video together reached the 15 MiB combined limit.
+- **Actions:**
+  - [Block or ignore](/platforms/javascript/session-replay/privacy/#blocking) very large or rapidly changing page elements in your replay setup.
+  - Update your SDK to the latest version if it continues.
+
+#### Replay Video Too Large
+
+Reason code: `too_large:replay_video`.
+
+Sentry rejected a mobile replay segment because its video was over the size limit (10 MiB compressed by default), or because more than one video was sent in the same envelope (one SDK upload). Normal segments are far below this limit, so this likely points to an SDK problem or an unusual segment.
+
+- **Short:** Mobile replay video over size limit.
+- **Causes:**
+  - An SDK problem or an unusual segment produced a video far larger than normal.
+  - More than one replay video was sent in the same envelope.
+- **Actions:**
+  - Update your mobile SDK to the latest version.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues after updating.
+
+#### Check-In Too Large
+
+Reason code: `too_large:check_in`.
+
+Sentry rejected a cron monitor check-in because it was over the check-in size limit (100 KiB by default), or because the envelope (one SDK upload) held more than one check-in. The whole envelope is rejected.
+
+- **Short:** Cron check-in over size or count limit.
+- **Causes:**
+  - The check-in payload was larger than the 100 KiB limit.
+  - More than one check-in was sent in a single envelope.
+- **Actions:**
+  - Keep each check-in payload under 100 KiB.
+  - Send one check-in per request.
+
+#### Session Update Too Large
+
+Reason code: `too_large:session`.
+
+Sentry rejected release health session updates because the envelope (one SDK upload) was over the session size limit (10 MiB by default) or held more than 100 session items. The whole envelope is rejected.
+
+- **Short:** Too many or too large session updates.
+- **Causes:**
+  - More than 100 session updates, or more than 10 MiB of them, were sent in one envelope.
+  - Session updates and session aggregates in the same envelope together crossed the shared size or count limit.
+- **Actions:**
+  - Send fewer session updates per envelope.
+
+#### Session Aggregates Too Large
+
+Reason code: `too_large:sessions`.
+
+Sentry rejected pre-aggregated release health sessions, which server-mode SDKs send, because the envelope (one SDK upload) was over the shared session size limit (10 MiB by default) or held more than 100 session items. The whole envelope is rejected.
+
+- **Short:** Too many or too large session aggregates.
+- **Causes:**
+  - A server-mode SDK sent more than 100 session aggregate items, or more than 10 MiB of them, in one envelope.
+  - Session aggregates and session updates in the same envelope together crossed the shared size or count limit.
+- **Actions:**
+  - Send fewer session aggregates per envelope.
+
+#### Legacy User Feedback Too Large
+
+Reason code: `too_large:user_report`.
+
+Sentry rejected an envelope (one SDK upload) because a user report from the older user feedback API pushed it over the attachment size or count limits it shares with attachments. User reports are small, so the attachments sent with it are usually what caused the overflow.
+
+- **Short:** User report hit shared attachment limits.
+- **Causes:**
+  - Attachments in the same envelope were too large or too many (defaults are 200 MiB per item, 30 items, and 200 MiB total), and the user report tipped the envelope over.
+- **Actions:**
+  - Send fewer or smaller attachments with the user report.
+
+#### User Feedback Too Large
+
+Reason code: `too_large:user_report_v2`.
+
+Sentry rejected [user feedback](/product/user-feedback/) because it was over the event size limit (1 MiB by default), or because it was sent in the same envelope (one SDK upload) as another event. Feedback screenshots are separate attachments and don't count toward this check.
+
+- **Short:** User feedback over event size limit.
+- **Causes:**
+  - The feedback carried too much context or extra data.
+  - The feedback was sent in the same envelope as another event, such as an error, transaction, or replay event.
+- **Actions:**
+  - Reduce context and extra data on feedback.
+  - Update your SDK to the latest version if it continues.
+
+#### Security Event Too Large
+
+Reason code: `too_large:security`.
+
+Sentry rejected a Content Security Policy (CSP) event because it was over the event size limit (1 MiB by default), or because it was sent in the same envelope (one upload) as another event. Sentry's own endpoints already cap these reports, so this usually comes from a downstream [Relay](/product/relay/) forwarding an oversized CSP event.
+
+- **Short:** Forwarded CSP event over size limit.
+- **Causes:**
+  - A downstream Relay, such as one you run, forwarded a CSP event larger than the event size limit.
+  - The CSP event was sent in the same envelope as another event.
+- **Actions:**
+  - Check the size limits configured on any Relay you run.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Security Report Too Large
+
+Reason code: `too_large:raw_security`.
+
+Sentry rejected a browser security report, such as a CSP violation, because it was larger than the event size limit (1 MiB by default). The security report endpoint already caps reports at this limit, so this only happens when a raw report is sent directly inside an envelope (one upload), for example by your own client or by a Relay running in proxy mode.
+
+- **Short:** Browser security report over size limit.
+- **Causes:**
+  - A client or a Relay running in proxy mode sent a raw security report directly, and it was over the event size limit.
+  - The security report was sent in the same envelope as another event.
+- **Actions:**
+  - You usually don't need to do anything. These reports are browser-generated and this is very rare.
+  - If you send reports through your own client or Relay, send one report per envelope.
+
+#### Unreal Crash Report Too Large
+
+Reason code: `too_large:unreal_report`.
+
+Sentry rejected an Unreal Engine crash report because it was over the shared attachment limits (200 MiB per item, 30 items, and 200 MiB total by default), or because it grew past 200 MiB once unpacked. These drops are counted as errors.
+
+- **Short:** Unreal crash report over size limit.
+- **Causes:**
+  - The crash report bundles large logs or other files.
+  - Other attachments in the same envelope (one upload) pushed it over the shared attachment limits.
+  - The report is over 200 MiB once unpacked, even though its upload was smaller.
+- **Actions:**
+  - Reduce the logs and files included in crash reports.
+  - Send fewer or smaller attachments with the crash report.
+
+#### Form Data Too Large
+
+Reason code: `too_large:form_data`.
+
+Sentry rejected a multipart crash upload, such as a minidump upload, because its non-file form fields together were over the event size limit (1 MiB by default). Form data has no data category of its own, so the drop is recorded against the other items in the upload, such as the minidump.
+
+- **Short:** Crash upload form fields over size limit.
+- **Causes:**
+  - Too much event data was sent in the upload's form fields, such as the `sentry` JSON field or `sentry[...]` fields.
+  - Form data was sent in the same envelope (one upload) as another event.
+- **Actions:**
+  - Send less event data in the upload's form fields.
+
+#### Client Report Too Large
+
+Reason code: `too_large:client_report`.
+
+Sentry rejected an envelope (one SDK upload) because the SDK's client report, its summary of data it dropped, was over the size or count limits. A lone client report records nothing here, so this only appears when other items in the same envelope were dropped with it. It points to an SDK problem rather than your data.
+
+- **Short:** SDK's client report exceeded its limits.
+- **Causes:**
+  - An SDK problem produced an oversized client report, or too many client reports in one envelope.
+- **Actions:**
+  - Update your SDK to the latest version.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues after updating.
+
+#### Legacy Custom Metrics Too Large
+
+Reason code: `too_large:statsd`.
+
+**Legacy:** Sentry rejected custom metrics sent in the old statsd format because they were over the size limit. Sentry no longer accepts this format.
+
+- **Short:** Legacy statsd metrics over size limit.
+- **Causes:**
+  - Your SDK sent custom metrics in the statsd format with a payload over the size limit.
+- **Actions:**
+  - Migrate to [Application Metrics](/product/metrics/).
+  - No action is needed for historical data.
+
+#### Metric Buckets Too Large
+
+Reason code: `too_large:metric_buckets`.
+
+Sentry rejected metric buckets sent by a downstream [Relay](/product/relay/) (Sentry's ingestion service, which some customers run themselves) because they were over the size limit (1 MiB by default), or because more than one was sent in the same envelope (one upload). SDKs never send metric buckets, so this comes from Relay-to-Relay traffic, and many of these rejections record no count.
+
+- **Short:** Relay metric buckets over size limit.
+- **Causes:**
+  - The sending Relay's batches were larger than the receiving limit. A Relay batches up to about 5 MB by default, while the receiving default is 1 MiB.
+  - More than one metric buckets item was sent in the same envelope.
+- **Actions:**
+  - Check the version and configuration of the Relay that sent the data.
+  - [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### Integration Payload Too Large
+
+Reason code: `too_large:integration`.
+
+Sentry rejected an OpenTelemetry (OTLP), Vercel log drain, or Network Error Logging (NEL) payload because it was over the size limit (12 MiB by default). Those endpoints usually refuse oversized requests before this check, so this reason needs an envelope (one upload) that carries the integration data directly, or more than one item of the same kind, and is rare.
+
+- **Short:** OTLP, Vercel, or NEL payload too large.
+- **Causes:**
+  - Integration data sent directly in an envelope was larger than 12 MiB, such as a large exporter or log drain batch.
+  - An envelope carried more than one integration item of the same kind, logs or spans.
+- **Actions:**
+  - Send smaller batches from your exporter or drain.
+  - If you build envelopes yourself, include at most one integration logs item and one spans item per envelope.
+
+#### Unknown Item Too Large
+
+Reason code: `too_large:unknown`.
+
+**Legacy:** Sentry rejected an item of a type that Relay (Sentry's ingestion service) didn't recognize because it was over the size limit. Current Relay versions no longer report this reason, so it only appears in historical data or from older Relays, such as ones you run yourself.
+
+- **Short:** Unrecognized item type over size limit.
+- **Causes:**
+  - An older Relay received an item of a type it didn't recognize that was larger than 12 MiB.
+- **Actions:**
+  - Update your SDK and any Relay you run to current versions.
+  - No action is needed for historical data.
+
+#### Attachment Too Large
+
+Reason code: `too_large:attachment:attachment`.
+
+Sentry rejected an envelope (one SDK upload) because an attachment was over the size limit, or because there were too many attachments. The whole envelope is rejected, including the event the attachments belong to.
+
+- **Short:** Attachment over size or count limit.
+- **Causes:**
+  - A single attachment is larger than the 200 MiB default limit.
+  - The envelope held more than 30 attachments, or more than 200 MiB of attachments in total.
+  - A multipart upload's attachments together went over the total size limit, whatever their type.
+- **Actions:**
+  - Send fewer or smaller attachments.
+
+#### Minidump Too Large
+
+Reason code: `too_large:attachment:minidump`.
+
+Sentry rejected a crash minidump because it was over the attachment size limit, which is checked on upload and again after decompression.
+
+- **Short:** Minidump over attachment size limit.
+- **Causes:**
+  - The minidump captures a lot of memory, making it too large once decompressed.
+  - Other attachments sent with the minidump pushed it over the shared attachment limits.
+- **Actions:**
+  - Capture smaller minidumps, for example without full memory.
+  - Send fewer or smaller attachments with the minidump.
+
+#### Apple Crash Report Too Large
+
+Reason code: `too_large:attachment:apple_crash_report`.
+
+Sentry rejected an envelope because an Apple crash report attachment was over the attachment size or count limits. These limits are shared, so other attachments sent with the crash may be what pushed it over.
+
+- **Short:** Apple crash report hit attachment limits.
+- **Causes:**
+  - The Apple crash report attachment itself is too large.
+  - Other attachments sent with the crash pushed the envelope over the shared limits.
+- **Actions:**
+  - Send fewer or smaller attachments with the crash.
+
+#### Crash Event Payload Too Large
+
+Reason code: `too_large:attachment:event_payload`.
+
+Sentry rejected the event data attached to a native crash upload because it was over the event size limit (1 MiB by default). Native crash uploads from sentry-native, Crashpad, and Breakpad send this data, and Unreal crash files can contain it too.
+
+- **Short:** Native crash event data over size limit.
+- **Causes:**
+  - The crash event carries too much context, tags, or extra data.
+- **Actions:**
+  - Reduce context, tags, and extra data on crash events.
+
+#### Crash Breadcrumbs Too Large
+
+Reason code: `too_large:attachment:breadcrumbs`.
+
+Sentry rejected the breadcrumbs file attached to a native crash upload because it was over the event size limit (1 MiB by default).
+
+- **Short:** Native crash breadcrumbs over size limit.
+- **Causes:**
+  - Too many breadcrumbs were recorded before the crash.
+  - Individual breadcrumbs carry large amounts of data.
+- **Actions:**
+  - Lower [`maxBreadcrumbs`](/platform-redirect/?next=/configuration/options/#maxBreadcrumbs) in your SDK options.
+  - Reduce the data attached to each breadcrumb.
+
+#### PlayStation Crash Dump Too Large
+
+Reason code: `too_large:attachment:prosperodump`.
+
+Sentry rejected a PlayStation crash dump because it was over the attachment size limit once decompressed, or because it and the attachments sent with it went over the attachment limits on upload.
+
+- **Short:** PlayStation crash dump over size limit.
+- **Causes:**
+  - The crash dump is too large after decompression.
+  - Other attachments sent with the dump pushed it over the shared attachment limits.
+- **Actions:**
+  - Reduce the data included in the dump.
+  - Send fewer or smaller attachments with the dump.
+
+#### Unreal Context Too Large
+
+Reason code: `too_large:attachment:unreal_context`.
+
+Sentry rejected an Unreal Engine crash context attachment because it was over the attachment size or count limits. Sentry normally creates this file itself when unpacking an Unreal crash report, so this only appears when a client sends the context attachment directly.
+
+- **Short:** Unreal context over attachment limits.
+- **Causes:**
+  - A client sent the Unreal context attachment directly, and it was too large.
+  - Other attachments sent with it pushed the total over the shared limits.
+- **Actions:**
+  - Send fewer or smaller crash attachments.
+
+#### Unreal Crash Logs Too Large
+
+Reason code: `too_large:attachment:unreal_logs`.
+
+Sentry rejected an Unreal Engine crash log attachment because it was over the attachment size or count limits. Sentry normally extracts these logs itself when unpacking an Unreal crash report, so this only appears when a client sends the log attachment directly.
+
+- **Short:** Unreal crash logs over attachment limits.
+- **Causes:**
+  - A client sent the Unreal crash log attachment directly with too much log output.
+  - Other attachments sent with it pushed the total over the shared limits.
+- **Actions:**
+  - Reduce log output included in crash reports.
+  - Send fewer or smaller other attachments with the logs.
+
+#### View Hierarchy Too Large
+
+Reason code: `too_large:attachment:view_hierarchy`.
+
+Sentry rejected an event because its view hierarchy attachment, which mobile SDKs send when view hierarchy capture is turned on, was over the attachment size or count limits. With a 200 MiB per-attachment default, the shared count or total limit is the more likely trigger.
+
+- **Short:** View hierarchy over attachment limits.
+- **Causes:**
+  - The event's attachments together went over the shared count or total size limit, and the view hierarchy was the one that crossed it.
+  - The view hierarchy attachment itself is unusually large.
+- **Actions:**
+  - Send fewer or smaller attachments with each event.
+
+#### Switch Dying Message Too Large
+
+Reason code: `too_large:attachment:nnswitch_dying_message`.
+
+Sentry rejected an envelope because a Nintendo Switch dying message attachment was over the attachment size or count limits. The dying message has no count of its own, so the drop is recorded against the error event and other attachments.
+
+- **Short:** Switch dying message hit attachment limit.
+- **Causes:**
+  - The dying message attachment itself is too large.
+  - Other attachments sent with it pushed the envelope over the shared limits.
+- **Actions:**
+  - Send fewer or smaller attachments.
+
+### Category: Rate Limited
+
+Sentry throttled requests or dropped events after they arrived.
+
+#### Generic Rate Limit
+
+Reason code: `generic`.
+
+Your requests were throttled by Sentry's edge protection, not by a quota. The limit applies to a single DSN key and to all data types, for the duration Sentry returned in `Retry-After`.
+
+- **Short:** Your requests across all event types were rate limited.
+- **Causes:**
+  - A very high request rate from one DSN key. A runaway loop, or a retry storm after a batch of failures, is a common cause.
+  - A project with legitimately high traffic hitting the rate limit.
+- **Actions:**
+  - Look for a loop or retry storm. Check whether the burst lines up with a deploy.
+  - If this volume is expected, [contact Sentry support](https://www.sentry.help/en/) or your account manager.
+
+#### Project Abuse Limit
+
+Reason code: `project_abuse_limit`.
+
+Your project exceeded Sentry's abuse limit for a data type. This is a short-window rate limit. It is not your billing quota and it is not spike protection.
+
+- **Short:** Your events exceeded the project abuse limit.
+- **Causes:**
+  - A very high rate of one telemetry type on a project. An error emitted in a tight loop can trigger this.
+  - A project with legitimately high traffic hitting the abuse limit.
+- **Actions:**
+  - Look for a loop or retry storm. Check whether the burst lines up with a deploy.
+  - If this volume is expected, [contact Sentry support](https://www.sentry.help/en/) or your account manager.
+
+#### Spike Protection
+
+Reason code: `smart_rate_limit`.
+
+[Spike protection](/pricing/quotas/spike-protection/) detected a sudden increase in event volume for this project and dropped events so the spike would not consume your quota.
+
+- **Short:** Spike protection dropped events to preserve your quota. See [Spike Protection](/pricing/quotas/spike-protection/).
+- **Causes:**
+  - A sudden increase in volume for one project.
+  - A low-volume or newly created project. Thresholds are derived partly from recent history.
+  - A real traffic spike, such as a badly behaved bot.
+- **Actions:**
+  - Find what caused the spike. Sort the project's issues by event count over the affected window, and check whether it lines up with a deploy.
+  - Turn spike protection on or off per project in settings. See [Spike Protection](/pricing/quotas/spike-protection/).
+
+#### Quota Exceeded
+
+Reason code: `usage_exceeded`, or a per-category code such as `error_usage_exceeded` or `span_usage_exceeded`.
+
+Your organization's [quota](/pricing/quotas/) for this data category was fully consumed, and no pay-as-you-go budget remained. The prefix names the data category, such as error, transaction, span, or replay. The bare `usage_exceeded` code is the older, all-category version. When a project hits its [spend allocation](/pricing/quotas/spend-allocation/), the code is `project_quota_<category>_usage_exceeded`.
+
+- **Short:** Your organization hit its quota for this event type.
+- **Causes:**
+  - Reserved monthly volume for this category was consumed, and your pay-as-you-go budget was used up.
+  - Newly enabled instrumentation started sending a category you had not budgeted for.
+  - A project hit its spend allocation limit.
+- **Actions:**
+  - Raise your pay-as-you-go budget in [Subscription settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/billing/overview/) if the growth is expected. See [quotas](/pricing/quotas/).
+  - Lower your sampling rates or add [inbound filters](/concepts/data-management/filtering/) so the same overrun does not happen next period.
+
+#### Internal Rate Limit
+
+Reason code: `rate_limited`.
+
+Sentry dropped data that went over one of its internal rate limits. This covers attachments over the per-project save limit, cron check-ins over the per-monitor limit, and Seer scanner and autofix runs that Sentry starts automatically.
+
+- **Short:** Over an internal Sentry rate limit.
+- **Causes:**
+  - Your project saved more attachments than Sentry's per-project attachment save limit allows.
+  - A cron monitor sent more check-ins than allowed. By default, that's 6 per minute for each project, monitor, and environment combination.
+  - Automatic Seer scanner or autofix runs went over their limit. Sentry starts these runs, so they aren't data your application sent.
+- **Actions:**
+  - Lower the volume of attachments your project sends.
+  - Reduce how often each cron monitor checks in.
+  - These limits aren't configurable. [Contact Sentry support](https://www.sentry.help/en/) if it continues.
+
+#### DSN Rate Limit
+
+Reason code: `key_quota`.
+
+Sentry dropped events because they went over the [rate limit set on the project's client key (DSN)](/pricing/quotas/manage-event-stream-guide/#rate-limiting). The limit covers errors and security reports, such as CSP reports. Because this is a setting you control, it's left out of the dropped data line.
+
+- **Short:** Exceeded the DSN rate limit.
+- **Causes:**
+  - A rate limit is set on the client key, and your application sent more errors or security reports than it allows.
+  - Security reports, such as CSP reports, count toward the same limit as errors.
+- **Actions:**
+  - Raise or remove the rate limit in [Client Keys (DSN)](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/).
+  - Find what is sending the extra errors or security reports if the volume is higher than expected.
+
+### Category: Inbound Filters
+
+Sentry dropped the data on purpose when it arrived, usually because of a [project inbound filter](/concepts/data-management/filtering/). Filtered events do not count toward quota.
+
+#### Filtered Transaction
+
+Reason code: `filtered-transaction`.
+
+The transaction name matched Sentry's [health check filter](/concepts/data-management/filtering/#transactions-coming-from-health-check), which drops endpoints such as `/health`, `/healthz`, `/ping`, and `/ready`. This filter is on by default.
+
+- **Short:** Transaction matched the default health check filter. See [health check filtering](/concepts/data-management/filtering/#transactions-coming-from-health-check).
+- **Causes:**
+  - The health check filter is enabled by default on Sentry projects.
+- **Actions:**
+  - Turn the filter off in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/) if you want these transactions.
+
+#### Error Message Filter
+
+Reason code: `error-message`.
+
+The event matched a custom glob in your error-message filter. See [custom filtering](/concepts/data-management/filtering/#how-custom-filtering-works).
+
+- **Short:** Event message matched one of your custom filters. See [custom filtering](/concepts/data-management/filtering/#how-custom-filtering-works).
+- **Causes:**
+  - A filter you configured.
+- **Actions:**
+  - If events you expect are missing, review the glob in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### Release Version Filter
+
+Reason code: `release-version`.
+
+The event's release matched a custom release filter. See [custom filtering](/concepts/data-management/filtering/#how-custom-filtering-works).
+
+- **Short:** Event release matched one of your custom filters. See [custom filtering](/concepts/data-management/filtering/#how-custom-filtering-works).
+- **Causes:**
+  - A filter you configured.
+- **Actions:**
+  - If events you expect are missing, review the release rule in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### IP Address Filter
+
+Reason code: `ip-address`.
+
+The event matched an IP range in a custom filter. See [IP address filters](/concepts/data-management/filtering/#ip-addresses).
+
+- **Short:** Event IP address matched one of your custom filters. See [IP address filters](/concepts/data-management/filtering/#ip-addresses).
+- **Causes:**
+  - A filter you configured.
+- **Actions:**
+  - If events you expect are missing, review the IP rule in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### Legacy Browser Filter
+
+Reason code: `legacy-browsers`.
+
+The browser matched the [legacy browser filter](/concepts/data-management/filtering/#legacy-browser-filters). That filter drops events from older browsers that tend to produce broken telemetry.
+
+- **Short:** Browser matched your legacy browser filter. See [legacy browser filters](/concepts/data-management/filtering/#legacy-browser-filters).
+- **Causes:**
+  - Bots spoofing old user agents.
+  - People connecting from old browsers, such as a kiosk that still runs an old browser.
+- **Actions:**
+  - If the dropped browsers are ones your users actually use, review the legacy browser list in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/) and turn individual browsers off.
+
+#### Web Crawler Filter
+
+Reason code: `web-crawlers`.
+
+The user agent matched [Sentry's list of known web crawlers](/concepts/data-management/filtering/#web-crawler-errors).
+
+- **Short:** User agent matched Sentry's known crawler list. See [web crawler filters](/concepts/data-management/filtering/#web-crawler-errors).
+- **Causes:**
+  - Bot traffic to your site.
+  - A user agent that matches the generic patterns. Any agent containing "bot" or "spider" as a word is filtered.
+- **Actions:**
+  - Leave the filter on when you do not need crawler errors.
+  - To capture crawler-triggered errors, turn the filter off under [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### Localhost Filter
+
+Reason code: `localhost`.
+
+The data was sent from `localhost` and the project's localhost inbound filter is turned on. This includes events from `127.0.0.1`, `::1`, `localhost` URLs, `file://` URLs, and `*.localhost` hosts.
+
+- **Short:** Event was sent from a local address.
+- **Causes:**
+  - You sent events from local development or testing while the localhost filter was on. It's off by default, so someone turned it on.
+  - Events came from requests whose `Host` or `X-Forwarded-Host` header was `localhost` or `127.0.0.1`.
+  - Events came from pages loaded from `file://` URLs or `*.localhost` hosts.
+- **Actions:**
+  - You usually don't need to do anything. This is the filter working as intended.
+  - To keep these events, turn off the localhost filter in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### Browser Extensions Filter
+
+Reason code: `browser-extensions`.
+
+The error matched Sentry's list of errors known to be caused by browser extensions. See [browser extension errors](/concepts/data-management/filtering/#browser-extension-errors). This filter is turned on automatically for new projects with a JavaScript platform.
+
+- **Short:** Error came from a browser extension.
+- **Causes:**
+  - A browser extension installed by one of your users threw an error that your SDK captured.
+  - The browser extension filter is on, which is the default for new projects created with a JavaScript platform.
+- **Actions:**
+  - You usually don't need to do anything. This is the filter working as intended.
+  - To capture these errors, turn off the filter in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### React Hydration Errors Filter
+
+Reason code: `react-hydration-errors`.
+
+The error is a React hydration error, which the hydration errors inbound filter removes by default. The filter matches messages containing React's error-decoder links for hydration error codes 418, 419, 421, 422, 423, and 425.
+
+- **Short:** Error was a React hydration error.
+- **Causes:**
+  - Your React app threw hydration errors while the filter was on, which is the default.
+- **Actions:**
+  - You usually don't need to do anything. This is the filter working as intended.
+  - To capture these errors, turn off **Filter out hydration errors** in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### ChunkLoadError Filter
+
+Reason code: `chunk-load-error`.
+
+The error is a `ChunkLoadError`, raised when the browser fails to load a JavaScript chunk. The ChunkLoadError filter is on by default.
+
+- **Short:** Error was a ChunkLoadError.
+- **Causes:**
+  - You redeployed while users still had an old version of the page open.
+  - Your app raised Webpack "Loading chunk" or Turbopack "Failed to load chunk" errors while the filter was on, which is the default.
+- **Actions:**
+  - You usually don't need to do anything. This is the filter working as intended.
+  - To capture these errors, turn off **Filter out ChunkLoadError(s)** in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+
+#### Sentry-Managed Error Filter
+
+Reason code: `custom-error`.
+
+The error matched a filter that Sentry manages for known malicious payloads, such as fake `npx` setup commands. These aren't real application errors, and there's no project setting for this filter.
+
+- **Short:** Error matched a known malicious payload.
+- **Causes:**
+  - Errors were sent with a known malicious payload, such as a fake `npx @...` setup command, in the exception type, value, or log message.
+- **Actions:**
+  - You don't need to do anything. This filter removes malicious attempts, not real errors.
+  - [Contact Sentry support](https://www.sentry.help/en/) if you believe real errors are being dropped.
+
+#### Log Message Filter
+
+Reason code: `log-message`.
+
+The log's message matched a pattern in the project's [Log Message filter](/concepts/data-management/filtering/#log-message).
+
+- **Short:** Log message matched an inbound filter.
+- **Causes:**
+  - The Log Message filter has a pattern that matches these logs.
+  - A pattern is broader than intended and also matches logs you meant to keep.
+- **Actions:**
+  - Review the Log Message patterns in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+  - Edit or remove the matching pattern to keep these logs.
+
+#### Application Metric Name Filter
+
+Reason code: `trace-metric-name`.
+
+The metric's name matched a pattern in the project's [Application Metrics filter](/concepts/data-management/filtering/#application-metrics).
+
+- **Short:** Metric name matched an inbound filter.
+- **Causes:**
+  - The Application Metrics filter has a pattern that matches these metric names.
+  - A pattern is broader than intended and also matches metrics you meant to keep.
+- **Actions:**
+  - Review the Application Metrics patterns in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
+  - Edit or remove the matching pattern to keep these metrics.
+
+#### Custom Inbound Filter
+
+Reason code: `custom-inbound-filter:<id>`, where `<id>` is the filter's ID.
+
+The data matched one of the project's custom inbound filters. Stats groups all custom filters together.
+
+- **Short:** Matched a custom inbound filter.
+- **Causes:**
+  - A custom inbound filter matches this data on conditions such as error type or message, log message, metric name, release, or user country.
+  - A filter's conditions or data types (errors, spans, logs, metrics, or all of them) are broader than intended.
+- **Actions:**
+  - Use the ID after the colon to find which custom filter matched.
+  - Edit or turn off that filter in [Inbound Filters](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/) to keep this data.
+
+#### Invalid CSP Report
+
+Reason code: `invalid-csp`.
+
+A Content Security Policy (CSP) report was filtered because its blocked, source, or document URI matched the project's ignored sources. Sentry also uses this reason for browser reports whose type isn't `csp-violation`, which it doesn't support.
+
+- **Short:** CSP report ignored or unsupported.
+- **Causes:**
+  - The report's URI matched Sentry's default ignored sources, such as `chrome-extension://`, `moz-extension://`, or `safari-extension://` URLs. This list is on by default.
+  - The report's URI matched one of the project's additional ignored sources.
+  - The browser sent a Reporting API report whose type isn't `csp-violation`. Sentry doesn't support these, and no setting can change that.
+- **Actions:**
+  - For reports from browser extensions, you usually don't need to do anything.
+  - To keep these reports, turn off **Use default ignored sources** or edit **Additional ignored sources** in **Project Settings > Security Headers > CSP**.
+
+#### Dynamic Sampling
+
+Reason code: `Sampled:<rule IDs>`, where the rule IDs identify the sampling rules that applied.
+
+[Dynamic sampling](/organization/dynamic-sampling/) dropped the data to keep a representative sample.
+
+- **Short:** Dropped by a dynamic sampling rule.
+- **Causes:**
+  - Your organization's or project's dynamic sampling settings.
+- **Actions:**
+  - To keep more data, raise the target sample rate in your [dynamic sampling](/organization/dynamic-sampling/) settings.
+
+#### Discarded Transaction
+
+Reason code: `discarded`.
+
+Sentry discarded the transaction event after extracting its spans, so the transaction's data is kept as spans instead. A Sentry-side setting controls this, not your project. Attachments sent with the transaction are dropped and reported under this reason too.
+
+- **Short:** Transaction kept as spans instead.
+- **Causes:**
+  - Sentry turned on span-based storage of transactions for your organization, which it has done for many organizations.
+  - Your SDK sent attachments with a transaction, so they were dropped with it and counted under this reason.
+  - Span extraction was rate limited, but the transaction was still discarded.
+- **Actions:**
+  - You usually don't need to do anything. Look for this data as spans.
+  - If the spans are missing too, check [Stats](/product/stats/) for rate-limited spans.
+  - [Contact Sentry support](https://www.sentry.help/en/) if attachments sent with transactions are missing.
+
+#### Denied Metric Name
+
+Reason code: `denied-name`.
+
+**Legacy:** Metrics were dropped because their name was on the project's block list in Sentry's retired custom metrics product. This reason is no longer reported and only appears in historical data.
+
+- **Short:** Legacy: metric name was on a block list.
+- **Causes:**
+  - A metric name was blocked in the custom metrics product, which has since been retired.
+- **Actions:**
+  - You don't need to do anything. The block list no longer exists, so there's nothing to unblock.
+
+#### Unsupported Metric Namespace
+
+Reason code: `disabled-namespace`.
+
+Sentry dropped metrics sent to a namespace it doesn't support. It only accepts its own namespaces, such as sessions, spans, and transactions, and no longer accepts custom metrics. This is an intentional drop on Sentry's side and almost never shows up in Stats.
+
+- **Short:** Metrics sent to an unsupported namespace.
+- **Causes:**
+  - Your code still sends custom metrics, a product Sentry has removed.
+- **Actions:**
+  - Remove the custom metric calls from your code, or move to [Application Metrics](/product/metrics/).

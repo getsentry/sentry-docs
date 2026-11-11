@@ -12,6 +12,7 @@ import {
   VERSION_INDICATOR,
 } from 'sentry-docs/versioning';
 
+import {FrameworkContent} from './frameworkSelector';
 import {Include} from './include';
 
 type Props = {
@@ -20,6 +21,11 @@ type Props = {
   fallbackPlatform?: string;
   noGuides?: boolean;
   platform?: string;
+  /**
+   * Allow this content to be swapped client-side for another guide's version
+   * when rendered inside a `<FrameworkSelector>`.
+   */
+  switchable?: boolean;
 };
 
 const updatePathIfVersionedFileDoesNotExist = (path: string): string => {
@@ -52,9 +58,33 @@ function MDXLayoutRenderer({mdxSource: source, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export async function PlatformContent({includePath, platform, noGuides}: Props) {
+export async function PlatformContent({
+  includePath,
+  platform,
+  noGuides,
+  switchable,
+}: Props) {
   const {path} = serverContext();
+  const doc = await resolvePlatformContent({includePath, path, platform, noGuides});
+  const content = doc ? <MDXLayoutRenderer mdxSource={doc.mdxSource} /> : null;
 
+  if (switchable) {
+    return <FrameworkContent includePath={includePath}>{content}</FrameworkContent>;
+  }
+
+  return content;
+}
+
+/**
+ * Returns the `platform-includes/<includePath>/` file for the page at `path`: the file of the
+ * guide, its `fallbackGuide`, the platform, its `fallbackPlatform`, or `_default`, in this order.
+ */
+export async function resolvePlatformContent({
+  includePath,
+  path,
+  platform,
+  noGuides,
+}: Pick<Props, 'includePath' | 'noGuides' | 'platform'> & {path: string[]}) {
   if (!platform) {
     if (path.length < 2 || path[0] !== 'platforms') {
       return null;
@@ -136,8 +166,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     }
   }
 
-  const {mdxSource} = doc;
-  return <MDXLayoutRenderer mdxSource={mdxSource} />;
+  return doc;
 }
 
 const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent});
