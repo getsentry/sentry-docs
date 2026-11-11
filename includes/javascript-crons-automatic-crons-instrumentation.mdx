@@ -1,4 +1,4 @@
-If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](https://www.npmjs.com/package/node-cron) or [`node-schedule`](https://www.npmjs.com/package/node-schedule) libraries to run your periodic tasks, or [BullMQ](https://www.npmjs.com/package/bullmq) job schedulers, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs. These functions send the job's schedule with each check-in, so Sentry creates the monitor for you.
+If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](https://www.npmjs.com/package/node-cron) or [`node-schedule`](https://www.npmjs.com/package/node-schedule) libraries to run your periodic tasks, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs. These functions send the job's schedule with each check-in, so Sentry creates the monitor for you.
 
 ### Cron
 
@@ -67,9 +67,20 @@ scheduleWithCheckIn.scheduleJob(
 
 ### BullMQ
 
-Requires the next SDK release after `11.12.0`, and `bullmq` version `5.16.0` or higher.
+Requires the next SDK release after `11.12.0`, and `bullmq` version `5.16.0` or a later `5.x` version.
 
-Use `Sentry.cron.instrumentBullMQWorker` to send check-ins for every job a BullMQ `Worker` runs from a [job scheduler](https://docs.bullmq.io/guide/job-schedulers). The monitor slug is the queue name and the job scheduler ID joined by `-`, like `reports-daily-report` in the example below, and the scheduler's `pattern` or `every` is sent as the monitor schedule. Jobs that weren't created by a job scheduler aren't monitored.
+Add `bullmqJobSchedulerIntegration` to send check-ins for every job a BullMQ `Worker` runs from a [job scheduler](https://docs.bullmq.io/guide/job-schedulers). Every worker in your app is monitored, without changes to your worker code:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.bullmqJobSchedulerIntegration({
+      excludeJobSchedulers: ["cache-warmup", /^tmp-/], // Optional.
+    }),
+  ],
+});
+```
 
 ```JavaScript
 import { Queue, Worker } from "bullmq";
@@ -82,11 +93,9 @@ await queue.upsertJobScheduler(
 );
 
 const worker = new Worker("reports", processor, { connection });
-Sentry.cron.instrumentBullMQWorker(worker, {
-  // job scheduler IDs or regular expressions to skip
-  excludeJobSchedulers: ["cache-warmup", /^tmp-/],
-});
 ```
+
+The monitor slug is the queue name and the job scheduler ID joined by `-`, like `reports-daily-report` in this example, and the scheduler's `pattern` or `every` is sent as the monitor schedule. Jobs that weren't created by a job scheduler aren't monitored. `excludeJobSchedulers` skips job schedulers whose ID matches a string exactly or a regular expression.
 
 Patterns use the scheduler's `tz` time zone, or the server's time zone without one. A job that BullMQ retries shows as one check-in, which fails only if the last attempt fails.
 
@@ -97,3 +106,4 @@ These aren't monitored:
 - Schedulers with a `limit` or `endDate`
 - Patterns on a worker with a custom `repeatStrategy`
 - Repeatable jobs added with `queue.add` and the `repeat` option
+- Workers in a server build that bundles BullMQ instead of loading it from `node_modules`
