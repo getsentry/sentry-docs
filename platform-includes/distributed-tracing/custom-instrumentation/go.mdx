@@ -1,44 +1,38 @@
-On this page you will learn how to manually propagate trace information into and out of your Go application.
+To connect traces across services, continue incoming tracing headers and attach the selected trace to outgoing requests. Sentry's HTTP middleware and HTTP client integration do this automatically; use these steps for custom instrumentation.
 
-To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+## Extract Incoming Tracing Information
 
-## Step 1) Extract Incoming Tracing Information
-
-Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `sentry.ContinueTrace()` function to help you with this. Incoming tracing information can come from different places:
-
-- In a web environment it will be sent via HTTP headers, for example, by another Sentry SDK used in your frontend project.
-- You also can pick up tracing information from environment variables.
-
-Here's an example of how to extract and store incoming tracing information using `sentry.ContinueTrace()`:
+Create a scope for the operation and pass `ContinueFromRequest` to the transaction. For non-HTTP input, use `ContinueFromHeaders(trace, baggage)` instead:
 
 ```go
-ctx := r.Context()
-hub := sentry.GetHubFromContext(ctx)
-sentry.ContinueTrace(hub, r.Header.Get(sentry.SentryTraceHeader), r.Header.Get(sentry.SentryBaggageHeader)),
+ctx, _ := sentry.WithScope(r.Context())
+transaction := sentry.StartTransaction(ctx, "handle request",
+	sentry.ContinueFromRequest(r),
+)
+defer transaction.Finish()
+ctx = transaction.Context()
 ```
 
-Sentry's `sentry.ContinueTrace()` function will extract the given headers, try to find the `sentry-trace` and `baggage` headers, and store them in memory for later use.
+If middleware has already started a transaction, use the request context and add child spans instead.
 
-## Step 2) Inject Tracing Information to Outgoing Requests
+## Inject Tracing Information Into Outgoing Requests
 
-For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must now also be added to outgoing requests. If you pregenerate HTML on the server-side, you might want to take a look at option 2 as well, which describes how to pass on tracing information through HTML meta tags.
-
-### Inject Tracing Information Into HTTP Requests
-
-You can generate this tracing information with the Sentry SDK's `hub.GetTraceparent()` and `hub.GetBaggage()` functions. Here's an example using Guzzle:
+Use the same operation context for outgoing work. `GetTraceparent` returns the `sentry-trace` value; use `GetTraceparentW3C` if the destination expects W3C `traceparent`. These functions and `GetBaggage` return an empty string when the context carries neither a scope nor a span.
 
 ```go
-ctx := r.Context()
-hub := sentry.GetHubFromContext(ctx)
-req, _ := http.NewRequest("GET", "http://example.com", nil)
-req.Header.Set(sentry.SentryTraceHeader, hub.GetTraceparent())
-req.Header.Set(sentry.SentryBaggageHeader, hub.GetBaggage())
+req, err := http.NewRequestWithContext(ctx, "GET", "https://example.com", nil)
+if err != nil {
+	return err
+}
+req.Header.Set(sentry.SentryTraceHeader, sentry.GetTraceparent(ctx))
+baggage, err := sentry.MergeBaggage(req.Header.Get(sentry.SentryBaggageHeader), sentry.GetBaggage(ctx))
+if err == nil {
+	req.Header.Set(sentry.SentryBaggageHeader, baggage)
+}
 ```
 
-In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses a Sentry SDK, it will extract and save the tracing information for later use.
+`MergeBaggage` replaces stale `sentry-*` members while preserving third-party baggage.
 
-The two services are now connected with your custom distributed tracing implementation.
+## Verify Propagation
 
-## Verification
-
-If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
+Send a request to an instrumented downstream service and check that it receives `sentry-trace` and `baggage` headers. Its SDK can then continue the same trace.

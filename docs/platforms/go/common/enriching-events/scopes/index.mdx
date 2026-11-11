@@ -1,114 +1,73 @@
 ---
-title: Scopes and Hubs
-description: "The Sentry Go SDK will in most cases automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
+title: Scopes and Contexts
+description: "Use context-bound scopes to isolate request data and enrich Sentry errors, logs, and metrics."
 ---
 
-When an event is captured and sent to Sentry, SDKs will merge that event data with extra
-information from the current scope. The SDK will in most cases automatically manage the scopes for you in the framework integrations and you don't need to think about them. However,
-you should know what a scope is and how you can use it for your advantage.
+A scope holds tags, user data, breadcrumbs, and other metadata for an operation. Captures use the scope and client carried by the `context.Context` you pass to the SDK. HTTP and gRPC server integrations create request scopes automatically.
 
-## What's a Scope, What's a Hub
+Replacing hubs from 0.x? See <PlatformLink to="/migration/v0-to-v1/#isolating-scope-data">the scope migration steps</PlatformLink>.
 
-You can think of the hub as the central point that our SDKs use to route an
-event to Sentry. When you call `init()` a hub is created and a client and a
-blank scope are created on it. That hub is then associated with the current
-thread and will internally hold a stack of scopes.
+## Isolating an Operation
 
-The scope will hold useful information that should be sent along with the
-event. For instance [contexts](../context/) or
-[breadcrumbs](../breadcrumbs/) are stored on
-the scope. When a scope is pushed, it inherits all data from the parent scope
-and when it pops all modifications are reverted.
+Use `WithScope` to keep one request or job's metadata separate from other work. It clones the scope on the parent context, or starts an empty scope when the parent has none.
 
-The default SDK integrations will push and pop scopes intelligently. For
-instance web framework integrations will create and destroy scopes around your
-routes or controllers.
+```go
+ctx, scope := sentry.WithScope(ctx)
+scope.SetTag("job", "checkout")
+scope.SetUser(sentry.User{ID: "user-123"})
+sentry.CaptureException(ctx, err)
+```
 
-## How the Scope and Hub Work
+Keep using the returned context for this operation. There is no scope stack to push or pop. For goroutines, see <PlatformLink to="/usage/concurrency/">Concurrency</PlatformLink>.
 
-As you start using an SDK, a scope and hub are automatically created for you out
-of the box. It's unlikely that you'll interact with the hub directly unless you're
-writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call <PlatformIdentifier name="configure-scope" /> at any point in
-time to modify data stored on the scope. This is useful for doing things like
-[modifying the context](../context/).
+## Enriching a Request
 
-When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
-discovers the current hub and asks it to capture an event. Internally the hub will
-then merge the event with the topmost scope's data.
+Inside Sentry middleware, get the existing scope from the request context. `ScopeFromContext` returns nil if no scope is attached.
 
-## Configuring the Scope
+```go
+ctx := r.Context()
+if scope := sentry.ScopeFromContext(ctx); scope != nil {
+	scope.SetTag("page", "checkout")
+}
+sentry.CaptureException(ctx, err)
+```
 
-The most useful operation when working with scopes is the <PlatformIdentifier name="configure-scope" /> function. It can be used to reconfigure the current scope.
+For Gin, Echo, Fiber, FastHTTP, and Iris, use the integration's `GetContext` helper to obtain the Go context. Set request-specific user data on this scope and clear it with `scope.SetUser(sentry.User{})` when needed.
 
-You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
+## Application-Wide Metadata
 
-<PlatformContent includePath="enriching-events/scopes/configure-scope" />
+Set shared metadata on `GlobalScope()`:
 
-You can also apply this configuration when unsetting a user at logout:
+```go
+sentry.GlobalScope().SetTag("region", "eu-central")
+```
 
-<PlatformContent includePath="enriching-events/unset-user" />
+The global scope is merged into every event, log, and metric when it is captured, so changes made after a scope was created still apply. Keep request-specific data off the global scope to avoid mixing users or operations.
 
-To learn what useful information can be associated with scopes see
-[the context documentation](../context/).
+A context without an attached scope has nowhere to keep state: events captured with it receive the global scope's data, but `AddBreadcrumb` drops the breadcrumb, `LastEventID` returns an empty ID, and `ScopeFromContext` returns `nil`. Create a scope with `WithScope` first.
 
-## Local Scopes
+`NewScope()` creates an empty scope, and `ContextWithScope(ctx, scope)` attaches it. Do not attach a clone of the global scope, because its breadcrumbs and event processors would be applied twice. Use `ContextWithClient(ctx, client)` to select a client without changing the scope.
 
-We also support pushing and configuring a scope within a single call. This is typically
-called <PlatformIdentifier name="with-scope" />, <PlatformIdentifier name="push-scope" /> or implemented as a function parameter on the capture methods, depending on the SDK. It's very helpful if
-you only want to send data for one specific event.
+## Enriching a Single Event
 
-### Using <PlatformIdentifier name="with-scope" />
-
-In the following example we use <PlatformIdentifier name="with-scope" /> to attach a `level` and a `tag` to only one specific error:
+Fork a temporary scope and pass its context to only the captures that need the additional data:
 
 <PlatformContent includePath="enriching-events/scopes/with-scope" />
 
-While this example looks similar to <PlatformIdentifier name="configure-scope" />, it is actually very different.
-Calls to <PlatformIdentifier name="configure-scope" /> change the current active scope; all successive calls to <PlatformIdentifier name="configure-scope" /> will maintain previously set changes unless they are explicitly unset.
-
-On the other hand, <PlatformIdentifier name="with-scope" /> creates a clone of the current scope, and the changes
-made will stay isolated within the <PlatformIdentifier name="with-scope" /> callback function. This allows you to
-more easily isolate pieces of context information to specific locations in your code or
-even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
-
-### Using <PlatformIdentifier name="push-scope" />
-
-<PlatformIdentifier name="push-scope" /> and <PlatformIdentifier name="configure-scope" /> both modify the active scope, but they differ in how long the changes persist:
-
-- <PlatformIdentifier name="configure-scope" /> updates the current scope and keeps the change until you unset it or clear the scope.
-- <PlatformIdentifier name="push-scope" /> adds a child scope. Call <PlatformIdentifier name="pop-scope" /> to restore the previous scope, usually with `defer`.
-- <PlatformIdentifier name="with-scope" /> clones the current scope for a callback and restores it automatically when the callback returns.
-
-In Go, <PlatformIdentifier name="push-scope" /> returns the new scope so you can configure it directly:
-
-```go
-scope := sentry.PushScope()
-defer sentry.PopScope()
-scope.SetTag("request.type", "background")
-```
-
 ## Setting Attributes
 
-You can set typed attributes on the scope using `SetAttributes`. These attributes are attached to logs and metrics emitted within the scope. Attributes use the `attribute` package for type safety.
+Scope attributes enrich logs and metrics. Use tags or contexts for error-event metadata.
 
 ```go
 import "github.com/getsentry/sentry-go/attribute"
 
-sentry.ConfigureScope(func(scope *sentry.Scope) {
-	scope.SetAttributes(
-		attribute.String("user.role", "admin"),
-		attribute.Int("retry.count", 3),
-		attribute.Bool("feature.enabled", true),
-		attribute.Float64("score", 99.5),
-	)
-})
+ctx, scope := sentry.WithScope(ctx)
+scope.SetAttributes(
+	attribute.String("user.role", "admin"),
+	attribute.Int("retry.count", 3),
+)
+sentry.NewLogger(ctx).Info().Emit("Retrying checkout")
+scope.RemoveAttribute("user.role")
 ```
 
-To remove an attribute from the scope, use `RemoveAttribute`:
-
-```go
-sentry.ConfigureScope(func(scope *sentry.Scope) {
-	scope.RemoveAttribute("user.role")
-})
-```
+A transaction is set on its scope, so captures, logs, and metrics sent with that scope are linked to it. To associate them with a child span, pass `span.Context()` instead.

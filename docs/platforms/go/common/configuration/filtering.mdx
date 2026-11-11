@@ -16,7 +16,7 @@ Configure your SDK to filter error events by using the <PlatformIdentifier name=
 
 ### Using <PlatformIdentifier name="before-send" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `null`, based on custom logic and the data available on the event.
+All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `nil`, based on custom logic and the data available on the event.
 
 <PlatformContent includePath="configuration/before-send/" />
 
@@ -36,34 +36,36 @@ When the SDK creates an event or breadcrumb for transmission, that transmission 
 
 Hints are available in two places:
 
-1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
-2. `eventProcessors`
-
-Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
-
-For events, hints contain properties such as `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
-
-For breadcrumbs, the use of `hints` depends on the type of breadcrumb.
-
-<PlatformContent includePath="configuration/before-send-fingerprint">
-
-In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
-
-</PlatformContent>
+1. <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-send-transaction" />, and <PlatformIdentifier name="before-breadcrumb" />
+2. Event processors registered with `scope.AddEventProcessor` or `sentry.AddGlobalEventProcessor`
 
 #### Hints for Events
 
-`originalException`
+`sentry.EventHint` has the following fields:
 
-The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+`OriginalException`
 
-`syntheticException`
+The error passed to `CaptureException`. This is useful for changing how the Sentry SDK groups events or to extract additional information.
 
-When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
+`RecoveredException`
+
+The value recovered from a panic by `sentry.Recover` or a framework integration.
+
+`Context`
+
+The `context.Context` passed to the capture. Integrations store the original request in it under `sentry.RequestContextKey`.
+
+`Request` / `Response`
+
+The HTTP request and response, when the integration that created the event sets them.
+
+`Data`
+
+Arbitrary data attached to the event hint.
 
 #### Hints for Breadcrumbs
 
-<PlatformContent includePath="configuration/breadcrumb-hints" />
+`sentry.BreadcrumbHint` is a `map[string]any`. The SDK doesn't add entries to it; pass your own with `sentry.WithBreadcrumbHint` when you call `sentry.AddBreadcrumb`, and read them in <PlatformIdentifier name="before-breadcrumb" />.
 
 ### Using <PlatformIdentifier name="ignore-errors" />
 

@@ -4,6 +4,7 @@ Create a trace exporter and register Sentry's OTel integration:
 ```go
 import (
 	"context"
+
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
@@ -32,6 +33,8 @@ if err != nil {
 tp := sdktrace.NewTracerProvider(
 	sdktrace.WithBatcher(exporter),
 )
+// Export buffered spans before the program exits.
+defer tp.Shutdown(ctx)
 otel.SetTracerProvider(tp)
 ```
 
@@ -48,18 +51,12 @@ If you're exporting through an OpenTelemetry Collector instead of sending traces
 
 ### Linking Errors to Transactions
 
-To link errors and messages captured by the Sentry SDK to the active trace in the UI, pass the current OpenTelemetry-enhanced context in the `EventHint`:
+Pass the context carrying the active OpenTelemetry span directly to captures. The registered `sentryotel.NewOtelIntegration()` reads that context to correlate errors, logs, and metrics:
 
 ```go
-hub := sentry.CurrentHub()
-//// or:
-// hub := sentry.GetHubFromContext(ctx)
-client, scope := hub.Client(), hub.Scope()
-client.CaptureException(
-	errors.New("new error"),
-	&sentry.EventHint{Context: ctx},
-	scope,
-)
+sentry.CaptureException(ctx, errors.New("new error"))
+sentry.CaptureMessage(ctx, "Processing request")
+sentry.NewLogger(ctx).Info().Emit("Request started")
 ```
 
-Events captured with the high-level `sentry.CaptureException` or `sentry.CaptureMessage` functions are not linked unless the active context is included in the event hint.
+Use `ContextWithScope` or `WithScope` when you need additional scope data.
