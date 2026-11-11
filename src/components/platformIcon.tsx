@@ -1289,12 +1289,10 @@ export function PlatformIcon({
           height={size}
           style={{borderRadius: `${radius}px`}}
           alt={`${platform} icon`}
-          loading="eager"
           title={title}
         />
         <Image
           src={languageSvg}
-          loading="eager"
           style={{
             position: 'absolute',
             bottom: '-1px',
@@ -1333,7 +1331,6 @@ export function PlatformIcon({
       height={size}
       {...otherProps}
       placeholder={undefined}
-      loading="eager"
       style={{borderRadius: `${radius}px`, marginTop: 0, marginBottom: 0, ...style}}
       alt={`${platform} icon`}
     />
