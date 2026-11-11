@@ -13,17 +13,17 @@ export const SENTRY_CLI_URL = 'https://cli.sentry.dev/';
 export const CLI_INSTALL_METHODS = [
   {
     id: 'curl',
-    label: 'curl',
+    label: 'cURL',
     command: 'curl https://cli.sentry.dev/install -fsS | bash',
   },
   {
     id: 'powershell',
-    label: 'powershell',
+    label: 'PowerShell',
     command: 'irm https://cli.sentry.dev/install.ps1 | iex',
   },
   {
     id: 'brew',
-    label: 'brew',
+    label: 'Homebrew',
     command: 'brew install getsentry/tools/sentry',
   },
   {
