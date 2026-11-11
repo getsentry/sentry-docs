@@ -782,7 +782,9 @@ init({
 });
 ```
 
-If the SDK can not cleanly map `sendDefaultPii` behavior to data collection options, it **MUST NOT** backfill data collection options from the configured `sendDefaultPii` value. Instead the SDK **MUST** ignore the value of `sendDefaultPii` if any data collection options is set explicitly and instead use the default data collection options where no explicit value has been set.
+If the SDK cannot cleanly map the `sendDefaultPii` behavior to data collection options, it **MUST NOT** derive data collection options from the configured `sendDefaultPii` value. Instead, the following rules apply:
+- if the user sets at least one data collection option, the SDK **MUST** ignore `sendDefaultPii`. The SDK **MUST** apply the options the user set, and the spec defaults for all other options. [This also means that the SDK might send more data when `sendDefaultPii` was `false` before, so users should be made aware of that.] <-- we should probably explicitly add this sentece
+- If the user sets no data collection options, the SDK **MUST** keep the legacy `sendDefaultPii` behavior unchanged.
 This prevents breaking changes in PII filtering and allows customers to migrate to data collection at their own pace. Customers may keep using `sendDefaultPii` without changes to SDK behavior as long as they don't opt into data collection.
 
 Examples of not cleanly mapping:
