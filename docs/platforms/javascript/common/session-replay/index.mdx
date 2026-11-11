@@ -21,7 +21,11 @@ Session Replay is no longer supported in `@sentry/capacitor` as of version 4.0.0
 
 [Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a video-like reproduction of what was happening in the user's browser before, during, and after the issue. You can rewind and replay your application's DOM state and see key user interactions, like mouse clicks, scrolls, network requests, and console entries, in a single combined UI inspired by your browser's DevTools.
 
-By default, our Session Replay SDK masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser. To learn more, see <PlatformLink to="/session-replay/privacy/">Session Replay Privacy</PlatformLink>.
+By default, Sentry's Session Replay SDK masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser. To learn more, see <PlatformLink to="/session-replay/privacy/">Session Replay Privacy</PlatformLink>.
+
+You can also use Session Replay to record user interactions with your application that do not result in an error. This is helpful for understanding the user's experience and for debugging issues that are not related to errors, like performance issues.
+
+In this page, learn how to [set up Session Replay](#set-up) and best practices for [configuring its sampling rates](#sampling).
 
 <PlatformSection supported={["javascript.angular"]}>
   <Alert level="warning">
@@ -50,6 +54,8 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
 ## Set Up
 
 To set up the integration, add the following to your Sentry initialization. There are several options you can pass to the integration constructor. See the [configuration documentation](/platforms/javascript/session-replay/configuration/) for more details.
+
+These are starting values, not a recommendation for your application. The rest of this page is about how to tune them to get the replays that matter to you.
 
 <PlatformSection supported={["javascript.nextjs"]}>
 <Alert>
@@ -154,96 +160,184 @@ If you're unable to update your CSP policy to allow inline web workers, you can 
   breadcrumbs, rage clicks, and dead clicks.
 </PlatformSection>
 
-## User Session
-
-A user session starts when the Session Replay SDK is first loaded and initialized.
-The session will capture any pageloads, refreshes, or navigations as long as the SDK is re-initialized on the same domain, and in the same browser tab, each time. Sessions continue capturing data until 5 minutes pass without any user interactions **or** until a maximum of 60 minutes have elapsed. Closing the browser tab will end the session immediately, according to the rules for [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
-
-<Alert>
-
-An _interaction_ refers to either a mouse click or a browser navigation event.
-
-</Alert>
-
-### Replay Captures on Errors Only
-
-If you prefer not to record an entire session, you can elect to capture a replay only if an error occurs. In this case, the integration will buffer up to one minute worth of events prior to the error being thrown. It will continue to record the session, following the rules above regarding session life and activity. Read the [sampling](#sampling) section for configuration options.
-
 ## Sampling
 
-Sampling controls how much traffic results in a Session Replay.
-
-#### Configure Sample Rates
-
-- <PlatformIdentifier name="replays-session-sample-rate" /> - Percentage of sessions to record fully
-- <PlatformIdentifier name="replays-on-error-sample-rate" /> - Percentage of sessions to record when an error occurs (buffers 1 minute before the error)
-
-**Tip:** Keep `replaysOnErrorSampleRate` at `1.0` - error sessions provide the most debugging value.
-
-#### Recommended Production Sample Rates
+Sampling controls how much of your traffic results in a Session Replay. There are two rates, and they do different jobs.
 
 <div className="table-fit-content">
 
-| Traffic Volume             | Session Rate | Error Rate |
-| -------------------------- | ------------ | ---------- |
-| **High** (100k+/day)       | `0.01` (1%)  | `1.0`      |
-| **Medium** (10k-100k/day)  | `0.1` (10%)  | `1.0`      |
-| **Low** (under 10k/day)    | `0.25` (25%) | `1.0`      |
+| Option | What it records | The question it answers |
+| --- | --- | --- |
+| `replaysOnErrorSampleRate` | Only when an error occurs, including the 60 seconds before it | "Something broke. What was the user doing?" |
+| `replaysSessionSampleRate` | Complete sessions from the start, error or not | "What are users experiencing?" or "What's going wrong that isn't throwing an error?" |
 
 </div>
 
-```javascript {filename:instrumentation-client.ts}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+<Alert>
 
-  // Capture 10% of all sessions
-  replaysSessionSampleRate: 0.1,
+A replay session starts when the SDK first loads. It stays open across pageloads, refreshes, and navigations in the same tab and on the same domain. A fully recorded session pauses after 5 minutes without a click, text input, or navigation, and resumes on the same session if the user does one of those again. The session ends after 15 minutes without one, after 60 minutes, or when the tab closes. That defintion is not the same as a Google Analytics session. One person can produce several replay sessions in a day, so don't substitute analytics session counts for these numbers.
 
-  // Capture 100% of sessions with errors
-  replaysOnErrorSampleRate: 1.0,
+</Alert>
 
-  integrations: [Sentry.replayIntegration()],
+Most applications want a high error rate (`replaysOnErrorSampleRate`) and a low session rate (`replaysSessionSampleRate`), but every case is different. Sampling rates in your code represent percentages, so `1.0` = 100%, `0.1` = 10% and so on.
+
+### What Are You Trying to Answer?
+
+Session Replay has two sample rates, and most setups use both:
+
+- `replaysOnErrorSampleRate` answers "what happened around this error?". The SDK holds the last 60 seconds of each session in memory and only uploads it if an error happens. You pay only for sessions that hit an error, so you can usually set this high (often 1.0). The replay attaches to the issue, so you can see what the user did to trigger the error and whether they noticed it, worked around it, or gave up.
+
+- `replaysSessionSampleRate` answers "what are users running into that never throws an error?". Sessions it picks are recorded and uploaded in full, whether or not anything goes wrong, so every percent adds directly to your replay usage.
+
+The SDK checks the session rate first. Any session it doesn't pick falls back to the error rate, so each session uses one rate or the other.
+
+Rule of thumb: keep the error rate high. Reach for session recording only for problems an error won't tell you about. The sections below cover how to aim it, depending on what you know in advance.
+
+### Recording on Errors
+
+To record a replay when an error is thrown, use `replaysOnErrorSampleRate`. The replay attaches to the issue, so you can watch what the user did in the minute before the error was thrown. It answers:
+
+- What did the user do to trigger this?
+- Did this error hurt anyone? Watching the session tells you whether the user noticed, worked around it, or gave up, which is often what decides priority.
+
+Recording on errors gives you context for problems you already know about, because the error told you. The three situations below cover finding problems that don't come attached to an error.
+
+### When You Know Where to Look
+
+You care about a specific route, a feature behind a flag, a release you shipped this week, or the checkout funnel. This is the most common case and the easiest one to configure well.
+
+Leave the global rates alone and switch matching sessions to full recording, using replay.flush() if the session is buffering or replay.start() if no replay is running.
+
+See <PlatformLink to="/session-replay/understanding-sessions/#examples-of-custom-sampling">Examples of Custom Sampling</PlatformLink> for recording by URL, feature flag, or user segment.
+
+Nothing expires a raised rate for you, so decide up front how it comes back down. The cleanest way is to tie the increase to the thing you're watching: condition it on the feature flag or the release version, and it falls away when they do.
+
+### When You Know Who to Look At
+
+A customer reported a problem and you want their session. If the complaint arrives days later, either you were already recording that person or you weren't. A sampling rate only helps here at `1.0`, and that's expensive. `replay.flush()` only has the previous 60 seconds to send if `replaysOnErrorSampleRate` is above 0.
+
+Two things that work better:
+
+- **Capture at the moment they tell you.** Sentry's [User Feedback widget](/product/user-feedback/#user-feedback-widget) sends a replay when a user submits feedback. This requires `replaysOnErrorSampleRate` to be above 0, which keeps a buffer of the session in memory so the replay includes what happened before the widget opened (up to 30 seconds). If it's 0, the feedback arrives without that context. You can do the same from your own support widget by calling `replay.flush()`, which uploads the buffered session and gives you a replay ID to attach to the ticket. The same requirement applies with an error rate of 0, `flush()` only records from the moment it's called.
+- **Record the users most likely to contact you.** Set a higher rate for logged-in users, paying accounts, or enterprise customers. This covers your support cases at a fraction of what raising the rate for all traffic would cost.
+
+Either way, call <PlatformLink to="/configuration/apis/#setUser">`setUser`</PlatformLink> so you can find the session once you have it.
+
+### When You Don't Know Either: Broad Observability
+
+Targeted and on-error sampling only catch problems you can predict. To find the ones you can't, like rage clicks or a broken flow on a page you weren't watching, set a small baseline with `replaysSessionSampleRate`. This is the one case where a flat, global percentage makes sense. 
+
+Sentry captures <PlatformLink to="/session-replay/issue-types/">Rage clicks, dead clicks, and hydration error issues</PlatformLink> from replay data. Rage and dead clicks don't throw errors, so only session-sampled replays (replaysSessionSampleRate) capture them, both as rage clicks. Hydration errors are also sent as regular errors, but by default an inbound filter drops those and Sentry creates the issue from the replay instead, which gives you the visual and HTML diff tools. Rage click and hydration issues are grouped by problem type and URL, so even a low session sample rate will surface recurring problems.
+
+This is also a good use case for using the [Session Replay Explorer](https://sentry.io/orgredirect/organizations/:orgslug/explore/replays/?project=:projectId) to discover potential problems you might not have otherwise known about.
+
+### Setting Your Rates
+
+Set the error rate and the session rate separately.
+
+#### Your Error Rate
+
+**Keep `replaysOnErrorSampleRate` at `1.0`, but tune your error noise first.**
+
+At `1.0`, every session that hits any error is recorded. A single noisy error on a popular route can consume a lot of replays that all look the same.
+
+Before lowering the rate, reduce which errors you record:
+
+- `ignoreErrors` for third-party scripts, browser extension noise, and benign quirks.
+- `beforeErrorSampling` to skip errors you've already triaged, already have replays for, or don't intend to fix.
+
+```javascript
+Sentry.replayIntegration({
+  beforeErrorSampling: (event) => {
+    const message = event.exception?.values?.[0]?.value ?? "";
+    // We already have plenty of replays for this one
+    return !message.includes("NetworkError when attempting to fetch resource");
+  },
 });
 ```
 
-### How Sampling Works
+`beforeErrorSampling` only runs in <PlatformLink to="/session-replay/understanding-sessions/#buffer-mode">buffer mode</PlatformLink>. If a session was already selected by `replaysSessionSampleRate`, it records regardless.
 
-Sampling begins as soon as a session starts. When someone visits your application, sampling decisions happen in this order:
+Lower `replaysOnErrorSampleRate` below `1.0` only if you can't bring the noise down. Reducing sampling uniformly across errors can also sample away the rare one you most wanted to see.
 
-1. **<PlatformIdentifier name="replays-session-sample-rate" /> is checked first**
-   - If sampled: Full session recording starts and is sent to Sentry in real-time
-   - If not sampled: Recording is buffered in memory only (last 60 seconds kept)
+#### Your General Session Rate
 
-2. **If an error occurs** (and session wasn't selected for full recording):
-   - <PlatformIdentifier name="replays-on-error-sample-rate" /> is checked
-   - If sampled: Buffered 60 seconds + rest of session is sent to Sentry
-   - If not sampled: Buffer is discarded, nothing sent
+How much you need depends on how much your sessions differ from each other. Session replays show you experiences you didn't know to look for. If every session resembles every other one, a smaller number will tell you what you need to know. If they vary a lot, you need more to have a reasonable chance of catching the unusual one.
 
-**When data leaves your browser:**
+**Record more when sessions differ:** a large or highly interactive surface area, layouts that vary per user, long multi-step sessions, a product changing quickly, or a feature that just launched.
 
-| Scenario | Data Sent to Sentry |
-|----------|---------------------|
-| Selected for session sampling | Immediately (real-time chunks) |
-| Not selected, no error occurs | Never (buffer discarded) |
-| Not selected, error occurs & sampled | After error (60s before + everything after) |
+**Record less when sessions look alike:** a handful of templated page types, short visits, a stable UI that hasn't changed in months, mostly static content. For example, a documentation site doesn't need much.
 
-Read more about <PlatformLink to="/session-replay/understanding-sessions/">understanding sessions</PlatformLink>.
+### What a Given Rate Covers
 
-## Error Linking
+You can't predict how often a problem will happen before it happens, so this isn't a way to choose a rate. It is useful after the fact, when you want to understand why a replay you expected isn't there, or to sanity-check what your current rate is likely to catch.
 
-Errors that happen on the page while a replay is running will be linked to the replay, making it possible to jump between related issues and replays. However, it's **possible** that in some cases the error count reported on the **Replays Details** page won't match the actual errors that have been captured. That's because errors can be lost, and while this is uncommon, there are a few reasons why it could happen:
+The chance of catching at least one occurrence of something is:
 
-- The replay was rate-limited and couldn't be accepted.
-- The replay was deleted by a member of your org.
-- There were network errors and the replay wasn't saved.
+**P(caught at least once) = 1 - (1 - r)^n**
 
-## Trace Linking
+*where r = your sample rate and n = the number of times it happened*
 
-When [tracing](/product/trace-explorer/) is enabled, traces are visible in the Replay timeline. This lets you see performance data in the context of what the user was doing — you can watch a user click a button, then see the corresponding network request and how long it took.
+<div className="table-fit-content">
 
-From the Replay Details page, click on any trace span in the timeline to jump directly to the trace view. From there, you can drill into individual spans, see database queries, API calls, and identify performance bottlenecks that affected the user's experience.
+| Times it occurred | `0.01` | `0.05` | `0.1` | `0.25` |
+| --- | --- | --- | --- | --- |
+| 1 | 1% | 5% | 10% | 25% |
+| 10 | 10% | 40% | 65% | 94% |
+| 50 | 39% | 92% | 99% | 100% |
+| 100 | 63% | 99% | 100% | 100% |
+| 500 | 99% | 100% | 100% | 100% |
 
-This connection works both ways: when viewing a trace, you can jump to the associated replay to see exactly what the user experienced during that operation.
+</div>
+
+*Assumes the problem threw no error. Anything that throws is covered by `replaysOnErrorSampleRate` instead.*
+
+**Read the top row closely.** If you need one specific session, raising your rate won't get it. Record that route or that user deliberately, or capture it manually.
+
+### Checking the Cost
+
+Once you know roughly what your use cases need, check what it costs before you deploy. Work in this direction rather than the reverse: a rate derived from a budget alone can land below what your use cases need, and then the money is spent without buying you the answer.
+
+You'll need three numbers: sessions per day, roughly what share of those sessions hit an error, and your available replay quota. The first two are in your Sentry project; the quota is under your subscription settings.
+
+Error-triggered replays are mostly out of your hands: if `replaysOnErrorSampleRate` is `1.0`, your error volume sets that number. Calculate it first, then add what your session rate will produce.
+
+```text
+sessions per day with an error × replaysOnErrorSampleRate × 30 days = error-triggered replays per month
+
+sessions per day × replaysSessionSampleRate × 30 days = session-sampled replays per month
+```
+
+If the total is more than your quota, you have three options: raise the quota, narrow your session sampling to specific routes or users, or reduce your error volume. Dropping your session rate to whatever fits may be tempting, but it can leave you paying for replays that no longer answer your question.
+
+If you don't have your traffic numbers yet, start low and leave a comment saying the rate is provisional. Over-recording costs money quietly, while under-recording shows up the first time someone goes looking for a replay and it isn't there. Either way, work out the expected monthly volume before you deploy rather than after.
+
+One other consideration: recording is work in your user's browser or device, and mutation-heavy pages feel it most. See <PlatformLink to="/session-replay/configuration/#mutation-limits">Mutation Limits</PlatformLink>.
+
+### Worked Example
+
+An app with 8,000 sessions per day, about 3% of which hit an error, and a budget of 10,000 replays per month:
+
+- Sessions with an error: 8,000 × 0.03 = 240 per day
+- Error-triggered replays: 240 × 30 = 7,200 per month at `replaysOnErrorSampleRate: 1.0`
+- At the `0.1` starting value, `replaysSessionSampleRate` adds 8,000 × 0.1 × 30 = 24,000 per month
+- Total: 31,200 replays per month, about three times the budget
+
+Error-triggered replays alone take 72% of this budget. Now you decide: if broad observability is all you need from session sampling, `0.01` brings the total to 9,600 and fits. If you need to watch checkout closely, keep the global rate low and record that route instead. If you need both, the budget is too small and the answer is to raise it.
+
+### Things to Avoid
+
+- Don't ship `replaysSessionSampleRate: 1.0` to production. It's the right setting while you're testing locally and almost never right once you're live.
+- Don't guess at numbers you can look up. Sessions per day and error rate are both in your Sentry project. A sample rate derived from a guess is usually off by enough to matter. If you can't get them, ask someone who can rather than estimating.
+- Setting both rates to `0` turns replay off completely. If you're using a low baseline plus targeted recording, you still need a baseline above `0`, or you need to call `replay.start()` or `replay.startBuffering()` manually.
+- Write down when a temporary rate increase should come back down. Rates raised to investigate an issue or watch a release tend to stay raised. Put the date or the release in a comment next to the value.
+- Don't filter on error message text in `beforeErrorSampling` if your app is localized. Match on error type, or on a tag you set yourself, so the filter doesn't silently stop working in other languages.
+
+### Adjusting Over Time
+
+**Raise your session rate** when you're investigating a specific issue, or shortly after a release when you want to watch a launch closely. Scope the increase to the route or flag you care about where you can.
+
+**Lower it** when you're hitting your replay quota before the end of the month, replays are piling up unreviewed, or your application is stable and you're seeing the same few flows repeatedly. Also lower it once whatever prompted you to raise it has shipped and settled. Revisit after launches, redesigns, and significant changes in traffic.
 
 ## Verify
 
