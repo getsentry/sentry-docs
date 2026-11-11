@@ -9,17 +9,17 @@ Unreal Engine uses **App Not Responding** for mobile UI-thread detection and **A
 
 ## App Hangs
 
-Game-thread app hang tracking is disabled by default:
+Game-thread app hang tracking is disabled by default. You can find these options in **Project Settings > Plugins > Sentry > App Hangs**, labeled **Enable hang tracking**, **Hang timeout (seconds)**, and **Use native hang tracking**:
 
 | Option                  | Default   | Platforms                                                                   |
 | ----------------------- | --------- | --------------------------------------------------------------------------- |
 | `EnableHangTracking`    | Disabled  | Windows, Linux; required for the native watchdog on all supported platforms |
-| `HangTimeoutDuration`   | 5 seconds | Windows, Linux, macOS, Android                                              |
-| `UseNativeHangTracking` | Disabled  | Windows, Linux, macOS, Android                                              |
+| `HangTimeoutDuration`   | 5 seconds | Windows, Linux, macOS with native backend, Android                          |
+| `UseNativeHangTracking` | Disabled  | Windows, Linux, macOS with native backend, Android                          |
 
 ### Engine Watcher
 
-On Windows and Linux, `EnableHangTracking` uses Unreal Engine's `FThreadHeartBeat` watcher. It requires a packaged build and `HangDuration` greater than `0`:
+On Windows and Linux, `EnableHangTracking` uses Unreal Engine's `FThreadHeartBeat` watcher. It requires `HangDuration` greater than `0`:
 
 ```ini {filename:DefaultEngine.ini}
 [/Script/Sentry.SentrySettings]
@@ -29,7 +29,15 @@ EnableHangTracking=True
 HangDuration=25
 ```
 
-The engine watcher waits for the greater of `HangTimeoutDuration` and Unreal Engine's `StuckDuration` before capturing a stuck thread's stack trace. It uses Unreal Engine's existing heartbeat system plus a Sentry watchdog thread.
+The engine watcher waits for the greater of `HangTimeoutDuration` and Unreal Engine's `StuckDuration` before capturing a stuck thread's stack trace. It uses Unreal Engine's existing heartbeat system plus a Sentry watchdog thread, so it reports any thread that sends engine heartbeats, such as the game thread or the async loading thread. Each stuck thread is reported once.
+
+Since it relies on Unreal Engine's hang detection, the engine watcher doesn't run:
+
+- in editor builds, including Standalone Game or `-game` runs of the editor binary, or in Debug builds
+- while a debugger is attached, unless you pass `-debughangdetection`
+- when you pass `-nothreadtimeout`
+
+Unreal Engine also reports its own hang when a thread is stuck for `HangDuration`, so keep `HangDuration` above `HangTimeoutDuration`.
 
 ### Native Watchdog
 
@@ -42,7 +50,14 @@ UseNativeHangTracking=True
 HangTimeoutDuration=5.0
 ```
 
-The native watchdog sends an `OnEndFrame` game-thread heartbeat while the app is active and foregrounded, and runs a background watchdog thread. It does not require Unreal Engine's heartbeat configuration. On macOS, it requires the [native backend](/platforms/unreal/configuration/native-backend/). On Android, it runs alongside JVM ANR detection, so a freeze that blocks both threads can create an ANR and an `AppHang` event.
+The native watchdog sends a game-thread heartbeat at the end of every frame and runs a background watchdog thread. It does not require Unreal Engine's heartbeat configuration.
+
+- Detection starts with the first frame, so the SDK doesn't report hangs during startup. After that, blocking loads longer than `HangTimeoutDuration` are reported.
+- On Android, detection pauses while the app is in the background. On desktop platforms, it keeps running while the window is in the background or minimized.
+- Each freeze is reported once.
+- The native watchdog also runs in the Editor, so pausing at a breakpoint for longer than `HangTimeoutDuration` reports an app hang.
+
+On macOS, the native watchdog requires the [native backend](/platforms/unreal/configuration/native-backend/). On Android, it runs alongside JVM ANR detection, so a freeze that blocks both threads can create an ANR and an `AppHang` event.
 
 ## App Not Responding
 
@@ -53,9 +68,11 @@ App Not Responding detection is enabled by default on mobile platforms:
 | `EnableAppNotRespondingTracking` | Enabled   | Android, iOS, macOS with Cocoa backend              |
 | `AppNotRespondingTimeout`        | 5 seconds | iOS, macOS with Cocoa backend, Android below API 30 |
 
-On iOS and macOS with the default Cocoa backend, these options configure Cocoa app hang detection. On macOS with the native backend, use native hang tracking instead. On Android, they configure JVM ANR detection. Android 11 and later reads ANRs from `ApplicationExitInfo` during a subsequent SDK initialization, so the operating system controls the timeout.
+In **Project Settings > Plugins > Sentry > App Hangs**, these options are under the advanced settings, labeled **Enable main thread hang tracking** and **Main thread hang timeout (seconds)**.
 
-To preserve the behavior from before SDK version `1.13.0`, explicitly disable App Not Responding tracking:
+On iOS and macOS with the default Cocoa backend, they configure Cocoa app hang detection. On macOS with the native backend, use native hang tracking instead. On Android, they configure JVM ANR detection. Android 11 and later reads ANRs from `ApplicationExitInfo` during a subsequent SDK initialization, so the operating system controls the timeout.
+
+To disable App Not Responding tracking:
 
 ```ini {filename:DefaultEngine.ini}
 [/Script/Sentry.SentrySettings]
@@ -64,11 +81,13 @@ EnableAppNotRespondingTracking=False
 
 ## Queries
 
-App hang events use the `AppHang` mechanism. Search for:
+App hang events use the `AppHang` mechanism and the tag `CrashType:Hang`. Search for:
 
 ```
 error.mechanism.type:AppHang
 ```
+
+The two detectors name their events differently, so their issues group separately: the engine watcher reports `App Hanging: Application not responding`, and the native watchdog reports `AppHang: App hung for at least <duration> ms.`
 
 Android JVM ANRs use `ANR`, `AppExitInfo`, or `HistoricalAppExitInfo` depending on the Android version and event source.
 

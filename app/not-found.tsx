@@ -6,7 +6,7 @@ import {useEffect, useState} from 'react';
 import {DevelopDocsHeader} from 'sentry-docs/components/developDocsHeader';
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 export default function NotFound() {
@@ -43,7 +43,7 @@ export default function NotFound() {
       {isDeveloperDocs ? (
         <DevelopDocsHeader pathname="/" searchPlatforms={[]} />
       ) : (
-        <Header pathname="/" searchPlatforms={[]} noSearch platforms={[]} />
+        <Header pathname="/" searchPlatforms={[]} noSearch />
       )}
       <main id="main" className="px-8 pt-28">
         <h1 className="font-medium text-3xl mb-4">Page Not Found</h1>

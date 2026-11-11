@@ -12,7 +12,7 @@ og_image: /og-images/product-issues-ownership-rules.png
 Sentry lets you define the "ownership" of an issue so it can automatically assign issues and route alerts to the right people. There are two ways to define ownership:
 
 - **Ownership rules** - Custom rules you define per project that match issues based on file paths, URLs, modules, or event tags.
-- **Code owners** - Import your [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) or [GitLab](https://docs.gitlab.com/ee/user/project/code_owners.html) CODEOWNERS file to assign issues based on file paths in the event stack trace.
+- **Code owners** - Import a CODEOWNERS file from a [supported source code integration](#supported-integrations) to assign issues based on file paths in the event stack trace.
 
 Ownership rules take precedence over code owners when Sentry assigns issues.
 
@@ -32,12 +32,12 @@ The general format of a rule is: `type:pattern owners`
 
 **Types of matches:**
 
-| Type | Matches Against | Example Pattern |
-|------|----------------|-----------------|
-| `path` | File paths in the event's stack trace | `src/javascript/*.[tj]sx` |
-| `module` | Module names in the event's stack trace | `com.example.app` |
-| `url` | The event's request URL | `https://www.example.io/v/[0-9]/checkout` |
-| `tags.TAG_NAME` | A specific event tag | `tags.browser:Chrome 81.0.?` |
+| Type            | Matches Against                         | Example Pattern                           |
+| --------------- | --------------------------------------- | ----------------------------------------- |
+| `path`          | File paths in the event's stack trace   | `src/javascript/*.[tj]sx`                 |
+| `module`        | Module names in the event's stack trace | `com.example.app`                         |
+| `url`           | The event's request URL                 | `https://www.example.io/v/[0-9]/checkout` |
+| `tags.TAG_NAME` | A specific event tag                    | `tags.browser:Chrome 81.0.?`              |
 
 **Patterns** support unix-style [glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)>). Use `*` to match anything and `?` to match a single character. This is not regex.
 
@@ -62,7 +62,7 @@ You can add and edit ownership rules from your project's [Ownership Rules](https
 
 ### Permissions
 
-Teams _must_ have access to the project to become owners, unless the organization has [Open Membership](/organization/membership/#open-membership) enabled. To grant a team access to a project, go to your project's [Project Teams](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/teams/) settings and click "Add Team".
+Teams _must_ have access to the project to become owners. This applies even when the organization has [Open Membership](/organization/membership/#open-membership) enabled. To grant a team access to a project, go to your project's [Project Teams](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/teams/) settings and click "Add Team".
 
 To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a team, navigate to [**Settings > Teams**](https://sentry.io/orgredirect/organizations/:orgslug/settings/teams/), select a team, and click "Add Member".
 
@@ -70,7 +70,7 @@ To grant a user access to a project, the user must be a member of a team with ac
 
 <Include name="feature-available-for-plan-business.mdx" />
 
-You can import your CODEOWNERS file and use it alongside your ownership rules to assign Sentry issues. This requires **code mappings** from [stack trace linking](/integrations/source-code-mgmt/github/#stack-trace-linking) to be configured first, so Sentry can map file paths between your build output and your repository.
+You can import your CODEOWNERS file and use it alongside your ownership rules to assign Sentry issues. This requires [code mappings](/integrations/source-code-mgmt/code-mappings/) to be configured first, so Sentry can map file paths between your build output and your repository.
 
 For example, you may build your program in a `dist/` folder that doesn't appear in your CODEOWNERS file, but does appear in your stack traces. Code mappings let Sentry normalize these file paths so CODEOWNERS rules match correctly.
 
@@ -78,11 +78,25 @@ During import, select the code mapping Sentry should apply to the CODEOWNERS fil
 
 If the project has multiple code mappings for the same repository, import the CODEOWNERS file once for each mapping you need. When you update a selected code mapping, Sentry rebuilds the CODEOWNERS rules tied to it.
 
+### Supported Integrations
+
+Sentry supports importing CODEOWNERS files from these source code integrations:
+
+- [Azure DevOps](/integrations/source-code-mgmt/azure-devops/)
+- [Bitbucket](/integrations/source-code-mgmt/bitbucket/)
+- [Bitbucket Server](/integrations/source-code-mgmt/bitbucket/#bitbucket-server)
+- [Cursor Origin](/integrations/source-code-mgmt/cursor-origin/#code-owners)
+- [GitHub](/integrations/source-code-mgmt/github/)
+- [GitHub Enterprise](/integrations/source-code-mgmt/github/#installing-github-enterprise)
+- [GitLab](/integrations/source-code-mgmt/gitlab/)
+
+For Azure DevOps, Bitbucket, and Bitbucket Server, use Sentry user email addresses as owners in your CODEOWNERS file. External username and team mappings aren't supported for these integrations.
+
 ### Setting Up Code Owners
 
-1. Set up [code mappings](/integrations/source-code-mgmt/github/#stack-trace-linking) for your project.
+1. Set up [code mappings](/integrations/source-code-mgmt/code-mappings/) for your project.
 2. Import your CODEOWNERS file from your project's [Ownership Rules](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/ownership/) settings and select the code mapping to apply.
-3. Configure [external team/user mappings](#external-teamuser-mappings) to map your source control identities to Sentry users and teams.
+3. If your CODEOWNERS file uses usernames or team names, configure [external team/user mappings](#external-teamuser-mappings) to map your source control identities to Sentry users and teams. Email addresses are matched directly to users in your Sentry organization.
 
 ### Supported Syntax
 
@@ -92,9 +106,9 @@ Sentry does not support [GitLab CODEOWNERS syntax](https://docs.gitlab.com/user/
 
 ### External Team/User Mappings
 
-You need to map identities from your source control provider to Sentry users and teams so that CODEOWNERS rules can be resolved. Sentry automatically ignores rules that are missing team/user mappings.
+For GitHub, GitHub Enterprise, GitLab, and Cursor Origin, map usernames and team names from your source control provider to Sentry users and teams so that CODEOWNERS rules can be resolved. Sentry automatically ignores rules that are missing team/user mappings.
 
-Create these mappings by navigating to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) **> GitHub/GitLab > [Configuration] > Team Mappings/User Mappings**. Suggestions will come from any CODEOWNERS files on projects for the organization.
+To create these mappings, go to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/), select your source code integration, and open **Configuration > Team Mappings/User Mappings**. Suggestions will come from any CODEOWNERS files on projects for the organization.
 
 ![External team mappings for GitHub/Gitlab](./img/external_team_mappings.png)
 
@@ -103,11 +117,11 @@ Create these mappings by navigating to [**Settings > Integrations**](https://sen
 ### Limitations
 
 - CODEOWNERS files have a maximum size of **3MB**. If your file exceeds this, use wildcard rules to consolidate multiple entries.
-- Sentry syncs your CODEOWNERS file periodically from your repository. Changes may not be reflected immediately.
+- Sentry re-syncs your CODEOWNERS file when it receives a commit that adds or changes it, as long as **Sync changes from CODEOWNERS** is turned on in your project's Ownership Rules settings (it's on by default). Changes made without a commit Sentry knows about aren't picked up until you import the file again.
 
 ## Evaluation Flow
 
-Ownership rules and code owners are matched against individual events in an issue. Sentry evaluates an event by checking if _any_ of its in-app stack trace frames match a rule. Rules are evaluated in this order:
+Ownership rules and code owners are matched against individual events in an issue. Sentry evaluates an event by checking if _any_ of its stack trace frames match a rule. `path` and `module` ownership rules check every frame. Code owners rules skip frames marked as not in-app. Rules are evaluated in this order:
 
 1. Code owners, top-to-bottom
 2. Ownership rules, top-to-bottom
@@ -204,6 +218,6 @@ Ensure that all teams and users referenced in your rules have the correct access
 
 ### Code owners rules aren't matching
 
-- Verify that [code mappings](/integrations/source-code-mgmt/github/#stack-trace-linking) are configured correctly for your project.
+- Verify that [code mappings](/integrations/source-code-mgmt/code-mappings/) are configured correctly for your project.
 - Check that [external team/user mappings](#external-teamuser-mappings) are set up. Rules with unmapped teams or users are silently ignored.
 - CODEOWNERS files over 3MB are not supported. Consolidate rules using wildcards.

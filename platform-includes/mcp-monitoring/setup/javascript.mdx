@@ -1,4 +1,27 @@
-Import Sentry from your framework's SDK package, then wrap the MCP server instance before connecting it to a transport:
+Create your MCP server as usual. No Sentry-specific code is needed:
+
+```javascript {filename:mcp-server.js}
+import { McpServer } from "@modelcontextprotocol/server";
+
+const server = new McpServer({
+  name: "my-mcp-server",
+  version: "1.0.0",
+});
+```
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+Run your MCP server in the Node.js runtime. Automatic instrumentation isn't available in the Edge runtime.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun"]}>
+
+On Bun, automatic instrumentation requires building your app with the [Sentry Bun plugin](/platforms/javascript/guides/bun/#build-with-the-sentry-plugin-recommended).
+
+</PlatformSection>
+
+On SDK versions earlier than `11.1.0`, or if automatic instrumentation isn't set up for your app, wrap the MCP server instance before connecting it to a transport:
 
 ```javascript {filename:mcp-server.js}
 import * as Sentry from "___SDK_PACKAGE___";
@@ -12,4 +35,4 @@ const server = Sentry.wrapMcpServerWithSentry(
 );
 ```
 
-Register tools, prompts, and resources on `server` as usual. The wrapper returns the same server instance.
+The wrapper returns the same server instance. Wrapping a server the SDK already instrumented doesn't instrument it twice.

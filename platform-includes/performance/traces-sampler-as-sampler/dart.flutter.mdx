@@ -1,5 +1,18 @@
-```dart {tabTitle: Transaction Mode (Default)}
+```dart {tabTitle: Stream Mode (Default)} {mdExpandTabs}
 await SentryFlutter.init((options) {
+  options.tracesSampler = (samplingContext) {
+    final spanContext = samplingContext.spanContext;
+    if (spanContext.name == 'health-check') {
+      return 0.0;
+    }
+    return 0.2;
+  };
+});
+```
+
+```dart {tabTitle: Transaction Mode}
+await SentryFlutter.init((options) {
+  options.traceLifecycle = SentryTraceLifecycle.static;
   // Determine traces sample rate based on the sampling context
   options.tracesSampler = (samplingContext) {
     final ctx = samplingContext.customSamplingContext;
@@ -24,17 +37,5 @@ await SentryFlutter.init((options) {
       return 0.1;
     }
   };
-});
-```
-
-```dart {tabTitle: Stream Mode}
-await SentryFlutter.init((options) {
-    options.tracesSampler = (samplingContext) {
-    final spanContext = samplingContext.spanContext;
-    if (spanContext.name == 'health-check') {
-        return 0.0;
-    }
-    return 0.2;
-    };
 });
 ```
