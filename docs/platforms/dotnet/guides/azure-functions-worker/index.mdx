@@ -4,31 +4,33 @@ sdk: sentry.dotnet.azure.functions.worker
 description: "Learn about Sentry's .NET integration with Azure Functions."
 ---
 
-Sentry provides an integration with Azure Functions through the [Sentry.Extensions.Logging](https://www.nuget.org/packages/Sentry.Extensions.Logging) and [Sentry.OpenTelemetry.Exporter](https://www.nuget.org/packages/Sentry.OpenTelemetry.Exporter) NuGet packages.
+Sentry provides an integration with Azure Functions through the [Sentry.Extensions.Hosting](https://www.nuget.org/packages/Sentry.Extensions.Hosting) and [Sentry.OpenTelemetry.Exporter](https://www.nuget.org/packages/Sentry.OpenTelemetry.Exporter) NuGet packages.
 
 ## Install
 
 Add the Sentry dependencies to your Azure Functions application:
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry.Extensions.Logging -v {{@inject packages.version('sentry.dotnet.extensions.logging') }}
+dotnet add package Sentry.Extensions.Hosting -v {{@inject packages.version('sentry.dotnet') }}
 dotnet add package Sentry.OpenTelemetry.Exporter -v {{@inject packages.version('sentry.dotnet') }}
 dotnet add package OpenTelemetry.Extensions.Hosting
 dotnet add package OpenTelemetry.Instrumentation.Http
 ```
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry.Extensions.Logging -Version {{@inject packages.version('sentry.dotnet.extensions.logging') }}
+Install-Package Sentry.Extensions.Hosting -Version {{@inject packages.version('sentry.dotnet') }}
 Install-Package Sentry.OpenTelemetry.Exporter -Version {{@inject packages.version('sentry.dotnet') }}
 Install-Package OpenTelemetry.Extensions.Hosting
 Install-Package OpenTelemetry.Instrumentation.Http
 ```
 
-The [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) package also provides access to the `ILogger<T>` integration and the other core features available in the [Sentry](/platforms/dotnet/) SDK.
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means you also get the `ILogger<T>` integration and the other core features available in the [Sentry](/platforms/dotnet/) SDK.
 
 ## Configure
 
-**Error Monitoring** starts working as soon as you initialize the SDK by calling `AddSentry` when configuring logging. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+**Error Monitoring** starts working as soon as you call `UseSentry` on the host builder. **Logs** sent through `Microsoft.Extensions.Logging` need `EnableLogs = true`, and **Application Metrics** need no extra configuration. You'll learn how to send them in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+
+`UseSentry` starts Sentry when the host is built and closes it when the host stops. It also adds Sentry's `ILogger` integration, which captures `LogError` and higher as events.
 
 This guide also enables **Tracing** through OpenTelemetry. Sentry's OTLP exporter is added to the OpenTelemetry `TracerProviderBuilder`, and `UseOtlp()` tells the Sentry SDK to use OpenTelemetry for tracing.
 
@@ -42,11 +44,17 @@ Don't need a feature? Remove its options from the snippet.
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
+    .UseSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+        options.EnableLogs = true;
+        options.UseOtlp(); // <-- Configure Sentry to use OpenTelemetry for tracing
+        options.Debug = true;
+    })
     .ConfigureServices(services =>
     {
         services.AddOpenTelemetry().WithTracing(builder =>
@@ -56,24 +64,22 @@ var host = new HostBuilder()
                 .AddHttpClientInstrumentation(); // From OpenTelemetry.Instrumentation.Http, instruments outgoing HTTP requests
         });
     })
-    .ConfigureLogging(logging =>
-    {
-        logging.AddSentry(options =>
-        {
-            options.Dsn = "___PUBLIC_DSN___";
-            options.EnableLogs = true;
-            options.UseOtlp(); // <-- Configure Sentry to use OpenTelemetry for tracing
-            options.Debug = true;
-        });
-    })
     .Build();
 
 await host.RunAsync();
 ```
 
+Apps that use the ASP.NET Core integration, with `ConfigureFunctionsWebApplication()` instead of `ConfigureFunctionsWorkerDefaults()`, call the same `UseSentry`, not the one from `Sentry.AspNetCore`.
+
+<Alert title="Changed in Version 7.0.0">
+
+In earlier versions, there was no `Sentry.Extensions.Hosting` package. On those versions, install `Sentry.Extensions.Logging` and pass the same options to `logging.AddSentry(options => ...)` in `ConfigureLogging`, instead of calling `UseSentry`.
+
+</Alert>
+
 ## Send Logs
 
-Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in your Sentry initialization.
+Use `Microsoft.Extensions.Logging` to send structured logs from your application. Set `EnableLogs = true` in the options you pass to `UseSentry`.
 
 See [Microsoft.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) for setup details.
 
