@@ -205,6 +205,21 @@ member this.ConfigureServices(services: IServiceCollection) =
     services.AddScoped<ISentryEventExceptionProcessor, MyExceptionProcessor>() |> ignore
 ```
 
+### Clearing Logger Providers
+
+`ClearProviders()` removes every logger provider registered before it, including the ones `UseSentry` adds. Without them, `ILogger` entries don't reach Sentry. Call `UseSentry` after it:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.WebHost.UseSentry();
+```
+
+If the app has to clear the providers after `UseSentry`, call `builder.Logging.AddSentry()` after `ClearProviders()`. It adds Sentry's providers back, with the options of `UseSentry`. Leave it out if NLog, Serilog, or log4net already sends your `ILogger` entries to Sentry, because each entry would then arrive twice.
+
+With `Debug` on, the SDK logs a warning through `ILogger` when the app starts if Sentry's providers were removed and not added back.
+
 ### Options and Initialization
 
 As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
