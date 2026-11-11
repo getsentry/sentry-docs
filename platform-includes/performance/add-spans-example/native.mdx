@@ -61,7 +61,7 @@ perform_checkout();
 
 The SDK will turn off managing automatic trace boundaries via transactions once manual management of trace boundaries
 was requested by either a downstream SDK (using `sentry_set_trace(trace_id, parent_span_id)`) or a direct user of the
-Native SDK (via `sentry_regenerate_trace()`):
+Native SDK (via `sentry_start_new_trace()`):
 
 ```C
 sentry_options_t *options = sentry_options_new();
@@ -86,10 +86,10 @@ sentry_options_t *options = sentry_options_new();
 sentry_init(options);
 
 // Generates a new random trace and span id onto the propagation_context
-sentry_regenerate_trace();
+sentry_start_new_trace();
 authenticate_user();
 
-sentry_regenerate_trace();
+sentry_start_new_trace();
 // Events, transactions, and spans inside perform_checkout() will be part of
 // a different trace than the ones inside authenticate_user()
 perform_checkout();
@@ -100,6 +100,6 @@ After the client called either function, the following transactions inherit that
 <Alert level="warning" title="Downstream SDK usage">
   If you interact with the Native SDK in the context of a downstream SDK (for
   instance Android, .NET, Unity, or Unreal), we urge you not to use
-  `sentry_regenerate_trace()` since it would interfere with the traces managed
+  `sentry_start_new_trace()` since it would interfere with the traces managed
   from those SDKs.
 </Alert>

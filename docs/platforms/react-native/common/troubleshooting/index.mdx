@@ -128,6 +128,40 @@ This setting applies to **all** class and function names — not just React comp
 
 </Alert>
 
+## Jest Fails With "Unexpected token 'export'"
+
+Starting with SDK version `8.15.0`, Jest tests that import `@sentry/react-native` without mocking it may fail with:
+
+```
+SyntaxError: Unexpected token 'export'
+```
+
+The error points to a file in `@sentry/core` or another `@sentry/*` package. These packages expose a `react-native` export condition that resolves to their ES module build. The React Native Jest environment enables this condition, but Jest presets don't transform these packages by default, so Jest loads their ES modules without transpiling them.
+
+To fix this, let Babel transform all `@sentry/*` packages. With `jest-expo`, extend the preset's patterns:
+
+```javascript {filename:jest.config.js}
+const preset = require("jest-expo/jest-preset");
+
+module.exports = {
+  preset: "jest-expo",
+  transformIgnorePatterns: preset.transformIgnorePatterns.map((pattern) =>
+    pattern.replace("@sentry/react-native", "@sentry/.*")
+  ),
+};
+```
+
+If you use another preset, or your `jest-expo` version doesn't list `@sentry/react-native` in its `transformIgnorePatterns`, add `@sentry/.*` to your own pattern:
+
+```javascript {filename:jest.config.js}
+module.exports = {
+  preset: "@react-native/jest-preset",
+  transformIgnorePatterns: [
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?|@sentry/.*)/)",
+  ],
+};
+```
+
 ## Missing Context on Android NDK Events
 
 If the context - such as breadcrumbs, user, etc. - is missing on Android NDK events, you need to enable the [Scope Synchronization](/platforms/react-native/enriching-events/scopes/#scope-synchronization) feature.

@@ -16,7 +16,7 @@ async function main() {
   try {
     // Dynamically import to respect NEXT_PUBLIC_DEVELOPER_DOCS at build time
     const {getDocsRootNodeUncached} = await import('../src/docTree');
-    const {isDeveloperDocs} = await import('../src/isDeveloperDocs');
+    const {DOCTREE_FILENAME, isDeveloperDocs} = await import('../src/docsSite.mjs');
 
     // Generate the doc tree
     const tree = await getDocsRootNodeUncached();
@@ -32,15 +32,12 @@ async function main() {
       key === 'parent' ? undefined : value
     );
 
-    // Use different filename based on which docs we're building
-    const filename = isDeveloperDocs ? 'doctree-dev.json' : 'doctree.json';
-
     // Save to .next for standalone builds
-    const nextPath = path.join(nextDir, filename);
+    const nextPath = path.join(nextDir, DOCTREE_FILENAME);
     await writeFile(nextPath, treeJSON, 'utf-8');
 
     // Save to public for serverless (will be accessible as static file)
-    const publicPath = path.join(publicDir, filename);
+    const publicPath = path.join(publicDir, DOCTREE_FILENAME);
     await writeFile(publicPath, treeJSON, 'utf-8');
 
     console.log(
