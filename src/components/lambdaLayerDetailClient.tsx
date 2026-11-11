@@ -48,7 +48,7 @@ export function LayerDetailClient({
   defaultLayer,
   sdkVersionIndex,
 }: {
-  runtimes: Runtime[];
+  runtimes?: Runtime[];
   defaultLayer: Layer;
   sdkVersionIndex: SdkVersionIndex;
 }) {
@@ -62,7 +62,7 @@ export function LayerDetailClient({
     sdkVersion => !sdkMajorVersion || sdkVersion.split('.')[0] === sdkMajorVersion
   );
   const runtime = defaultLayer.runtime;
-  const initialRuntimes = sortRuntimes(defaultLayer.compatibleRuntimes);
+  const initialRuntimes = runtimes ? sortRuntimes(defaultLayer.compatibleRuntimes) : [];
   const [selectedSdkVersion, setSelectedSdkVersion] = useState(latestSdkVersion);
   const [selectedLayer, setSelectedLayer] = useState<Layer>(defaultLayer);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,14 +77,15 @@ export function LayerDetailClient({
     preferredRuntime?: string,
     preferredRegion?: string
   ) => {
-    const compatibleRuntimes = sortRuntimes(layer.compatibleRuntimes);
-    const nextRuntime =
-      preferredRuntime && compatibleRuntimes.includes(preferredRuntime)
-        ? preferredRuntime
-        : compatibleRuntimes[0];
-
     setSelectedLayer(layer);
-    setSelectedRuntime(nextRuntime);
+    if (runtimes) {
+      const compatibleRuntimes = sortRuntimes(layer.compatibleRuntimes);
+      const nextRuntime =
+        preferredRuntime && compatibleRuntimes.includes(preferredRuntime)
+          ? preferredRuntime
+          : compatibleRuntimes[0];
+      setSelectedRuntime(nextRuntime);
+    }
     setSelectedRegion(
       layer.regions.some(item => item.region === preferredRegion)
         ? preferredRegion
@@ -123,17 +124,22 @@ export function LayerDetailClient({
     }
   };
 
-  const compatibleRuntimes = sortRuntimes(selectedLayer.compatibleRuntimes);
-  const availableRuntimes = sortRuntimes(
-    availableSdkVersions.flatMap(
-      sdkVersion => getSdkVersionMetadata(sdkVersionIndex, sdkVersion).compatible_runtimes
-    )
-  );
-  const compatibleSdkVersions = availableSdkVersions.filter(
-    sdkVersion =>
-      !selectedRuntime ||
-      sdkVersionSupportsRuntime(sdkVersionIndex, sdkVersion, selectedRuntime)
-  );
+  const compatibleRuntimes = runtimes
+    ? sortRuntimes(selectedLayer.compatibleRuntimes)
+    : [];
+  const availableRuntimes = runtimes
+    ? sortRuntimes(
+        availableSdkVersions.flatMap(
+          sdkVersion =>
+            getSdkVersionMetadata(sdkVersionIndex, sdkVersion).compatible_runtimes
+        )
+      )
+    : [];
+  const compatibleSdkVersions = selectedRuntime
+    ? availableSdkVersions.filter(sdkVersion =>
+        sdkVersionSupportsRuntime(sdkVersionIndex, sdkVersion, selectedRuntime)
+      )
+    : availableSdkVersions;
   const sdkVersionOptions: SelectOption[] = compatibleSdkVersions.map(sdkVersion => ({
     label: sdkVersion === latestSdkVersion ? `Latest (${sdkVersion})` : sdkVersion,
     value: sdkVersion,
@@ -169,7 +175,7 @@ export function LayerDetailClient({
   const runtimeOptions: SelectOption[] = availableRuntimes.map(runtimeIdentifier => ({
     label: formatRuntimeOption(
       runtimeIdentifier,
-      runtimes.find(runtimeData => runtimeData.identifier === runtimeIdentifier)
+      runtimes?.find(runtimeData => runtimeData.identifier === runtimeIdentifier)
     ),
     value: runtimeIdentifier,
   }));
@@ -188,9 +194,10 @@ export function LayerDetailClient({
       })
     : '';
 
-  const runtimeSummary = compatibleRuntimes.length
-    ? formatRuntimeRanges(compatibleRuntimes)
-    : undefined;
+  const runtimeSummary =
+    runtimes && compatibleRuntimes.length
+      ? formatRuntimeRanges(compatibleRuntimes)
+      : undefined;
 
   return (
     <div>
@@ -207,18 +214,20 @@ export function LayerDetailClient({
             onChange={option => setSelectedRegion(option?.value)}
           />
         </SelectionField>
-        <SelectionField>
-          <SelectionLabel htmlFor="layer-runtime">Runtime</SelectionLabel>
-          <Select
-            instanceId="layer-runtime"
-            inputId="layer-runtime"
-            placeholder="Runtime compatibility unavailable"
-            isDisabled={isLoading || !runtimeOptions.length}
-            options={runtimeOptions}
-            value={selectedRuntimeOption}
-            onChange={option => handleRuntimeChange(option?.value)}
-          />
-        </SelectionField>
+        {runtimes ? (
+          <SelectionField>
+            <SelectionLabel htmlFor="layer-runtime">Runtime</SelectionLabel>
+            <Select
+              instanceId="layer-runtime"
+              inputId="layer-runtime"
+              placeholder="Runtime compatibility unavailable"
+              isDisabled={isLoading || !runtimeOptions.length}
+              options={runtimeOptions}
+              value={selectedRuntimeOption}
+              onChange={option => handleRuntimeChange(option?.value)}
+            />
+          </SelectionField>
+        ) : null}
         <SelectionField>
           <SelectionLabel htmlFor="layer-sdk-version">SDK version</SelectionLabel>
           <Select<SelectOption>

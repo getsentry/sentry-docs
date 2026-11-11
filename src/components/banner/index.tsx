@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
 
 import styles from './banner.module.scss';
 
@@ -13,6 +13,8 @@ type BannerType = {
   linkURL: string;
   /** The main text of the banner */
   text: string;
+  /** Optional text after the link; when set, the link is rendered inline */
+  textAfterLink?: string;
   /** Optional ISO Date string that will hide the banner after this date without the need for a rebuild */
   expiresOn?: string;
 };
@@ -46,6 +48,13 @@ type BannerType = {
 // ];
 
 const BANNERS: BannerType[] = [
+  {
+    appearsOn: ['^/pricing/$'],
+    text: 'On December 8, Seer moves from active-contributor pricing to usage-based credits.',
+    linkURL: '/pricing/#seer-pricing',
+    linkText: 'Seer pricing',
+    expiresOn: '2026-12-22T00:00:00Z',
+  },
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
@@ -121,14 +130,34 @@ export function Banner() {
   if (!banner) {
     return null;
   }
+
+  const hasInlineLink = banner.textAfterLink !== undefined;
+
   return (
     <div className={[styles['promo-banner']].filter(Boolean).join(' ')}>
       <div className={styles['promo-banner-message']}>
-        <span className="flex flex-col md:flex-row gap-4">
-          {banner.text}
-          <a href={banner.linkURL} className="min-w-max">
-            {banner.linkText}
-          </a>
+        <span
+          className={
+            hasInlineLink
+              ? styles['promo-banner-inline-link']
+              : 'flex flex-col md:flex-row gap-4'
+          }
+        >
+          {hasInlineLink ? (
+            <Fragment>
+              {banner.text}
+              {banner.text && ' '}
+              <a href={banner.linkURL}>{banner.linkText}</a>
+              {banner.textAfterLink}
+            </Fragment>
+          ) : (
+            <Fragment>
+              {banner.text}
+              <a href={banner.linkURL} className="min-w-max">
+                {banner.linkText}
+              </a>
+            </Fragment>
+          )}
         </span>
       </div>
       <button

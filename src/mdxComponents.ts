@@ -1,3 +1,4 @@
+import {AgentMigrationCallout} from './components/agentMigrationCallout';
 import {AgentSetupCallout} from './components/agentSetupCallout';
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
@@ -11,6 +12,7 @@ import {CommunitySupportedPlatforms} from './components/communitySupportedPlatfo
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {ContentSeparator} from './components/contentSeparator';
+import {ConventionAttributes} from './components/conventionAttributes';
 import {CopyableCard} from './components/copyableCard';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
@@ -18,6 +20,7 @@ import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {FeatureBadge} from './components/featureBadge';
+import {FrameworkSelector} from './components/frameworkSelector';
 import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
@@ -30,6 +33,7 @@ import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkCard, LinkCardGrid} from './components/linkCard';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {LLMSteering} from './components/llmSteering';
+import {MigrationGuide} from './components/migrationGuide';
 import {
   OnboardingOption,
   OnboardingOptionButtons,
@@ -58,12 +62,6 @@ import {SpecChangelog} from './components/specChangelog';
 import {SpecMeta} from './components/specMeta';
 import {SpecRfcAlert} from './components/specRfcAlert';
 import {SpecSection} from './components/specSection';
-import {
-  SplitLayout,
-  SplitSection,
-  SplitSectionCode,
-  SplitSectionText,
-} from './components/splitLayout';
 import {StatusBadge} from './components/statusBadge';
 import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
@@ -76,6 +74,7 @@ export function mdxComponents(
   wrapper: any = ({children}) => children
 ) {
   return {
+    AgentMigrationCallout,
     AgentSetupCallout,
     Alert,
     Arcade,
@@ -85,6 +84,7 @@ export function mdxComponents(
     CliChecksumTable,
     CommunitySupportedPlatforms,
     ContentSeparator,
+    ConventionAttributes,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
@@ -102,6 +102,7 @@ export function mdxComponents(
     DefinitionList,
     Expandable,
     FeatureBadge,
+    FrameworkSelector,
     GuideGrid,
     IntegrationGrid,
     IntegrationListItem,
@@ -110,6 +111,7 @@ export function mdxComponents(
     Link: SmartLink,
     LinkWithPlatformIcon,
     LLMSteering,
+    MigrationGuide,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
@@ -133,10 +135,6 @@ export function mdxComponents(
     SpecMeta,
     SpecRfcAlert,
     SpecSection,
-    SplitLayout,
-    SplitSection,
-    SplitSectionText,
-    SplitSectionCode,
     StatusBadge,
     StepComponent,
     StepConnector,

@@ -32,6 +32,24 @@ Turns debug mode on or off. If `debug` is enabled, the SDK will attempt to print
 
 </SdkOption>
 
+<SdkOption name="logger_level" type="sentry_level_t" defaultValue="SENTRY_LEVEL_DEBUG">
+
+Sets the minimum level of the debug messages the SDK logs. Has no effect unless `debug` is enabled.
+
+</SdkOption>
+
+<SdkOption name="logger" type="function">
+
+This function is called with the level, the format string, and the arguments of each debug message, and replaces the default logger, which prints to `stderr` or, on Android, to logcat. It's only called when `debug` is enabled. Multiple threads may call it concurrently.
+
+</SdkOption>
+
+<SdkOption name="logger_enabled_when_crashed" type="bool" defaultValue="true" defaultNote="false for breakpad on macOS" availableSince="0.11.0">
+
+Whether the SDK keeps calling the logger after it detects a crash. Disabling it avoids potential issues that logging might cause during crash handling.
+
+</SdkOption>
+
 <SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
 
 Sets the release. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
@@ -48,6 +66,12 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 </SdkOption>
 
+<SdkOption name="dist" type="string">
+
+Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application.
+
+</SdkOption>
+
 <SdkOption name="sample_rate" type="float" defaultValue="1.0">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
@@ -60,35 +84,33 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </SdkOption>
 
-<SdkOption name="crashpad_wait_for_upload" type="bool" defaultValue="false">
-
-Whether Crashpad should delay application shutdown until the upload of the crash report in the `crashpad_handler` is complete. This is useful for deployment in `Docker` (Linux and Windows containers) or `systemd`, where the life cycle of all processes is bound by the root process (typically the application being monitored).
-
-</SdkOption>
-
-<SdkOption name="crash_reporting_mode" type="sentry_crash_reporting_mode_t" defaultValue="SENTRY_CRASH_REPORTING_MODE_NATIVE_WITH_MINIDUMP" availableSince="0.13.2">
-
-Controls which crash report format the `native` backend sends when the application crashes. This setting only affects the `native` backend. See [Crash Reporting Modes](/platforms/native/configuration/backends/native/#crash-reporting-modes).
-
-</SdkOption>
-
-<SdkOption name="minidump_mode" type="sentry_minidump_mode_t" defaultValue="SENTRY_MINIDUMP_MODE_SMART" availableSince="0.13.2">
-
-Controls how much memory the `native` backend captures in minidumps. This setting only affects the `native` backend and crash reporting modes that send a minidump. See [Minidump Capture Modes](/platforms/native/configuration/backends/native/#minidump-capture-modes).
-
-</SdkOption>
-
-<SdkOption name="propagate_traceparent" type="bool" defaultValue="false" availableSince="0.11.3">
-
-Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` header for [distributed tracing](https://docs.sentry.io/platforms/native/tracing/trace-propagation/custom-instrumentation/).
-
-<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
-
-</SdkOption>
-
 <SdkOption name="send_client_reports" type="bool" defaultValue="true" availableSince="0.13.6">
 
 Set this boolean to `false` to disable client reports. Client reports are a protocol feature that allows clients to send status information about themselves to Sentry. They’re currently used mainly to report outcomes for events that were never sent.
+
+</SdkOption>
+
+<SdkOption name="require_user_consent" type="bool" defaultValue="false">
+
+Disables uploads until the user has given consent to the SDK. Give consent with `sentry_user_consent_give` and revoke it with `sentry_user_consent_revoke`. The SDK discards envelopes captured before consent is given, unless [offline caching](/platforms/native/configuration/transports/#offline-caching) or [HTTP retry](/platforms/native/configuration/transports/#retrying-failed-uploads) is enabled.
+
+</SdkOption>
+
+<SdkOption name="attach_stacktrace" type="bool" defaultValue="false" availableSince="0.17.4">
+
+Attaches the stack trace of the capturing thread to events that carry none, such as messages. Events that already carry a stack trace, including crashes, are left untouched. With a stack trace, messages group by call site rather than by message text.
+
+</SdkOption>
+
+<SdkOption name="shutdown_timeout" type="uint64_t" defaultValue="2000" defaultNote="milliseconds">
+
+Sets the maximum time, in milliseconds, that `sentry_close()` waits for asynchronous tasks, such as pending uploads, to finish before it attempts a forced termination.
+
+</SdkOption>
+
+<SdkOption name="logs_with_attributes" type="bool" defaultValue="false">
+
+Whether calls to `sentry_log_X()` expect an attributes object as the second argument, allowing users to pass in custom log attributes. An example can be found on the [Logs page](/platforms/native/logs/#additional-attributes).
 
 </SdkOption>
 
@@ -98,7 +120,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 
 <SdkOption name="before_send" type="function">
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(event)` before returning. This hook can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object and a hint, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(event)` before returning. This hook can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before_send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -106,7 +128,7 @@ By the time <PlatformIdentifier name="before_send" /> is executed, all scope dat
 
 <SdkOption name="on_crash" type="function">
 
-This function is called with a backend-specific event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(event)` before returning. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
+This function is called with a backend-specific event object and a hint, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. To drop it, you **must** call `sentry_value_decref(event)` before returning. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
 
 </SdkOption>
 
@@ -124,6 +146,124 @@ User feedback does not go through <PlatformIdentifier name="before_send" />, so 
 
 </SdkOption>
 
+<SdkOption name="before_send_log" type="function">
+
+This function is called with an SDK-specific log object, and can return a modified log object, or `sentry_value_new_null()` to drop the log. In that case, you **must** call `sentry_value_decref(log)` before returning.
+
+</SdkOption>
+
+<SdkOption name="before_send_metric" type="function" availableSince="0.12.6">
+
+This function is called with an SDK-specific metric object, and can return a modified metric object, or `sentry_value_new_null()` to drop the metric. In that case, you **must** call `sentry_value_decref(metric)` before returning. An example can be found on the [Metrics page](/platforms/native/metrics/#before_send_metric).
+
+</SdkOption>
+
+<SdkOption name="before_breadcrumb" type="function" availableSince="0.13.0">
+
+This function is called with each breadcrumb passed to `sentry_add_breadcrumb()`, and can return a modified breadcrumb, or `sentry_value_new_null()` to drop it. To drop it, you **must** call `sentry_value_decref(breadcrumb)` before returning.
+
+</SdkOption>
+
+<SdkOption name="before_screenshot" type="function" availableSince="0.13.7">
+
+This function is called with the event before a screenshot is captured for it, and should return non-zero to capture the screenshot or zero to skip it. It doesn't take ownership of the event. It's only called on Windows when <PlatformLink to="/enriching-events/screenshots/">screenshots</PlatformLink> are enabled, and isn't supported by the `crashpad` backend.
+
+</SdkOption>
+
+<SdkOption name="on_crashed_last_run" type="function" availableSince="0.16.4">
+
+This function is called during `sentry_init()` for every envelope of a crash from a previous run. It doesn't take ownership of the envelope, which is only valid during the call. Because `sentry_init()` hasn't completed yet, the function must not call SDK functions that require an initialized SDK. With the `native` backend, the option must also be set in the run that crashed, so that the crash daemon keeps the envelope for the next launch.
+
+</SdkOption>
+
+<SdkOption name="initial_scope" type="function" availableSince="0.16.7">
+
+This function is called once during `sentry_init()` with the global scope, before the crash backend starts, so the data it sets is available to crash reports, including those of out-of-process crash handlers. Configure the scope with the `sentry_scope_*` functions rather than global functions such as `sentry_set_tag`.
+
+</SdkOption>
+
+## Crash Handling Options
+
+<SdkOption name="symbolize_stacktraces" type="bool" defaultValue="false" defaultNote="true with the native backend, and on Android, AIX, and PlayStation">
+
+Enables client-side symbolication of stack traces. This is useful for resolving system library frames when debug information files can't be provided for server-side symbolication. It can have a performance impact, because symbolication runs in the application process when the `inproc` backend handles a crash, or when you capture an event with any backend.
+
+</SdkOption>
+
+<SdkOption name="system_crash_reporter_enabled" type="bool" defaultValue="false">
+
+Forwards crashes to the macOS system crash reporter. Depending on the crash, this may increase the time it takes to handle it. This setting only affects the `crashpad` and `native` backends on macOS.
+
+</SdkOption>
+
+<SdkOption name="max_stack_capture_size" type="uint32_t" defaultValue="0" defaultNote="bytes, no limit" availableSince="0.17.2">
+
+Limits the size of the stack captured for each non-crashing thread. The crashed thread is not limited. Set to `0` for no limit. This setting only affects the `crashpad` and `native` backends on Linux.
+
+</SdkOption>
+
+<SdkOption name="handler_strategy" type="sentry_handler_strategy_t" defaultValue="SENTRY_HANDLER_STRATEGY_DEFAULT">
+
+Controls when the SDK invokes a previously installed signal handler. By default, it's invoked after the SDK has handled the signal. `SENTRY_HANDLER_STRATEGY_CHAIN_AT_START` invokes it first instead, which is needed for runtimes like CLR or Mono that convert some signals into managed exceptions. Otherwise, the SDK would report a native crash in addition to the managed exception. This setting only affects the `inproc` backend on Linux and Android, and the `native` backend on Linux.
+
+</SdkOption>
+
+<SdkOption name="crash_memory_reserve" type="size_t" defaultValue="0" defaultNote="bytes, disabled" availableSince="0.17.6">
+
+Sets the amount of memory, in bytes, that the SDK reserves during `sentry_init()` and releases when it handles a crash, so the crash handler can still allocate after the application has run out of memory. Set to `0` to disable it. The default comes from the `SENTRY_CRASH_MEMORY_RESERVE` CMake option, which is set in KiB.
+
+</SdkOption>
+
+## Native Backend Options
+
+These options only affect the [`native` backend](/platforms/native/configuration/backends/native/).
+
+<SdkOption name="crash_reporting_mode" type="sentry_crash_reporting_mode_t" defaultValue="SENTRY_CRASH_REPORTING_MODE_NATIVE_WITH_MINIDUMP" availableSince="0.13.2">
+
+Controls which crash report format the `native` backend sends when the application crashes. This setting only affects the `native` backend. See [Crash Reporting Modes](/platforms/native/configuration/backends/native/#crash-reporting-modes).
+
+</SdkOption>
+
+<SdkOption name="minidump_mode" type="sentry_minidump_mode_t" defaultValue="SENTRY_MINIDUMP_MODE_SMART" availableSince="0.13.2">
+
+Controls how much memory the `native` backend captures in minidumps. This setting only affects the `native` backend and crash reporting modes that send a minidump. See [Minidump Capture Modes](/platforms/native/configuration/backends/native/#minidump-capture-modes).
+
+</SdkOption>
+
+<SdkOption name="thread_stackwalk_mode" type="sentry_thread_stackwalk_mode_t" defaultValue="SENTRY_THREAD_STACKWALK_MODE_ALL" availableSince="0.16.5">
+
+Controls which threads the `native` backend walks when it unwinds stacks on the client. With `SENTRY_THREAD_STACKWALK_MODE_CRASHED_ONLY`, only the crashed thread gets a stack trace, and the remaining threads are listed with their ID and name. This shortens crash processing for applications with many threads. This setting only affects the `native` backend and crash reporting modes with client-side stack walking.
+
+</SdkOption>
+
+<SdkOption name="crash_upload_mode" type="sentry_crash_upload_mode_t" defaultValue="SENTRY_CRASH_UPLOAD_MODE_SYNC" availableSince="0.15.0">
+
+Controls whether the crashed application waits for the `native` backend's crash daemon to finish uploading. With `SENTRY_CRASH_UPLOAD_MODE_ASYNC`, the application can exit as soon as the crash data has been captured, while the daemon continues the upload in the background. This setting only affects the `native` backend.
+
+</SdkOption>
+
+<SdkOption name="minidump_flags" type="sentry_minidump_flags_t" availableSince="0.16.0">
+
+Sets the raw Windows [`MINIDUMP_TYPE`](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ne-minidumpapiset-minidump_type) flags for minidumps. When set, these flags take precedence over `minidump_mode`. Unsupported bits are discarded, and `0` selects `MiniDumpNormal`. This setting only affects the `native` backend on Windows.
+
+</SdkOption>
+
+## Crashpad Backend Options
+
+These options only affect the [`crashpad` backend](/platforms/native/configuration/backends/crashpad/).
+
+<SdkOption name="crashpad_wait_for_upload" type="bool" defaultValue="false">
+
+Whether Crashpad should delay application shutdown until the upload of the crash report in the `crashpad_handler` is complete. This is useful for deployment in `Docker` (Linux and Windows containers) or `systemd`, where the life cycle of all processes is bound by the root process (typically the application being monitored).
+
+</SdkOption>
+
+<SdkOption name="crashpad_limit_stack_capture_to_sp" type="bool" defaultValue="false" availableSince="0.12.0">
+
+Uses the current stack pointer to bound the stack capture of the `crashpad` backend, instead of the full stack region derived from the thread environment block (TEB). This is useful when running under Wine or Proton, where incorrect TEB values can lead to excessively large stack captures. This setting only affects the `crashpad` backend on Windows.
+
+</SdkOption>
+
 ## Tracing Options
 
 <SdkOption name="traces_sample_rate" type="float" defaultValue="0.0">
@@ -138,39 +278,29 @@ A function responsible for determining the percentage chance a given transaction
 
 </SdkOption>
 
-## Logs options
+<SdkOption name="max_spans" type="size_t" defaultValue="1000">
 
-<SdkOption name="enable_logs" type="bool" defaultValue="true">
-
-This option enables the [logging integration](/platforms/native/logs), which allows the SDK to capture logs and send them to Sentry.
+Sets the maximum number of spans that can be attached to a transaction.
 
 </SdkOption>
 
-<SdkOption name="before_send_log" type="function">
+<SdkOption name="propagate_traceparent" type="bool" defaultValue="false" availableSince="0.11.3">
 
-This function is called with an SDK-specific log object, and can return a modified log object, or `sentry_value_new_null()` to drop the log. In that case, you **must** call `sentry_value_decref(log)` before returning.
+Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` header for [distributed tracing](https://docs.sentry.io/platforms/native/tracing/trace-propagation/custom-instrumentation/).
 
-</SdkOption>
-
-<SdkOption name="logs_with_attributes" type="bool" defaultValue="false">
-
-Whether calls to `sentry_log_X()` expect an attributes object as the second argument, allowing users to pass in custom log attributes. An example can be found on the [Logs page](/platforms/native/logs/#additional-attributes).
+<Include name="platforms/configuration/options/propagate-traceparent-tail-sampling.mdx" />
 
 </SdkOption>
 
-## Metrics Options
+<SdkOption name="strict_trace_continuation" type="bool" defaultValue="false" availableSince="0.14.1">
 
-<SdkOption name="enable_metrics" type="bool" defaultValue="true" availableSince="0.12.6">
-
-This option enables [Application Metrics](/platforms/native/metrics). When disabled, all calls to `sentry_metrics_*()` are no-ops.
-
-Metrics have been enabled by default since `0.13.5`. In earlier versions they were experimental and had to be turned on explicitly.
+Controls whether to continue an incoming trace when only one of the trace and the SDK has an organization ID. When enabled, the SDK starts a new trace in that case. When disabled, it continues the incoming trace. If both organization IDs are present and differ, the SDK never continues the trace. See [strict trace continuation](https://develop.sentry.dev/sdk/foundations/trace-propagation/#strict-trace-continuation).
 
 </SdkOption>
 
-<SdkOption name="before_send_metric" type="function" availableSince="0.12.6">
+<SdkOption name="org_id" type="string" availableSince="0.14.1">
 
-This function is called with an SDK-specific metric object, and can return a modified metric object, or `sentry_value_new_null()` to drop the metric. In that case, you **must** call `sentry_value_decref(metric)` before returning. An example can be found on the [Metrics page](/platforms/native/metrics/#before_send_metric).
+Overrides the organization ID that the SDK derives from the DSN host, such as `123456` from `o123456.ingest.sentry.io`. This is typically only needed for self-hosted setups where the DSN host doesn't contain the organization ID.
 
 </SdkOption>
 
@@ -182,12 +312,64 @@ These options control in-process app-hang detection. See the [App Hangs page](/p
 
 Enables or disables in-process app-hang detection. When enabled, a background watchdog thread monitors heartbeats from the watched thread. If no heartbeat is received within `app_hang_timeout`, an app-hang event is captured and sent to Sentry.
 
-Must be combined with regular calls to `sentry_app_hang_heartbeat()` from the thread you want monitored. The first heartbeat latches the calling thread as the monitored thread; heartbeats from any other thread are ignored.
+Must be combined with regular calls to `sentry_app_hang_heartbeat()` from the thread you want monitored. The first heartbeat latches the calling thread as the monitored thread; heartbeats from any other thread are ignored. To pause detection while the thread stops sending heartbeats on purpose, call `sentry_app_hang_pause()` (available since `0.16.1`).
 
 </SdkOption>
 
 <SdkOption name="app_hang_timeout" type="uint64_t" defaultValue="5000" defaultNote="milliseconds" availableSince="0.15.2">
 
-Sets the app-hang detection timeout, in milliseconds. If `enable_app_hang_tracking` is enabled and no heartbeat is received from the monitored thread within this window, an app-hang event is captured.
+Sets the app-hang detection timeout, in milliseconds. If `enable_app_hang_tracking` is enabled and no heartbeat is received from the monitored thread within this window, an app-hang event is captured. The minimum is `1000` ms; the SDK raises lower values, including `0`, to `1000` ms.
+
+</SdkOption>
+
+## Transport Options
+
+These options control how the HTTP transport retries and caches envelopes. See the [Transports page](/platforms/native/configuration/transports/) for a full explanation and usage example.
+
+<SdkOption name="http_retry" type="bool" defaultValue="false" availableSince="0.13.5">
+
+Enables or disables HTTP retry with exponential backoff for network failures. See [Retrying Failed Uploads](/platforms/native/configuration/transports/#retrying-failed-uploads).
+
+</SdkOption>
+
+<SdkOption name="cache_keep" type="sentry_cache_keep_t" defaultValue="SENTRY_CACHE_KEEP_NONE" availableSince="0.12.7">
+
+Controls if and when the SDK keeps envelopes in a persistent cache, in the `cache/` subdirectory of the database path. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="cache_max_items" type="size_t" defaultValue="30" availableSince="0.12.7">
+
+Sets the maximum number of items in the cache directory. On startup, the SDK removes cached entries from oldest to newest until the directory contains at most the specified number of items. Set to `0` for no limit. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="cache_max_size" type="size_t" defaultValue="0" defaultNote="bytes, no limit" availableSince="0.12.7">
+
+Sets the maximum size in bytes for the cache directory. On startup, the SDK removes cached entries from oldest to newest until the directory size is within the limit. Set to `0` for no limit. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="cache_max_age" type="time_t" defaultValue="0" defaultNote="seconds, no limit" availableSince="0.12.7">
+
+Sets the maximum age in seconds for entries in the cache directory. On startup, the SDK removes cached entries exceeding the limit. Set to `0` for no limit. See [Offline Caching](/platforms/native/configuration/transports/#offline-caching).
+
+</SdkOption>
+
+<SdkOption name="transfer_timeout" type="uint64_t" defaultValue="0" defaultNote="milliseconds, no limit" availableSince="0.15.0">
+
+Sets the timeout in milliseconds for HTTP transfers. With curl, it limits the total time a request may take. With WinHTTP, it applies to individual send and receive operations. Set to `0` for no limit. Crashpad's crash report upload doesn't support it.
+
+</SdkOption>
+
+<SdkOption name="ca_certs" type="string">
+
+Sets the path to a file containing the SSL certificates used for verification. Only the `curl` transport uses this option.
+
+</SdkOption>
+
+<SdkOption name="enable_large_attachments" type="bool" defaultValue="false" availableSince="0.13.9">
+
+Uploads attachments above an internal size threshold in a separate request before the envelope is sent, instead of embedding them in the envelope. Without it, Sentry rejects oversized uploads. This requires the `projects:relay-upload-endpoint` server-side feature.
 
 </SdkOption>

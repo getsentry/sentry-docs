@@ -8,7 +8,7 @@ import {LayerDetailClient} from './lambdaLayerDetailClient';
 import {normalizeLayer} from './lambdaLayerUtils';
 
 export async function LambdaLayerDetail({canonical}: {canonical: string}) {
-  const [layerIndex, runtimes] = await Promise.all([getLayerIndex(), getRuntimes()]);
+  const layerIndex = await getLayerIndex();
   if (!layerIndex) {
     return null;
   }
@@ -18,7 +18,10 @@ export async function LambdaLayerDetail({canonical}: {canonical: string}) {
   if (!requestedLayer) {
     throw new Error(`Could not find layer for: ${canonical}`);
   }
-  const sdkVersionIndex = await getSdkVersionIndex(requestedLayer.runtime);
+  const [sdkVersionIndex, runtimes] = await Promise.all([
+    getSdkVersionIndex(requestedLayer.runtime),
+    requestedLayer.runtime === 'python' ? getRuntimes() : undefined,
+  ]);
 
   return (
     <LayerDetailClient

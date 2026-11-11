@@ -1,90 +1,61 @@
 ---
 title: Ember Options
-description: "Additional configuration options for the Ember addon."
+description: "Configure tracing for Ember routes, classic components, and the runloop."
 sidebar_order: 1
 ---
 
-All Sentry SDK options can be passed to `init`:
+Pass Sentry SDK options, such as `dsn` and `tracesSampleRate`, to `Sentry.init()` in `app/app.ts`. See <PlatformLink to="/">Set Up Sentry</PlatformLink> for the complete setup and <PlatformLink to="/configuration/options/">Basic Options</PlatformLink> for SDK configuration.
 
+Pass Ember performance options to `instrumentAppInstancePerformance()` as shown below.
 
-```javascript
-import * as Sentry from "@sentry/ember";
+## Tracing Considerations
 
-Sentry.init({
-  // Sentry options
-  dsn: "___PUBLIC_DSN___",
-});
+To capture page loads, navigation, classic component renders, and runloop timings, call `instrumentAppInstancePerformance()` from an instance initializer. Set `tracesSampleRate` or `tracesSampler` in `Sentry.init()` to enable tracing.
+
+```typescript {filename:app/instance-initializers/sentry-performance.ts}
+import type ApplicationInstance from "@ember/application/instance";
+import { instrumentAppInstancePerformance } from "@sentry/ember";
+
+export function initialize(appInstance: ApplicationInstance): void {
+  instrumentAppInstancePerformance(appInstance, {
+    // These are the defaults. Adjust them for your application.
+    disableInstrumentComponents: false,
+    minimumComponentRenderDuration: 2,
+    disableRunloopPerformance: false,
+    minimumRunloopQueueDuration: 5,
+  });
+}
+
+export default { initialize };
 ```
 
-The `@sentry/ember` add-on includes options to manage Ember specific instrumentation; these options are set on the add-on config directly.
+The SDK skips this instrumentation during FastBoot server rendering. To disable automatic Ember performance instrumentation, omit the instance initializer.
 
-```javascript
-ENV["@sentry/ember"] = {
-  // Ember specific options
-};
-```
+## Routes
 
-The following documentation is for Ember specific configuration, for Sentry options, [see basic options](/platforms/javascript/guides/ember/configuration/options)
+To capture timings for a route's `beforeModel`, `model`, `afterModel`, and `setupController` hooks, wrap its default export with `instrumentRoutePerformance()`.
 
-### Tracing Considerations
-
-The Sentry tracing integration is already set up via the Ember add on with custom Ember instrumentation for routing, components, and the runloop. It sideloads Sentry tracing as a chunk to instrument your application. If you'd like to disable this automatic instrumentation and stop receiving the associated transactions, set `disablePerformance` in your config. See example below:
-
-```javascript
-ENV["@sentry/ember"] = {
-  disablePerformance: true,
-};
-```
-
-### Routes
-
-If you would like to capture timings for the `beforeModel`, `model`, `afterModel` hooks as well as `setupController` in one of your Routes, `@sentry/ember` exports a `instrumentRoutePerformance` function which can be used by replacing the default export with a wrapped Route.
-
-```javascript
+```typescript {filename:app/routes/my-route.ts}
 import Route from "@ember/routing/route";
 import { instrumentRoutePerformance } from "@sentry/ember";
 
 class MyRoute extends Route {
   model() {
-    //...
+    // Load your model here.
   }
 }
 
 export default instrumentRoutePerformance(MyRoute);
 ```
 
-### Classic Components
+## Classic Components
 
-The render times of classic components are also enabled by default, with a setting to capture render timings only above a certain duration. To change this minimum, you can modify `minimumComponentRenderDuration` in your config.
+After you call `instrumentAppInstancePerformance()`, the SDK captures classic component render timings by default. Set `minimumComponentRenderDuration` in the initializer's options to change the minimum duration in milliseconds. The default is `2`; set it to `0` to capture all classic component render timings.
 
-```javascript
-ENV["@sentry/ember"] = {
-  minimumComponentRenderDuration: 0, // Setting this to zero will capture all classic components.
-};
-```
+Set `disableInstrumentComponents: true` in the same options object to disable component instrumentation.
 
-To disable component instrumentation you can set `disableInstrumentComponents` in your config.
+## Runloop
 
-```javascript
-ENV["@sentry/ember"] = {
-  disableInstrumentComponents: true,
-};
-```
+After you call `instrumentAppInstancePerformance()`, the SDK instruments queues in your application's runloop by default. Set `minimumRunloopQueueDuration` in the initializer's options to change the minimum duration in milliseconds. The default is `5`; set it to `0` to capture all runloop queue durations.
 
-### Runloop
-
-The duration of each queue in your application's runloop is instrumented by default, as long as the duration of the queue is longer than a threshold defined in your config by `minimumRunloopQueueDuration`
-
-```javascript
-ENV["@sentry/ember"] = {
-  minimumRunloopQueueDuration: 0, // Setting this to zero will capture all runloop queue durations
-};
-```
-
-If you would like to disable runloop instrumentation you can set `disableRunloopPerformance` in your config.
-
-```javascript
-ENV["@sentry/ember"] = {
-  disableRunloopPerformance: true,
-};
-```
+Set `disableRunloopPerformance: true` in the same options object to disable runloop instrumentation.

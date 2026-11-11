@@ -1,7 +1,7 @@
 ---
 title: Set Up Metrics
 sidebar_title: Application Metrics
-description: "Metrics let you to send, view, and query counters, gauges, and distributions from your Godot Engine game. Use these to track application health and drill down into related traces, logs, and errors."
+description: "Metrics allow you to send, view, and query counters, gauges, and distributions from your Godot Engine game to track application health and drill down into related traces, logs, and errors."
 sidebar_order: 5700
 new: true
 ---
@@ -10,15 +10,134 @@ new: true
 
 <PlatformContent includePath="metrics/requirements" />
 
-## Setup
-
-<PlatformContent includePath="metrics/setup" />
-
 ## Usage
 
 <PlatformContent includePath="metrics/usage" />
 
+## Automatic Metrics
+
+Automatic metrics help you compare frame performance, rendering load, memory use, and multiplayer connectivity across devices and scenes. Automatic metrics are disabled by default and independent of metrics you send manually.
+
+Enable automatic metrics in the **Project Settings** under **Sentry** &gt; **Auto Metrics**, or configure `options.auto_metrics` during <PlatformLink to="/configuration/options/#programmatic-configuration">programmatic initialization</PlatformLink>. See [Options](#options) for available settings.
+
+Collection pauses when the application loses focus or the operating system pauses it. Headless applications ignore focus changes but still respect OS pause. `SceneTree.paused` and `Engine.time_scale` don't affect collection.
+
+Automatic metrics include the following attributes when available, in addition to the [default attributes](#default-attributes) attached to every metric. These aren't added to manually emitted metrics.
+
+| Attribute        | Description                                                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gpu.name`       | GPU model name; omitted in headless mode                                                                                                        |
+| `cpu.cores`      | Logical CPU core count reported by Godot                                                                                                        |
+| `ram.gb`         | Physical RAM reported by the OS, in GiB; unavailable on Web                                                                                     |
+| `res.x`, `res.y` | Root viewport target width and height in pixels, before window stretching and after 3D scaling; omitted in headless mode                        |
+| `scene`          | Full resource path of the current scene, such as `res://levels/forest.tscn`; falls back to the scene node name if no resource path is available |
+
+Use these attributes to group performance data by hardware, resolution, or scene.
+
+### Frame Time and FPS
+
+<AvailableSince version="2.4.0" />
+
+Use frame metrics to track frame duration and frame rate across players' devices.
+
+| Metric                 | Type              | Description                                    |
+| ---------------------- | ----------------- | ---------------------------------------------- |
+| `game.perf.frame_time` | Distribution (ms) | Sampled elapsed time between process callbacks |
+| `game.perf.fps`        | Gauge             | Engine-reported frames per second              |
+
+The SDK randomly selects one frame from each collection interval and reports its frame time, including time spent waiting for VSync or frame limiting. Sampling may miss brief hitches.
+
+### Rendering
+
+<AvailableSince version="2.4.0" />
+
+Rendering metrics help identify scenes with high rendering load or video memory use.
+
+| Metric                              | Type          | Description                                                                       |
+| ----------------------------------- | ------------- | --------------------------------------------------------------------------------- |
+| `game.perf.render.draw_calls`       | Gauge         | Draw calls in the last rendered frame                                             |
+| `game.perf.render.primitives`       | Gauge         | Vertices or indices rendered in the last frame, including depth and shadow passes |
+| `game.perf.render.video_mem_used`   | Gauge (bytes) | Total video memory used, including texture, buffer, and other allocations         |
+| `game.perf.render.texture_mem_used` | Gauge (bytes) | Texture memory used                                                               |
+| `game.perf.render.buffer_mem_used`  | Gauge (bytes) | Render buffer memory used                                                         |
+
+### Memory
+
+<AvailableSince version="2.4.0" />
+
+Memory metrics help track process memory use and growth in object and node counts. Process memory usage is unavailable on Web; object and node counts are still collected.
+
+| Metric                   | Type          | Description                                 |
+| ------------------------ | ------------- | ------------------------------------------- |
+| `game.perf.used_memory`  | Gauge (bytes) | RAM used by the game process                |
+| `game.perf.object_count` | Gauge         | Instantiated objects, including nodes       |
+| `game.perf.node_count`   | Gauge         | Nodes in the scene tree, including its root |
+
+### Network
+
+<AvailableSince version="2.5.0" />
+
+Network metrics help diagnose multiplayer latency and traffic volume. Network metrics use only the default `SceneTree` multiplayer API; custom multiplayer APIs assigned to subtrees aren't monitored. Client, server, and mesh sessions are supported. No network metrics are emitted without an active multiplayer connection.
+
+Peer counts work across all transports. All other measurements require ENet.
+
+| Metric                            | Type          | Description                                                                |
+| --------------------------------- | ------------- | -------------------------------------------------------------------------- |
+| `game.perf.net.num_peers`         | Gauge         | Connected remote peers, excluding this instance; server and mesh only      |
+| `game.perf.net.ping`              | Gauge (ms)    | Client round-trip time to the server                                       |
+| `game.perf.net.ping_peer_avg`     | Gauge (ms)    | Average peer round-trip time; server and mesh only                         |
+| `game.perf.net.ping_peer_max`     | Gauge (ms)    | Highest peer round-trip time; server and mesh only                         |
+| `game.perf.net.packet_loss_ratio` | Gauge (ratio) | ENet's estimated outgoing packet-loss ratio toward the server; client only |
+| `game.perf.net.in_rate`           | Gauge (bytes) | Bytes received per second; client and server only                          |
+| `game.perf.net.out_rate`          | Gauge (bytes) | Bytes sent per second; client and server only                              |
+| `game.perf.net.in_packets`        | Gauge         | UDP datagrams received per second; client and server only                  |
+| `game.perf.net.out_packets`       | Gauge         | UDP datagrams sent per second; client and server only                      |
+
+Ping includes Godot's network-processing delays, so it reflects latency experienced by the game rather than network delay alone. Traffic rates include ENet protocol traffic and retransmissions; packet rates count UDP datagrams, not RPCs or game messages.
+
+<Alert>
+  Traffic collection resets ENet's shared byte and packet counters. Other code
+  reading and resetting those counters affects these measurements, and vice
+  versa.
+</Alert>
+
 ## Options
+
+Configure these properties on `options.auto_metrics`, or use the corresponding settings in the **Project Settings** under **Sentry &gt; Auto Metrics**. Each interval applies only when the corresponding metrics are enabled.
+
+| Option                           | Default | Available Since | Description                               |
+| -------------------------------- | ------- | --------------- | ----------------------------------------- |
+| `enable_frame_metrics`           | `false` | 2.4.0           | Collect frame time and FPS                |
+| `enable_rendering_metrics`       | `false` | 2.4.0           | Collect rendering metrics                 |
+| `enable_memory_metrics`          | `false` | 2.4.0           | Collect memory, object, and node metrics  |
+| `enable_network_metrics`         | `false` | 2.5.0           | Collect network metrics                   |
+| `frame_metrics_interval_sec`     | `1.0`   | 2.4.0           | Frame collection interval, in seconds     |
+| `rendering_metrics_interval_sec` | `1.0`   | 2.4.0           | Rendering collection interval, in seconds |
+| `memory_metrics_interval_sec`    | `60.0`  | 2.4.0           | Memory collection interval, in seconds    |
+| `network_metrics_interval_sec`   | `10.0`  | 2.5.0           | Network collection interval, in seconds   |
+
+For example, enable automatic metrics and adjust the memory interval during initialization:
+
+```GDScript {tabTitle:GDScript} {mdExpandTabs}
+SentrySDK.init(func(options: SentryOptions) -> void:
+    options.auto_metrics.enable_frame_metrics = true
+    options.auto_metrics.enable_rendering_metrics = true
+    options.auto_metrics.enable_memory_metrics = true
+    options.auto_metrics.enable_network_metrics = true
+    options.auto_metrics.memory_metrics_interval_sec = 30.0
+)
+```
+
+```csharp {tabTitle:C#}
+SentrySdk.Init(options =>
+{
+    options.AutoMetrics.EnableFrameMetrics = true;
+    options.AutoMetrics.EnableRenderingMetrics = true;
+    options.AutoMetrics.EnableMemoryMetrics = true;
+    options.AutoMetrics.EnableNetworkMetrics = true;
+    options.AutoMetrics.MemoryMetricsIntervalSec = 30.0;
+});
+```
 
 <PlatformContent includePath="metrics/options" />
 

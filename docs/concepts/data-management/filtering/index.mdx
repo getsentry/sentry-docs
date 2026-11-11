@@ -9,7 +9,7 @@ Sentry provides several methods to filter data in your project. Using sentry.io 
 
 ## Inbound Data Filters
 
-Inbound data filters allow you to determine which errors, if any, Sentry should ignore. Explore these by navigating to **[Project] > Project Settings > Inbound Filters.**
+Inbound data filters allow you to determine which errors, if any, Sentry should ignore. Explore these by navigating to [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
 
 These filters are exclusively applied at ingest time and not later in processing. This, for instance, lets you discard an error by error message when the error is ingested through the JSON API. On the other hand, this filter doesn't apply to ingested minidumps. Filtered events do not consume quota, as discussed in [What Counts Toward My Quota](/pricing/quotas/#what-counts-toward-my-quota-an-overview).
 
@@ -26,6 +26,7 @@ Inbound filters include:
 - Events with certain error messages
 - Events from specific release versions of your code
 - Events from non-allowed domains (origin-based; see [Allowed Domains](#allowed-domains))
+- [Custom filters](#custom-filters) on different data types that allow combinations of different attributes
 
 ### Legacy Browser Filters
 
@@ -142,6 +143,8 @@ The following inbound filters **do not** apply to Logs:
 - Request URLs
 - User-Agents
 
+A [custom filter](#custom-filters) on the **Logs** data type drops logs by log message, release, or IP address.
+
 ## Application Metrics Filtering
 
 Inbound data filters have partial support for [Application Metrics](/product/metrics/). The following inbound filters **do** apply to Application Metrics:
@@ -149,9 +152,156 @@ Inbound data filters have partial support for [Application Metrics](/product/met
 - **Application Metrics** - Filters Application Metrics by metric name (supports glob pattern matching, for example `my_metric.*`)
 - **Releases** - Filters Application Metrics from specific release versions
 
-## How Custom Filtering Works
+A [custom filter](#custom-filters) on the **Metrics** data type drops Application Metrics by metric name, release, or IP address.
+
+## Custom Filters
 
 <Include name="feature-available-for-plan-trial-business.mdx" />
+
+<Include name="feature-available-for-user-group-early-adopter.mdx" />
+
+A custom filter drops data that matches all of its conditions. Use it for noise the built-in filters do not cover, such as a flaky error message, traffic from one IP range, or logs from an old release. 
+
+Like every inbound filter, a custom filter runs at ingest time, and filtered data does not count toward your quota.
+
+Create and manage custom filters under **Custom Inbound Filters** in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/), or with the [API](#custom-filter-api). A filter has:
+
+- A **name** that identifies it in the table and in its statistics.
+- A **data type** that specifies which data will be filtered.
+- One or more **conditions**. The conditions under which data will be dropped.
+- An **active** toggle.
+
+A project can have up to 50 custom filters. If your organization leaves a plan that includes custom filters, Sentry keeps the filters but stops applying them until you upgrade again.
+
+### Data Types
+
+| Data type      | What the filter inspects                 |
+| -------------- | ---------------------------------------- |
+| Errors         | Error and message events                 |
+| Logs           | [Logs](/product/logs/)                   |
+| Metrics        | [Application Metrics](/product/metrics/) |
+| Spans          | Spans                                    |
+| All Data Types | All the above                            |
+
+### Conditions
+
+Conditions specify which data will be matched and therefore discarded. Each condition consists of a property, an operator and one or more values. When there are multiple conditions, they will be combined using logical `AND`. When a condition gets a list of values, it will match any of the values in the list.
+
+| Property      | Key                | Data types | Matches                                                          |
+| ------------- | ------------------ | ---------- | ---------------------------------------------------------------- |
+| Error Message | `error_message`    | Errors     | The error message of the event                                   |
+| Error Type    | `error_type`       | Errors     | The exception type alone, such as `TypeError`                    |
+| Country       | `geo_country_code` | Errors     | The two-letter country code of the user's location, such as `US` |
+| Log Message   | `log_message`      | Logs       | The body of the log                                              |
+| Metric Name   | `metric_name`      | Metrics    | The name of the metric, such as `checkout.total`                 |
+| Release       | `release`          | All        | The release the data was sent from                               |
+| IP Address    | `ip_address`       | All        | The IP address the data was sent from                            |
+
+Filters may consist of at most 10 conditions or 4000 characters when sent to the API endpoint.
+
+#### Operators
+
+Type `key:value` for a plain match, or pick another operator from the menu of the term.
+
+| Operator                                                 | In the API                                                     | Properties               | Matches when                                                              |
+| -------------------------------------------------------- | -------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------- |
+| is (`key:value`)                                         | `equals`, or wildcard matching when the value contains `*`     | Text properties, Release | The property equals the value or the value with the wildcard              |
+| contains, starts with, ends with                         | `contains`, `starts_with`, `ends_with`                         | Text properties, Release | The property contains, starts with, or ends with the value                |
+| does not contain, does not start with, does not end with | `does_not_contain`, `does_not_start_with`, `does_not_end_with` | Text properties, Release | No value matches                                                          |
+| `>`, `>=`, `<`, `<=`                                     | `gt`, `gte`, `lt`, `lte`                                       | Release                  | The [version](#release) of the release compares as given. Takes one value |
+| matches                                                  | `cidr`                                                         | IP Address               | The address is one of the values, or inside one of the ranges             |
+| does not match                                           | `not_cidr`                                                     | IP Address               | The address is outside every value                                        |
+
+A value with `*` follows the [glob matching](#glob-matching) rules. Text comparisons are not case-sensitive. A negated operator also matches data that has no value for the property. For example, a Release condition with the `does not contain` operator and the value `beta` also drops data that was sent without a release.
+
+#### Error Message
+
+- The condition checks the exception type, the exception value, and the message of the event separately. For example, to drop any "ConnectionError", use `error_message:*ConnectionError*`.
+
+To find the text to match, open the JSON of an event in the issue. The condition matches the data found in the `exception` values and in the `logentry` field.
+
+<Alert title="Note" level="warning">
+
+Matching on the deobfuscated `{exception.type}` is not supported for <PlatformLink to="/enhance-errors/proguard/">ProGuard</PlatformLink> events, because deobfuscation of class names happens after ingestion. See [Troubleshooting](#error-message-filters-do-not-match-deobfuscated-exception-types).
+
+</Alert>
+
+#### Error Type
+
+The condition checks the exception type alone. An event with several chained exceptions matches when any of their types matches. Use it to narrow a filter to one type without also matching events that only mention that type in their message. For example, `error_type:TypeError error_message:*undefined*` drops only the `TypeError` events whose message mentions "undefined".
+
+#### Country
+
+The condition matches the two-letter country code of the user's location, such as `US`. Sentry derives the location from the IP address the event was sent from, unless the SDK sets `user.geo.country_code` on the event. For example, `geo_country_code:[CN,RU]` drops errors from users in China or Russia.
+
+#### Release
+
+- The condition matches the full release name provided during SDK initialization. If you provide the recommended package prefix, the release is in the format `package@version`, for example: `my-example@1.4.0-beta.1`. On logs, metrics, and spans, the condition reads the `sentry.release` attribute.
+- The `is`, `contains`, `starts with`, and `ends with` operators treat the release as text. There is no special casing for SemVer. This allows for matching prefixes, such as `release:my-example@1.*`.
+- The `>`, `>=`, `<`, and `<=` operators compare the release as a version, so `release:<2.0.0` drops data from every release before 2.0.0. Two conditions express a range: `release:>=2.0.0 release:<4.0.0`.
+- The condition never matches data without a release, except under a negated operator.
+
+A version comparison follows these rules:
+
+- The value is one release with a version, such as `1.2.0` or `myapp@1.2.0`. Sentry rejects a value without a version, such as a commit hash.
+- A version has one to four numeric parts. Missing parts count as zero, so `1.2` equals `1.2.0`.
+- A pre-release sorts below its final release, so `1.0.0-rc.1` is less than `1.0.0`. The build code, such as `+build.2`, is ignored.
+- A value with a package only matches releases of that package. A value without a package compares with releases of every package.
+- A release without a version, such as a commit hash, never matches a comparison.
+
+#### Log Message
+
+The condition matches the body of the log. Match with wildcards instead of the full message. For example, to drop any "Connection timeout asbq33q", use `log_message:*Connection timeout*`.
+
+#### Metric Name
+
+The condition matches the name of the metric. For example, to drop all metrics under the `my_metric` namespace, use `metric_name:my_metric.*`.
+
+#### IP Address
+
+The condition matches the originating IP address of the request, with the same rules as the built-in [IP Addresses](#ip-addresses) filter. Enter a single address or a network range in CIDR notation, such as `ip_address:203.0.113.7` or `ip_address:[10.0.0.0/8,192.168.0.0/16]`. Sentry rejects a value that is not a valid address or range. Every data type carries the address, so a filter whose only conditions are IP Address conditions drops matching data of every type, whatever its data type.
+
+### Filter Lists from the Project Settings
+
+The table replaces the **Custom Filters** form of the project settings. The lists of that form appear as the rows **Releases**, **Error Messages**, **Log Messages**, and **Metric Names**. A row keeps the statistics of its list. The [project details API](/api/projects/update-a-project/) still reads and writes the lists as the `filters:releases`, `filters:error_messages`, `filters:log_messages`, and `filters:trace_metric_names` options, and the row shows every change.
+
+Such a row keeps its data type and its single property. You edit its patterns one per line, as the form did. You can rename the row and switch it off. Deleting the row empties the list. In the API, the row has `legacyFilter` set.
+
+Unlike the Error Message property, the **Error Messages** list matches the combined `{exception.type}: {exception.value}` description of an error. A pattern such as `TypeError: *` only works in this list.
+
+### Filter Names
+
+If AI features are enabled for your organization, Sentry suggests a name from the conditions when you leave the name empty. You can replace the suggestion with your own name.
+
+### Filter Statistics
+
+The **Trend** and **Filtered** columns of the table show how much data each filter dropped in the last 30 days, split by data category. The [Stats](/product/stats/) page counts this data as filtered.
+
+### Custom Filter API
+
+You can also manage custom filters with the API. See the [custom inbound filter endpoints](/api/projects/list-a-projects-custom-inbound-filters/) in the API reference. These endpoints are experimental and may change. The built-in filters on this page use the separate [data filters](/api/projects/list-a-projects-data-filters/) endpoints.
+
+A filter in the API uses the keys of the [conditions](#conditions) and [operators](#operators) tables. For example, this body creates a filter that drops `TypeError` events that mention "undefined" from releases before 2.0.0:
+
+```json
+{
+  "name": "Drop TypeErrors from the 1.x releases",
+  "dataType": "error",
+  "conditions": [
+    { "type": "error_type", "operator": "equals", "value": ["TypeError"] },
+    { "type": "error_message", "operator": "contains", "value": ["undefined"] },
+    { "type": "release", "operator": "lt", "value": ["2.0.0"] }
+  ]
+}
+```
+
+## Legacy Custom Filters
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+Projects not in the Early Adopter program filter error messages, releases, log messages, and application metrics with the **Custom Filters** form in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/). Each list holds glob patterns, one per line. 
+
+For projects in the Early Adopter program, these lists appear as rows of the [custom filters](#filter-lists-from-the-project-settings) table.
 
 Inbound data filters are not case-sensitive.
 
@@ -219,7 +369,7 @@ echo 1.2.[!3]
 
 ### Error Message Filters Do Not Match Deobfuscated Exception Types
 
-Inbound filters run immediately after Sentry receives an event. They do not wait for later processing such as symbolication, deobfuscation, or ProGuard mapping. For error events, Sentry matches the filter against `{exception.type}: {exception.value}` from the ingested event.
+Inbound filters run immediately after Sentry receives an event. They do not wait for later processing such as symbolication, deobfuscation, or ProGuard mapping. For error events, the Error Type and Error Message properties check the exception type and value of the ingested event, and the Error Messages list checks `{exception.type}: {exception.value}` of the ingested event. The filter form warns you about this when the platform of the project usually ships obfuscated code.
 
 If an error message filter does not filter an event, compare the filter against the event as Sentry received it, not only the issue title shown after processing. To find the original exception type, open the event JSON by clicking **{} View JSON** in the event header, then check `exception.values.raw_type`.
 

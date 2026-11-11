@@ -1,39 +1,62 @@
 ---
 title: Postgres.js
 description: "Adds instrumentation for the postgres (postgres.js) library."
-supported:
-  - javascript.cloudflare
-  - javascript.deno
+supportedCategories:
+  - server
 ---
 
 <AvailableSince version="10.41.0" />
 
 _Import name: `Sentry.instrumentPostgresJsSql`_
 
-The `instrumentPostgresJsSql` helper adds instrumentation for the [`postgres`](https://github.com/porsager/postgres) (postgres.js) library to capture spans by wrapping a postgres.js `sql` tagged-template instance. You need to manually wrap your `sql` instance with this helper:
+The `instrumentPostgresJsSql` helper adds instrumentation for the [`postgres`](https://github.com/porsager/postgres) (postgres.js) library to capture spans by wrapping a postgres.js `sql` tagged-template instance.
 
 ## Usage
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
-```javascript
+If you build your Worker with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>, you don't need this helper. The plugin traces postgres.js automatically, as long as `postgres` is bundled and not marked as external. If you deploy with `wrangler` directly, wrap your `sql` instance with the helper:
+
+```javascript {tabTitle:Vite} {mdExpandTabs}
 import postgres from "postgres";
-import * as Sentry from "@sentry/cloudflare";
 
-export default Sentry.withSentry((env) => ({ dsn: "__DSN__" }), {
+export default {
   async fetch(request, env, ctx) {
-    const sql = Sentry.instrumentPostgresJsSql(postgres(env.DATABASE_URL));
+    const sql = postgres(env.DATABASE_URL);
 
-    // All queries now create Sentry spans
+    // All queries create Sentry spans, no helper needed
     const users = await sql`SELECT * FROM users WHERE id = ${userId}`;
     return Response.json(users);
   },
-});
+};
+```
+
+```javascript {tabTitle:Wrangler}
+import postgres from "postgres";
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  {
+    async fetch(request, env, ctx) {
+      const sql = Sentry.instrumentPostgresJsSql(postgres(env.DATABASE_URL));
+
+      // All queries now create Sentry spans
+      const users = await sql`SELECT * FROM users WHERE id = ${userId}`;
+      return Response.json(users);
+    },
+  }
+);
 ```
 
 </PlatformSection>
 
 <PlatformSection supported={["javascript.deno"]}>
+
+If you load Sentry's import hook with `--preload=npm:@sentry/deno/import`, you don't need this helper. The hook traces postgres.js automatically. Without the hook, wrap your `sql` instance with the helper:
 
 ```javascript
 import * as Sentry from "___SDK_PACKAGE___";

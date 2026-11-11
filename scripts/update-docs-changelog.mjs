@@ -285,6 +285,15 @@ function categorizeFiles(files) {
       continue;
     }
 
+    // Skip versioned doc files (e.g. index__v7.x.mdx). Their canonical URL is
+    // <path>__v<version>/, not <path>/index__v7.x/, so the naive path-to-URL
+    // mapping below produces a 404 (caught by the lint-404 check). The current
+    // version of the page is almost always edited in the same PR and linked
+    // separately, so old-version pages add little to the changelog anyway.
+    if (file.filename.includes('__v')) {
+      continue;
+    }
+
     // For non-removed files, only include if the file exists locally
     // This avoids linking to pages that haven't been deployed yet
     if (file.status !== 'removed') {

@@ -17,6 +17,7 @@ export type Parameter = {
     type: string;
     items?: {[key: string]: unknown};
   };
+  'x-sentry-experimental'?: boolean;
 };
 
 type Markdown = {
@@ -72,6 +73,7 @@ export type DeRefedOpenAPI = {
         description?: string;
         security?: any;
         servers?: ServerMeta[];
+        'x-sentry-experimental'?: boolean;
       };
     };
   };

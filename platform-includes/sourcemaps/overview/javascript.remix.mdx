@@ -9,66 +9,47 @@ If you installed the SDK manually or the wizard failed, follow the steps below t
 
 Starting from version 2.2.0, Remix supports [Vite](https://vitejs.dev/) as a build tool, and from Remix version 2.7.0 it's stable and the recommended way to build your application.
 
-If you use Vite to build your project, you can use the [Vite plugin](/platforms/javascript/sourcemaps/uploading/vite/) to upload source maps to Sentry.
+If you use Vite to build your project, `sentryRemixVitePlugin` uploads your source maps to Sentry. It ships with `@sentry/remix`, so there's no extra package to install.
 
-First, install the plugin if you haven't already done so:
-
-```bash {tabTitle:npm}
-npm install @sentry/vite-plugin --save-dev
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/vite-plugin --dev
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/vite-plugin --save-dev
-```
-
-Then, add the plugin to your Vite configuration:
+Add your Sentry organization, project, and auth token to the plugin in your Vite configuration:
 
 ```typescript {filename:vite.config.ts}
-import { defineConfig } from "vite";
 import { vitePlugin as remix } from "@remix-run/dev";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryRemixVitePlugin } from "@sentry/remix/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
     remix({
       // ... your Remix plugin options
     }),
-    sentryVitePlugin({
-      // If you use .sentryclirc or environment variables,
-      // you don't need to specify these options
-      authToken: "___SENTRY_AUTH_TOKEN___",
+    sentryRemixVitePlugin({
+      // If you use environment variables, you don't need to specify these options
+      authToken: process.env.SENTRY_AUTH_TOKEN,
       org: "___SENTRY_ORG_SLUG___",
       project: "___SENTRY_PROJECT_SLUG___",
-
-      sourcemaps: {
-        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-        // Set the appropriate glob pattern for your output folder - some glob examples below:
-        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
-      }
     }),
   ],
-  build: {
-    sourcemap: "hidden", // Source map generation must be turned on ("hidden", true, etc.)
-    // ... rest of your Vite build options
-  },
 
   // ... rest of your Vite config
 });
 ```
 
+The plugin reads `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` from your environment, so you can leave the options out and set those instead.
+
+During a production build, the plugin injects debug IDs, uploads the source maps, and then deletes the `.map` files it generated from your build output. It skips uploading in development, so `vite dev` doesn't create a new set of artifacts on every restart.
+
+If you don't set `build.sourcemap` yourself, the plugin turns on hidden source maps. If you do set it, the plugin keeps your setting and leaves your source maps in place, so you control whether they're deleted with `sourcemaps.filesToDeleteAfterUpload`.
+
 <Alert level="warning">
-  Generating source maps **may expose them to the public**, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
-  using [Sentry Vite Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/vite-plugin#sourcemapsfilestodeleteafterupload)
-  option to delete source maps after they've been uploaded to Sentry.
+  Generating source maps **may expose them to the public**, potentially causing
+  your source code to be leaked. If you turn on source maps yourself, prevent
+  this by configuring your server to deny access to `.js.map` files, or by
+  setting `sourcemaps.filesToDeleteAfterUpload` to delete them after they've
+  been uploaded to Sentry.
 </Alert>
 
-To see the full list of options, refer to the [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+To turn uploading off, set `sourcemaps.disable` to `true`. To keep the debug IDs and upload the maps yourself, set it to `'disable-upload'`.
 
 ### Using `npx @sentry/remix --upload-sourcemaps`
 
@@ -140,6 +121,6 @@ Please note that these commands might vary for the operating system or shell you
 
 <Alert>
 
-By default, if Sentry can't find the uploaded files it needs, it will attempt to download them from the URLs in the stack trace. To disable this, turn off "Enable JavaScript source fetching" in either your organization's "Security & Privacy" settings or your project's general settings.
+By default, if Sentry can't find the uploaded files it needs, it will attempt to download them from the URLs in the stack trace. To disable this, turn off "Enable JavaScript source fetching" in either your organization's ["Security & Privacy" settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/security-and-privacy/) or your project's [general settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/).
 
 </Alert>

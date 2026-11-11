@@ -2,11 +2,11 @@
 
 import {promises as fs} from 'fs';
 
-import {DeRefedOpenAPI} from './open-api/types';
+import {DeRefedOpenAPI, Parameter} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '{"message":"API rate limit exceeded for 40.65.59.112. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)","documentation_url":"https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"}';
+const SENTRY_API_SCHEMA_SHA = 'f13098b1512093f92f3a1c432967f3a9b2fdc501';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -31,13 +31,16 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
 
 export type APIParameter = {
   description: string;
+  experimental: boolean;
   name: string;
   required: boolean;
   schema: {
     type: string;
+    enum?: string[];
     format?: string;
     items?: {
       type: string;
+      enum?: string[];
     };
   };
 };
@@ -64,6 +67,7 @@ export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
   deprecated: boolean;
+  experimental: boolean;
   method: string;
   name: string;
   pathParameters: APIParameter[];
@@ -87,15 +91,40 @@ export type APICategory = {
   description?: string;
 };
 
+// Slashes become separators: an endpoint slug must be one URL segment, because the
+// API route only matches /api/<category>/<endpoint>/.
 function slugify(s: string): string {
   return s
-    .replace(/[^a-zA-Z0-9/ ]/g, '')
+    .replace(/\//g, ' ')
+    .replace(/[^a-zA-Z0-9 ]/g, '')
     .trim()
     .replace(/\s/g, '-')
     .toLowerCase();
 }
 
 const DEPRECATED_PREFIX_REGEX = /^\(DEPRECATED\)\s*/;
+
+// Sentry prepends this notice to the description of every experimental operation, so
+// that consumers with no badge of their own still warn the reader. We render a badge
+// and the same sentence beside it, so strip the prefix rather than saying it twice.
+// Parameter notices stay in the description: the parameter badge does not repeat them.
+const EXPERIMENTAL_NOTICE_REGEX = /^\*\*Experimental:\*\*[^\n]*\n+/;
+
+type ExperimentalExtension = {
+  description?: string;
+  'x-sentry-experimental'?: boolean;
+};
+
+// `extensions={"x-sentry-experimental": True}` on an OpenAPI parameter or body
+// property lands as a sibling vendor extension.
+export function toDocumentedParameter<T extends ExperimentalExtension>(
+  param: T
+): T & {experimental: boolean} {
+  return {
+    ...param,
+    experimental: param['x-sentry-experimental'] === true,
+  };
+}
 
 function isDeprecatedOperationId(operationId: string | undefined): boolean {
   return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
@@ -135,6 +164,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
       const isDeprecated =
         isDeprecatedOperationId(apiData.operationId) ||
         isDeprecatedOperationId(apiData.summary);
+      const isExperimental = apiData['x-sentry-experimental'] === true;
       const titleSource = apiData.summary || apiData.operationId || '';
       const cleanName = stripDeprecatedPrefix(titleSource);
 
@@ -148,18 +178,17 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           method,
           name: cleanName,
           deprecated: isDeprecated,
+          experimental: isExperimental,
           server,
           slug: slugify(cleanName),
           summary: apiData.summary
             ? stripDeprecatedPrefix(apiData.summary)
             : apiData.summary,
-          descriptionMarkdown: apiData.description,
-          pathParameters: (apiData.parameters || []).filter(
-            p => p.in === 'path'
-          ) as APIParameter[],
-          queryParameters: (apiData.parameters || []).filter(
-            p => p.in === 'query'
-          ) as APIParameter[],
+          descriptionMarkdown: isExperimental
+            ? apiData.description?.replace(EXPERIMENTAL_NOTICE_REGEX, '')
+            : apiData.description,
+          pathParameters: documentedParameters(apiData.parameters, 'path'),
+          queryParameters: documentedParameters(apiData.parameters, 'query'),
           requestBodyContent: {
             example:
               apiData.requestBody?.content &&
@@ -198,6 +227,25 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
   return categories;
 }
 
+function documentedParameters(
+  parameters: Parameter[] | undefined,
+  location: 'path' | 'query'
+): APIParameter[] {
+  return (parameters || [])
+    .filter(param => param.in === location)
+    .map(param => {
+      const documented = toDocumentedParameter(param);
+      return {
+        name: documented.name,
+        description: documented.description,
+        required: documented.required,
+        experimental: documented.experimental,
+        // OpenAPI item schemas are an open record; the page only reads type and enum.
+        schema: documented.schema as APIParameter['schema'],
+      };
+    });
+}
+
 function getBodyParameters(apiData: APIData): APIParameter[] {
   const content = apiData.requestBody?.content;
   const contentType = content && Object.values(content)[0];
@@ -208,16 +256,19 @@ function getBodyParameters(apiData: APIData): APIParameter[] {
 
   const required: string[] = contentType?.schema?.required || [];
 
-  return Object.entries(properties).map(([name, props]: [string, any]) => ({
-    name,
-    description: props.description,
-    required: required.includes(name),
-    schema: {
-      type: props.type,
-      format: '',
-      items: props.items,
-    },
-  }));
+  return Object.entries(properties).map(([name, props]: [string, any]) =>
+    toDocumentedParameter({
+      name,
+      description: props.description,
+      required: required.includes(name),
+      'x-sentry-experimental': props['x-sentry-experimental'],
+      schema: {
+        type: props.type,
+        format: '',
+        items: props.items,
+      },
+    })
+  );
 }
 
 function getBodyContentType(apiData: APIData): string | undefined {

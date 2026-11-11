@@ -1,0 +1,29 @@
+---
+id: update-all-sentry-packages-together
+title: "Update All Sentry Packages Together"
+phase: packages
+category: package
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 10
+---
+
+Update every Sentry package in the solution to the same 7.x version. A 6.x integration package left next to `Sentry` 7 breaks at runtime with `MissingMethodException`, because it calls members that 7.0 removes.
+
+`Sentry.Extensions.Logging` 6.12.1 throws when the app builds its logger factory, and `Sentry.Serilog` 6.12.1 throws when the app calls `WriteTo.Sentry()` without arguments. Set up in other ways, `Sentry.Serilog` and `Sentry.NLog` 6.12.1 fail on every entry they write instead. Serilog and NLog swallow that exception, so the app keeps running and sends nothing to Sentry.
+
+```xml {filename:MyApp.csproj}
+<ItemGroup>
+  <PackageReference Include="Sentry.AspNetCore" Version="7.0.0" />
+  <PackageReference Include="Sentry.Serilog" Version="7.0.0" />
+</ItemGroup>
+```
+
+If the solution uses central package management, update the versions in `Directory.Packages.props` instead.
+
+Worker services and other generic host apps that started Sentry with `Logging.AddSentry` need the new `Sentry.Extensions.Hosting` package instead of `Sentry.Extensions.Logging`. `Sentry.Extensions.Hosting` brings in `Sentry.Extensions.Logging`, so remove the direct reference. See [Generic Host Apps Call UseSentry](#generic-host-apps-call-usesentry).
+
+```shell
+dotnet add package Sentry.Extensions.Hosting
+```

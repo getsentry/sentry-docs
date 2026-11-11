@@ -1,0 +1,20 @@
+---
+id: http-error-capture
+title: "HTTP Error Capture and Grouping"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 130
+---
+
+HTTP error types, messages, and capture rules have changed. Review HTTP error filters, grouping rules, and alert volumes after upgrading:
+
+- `SentryHttpClient` reports failed HTTP status responses with the stable exception type `SentryHttpClientError`, and its message no longer starts with `Exception:`.
+- `sentry_dio` uses the stable exception type `DioException`, including in obfuscated builds. Default error messages become `HTTP Client Error with status code: <code>` or `HTTP Client Error: <failure>`. Custom Dio string builders are preserved.
+- `sentry_dio` now captures connection failures without a status code, such as timeouts, DNS failures, and certificate errors, when failed-request capture is enabled and the target matches. Caller-initiated cancellations without a status code are excluded.
+- `sentry_dio` matches `failedRequestTargets` against the resolved full URL instead of the relative request path. Update patterns that assumed a path-only value.
+- `sentry_supabase` uses the stable exception type `SentrySupabaseClientError`, and its message no longer starts with `Exception:`.
+
+Dio events now include response status and metadata in `event.contexts.response`; response bodies remain on `hint.response`. Failed-request capture through `SentryHttpClient` and Dio excludes requests to the configured DSN host to prevent recursive error reporting.

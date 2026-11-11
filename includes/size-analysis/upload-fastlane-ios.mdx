@@ -1,7 +1,9 @@
 The Fastlane plugin can be used to upload XCArchive or IPA builds to Sentry. On GitHub Actions, Fastlane will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. In other Continuous Integration (CI) environments, you may need to manually set metadata values.
 
 <Alert>
-Uploading IPA files requires Sentry Fastlane plugin version `2.0.0-rc.3` or later. XCArchive uploads are supported in earlier versions.
+  Uploading IPA files requires Sentry Fastlane plugin version `2.0.0-rc.3` or
+  later. Including dSYMs in IPA build analysis requires version `2.7.0` or later
+  and an Apple silicon Mac. XCArchive uploads are supported in earlier versions.
 </Alert>
 
 1. Configure the [Sentry Fastlane plugin](/platforms/apple/guides/ios/dsym/#sentry-fastlane-plugin) (version `{{@inject packages.version('sentry.cocoa.fastlane') }}`):
@@ -63,6 +65,8 @@ Uploading IPA files requires Sentry Fastlane plugin version `2.0.0-rc.3` or late
    end
    ```
 
+   IPA files typically don't contain dSYMs. Pass `dsym_path` to include them in build analysis.
+
    To upload an IPA instead of the XCArchive, explicitly specify `ipa_path`:
 
    ```ruby {filename:Fastfile}
@@ -75,6 +79,7 @@ Uploading IPA files requires Sentry Fastlane plugin version `2.0.0-rc.3` or late
        org_slug: 'your-org',
        project_slug: 'your-project',
        ipa_path: 'path/to/YourApp.ipa',
+       dsym_path: 'path/to/dSYMs',
        build_configuration: 'Release'
      )
    end

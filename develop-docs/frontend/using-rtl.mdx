@@ -340,6 +340,26 @@ render(<Example />);
 userEvent.type(screen.getByLabelText("Search by name"), "sentry");
 ```
 
+Render the component under test, don't wrap `render()` in a local helper.
+A helper hides the JSX from every test that calls it, and `rerender` takes an element, so the call site can no longer control what renders.
+
+```tsx
+import {render} from "sentry-test/reactTestingLibrary";
+
+// ❌
+function renderComponent(props: Props = {}) {
+  return render(<Widget {...props}>hello</Widget>);
+}
+
+// ✅
+function ExampleWidget(props: Props) {
+  return <Widget {...props}>hello</Widget>;
+}
+render(<ExampleWidget isLoading />);
+```
+
+Declare it at module scope so `rerender` keeps the same component type, and keep `render()` options at the call site. Helpers that only register mocks, or that take the element as a parameter, are fine.
+
 ## Testing hooks with providers
 
 Use `renderHookWithProviders()` to test hooks with the same built-in providers as `render()` (organization, theme, query client, and an in-memory router). It returns the regular `renderHook` result plus a `router` helper you can use to inspect location and navigate.

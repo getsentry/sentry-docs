@@ -2,45 +2,141 @@
 
 <PlatformContent includePath="alert-using-a-framework" noGuides />
 
-## Prerequisites
+<PlatformContent includePath="getting-started-prerequisites" />
 
-- You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- Ruby 2.4+ or any of the most recent JRuby versions
-
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/profiling/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs"]}
-/>
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
+
+### Install the Sentry SDK
 
 <PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
-Configuration should happen as early as possible in your application's lifecycle.
+<PlatformSection supported={["ruby", "ruby.rails"]}>
+
+**Error Monitoring** starts working as soon as you call `Sentry.init`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["ruby", "ruby.rails"]}>
+
+**Error Monitoring** starts working as soon as you call `Sentry.init`. **Application Metrics** need no extra configuration, and you'll learn how to send them in step [#3](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**.
+
+</PlatformSection>
+
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
 
 <PlatformContent includePath="getting-started-config" />
 
-## Verify
+### Control the Data You Send to Sentry
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+By default, the SDK does **not** send user identity data (IP address, ID, and similar) or other data like HTTP bodies and URL query parameters.
 
-<PlatformContent includePath="getting-started-verify" />
+To opt in and get richer debugging context, turn on individual categories using the `data_collection` option. For the full list of categories and their defaults, <PlatformLink to="/configuration/options/#data_collection">see the `data_collection` options</PlatformLink>.
 
-<Alert>
+```ruby
+require 'sentry-ruby'
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Sentry.init do |config|
+  config.dsn = '___PUBLIC_DSN___'
 
-</Alert>
+  config.data_collection.user_info = true
+  config.data_collection.http_bodies = [:incoming_request, :outgoing_request]
+  # other categories
+end
+```
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+<PlatformSection supported={["ruby", "ruby.rails"]}>
+
+## Send Logs
+
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`.
+You can pass any attributes you want and search or filter by them later.
+
+<PlatformSection supported={["ruby.rails"]}>
+
+To also capture Rails framework events, such as ActiveRecord queries and controller actions, set `config.rails.structured_logging.enabled = true` in your Sentry initialization code.
+
+</PlatformSection>
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and the syntax for formatting messages.
+
+```ruby
+Sentry.logger.info("User example action completed")
+
+Sentry.logger.warn("Slow operation detected", operation: "data_fetch", duration: 3500)
+
+Sentry.logger.error("Validation failed", form_field: "email", reason: "Invalid email")
+```
+
+If you're already logging with Ruby's standard library `Logger`, you can capture those logs by enabling the `:logger` patch. See <PlatformLink to="/integrations/logging/">Standard Library Logging</PlatformLink>.
+
+</PlatformSection>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `Sentry.metrics` to send counters, gauges, and distributions from your app. Add attributes to search and filter metrics later.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```ruby
+Sentry.metrics.count("checkout.failed", value: 1)
+
+Sentry.metrics.gauge(
+  "queue.depth",
+  42,
+  attributes: { queue: "payments" }
+)
+
+Sentry.metrics.distribution(
+  "api_latency",
+  187,
+  unit: "millisecond",
+  attributes: { endpoint: "/api/orders" }
+)
+```
+
+If you're using Yabeda, you can use the <PlatformLink to="/integrations/yabeda/">`sentry-yabeda` integration</PlatformLink> to automatically send Yabeda metrics to Sentry.
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Trigger and capture a test error in your application:
+
+```ruby
+begin
+  1 / 0
+rescue ZeroDivisionError => exception
+  Sentry.capture_exception(exception)
+end
+```
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Ruby application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/tracing/">Set Up Tracing</PlatformLink> to learn more about tracing and sampling
+- <PlatformLink to="/profiling/">Set Up Profiling</PlatformLink> to learn how to collect and analyze profiles
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

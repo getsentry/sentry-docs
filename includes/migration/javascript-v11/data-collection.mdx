@@ -1,0 +1,62 @@
+---
+id: data-collection
+title: "`sendDefaultPii` is replaced by `dataCollection`"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 10
+---
+
+`sendDefaultPii` is replaced by `dataCollection`, which controls each category of collected data separately. Our blog post [The Data Collection Control Panel](https://blog.sentry.io/datacollection-control-panel/) covers the thinking behind it.
+
+<Alert level="warning">
+
+This is a behavior change, not a rename. In v10, an unset `sendDefaultPii` was restrictive. In v11, an unset `dataCollection` collects everything by default.
+
+</Alert>
+
+| Category              | v10 default (`sendDefaultPii` off) | v11 default          |
+| --------------------- | ---------------------------------- | -------------------- |
+| `userInfo`            | `false`                            | `true`               |
+| `cookies`             | not collected                      | `true`               |
+| `httpHeaders`         | request + response, PII scrubbed   | request + response   |
+| `httpBodies`          | not collected (size only)          | all request/response |
+| `urlQueryParams`      | `true`                             | `true`               |
+| `genAI`               | inputs + outputs not collected     | inputs + outputs     |
+| `databaseQueryData`   | `false`                            | `true`               |
+| `stackFrameVariables` | `true`                             | `true`               |
+| `frameContextLines`   | `7`                                | `5`                  |
+
+If you set `sendDefaultPii: true`, remove it. The v11 default matches that behavior.
+
+If you relied on the v10 default, set the baseline explicitly.
+
+Sentry scrubs values whose key looks sensitive (e.g. `auth`, `token`, `secret`, `password`). The match runs on the key name, so treat it as best effort: a credential in a field that isn't named like one still reaches Sentry. Review your <PlatformLink to="/data-management/sensitive-data/">data scrubbing</PlatformLink> config for the categories v11 collects now, especially request and response bodies.
+
+<Expandable title="Keeping the v10 collection defaults">
+
+```js
+Sentry.init({
+  dataCollection: {
+    userInfo: false,
+    cookies: false,
+    httpHeaders: {
+      request: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+      response: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    },
+    httpBodies: [],
+    urlQueryParams: { deny: ["forwarded", "-ip", "remote-", "via", "-user"] },
+    genAI: { inputs: false, outputs: false },
+    databaseQueryData: false,
+    graphQL: { document: false, variables: false },
+  },
+});
+```
+
+The `cookies`, `urlQueryParams`, and `httpHeaders` fields also accept `true`, `false`, `{ allow: string[] }`, or `{ deny: string[] }`.
+
+</Expandable>
+
+See the <PlatformLink to="/configuration/options/#dataCollection">`dataCollection` option</PlatformLink> for the full list of categories.

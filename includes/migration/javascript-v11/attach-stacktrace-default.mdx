@@ -1,0 +1,17 @@
+---
+id: attach-stacktrace-default
+title: "`attachStacktrace` now defaults to `true`"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 40
+---
+
+`Sentry.captureMessage()` events, and non-`Error` values passed to `Sentry.captureException()`, now attach a synthetic stack trace that points to the call site. Set `attachStacktrace: false` to restore the previous behavior.
+
+Two consequences are worth checking after you upgrade:
+
+- **Issue grouping:** Sentry groups events with and without stack traces differently, so you may see new issue groups.
+- **Release health:** Events with a stack trace count as errors, so a `captureMessage()` call marks the current session as errored. Crash-free session rate is not affected. For purely informational output, consider [Sentry Logs](/product/logs/) instead.

@@ -3,6 +3,7 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {Fragment, useMemo} from 'react';
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
+import {canonicalPath} from 'sentry-docs/canonical';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
@@ -14,6 +15,7 @@ import {SpecChangelog} from 'sentry-docs/components/specChangelog';
 import {isSpecStatus} from 'sentry-docs/components/specConstants';
 import {SpecMeta} from 'sentry-docs/components/specMeta';
 import {isDevelopDocsIndexablePath} from 'sentry-docs/developDocsConfig';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
@@ -23,7 +25,6 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
@@ -289,17 +290,6 @@ type MetadataProps = {
   }>;
 };
 
-// Helper function to clean up canonical tags missing leading or trailing slash
-function formatCanonicalTag(tag: string) {
-  if (tag.charAt(0) !== '/') {
-    tag = '/' + tag;
-  }
-  if (tag.charAt(tag.length - 1) !== '/') {
-    tag += '/';
-  }
-  return tag;
-}
-
 // Helper function to resolve OG image URLs
 function resolveOgImageUrl(
   imageUrl: string | undefined,
@@ -337,13 +327,10 @@ function resolveOgImageUrl(
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const domain = isDeveloperDocs
-    ? 'https://develop.sentry.dev'
-    : 'https://docs.sentry.io';
   // enable og image preview on preview deployments
   const previewDomain = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : domain;
+    : DOCS_ORIGIN;
   let title =
     'Sentry Docs | Application Performance Monitoring & Error Tracking Software';
   let customCanonicalTag: string = '';
@@ -362,14 +349,21 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     );
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+      const pageTitle = pageNode.frontmatter.title;
 
-      title =
-        pageNode.frontmatter.title +
-        (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
+      // Platform/guide pages keep `| Sentry for {name}`. Other docs get `| Sentry Docs`.
+      // `/platforms` itself has no guide/platform, so leave that title unchanged.
+      if (guideOrPlatform) {
+        title = `${pageTitle} | Sentry for ${guideOrPlatform.title}`;
+      } else if (params.path[0] !== 'platforms') {
+        title = `${pageTitle} | Sentry Docs`;
+      } else {
+        title = pageTitle;
+      }
       description = pageNode.frontmatter.description ?? '';
 
       if (pageNode.frontmatter.customCanonicalTag) {
-        customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
+        customCanonicalTag = pageNode.frontmatter.customCanonicalTag;
       }
 
       noindex = pageNode.frontmatter.noindex;
@@ -385,7 +379,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       if (pageNode.frontmatter.og_image) {
         ogImageUrl = resolveOgImageUrl(
           pageNode.frontmatter.og_image,
-          previewDomain ?? domain,
+          previewDomain,
           params.path
         );
       }
@@ -394,16 +388,14 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   // Default fallback
   if (!ogImageUrl) {
-    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+    ogImageUrl = `${previewDomain}/og.png`;
   }
 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
-  const canonical = customCanonicalTag
-    ? domain + customCanonicalTag
-    : params.path
-      ? `${domain}/${params.path.join('/')}/`
-      : domain;
+  const canonical = `${DOCS_ORIGIN}${canonicalPath(
+    customCanonicalTag || params.path?.join('/') || ''
+  )}`;
 
   return {
     title,

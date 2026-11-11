@@ -1,0 +1,57 @@
+---
+id: ember-v2-addon
+title: "`@sentry/ember` is now a v2 addon with manual setup"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: [ember]
+platformCategory: browser
+order: 450
+---
+
+`@sentry/ember` is a [v2 (Embroider) addon](https://rfcs.emberjs.com/id/0507-embroider-v2-package-format/) now, so it builds cleanly under Embroider and Vite as well as classic builds.
+
+Because v2 addons can't configure the host app, Sentry is no longer wired up from `config/environment.js` and no longer registers its own initializer.
+
+You call `Sentry.init()` yourself and opt into performance instrumentation.
+
+**1. Initialize Sentry in `app/app.ts`.** Remove the `'@sentry/ember'` block from `config/environment.js` and call `init()` before your `Application` class. The former `sentry` config keys are `Sentry.init()` options.
+
+```typescript {filename:app/app.ts}
+import Application from "@ember/application";
+import Resolver from "ember-resolver";
+import loadInitializers from "ember-load-initializers";
+import config from "my-app/config/environment";
+import * as Sentry from "@sentry/ember";
+
+Sentry.init({
+  dsn: config.sentryDsn,
+  tracesSampleRate: 1.0,
+});
+
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
+}
+
+loadInitializers(App, config.modulePrefix);
+```
+
+**2. Opt into performance instrumentation with an instance-initializer.** The former `disable*` performance flags are options of `instrumentAppInstancePerformance()`. `disablePerformance` no longer exists: omit the instance-initializer to disable performance instrumentation. FastBoot is detected automatically, so client-side instrumentation is skipped during server rendering.
+
+```typescript {filename:app/instance-initializers/sentry-performance.ts}
+import type ApplicationInstance from "@ember/application/instance";
+import { instrumentAppInstancePerformance } from "@sentry/ember";
+
+export function initialize(appInstance: ApplicationInstance): void {
+  instrumentAppInstancePerformance(appInstance, {
+    // disableRunloopPerformance: false,
+    // disableInstrumentComponents: false,
+  });
+}
+
+export default { initialize };
+```
+
+`instrumentRoutePerformance` is unchanged. Wrapping individual routes works as before.

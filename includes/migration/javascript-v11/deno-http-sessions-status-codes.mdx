@@ -1,0 +1,14 @@
+---
+id: deno-http-sessions-status-codes
+title: "Deno server requests are tracked as sessions and honor `ignoreStatusCodes`"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: [deno]
+platformCategory: server
+order: 160
+---
+
+`denoHttpIntegration` creates [Sessions](/product/releases/health/#sessions) for incoming `node:http` requests, like the other server SDKs. Pass `sessions: false` to restore the previous behavior. `sessionFlushingDelayMS` is configurable now and defaults to 60 seconds.
+
+`denoHttpIntegration` and `denoServeIntegration` honor `ignoreStatusCodes`, using the same default list as `httpIntegration`: incoming requests whose response status falls in `[[401, 404], [301, 303], [305, 399]]` are dropped. Each integration owns the option for the requests it instruments. Pass an empty array to keep everything. The filter only applies in transaction mode, which is why the option is deprecated and will be removed in v12.

@@ -1,0 +1,26 @@
+---
+id: unstable-bundler-plugin-options
+title: "The `unstable_sentry*PluginOptions` escape hatch was removed"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: [astro, nextjs, nuxt, react-router, solidstart, sveltekit]
+platformCategory: all
+order: 350
+---
+
+The `unstable_sentry*PluginOptions` escape hatch was removed from every SDK, because the Sentry bundler plugins now live in the SDK monorepo and release in lockstep. Every supported plugin option is a first-class build option:
+
+```js
+// Before
+unstable_sentryWebpackPluginOptions: {
+  applicationKey: "my-app",
+},
+
+// After
+applicationKey: "my-app",
+```
+
+Passing a removed option logs a build-time warning that names it, because build configs are often plain JavaScript where TypeScript can't catch it.
+
+`moduleMetadata` and `sourcemaps.resolveSourceMap` are first-class build options now. `release.uploadLegacySourcemaps`, `_experiments`, and the whole-plugin `disable` flag have no equivalent. Use `sourcemaps.disable` instead of `disable`.

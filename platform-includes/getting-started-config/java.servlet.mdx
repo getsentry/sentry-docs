@@ -3,7 +3,6 @@ Configuration should happen as early as possible in your application's lifecycle
 
 The following example configures a `SentryInitializer` servlet container initializer that initializes Sentry on application startup.
 
-
 ```java
 package sentry.sample;
 
@@ -19,9 +18,11 @@ public final class SentryInitializer implements ServletContainerInitializer {
     Sentry.init(options -> {
       options.setDsn("___PUBLIC_DSN___");
 
-      // Add data like request headers and IP for users,
-      // see https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/ for more info
-      options.setSendDefaultPii(true);
+      // Use Data Collection defaults but don't collect automatic user information.
+      // https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/
+      options.getDataCollection().forceDataCollection();
+      options.getDataCollection().setUserInfo(false);
+      // Configure other data categories here.
       // ___PRODUCT_OPTION_START___ performance
 
       // Set traces_sample_rate to 1.0 to capture 100%
@@ -58,10 +59,12 @@ class SentryInitializer : ServletContainerInitializer {
     Sentry.init { options ->
       options.dsn = "___PUBLIC_DSN___"
 
-      // Add data like request headers and IP for users,
-      // see https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/ for more info
-      options.isSendDefaultPii = true
-        // ___PRODUCT_OPTION_START___ performance
+      // Use Data Collection defaults but don't collect automatic user information.
+      // https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/
+      options.dataCollection.forceDataCollection()
+      options.dataCollection.userInfo = false
+      // Configure other data categories here.
+      // ___PRODUCT_OPTION_START___ performance
 
       // Set traces_sample_rate to 1.0 to capture 100%
       // of transactions for tracing.
@@ -83,6 +86,7 @@ class SentryInitializer : ServletContainerInitializer {
   }
 }
 ```
+
 <OnboardingOption optionId="logs">
 <Alert>
 
@@ -96,4 +100,5 @@ Create a file in `src/main/resources/META-INF/services` named `javax.servlet.Ser
 ```properties
 sentry.sample.SentryInitializer
 ```
+
 </OnboardingOption>

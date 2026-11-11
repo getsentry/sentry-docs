@@ -347,24 +347,32 @@ export function updateElementsVisibilityForOptions(
 
 export function OnboardingOptionButtons({
   options: initialOptions,
+  defaults = [],
 }: {
   // convenience to allow passing option ids as strings when no additional config is required
   options: (OnboardingOptionType | OptionId)[];
+  defaults?: OptionId[];
 }) {
   const codeContext = useContext(CodeContext);
   const {emit} = usePlausibleEvent();
+
+  validateOptionIds(defaults.map(id => ({id})));
+  const defaultOptionIds = new Set(defaults);
 
   const normalizedOptions = initialOptions
     .map(option => {
       if (typeof option === 'string') {
         return {
           id: option,
-          // error monitoring is always needs to be checked and disabled
+          // error monitoring always needs to be checked and disabled
           disabled: option === 'error-monitoring',
-          checked: option === 'error-monitoring',
+          checked: option === 'error-monitoring' || defaultOptionIds.has(option),
         };
       }
-      return option;
+      return {
+        ...option,
+        checked: option.checked || defaultOptionIds.has(option.id),
+      };
     })
     // sort options by their index in OPTION_IDS
     // so that the order of the options is consistent
@@ -376,6 +384,13 @@ export function OnboardingOptionButtons({
     });
 
   validateOptionIds(normalizedOptions);
+
+  const optionIds = new Set(normalizedOptions.map(option => option.id));
+  defaults.forEach(defaultOption => {
+    if (!optionIds.has(defaultOption)) {
+      throw new Error(`Default option "${defaultOption}" must be included in options.`);
+    }
+  });
 
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({

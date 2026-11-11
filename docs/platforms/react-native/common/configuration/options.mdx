@@ -177,6 +177,12 @@ Learn more about enriching events with the view hierarchy in our <PlatformLink t
 
 </SdkOption>
 
+<SdkOption name="reportAccessibilityIdentifier" type="boolean" defaultValue="true">
+
+Controls whether the native iOS SDK includes each view's `accessibilityIdentifier` in the captured view hierarchy (see `attachViewHierarchy`). Accessibility identifiers are developer-defined and may contain personally identifiable information (PII). Set this to `false` to omit them from the view hierarchy. The native SDK doesn't gate this on `sendDefaultPii`, so it defaults to `true` regardless of that option. This only affects iOS.
+
+</SdkOption>
+
 <SdkOption name="enabled" type="boolean" defaultValue="true">
 
 Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
@@ -430,9 +436,57 @@ The minimum amount of time (in milliseconds) an app must be unresponsive before 
 
 </SdkOption>
 
+<SdkOption name="enableNetworkBreadcrumbs" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native iOS SDK from recording a breadcrumb for every network request. The JavaScript SDK already records breadcrumbs for `fetch`/`XHR` requests, so these native HTTP breadcrumbs are largely duplicates. Disabling this reduces breadcrumb noise. This only affects iOS.
+
+</SdkOption>
+
+<SdkOption name="enableNetworkEventBreadcrumbs" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native Android SDK from recording breadcrumbs for network connectivity changes (network available/lost, capability changes such as WiFi ↔ cellular, and bandwidth/VPN state). These track the device's network state rather than individual HTTP requests, so they're distinct from the `fetch`/`XHR` breadcrumbs the JavaScript SDK records. Disabling this reduces breadcrumb noise. This only affects Android.
+
+</SdkOption>
+
+<SdkOption name="enableAutoBreadcrumbTracking" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native iOS SDK from automatically recording breadcrumbs for system events such as memory warnings, orientation changes, keyboard show/hide, and screenshots. Disabling this reduces breadcrumb noise. This only affects iOS.
+
+</SdkOption>
+
+<SdkOption name="enableActivityLifecycleBreadcrumbs" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native Android SDK from recording breadcrumbs for activity lifecycle events (`created`, `started`, `resumed`, `paused`, `stopped`, `destroyed`). This only affects Android.
+
+</SdkOption>
+
+<SdkOption name="enableAppLifecycleBreadcrumbs" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native Android SDK from recording breadcrumbs for app lifecycle events (the app entering the foreground or background). This only affects Android.
+
+</SdkOption>
+
+<SdkOption name="enableSystemEventBreadcrumbs" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native Android SDK from recording breadcrumbs for system events such as low battery, low storage, device charging, screen on/off, airplane mode, and `ACTION_*` intents. This only affects Android.
+
+</SdkOption>
+
+<SdkOption name="enableAppComponentBreadcrumbs" type="boolean" defaultValue="true">
+
+Set this boolean to `false` to stop the native Android SDK from recording breadcrumbs for app component events such as low-memory `onTrimMemory` callbacks and configuration or orientation changes. This only affects Android.
+
+</SdkOption>
+
 <SdkOption name="enableAutoPerformanceTracing" type="boolean" defaultValue="true">
 
 Set this boolean to `false` to disable auto [performance monitoring](/product/dashboards/sentry-dashboards/) tracking.
+
+</SdkOption>
+
+<SdkOption name="enablePreWarmedAppStartTracing" type="boolean" defaultValue="true">
+
+Controls whether the native iOS SDK measures app start for pre-warmed app starts, where the operating system starts parts of the app ahead of time. Enabled by default, and the default already accounts for pre-warm skew. Set this to `false` to opt out of app-start tracing for pre-warmed starts. This only affects iOS.
 
 </SdkOption>
 
@@ -449,6 +503,12 @@ Set this boolean to `true` to subscribe to MetricKit diagnostic reports on iOS a
 Requires iOS 15 or macOS 12 and up. MetricKit hang diagnostics are reported by the operating system and are separate from <PlatformLink to="/configuration/app-hangs/">App Hang Tracking</PlatformLink>, so enabling both can report the same hang twice.
 
 Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="enableMetricKitRawPayload" type="boolean" defaultValue="false">
+
+Set this boolean to `true` to attach the raw MetricKit diagnostic payload (as received from the operating system) to the events the native iOS SDK creates from MetricKit diagnostics. Only has an effect when `enableMetricKit` is enabled. This only affects iOS.
 
 </SdkOption>
 

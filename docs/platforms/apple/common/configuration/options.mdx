@@ -377,7 +377,9 @@ Learn more in the <PlatformLink to="/configuration/graphql-operation-tracking/">
 
 <SdkOption name="enableLogs" type="bool" defaultValue="false">
 
-When enabled, the SDK sends logs to Sentry. You must explicitly set this option to `true` to enable log capturing.
+In SDK 9.0.0–9.26.x, set this option to `true` to send logs to Sentry.
+
+Since SDK 9.27.0, this option is deprecated and no longer gates calls to `SentrySDK.logger` or integrations that forward to it. Setting it to `false` doesn't drop those logs. Use <PlatformLink to="/logs/#beforesendlog">`beforeSendLog`</PlatformLink> to filter logs instead.
 
 Learn more about structured logging in the <PlatformLink to="/logs/">logs documentation</PlatformLink>.
 
@@ -836,7 +838,7 @@ This feature requires that tracing is enabled via <PlatformIdentifier name="trac
 
 Screenshot options allow you to configure how screenshots are captured and masked when attached to error events. These options are available under `options.screenshot`.
 
-Learn more about screenshot options in the <PlatformLink to="/guides/ios/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+Learn more about screenshot options in the [Screenshots documentation](/platforms/apple/guides/ios/enriching-events/screenshots/).
 
 <SdkOption name="screenshot.maskAllText" type="bool" defaultValue="true">
 
@@ -900,7 +902,7 @@ Learn more in the <PlatformLink to="/session-replay/">Session Replay documentati
 
 When enabled, all text in the app is masked during session replay by drawing a black rectangle over it.
 
-Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/session-replay/customredact/" fallbackPlatform="apple">Using Custom Masking for Session Replay</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -908,7 +910,7 @@ Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom 
 
 When enabled, all non-bundled images in the app are masked during session replay by drawing a black rectangle over them.
 
-Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/session-replay/customredact/" fallbackPlatform="apple">Using Custom Masking for Session Replay</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -922,7 +924,7 @@ The quality of the session replay video. Higher quality increases CPU and bandwi
 
 A list of custom `UIView` subclasses that should be masked during session replay. Every child of a masked view is also masked.
 
-Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/session-replay/customredact/" fallbackPlatform="apple">Using Custom Masking for Session Replay</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -930,7 +932,7 @@ Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom 
 
 A list of custom `UIView` subclasses to be ignored during the masking step of session replay. Views of these classes are not masked, but their children may be. This property takes precedence over `maskedViewClasses`.
 
-Learn more in the <PlatformLink to="/session-replay/customredact/">Using Custom Masking for Session Replay</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/session-replay/customredact/" fallbackPlatform="apple">Using Custom Masking for Session Replay</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -970,7 +972,7 @@ We discourage using this option as it can result in incomplete or missing views 
 
 </Alert>
 
-Learn more about session replay performance in the <PlatformLink to="/session-replay/performance-overhead/">Performance Overhead</PlatformLink> documentation.
+Learn more about session replay performance in the <PlatformLink to="/session-replay/performance-overhead/" fallbackPlatform="apple">Performance Overhead</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -1057,7 +1059,7 @@ When enabled, the profiler starts as early as possible during the app lifecycle,
 
 If `lifecycle` is `manual`, profiling starts automatically on startup but you must call `SentrySDK.stopProfiler()` when your app startup is complete. If `lifecycle` is `trace`, profiling starts automatically on startup and stops when the root span associated with app startup ends.
 
-Learn more about profiling in the <PlatformLink to="/profiling/">Profiling documentation</PlatformLink>.
+Learn more about profiling in the <PlatformLink to="/profiling/" fallbackPlatform="apple">Profiling documentation</PlatformLink>.
 
 </SdkOption>
 
@@ -1289,6 +1291,8 @@ This option is only used when <PlatformIdentifier name="enableSpotlight" /> is s
 
 When enabled, the SDK can send metrics to Sentry. Note that metrics are not collected automatically — you must manually call the `SentrySDK.metrics` API to record counters, gauges, and distributions.
 
+Since SDK 9.27.0, this option is deprecated and no longer gates manual metric capture. To drop metrics, return `nil` from <PlatformIdentifier name="beforeSendMetric" />.
+
 Learn more in the <PlatformLink to="/metrics/">Metrics documentation</PlatformLink>.
 
 </SdkOption>
@@ -1329,7 +1333,7 @@ SentrySDK.start { options in
 
 When enabled, the SDK can capture request and response headers and bodies for network requests during session replay. You must also configure `options.sessionReplay.networkDetailAllowUrls` to specify which requests are captured.
 
-Learn more in the <PlatformLink to="/session-replay/configuration/#network-details">Network Details</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/session-replay/configuration/#network-details" fallbackPlatform="apple">Network Details</PlatformLink> documentation.
 
 </SdkOption>
 
@@ -1361,13 +1365,13 @@ When enabled, the SDK uses a more efficient mechanism for detecting watchdog ter
 
 </SdkOption>
 
-<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.4.0" removedSince="9.12.0">
+<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.2.0" removedSince="9.12.0">
 
 **Removed in version 9.12.0** — Metrics has graduated to GA. Use the top-level <PlatformIdentifier name="enableMetrics" /> option instead. See [sentry-cocoa#7842](https://github.com/getsentry/sentry-cocoa/pull/7842).
 
 </SdkOption>
 
-<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.4.0" removedSince="9.12.0">
+<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.2.0" removedSince="9.12.0">
 
 **Removed in version 9.12.0** — Metrics has graduated to GA. Use the top-level <PlatformIdentifier name="beforeSendMetric" /> option instead. See [sentry-cocoa#7842](https://github.com/getsentry/sentry-cocoa/pull/7842).
 

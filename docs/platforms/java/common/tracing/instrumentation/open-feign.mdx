@@ -61,6 +61,23 @@ val api = Feign.builder()
     .target(YourApi::class.java, "https://your-api-host/")
 ```
 
+## Control URL Query Parameters
+
+OpenFeign adds URLs to HTTP spans and breadcrumbs. Use <PlatformLink to="/configuration/options/#dataCollection">`dataCollection.urlQueryParams`</PlatformLink> to filter or omit their query parameters:
+
+```java
+import io.sentry.KeyValueCollectionBehavior;
+import io.sentry.Sentry;
+
+Sentry.init(
+    options ->
+        options
+            .getDataCollection()
+            .setUrlQueryParams(KeyValueCollectionBehavior.off()));
+```
+
+Configuring this field activates the Data Collection defaults for omitted fields. The base URL is still sent when query parameter collection is disabled.
+
 ## Modify or Drop Spans
 
 Spans created around HTTP requests can be modified or dropped using `SentryFeignClient.BeforeSpanCallback` passed to `SentryCapability`:

@@ -6,6 +6,8 @@ import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 type Props = Omit<ComponentProps<typeof Link>, 'href'> & {
   to: string;
+  /** Platform to use when the user hasn't picked one yet, e.g. `javascript.node`. */
+  defaultPlatform?: string;
 };
 
 function getRedirectHref(to: string, platform?: string) {
@@ -16,8 +18,8 @@ function getRedirectHref(to: string, platform?: string) {
   return `/platform-redirect/?${params.toString()}`;
 }
 
-export function PreferredPlatformLink({to, ...props}: Props) {
-  const [href, setHref] = useState(() => getRedirectHref(to));
+export function PreferredPlatformLink({to, defaultPlatform, ...props}: Props) {
+  const [href, setHref] = useState(() => getRedirectHref(to, defaultPlatform));
 
   useEffect(() => {
     if (!isLocalStorageAvailable()) {

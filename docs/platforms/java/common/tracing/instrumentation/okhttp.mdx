@@ -41,7 +41,45 @@ For other dependency managers, see the [central Maven repository](https://search
 
 ## Configure
 
-Configuration should happen once you create your `OkHttpClient` instance.
+<PlatformSection supported={["java.spring-boot"]}>
+
+### Configure Spring Boot Automatically
+
+Sentry's Spring Boot 2, 3, and 4 integrations automatically instrument every `OkHttpClient` bean managed by Spring when you enable this option. Install `sentry-okhttp`, configure `sentry.dsn`, and enable the integration in your application configuration:
+
+```properties {tabTitle:application.properties} {filename:src/main/resources/application.properties}
+sentry.clients.ok-http-enabled=true
+```
+
+```yaml {tabTitle:application.yml} {filename:src/main/resources/application.yml}
+sentry:
+  clients:
+    ok-http-enabled: true
+```
+
+The auto-configuration preserves each client's existing configuration, interceptors, and event listeners. It adds the Sentry interceptor only once and doesn't create an `OkHttpClient` bean if your application hasn't defined one.
+
+Auto-configured clients use a `SentryOkHttpInterceptor` and `SentryOkHttpEventListener` with default options. To customize them (for example, with a `BeforeSpanCallback`, the `captureFailedRequests` options, or a delegate `EventListener` as described below), add your own configured `SentryOkHttpInterceptor` or `SentryOkHttpEventListener` to the bean. The auto-configuration uses your instances instead of adding its own.
+
+Auto-configuration doesn't instrument clients created outside Spring or `OkHttpClient` subclasses. Configure these clients manually as shown below.
+
+<Alert>
+
+Sentry skips auto-configuration when the <PlatformLink to="/opentelemetry/setup/agent/">OpenTelemetry Java Agent</PlatformLink> is on the classpath because the agent already instruments OkHttp.
+
+</Alert>
+
+### Configure Manually
+
+Add the Sentry interceptor and event listener when you create an OkHttp client that Spring doesn't manage.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Add the Sentry interceptor and event listener when you create your `OkHttpClient` instance.
+
+</PlatformSection>
 
 ```kotlin
 import okhttp3.OkHttpClient
@@ -259,13 +297,20 @@ private val client = OkHttpClient.Builder()
   .build()
 ```
 
-By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+Use <PlatformLink to="/configuration/options/#dataCollection">Data Collection</PlatformLink> to control the request and response headers, cookies, and URL query parameters attached to error events. For example, allow selected request headers and omit cookies:
 
 ```kotlin
+import io.sentry.KeyValueCollectionBehavior
+import io.sentry.Sentry
+
 Sentry.init { options ->
-  options.isSendDefaultPii = true
+  options.dataCollection.httpHeaders.request =
+    KeyValueCollectionBehavior.allowList("content-type", "x-request-id")
+  options.dataCollection.cookies = KeyValueCollectionBehavior.off()
 }
 ```
+
+Configuring either field activates the Data Collection defaults for omitted fields. Sensitive values still use the built-in filtering rules.
 
 HTTP client errors sent to Sentry are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
 
