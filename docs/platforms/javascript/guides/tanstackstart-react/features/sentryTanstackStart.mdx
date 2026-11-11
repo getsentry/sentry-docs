@@ -97,58 +97,11 @@ sentryTanstackStart({
 
 <AvailableSince version="10.51.0" />
 
-The `tunnelRoute` option serves a same-origin tunnel that forwards Sentry envelopes to Sentry's ingest servers. It also automatically sets the client `tunnel` option in `Sentry.init()` so browser events go through it. This helps avoid ad blockers and corporate firewalls that block requests to `*.sentry.io`.
-
-Since version `11.10.0`, the tunnel answers in the server entry, before TanStack Start's request middleware and routing. It works the same way as <PlatformLink to="/configuration/integrations/servetunnel/">`serveTunnelIntegration`</PlatformLink>, which you can use instead of this option.
-
-`tunnelRoute` accepts three shapes:
-
-#### `tunnelRoute: true` (recommended)
-
-Serves a path derived from the DSN, under your router's base path. It's the same path that `Sentry.init({ tunnel: true })` uses.
-
-```typescript {filename:vite.config.ts}
-sentryTanstackStart({
-  tunnelRoute: true,
-}),
-```
-
-<Alert>
-  Before version `11.10.0`, `tunnelRoute: true` generated a new random path for
-  each dev session and production build.
+<Alert level="warning">
+  This option is deprecated and will be removed in v12. Set `tunnel: true` in
+  the browser and add `serveTunnelIntegration` on the server instead, as
+  described in{" "}
+  <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
 </Alert>
 
-#### Static path
-
-Pass a string to use a fixed route path. The SDK serves it as written, without the base path.
-
-```typescript {filename:vite.config.ts}
-sentryTanstackStart({
-  tunnelRoute: "/monitor",
-}),
-```
-
-#### Object form
-
-Use the object form to allow more DSNs or set a static path explicitly:
-
-```typescript {filename:vite.config.ts}
-sentryTanstackStart({
-  tunnelRoute: {
-    allowedDsns: ["___PUBLIC_DSN___"],
-    path: "/monitor",
-  },
-}),
-```
-
-- **`allowedDsns`**: envelopes for these DSNs are forwarded, in addition to the DSN of the active server-side Sentry SDK.
-- **`path`**: the public route path. If omitted, the path is derived from the DSN (same behavior as `tunnelRoute: true`).
-
-<Alert
-  level="info"
-  title="Setting `tunnel` in `Sentry.init()` overrides this option"
->
-  If you also pass a different `tunnel` to `Sentry.init()`, the runtime option
-  wins and the managed tunnel route is bypassed. The SDK logs a warning when
-  this happens.
-</Alert>
+The `tunnelRoute` option serves a tunnel on your own origin that forwards browser events to Sentry, so ad blockers don't drop them. It also sets the browser `tunnel` option for you.
