@@ -42,13 +42,18 @@ If the screenshot can't be taken, for example because the main thread doesn't re
 
 ### Native Errors
 
-| Platform              | Screenshot for native errors and crashes                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| iOS                   | Captured by sentry-cocoa, only with <PlatformLink to="/native-support/#build-time-initialization">build time initialization</PlatformLink> |
-| Windows               | Captured by sentry-native when the game crashes                                                                                            |
-| Android, macOS, Linux | None                                                                                                                                       |
+| Platform              | Screenshot for native crashes                   |
+| --------------------- | ----------------------------------------------- |
+| iOS                   | Captured by sentry-cocoa when the game crashes  |
+| Windows               | Captured by sentry-native when the game crashes |
+| Android, macOS, Linux | None                                            |
 
-These screenshots are taken by the native SDK, so they include overlays, and <PlatformIdentifier name="SetBeforeCaptureScreenshot" /> and <PlatformIdentifier name="SetBeforeSendScreenshot" /> don't apply to them.
+Other events the native SDKs capture, such as failed HTTP requests captured by sentry-cocoa, don't get a screenshot.
+
+Native crash screenshots are taken by the native SDK in its crash handler, so they include overlays, and <PlatformIdentifier name="SetBeforeCaptureScreenshot" /> and <PlatformIdentifier name="SetBeforeSendScreenshot" /> can't run for them:
+
+- On iOS, setting either callback turns native crash screenshots off, so a screenshot you'd skip or mask through them doesn't get sent unmasked. With <PlatformLink to="/native-support/#build-time-initialization">build time initialization</PlatformLink>, only callbacks set in your [`OptionsConfiguration`](/platforms/unity/configuration/options/programmatic-configuration/) count, as with every other option the native SDK gets at build time.
+- On Windows, sentry-native attaches them whether or not these callbacks are set.
 
 <Alert>
 
