@@ -1,0 +1,60 @@
+---
+title: Swift Package Manager
+description: "Learn how to use the Sentry React Native SDK in an iOS project that links native dependencies with Swift Package Manager instead of CocoaPods."
+sidebar_order: 5
+---
+
+React Native 0.87 added an opt-in preview that links iOS native dependencies with Swift Package Manager (SwiftPM) instead of CocoaPods. The Sentry React Native SDK ships a `Package.swift`, so React Native links it like any other SwiftPM dependency.
+
+CocoaPods is still the default. If your project uses CocoaPods, you don't need to change anything.
+
+## Requirements
+
+- React Native 0.87 or newer
+- `@sentry/react-native` 8.29.0 or newer
+- An iOS app. macOS, tvOS, and visionOS apps keep building with CocoaPods.
+
+## Switch an Existing Project to SwiftPM
+
+We recommend that you set up Sentry first and switch to SwiftPM after that. The Sentry build phases that upload source maps and debug symbols stay in your Xcode project when React Native removes CocoaPods.
+
+1. Set up the SDK with the [wizard](/platforms/react-native/) or the [manual configuration](/platforms/react-native/manual-setup/manual-setup/).
+
+2. Switch the iOS project to SwiftPM:
+
+   ```bash
+   cd ios
+   npx react-native spm add --deintegrate
+   ```
+
+   The `--deintegrate` flag runs `pod deintegrate` and removes the React Native lines from your `Podfile`. If your project never used CocoaPods, leave out the flag.
+
+3. Build the app with `npx react-native run-ios`, or open the `.xcodeproj` file in Xcode. SwiftPM projects don't have an `.xcworkspace` file.
+
+## Add Sentry to a SwiftPM Project
+
+If your project already uses SwiftPM, run the [wizard](/platforms/react-native/) as usual. If the wizard asks whether to run `pod install`, select **No, I'll do it later**. SwiftPM projects don't use CocoaPods.
+
+You can also follow the iOS steps in the [manual configuration](/platforms/react-native/manual-setup/manual-setup/#ios). The build phases are the same for CocoaPods and SwiftPM projects.
+
+## Expo
+
+If you use the Sentry Expo config plugin in a SwiftPM project, use `@sentry/react-native` 8.32.0 or newer. In older versions, the _Upload Debug Symbols to Sentry_ build phase can't find `ios/.xcode.env` in SwiftPM projects, so it can fail to find Node.
+
+## Troubleshooting
+
+### `Package.swift is missing for library "@sentry/react-native"`
+
+Your SDK version doesn't support SwiftPM. Upgrade `@sentry/react-native` to 8.29.0 or newer.
+
+### `Package.swift is missing` for Another Library
+
+Every autolinked library needs a `Package.swift`, and many community libraries don't ship one yet. This is a React Native requirement, not a Sentry one. React Native prints the steps to fix it. For example, `npx react-native spm scaffold` can generate a `Package.swift` for a library that has a podspec.
+
+### `Sentry.xcframework` Fails to Download
+
+When Xcode resolves the packages, SwiftPM downloads `Sentry.xcframework` from the [sentry-cocoa GitHub releases](https://github.com/getsentry/sentry-cocoa/releases). If your network blocks GitHub, allow access to it on the machine that builds the app.
+
+### Go Back to CocoaPods
+
+Run `npx react-native spm deinit` in the `ios` directory to remove what `spm add` added to your Xcode project. Then restore your `Podfile` from version control and run `pod install`.
