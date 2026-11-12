@@ -105,7 +105,7 @@ const worker = new Worker("reports", processor, { connection });
 
 <PlatformSection notSupported={["javascript.nextjs"]}>
 
-Like the SDK's other auto-instrumentation, this only works if `Sentry.init()` runs before your app imports `bullmq`, so load your instrument file with `--import`. If `bullmq` is imported first, no check-ins are sent.
+Like the SDK's other auto-instrumentation, this only works if `Sentry.init()` runs before your app loads `bullmq`. Load your instrument file with `--import`, or in CommonJS, `require("./instrument")` before any other module. If `bullmq` is loaded first, no check-ins are sent.
 
 </PlatformSection>
 
@@ -123,7 +123,7 @@ const nextConfig = {
 
 The monitor slug is the queue name and the job scheduler ID joined by `-`, like `reports-daily-report` in this example, and the scheduler's `pattern` or `every` is sent as the monitor schedule. Each monitored job scheduler creates its own monitor, and each monitor is billed. Jobs that weren't created by a job scheduler aren't monitored. `excludeJobSchedulers` skips job schedulers whose ID matches a string exactly or a regular expression.
 
-Patterns use the scheduler's `tz` time zone, or the server's time zone without one. A job that BullMQ retries shows as one check-in, which fails only if the last attempt fails.
+Patterns use the scheduler's `tz` time zone, or the server's time zone without one. On BullMQ 5, `utc: true` sends UTC. If a pattern's seconds field isn't `0`, a check-in margin of 2 minutes is sent too, since the job checks in up to 59 seconds after the minute Sentry expects. This replaces a margin set in Sentry. A job that BullMQ retries shows as one check-in, which fails only if the last attempt fails.
 
 These aren't monitored:
 
@@ -133,6 +133,7 @@ These aren't monitored:
 - On BullMQ 5, patterns with an `nthDayOfWeek` and anything but a single day of the week
 - Patterns on a worker with a custom `repeatStrategy`
 - Repeatable jobs added with `queue.add` and the `repeat` option
+- Workers created without a processor that fetch jobs themselves with `getNextJob`
 - Workers in a server build that bundles BullMQ instead of loading it from `node_modules`
 
 </PlatformSection>
