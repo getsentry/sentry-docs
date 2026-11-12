@@ -2,18 +2,20 @@
 title: Laravel
 sdk: sentry.php.laravel
 sidebar_order: 0
-description: >-
-  Laravel is a PHP web application framework with expressive, elegant syntax.
-  Learn how to set it up with Sentry.
+description: Learn how to set up Sentry in your Laravel application and capture your first events.
 og_image: /og-images/platforms-php-guides-laravel.png
 ---
 
 ## Prerequisites
 
-- You need a [Sentry account](https://sentry.io/signup/) and project
-- The Sentry SDK requires PHP 7.2 or later
-- Your Laravel version needs to be 11.x or higher
-- Read one of these guides if you use an [older version](/platforms/php/guides/laravel/other-versions/) or need [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/)
+You need:
+
+- a [Sentry account](https://sentry.io/signup/) and project
+- an application running on PHP `7.2` or later
+- Laravel version `11.x`+
+- [Composer](https://getcomposer.org/)
+
+Read one of these guides if you use an [older Laravel version](/platforms/php/guides/laravel/other-versions/) or need [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
 
 ## Install
 
@@ -23,18 +25,34 @@ Install the latest `sentry/sentry-laravel` package:
 composer require sentry/sentry-laravel
 ```
 
+### Install Excimer for Profiling
+
+<Include name="php-quick-start-excimer" />
+
 ## Configure
 
-**Error Monitoring** starts working once you add your DSN and register Sentry's exception handler. **Logs** need the `sentry_logs` log channel in your log stack, which the snippet below sets up. **Application Metrics** need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
-This guide also enables **Tracing** and **Profiling**. Laravel also supports <PlatformLink to="/crons/">Crons</PlatformLink>, <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink>, <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>, and <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
+**Error Monitoring** starts working as soon as you initialize Sentry. **Application Metrics** need no extra configuration and you'll learn how to send them in step [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Profiling**, and **Logs**.
 
-Publish the Sentry config file and set your DSN with this command:
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
+
+Publish the Sentry config file and set your DSN:
 
 ```shell
 php artisan sentry:publish --dsn=___PUBLIC_DSN___
 ```
 
-It creates the config file (`config/sentry.php`) and adds your DSN, along with any options you confirm at the prompts, to your `.env` file. Make sure your `.env` file includes the following:
+This creates the config file `config/sentry.php` and adds your DSN, along with any options you confirm at the prompts, to your `.env` file.
+
+The snippet shown below also configures:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
+- Logs: via the <PlatformLink to="/logs/">`sentry_logs`</PlatformLink> channel in `LOG_STACK`
+
+Don't need a feature? Remove its lines from your `.env` file.
 
 ```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
@@ -53,15 +71,29 @@ LOG_CHANNEL=stack
 LOG_STACK=single,sentry_logs
 ```
 
-The snippet also turns on:
+<Alert level="warning" title="Capture stack trace arguments">
+  To receive stack trace arguments in your errors, set `zend.exception_ignore_args = Off` in your `php.ini`.
+</Alert>
 
-- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
-- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
-- Logs: via the `sentry_logs` channel in `LOG_STACK`
+### Disable Sentry During Local Development and Testing
 
-Don't need a feature? Remove its lines from your `.env` file.
+When Sentry is installed in your application, it's also active when you're developing or running tests. This can send unwanted events to Sentry and slow down your application or test suite.
 
-To control the data the SDK collects, set the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> directly in `config/sentry.php`. See <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink> for the available categories and their defaults.
+To stop sending events to Sentry, leave `SENTRY_LARAVEL_DSN` out of your `.env` file or set it to `SENTRY_LARAVEL_DSN=null`.
+
+### Control the Data You Send to Sentry
+
+By default, the SDK sends user identity data (IP address, ID, and similar) and other data (HTTP bodies, URL query parameters, etc.), with sensitive values scrubbed.
+
+To opt out of individual categories use the `data_collection` option. For the full list of categories and their defaults, <PlatformLink to="/configuration/options/#data_collection">see the `data_collection` options</PlatformLink>.
+
+```php
+'data_collection' => [
+    'user_info' => false,
+    'cookies' => ['mode' => 'off'],
+    // other categories
+],
+```
 
 ### Report Unhandled Exceptions
 
@@ -90,62 +122,29 @@ return Application::configure(basePath: dirname(__DIR__))
     ->create();
 ```
 
-### Install Excimer for Profiling
-
-Profiling requires the Excimer PHP extension. Install it with PECL:
-
-```bash
-pecl install excimer
-```
-
-Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
-
-Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
-
-### Capture Stack Trace Arguments
-
-<Alert level="warning">
-  To receive stack trace arguments in your errors, set
-  `zend.exception_ignore_args = Off` in your `php.ini`.
-</Alert>
-
-### Disable Sentry During Local Development and Testing
-
-When Sentry is installed in your application, it's also active when you're developing or running tests. This can send unwanted events to Sentry and slow down your application or test suite.
-
-To stop sending events to Sentry, set the DSN to `null`. You can do this by leaving `SENTRY_LARAVEL_DSN` out of your `.env` file or by setting `SENTRY_LARAVEL_DSN=null`.
-
-### Set Up Sentry Through Forge
-
-If you use Laravel Forge to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry).
-
-![Sentry and Forge](./img/forge-sentry.png)
-
 ## Send Logs
 
-Once the `sentry_logs` channel is in your log stack, Laravel's `Log` facade sends logs to Sentry. Laravel flushes logs automatically when a request, command, or job finishes.
-
-```php
-use Illuminate\Support\Facades\Log;
-
-Log::info('Checkout completed', ['order_id' => 12345]);
-```
-
-If your `config/logging.php` defines the stack's `channels` array directly instead of reading `LOG_STACK`, add `sentry_logs` to that array. See <PlatformLink to="/logs/#setup">Set Up Logs</PlatformLink> for older SDK versions, custom channel configuration, log levels, and filtering.
+<PlatformContent includePath="getting-started-logs" />
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. Metrics are enabled by default after you install the SDK; no metrics option is required. Laravel flushes metrics automatically at the end of each request or command.
-
-```php
-\Sentry\traceMetrics()->count('checkout.failed', 1);
-```
-
-See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
-Add a route that throws an exception, then visit it to confirm that Sentry captures the error:
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Verify With Artisan
+
+You can test your configuration using the `sentry:test` artisan command:
+
+```shell
+php artisan sentry:test
+```
+
+### Verify With Code
+
+Add a route that throws an exception, then visit it:
 
 ```php {filename:routes/web.php}
 Route::get('/debug-sentry', function () {
@@ -153,33 +152,24 @@ Route::get('/debug-sentry', function () {
 });
 ```
 
-To check your DSN and connectivity from the command line, you can also run:
-
-```shell
-php artisan sentry:test
-```
-
 ### View Captured Data in Sentry
 
-Run the logging and metrics examples above in a request, command, or job. If you kept Tracing and Profiling enabled, make a request to a route in your application. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-- **Issues** for the test error.
-- **Logs** for `Checkout completed`.
-- **Application Metrics** for the `checkout.failed` counter.
-- **Tracing and Profiling** for the request's trace and its associated profile. Very short requests may not collect enough profiling samples to produce a profile.
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
 At this point, you should have integrated Sentry into your Laravel application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/usage/">Learn how to manually capture errors</PlatformLink>
-- Fine-tune Tracing with <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">`traces_sampler`</PlatformLink> or <PlatformLink to="/configuration/laravel-options/#lower-sample-rate-for-specific-jobs">lower the sample rate for specific jobs</PlatformLink>
-- Review all <PlatformLink to="/configuration/laravel-options/">Laravel options</PlatformLink>
+- Monitor and debug your Laravel agents with <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink>
+- Learn how to use <PlatformLink to="/crons/">Crons</PlatformLink> and <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>
+- Collect user feedback via the <PlatformLink to="/user-feedback/">Crash-Report Modal</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>
