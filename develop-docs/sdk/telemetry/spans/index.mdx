@@ -2,14 +2,22 @@
 title: Spans
 description: Span creation, sampling, filtering, buffering, and wire format for the span-first tracing model.
 spec_id: sdk/telemetry/spans
-spec_version: 1.0.0
+spec_version: 1.2.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
   - id: sdk/foundations/trace-propagation
     version: ">=1.0.0"
+  - id: sdk/foundations/trace-propagation/dynamic-sampling-context
+    version: ">=1.4.0"
 spec_changelog:
+  - version: 1.2.0
+    date: 2026-10-19
+    summary: Require DSC spec 1.4.0 so span envelopes always have a trace envelope header, even for incoming traces without baggage
+  - version: 1.1.0
+    date: 2026-10-08
+    summary: Added client reports section listing discard reasons for spans and clarifying that the quantity is the number of discarded spans
   - version: 1.0.0
     date: 2026-06-22
     summary: Initial stable release
@@ -476,6 +484,23 @@ SDKs **SHOULD** materialize and freeze the DSC as late as possible:
 
 </SpecSection>
 
+<SpecSection id="client-reports" status="candidate" since="1.1.0">
+
+### Client Reports
+
+SDKs **MUST** record a [client report](/sdk/telemetry/client-reports/) with the `span` data category in at least the following cases:
+
+- `sample_rate`: the span was not recorded because its trace was negatively sampled, so a [Noop span](#noop-span) was returned instead. SDKs **SHOULD** record one outcome per Noop span.
+- `ignored`: the span matched an `ignoreSpans` pattern. See the [filtering implementation requirements](#implementation-requirements) for how to count ignored segments and their children.
+- `no_parent_span`: the span was not started because no parent span was present (for example, auto-instrumented spans that are only created within an active span).
+- `buffer_overflow`: the [span buffer](#span-buffer) dropped the span.
+- `ratelimit_backoff`: the span was dropped because the `span` data category is rate limited.
+- `send_error`, `internal_sdk_error`, `network_error`: the envelope containing the span was discarded because sending it failed, as specified in [Network Failure Recording](/sdk/telemetry/client-reports/#network-failure-recording).
+
+The quantity **MUST** be the number of discarded spans, not the number of discarded envelopes or envelope items. For example, if a span envelope with 500 spans fails to send, the SDK records a `span` quantity of 500 (see [Quantity of Discarded Envelopes](/sdk/telemetry/client-reports/#quantity-of-discarded-envelopes)).
+
+</SpecSection>
+
 <SpecSection id="span-links" status="stable" since="1.0.0">
 
 ### Span Links
@@ -512,7 +537,7 @@ To associate an attachment with a span, submit a [trace attachment](/sdk/telemet
 
 Attributes outside the [common attribute keys](#common-attribute-keys) list **MUST** only be attached to the span they conceptually belong on, and **MUST NOT** be propagated to children. Attributes mirroring transaction context data **SHOULD** only be set on the segment span.
 
-All attributes set on a streamed span **MUST** use keys defined in [Sentry Conventions](https://getsentry.github.io/sentry-conventions/) before introduction in an SDK.
+All attributes set on a streamed span **MUST** use keys defined in [Sentry Conventions](https://conventions.sentry.dev/) before introduction in an SDK.
 
 Empty attributes **MUST** be omitted.
 
@@ -522,7 +547,7 @@ Guidelines for specific attributes:
 
 #### HTTP Headers
 
-HTTP headers **MUST** be emitted following the [`http.request.header.<key>`](https://getsentry.github.io/sentry-conventions/attributes/http/#http-request-header-key) and [`http.response.header.<key>`](https://getsentry.github.io/sentry-conventions/attributes/http/#http-response-header-key) conventions:
+HTTP headers **MUST** be emitted following the [`http.request.header.<key>`](https://conventions.sentry.dev/attributes/http/#http-request-header-key) and [`http.response.header.<key>`](https://conventions.sentry.dev/attributes/http/#http-response-header-key) conventions:
 
 - `<key>` **MUST** be the lowercased, but otherwise unchanged, header name.
 - The value **MUST** be a string array, even if the header has a single value. Multiple values for the same header **MUST** be emitted as separate array elements.
@@ -593,6 +618,8 @@ The envelope header **MUST** contain the same properties as previously with tran
 ```
 
 Unlike transactions, envelope headers for spans **REQUIRE** [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/). See also [Envelope Headers](/sdk/foundations/envelopes/#headers).
+
+To guarantee a DSC for every span envelope, SDKs implementing span streaming **MUST** follow version 1.4.0 or later of the DSC spec.
 
 ### Span v2 Envelope Item Header
 
