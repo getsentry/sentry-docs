@@ -394,8 +394,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
   const canonical = resolvePageCanonical(
-    params.path?.join('/') || '',
-    customCanonicalTag || undefined,
+    customCanonicalTag || params.path?.join('/') || '',
     DOCS_ORIGIN
   );
 

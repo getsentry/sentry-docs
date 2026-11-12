@@ -1118,12 +1118,8 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
           link: (_state, node) => {
             if (node.properties.rel.includes('canonical') && node.properties.href) {
               const href = String(node.properties.href);
-              try {
-                if (new URL(href).origin === DOCS_ORIGIN) {
-                  baseUrl = href;
-                }
-              } catch {
-                // Ignore a canonical that is not an absolute URL.
+              if (href.startsWith(`${DOCS_ORIGIN}/`)) {
+                baseUrl = href;
               }
             }
           },

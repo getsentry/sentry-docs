@@ -19,20 +19,16 @@ export function canonicalPath(pathname: string): string {
   return /\.\w+$/.test(finalSegment) ? withoutTrailingSlash : `${withoutTrailingSlash}/`;
 }
 
-/**
- * Canonical URL for a docs page.
- *
- * `customCanonicalTag` may be a site-relative path, which is resolved against
- * `origin`, or an absolute http(s) URL, which is used as written.
- */
-export function resolvePageCanonical(
-  pathname: string,
-  customCanonicalTag: string | undefined,
-  origin: string
-): string {
-  if (customCanonicalTag && ABSOLUTE_HTTP_URL.test(customCanonicalTag)) {
-    return customCanonicalTag;
-  }
+/** Whether a `customCanonicalTag` points off this site (an absolute http(s) URL). */
+export function isExternalCanonical(customCanonicalTag: string | undefined): boolean {
+  return !!customCanonicalTag && ABSOLUTE_HTTP_URL.test(customCanonicalTag);
+}
 
-  return `${origin}${canonicalPath(customCanonicalTag || pathname)}`;
+/**
+ * Canonical URL for a docs page. `target` is the page's `customCanonicalTag`,
+ * or its path when there is none. Absolute http(s) URLs are used as written;
+ * everything else is resolved against `origin`.
+ */
+export function resolvePageCanonical(target: string, origin: string): string {
+  return isExternalCanonical(target) ? target : `${origin}${canonicalPath(target)}`;
 }
