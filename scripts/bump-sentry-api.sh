@@ -29,11 +29,16 @@ timeout 600 pnpm add --save-exact --lockfile-only "$package@$latest"
 git config user.email "271575301+sentry-api-schema-updater[bot]@users.noreply.github.com"
 git config user.name "sentry-api-schema-updater[bot]"
 
+# A run that stopped before the merge leaves this branch, and maybe its PR,
+# behind. Overwrite the branch and reuse an open PR so the next run finishes.
 branch="bot/bump-sentry-api-to-$latest"
-git checkout -b "$branch"
+git checkout -B "$branch"
 git add package.json pnpm-lock.yaml
 git commit -m "Bump $package to $latest"
-git push --set-upstream origin "$branch"
+timeout 120 git push --force --set-upstream origin "$branch"
 
-gh pr create --fill
-gh pr merge --squash --admin -d
+open_prs=$(timeout 60 gh pr list --head "$branch" --state open --json number --jq length)
+if [ "$open_prs" = 0 ]; then
+  timeout 60 gh pr create --fill --head "$branch"
+fi
+timeout 120 gh pr merge "$branch" --squash --admin -d
