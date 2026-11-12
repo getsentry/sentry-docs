@@ -3,7 +3,7 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {Fragment, useMemo} from 'react';
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
-import {canonicalPath} from 'sentry-docs/canonical';
+import {resolvePageCanonical} from 'sentry-docs/canonical';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
@@ -393,9 +393,11 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
-  const canonical = `${DOCS_ORIGIN}${canonicalPath(
-    customCanonicalTag || params.path?.join('/') || ''
-  )}`;
+  const canonical = resolvePageCanonical(
+    params.path?.join('/') || '',
+    customCanonicalTag || undefined,
+    DOCS_ORIGIN
+  );
 
   return {
     title,

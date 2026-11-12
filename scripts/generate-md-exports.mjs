@@ -366,6 +366,17 @@ function normalizeRelativePath(filePath) {
   return filePath.replace(/\\/g, '/');
 }
 
+/** Absolute custom canonicals are kept; everything else stays on this site. */
+function canonicalPageUrl(nodePath, customCanonicalTag) {
+  if (
+    typeof customCanonicalTag === 'string' &&
+    /^https?:\/\//i.test(customCanonicalTag)
+  ) {
+    return customCanonicalTag;
+  }
+  return `${DOCS_ORIGIN}/${nodePath}/`;
+}
+
 /**
  * Walks the doctree to build a map of relativePath → {title, description, url}
  * for YAML frontmatter generation.
@@ -382,7 +393,7 @@ function buildFrontmatterMap(docTree) {
       map.set(relativePath, {
         title: getTitle(node),
         description: node.frontmatter?.description || '',
-        url: `${DOCS_ORIGIN}/${node.path}/`,
+        url: canonicalPageUrl(node.path, node.frontmatter?.customCanonicalTag),
       });
     }
     if (node.children) {
@@ -1101,10 +1112,19 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
           comment() {},
         },
         handlers: {
-          // HACK: Extract the canonical URL during parsing
+          // HACK: Extract the canonical URL during parsing. Off-site canonicals
+          // stay out of baseUrl so relative docs links still rewrite against
+          // this site.
           link: (_state, node) => {
             if (node.properties.rel.includes('canonical') && node.properties.href) {
-              baseUrl = node.properties.href;
+              const href = String(node.properties.href);
+              try {
+                if (new URL(href).origin === DOCS_ORIGIN) {
+                  baseUrl = href;
+                }
+              } catch {
+                // Ignore a canonical that is not an absolute URL.
+              }
             }
           },
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers

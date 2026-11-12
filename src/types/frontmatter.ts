@@ -21,11 +21,15 @@ export interface FrontMatter {
    */
   beta?: boolean;
   /**
-   * A description to use in the <meta> header, as well as in auto generated page grids.
+   * Override the page canonical URL. A site-relative path (for example
+   * `/platforms/react/options/`) is resolved against the docs origin. An
+   * absolute http(s) URL is used as written. Omit it to use the page URL.
    */
   customCanonicalTag?: string;
 
-  /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
+  /**
+   * A description to use in the <meta> header, as well as in auto generated page grids.
+   */
   description?: string;
 
   /**
