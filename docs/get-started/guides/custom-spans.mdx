@@ -89,7 +89,7 @@ span.finish()
 transaction.finish()
 ```
 
-Numeric attributes become metrics you can aggregate with `sum()`, `avg()`, `p90()` in [Trace Explorer](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/).
+Numeric attributes become metrics you can aggregate with `sum()`, `avg()`, `p90()` in [Explore → Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/).
 
 ## Where to Add Spans
 
@@ -644,20 +644,31 @@ fun processEmailDigest(job: Job) {
 
 For AI workloads, use [Sentry Agent Tracing](/product/agents/) instead of manual instrumentation when possible. It automatically captures agent workflows, tool calls, and token usage.
 
-If you already have Vercel AI SDK telemetry, [send those OTel spans to Sentry](https://sentry.io/cookbook/vercel-ai-sdk-otel-sentry/) rather than adding `ai.inference` wrappers.
+If you use a library that Sentry instruments, such as the OpenAI, Anthropic, Google Gen AI, LangChain, or Vercel AI SDKs, its integration already creates these spans, so don't add your own wrappers. See [Set Up Agents](/product/agents/getting-started/) for all supported SDKs and integrations. If you already export OpenTelemetry traces, for example from the [Vercel AI SDK](https://sentry.io/cookbook/vercel-ai-sdk-otel-sentry/) or the [Claude Platform](/concepts/otlp/direct/claude-platform/), send those to Sentry instead.
 
 If you're not using a supported framework or need custom attributes:
 
 ```javascript {tabTitle: JavaScript}
 Sentry.startSpan(
-  { name: "generate-summary", op: "ai.inference" },
+  {
+    name: "chat gpt-4o",
+    op: "gen_ai.chat",
+    attributes: {
+      "gen_ai.operation.name": "chat",
+      "gen_ai.provider.name": "openai",
+      "gen_ai.request.model": "gpt-4o",
+    },
+  },
   async (span) => {
-    span.setAttribute("ai.model", "gpt-4");
-    span.setAttribute("ai.feature", "document-summary");
+    // llmClient is your own client, not an SDK that Sentry instruments
+    const response = await llmClient.chat({ model: "gpt-4o", messages });
 
-    const response = await openai.chat.completions.create({...});
-
-    span.setAttribute("ai.tokens.total", response.usage.total_tokens);
+    span.setAttribute("gen_ai.response.model", response.model);
+    span.setAttribute("gen_ai.usage.input_tokens", response.usage.inputTokens);
+    span.setAttribute(
+      "gen_ai.usage.output_tokens",
+      response.usage.outputTokens
+    );
     return response;
   }
 );
@@ -666,92 +677,122 @@ Sentry.startSpan(
 ```python {tabTitle: Python}
 import sentry_sdk
 
-with sentry_sdk.start_span(name="generate-summary", op="ai.inference") as span:
-    span.set_data("ai.model", "gpt-4")
-    span.set_data("ai.feature", "document-summary")
+with sentry_sdk.start_span(name="chat gpt-4o", op="gen_ai.chat") as span:
+    span.set_data("gen_ai.operation.name", "chat")
+    span.set_data("gen_ai.provider.name", "openai")
+    span.set_data("gen_ai.request.model", "gpt-4o")
 
-    response = openai.chat.completions.create(...)
+    # llm_client is your own client, not an SDK that Sentry instruments
+    response = llm_client.chat(model="gpt-4o", messages=messages)
 
-    span.set_data("ai.tokens.total", response.usage.total_tokens)
+    span.set_data("gen_ai.response.model", response.model)
+    span.set_data("gen_ai.usage.input_tokens", response.usage.input_tokens)
+    span.set_data("gen_ai.usage.output_tokens", response.usage.output_tokens)
 ```
 
 ```php {tabTitle: PHP}
 $spanContext = \Sentry\Tracing\SpanContext::make()
-    ->setOp('ai.inference')
-    ->setDescription('generate-summary')
+    ->setOp('gen_ai.chat')
+    ->setDescription('chat gpt-4o')
     ->setData([
-        'ai.model' => 'gpt-4',
-        'ai.feature' => 'document-summary',
+        'gen_ai.operation.name' => 'chat',
+        'gen_ai.provider.name' => 'openai',
+        'gen_ai.request.model' => 'gpt-4o',
     ]);
 
-$response = \Sentry\trace(function () {
-    $response = $this->openai->chat()->completions()->create([...]);
+$response = \Sentry\trace(function () use ($messages) {
+    // $this->llmClient is your own client, not an SDK that Sentry instruments
+    $response = $this->llmClient->chat('gpt-4o', $messages);
 
     $span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
-    $span->setData(['ai.tokens.total' => $response->usage->totalTokens]);
+    $span->setData([
+        'gen_ai.response.model' => $response->model,
+        'gen_ai.usage.input_tokens' => $response->usage->inputTokens,
+        'gen_ai.usage.output_tokens' => $response->usage->outputTokens,
+    ]);
 
     return $response;
 }, $spanContext);
 ```
 
 ```csharp {tabTitle: .NET}
-var transaction = SentrySdk.StartTransaction("generate-summary", "ai.inference");
+var transaction = SentrySdk.StartTransaction("chat gpt-4o", "gen_ai.chat");
 SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
 
-transaction.SetExtra("ai.model", "gpt-4");
-transaction.SetExtra("ai.feature", "document-summary");
+transaction.SetData("gen_ai.operation.name", "chat");
+transaction.SetData("gen_ai.provider.name", "openai");
+transaction.SetData("gen_ai.request.model", "gpt-4o");
 
-var response = await openai.ChatCompletion.CreateAsync(...);
+// llmClient is your own client, not an SDK that Sentry instruments
+var response = await llmClient.ChatAsync("gpt-4o", messages);
 
-transaction.SetExtra("ai.tokens.total", response.Usage.TotalTokens);
+transaction.SetData("gen_ai.response.model", response.Model);
+transaction.SetData("gen_ai.usage.input_tokens", response.Usage.InputTokens);
+transaction.SetData("gen_ai.usage.output_tokens", response.Usage.OutputTokens);
 transaction.Finish();
 ```
 
 ```ruby {tabTitle: Ruby}
-Sentry.with_child_span(op: 'ai.inference', description: 'generate-summary') do |span|
-  span.set_data('ai.model', 'gpt-4')
-  span.set_data('ai.feature', 'document-summary')
+Sentry.with_child_span(op: 'gen_ai.chat', description: 'chat gpt-4o') do |span|
+  span.set_data('gen_ai.operation.name', 'chat')
+  span.set_data('gen_ai.provider.name', 'openai')
+  span.set_data('gen_ai.request.model', 'gpt-4o')
 
-  response = openai.chat(...)
+  # llm_client is your own client, not an SDK that Sentry instruments
+  response = llm_client.chat(model: 'gpt-4o', messages: messages)
 
-  span.set_data('ai.tokens.total', response.dig('usage', 'total_tokens'))
+  span.set_data('gen_ai.response.model', response.model)
+  span.set_data('gen_ai.usage.input_tokens', response.usage.input_tokens)
+  span.set_data('gen_ai.usage.output_tokens', response.usage.output_tokens)
 end
 ```
 
 ```dart {tabTitle: Flutter}
-final transaction = Sentry.startTransaction('generate-summary', 'ai.inference');
-transaction.setData('ai.model', 'gpt-4');
-transaction.setData('ai.feature', 'document-summary');
+final transaction = Sentry.startTransaction('chat gpt-4o', 'gen_ai.chat');
+transaction.setData('gen_ai.operation.name', 'chat');
+transaction.setData('gen_ai.provider.name', 'openai');
+transaction.setData('gen_ai.request.model', 'gpt-4o');
 
-final response = await openai.chat.completions.create(...);
+// llmClient is your own client, not an SDK that Sentry instruments
+final response = await llmClient.chat(model: 'gpt-4o', messages: messages);
 
-transaction.setData('ai.tokens.total', response.usage.totalTokens);
+transaction.setData('gen_ai.response.model', response.model);
+transaction.setData('gen_ai.usage.input_tokens', response.usage.inputTokens);
+transaction.setData('gen_ai.usage.output_tokens', response.usage.outputTokens);
 await transaction.finish();
 ```
 
 ```swift {tabTitle: Swift}
 import Sentry
 
-let transaction = SentrySDK.startTransaction(name: "generate-summary", operation: "ai.inference")
-transaction.setData(value: "gpt-4", key: "ai.model")
-transaction.setData(value: "document-summary", key: "ai.feature")
+let transaction = SentrySDK.startTransaction(name: "chat gpt-4o", operation: "gen_ai.chat")
+transaction.setData(value: "chat", key: "gen_ai.operation.name")
+transaction.setData(value: "openai", key: "gen_ai.provider.name")
+transaction.setData(value: "gpt-4o", key: "gen_ai.request.model")
 
-let response = try await openai.chat.completions.create(...)
+// llmClient is your own client, not an SDK that Sentry instruments
+let response = try await llmClient.chat(model: "gpt-4o", messages: messages)
 
-transaction.setData(value: response.usage.totalTokens, key: "ai.tokens.total")
+transaction.setData(value: response.model, key: "gen_ai.response.model")
+transaction.setData(value: response.usage.inputTokens, key: "gen_ai.usage.input_tokens")
+transaction.setData(value: response.usage.outputTokens, key: "gen_ai.usage.output_tokens")
 transaction.finish()
 ```
 
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 
-val transaction = Sentry.startTransaction("generate-summary", "ai.inference")
-transaction.setData("ai.model", "gpt-4")
-transaction.setData("ai.feature", "document-summary")
+val transaction = Sentry.startTransaction("chat gpt-4o", "gen_ai.chat")
+transaction.setData("gen_ai.operation.name", "chat")
+transaction.setData("gen_ai.provider.name", "openai")
+transaction.setData("gen_ai.request.model", "gpt-4o")
 
-val response = openai.chat.completions.create(...)
+// llmClient is your own client, not an SDK that Sentry instruments
+val response = llmClient.chat(model = "gpt-4o", messages = messages)
 
-transaction.setData("ai.tokens.total", response.usage.totalTokens)
+transaction.setData("gen_ai.response.model", response.model)
+transaction.setData("gen_ai.usage.input_tokens", response.usage.inputTokens)
+transaction.setData("gen_ai.usage.output_tokens", response.usage.outputTokens)
 transaction.finish()
 ```
 
@@ -759,14 +800,14 @@ transaction.finish()
 
 ## Quick Reference
 
-| Category        | `op` Value      | Example Attributes           |
-| --------------- | --------------- | ---------------------------- |
-| User flows      | `user.action`   | cart.itemCount, user.tier    |
-| External APIs   | `http.client`   | http.url, response.timeMs    |
-| Database        | `db.query`      | query.type, result.rowCount  |
-| Background jobs | `queue.process` | job.type, job.id, queue.name |
-| AI/LLM          | `ai.inference`  | ai.model, ai.tokens.total    |
+| Category        | `op` Value      | Example Attributes                                                          |
+| --------------- | --------------- | --------------------------------------------------------------------------- |
+| User flows      | `user.action`   | cart.itemCount, user.tier                                                   |
+| External APIs   | `http.client`   | http.url, response.timeMs                                                   |
+| Database        | `db.query`      | query.type, result.rowCount                                                 |
+| Background jobs | `queue.process` | job.type, job.id, queue.name                                                |
+| AI/LLM          | `gen_ai.chat`   | gen_ai.request.model, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens |
 
 ## Next Steps
 
-Explore the [Trace Explorer product walkthrough](/product/trace-explorer/) to learn more about the Sentry interface and discover additional tips.
+See [Traces and Spans](/product/trace-explorer/) for how to query this data in Explore, and [Explore](/product/explore/) for the controls shared with other datasets.

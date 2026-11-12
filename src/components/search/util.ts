@@ -1,4 +1,4 @@
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 
 export function relativizeUrl(url: string) {
   return isDeveloperDocs
