@@ -14,64 +14,26 @@ keywords:
 
 <AgentSetupCallout skill="sentry-android-sdk" platformName="Android" />
 
-On this page, we get you up and running with Sentry's Android SDK, automatically reporting errors and exceptions in your application.
+## Prerequisites
 
-<Alert>
+You need:
 
-If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Android 5.0 (API level 21) or higher
+  - Session Replay requires at least Android 8.0 (API level 26)
 
-</Alert>
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
-
 We recommend installing the SDK through our [Sentry Wizard](https://github.com/getsentry/sentry-wizard) by running one of the following commands inside your project directory:
 
-```bash {tabTitle:brew} {mdExpandTabs}
-brew install getsentry/tools/sentry-wizard && sentry-wizard -i android
-```
-
-```bash {tabTitle:npx}
-npx @sentry/wizard@latest -i android
-```
-
-```bash {tabTitle:macOS (Intel/x64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.0.0/sentry-wizard-darwin-x64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```bash {tabTitle:macOS (Apple Silicon/arm64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.0.0/sentry-wizard-darwin-arm64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```bash {tabTitle:Linux (x64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.0.0/sentry-wizard-linux-x64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```bash {tabTitle:Linux (arm64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v9.0.0/sentry-wizard-linux-arm64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```powershell {tabTitle:Windows}
-$downloadUrl = "https://github.com/getsentry/sentry-wizard/releases/download/v9.0.0/sentry-wizard-win-x64.exe"
-Invoke-WebRequest $downloadUrl -OutFile sentry-wizard.exe
-./sentry-wizard.exe -i android
-```
+<PlatformContent includePath="getting-started-install" />
 
 This will patch your project and configure the SDK. You only need to patch the project once, then you can add the patched files to your version control system.
-If you prefer, you can also <PlatformLink to="/manual-setup/">set up the SDK manually</PlatformLink> or follow the instructions below to adapt the [configuration](#configure).
+
+Prefer to set things up yourself? Check out the <PlatformLink to="/manual-setup/">Manual Setup guide</PlatformLink>.
 
 <Expandable title="The following tasks will be performed by the Sentry Wizard">
 
@@ -85,24 +47,27 @@ The wizard will prompt you to log in to Sentry. It'll then automatically do the 
 
 </Expandable>
 
-The wizard does not enable Profiling or Session Replay. Follow [Configure](#configure) to add them and adjust the generated configuration, including <PlatformLink to="/data-management/data-collected/">data collection</PlatformLink>.
+The wizard does not enable Profiling or Session Replay. Follow [Additional Configuration](#additional-configuration) to add them and adjust the generated configuration, including <PlatformLink to="/data-management/data-collected/">data collection</PlatformLink>.
 
-## Configure
+## Additional Configuration
 
-**Error Monitoring** starts working as soon as you initialize the SDK. You can also send **Logs** and **Application Metrics** after initialization, as shown in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
+**Error Monitoring** starts working as soon as you initialize the SDK. You can also send **Logs** and **Application Metrics** after initialization, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-). The configuration below also enables **Tracing**, **Profiling**, and **Session Replay**.
 
-This guide also enables **Tracing**, **Profiling**, and **Session Replay**. The Android SDK also supports **User Feedback**; see <PlatformLink to="/user-feedback/">Set Up User Feedback</PlatformLink> to add a feedback form to your app.
+<Include name="quick-start-features-expandable" />
 
-Use SDK version **8.58.0 or later** for the full configuration below, including the <PlatformLink to="/configuration/options/#dataCollection">Data Collection options</PlatformLink>. Session Replay requires **Android 8.0 (API level 26) or higher**.
+<Alert>
+Use SDK version **8.58.0 or later** for the full configuration below.
+</Alert>
 
 The SDK initializes automatically using your application's `AndroidManifest.xml`. If you ran the wizard, update the existing Sentry entries and add the missing options from the snippet below. Keep a single `io.sentry.dsn` entry.
 
 The snippet also turns on:
 
+- Data Collection: via <PlatformLink to="/configuration/options/#dataCollection">`data-collection`</PlatformLink>
 - Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
 - Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#profileLifecycle">`profileLifecycle`</PlatformLink>
 - Session Replay: via `sessionSampleRate` and `onErrorSampleRate` in the <PlatformLink to="/session-replay/configuration/#general-configuration">Session Replay configuration</PlatformLink>
-- Automatic Logs collection: via `io.sentry.logs.enabled`, described in the <PlatformLink to="/logs/#setup">Logs setup</PlatformLink>
+- Logs: via <PlatformLink to="/logs/">`logs.enabled`</PlatformLink>
 
 Don't need a feature? Remove its options from your app's manifest. The `trace` profiling lifecycle requires tracing: if you disable tracing, also remove the profiling options or <PlatformLink to="/profiling/#enabling-manual-lifecycle-ui-profiling">configure manual profiling</PlatformLink>.
 
@@ -132,67 +97,34 @@ Don't need a feature? Remove its options from your app's manifest. The `trace` p
 </application>
 ```
 
-### Configure the Sentry Android Gradle Plugin
 
-The Sentry Wizard configures the Gradle plugin, which supports automatic tracing instrumentation and uploads ProGuard/R8 mappings and source context. For manual setup, see the <PlatformLink to="/configuration/gradle/">Gradle plugin</PlatformLink>, <PlatformLink to="/enhance-errors/proguard/">ProGuard/R8</PlatformLink>, and <PlatformLink to="/enhance-errors/source-context/">source context</PlatformLink> guides.
-
-<Alert level="info">
+<Alert level="info" title="A note on Profiling">
 
 Starting with SDK version 8.51.0, profiling on Android 15 (API level 35) and higher uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, the SDK automatically falls back to the <PlatformLink to="/profiling/legacy/">legacy profiler</PlatformLink>.
 
 </Alert>
 
+### Configure the Sentry Android Gradle Plugin
+
+The Sentry Wizard configures the Gradle plugin, which supports automatic tracing instrumentation and uploads ProGuard/R8 mappings and source context. For manual setup, see the <PlatformLink to="/configuration/gradle/">Gradle plugin</PlatformLink>, <PlatformLink to="/enhance-errors/proguard/">ProGuard/R8</PlatformLink>, and <PlatformLink to="/enhance-errors/source-context/">source context</PlatformLink> guides.
+
 ## Send Logs
 
-After SDK initialization, use `Sentry.logger()` to send log messages at different levels.
+<PlatformContent includePath="getting-started-logs" />
 
-```java {tabTitle: Java}
-import io.sentry.Sentry;
-
-Sentry.logger().info("Order processed");
-Sentry.logger().error("Payment failed");
-```
-
-```kotlin {tabTitle: Kotlin}
-import io.sentry.Sentry
-
-Sentry.logger().info("Order processed")
-Sentry.logger().error("Payment failed")
-```
-
-Starting with SDK version **8.59.0**, direct `Sentry.logger()` calls work regardless of the `io.sentry.logs.enabled` setting. On earlier SDK versions, set this option to `true` to send logs through this API.
-
-To collect logs automatically through the <PlatformLink to="/integrations/timber/">Timber</PlatformLink> or <PlatformLink to="/integrations/logcat/">Logcat</PlatformLink> integration, keep `io.sentry.logs.enabled` set to `true`. If you <PlatformLink to="/manual-setup/#configuration-via-sentryoptions">initialize the SDK in code</PlatformLink> instead, set `options.logs.isEnabled = true` in Kotlin or `options.getLogs().setEnabled(true)` in Java.
-
-See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and configuration options.
+We also provide integrations for:
+- <PlatformLink to="/integrations/timber/">Timber</PlatformLink>
+- <PlatformLink to="/integrations/logcat/">Logcat</PlatformLink>
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-The Android SDK provides counters, gauges, and distributions through `Sentry.metrics()`. Metrics need no separate enable option.
-
-<PlatformContent includePath="metrics/requirements" />
-
-```java {tabTitle: Java}
-import io.sentry.Sentry;
-
-Sentry.metrics().count("button_click", 1.0);
-Sentry.metrics().gauge("queue_depth", 42.0);
-Sentry.metrics().distribution("response_time", 187.5);
-```
-
-```kotlin {tabTitle: Kotlin}
-import io.sentry.Sentry
-
-Sentry.metrics().count("button_click", 1.0)
-Sentry.metrics().gauge("queue_depth", 42.0)
-Sentry.metrics().distribution("response_time", 187.5)
-```
-
-See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
-Add an intentional error to your application to confirm that Sentry captures it:
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Trigger and capture a test error in your application:
 
 ```java {tabTitle: Java}
 import io.sentry.Sentry;
@@ -208,7 +140,9 @@ Sentry.captureException(Exception("This is a test."))
 
 ### View Captured Data in Sentry
 
-Open your project in Sentry and find the test error in Issues.
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
@@ -219,3 +153,12 @@ At this point, you should have integrated Sentry into your Android application. 
   make error details more readable
 - <PlatformLink to="/user-feedback/">Collect User Feedback</PlatformLink> from
   your users
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
