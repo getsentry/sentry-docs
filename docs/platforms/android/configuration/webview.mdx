@@ -117,6 +117,48 @@ The list is empty by default, so without hosts `addTracePropagation(webView)` lo
 
 `allowedHosts` is separate from [`tracePropagationTargets`](/platforms/android/configuration/options/#tracePropagationTargets), which controls outgoing HTTP requests. Setting one doesn't affect the other.
 
+### Connect Web Views Automatically
+
+<Alert>
+
+Automatic trace propagation is available from Android SDK version `8.65.0` and Sentry Android Gradle Plugin version `6.27.0`.
+
+</Alert>
+
+The [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/) can connect your web views without calls to `addTracePropagation`. It replaces each `WebView.loadUrl` call in your app with a call that refreshes the trace right before the page loads, so every page your app opens with `loadUrl` continues the trace that's active at that moment.
+
+Enable the `WEBVIEW` instrumentation feature, which is off by default:
+
+```groovy {filename:app/build.gradle}
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    features = EnumSet.allOf(InstrumentationFeature)
+  }
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    features.set(EnumSet.allOf(InstrumentationFeature::class.java))
+  }
+}
+```
+
+Then set the allowed hosts in the SDK options, as shown above. Without hosts, the plugin's change has no effect and pages are loaded as before.
+
+- The plugin replaces `loadUrl` calls in your app and in its dependencies, including calls on `WebView` subclasses. The allowed hosts decide which pages receive the trace, so web views in your dependencies only receive it on hosts you listed.
+- If you pass hosts to `addTracePropagation` for a web view, they're kept for that web view instead of the hosts in the options.
+- Only `http` and `https` URLs refresh the trace. For example, `javascript:` URLs are loaded without it.
+- Pages opened in other ways, such as links followed inside the page, `reload`, `postUrl`, or `loadDataWithBaseURL`, keep the trace from the last `loadUrl` call. `loadUrl` calls through a Java method reference, such as `webView::loadUrl`, and calls in minified dependencies aren't replaced.
+
 ### Pages Bundled With Your App
 
 Pages loaded with `loadData`, with `loadDataWithBaseURL` and a base URL that isn't HTTPS, or from `file://` URLs don't receive the trace. To show pages bundled with your app, serve them over HTTPS with [`WebViewAssetLoader`](https://developer.android.com/reference/androidx/webkit/WebViewAssetLoader) and allow its domain:

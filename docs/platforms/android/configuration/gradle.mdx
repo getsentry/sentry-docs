@@ -131,7 +131,7 @@ sentry {
       enabled = true
 
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
-      // Defaults to all available values of InstrumentationFeature enum class.
+      // Defaults to all available values of InstrumentationFeature enum class, except WEBVIEW.
       features = [InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP, InstrumentationFeature.COMPOSE]
 
       // Enable or disable logcat instrumentation through bytecode manipulation.
@@ -270,7 +270,7 @@ sentry {
       enabled.set(true)
 
       // Specifies a set of instrumentation features that are eligible for bytecode manipulation.
-      // Defaults to all available values of InstrumentationFeature enum class.
+      // Defaults to all available values of InstrumentationFeature enum class, except WEBVIEW.
       features.set(setOf(InstrumentationFeature.DATABASE, InstrumentationFeature.FILE_IO, InstrumentationFeature.OKHTTP, InstrumentationFeature.COMPOSE))
 
       // Enable or disable logcat instrumentation through bytecode manipulation.
@@ -485,11 +485,22 @@ enum class InstrumentationFeature {
      * This feature uses bytecode manipulation and adds an OnDestinationChangedListener to all
      * navigation controllers used in Jetpack Compose.
      */
-    COMPOSE
+    COMPOSE,
+
+    /**
+     * When enabled the SDK will connect the app's trace with web content in a
+     * [android.webkit.WebView]. This feature uses bytecode manipulation and replaces
+     * WebView.loadUrl calls with calls that refresh the trace before each load, for the hosts set
+     * in the SDK's webViewTracing.allowedHosts option. Not enabled by default.
+     *
+     * Requires sentry-android SDK version 8.65.0 and above.
+     * Only available v6.27.0 and above of the Sentry Android Gradle plugin.
+     */
+    WEBVIEW
 }
 ```
 
-Check [Integrations](/platforms/android/integrations/) page for more detailed explanation of each instrumentation feature.
+Check [Integrations](/platforms/android/integrations/) page for more detailed explanation of each instrumentation feature, and the [WebView](/platforms/android/configuration/webview/#connect-web-views-automatically) page for `WEBVIEW`.
 
 <Alert>
 
