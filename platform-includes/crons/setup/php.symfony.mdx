@@ -26,6 +26,18 @@ Each retry sends its own check-ins, so a failed attempt is `error` and a retry t
 
 Messages with a batch handler send `ok` when the batch is flushed, so a long batch can run past the monitor's max runtime.
 
+To skip some recurring messages, list them under `excluded_messages`. An entry matches the message class, the command name or full command of a scheduled console command, the `@service::method` of a scheduled service, or the monitor slug. Entries wrapped in slashes, optionally followed by flags such as `/^reports-/i`, are regular expressions. The SDK ignores an invalid regular expression and logs a warning. Excluded messages don't count when the SDK checks for shared slugs.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    scheduler:
+        enabled: true
+        excluded_messages:
+            - App\Message\CleanupMessage
+            - 'app:sync-search-index'
+            - '/^reports-/'
+```
+
 To monitor other jobs, send check-ins with the PHP SDK as shown below.
 
 <PlatformContent includePath="crons/setup" noGuides />
