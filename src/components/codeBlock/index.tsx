@@ -143,8 +143,12 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
       <div className={styles['code-actions']}>
         <code className={styles.filename}>{filename}</code>
         {showCopyButton && (
-          <button className={styles.copy} onClick={copyCodeOnClick}>
-            <Clipboard size={16} />
+          <button
+            className={styles.copy}
+            onClick={copyCodeOnClick}
+            aria-label="Copy code"
+          >
+            <Clipboard size={16} aria-hidden />
           </button>
         )}
         {externalLink && (
@@ -154,8 +158,9 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
             rel="noopener noreferrer"
             className={styles.copy}
             title="View Github Source"
+            aria-label="View GitHub source"
           >
-            <ExternalLink size={16} />
+            <ExternalLink size={16} aria-hidden />
           </a>
         )}
       </div>
@@ -163,9 +168,13 @@ export function CodeBlock({filename, language, children, externalLink}: CodeBloc
         data-mdast="ignore"
         className={styles.copied}
         style={{opacity: showCopied ? 1 : 0}}
+        aria-hidden="true"
       >
         Copied
       </div>
+      <span data-mdast="ignore" className="sr-only" role="status">
+        {showCopied ? 'Copied' : ''}
+      </span>
       <div ref={codeRef}>{processedChildren}</div>
     </div>
   );
