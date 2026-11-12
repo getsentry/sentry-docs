@@ -1,13 +1,18 @@
 ---
 title: Symfony
 sdk: sentry.php.symfony
-description: "Symfony is a set of reusable PHP components and a PHP framework to build web applications and services. Learn how to set it up with Sentry."
+description: Learn how to set up Sentry in your Symfony application and capture your first events.
 ---
 
 ## Prerequisites
 
-- You need a [Sentry account](https://sentry.io/signup/) and project
-- Your Symfony application needs to run on PHP 7.2 or later
+You need:
+
+- a [Sentry account](https://sentry.io/signup/) and project
+- a Symfony app running on PHP `7.2` or later
+- [Composer](https://getcomposer.org/)
+
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
@@ -17,18 +22,28 @@ Install the latest `sentry/sentry-symfony` bundle:
 composer require sentry/sentry-symfony
 ```
 
+### Install Monolog for Logs
+
 The logging configuration below also requires MonologBundle. If it isn't already installed, add it:
 
 ```bash
 composer require symfony/monolog-bundle
 ```
 
+### Install Excimer for Profiling
+
+<Include name="php-quick-start-excimer" />
+
 ## Configure
 
-**Error Monitoring** starts working as soon as the bundle is enabled and your DSN is set. **Logs** need Sentry's Monolog `LogsHandler`, which the snippet below registers. **Application Metrics** need no extra configuration. You'll learn how to send both in [Send Logs](#send-logs) and [Send Application Metrics](#send-application-metrics-).
-This guide also enables **Tracing** and **Profiling**. Symfony also supports <PlatformLink to="/crons/">Crons</PlatformLink>, <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>, and <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>.
+**Error Monitoring** starts working as soon as the bundle is enabled and your DSN is set. **Application Metrics** need no extra configuration and you'll learn how to send them in step [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Profiling**, and **Logs**.
 
-Add your DSN to your `.env` file:
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
+
+Add your Sentry DSN to your `.env` file:
 
 ```plain {filename:.env}
 ###> sentry/sentry-symfony ###
@@ -36,7 +51,15 @@ SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
 ```
 
-Then configure the bundle in `config/packages/sentry.yaml`:
+Then configure the bundle in `config/packages/sentry.yaml` as shown in the snippet below.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
+- Logs: via the <PlatformLink to="/logs/">`sentry_logs` Monolog handler</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
 
 {/* prettier-ignore */}
 ```yaml {filename:config/packages/sentry.yaml}
@@ -44,9 +67,6 @@ when@prod:
     sentry:
         dsn: '%env(SENTRY_DSN)%'
         options:
-            # Use the defaults for each data collection category.
-            data_collection: {}
-
             # Enables Tracing.
             # Set to 1.0 to capture 100% of spans for tracing.
             # We recommend reducing this value in production.
@@ -70,72 +90,48 @@ when@prod:
                 - !php/const Monolog\Logger::INFO
 ```
 
-The snippet also turns on:
+<Alert level="warning" title="Capture stack trace arguments">
+  To receive stack trace arguments in your errors, set `zend.exception_ignore_args = Off` in your `php.ini`.
+</Alert>
 
-- Default data collection: via <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink>
-- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
-- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
-- Logs: via the `sentry_logs` Monolog handler and its `LogsHandler` service, which require MonologBundle (`symfony/monolog-bundle`)
+### Control the Data You Send to Sentry
 
-Don't need a feature? Remove its options from the snippet.
+By default, the SDK sends user identity data (IP address, ID, and similar) and other data (HTTP bodies, URL query parameters, etc.), with sensitive values scrubbed.
 
-Setting `data_collection` to `{}` applies the defaults for every data category. See <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink> to control which categories the SDK collects.
+To opt out of individual categories use the `data_collection` option. For the full list of categories and their defaults, <PlatformLink to="/configuration/options/#data_collection">see the `data_collection` options</PlatformLink>.
+
+```yaml {filename:config/packages/sentry.yaml}
+when@prod:
+    sentry:
+        options:
+            data_collection:
+                # opt out of collecting user info
+                user_info: false
+                # opt out of collecting cookies
+                cookies:
+                    mode: "off"
+                # other categories
+            # your other Sentry options
+],
+```
 
 ### Enable Sentry in Other Environments
 
 When using Symfony Flex, the Sentry bundle is enabled in the `prod` environment only by default, which is why the snippet uses `when@prod`. To use Sentry in other environments, update `config/packages/sentry.yaml` and the Sentry bundle entry in `config/bundles.php`.
 
-### Install Excimer for Profiling
-
-Profiling requires the Excimer PHP extension. Install it with PECL:
-
-```bash
-pecl install excimer
-```
-
-Excimer supports PHP 7.2 and later, and requires Linux or macOS. It doesn't support Windows. For other installation methods, see the <PlatformLink to="/profiling/#installation">Excimer installation guide</PlatformLink>.
-
-Depending on your PHP installation, you may also need to enable `extension=excimer.so` in the `php.ini` used by your application and restart your PHP workers or web server. Confirm that Excimer is loaded in the PHP runtime serving your application.
-
-### Capture Stack Trace Arguments
-
-<Alert level="warning">
-  To receive stack trace arguments in your errors, set
-  `zend.exception_ignore_args = Off` in your `php.ini`.
-</Alert>
-
-### Use Sentry With Monolog
-
-If you already use [Monolog](https://github.com/Seldaek/monolog) to report errors or record breadcrumbs, see the <PlatformLink to="/integrations/monolog/">Monolog integration docs</PlatformLink> for related configuration.
-
 ## Send Logs
 
-Once the `sentry_logs` handler is registered, logs sent through `Psr\Log\LoggerInterface` go to Sentry. Symfony flushes logs automatically when a request or command finishes. For example, inject the logger into a controller action:
-
-```php
-public function checkout(\Psr\Log\LoggerInterface $logger): \Symfony\Component\HttpFoundation\Response
-{
-    $logger->info('Checkout completed', ['order_id' => 12345]);
-
-    return new \Symfony\Component\HttpFoundation\Response('Checkout completed');
-}
-```
-
-See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for log levels, filtering, and all available options.
+<PlatformContent includePath="getting-started-logs" />
 
 ## Send Application Metrics <FeatureBadge type="new" />
 
-Use `\Sentry\traceMetrics()` to send counters, gauges, and distributions. Metrics are enabled by default after you install the SDK; no metrics option is required. Symfony flushes metrics automatically at the end of each request or command.
-
-```php
-\Sentry\traceMetrics()->count('checkout.failed', 1);
-```
-
-See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
-Create the following controller, then visit `/_sentry-test` in an environment where Sentry is enabled to confirm that Sentry captures the error:
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Create the following controller, then visit `/_sentry-test` in an environment where Sentry is enabled:
 
 ```php
 <?php
@@ -157,24 +153,23 @@ class SentryTestController extends AbstractController
 
 ### View Captured Data in Sentry
 
-Run the logging and metrics examples above in a request or command in an environment where Sentry is enabled. If you kept Tracing and Profiling enabled, make a request to a route in that environment. After a few moments, open your project in [Sentry](https://sentry.io/) and check:
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-- **Issues** for the test error.
-- **Logs** for `Checkout completed`.
-- **Application Metrics** for the `checkout.failed` counter.
-- **Tracing and Profiling** for the request's trace and its associated profile. Very short requests may not collect enough profiling samples to produce a profile.
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
 At this point, you should have integrated Sentry into your Symfony application. Here's what to explore next:
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/usage/">Learn how to manually capture errors</PlatformLink>
-- Review all <PlatformLink to="/configuration/symfony-options/">Symfony options</PlatformLink>
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after Setup
+- Learn how to use <PlatformLink to="/crons/">Crons</PlatformLink> and <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>
+- Collect user feedback via the <PlatformLink to="/user-feedback/">Crash-Report Modal</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 
 </Expandable>
+
+</StepConnector>
