@@ -31,6 +31,22 @@ The Scopes model introduced in version 8 is the supported context model in versi
 
 On Android, APIs such as `Sentry.configureScope()` and `Sentry.setTag()` use the current scope by default.
 
+## Removed `traceSampling` Option
+
+Version 9 removes `SentryOptions.setTraceSampling(...)`, `SentryOptions.isTraceSampling()`, and the `io.sentry.traces.trace-sampling` manifest option. This option was a global switch for trace propagation, not a transaction sampling setting.
+
+To stop attaching `sentry-trace` and `baggage` headers to outgoing HTTP requests, set `tracePropagationTargets` to an empty list. If your app uses manifest-only auto-initialization, replace the removed manifest option with an empty propagation target value:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data
+    android:name="io.sentry.traces.trace-propagation-targets"
+    android:value="" />
+```
+
+For Apollo v2, set `attachTracingHeaders` to `false` on `SentryApolloInterceptor` because the interceptor doesn't have a request URL to match against propagation targets.
+
+There is no replacement for suppressing the trace context in Sentry envelopes. Transactions with baggage now always include that context.
+
 ## Manual Logs and Metrics
 
 Calls to `Sentry.logger()` and `Sentry.metrics()` no longer require a global enable option. Remove calls to:
@@ -95,3 +111,11 @@ If you previously turned Performance V2 off, the SDK now:
 ## Removed Android `LoadClass` Shim
 
 Version 9 removes the deprecated `io.sentry.android.core.LoadClass` class. Replace imports of this class with `io.sentry.util.LoadClass`. The replacement provides the same constructor and methods.
+
+## Removed `IEnvelopeCache.store()` Methods
+
+Version 9 removes the deprecated `IEnvelopeCache.store(...)` overloads. If you provide a custom envelope cache:
+
+- Rename `store(SentryEnvelope, Hint)` to `storeEnvelope(SentryEnvelope, Hint)`.
+- Return `true` only when the envelope was stored, and `false` when it wasn't.
+- Replace calls to `store(envelope)` with `storeEnvelope(envelope, new Hint())`.
