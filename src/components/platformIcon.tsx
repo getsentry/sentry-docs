@@ -1139,6 +1139,7 @@ export const PLATFORM_TO_ICON = {
   'python-gcp-functions': 'gcp-functions',
   'python-anthropic': 'anthropic',
   'python-beam': 'apache-beam',
+  'python-bedrock': 'aws',
   'python-boto3': 'aws',
   'python-bottle': 'bottle',
   'python-celery': 'celery',
