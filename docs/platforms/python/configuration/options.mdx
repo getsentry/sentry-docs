@@ -623,21 +623,19 @@ Determines which scheduler the profiler uses to record profiles. Can be `"thread
 
 </SdkOption>
 
-<SdkOption name="profiles_sample_rate" type='float' defaultValue='None'>
+Deprecated: transaction-based profiling (`profiles_sample_rate` and `profiles_sampler`) is deprecated and will be removed in the next major version of the SDK. Use continuous profiling instead — set `profile_session_sample_rate` and `profile_lifecycle` (below). Transaction-based profiling only works when tracing is enabled; continuous profiling does not need tracing.
 
-A number between `0` and `1`, controlling the percentage chance a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all profiles created in the app. The `profiles_sample_rate` setting is relative to the `traces_sample_rate` setting.
+```python
+import sentry_sdk
 
-Either this or `profiles_sampler` must be defined to enable profiling.
-
-</SdkOption>
-
-<SdkOption name="profiles_sampler" type='function' defaultValue='None'>
-
-A function responsible for determining the percentage chance a recorded profile will be sent to Sentry. The function takes one parameter (the `sampling_context`). The given `sampling_context` contains information about the transaction linked to the profile and the context in which it's being created. The function must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering profiles, by returning `0` for those that are unwanted.
-
-Either this or `profiles_sample_rate` must be defined to enable profiling. Additionally, tracing must be enabled for profiling to work.
-
-</SdkOption>
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Continuous profiling: profiles a percentage of sessions.
+    # No tracing required.
+    profile_session_sample_rate=1.0,
+    profile_lifecycle="trace",
+)
+```
 
 <SdkOption name="profile_session_sample_rate" type='float' defaultValue='None'>
 
