@@ -150,7 +150,9 @@ export function CodeTabs({children}: CodeTabProps) {
   const buttons = possibleChoices.map((choice, idx) => (
     <TabButton
       key={idx}
+      type="button"
       data-active={choice === possibleChoices[selectedTabIndex]}
+      aria-pressed={choice === possibleChoices[selectedTabIndex]}
       onClick={() => {
         if (containerRef.current) {
           // see useEffect above.

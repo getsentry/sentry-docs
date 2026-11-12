@@ -40,21 +40,22 @@ export function DevelopDocsHeader({
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 80px; }'}</style>
-      <nav className="nav-inner mx-auto px-3 py-2 flex items-center">
+      <nav aria-label="Main" className="nav-inner mx-auto px-3 py-2 flex items-center">
         {pathname !== '/' && (
-          <button className="md:hidden mr-3">
-            <label
-              htmlFor={developerDocsSidebarToggleId}
-              aria-label="Toggle sidebar navigation"
-              className="inline-flex items-center cursor-pointer"
-            >
+          <button
+            type="button"
+            className="md:hidden mr-3"
+            aria-label="Toggle sidebar navigation"
+            onClick={() => document.getElementById(developerDocsSidebarToggleId)?.click()}
+          >
+            <span className="inline-flex items-center cursor-pointer">
               <HamburgerMenuIcon
                 className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
                 strokeWidth="1.8"
                 width="22"
                 height="22"
               />
-            </label>
+            </span>
           </button>
         )}
         <Link

@@ -162,7 +162,7 @@ export function Banner() {
       </div>
       <button
         className={styles['promo-banner-dismiss']}
-        role="button"
+        aria-label="Dismiss banner"
         onClick={() => {
           const manifest = readOrResetLocalStorage() || [];
           const payload = JSON.stringify([...manifest, banner.hash]);
