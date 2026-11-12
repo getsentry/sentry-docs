@@ -5,28 +5,13 @@ supportedCategories:
   - server
 ---
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
-
-<AvailableSince version="11.12.0" />
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.nextjs"]}>
-
 <AvailableSince version="11.13.0" />
-
-</PlatformSection>
 
 _Import name: `Sentry.serveTunnelIntegration`_
 
 This integration serves the tunnel that the browser SDK uses when you set `tunnel: true`. The tunnel forwards the browser's events to Sentry, so ad blockers don't drop them. To set it up, see <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
 
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.serveTunnelIntegration()],
-});
-```
+<PlatformContent includePath="configuration/tunnel-server-init" />
 
 ## Options
 
@@ -48,7 +33,7 @@ Sentry.serveTunnelIntegration({
 
 _Type: `string`_
 
-A fixed tunnel path instead of the one derived from the DSN. The SDK serves it as written, without the base path. Set the same path in the browser, as described in <PlatformLink to="/configuration/tunneling/#using-a-fixed-path">Using a Fixed Path</PlatformLink>.
+A fixed tunnel path instead of the one derived from the DSN. The SDK doesn't add the base path it reads from your framework config, so include it in the path, or set `basePath` too. Set the same path in the browser, as described in <PlatformLink to="/configuration/tunneling/#using-a-fixed-path">Using a Fixed Path</PlatformLink>.
 
 ### `basePath`
 
@@ -73,6 +58,8 @@ app.use(
   (req, res, next) => Sentry.handleTunnelRequestIfMatched(req, res) ?? next()
 );
 ```
+
+Add it before any middleware that reads the request body.
 
 <PlatformSection supported={["javascript.nextjs"]}>
 

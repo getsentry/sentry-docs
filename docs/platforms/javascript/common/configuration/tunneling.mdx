@@ -13,17 +13,7 @@ Ad blockers often block requests to Sentry, so your events never arrive. A tunne
 
 ## Setting Up the Tunnel
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
-
-<AvailableSince version="11.12.0" />
-
-</PlatformSection>
-
-<PlatformSection supported={["javascript.nextjs"]}>
-
 <AvailableSince version="11.13.0" />
-
-</PlatformSection>
 
 The browser sends its events to a path on your own origin derived from the DSN, for example `/qpo967`, and your server forwards them to Sentry.
 
@@ -74,7 +64,13 @@ No additional setup is needed. The server SDK answers tunnel requests before the
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
-On Vercel, `withSentryConfig` adds the route for the tunnel at build time.
+On Vercel, `withSentryConfig` adds a route for the tunnel at build time instead, and your middleware (`proxy.ts` or `middleware.ts`) runs before that route. If your middleware blocks requests, for example ones without a session, use a [fixed path](#using-a-fixed-path) and exclude it in the `matcher`:
+
+```typescript {filename:proxy.ts}
+export const config = {
+  matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
+};
+```
 
 </PlatformSection>
 
@@ -132,6 +128,8 @@ To check the tunnel, trigger an event and look in your browser's Network tab for
 
 The server answers one path per DSN it allows. If your browser uses a different DSN than your server, add it to `allowedDsns`:
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -143,11 +141,35 @@ Sentry.init({
 });
 ```
 
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      Sentry.serveTunnelIntegration({
+        allowedDsns: ["<your browser DSN>"],
+      }),
+    ],
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // Your app
+    },
+  }
+);
+```
+
+</PlatformSection>
+
 ### Using a Fixed Path
 
-<AvailableSince version="11.13.0" />
-
 To serve the tunnel at a path you choose, set it on both sides:
+
+<PlatformSection notSupported={["javascript.cloudflare"]}>
 
 ```javascript {tabTitle:Browser}
 Sentry.init({
@@ -162,6 +184,33 @@ Sentry.init({
   integrations: [Sentry.serveTunnelIntegration({ path: "/monitoring" })],
 });
 ```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+```javascript {tabTitle:Browser}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "/monitoring",
+});
+```
+
+```javascript {tabTitle:Server}
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [Sentry.serveTunnelIntegration({ path: "/monitoring" })],
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // Your app
+    },
+  }
+);
+```
+
+</PlatformSection>
 
 ### What the Tunnel Forwards
 
@@ -191,6 +240,8 @@ How you serve that path depends on your server. If it runs a Sentry JavaScript S
 
 Keep `serveTunnelIntegration` on your server. Set `intercept: false` so your route answers the requests instead of the SDK, and set `path` to your route so tunnel requests stay out of your traces:
 
+<PlatformSection notSupported={["javascript.cloudflare"]}>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -199,6 +250,8 @@ Sentry.init({
   ],
 });
 ```
+
+</PlatformSection>
 
 Answer the requests at your endpoint with `handleTunnelRequest`, which forwards them to Sentry:
 
