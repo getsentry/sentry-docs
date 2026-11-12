@@ -120,7 +120,6 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
           </RadixSelect.Icon>
         </RadixSelect.Trigger>
         <RadixSelect.Content
-          role="dialog"
           aria-label="Versions"
           position="popper"
           className={styles.popover}

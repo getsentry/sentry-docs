@@ -65,6 +65,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
         <div className="w-full flex justify-end">
           <input
             placeholder="Search SDKs"
+            aria-label="Search SDKs"
             className={`${styles.input}`}
             value={filter}
             onChange={e => setFilter(e.target.value)}

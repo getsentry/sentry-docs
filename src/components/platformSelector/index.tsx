@@ -257,6 +257,7 @@ export function PlatformSelector({
             value={searchValue}
             onChange={e => setSearchValue(e.target.value)}
             placeholder="Search platforms"
+            aria-label="Search platforms"
             className={styles.combobox}
             autoComplete="off"
             autoCorrect="off"
@@ -355,6 +356,7 @@ export function PlatformSelector({
               <Combobox
                 autoSelect
                 placeholder="Search platforms"
+                aria-label="Search platforms"
                 className={styles.combobox}
                 onBlurCapture={event => {
                   event.preventDefault();
