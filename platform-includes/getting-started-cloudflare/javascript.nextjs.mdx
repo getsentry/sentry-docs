@@ -1,0 +1,209 @@
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A Next.js application that runs on Cloudflare Workers with the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare) or [vinext](https://github.com/cloudflare/vinext)
+
+<Alert level="info">
+  If you haven't deployed a Next.js app to Cloudflare Workers before, follow
+  Cloudflare's [Next.js deployment
+  guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
+  first.
+</Alert>
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+### Run the Installation Wizard
+
+Run the Sentry wizard to automatically install the SDK and configure Sentry in your Next.js application:
+
+```bash
+npx @sentry/wizard@latest -i nextjs
+```
+
+The wizard asks whether you want to enable **Tracing** and **Session Replay**, route browser requests through your server to avoid ad blockers, and create an example page. To match the configuration in this guide, answer **Yes** to each.
+
+Prefer to set things up yourself? Check out the [Manual Setup](/platforms/javascript/guides/nextjs/manual-setup/) guide.
+
+## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable" />
+
+The wizard creates the files below. On Cloudflare Workers, you set the server options in the Worker entry instead, as the [Wrap the Worker Entry](#wrap-the-worker-entry) step shows.
+
+<PlatformContent
+  includePath="getting-started-wizard-files"
+  platform="javascript.nextjs"
+/>
+
+### Configure Wrangler
+
+The SDK uses Node.js APIs that the Workers runtime only provides with the `nodejs_compat` [compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/). Set the [compatibility date](https://developers.cloudflare.com/workers/configuration/compatibility-dates/) to `2025-08-16` or later, which adds the `https.request` API that the SDK uses to send data:
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2025-08-16",
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2025-08-16"
+```
+
+### Wrap the Worker Entry
+
+<AvailableSince version="11.6.0" />
+
+If you build your app with vinext, skip to [Wrap the Worker Entry With vinext](#wrap-the-worker-entry-with-vinext).
+
+On Cloudflare Workers, your Next.js app runs inside the Worker entry that OpenNext generates (`.open-next/worker.js`). Wrap this entry with `withSentry` from `@sentry/nextjs/cloudflare` to get the same Next.js spans as on Node.js, plus Cloudflare data such as spans for D1 queries. Each request gets one `http.server` span with the name of the Next.js route, and the Next.js spans become its children.
+
+`@sentry/nextjs` depends on `@sentry/cloudflare`, so you don't need to install another package.
+
+First, create a [custom Worker](https://opennext.js.org/cloudflare/howtos/custom-worker) that imports the handler of OpenNext and wraps it with `withSentry`. Pass your Sentry options to `withSentry`:
+
+```typescript {filename:worker.ts}
+import * as Sentry from "@sentry/nextjs/cloudflare";
+// @ts-ignore `.open-next/worker.js` is generated at build time
+import handler from "./.open-next/worker.js";
+
+// Re-export the Durable Objects your app uses, for example for the DO Queue and DO Tag Cache of OpenNext
+// @ts-ignore `.open-next/worker.js` is generated at build time
+export { DOQueueHandler, DOShardedTagCache } from "./.open-next/worker.js";
+
+export default Sentry.withSentry(
+  () => ({
+    dsn: "___PUBLIC_DSN___",
+
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
+    tracesSampleRate: 1.0,
+  }),
+  handler
+);
+```
+
+Then, point `main` in your Wrangler configuration to this file:
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "main": "./worker.ts",
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+main = "./worker.ts"
+```
+
+#### Wrap the Worker Entry With vinext
+
+With [vinext](https://github.com/cloudflare/vinext), you don't need a custom Worker. Add the [Sentry Vite plugin](/platforms/javascript/guides/cloudflare/install/vite-plugin/) to your Vite config, and it wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare` automatically.
+
+#### Server and Edge Configuration in the Worker
+
+In the Worker, `withSentry` creates the Sentry client. `Sentry.init()` in `sentry.server.config.ts` and `sentry.edge.config.ts` still runs, but it creates no client and only applies the `release` option. Set all other options in `withSentry`.
+
+On Workers, these two files are optional. Keep them if you use `next dev`, which runs on Node.js and doesn't use the Worker entry. They also pass on the release that `withSentryConfig` sets at build time.
+
+Keep `instrumentation.ts`, because Next.js reports server errors, for example from Server Components and route handlers, through its `onRequestError` hook.
+
+The SDK takes the release from the first of these sources that has a value:
+
+1. The `release` option of `withSentry`
+2. The `SENTRY_RELEASE` environment variable
+3. The ID of the `CF_VERSION_METADATA` binding
+4. The `release` option of `Sentry.init()` in `sentry.server.config.ts` or `sentry.edge.config.ts`, or else the release that `withSentryConfig` sets at build time
+
+On Node.js, the build release comes before `SENTRY_RELEASE`.
+
+### Control the Data You Send to Sentry
+
+<PlatformContent
+  includePath="getting-started-data-collection"
+  platform="javascript"
+/>
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you're already logging with `console` or Consola, use an integration to capture those logs as Sentry Logs automatically:
+
+- <PlatformLink to="/logs/#console">`consoleLoggingIntegration`</PlatformLink> for `console` calls
+- <PlatformLink to="/logs/#consola">Consola</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+The wizard created an example page that sends a test error from both your frontend and your backend:
+
+1. Build your app and run it in the Workers runtime on your machine:
+
+   ```bash
+   npx opennextjs-cloudflare build && npx opennextjs-cloudflare preview
+   ```
+
+2. Open `/sentry-example-page` on the URL that the preview command prints.
+3. Click **Throw Sample Error**.
+
+If you skipped the example page, add a test button to one of your pages instead. Clicking it will trigger an error for Sentry to capture.
+
+```tsx {filename:app/page.tsx}
+"use client";
+
+export default function Page() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        throw new Error("Sentry Test Error");
+      }}
+    >
+      Test Sentry Error
+    </button>
+  );
+}
+```
+
+<PlatformContent
+  includePath="getting-started-browser-sandbox-warning"
+  platform="javascript"
+/>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Next.js application on Cloudflare Workers. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- [Distributed Tracing](/platforms/javascript/guides/nextjs/tracing/distributed-tracing/) to trace requests across services
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events, if you didn't enable it in the wizard
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If you encountered issues with our installation wizard, try [setting up Sentry manually](/platforms/javascript/guides/nextjs/manual-setup/)
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
