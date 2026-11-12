@@ -37,6 +37,7 @@ export function SidebarLink({
       className={`${styles['sidebar-link']} ${isActive ? 'active' : ''} ${
         topLevel ? styles['sidebar-link-top-level'] : ''
       } ${className ?? ''}`}
+      aria-current={isActive ? 'page' : undefined}
       data-sidebar-link
     >
       <div className={styles['sidebar-link-content']}>

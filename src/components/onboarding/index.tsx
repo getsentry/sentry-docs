@@ -475,7 +475,7 @@ export function OnboardingOptionButtons({
           key={option.id}
           className="w-full md:w-auto"
         >
-          <label role="button">
+          <label>
             <Checkbox
               defaultChecked={option.disabled}
               checked={option.checked}

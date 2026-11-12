@@ -140,7 +140,12 @@ export function KeywordSelector({
         }
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
         onMouseEnter={() => setShowProjectPreview(true)}
         onMouseLeave={() => setShowProjectPreview(false)}
         onFocus={() => setShowProjectPreview(true)}
