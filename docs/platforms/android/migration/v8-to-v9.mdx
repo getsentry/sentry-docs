@@ -31,6 +31,22 @@ The Scopes model introduced in version 8 is the supported context model in versi
 
 On Android, APIs such as `Sentry.configureScope()` and `Sentry.setTag()` use the current scope by default.
 
+## Removed `traceSampling` Option
+
+Version 9 removes `SentryOptions.setTraceSampling(...)`, `SentryOptions.isTraceSampling()`, and the `io.sentry.traces.trace-sampling` manifest option. This option was a global switch for trace propagation, not a transaction sampling setting.
+
+To stop attaching `sentry-trace` and `baggage` headers to outgoing HTTP requests, set `tracePropagationTargets` to an empty list. If your app uses manifest-only auto-initialization, replace the removed manifest option with an empty propagation target value:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data
+    android:name="io.sentry.traces.trace-propagation-targets"
+    android:value="" />
+```
+
+For Apollo v2, set `attachTracingHeaders` to `false` on `SentryApolloInterceptor` because the interceptor doesn't have a request URL to match against propagation targets.
+
+There is no replacement for suppressing the trace context in Sentry envelopes. Transactions with baggage now always include that context.
+
 ## Manual Logs and Metrics
 
 Calls to `Sentry.logger()` and `Sentry.metrics()` no longer require a global enable option. Remove calls to:
