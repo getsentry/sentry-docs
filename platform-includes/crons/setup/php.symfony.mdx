@@ -6,7 +6,7 @@ Symfony Scheduler monitoring ships in the next release of `sentry/sentry-symfony
 
 </Alert>
 
-The Symfony SDK can monitor the recurring messages of the [Symfony Scheduler](https://symfony.com/doc/current/scheduler.html) 6.4 or later. It sends a check-in when a worker starts a recurring message, and another when the message finishes or fails. (Please note, this creates a Cron Monitor for every recurring message, which counts against your quota.)
+The Symfony SDK can monitor the recurring messages of the [Symfony Scheduler](https://symfony.com/doc/current/scheduler.html) 6.4 or later. It sends a check-in when a worker starts a recurring message, and another when the message finishes or fails. Create a monitor for each message you want to track first, using the slug described below. Sentry drops check-ins for slugs that don't have a monitor.
 
 Enable it in your bundle configuration:
 
@@ -33,6 +33,8 @@ The SDK doesn't send check-ins for schedules that Crons can't express or would r
 When a `RedispatchMessage` or Messenger routing sends a message to another transport, the message is monitored when a worker consumes it there. Messages that the scheduler's worker handles itself, including ones sent to the `sync` transport, are monitored right away. Cancelled runs and messages of anonymous classes don't send check-ins.
 
 Retries aren't reported. If the first attempt of a message on an async transport fails, its check-in is `error`, even when a retry succeeds.
+
+Messages with a batch handler send `ok` when the batch is flushed, so a long batch can run past the monitor's max runtime.
 
 To skip some recurring messages, list them under `excluded_messages`. An entry matches the message class, the command name or full command of a scheduled console command, the `@service::method` of a scheduled service, or the monitor slug. Entries wrapped in slashes, optionally followed by flags such as `/^reports-/i`, are regular expressions. The SDK ignores an invalid regular expression and logs a warning. Excluded messages don't count when the SDK checks for shared slugs.
 
