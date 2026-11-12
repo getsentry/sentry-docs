@@ -2,28 +2,79 @@ If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](
 
 ### Cron
 
-Requires SDK version `7.92.0` or higher.
+#### Monitor All Named Jobs
 
-Use `Sentry.cron.instrumentCron` to instrument the `CronJob` constructor or `CronJob.from` method in the [`cron`](https://www.npmjs.com/package/cron) library. Pass the name of the cron monitor as a second argument to the function.
+Requires SDK version `11.11.0` or higher and `cron` version `4.3.0` or higher.
+
+We recommend adding `cronJobIntegration`, which monitors every job that has a `name`:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.cronJobIntegration({
+      excludeJobs: ["cleanup-temp-files", /^debug-/], // Optional.
+    }),
+  ],
+});
+```
+
+```JavaScript
+import { CronJob } from "cron";
+
+CronJob.from({
+  name: "daily-report",
+  cronTime: "0 30 9 * * 1-5",
+  timeZone: "Europe/Vienna",
+  onTick: sendReport,
+  start: true,
+});
+```
+
+The monitor slug is the job `name`. Jobs without a `name`, and jobs that run once at a date, aren't monitored. `excludeJobs` skips jobs whose name matches a string exactly or a regular expression.
+
+Each check-in sends the schedule and time zone (your server's time zone if `timeZone` isn't set). Schedules that can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), and jobs with a `utcOffset`, aren't monitored.
+
+In NestJS, use the Nest integration's `monitorCronJobs` option instead, because `@nestjs/schedule` runs `@Cron()` methods as named `cron` jobs.
+
+#### Migrate From `instrumentCron`
+
+`Sentry.cron.instrumentCron` is deprecated. To move to `cronJobIntegration`:
+
+1. Upgrade `cron` to version `4.3.0` or higher.
+2. Add `cronJobIntegration` to `Sentry.init`, as shown above.
+3. Remove the `instrumentCron` wrapper, and set each job's `name` to the monitor slug you passed to `instrumentCron`, so check-ins keep going to the same monitor.
+
+Before:
 
 ```JavaScript
 import { CronJob } from "cron";
 
 const CronJobWithCheckIn = Sentry.cron.instrumentCron(CronJob, "my-cron-job");
 
-// use the constructor
-const job = new CronJobWithCheckIn("* * * * *", () => {
-  console.log("You will see this message every minute");
-});
-
-// or from method
-const job = CronJobWithCheckIn.from({
+CronJobWithCheckIn.from({
   cronTime: "* * * * *",
   onTick: () => {
     console.log("You will see this message every minute");
   },
 });
 ```
+
+After:
+
+```JavaScript
+import { CronJob } from "cron";
+
+CronJob.from({
+  name: "my-cron-job",
+  cronTime: "* * * * *",
+  onTick: () => {
+    console.log("You will see this message every minute");
+  },
+});
+```
+
+Until you migrate, `cronJobIntegration` skips jobs created with `instrumentCron`, so using both doesn't send duplicate check-ins.
 
 ### Node Cron
 
