@@ -173,7 +173,21 @@ On Android 15 (API level 35) and higher, UI Profiling relies on the Android Prof
 
 - **Older devices use the legacy profiler.** On devices below Android 15, the SDK automatically falls back to <PlatformLink to="/profiling/legacy/">Legacy Profiling</PlatformLink>, which has different characteristics. You can disable this fallback with the <PlatformLink to="/configuration/options/#enableLegacyProfiling">`enableLegacyProfiling`</PlatformLink> option.
 - **App start profiling is not supported.** The `startProfilerOnAppStart` option has no effect with the ProfilingManager (Perfetto) backend. App start profiling is only supported by the legacy profiler used on devices below Android 15. To learn more, see <PlatformLink to="/profiling/legacy/">Legacy Profiling</PlatformLink>.
-- **Profiling requests are rate limited and not guaranteed to be fulfilled.** Apart from the SDK sampling rate, the Android Framework also restricts profiling, so not every request results in a profile. These limits are outside the SDK's control. To learn more, see the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> documentation.
+- **Profiling requests are rate limited and not guaranteed to be fulfilled.** Apart from the SDK sampling rate, the Android Framework also restricts profiling, so not every request results in a profile. These limits are outside the SDK's control. To learn more, see [When Android Rejects Profiling Requests](#when-android-rejects-profiling-requests).
+
+## When Android Rejects Profiling Requests
+
+Whether a session gets profiled works like a funnel. First, the SDK decides whether to request profiling for the session, based on your `profileSessionSampleRate`. Then, the ProfilingManager applies its own limits and decides whether to record each request the SDK sends. When Android rejects a request, no profile is recorded for that time window, and the transactions and spans running during that window aren't linked to a profile.
+
+The SDK records profiles in chunks of up to 60 seconds, and each chunk is a separate ProfilingManager request. In `trace` mode, the profiler also sends a new request every time it restarts after all sampled spans have finished.
+
+Android rejects a profiling request in the following cases:
+
+- **The app reached its profiling limit.** Each app gets a limited profiling budget per hour, per day, and per week. Once the app uses up any of these, Android rejects further requests until that period resets (`ERROR_FAILED_RATE_LIMIT_PROCESS`).
+- **The device reached its system-wide profiling limit.** All apps on a device share a global budget with the same hourly, daily, and weekly periods. Profiling by other apps can use up this budget, even if your app hasn't reached its own limit (`ERROR_FAILED_RATE_LIMIT_SYSTEM`).
+- **Profiling is already in progress.** Android rejects a request while another profiling session is running (`ERROR_FAILED_PROFILING_IN_PROGRESS`).
+
+Android doesn't publish the exact budgets, and they may change between Android versions. To learn more, see the Android <Link to="https://developer.android.com/topic/performance/tracing/profiling-manager/will-my-profile-always-be-collected#how-rate-limiting-works">profiling limitations</Link> documentation. When <PlatformLink to="/configuration/options/#debug">debug mode</PlatformLink> is enabled, the SDK logs the error code of every rejected request.
 
 <Alert level="info" title="Disabling Rate Limiting for Local Testing">
   When testing locally, you can disable the Android Framework restrictions with the following shell command:
@@ -182,3 +196,13 @@ On Android 15 (API level 35) and higher, UI Profiling relies on the Android Prof
   adb shell device_config put profiling_testing rate_limiter.disabled true
   ```
 </Alert>
+
+### Which Parts of Your App Get Profiled
+
+Requests sent early in a rate-limit period are the most likely to be recorded, while later ones are more likely to be rejected. As a result, the app start and first screens (right after `Sentry.init()`) are usually profiled more often than parts of your app that users reach later in a session. In long sessions, later parts of your app may not be profiled at all once the app has used up its budget.
+
+### Profiling Specific Parts of Your App
+
+To get profiles for a specific flow, such as a checkout or a heavy screen, use the [`manual` lifecycle](#enabling-manual-lifecycle-ui-profiling). Call `Sentry.startProfiler()` when the flow starts and `Sentry.stopProfiler()` when it ends. This spends the limited budget on the code you want to investigate, instead of on everything that runs while a sampled span is active.
+
+Keep manually profiled sections short, and always call `Sentry.stopProfiler()` when the flow is done. A profiler that keeps running sends a new request every 60 seconds, which uses up the app's budget quickly.

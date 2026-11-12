@@ -27,17 +27,21 @@ For more information on how to dynamically set event tags via `NLog.config`, see
 ```
 
 ```csharp
-SentrySdk.ConfigureScope(scope =>
+LogManager.Configuration.AddSentry(options =>
 {
-    // You can still use NLog layouts in code to set configured properties
-    scope.SetTag("logger", "${logger}");
+    options.Dsn = "___PUBLIC_DSN___";
+    // Tags configured on the target can use NLog layouts
+    options.AddTag("logger", "${logger}");
 });
 ```
 
 ```fsharp
-SentrySdk.ConfigureScope(
-  fun scope ->
-    // You can still use NLog layouts in code to set configured properties
-    scope.SetTag("logger", "${logger}")
-  )
+LogManager.Configuration.AddSentry(
+  fun options ->
+    options.Dsn <- "___PUBLIC_DSN___"
+    // Tags configured on the target can use NLog layouts
+    options.AddTag("logger", "${logger}")
+  ) |> ignore
 ```
+
+NLog layouts are only rendered in tags configured on the Sentry target. A tag set on the scope, for example with `SentrySdk.SetTag`, is sent as is.

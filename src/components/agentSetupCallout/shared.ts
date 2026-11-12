@@ -1,14 +1,45 @@
 /**
- * Shared constants and utilities for agent skills prompt building.
- * Used by AgentSetupCallout (full banner) and inline copy-prompt buttons.
+ * Shared constants for the Sentry CLI setup prompt.
+ * Used by the setup callout, the homepage card, and inline copy buttons.
  */
 
-export const SKILLS_BASE_URL = 'https://skills.sentry.dev';
+export const SENTRY_CLI_URL = 'https://cli.sentry.dev/';
 
-/** Single entrypoint skill that instruments any SDK; the SDK is named in prose. */
-export const INSTRUMENT_SKILL_URL = `${SKILLS_BASE_URL}/instrument`;
+/**
+ * Install commands from https://cli.sentry.dev/.
+ * curl, PowerShell, Homebrew, and npx cover the common paths.
+ * npm, pnpm, and bun are the same global Node install as each other, so npx stands in for them.
+ */
+export const CLI_INSTALL_METHODS = [
+  {
+    id: 'curl',
+    label: 'cURL',
+    command: 'curl https://cli.sentry.dev/install -fsS | bash',
+  },
+  {
+    id: 'powershell',
+    label: 'PowerShell',
+    command: 'irm https://cli.sentry.dev/install.ps1 | iex',
+  },
+  {
+    id: 'brew',
+    label: 'Homebrew',
+    command: 'brew install getsentry/tools/sentry',
+  },
+  {
+    id: 'npx',
+    label: 'npx',
+    command: 'npx sentry@latest',
+  },
+] as const;
+
+export type CliInstallMethodId = (typeof CLI_INSTALL_METHODS)[number]['id'];
+
+export function setupTarget(sdkName?: string): string {
+  return sdkName ? `the Sentry ${sdkName} SDK` : 'Sentry';
+}
 
 export function buildPrompt(sdkName?: string): string {
-  const target = sdkName ? `the Sentry ${sdkName} SDK` : 'Sentry';
-  return `Use curl to download, read and follow ${INSTRUMENT_SKILL_URL} to set up ${target}.`;
+  const install = CLI_INSTALL_METHODS[0].command;
+  return `Set up ${setupTarget(sdkName)} with the Sentry CLI. Install the CLI with \`${install}\`, then follow ${SENTRY_CLI_URL} to finish setup.`;
 }

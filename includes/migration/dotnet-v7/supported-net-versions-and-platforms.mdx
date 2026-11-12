@@ -1,0 +1,50 @@
+---
+id: supported-net-versions-and-platforms
+title: "Supported .NET Versions and Platforms"
+phase: prerequisites
+category: version-support
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 10
+---
+
+Android, iOS, Mac Catalyst and MAUI apps need .NET 10 or later. Version 7 adds support for .NET 11 and drops the .NET 9 targets for these platforms. Server, desktop and console apps keep the same minimums, including WPF, WinForms and WinUI apps.
+
+| Target                                            | 6.x           | 7.x               |
+| ------------------------------------------------- | ------------- | ----------------- |
+| .NET                                              | .NET 8, 9, 10 | .NET 8, 9, 10, 11 |
+| .NET Standard                                     | 2.0, 2.1      | 2.0, 2.1          |
+| .NET Framework                                    | 4.6.2         | 4.6.2             |
+| Android, iOS and Mac Catalyst targets of `Sentry` | .NET 9, 10    | .NET 10, 11       |
+| `Sentry.Maui`, including its Windows target       | .NET 9, 10    | .NET 10, 11       |
+| `Sentry.Maui.CommunityToolkit.Mvvm`               | .NET 9        | .NET 10 and later |
+
+Each package keeps the .NET Standard and .NET Framework targets it had in 6.x. `Sentry` has no Windows-specific target, so WPF, WinForms and WinUI apps use its plain .NET builds, as they did in 6.x. On .NET 11, the platform minimums go up:
+
+| Platform          | .NET 10 | .NET 11 |
+| ----------------- | ------- | ------- |
+| Android API level | 21      | 24      |
+| Mac Catalyst      | 15.0    | 17.0    |
+| iOS               | 15.0    | 15.0    |
+
+Move each mobile or MAUI project to .NET 10 or .NET 11 before you update the Sentry packages:
+
+```xml {filename:MyApp.csproj}
+<PropertyGroup>
+  <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+</PropertyGroup>
+```
+
+An app that targets .NET 11 also needs the higher platform minimums:
+
+```xml {filename:MyApp.csproj}
+<PropertyGroup>
+  <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+  <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">17.0</SupportedOSPlatformVersion>
+</PropertyGroup>
+```
+
+If a project still targets `net9.0-android`, `net9.0-ios` or `net9.0-maccatalyst`, NuGet gives it the plain `net9.0` build of `Sentry` 7. That build has no native SDK, so the app loses native crash reporting. Stay on 6.x until you move the app to .NET 10.
+
+A .NET 9 MAUI project can't use `Sentry.Maui` 7 at all. The package has no .NET 9 target, so NuGet fails the restore with error NU1202.
