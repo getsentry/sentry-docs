@@ -1,0 +1,37 @@
+---
+id: usesentry-overrides-appsettingsjson-in-maui
+title: "UseSentry Overrides appsettings.json in MAUI"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: [maui]
+platformCategory: all
+order: 60
+---
+
+In MAUI apps, options set in the `UseSentry` callback now override the same settings from configuration, such as an `appsettings.json` file the app loads. In 6.x, configuration won, which was the reverse of ASP.NET Core.
+
+The SDK now applies the `Sentry` configuration section first, then the `UseSentry` callback, then the settings MAUI requires. If you relied on configuration to override the callback, keep each setting in one place. In 6.x, a callback could hold defaults that configuration replaced:
+
+```csharp {filename:MauiProgram.cs}
+var builder = MauiApp.CreateBuilder();
+builder
+    .UseMauiApp<App>()
+    .UseSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+        options.TracesSampleRate = 1.0;
+    });
+```
+
+In 7.x, remove from the callback any setting that configuration should control:
+
+```csharp {filename:MauiProgram.cs}
+var builder = MauiApp.CreateBuilder();
+builder
+    .UseMauiApp<App>()
+    .UseSentry(options =>
+    {
+        options.Dsn = "___PUBLIC_DSN___";
+    });
+```

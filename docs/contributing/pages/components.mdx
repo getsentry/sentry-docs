@@ -360,6 +360,7 @@ Attributes:
 
 - `includePath` (string) - the subfolder within `/includes` to map to
 - `platform` (string) - defaults to the `platform` value from the page context
+- `switchable` (boolean) - lets a surrounding [`FrameworkSelector`](#frameworkselector) swap the include for the selected framework's version
 
 Some notes:
 
@@ -370,6 +371,28 @@ Some notes:
 - A file named `_default` will be used if no other content matches.
 
 Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
+
+## FrameworkSelector
+
+Adds a framework dropdown to a runtime's quick start, such as the Node.js, Bun, and Deno guides. Selecting a framework that doesn't have its own SDK (Express, Fastify, Koa, Hapi) swaps every `<PlatformContent switchable />` inside the selector for that framework's version. Selecting a framework that has its own guide (Next.js, Nuxt, and others) opens that guide. The selection is kept in the `?framework=` query parameter.
+
+```markdown {tabTitle:Example}
+<FrameworkSelector runtime="node">
+
+<PlatformContent includePath="getting-started-install" switchable />
+
+</FrameworkSelector>
+```
+
+The runtimes, their frameworks, and their switchable include paths are configured in `src/components/frameworkSelector/frameworks.ts`.
+
+The framework snippets are only shown after a reader selects the framework, so they're easy to miss when you change content:
+
+- `platform-includes/<includePath>/javascript.<framework>.mdx` (for example, `javascript.express.mdx`) shows up on the Node.js, Bun, **and** Deno quick starts. Put snippets that only apply to one runtime in `javascript.<runtime>.<framework>.mdx`, for example `javascript.node.express.mdx`.
+- On Node.js, a framework without its own file uses the Node.js content. On Bun and Deno, it uses the runtime's own content.
+- Every `switchable` include path has to be listed in the runtime's `includePaths` in `frameworks.ts`. If it isn't, the framework version isn't built and the page quietly keeps showing the runtime's content. `frameworks.spec.ts` fails when the two get out of sync.
+- The framework snippets aren't part of the runtime page's [Markdown export](/contributing/pages/llm-support/). Keep framework-specific guidance that agents need, such as error handling options, on the framework's own guide page too, for example `docs/platforms/javascript/guides/express/index.mdx`.
+- To review a change, open the quick start with the framework selected, for example `/platforms/javascript/guides/node/?framework=express`, for each runtime the file applies to.
 
 ## PlatformIdentifier
 

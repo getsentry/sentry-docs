@@ -205,7 +205,7 @@ Note: Enabling this option can lead to longer build times.
 
 <SdkOption name="tunnelRoute" type="string | boolean">
 <Alert level="info">
-This feature requires **Next.js version 11+** and doesn't currently work with self-hosted Sentry instances.
+This feature requires **Next.js version 11+**. Rewrite mode doesn't work with self-hosted Sentry instances.
 </Alert>
 
 Tunnel Sentry requests through this route on your Next.js server to prevent ad-blockers from blocking Sentry events from being sent.
@@ -215,15 +215,73 @@ This option can be set to:
 - `true` for auto-generated routes, which are unpredictable and change with each deployment.
 - A custom static string path like `/error-monitoring`.
 
+<Expandable level="warning" title="If your middleware blocks requests without a session">
+
+Your middleware (`proxy.ts` or `middleware.ts`) also runs for tunnel requests. On v10, the SDK skips your middleware only in rewrite mode with Webpack. Exclude the tunnel route in its `matcher`. This needs a fixed string, because `true` creates a new path for each build:
+
+```typescript {filename:proxy.ts}
+export const config = {
+  matcher: ["/((?!error-monitoring|_next/static|_next/image|favicon.ico).*)"],
+};
+```
+
+</Expandable>
+
 Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.
 
-<Expandable level="warning" title="Using Next.js middleware on Turbopack">
-  If you're using Turbopack, client-side event recording will fail if your
-  Next.js middleware intercepts the configured tunnel route. To fix this, set
-  the route to a fixed string (like `/error-monitoring`) and add a negative
-  matcher like `(?!error-monitoring)` in your middleware to exclude the tunnel
-  route. If you're not using Turbopack, Sentry will automatically skip the
-  tunnel route in your middleware.
+The tunnel route works in one of two modes:
+
+- **Rewrite mode** (default): A Next.js rewrite proxies each request to Sentry with all its request headers. Works only with Sentry SaaS DSNs.
+- **Handler mode**: A route handler in your app forwards only the request body to Sentry. Works with any DSN.
+
+Starting with versions `10.77.1` (v10) and `11.9.0` (v11), the browser sends tunnel requests in rewrite mode [with `credentials: "omit"`](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials).
+If a layer in front of your app requires credentials (for example, Vercel Deployment Protection or HTTP Basic authentication), it rejects these requests. Use handler mode in this case.
+You can also set `credentials: "same-origin"`, but rewrite mode then forwards the credentials to Sentry:
+
+```javascript {filename:instrumentation-client.ts}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  transportOptions: {
+    fetchOptions: { credentials: "same-origin" },
+  },
+});
+```
+
+**Handler mode**
+
+<AvailableSince version="10.77.1 (v10) and v11.9.0 (v11)" />
+
+Keep `tunnelRoute` and add this file. If your app uses a `src` directory, add it at `src/app/sentry-tunnel/route.ts`:
+
+```typescript {filename:app/sentry-tunnel/route.ts}
+export { POST } from "@sentry/nextjs/tunnel";
+```
+
+This works with any `tunnelRoute` value, including `true`. When the SDK finds the file, the build prints this line:
+
+```bash
+[@sentry/nextjs] The tunnel route sends events through app/sentry-tunnel/route.ts. Only the event payload goes to Sentry.
+```
+
+If the line is missing, the SDK uses rewrite mode.
+
+The handler accepts only the DSN of your server-side SDK. It rejects other DSNs with a `403` and requests larger than 20 MiB with a `413`. If your browser SDK uses a different DSN, list the allowed DSNs:
+
+```typescript {filename:app/sentry-tunnel/route.ts}
+import { createSentryTunnelRoute } from "@sentry/nextjs/tunnel";
+
+export const { POST } = createSentryTunnelRoute({
+  allowedDsns: ["___PUBLIC_DSN___"],
+});
+```
+
+<Expandable title="Limits of handler mode">
+
+- Handler mode works only with the App Router.
+- The SDK doesn't find the file in a route group, such as `app/(group)/sentry-tunnel/`.
+- With `"moduleResolution": "node"` in `tsconfig.json`, the type check fails with `Cannot find module '@sentry/nextjs/tunnel'`. Set `moduleResolution` to `bundler`, `node16`, or `nodenext`.
+- Each event request runs the route handler. On serverless hosts, this is one function invocation for each request.
+
 </Expandable>
 
 </SdkOption>
@@ -237,7 +295,7 @@ Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-wi
 Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://nextjs.org/docs/architecture/nextjs-compiler#runafterproductioncompile) to upload sourcemaps after the build is completed.
 
 - This option is set to `true` by default for Turbopack as there are no alternative ways to upload sourcemaps here.
-- This option is set to `false` for Webpack as the default behavior is to upload sourcemaps during the build process using the [Sentry Webpack Plugin](https://github.com/getsentry/sentry-javascript-bundler-plugins).
+- This option is set to `false` for Webpack as the default behavior is to upload sourcemaps during the build process using the Sentry Webpack Plugin.
 
 **Important:** Enabling this option will mutate your Next.js build output by injecting [Debug IDs](/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/debug-ids/) via the Sentry CLI. If you are relying on any sort of integrity hashes for your build artifacts, you will need to disable this option.
 
