@@ -49,8 +49,33 @@ export type Runtime = {
   title: string;
 };
 
-/** Runtime guides (keyed by guide slug) that have a framework selector on their getting started page. */
+/**
+ * Runtime guides (keyed by guide slug) that have a framework selector on their getting started
+ * page. `browser` is the Browser JavaScript page at `/platforms/javascript/`.
+ */
 export const RUNTIMES: Record<string, Runtime> = {
+  browser: {
+    title: 'Browser JavaScript',
+    frameworks: [],
+    frameworkGuides: [
+      guide('Angular', 'angular'),
+      guide('Astro', 'astro'),
+      guide('Ember', 'ember'),
+      guide('Gatsby', 'gatsby'),
+      guide('Next.js', 'nextjs'),
+      guide('Nuxt', 'nuxt'),
+      guide('React', 'react'),
+      guide('React Router', 'react-router'),
+      guide('Remix', 'remix'),
+      guide('Solid', 'solid'),
+      guide('SolidStart', 'solidstart'),
+      guide('Svelte', 'svelte'),
+      guide('SvelteKit', 'sveltekit'),
+      guide('TanStack Start', 'tanstackstart-react'),
+      guide('Vue', 'vue'),
+    ],
+    includePaths: [],
+  },
   node: {
     title: 'Node.js',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
