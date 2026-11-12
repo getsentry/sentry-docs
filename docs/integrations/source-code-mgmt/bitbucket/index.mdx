@@ -177,52 +177,9 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 
 ### Stack Trace Linking
 
-Stack trace linking takes you from a file in your Sentry stack trace to that same file in your source code. If you have commit tracking set up in Sentry, we can take you to the exact version (using the commit associated with the event) of the source code when the error occurred. Otherwise we'll link you to the current state of the source code (using the default branch).
+Stack trace linking takes you from a file in your Sentry stack trace to the same file in Bitbucket. If you've set up commit tracking, Sentry links to the version of the file from the commit associated with the event. Otherwise, it links to the branch set in your code mapping.
 
-1. Navigate to [**Settings > Integrations**](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/) > **Bitbucket > Configurations**.
-
-1. Click "Configure" (the gear icon) next to your Bitbucket Instance.
-
-1. Click the "Code Mappings" tab.
-
-1. Set up a code mapping for each project you want to have stack trace linking. To create a new code mapping, click "Add Mapping".
-
-1. Fill out the form, then click "Save Changes". Each form field is described below:
-
-   - **Project** (required): This is the Sentry project.
-   - **Repo** (required): This is the Bitbucket project associated with the Sentry project above. If you have more than one Bitbucket project being used per Sentry project, you'll need multiple code mappings.
-   - **Branch** (required): This is the default branch of your code we fall back to if you do not have commit tracking set up.
-   - **Stack Trace Root** and **Source Code Root** (optional): See below for information on determining these values.
-
-#### Stack Trace Root and Source Code Root
-
-<Alert>
-
-The following information is only valid for platforms which use traditional file paths. Platforms with package names require additional steps. For **Java**, read more in the [page on source context](/platforms/java/source-context/#setting-up-code-mappings).
-
-</Alert>
-
-First, navigate to a stack trace that you wish to map. Find an **In App** frame, which is denoted by a bubble on the right side of the frame. The filename will be shown as the first piece of text at the left hand side of the frame header. In this example, it is `src/main.py`.
-
-<Include name="common-imgs/code-mappings-stacktrace" />
-
-For certain native platforms, the stack trace will look different. In cases like these, you can find the absolute path by hovering over the filename.
-
-![Highlighting where in the UI to find the file path for native stack traces](./img/code-mappings-stacktrace-native.png)
-
-If you aren’t sure, you can look at the event JSON by clicking on the `{}` button in the event header. Find the text in the frame's `filename` or `abs_path`.
-
-<Include name="common-imgs/code-mappings-event-json" />
-
-Next, locate the file seen in the stack trace with your source code provider (e.g. GitHub). In this example, the path is `flask/src/main.py` (`empower` is ignored since it is the name of the repo).
-
-<Include name="common-imgs/code-mappings-source-file" />
-
-Compare the file path from the stack trace with the path found in your source repository. In this example, the `src/` folder in the stack trace matches the `flask/src` folder in the source code. Using that information, set the **Stack Trace Root** to `src/` and the **Source Code Root** to `flask/src/`. This tells Sentry to replace all file paths beginning in `src/` with `flask/src/` when searching for the source code.
-
-For best results, we recommend always providing a non-empty value for the **Stack Trace Root** when possible.
-
-<Include name="common-imgs/code-mappings-configure-modal" />
+To set up stack trace linking, [add a code mapping](/integrations/source-code-mgmt/code-mappings/) for each Sentry project and Bitbucket repository you want to link.
 
 ### Source Context
 
