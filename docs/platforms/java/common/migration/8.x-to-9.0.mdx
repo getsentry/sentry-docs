@@ -49,6 +49,14 @@ The Scopes model introduced in version 8 is the supported context model in versi
 
 For backend and other JVM applications, APIs such as `Sentry.configureScope()` and `Sentry.setTag()` use the isolation scope by default.
 
+## Removed `traceSampling` Option
+
+Version 9 removes `SentryOptions.setTraceSampling(...)` and `SentryOptions.isTraceSampling()`. The option was a global switch for trace propagation, not a transaction sampling setting.
+
+To stop attaching `sentry-trace` and `baggage` headers to outgoing HTTP requests, set `tracePropagationTargets` to an empty list. For Apollo v2, set `attachTracingHeaders` to `false` on `SentryApolloInterceptor` because the interceptor doesn't have a request URL to match against propagation targets.
+
+There is no replacement for suppressing the trace context in Sentry envelopes. Transactions with baggage now always include that context.
+
 ## Removed OpenTelemetry APIs
 
 Version 9 removes these deprecated OpenTelemetry integration classes:
