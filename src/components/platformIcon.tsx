@@ -993,6 +993,7 @@ export const PLATFORM_TO_ICON = {
   android: 'android',
   anthropic: 'anthropic',
   apple: 'apple',
+  aws: 'aws',
   capacitor: 'capacitor',
   clojure: 'clojure',
   cocoa: 'apple',
