@@ -20,7 +20,7 @@ The default value to report a log entry as an event to Sentry is `Error`.
 
 This means that out of the box, any `Error` call will create an `Event` which will include all log messages of level `Info`, `Warn`, `Error`, and `Fatal` stored as breadcrumbs.
 
-Log messages are also sent to Sentry as [Structured Logs](logs/).
+Log messages at `Info` or higher are also sent to Sentry as [Structured Logs](logs/). Set [`MinimumLogLevel`](#minimumloglevel) to change that level.
 
 ## Install
 
@@ -67,6 +67,8 @@ config.AddSentry(options =>
     options.MinimumBreadcrumbLevel = LogLevel.Debug;
     // Error and higher is sent as event (default is Error)
     options.MinimumEventLevel = LogLevel.Error;
+    // Info and higher are sent as logs (default is Info)
+    options.MinimumLogLevel = LogLevel.Info;
 
     // Send the logger name as a tag
     options.AddTag("logger", "${logger}");
@@ -78,7 +80,7 @@ The target drops log events while Sentry isn't initialized. If a DSN can be foun
 
 ### Minimum log level
 
-Two log levels are used to configure this integration (see options below). One will configure the lowest level required for a log message to become an event (`MinimumEventLevel`) sent to Sentry. The other option (`MinimumBreadcrumbLevel`) configures the lowest level a message has to be to become a breadcrumb. Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.Info` or `logger.Warn`, no event is sent to Sentry. If you then log with `logger.Error`, an event is sent to Sentry which includes those 100 `Info` or `Warn` messages. For this to work, `SentryTarget` needs to receive **all** log entries in order to decide what to keep as breadcrumb or sent as event. Make sure to set the `NLog` `LogLevel` configuration to a value lower than what you set for the `MinimumBreadcrumbLevel` and `MinimumEventLevel` to make sure `SentryTarget` receives these log messages.
+Three log levels configure this integration. See [Options](#options) below. `MinimumEventLevel` is the lowest level for a log message to become an event sent to Sentry. `MinimumBreadcrumbLevel` is the lowest level for a message to become a breadcrumb. `MinimumLogLevel` is the lowest level for a message to be sent as a structured log. Breadcrumbs are kept in memory, by default the last 100 records, and are sent with events. For example, by default, if you log 100 entries with `logger.Info` or `logger.Warn`, no event is sent to Sentry. If you then log with `logger.Error`, an event is sent to Sentry which includes those 100 `Info` or `Warn` messages. For this to work, `SentryTarget` needs to receive **all** log entries in order to decide what to keep as breadcrumb or sent as event. `AddSentry` adds a rule that passes the target every entry at the lowest of the three levels or higher. If you write the rule yourself, for example in `NLog.config`, make sure its minimum level isn't higher than `MinimumBreadcrumbLevel`, `MinimumEventLevel` or `MinimumLogLevel`, so `SentryTarget` receives these log messages.
 
 The target can also be configured in an `NLog.config` XML file:
 
@@ -98,6 +100,7 @@ The target can also be configured in an `NLog.config` XML file:
             breadcrumbLayout="${message}"
             minimumBreadcrumbLevel="Debug"
             minimumEventLevel="Error"
+            minimumLogLevel="Info"
             includeEventDataOnBreadcrumbs="true">
 
       <!--Optionally add any desired additional Tags that will be sent with every message -->
@@ -128,7 +131,6 @@ To send these crashes, also call `SentrySdk.Init` before you create the builder,
 using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
-using Sentry.NLog;
 
 using var sentry = SentrySdk.Init(options =>
 {
@@ -136,7 +138,7 @@ using var sentry = SentrySdk.Init(options =>
 });
 
 var config = new LoggingConfiguration();
-config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, new SentryTarget());
+config.AddSentry();
 LogManager.Configuration = config;
 var logger = LogManager.GetCurrentClassLogger();
 
@@ -179,6 +181,10 @@ A `LogLevel` that indicates the minimum level a log message needs to be in order
 #### MinimumEventLevel
 
 A `LogLevel` which indicates the minimum level a log message has to be sent to Sentry as an event. By default this value is `Error`.
+
+#### MinimumLogLevel
+
+A `LogLevel` which indicates the minimum level a log message needs to be sent to Sentry as a structured log. By default this value is `Info`. Set it to `Off` to send no logs.
 
 #### IgnoreEventsWithNoException
 
