@@ -35,11 +35,30 @@ In order to monitor release health, the SDK sends session data.
 
 A session represents the interaction between the user and the application. Sessions contain a timestamp, a status (if the session was OK or if it crashed), and are always linked to a release. Most Sentry SDKs can manage sessions automatically.
 
-<PlatformContent includePath="configuration/auto-session-tracking" />
+The SDK tracks sessions automatically on all supported platforms. To turn this off, disable <PlatformLink to="/configuration/options/#auto_session_tracking">Auto Session Tracking</PlatformLink> in **Project Settings > Sentry > Options**.
 
-<Alert>
+On Android, iOS, and macOS, <PlatformLink to="/configuration/options/#session_tracking_interval_ms">Session Tracking Interval Ms</PlatformLink> controls how long the game can stay in the background before its session ends.
 
-Release health support for .NET is currently limited to single-instance **client** applications only. This means it can be used with WPF, Xamarin, WinForms and similar app models.
-Support for server frameworks such as ASP.NET is planned.
+To control session boundaries manually, disable **Auto Session Tracking** and call `SentrySDK.start_session()` and `SentrySDK.end_session()`:
 
-</Alert>
+```GDScript {tabTitle:GDScript} {mdExpandTabs}
+func on_match_started() -> void:
+	SentrySDK.start_session()
+
+func on_match_finished() -> void:
+	SentrySDK.end_session()
+```
+
+```csharp {tabTitle:C#}
+public void OnMatchStarted()
+{
+    SentrySdk.StartSession();
+}
+
+public void OnMatchFinished()
+{
+    SentrySdk.EndSession();
+}
+```
+
+Only one session can be active at a time. Starting a session ends any existing session first. Ending a session when none is active does nothing.
