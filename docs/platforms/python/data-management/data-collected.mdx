@@ -8,11 +8,13 @@ Sentry takes data privacy very seriously and has default settings in place that 
 
 The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Python SDK collects.
 
+This page describes the data collected by version `3.x` of the Python SDK. For `2.x`, switch to `2.x` in the version selector.
+
 <Expandable title="Options to control data collection">
 
 You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you opt in or out of each data category individually. Any category you don't set falls back to its default, described on this page.
 
-In SDK versions prior to `3.0`, the SDK collects conservatively unless you pass a `data_collection` dictionary or set the `send_default_pii` option. As soon as you pass a `data_collection` dictionary, the categories you don't set explicitly fall back to the defaults described on this page. Setting `send_default_pii=True` is roughly equivalent to enabling all `data_collection` categories. If you set both, `send_default_pii` is ignored entirely and the SDK emits a `DeprecationWarning`. To keep the conservative SDK `2.x` defaults in SDK `3.x`, see [Preserving `send_default_pii=False` Behavior](#preserving-send_default_piifalse-behavior).
+To keep the conservative SDK `2.x` defaults in SDK `3.x`, see [Preserving `send_default_pii=False` Behavior](#preserving-send_default_piifalse-behavior).
 
 Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
@@ -42,8 +44,6 @@ sentry_sdk.init(
 
 Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are always scrubbed, while the keys are kept. See [Key-Value Collection Behavior](#key-value-collection-behavior) below for details on `mode` and `terms`.
 
-In SDK versions prior to `3.0`, the SDK filters out headers that contain sensitive data unless you use `data_collection` or set `send_default_pii=True`. Additionally, a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from headers (and a lot of other fields) right before sending data to Sentry.
-
 ## Cookies
 
 By default, the Sentry SDK sends cookies, with the values of sensitive cookies (such as the Session ID and CSRF Token cookies in Django) scrubbed. Opt out with `{"mode": "off"}`, or restrict which values are sent using `"allowlist"` or `"denylist"` mode:
@@ -58,8 +58,6 @@ sentry_sdk.init(
     },
 )
 ```
-
-In SDK versions prior to `3.0`, the SDK only sends cookies if you use `data_collection` or set `send_default_pii=True`. Additionally, a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from cookies (and a lot of other fields) right before sending data to Sentry.
 
 ## Information About Logged-in User
 
@@ -77,8 +75,6 @@ sentry_sdk.init(
     },
 )
 ```
-
-In SDK versions prior to `3.0`, the SDK only sends logged-in user information if you use `data_collection` or set `send_default_pii=True`.
 
 ## Users' IP Address
 
@@ -109,8 +105,6 @@ sentry_sdk.init(
     },
 )
 ```
-
-In SDK versions prior to `3.0`, the SDK only sends the user's IP address if you use `data_collection` or set `send_default_pii=True`.
 
 ## Request URL
 
@@ -165,8 +159,6 @@ The valid body types are `"incoming_request"`, `"outgoing_request"`, and `"outgo
 
 `max_request_body_size` still applies on top of `http_bodies`.
 
-In SDK versions prior to `3.0`, `http_bodies` only applies if you use `data_collection`.
-
 ## Source Context
 
 When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
@@ -183,8 +175,6 @@ sentry_sdk.init(
     },
 )
 ```
-
-In SDK versions prior to `3.0`, you can also opt out by setting the `include_source_context` option to `False`.
 
 ## Local Variables In Stack Trace
 
@@ -215,8 +205,6 @@ sentry_sdk.init(
     },
 )
 ```
-
-In SDK versions prior to `3.0`, you can also stop sending local variables by setting `include_local_variables=False`, and the data scrubber removes sensitive variables unless you use `data_collection`.
 
 ## SQL Queries
 
@@ -250,8 +238,6 @@ sentry_sdk.init(
 )
 ```
 
-In SDK versions prior to `3.0`, GraphQL documents and variables are only collected if you use `data_collection` or set `send_default_pii=True`.
-
 ## Queue And Task Message Data
 
 By default, message body data for queue and task-queue integrations is collected. Set `queues` to `False` to opt out:
@@ -266,8 +252,6 @@ sentry_sdk.init(
     },
 )
 ```
-
-In SDK versions prior to `3.0`, this data is only collected if you use `data_collection` or set `send_default_pii=True`.
 
 ## LLM Inputs And Responses
 
@@ -286,8 +270,6 @@ sentry_sdk.init(
 
 Tool arguments, tool results, and prompt content of the <PlatformLink to="/integrations/mcp/">MCP integration</PlatformLink> are controlled separately by the `mcp` category, which works the same way.
 
-In SDK versions prior to `3.0`, the SDK only records LLM inputs and responses if you use `data_collection` or set `send_default_pii=True`, and the `gen_ai` category also covers MCP data. Most AI integrations also have an `include_prompts` parameter to control whether prompts should be included. When `data_collection` is set, `gen_ai` determines whether prompt content is recorded, regardless of what an individual integration's `include_prompts` is set to.
-
 ## `data_collection` Reference
 
 ### Keys
@@ -301,7 +283,7 @@ In SDK versions prior to `3.0`, the SDK only records LLM inputs and responses if
 | `url_query_params`      | key-value behavior                      | `{"mode": "denylist"}`                                          | Collect URL query parameters.                                                                                                                                                                                                                                                                                                                        |
 | `graphql`               | `{"document": bool, "variables": bool}` | both `True`                                                     | Collect the GraphQL query document and its variables.                                                                                                                                                                                                                                                                                                |
 | `gen_ai`                | `{"inputs": bool, "outputs": bool}`     | both `True`                                                     | Collect generative AI input and output content. Metadata such as the model ID and token counts is always collected.                                                                                                                                                                                                                                  |
-| `mcp`                   | `{"inputs": bool, "outputs": bool}`     | both `True`                                                     | Collect MCP tool arguments, tool results, and prompt content. Available in SDK `3.0` and later.                                                                                                                                                                                                                                                      |
+| `mcp`                   | `{"inputs": bool, "outputs": bool}`     | both `True`                                                     | Collect MCP tool arguments, tool results, and prompt content.                                                                                                                                                                                                                                                                                        |
 | `database_query_data`   | `bool`                                  | `True`                                                          | Collect database query data. Query parameter values are never sent; queries are parameterized first.                                                                                                                                                                                                                                                 |
 | `queues`                | `bool`                                  | `True`                                                          | Collect message body data for queue and task-queue integrations.                                                                                                                                                                                                                                                                                     |
 | `stack_frame_variables` | `bool` or key-value behavior            | `True`                                                          | Include local variable values captured within stack frames. Accepts a boolean (`True` collects all variables, `False` collects none) or a key-value behavior to filter which variables are sent by name (see [Filtering Stack Frame Variables](https://develop.sentry.dev/sdk/foundations/client/data-collection/#filtering-stack-frame-variables)). |
@@ -357,5 +339,3 @@ sentry_sdk.init(
     },
 )
 ```
-
-Omit the `mcp` key in SDK versions prior to `3.0`.
