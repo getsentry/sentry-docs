@@ -1,0 +1,39 @@
+The Ruby SDK doesn't integrate with third-party feature flag SDKs. Use the generic API to track feature flag evaluations from any provider.
+
+### Generic API
+
+Call `Sentry.add_feature_flag` with the flag name and its result each time your application evaluates a flag. Only boolean results are supported, and the SDK ignores any other value.
+
+The SDK stores the evaluation on the current scope. If a span or transaction is active, the SDK also records the evaluation on it.
+
+```ruby
+Sentry.add_feature_flag("test-flag", false)
+
+Sentry.capture_exception(StandardError.new("Something went wrong!"))
+```
+
+Go to your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+The flag name can be a string or a symbol. The SDK converts it to a string.
+
+### Scoped Evaluations
+
+To limit an evaluation to a block of code, call `add_feature_flag` on a local scope. Events captured inside the block include the evaluation, and the current scope stays unchanged:
+
+```ruby
+Sentry.with_scope do |scope|
+  scope.add_feature_flag("new-checkout", true)
+
+  Sentry.capture_message("Checkout failed")
+end
+```
+
+A forked scope, such as the one `Sentry.with_scope` yields, starts with a copy of its parent's evaluations. Evaluations added to the copy don't change the parent scope. If a span or transaction is active, it still records the evaluation.
+
+The Ruby SDK doesn't have a separate API to clear feature flags. `Scope#clear` removes them along with all other scope data.
+
+### How Evaluations Are Recorded
+
+- **Events:** The SDK attaches the scope's evaluations to error and message events in the `flags` context. Transaction and check-in events don't include it.
+- **Scope limit:** The scope keeps the last 100 distinct flags it evaluated. Evaluating a flag again updates its result and makes it the most recent. When a new flag would exceed the limit, the scope drops the oldest one.
+- **Spans:** The active span or transaction records up to 10 flags as `flag.evaluation.<name>` data. Once a span has recorded 10 flags, it ignores further evaluations. Spans don't inherit evaluations from their parent span.
