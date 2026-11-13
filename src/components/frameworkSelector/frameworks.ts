@@ -111,14 +111,18 @@ export const RUNTIMES: Record<string, Runtime> = {
   bun: {
     title: 'Bun',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Elysia', 'elysia'), guide('Hono', 'hono')],
+    frameworkGuides: [
+      guide('Elysia', 'elysia'),
+      guide('Hono', 'hono'),
+      guide('Next.js', 'nextjs/bun'),
+    ],
     agentGuides: [guide('Pi Durable', 'pi-durable/bun')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   deno: {
     title: 'Deno',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Hono', 'hono')],
+    frameworkGuides: [guide('Hono', 'hono'), guide('Next.js', 'nextjs/deno')],
     agentGuides: [guide('Pi Durable', 'pi-durable/deno')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
