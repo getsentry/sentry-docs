@@ -111,14 +111,18 @@ export const RUNTIMES: Record<string, Runtime> = {
   bun: {
     title: 'Bun',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Elysia', 'elysia'), guide('Hono', 'hono')],
+    frameworkGuides: [
+      guide('Elysia', 'elysia'),
+      guide('Hono', 'hono'),
+      guide('React Router', 'react-router/bun'),
+    ],
     agentGuides: [guide('Pi Durable', 'pi-durable/bun')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   deno: {
     title: 'Deno',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Hono', 'hono')],
+    frameworkGuides: [guide('Hono', 'hono'), guide('React Router', 'react-router/deno')],
     agentGuides: [guide('Pi Durable', 'pi-durable/deno')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
@@ -131,6 +135,7 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
+      guide('React Router', 'react-router/cloudflare'),
       guide('Remix', 'remix/cloudflare'),
       guide('SvelteKit', 'sveltekit/cloudflare'),
       guide('TanStack Start', 'tanstackstart-react/cloudflare'),

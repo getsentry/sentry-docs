@@ -1,0 +1,99 @@
+---
+title: React Router Framework on Bun
+sidebar_title: Quick Start (Bun)
+sidebar_order: 0.7
+description: Learn how to set up Sentry in your React Router app (v7.15+) that runs on Bun and capture your first errors and traces.
+runtime: bun
+---
+
+This guide sets up Sentry in a React Router app in framework mode that you build with Vite and serve with `react-router-serve` on Bun. At the end, your app sends errors, traces, logs, and session replays to Sentry.
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A React Router app in framework mode, version `7.15.0` or above
+- [Bun](https://bun.sh/)
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Add the Sentry React Router SDK for your app and the Sentry Bun SDK for your server:
+
+```bash
+bun add @sentry/react-router @sentry/bun
+```
+
+## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+<Include name="react-router/client-setup" />
+
+### Configure Server-Side Sentry
+
+Create a file called `instrument.server.mjs` in the root of your project, and initialize Sentry with the Bun SDK. Don't use `Sentry.init()` from `@sentry/react-router` on the server: it's made for Node.js.
+
+```javascript {filename: instrument.server.mjs}
+import * as Sentry from "@sentry/bun";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+});
+```
+
+<Include name="react-router/server-entry" />
+
+To use a Content Security Policy nonce or your own `handleRequest` or `handleError` logic, see the <PlatformLink to="/manual-setup/#configure-server-side-sentry">manual setup</PlatformLink>.
+
+<Include name="react-router/source-maps" />
+
+Keep the plugin even if you don't upload source maps: on Bun, it's the only way to get spans for packages such as database clients. You don't need `sentryBunPlugin` from the [Bun guide](/platforms/javascript/guides/bun/). That plugin is for apps that you build with `Bun.build()`, and Vite builds your React Router app.
+
+### Start Your App
+
+Preload `instrument.server.mjs` and run the `react-router-serve` script with Bun. Update the `start` script in your `package.json`:
+
+```json {filename: package.json}
+"scripts": {
+  "start": "bun --preload ./instrument.server.mjs ./node_modules/@react-router/serve/bin.cjs ./build/server/index.js"
+}
+```
+
+Use the path of the script file, not the `react-router-serve` command. With the command, the preloaded file doesn't apply to the server, and Sentry receives no data.
+
+When the server starts, Bun shows the message `[Sentry] No diagnostics-channel injection detected`. You can ignore it: the Sentry Vite plugin instruments the packages in your server build.
+
+On Bun, you get no spans for the Express middleware of `react-router-serve`, because Express isn't part of your server build. Errors, request spans, spans for loaders and actions, and outgoing `fetch` requests work.
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+<Include name="react-router/logs-metrics-verify" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your React Router Framework application on Bun. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
+- Learn more about the [Sentry Bun SDK](/platforms/javascript/guides/bun/)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

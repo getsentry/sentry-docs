@@ -1,0 +1,25 @@
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<Include name="vite-loadenv-hint-splitlayout.mdx" />
+
+Next, call `sentryOnBuildEnd` in the `buildEnd` hook of your `react-router.config.ts`. It adds debug IDs to your build output and uploads the source maps:
+
+```typescript {filename: react-router.config.ts} {diff}
+import type { Config } from "@react-router/dev/config";
++import { sentryOnBuildEnd } from "@sentry/react-router/vite";
+
+export default {
+  ssr: true,
++ buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
++   // ...
++   // Call this at the end of the hook
++   await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
++ },
+} satisfies Config;
+```
