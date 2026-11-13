@@ -32,11 +32,11 @@ With only `max_cache_items`, the cache can grow to 30 envelopes of up to 200 MiB
 
 SDKs that support `max_cache_size` use it as the primary limit and raise the `max_cache_items` default to `1000`. Thirty envelopes fill up quickly on a device that's offline for a while, for example with session updates, log batches, or replay segments, while 1000 still bounds how many files the SDK has to manage and send once the device is back online. SDKs without `max_cache_size` keep `30`, because the count limit is the only bound on their disk usage.
 
-Setting either option to `0` disables caching: the SDK **MUST NOT** write envelopes to the cache and handles each envelope as described in [Envelopes Larger Than the Limit](#envelopes-larger-than-the-limit).
+Setting `max_cache_items` or `max_cache_size` to `0` disables caching: the SDK **MUST NOT** write envelopes to the cache and handles each envelope as described in [Envelopes Larger Than the Limit](#envelopes-larger-than-the-limit).
 
 To remove a limit, users set the option to the platform's maximum integer value, for example `Int.MAX_VALUE`, `Long.MAX_VALUE`, `UInt.max`, or `SIZE_MAX`. This lets users rely on only one of the limits. For example, users who care about disk usage rather than the number of envelopes can set `max_cache_items` to the maximum value and keep `max_cache_size`.
 
-If a user sets a negative value for either option, SDKs **MUST** ignore it, use the default, and log a warning in debug mode.
+If a user sets a negative value for `max_cache_items` or `max_cache_size`, SDKs **MUST** ignore it, use the default, and log a warning in debug mode.
 
 ### Enforcing the Limits
 
@@ -98,7 +98,7 @@ Sending order **MUST NOT** change [Eviction Order](#eviction-order): SDKs still 
 
 ### Envelopes Larger Than the Limit
 
-If a single envelope is larger than `max_cache_size`, it can never fit in the cache. The same applies to every envelope when either option is `0`. In that case, SDKs:
+If a single envelope is larger than `max_cache_size`, it can never fit in the cache. The same applies to every envelope when `max_cache_items` or `max_cache_size` is `0`. In that case, SDKs:
 
 - **MUST NOT** delete other cached envelopes to make room for it.
 - **MUST NOT** write it to the cache.
