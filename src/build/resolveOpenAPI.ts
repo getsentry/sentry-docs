@@ -1,6 +1,7 @@
 /* eslint import/no-nodejs-modules:0 */
 
 import {
+  API_BASE_PATH,
   type ApiDocs,
   type ApiDocsOperation,
   type ApiDocsParameter,
@@ -27,7 +28,7 @@ async function resolveApiDocs(): Promise<ApiDocs> {
       );
     }
   }
-  return {tags, operations};
+  return {apiBasePath: API_BASE_PATH, tags, operations};
 }
 
 export type APIParameter = {
@@ -170,7 +171,9 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
     operation.tags.forEach(tag => {
       categoryMap[tag].apis.push({
-        apiPath: operation.path,
+        // Operation paths are relative to the spec's API base path, such as
+        // `/api/0`; pages show the full path after the origin.
+        apiPath: `${data.apiBasePath}${operation.path}`,
         method: operation.method.toLowerCase(),
         name: cleanName,
         deprecated: isDeprecated,
