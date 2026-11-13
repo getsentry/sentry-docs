@@ -1,0 +1,64 @@
+---
+title: Linear Seer Integration
+sidebar_order: 1
+
+description: "Learn how adding Linear data to Seer's context helps you debug and fix issues."
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+The Linear for Seer integration gives [Seer Agent](/product/ai-in-sentry/seer/#seer-agent) read-only access to issues, projects, and comments in your Linear workspace. Seer can then use Linear data to enhance or supplement Sentry telemetry in issue analysis or investigations.
+
+The connection is shared across your Sentry organization. You can connect one Linear workspace per Sentry organization.
+
+Sentry installs the integration as an app in your Linear workspace, so Seer reads Linear as the app instead of as the person who connected it. Seer connects through [Linear's read-only MCP server](https://linear.app/docs/mcp), which only exposes read tools, so Seer can't create or change anything in Linear.
+
+This integration is separate from the [Linear issue tracking integration](/integrations/issue-tracking/linear/), which is built by Linear and lets you create and link Linear issues from Sentry.
+
+## Install the Linear for Seer Integration
+
+<Alert>
+
+Sentry Owner, Manager, or Admin permissions are required to install this integration.
+
+You also need to be a Linear workspace admin, because installing an app in a Linear workspace requires admin permissions. A Linear workspace admin can complete these steps for you.
+
+</Alert>
+
+1. Navigate to [Seer Connector Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/connectors/).
+2. Select the Linear for Seer integration and click **Add Workspace**.
+3. Click **Authorize Linear**. A Linear authorization window opens. If it doesn't, allow popups from Sentry in your browser and click **Authorize Linear** again.
+4. In the Linear window, select the workspace you want to connect, review the requested access, and approve it.
+
+   Linear's authorization screen lists read and write permissions. Seer only uses Linear's read-only MCP server, so it can only read data from your workspace.
+
+   If Linear asks which teams the app can access, select every team whose issues and projects you want Seer to read. Seer can't see data from teams the app can't access.
+
+5. After you approve, Sentry checks that it can read the workspace before completing installation. The new connection appears as **Linear (_Workspace Name_)**.
+
+   If the check fails, the error appears in the setup modal. Correct the problem and click **Authorize Linear** again. You can retry in the same setup modal.
+
+## Configure
+
+The integration has no settings to edit. Sentry refreshes the Linear access token automatically, so you don't need to rotate it.
+
+To reauthorize the workspace, click the **Configurations** tab on the [Linear for Seer settings page](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/linear/?tab=configurations), click **Configure** for the workspace, then click **Reconnect Linear** and approve access in Linear again. Choose the same workspace you connected originally. To connect a different workspace, uninstall the current connection first, then install the integration again.
+
+To change which teams Seer can read, update the app's team access in Linear's [Applications settings](https://linear.app/settings/applications). Only Linear workspace admins can change an app's team access.
+
+When you uninstall the integration, Sentry revokes the app's access in Linear. If another Sentry organization is connected to the same Linear workspace, Sentry keeps the app's access in Linear so that organization's connection keeps working.
+
+## Troubleshooting
+
+If the connection needs attention:
+
+- **Linear authorization was canceled:** You closed or declined the Linear authorization window. Click **Authorize Linear** to try again.
+- **The authorization popup was blocked:** Allow popups from Sentry in your browser, then click **Authorize Linear** again.
+- **Could not reach Linear:** Linear could not be reached during setup. Wait a moment, then try again.
+- **Linear authorization failed:** Linear rejected the authorization. Confirm that you're a Linear workspace admin and approved the requested access, then authorize the workspace again. If this appears for an existing connection, the app's access was likely revoked in Linear. Click **Reconnect Linear** to restore it.
+- **The app can't read your Linear workspace:** The app was installed but can't read workspace data. Check the app's access in Linear's [Applications settings](https://linear.app/settings/applications). If your workspace requires approval for third-party apps, make sure an admin has approved it. See Linear's [third-party app approvals](https://linear.app/docs/third-party-application-approvals).
+- **Remove the current Linear connection before connecting a different workspace:** Your Sentry organization is already connected to a different Linear workspace. Uninstall that connection, or select the original workspace when you reconnect.
+- **The integration was disabled:** Sentry disables the connection if Linear stops accepting its credentials, for example after someone revokes the app's access in Linear. Click **Reconnect Linear** to authorize the workspace again.
+- **Seer can't find issues or projects you expect:** Check that the app has access to the teams that own them in Linear's [Applications settings](https://linear.app/settings/applications).
+
+After correcting the setup, click **Authorize Linear** during installation or **Reconnect Linear** in the integration settings.
