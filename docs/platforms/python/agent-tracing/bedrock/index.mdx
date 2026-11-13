@@ -1,0 +1,101 @@
+---
+title: Amazon Bedrock
+description: "Learn about using Sentry for Amazon Bedrock."
+sidebar_order: 31
+---
+
+This integration connects Sentry with [Amazon Bedrock](https://aws.amazon.com/bedrock/) calls made through the [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) `bedrock-runtime` client.
+
+Once you've installed this SDK, you can use the Sentry Agents Tracing, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+Sentry AI Observability will automatically collect information about prompts, tools, tokens, and models. Learn more about the [Agents Dashboard](/product/agents/dashboards/).
+
+<Include name="python-stream-mode-general-callout.mdx" />
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install sentry-sdk
+```
+
+```bash {tabTitle:uv}
+uv add sentry-sdk
+```
+
+## Configure
+
+Add `Boto3Integration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.boto3 import Boto3Integration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
+    integrations=[
+        Boto3Integration(),
+    ],
+)
+```
+
+## Verify
+
+Verify that the integration works by making a chat request to Bedrock.
+
+```python
+import boto3
+import sentry_sdk
+
+sentry_sdk.init(...)  # same as above
+
+client = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+def my_llm_stuff():
+    # or sentry_sdk.traces.start_span(name="The result of the AI inference", parent_span=None) in stream mode
+    with sentry_sdk.start_transaction(name="The result of the AI inference"):
+        response = client.converse(
+            modelId="us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"text": "Tell me a short story about a robot."}],
+                }
+            ],
+        )
+        print(response["output"]["message"]["content"][0]["text"])
+```
+
+After running this script, the resulting data should show up in the `AI Spans` tab on the `Explore > Traces > Trace` page on Sentry.io.
+
+If you manually created an <PlatformLink to="/agent-tracing/manual-instrumentation/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [Agents Dashboard](/product/agents/dashboards/).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Boto3 integration will connect Sentry with the supported Bedrock methods automatically.
+
+- The supported methods are currently `converse` and `converse_stream` on the `bedrock-runtime` client.
+
+- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include prompts, messages, or responses by default. Tool definitions are still attached by default; setting `inputs` to `False` in the `gen_ai` key described below removes them. To include prompts, messages, and responses, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default:
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      data_collection={
+          # Record LLM inputs, but not outputs
+          "gen_ai": {"inputs": True, "outputs": False},
+      },
+  )
+  ```
+
+  Alternatively, set `send_default_pii=True` in the `sentry_sdk.init()` call. `send_default_pii` will be removed in version 3.0 of the SDK.
