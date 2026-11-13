@@ -78,6 +78,7 @@ export type DeRefedOpenAPI = {
     };
   };
   tags: Tag[];
+  servers?: ServerMeta[];
 };
 
 export type ResponseContent = {
