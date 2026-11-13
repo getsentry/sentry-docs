@@ -24,7 +24,7 @@ Envelope sizes vary widely. Most are a few kilobytes, but envelopes with screens
 |---|---|---|---|
 | `max_cache_items` | `int` | `1000`, or `30` if the SDK doesn't support `max_cache_size` | Maximum number of envelopes in the cache. **MUST** be supported. |
 | `max_cache_size` | `int` | `536870912` (512 MiB) | Maximum total size of the cached envelopes, in bytes. **SHOULD** be supported. |
-| `max_cache_age` | duration | Not set: 90 or 30 days, depending on the envelope's items | Maximum age of a cached envelope. Replaces the default ages in [Maximum Age](#maximum-age) for all envelopes. **MAY** be supported. |
+| `max_cache_age` | duration | Not set: 90 or 30 days, depending on the envelope's items | Maximum age of a cached envelope. Can only shorten the default ages in [Maximum Age](#maximum-age). **MAY** be supported. |
 
 SDKs **SHOULD** use the platform's naming convention, for example `maxCacheSize` or `MaxCacheSize`. SDKs **SHOULD** use a 64-bit integer type for `max_cache_size` where the platform has one, so users can set limits above 2 GiB.
 
@@ -66,14 +66,13 @@ These ages work as follows:
 - SDKs **SHOULD** delete expired envelopes when the SDK initializes, and **MAY** also delete them at other times, such as before writing an envelope.
 - When an envelope is deleted because it's too old, the rules in [Eviction Order](#eviction-order) for client reports and session integrity apply.
 
-SDKs **MAY** expose a `max_cache_age` option to override these defaults, for example to delete cached data sooner for privacy reasons or on devices with little storage. When the user sets it:
+SDKs **MAY** expose a `max_cache_age` option to shorten these defaults, for example to delete cached data sooner for privacy reasons or on devices with little storage. When the user sets it:
 
-- The SDK **MUST** apply it to all envelopes, regardless of their items, instead of the 90-day and 30-day defaults.
+- The maximum age of each envelope is the shorter of `max_cache_age` and the envelope's default. For example, with `max_cache_age` set to 60 days, envelopes with an event item expire after 60 days and all others still after 30 days.
 - The SDK **MUST** apply it to envelopes already in the cache, including those written before the user set or changed it.
 - SDKs **SHOULD** use the platform's duration type, or seconds where the platform has none.
-- If the value is `0` or negative, SDKs **MUST** ignore it, use the defaults, and log a warning in debug mode. To remove the age limit, users set it to the platform's maximum value.
-
-Values longer than the defaults keep data that Sentry is likely to reject or correct once it's sent.
+- Values longer than the defaults don't extend them, because Sentry rejects or corrects older data once it's sent. If the value is longer than 90 days, SDKs **SHOULD** log a warning in debug mode.
+- If the value is `0` or negative, SDKs **MUST** ignore it, use the defaults, and log a warning in debug mode.
 
 ### Measuring Size
 
