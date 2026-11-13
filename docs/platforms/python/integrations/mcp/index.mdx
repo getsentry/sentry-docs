@@ -198,21 +198,21 @@ Data on the following will be collected:
 - **Request context**: Request IDs, session IDs, and transport types (stdio/HTTP)
 - **Execution spans**: Timing information for all handler invocations
 
-Sentry considers tool inputs/outputs and prompt content as PII. By default, it doesn't include tool results or prompt content, but tool and prompt arguments (`mcp.request.argument.*`) are still attached; setting `inputs` to `False` in the `gen_ai` key described below removes them. To include tool results and prompt content, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default, and `include_prompts` is ignored:
+By default, the SDK collects tool arguments, tool results, and prompt content. To control this, use the `mcp` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately:
 
 ```python
 sentry_sdk.init(
     # ...
     data_collection={
         # Collect tool and prompt inputs, but not outputs
-        "gen_ai": {"inputs": True, "outputs": False},
+        "mcp": {"inputs": True, "outputs": False},
     },
 )
 ```
 
 Setting `inputs` to `False` removes the `mcp.request.argument.*` attributes from spans, and setting `outputs` to `False` removes tool results and prompt message content.
 
-Alternatively, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude this data despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below. `send_default_pii` will be removed in version 3.0 of the SDK.
+In SDK versions prior to `3.0`, this data is controlled by the `gen_ai` key of `data_collection` instead. Without `data_collection`, tool results and prompt content are only collected with `send_default_pii=True`, and can be excluded with the integration's `include_prompts=False` option.
 
 ### Captured Span Data
 
@@ -223,25 +223,33 @@ For each operation, the following span data attributes are captured:
 - `mcp.transport`: Transport type (`http` for Streamable HTTP, `sse` for Server-Sent Events or `stdio`)
 - `mcp.request_id`: Request identifier (when available)
 - `mcp.session_id`: Session identifier (when available)
+- `network.transport`: Network transport (for example, `pipe` for stdio or `tcp` for HTTP)
 
 **Tools:**
-- `mcp.tool.name`: The name of the tool being executed
-- `mcp.request.argument.*`: Tool input arguments
-- `mcp.tool.result.content`: Tool output (when `gen_ai.outputs` is enabled in `data_collection`, or when `send_default_pii=True`)
-- `mcp.tool.result.is_error`: Whether the tool execution resulted in an error
+- `gen_ai.tool.name`: The name of the tool being executed
+- `mcp.request.argument.*`: Tool input arguments (when `mcp.inputs` is enabled in `data_collection`)
+- `gen_ai.tool.call.result`: Tool output (when `mcp.outputs` is enabled in `data_collection`)
 
 **Prompts:**
-- `mcp.prompt.name`: The name of the prompt being requested
-- `mcp.request.argument.*`: Prompt input arguments
-- `mcp.prompt.result.message.count`: Number of messages in the prompt result
-- `mcp.prompt.result.message.role`: Role of the message (for single-message prompts)
-- `mcp.prompt.result.message.content`: Message content (for single-message prompts, when `gen_ai.outputs` is enabled in `data_collection`, or when `send_default_pii=True`)
+- `gen_ai.prompt.name`: The name of the prompt being requested
+- `mcp.request.argument.*`: Prompt input arguments (when `mcp.inputs` is enabled in `data_collection`)
+- `mcp.prompt.result.message_count`: Number of messages in the prompt result
+- `mcp.prompt.result.message_role`: Role of the message (for single-message prompts)
+- `mcp.prompt.result.message_content`: Message content (for single-message prompts, when `mcp.outputs` is enabled in `data_collection`)
 
 **Resources:**
 - `mcp.resource.uri`: The URI of the resource being accessed
 - `mcp.resource.protocol`: The URI protocol/scheme (e.g., `config`, `data`, `file`)
 
+In SDK versions prior to `3.0`, the tool and prompt names and the tool output are recorded as `mcp.tool.name`, `mcp.prompt.name`, and `mcp.tool.result.content`.
+
 ## Options
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, `MCPIntegration` doesn't accept any options. Use the `mcp` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> instead, as described in [Behavior](#behavior).
+
+</Alert>
 
 By adding `MCPIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `MCPIntegration` to change its behavior:
 
