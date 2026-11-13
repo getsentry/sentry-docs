@@ -94,7 +94,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 <SdkOption name="AttachScreenshot" type="bool" defaultValue="false">
 
-Attaches a screenshot of the game to events, such as errors and messages, and sends it in the same envelope as the event. Screenshots aren't attached in the Editor, in batch mode, or on WebGL.
+Attaches a screenshot of the game to events, such as errors and messages, and sends it in the same envelope as the event. Screenshots aren't attached in the Editor, in batch mode, or on WebGL. On iOS and Windows, native crashes also get a screenshot, taken by the native SDK.
 Learn more about enriching events with screenshots in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
@@ -147,6 +147,8 @@ Sets the distribution of the application. Distributions are used to disambiguate
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
+In Unity, it adds the device name (`device.name`) and the device's unique identifier to events. Native crashes on Windows, Linux, macOS with the Native backend, and game consoles carry the device name only with this option, too. Native crashes on iOS, Android, and macOS with the Cocoa backend don't include the device name. With <PlatformIdentifier name="IsEnvironmentUser" />, it also adds the user name. Learn more in <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink>.
+
 <Alert>
 
 If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
@@ -197,13 +199,13 @@ By the time <PlatformIdentifier name="SetBeforeSendTransaction" /> is executed, 
 
 <SdkOption name="SetBeforeCaptureScreenshot" type="function">
 
-A callback function that controls screenshot capture behavior. Return `false` to prevent a screenshot from being attached to a specific event. It can run on a background thread and runs before <PlatformIdentifier name="SetBeforeSend" /> and sampling. Learn more in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+A callback function that controls screenshot capture behavior. Return `false` to prevent a screenshot from being attached to a specific event. It can run on a background thread and runs before <PlatformIdentifier name="SetBeforeSend" /> and sampling. Setting it turns off screenshots for native crashes on iOS, as it can't run during a crash. Learn more in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
 
 <SdkOption name="SetBeforeSendScreenshot" type="function">
 
-A callback function that receives the screenshot as a `Texture2D` before it gets compressed, along with the event it belongs to. Modify or replace the texture and return it, or return `null` to discard the screenshot. Setting it makes the SDK read and compress screenshots on the main thread. Learn more in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
+A callback function that receives the screenshot as a `Texture2D` before it gets compressed, along with the event it belongs to. Modify or replace the texture and return it, or return `null` to discard the screenshot. Setting it makes the SDK read and compress screenshots on the main thread, and turns off screenshots for native crashes on iOS, as it can't run during a crash. Learn more in our <PlatformLink to="/enriching-events/screenshots/">Screenshots documentation</PlatformLink>.
 
 </SdkOption>
 
