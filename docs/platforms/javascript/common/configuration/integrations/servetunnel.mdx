@@ -1,0 +1,68 @@
+---
+title: ServeTunnel
+description: "Serves a tunnel on your server so Sentry browser SDK events reach Sentry through your own origin, past ad blockers."
+supportedCategories:
+  - server
+---
+
+<AvailableSince version="11.13.0" />
+
+_Import name: `Sentry.serveTunnelIntegration`_
+
+This integration serves the tunnel that the browser SDK uses when you set `tunnel: true`. The tunnel forwards the browser's events to Sentry, so ad blockers don't drop them. To set it up, see <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
+
+<PlatformContent includePath="configuration/tunnel-server-init" />
+
+## Options
+
+Most apps don't need any of these options.
+
+### `allowedDsns`
+
+_Type: `string[]`_
+
+DSNs to forward besides the server's own. Use this when the browser uses a different DSN than the server. The server's own DSN is always allowed.
+
+```javascript
+Sentry.serveTunnelIntegration({
+  allowedDsns: ["___PUBLIC_DSN___"],
+});
+```
+
+### `path`
+
+_Type: `string`_
+
+A fixed tunnel path instead of the one derived from the DSN. The SDK doesn't add the base path it reads from your framework config, so include it in the path, or set `basePath` too. Set the same path in the browser, as described in <PlatformLink to="/configuration/tunneling/#using-a-fixed-path">Using a Fixed Path</PlatformLink>.
+
+### `basePath`
+
+_Type: `string`_
+
+The path prefix your app is served under, for example `/docs`. The SDK reads it from your framework config, so you only need this option when it can't. Set the same value in the browser `tunnel` option.
+
+### `intercept`
+
+_Type: `boolean`_
+_Default: `true`_
+
+Whether the SDK answers tunnel requests before they reach your app. Set it to `false` to answer them from your own code with `handleTunnelRequestIfMatched`, for example behind your own middleware. Tunnel requests still don't show up in your traces:
+
+```javascript
+import express from "express";
+import * as Sentry from "@sentry/node";
+
+const app = express();
+
+app.use(
+  (req, res, next) => Sentry.handleTunnelRequestIfMatched(req, res) ?? next()
+);
+```
+
+Add it before any middleware that reads the request body.
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+On Vercel, the route that `withSentryConfig` adds at build time still answers tunnel requests.
+
+</PlatformSection>
