@@ -102,7 +102,7 @@ production:
   nightly_report:
     class: ReportJob
     args: [nightly]
-    schedule: "0 2 * * * America/New_York"
+    schedule: "0 4 * * * America/New_York"
   weekly_report:
     class: ReportJob
     args: [weekly]
@@ -122,6 +122,51 @@ To skip tasks, list their keys in `config.rails.solid_queue_exclude_recurring_ta
 Sentry.init do |config|
   config.enabled_patches += [:solid_queue_recurring]
   config.rails.solid_queue_exclude_recurring_tasks = ["clear_cache", /^tmp_/]
+end
+```
+
+### GoodJob
+
+<Alert>
+
+The GoodJob integration ships in the next `sentry-rails` release after `7.2.0`.
+
+</Alert>
+
+If you're using GoodJob cron (GoodJob 3.14 or later), enable the `:good_job_cron` patch to capture check-ins for every entry in `config.good_job.cron`:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:good_job_cron]
+end
+```
+
+```rb {filename:config/application.rb}
+config.good_job.enable_cron = true
+config.good_job.cron = {
+  nightly_report: {
+    cron: "0 4 * * * America/New_York",
+    class: "ReportJob",
+    args: ["nightly"],
+  },
+  weekly_report: {
+    cron: "every monday at 9am",
+    class: "ReportJob",
+    args: ["weekly"],
+  },
+}
+```
+
+The monitor slug is the cron key, so this example creates two monitors: `nightly_report` and `weekly_report`. Each entry gets its own monitor, even when entries share a job class. If two keys turn into the same slug, such as keys longer than 50 characters that start the same way, neither is monitored and the SDK logs a warning.
+
+Sentry creates and updates each monitor from the entry's schedule and time zone. Schedules without a time zone use your app's `Time.zone`. Schedules that can't be expressed in the Crons schedule format, such as a job that runs every 10 seconds, and entries whose `cron` is a proc aren't monitored. Neither are schedules whose time zone is an offset that isn't a whole number of hours, like `+05:30`; whole-hour offsets like `+05:00` are sent as `Etc/GMT-5`. Jobs that already call `sentry_monitor_check_ins` are left as they are. Retries and runs started with **Enqueue now** in the GoodJob dashboard send check-ins too.
+
+To skip entries, list their keys in `config.rails.good_job_exclude_cron_jobs`. Strings and symbols match a cron key exactly, and regular expressions are matched against it:
+
+```rb
+Sentry.init do |config|
+  config.enabled_patches += [:good_job_cron]
+  config.rails.good_job_exclude_cron_jobs = [:clear_cache, /^tmp_/]
 end
 ```
 
