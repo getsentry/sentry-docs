@@ -90,3 +90,8 @@ config.data_collection.graphql.variables = false
 ## SQL Queries
 
 SQL queries are sent to Sentry in a parameterized form. To control whether associated query data, such as bound parameter values and Redis command arguments, is collected, set `config.data_collection.database_query_data = false`.
+
+Starting with version 7.3.0, the SDK keeps credentials in Redis commands out of span descriptions and breadcrumbs, regardless of the `database_query_data` setting:
+
+- For `AUTH` and `HELLO`, the SDK records only the command name and none of its arguments.
+- For `ACL`, `CONFIG`, `MIGRATE`, and `SENTINEL`, the SDK records the command name and its first argument, such as the `SETUSER` subcommand of `ACL`, and drops all other arguments.
