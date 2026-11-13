@@ -67,3 +67,11 @@ var eventId = SentrySdk.CaptureMessage("An event that will receive user feedback
 
 SentrySdk.CaptureFeedback("It broke.", "user@example.com", "The User", associatedEventId: eventId);
 ```
+
+To link the feedback to the last event the SDK captured, including errors it captures automatically, such as from `Debug.LogError`, use `SentrySdk.LastEventId`. It's `SentryId.Empty` when no event was captured or the last one was dropped, and native crashes don't set it:
+
+```csharp {tabTitle:C#}
+var lastEventId = SentrySdk.LastEventId;
+
+SentrySdk.CaptureFeedback("It broke.", "user@example.com", "The User", associatedEventId: lastEventId != SentryId.Empty ? lastEventId : null);
+```
