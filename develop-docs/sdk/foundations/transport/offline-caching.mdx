@@ -81,6 +81,12 @@ When an envelope is deleted to satisfy either limit or the [Maximum Age](#maximu
 - **MUST** preserve session integrity: if the deleted envelope contains a session update with `init: true`, the SDK **MUST** move the `init` flag to the next remaining session update for the same session, so release health stays correct.
 - **SHOULD** read only the deleted envelope and, when it moves the `init` flag, the one envelope that receives it, found through the session ID in the index. SDKs **SHOULD NOT** read the other cached envelopes to find it, because the cost grows with the total size of the cache.
 
+### Sending Order
+
+When sending cached envelopes, for example after the SDK initializes or the device comes back online, SDKs **SHOULD** send envelopes that contain a crash first, then the rest from oldest to newest. With a large cache, a crash from the previous run otherwise waits behind every older envelope, and a crash during app start may not be sent before the app crashes again.
+
+Sending order **MUST NOT** change [Eviction Order](#eviction-order): SDKs still delete crash envelopes by the time they were written, like every other envelope.
+
 ### Envelopes Larger Than the Limit
 
 If a single envelope is larger than `max_cache_size`, it can never fit in the cache. The same applies to every envelope when either option is `0`. In that case, SDKs:
