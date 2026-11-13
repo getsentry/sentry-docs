@@ -179,6 +179,21 @@ After building your application, run the plugin to upload debug symbols:
 flutter pub run sentry_dart_plugin
 ```
 
+## Finalizing the Release
+
+By default, the plugin finalizes the release as its last step, which sets the release date to the time of the upload. If you upload debug symbols before the build reaches your users, for example when you submit it to the app stores or before a staged rollout, set `finalize_release` to `false`:
+
+```yaml {filename:pubspec.yaml}
+sentry:
+  finalize_release: false
+```
+
+Then use [Sentry CLI](/cli/releases/#finalizing-releases) to finalize the release once the build goes live. Use the same release name that the plugin uploaded to:
+
+```bash
+sentry-cli releases finalize my-app@1.0.0
+```
+
 ## Configuration Reference
 
 The following table lists all available configuration options for the Sentry Dart Plugin.
@@ -210,6 +225,7 @@ When available, environment variable names are listed in the **Environment Varia
 | `legacy_web_symbolication` | —                    | boolean | `false`                                       | Uses legacy symbolication for Flutter Web. See [Debug IDs](#debug-ids-flutter-web) |
 | `commits`                  | —                    | string  | `auto`                                        | Release commits integration                                                        |
 | `ignore_missing`           | —                    | boolean | `false`                                       | Ignore missing commits previously used in the release                              |
+| `finalize_release`         | —                    | boolean | `true`                                        | Whether to finalize the release after uploading                                    |
 | `wait_for_processing`      | —                    | boolean | `false`                                       | Whether to wait for server-side processing of uploaded files                       |
 | `log_level`                | `SENTRY_LOG_LEVEL`   | string  | `warn`                                        | Log level for sentry-cli: `trace`, `debug`, `info`, `warn`, `error`                |
 | `bin_dir`                  | —                    | string  | `.dart_tool/pub/bin/sentry_dart_plugin`       | Folder where the plugin downloads the sentry-cli binary                            |
