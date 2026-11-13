@@ -40,15 +40,15 @@ def main():
     db = client["sentry_test_db"]
     collection = db["sentry_test"]
 
-    # or sentry_sdk.traces.start_span(name="your_span_name", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         collection.insert_one({"test": "sentry"})
         collection.find_one({"test": "sentry"})
 
 main()
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the database operations.
+This will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io), and create spans for the database operations.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

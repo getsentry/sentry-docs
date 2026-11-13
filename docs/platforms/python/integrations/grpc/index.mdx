@@ -5,7 +5,7 @@ description: "Learn about the gRPC integration and how it adds support for the g
 
 The [gRPC](https://grpc.io/) integration instruments incoming unary-unary grpc requests and outgoing unary-unary, unary-stream grpc requests using grpcio channels.
 
-Use this integration to start or continue transactions for incoming grpc requests, create spans for outgoing requests,
+Use this integration to start or continue traces for incoming grpc requests, create spans for outgoing requests,
 and ensure traces are properly propagated to downstream services.
 
 <Include name="python-stream-mode-general-callout.mdx" />
@@ -133,7 +133,7 @@ In older versions of this integration you had to add the interceptors by hand. S
 
 ### Server
 
-If you added the `GRPCIntegration` as described above, the server will create a transaction for each call to a function and send it to [sentry.io](https://sentry.io).
+If you added the `GRPCIntegration` as described above, the server will create a service span for each call to a function and send it to [sentry.io](https://sentry.io).
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
@@ -146,19 +146,19 @@ sentry_sdk.init(...)  # same as above
 
 ...
 
-# or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-with sentry_sdk.start_transaction(op="function", name="testing_sentry"):
+# In SDK 2.x, use sentry_sdk.start_transaction(op="function", name="testing_sentry") instead
+with sentry_sdk.start_span(name="testing_sentry", attributes={"sentry.op": "function"}):
     with grpc.insecure_channel("example.com:12345") as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         response = stub.SayHello(helloworld_pb2.HelloRequest(name="you"))
 
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create a span for the call to the `SayHello` method on the server.
+This will create a service span called `testing_sentry`, visible in the Traces section of [sentry.io](https://sentry.io), with a child span for the call to the `SayHello` method on the server.
 
-The transaction created in the client will also be connected to the transaction on the server, giving you a full trace of your request.
+The span created in the client will also be connected to the span on the server, giving you a full trace of your request.
 
-If you use a framework (like Django, Flask, FastAPI, etc.) the transaction will be created for you automatically.
+If you use a framework (like Django, Flask, FastAPI, etc.) the service span will be created for you automatically.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

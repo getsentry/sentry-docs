@@ -82,7 +82,7 @@ def init_sentry(**_kwargs):
         # Enables Profiling.
         # Set to 1.0 to profile 100% of sessions.
         profile_session_sample_rate=1.0,
-        # Profiles are collected while a transaction is active.
+        # Profiles are collected while a span is active.
         profile_lifecycle="trace",
     )
 
@@ -115,13 +115,13 @@ def main():
         # Enables Profiling.
         # Set to 1.0 to profile 100% of sessions.
         profile_session_sample_rate=1.0,
-        # Profiles are collected while a transaction is active.
+        # Profiles are collected while a span is active.
         profile_lifecycle="trace",
     )
 
     # Enqueueing a task to be processed by Celery
-    with sentry_sdk.start_transaction(name="calling-a-celery-task"):
-    # or sentry_sdk.traces.start_span(name="calling-a-celery-task", parent_span=None) in stream mode
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="calling-a-celery-task") instead
+    with sentry_sdk.start_span(name="calling-a-celery-task"):
         result = add.delay(4, 4)
 
 if __name__ == "__main__":

@@ -71,8 +71,8 @@ async def main():
         db="test",
     )
     try:
-        # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-        with sentry_sdk.start_transaction(name="testing_sentry"):
+        # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+        with sentry_sdk.start_span(name="testing_sentry"):
             async with conn.cursor() as cur:
                 await cur.execute("SELECT 'Hello World'")
                 result = await cur.fetchone()
@@ -82,7 +82,7 @@ async def main():
 asyncio.run(main())
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create a span for the `SELECT` statement.
+This will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io) and will create a span for the `SELECT` statement.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

@@ -27,7 +27,7 @@ Sentry's SQLAlchemy integration is enabled automatically if you have the `sqlalc
 
 ## Verify Your Setup
 
-To verify that Sentry captures your SQLAlchemy queries, add this code to your app, which will create a transaction called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section and will create a span for the `SELECT` statement:
+To verify that Sentry captures your SQLAlchemy queries, add this code to your app, which will create a service span called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section and will create a span for the `SELECT` statement:
 
 ```python
 from sqlalchemy import create_engine
@@ -41,8 +41,8 @@ def main():
     statement = text("SELECT 'Hello World'")
 
     with engine.connect() as conn:
-        # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-        with sentry_sdk.start_transaction(name="testing_sentry"):
+        # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+        with sentry_sdk.start_span(name="testing_sentry"):
             result = conn.execute(statement)
 
 main()
