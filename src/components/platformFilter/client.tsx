@@ -4,11 +4,12 @@ import {TriangleRightIcon} from '@radix-ui/react-icons';
 import classNames from 'classnames';
 import {matchSorter, rankings} from 'match-sorter';
 import Link from 'next/link';
-import {useMemo, useState} from 'react';
+import {Fragment, useMemo, useState} from 'react';
 import {type Platform} from 'sentry-docs/types';
 import {splitToChunks, uniqByReference} from 'sentry-docs/utils';
 
 import {PlatformIcon} from '../platformIcon';
+import {guideGroupTitle, sortRuntimesFirst} from '../platformSelector/guideGroups';
 import styles from './style.module.scss';
 
 export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
@@ -101,6 +102,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
                     matchKeys={matchKeys}
                     // force expand if the filter is long enough to have few results
                     forceExpand={filter.length >= 2}
+                    showGuideGroups={filter === ''}
                   />
                 )
               )}
@@ -119,10 +121,13 @@ function PlatformWithGuides({
   platform,
   forceExpand,
   matchKeys,
+  showGuideGroups,
 }: {
   forceExpand: boolean;
   matchKeys: string[];
   platform: Platform;
+  /** Lists the runtime guides first and shows titles above them and the guides after them. */
+  showGuideGroups: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -133,10 +138,14 @@ function PlatformWithGuides({
     // In this case, we do not need to add the platform to the list of guides
     const hasGuideWithPlatformKey = platform.guides.some(g => g.key === platform.key);
 
-    return showPlatformInContent && !hasGuideWithPlatformKey
-      ? [platform, ...platform.guides]
-      : platform.guides;
-  }, [matchKeys, platform]);
+    const platformAndGuides =
+      showPlatformInContent && !hasGuideWithPlatformKey
+        ? [platform, ...platform.guides]
+        : platform.guides;
+    return showGuideGroups
+      ? sortRuntimesFirst(platform.key, platformAndGuides)
+      : platformAndGuides;
+  }, [matchKeys, platform, showGuideGroups]);
 
   return (
     <Collapsible.Root
@@ -170,28 +179,33 @@ function PlatformWithGuides({
         // scrollable if there are more than 8 (arbitrary limit) guides
         data-scrollable={platform.guides.length >= 8 || platform.integrations.length >= 8}
       >
-        {guides.map((guide, i) => (
-          <Link
-            href={guide.url}
-            style={{textDecoration: 'none', color: 'var(--foreground) !important'}}
-            key={guide.key}
-          >
-            <div
-              className={styles.Guide}
-              style={{
-                animationDelay: `${i * 5}ms`,
-              }}
-            >
-              <PlatformIcon
-                size={20}
-                platform={guide.icon ?? guide.key}
-                format="lg"
-                className={styles.PlatformIcon}
-              />
-              {guide.title}
-            </div>
-          </Link>
-        ))}
+        {guides.map((guide, i) => {
+          const groupTitle = showGuideGroups && guideGroupTitle(platform.key, guides, i);
+          return (
+            <Fragment key={guide.key}>
+              {groupTitle && <div className={styles.GuideGroupTitle}>{groupTitle}</div>}
+              <Link
+                href={guide.url}
+                style={{textDecoration: 'none', color: 'var(--foreground) !important'}}
+              >
+                <div
+                  className={styles.Guide}
+                  style={{
+                    animationDelay: `${i * 5}ms`,
+                  }}
+                >
+                  <PlatformIcon
+                    size={20}
+                    platform={guide.icon ?? guide.key}
+                    format="lg"
+                    className={styles.PlatformIcon}
+                  />
+                  {guide.title}
+                </div>
+              </Link>
+            </Fragment>
+          );
+        })}
         {platform.guides.length === 0 &&
           platform.integrations.map((integ, i) => {
             return (

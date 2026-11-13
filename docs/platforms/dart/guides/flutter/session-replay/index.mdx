@@ -9,7 +9,7 @@ description: "Learn how to enable Session Replay in your mobile app."
 
 <Alert>
 
-Flutter Session Replay is available on **iOS** and **Android**.
+Flutter Session Replay is available on **iOS** and **Android**. Support for **Web** is [experimental](#flutter-web-experimental).
 
 </Alert>
 
@@ -19,7 +19,7 @@ By default, the SDK masks text, user input, and non-asset images. Images bundled
 
 ## Pre-requisites
 
-Make sure your Sentry Flutter SDK version is at least `9.0.0`, which is required for Session Replay.
+Make sure your Sentry Flutter SDK version is at least `9.0.0` (or `10.3.0` for [web](#flutter-web-experimental)), which is required for Session Replay.
 You can update your `pubspec.yaml` to the matching version:
 
 ```yaml
@@ -54,6 +54,38 @@ While you're testing, we recommend that you set `sessionSampleRate` to `1.0`. Th
 
 Once testing is complete, **we recommend lowering this value in production**. We still recommend keeping `onErrorSampleRate` set to `1.0`.
 
+## Flutter Web (Experimental)
+
+<AvailableSince version="10.3.0" />
+
+Session Replay for Flutter Web is experimental and off by default. Its API and behavior may change in a minor release. It uses the same widget-level masking as mobile.
+
+To enable it, set `enableWebReplay` in addition to a non-zero sample rate:
+
+```dart
+await SentryFlutter.init(
+  (options) {
+    options.dsn = '___DSN___';
+    options.replay.enableWebReplay = true;
+    options.replay.sessionSampleRate = 1.0;
+    options.replay.onErrorSampleRate = 1.0;
+  },
+  appRunner: () => runApp(
+    SentryWidget(
+      child: MyApp(),
+    ),
+  ),
+);
+```
+
+Keep in mind:
+
+- Web replay only starts when `enableWebReplay` is `true` **and** `sessionSampleRate` or `onErrorSampleRate` is above `0`. Otherwise the Replay JavaScript bundle isn't loaded and nothing is recorded, so apps that don't use Replay don't download it.
+- Recording requires the CanvasKit or Skwasm renderer. With any other renderer, nothing is recorded.
+- `SentryFlutter.replay.pause()` and `resume()` do nothing on web. `start()`, `startBuffering()`, `stop()` and `flush()` work as described in [Manual Control](#manual-control), with one difference: on web, Replay must also be enabled through a non-zero sample rate. Unlike on mobile, setting both sample rates to `0.0` and starting manually does nothing on web. If you only want manual recording, set a very low rate such as `0.0001`.
+- The replay quality maps to a capture scale of 0.5x (`low`), 0.7x (`medium`), and 1.0x (`high`).
+- Click breadcrumbs the JavaScript SDK generates for the Flutter view (`body > flutter-view`) are dropped from replays, because they can't say what was tapped. The Flutter `flutter.ui.click` breadcrumb is used instead.
+
 ## User Session
 
 A user session starts when the Sentry SDK is initialized or when the application enters the foreground. The session will capture screen transitions, navigations, touches and other events until the application is sent to the background. If the application is brought back to the foreground within 30 seconds (default), the same `replay_id` will be used and the session will continue.
@@ -78,7 +110,7 @@ Sampling starts as soon as a session begins. The `sessionSampleRate` is then eva
 
 <AvailableSince version="10.0.0" />
 
-Use `SentryFlutter.replay` to control recording for opt-in flows or specific parts of your app. These methods support Android and iOS; they do nothing on other platforms or before `SentryFlutter.init()`.
+Use `SentryFlutter.replay` to control recording for opt-in flows or specific parts of your app. These methods support Android and iOS, and web with the [experimental web replay](#flutter-web-experimental) option enabled. `pause()` and `resume()` do nothing on web. The methods do nothing on other platforms or before `SentryFlutter.init()`.
 
 ### Start Recording on Demand
 
