@@ -14,8 +14,6 @@ This page describes the data collected by version `3.x` of the Python SDK. For `
 
 You can control many of the categories listed here with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you opt in or out of each data category individually. Any category you don't set falls back to its default, described on this page.
 
-To keep the conservative SDK `2.x` defaults in SDK `3.x`, see [Preserving `send_default_pii=False` Behavior](#preserving-send_default_piifalse-behavior).
-
 Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
 
 </Expandable>
@@ -304,38 +302,3 @@ The `cookies`, `http_headers["request"]`, and `url_query_params` categories take
 | `"off"`       | Collect nothing in this category.                                                                                     |
 
 `terms` match partially and case-insensitively, so `"-ip"` matches `X-Real-IP`. Filtered values are replaced with `[Filtered]`; the key itself is always preserved. The built-in sensitive denylist (`auth`, `token`, `secret`, `password`, `key`, `session`, and similar) always applies, even in `"allowlist"` mode.
-
-### Preserving `send_default_pii=False` Behavior
-
-To keep roughly the conservative collection you get from `send_default_pii=False` in SDK `2.x`, opt out of each category explicitly:
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    data_collection={
-        "user_info": False,
-        "gen_ai": {"inputs": False, "outputs": False},
-        "mcp": {"inputs": False, "outputs": False},
-        "graphql": {"document": False, "variables": False},
-        "database_query_data": False,
-        "queues": False,
-        "http_bodies": [],
-        "cookies": {
-            "mode": "denylist",
-            "terms": ["forwarded", "-ip", "remote-", "via", "-user"],
-        },
-        "http_headers": {
-            "request": {
-                "mode": "denylist",
-                "terms": ["forwarded", "-ip", "remote-", "via", "-user"],
-            },
-        },
-        "url_query_params": {
-            "mode": "denylist",
-            "terms": ["forwarded", "-ip", "remote-", "via", "-user"],
-        },
-    },
-)
-```
