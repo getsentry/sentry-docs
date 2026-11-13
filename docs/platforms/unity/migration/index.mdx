@@ -7,9 +7,34 @@ sidebar_section: configuration
 
 ## Migrating to 4.0.0
 
+### Static API moved to `Sentry.Unity`
+
+The SDK's static API has moved from `Sentry.Unity.SentryUnity` and `Sentry.SentrySdk` to `Sentry.Unity.SentrySdk`. The underlying .NET SDK's `SentrySdk` class is now internal, so code with only `using Sentry;` no longer compiles.
+
+Update your `using` directives and replace calls to `SentryUnity`:
+
+**Before:**
+```csharp
+using Sentry;
+using Sentry.Unity;
+
+SentryUnity.Init(options => options.Dsn = "___PUBLIC_DSN___");
+SentrySdk.CaptureMessage("Test event");
+```
+
+**After:**
+```csharp
+using Sentry.Unity;
+
+SentrySdk.Init(options => options.Dsn = "___PUBLIC_DSN___");
+SentrySdk.CaptureMessage("Test event");
+```
+
+Calls such as `SentrySdk.CaptureException()` stay the same. Keep `using Sentry;` as well if you use types from that namespace, like `SentryId` or `SentryLevel`.
+
 ### Minimum Unity version
 
-Unity 2020 support has been removed as it reached End of Life in 2023. The minimum supported version is now Unity 2021.
+Unity 2020 support has been removed as it reached End of Life in 2023. The minimum supported version is now Unity 2021.3.
 
 ### Ubuntu version requirement for Linux servers
 
@@ -17,10 +42,12 @@ If you are running your game on a Linux server, note that `sentry-native` is now
 
 ### Programmatic configuration changes
 
-The deprecated `RuntimeConfiguration` and `BuildtimeConfiguration` classes have been removed. You must now use the single `OptionsConfiguration` script for all programmatic configuration. Use preprocessor directives to set platform-specific options:
+The deprecated `RuntimeConfiguration` and `BuildtimeConfiguration` classes have been removed. You must now use a single options configuration script, deriving from `SentryOptionsConfiguration`, for all programmatic configuration. Use preprocessor directives to set platform-specific options:
 
 ```csharp
-public class SentryOptionsConfiguration : OptionsConfiguration
+using Sentry.Unity;
+
+public class MyOptionsConfiguration : SentryOptionsConfiguration
 {
     public override void Configure(SentryUnityOptions options)
     {
@@ -92,12 +119,8 @@ SentrySdk.CaptureUserFeedback(new UserFeedback(eventId, "user@example.com", "Use
 
 **After:**
 ```csharp
-var feedbackResult = SentrySdk.CaptureFeedback(new UserFeedback
-{
-    Email = "user@example.com",
-    Message = "User comment",
-    Name = "User Name"
-}, out var captureResult);
+var feedback = new SentryFeedback("User comment", "user@example.com", "User Name", associatedEventId: eventId);
+var feedbackId = SentrySdk.CaptureFeedback(feedback, out var captureResult);
 ```
 
 Note that `CaptureFeedback` now returns a `SentryId` and provides a `CaptureFeedbackResult` out parameter to indicate capture success or failure reason.
@@ -143,6 +166,10 @@ Backpressure handling is now enabled by default. The SDK will monitor system hea
 
 The SDK now always adds a breadcrumb when capturing an exception. The option to opt-out of this behavior has been removed.
 
+### Renamed options
+
+The option `AttachBreadcrumbsToEvents` has been renamed to `AddBreadcrumbsWithStructuredLogs`. It controls whether logs that are sent as structured logs are also added as breadcrumbs.
+
 ### Tag changes
 
 The SDK no longer sets tags automatically. Tag promotion from contexts now happens exclusively in Sentry. The following tags have been removed:
@@ -167,7 +194,7 @@ To restore the previous behaviour, you can set the `IosNativeInitializationType`
 
 The Runtime- and BuildTime-Configuration have been merged into a single OptionsConfiguration script. This allows for programmatic configuration of the SDK in one place using preprocessor directives instead of having to duplicate setting options in two different files.
 
-You can still use the old configuration classes, but they have been deprecated and will be removed in a future version. Going forward, you should use the new OptionsConfiguration script and make use of the preprocessor directives when setting options for different platforms.
+The old configuration classes were deprecated in this version and removed in 4.0.0. Use a single options configuration script and preprocessor directives to set options for different platforms.
 
 ## Migrating to 0.28.0
 
@@ -184,20 +211,19 @@ If you make use of the programmatic configuration, you'll need to update your im
 
 ### Programmatic Configuration Changes
 
-You no longer need to to call `SentryUnity.Init`. Instead, you can let the SDK self-initialize and modify the options taken from the Sentry Unity editor configuration window by providing a `ScriptableOptionsConfiguration` object.
+You no longer need to call `SentryUnity.Init`. Instead, you can let the SDK self-initialize and modify the options taken from the Sentry Unity editor configuration window by providing a `ScriptableOptionsConfiguration` object.
 
 - Open the Sentry Unity editor configuration window.
 - Go to the `Options Config` tab.
-- Click `Create options configuration`.
-  - This will prompt you to pick a location for your version of the scriptable options configuration script.
-  - It will also create an instance of the ScriptableOptionsConfiguration and set in it the configuration window.
+- Click **New** next to **Option Config Script**.
+  - This creates a script deriving from `SentryOptionsConfiguration` and an instance of it, and sets it in the configuration window.
 - Add your code to the newly created script.
 
 Learn more in our [options documentation](/platforms/unity/configuration/options/).
 
 ## Migrating From 0.7.0 or Earlier
 
-Starting from version 0.7.0, the SDK is [aliasing](https://blog.sentry.io/2022/02/24/alias-an-approach-to-net-assembly-conflict-resolution) its dependencies. We do this to avoid creating conflicts with other packages. This also means that if you were relying on our dependencies for certain types like `System.Text.Json`, then you'll have to import them into your project yourself going forward.
+Starting from version 0.7.0, the SDK is [aliasing](https://blog.sentry.io/alias-an-approach-to-net-assembly-conflict-resolution/) its dependencies. We do this to avoid creating conflicts with other packages. This also means that if you were relying on our dependencies for certain types like `System.Text.Json`, then you'll have to import them into your project yourself going forward.
 
 ## Migrating From 0.3.0 or Earlier
 
@@ -210,7 +236,7 @@ The Sentry SDK deprecated the use of JSON files to store options and now uses sc
 The Sentry Unity Lite SDK is deprecated for mobile, desktop, WebGL, and console players.
 Customers using Unity 5.x can still use the Sentry Unity Lite as it continues to be compatible with sentry.io.
 
-The updated Sentry Unity SDK requires Unity version 2019.4 or higher with .NET Standard 2.0 scripting profile.
+The updated Sentry Unity SDK requires Unity 2021.3 or higher.
 
 </Alert>
 

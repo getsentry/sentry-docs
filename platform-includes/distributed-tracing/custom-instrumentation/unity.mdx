@@ -21,6 +21,7 @@ If you're using .NET's `HttpClient`, you can extract trace headers from the resp
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Sentry.Unity;
 using UnityEngine;
 
 public class TraceReceiver : MonoBehaviour
@@ -73,6 +74,7 @@ For WebGL builds or if you prefer Unity's coroutine-based approach, use `UnityWe
 
 ```csharp
 using System.Collections;
+using Sentry.Unity;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -128,7 +130,7 @@ The easiest way to propagate traces is to use .NET's `HttpClient` with `SentryHt
 ```csharp
 using System.Net.Http;
 using System.Threading.Tasks;
-using Sentry.Http;
+using Sentry;
 using UnityEngine;
 
 public class TraceSender : MonoBehaviour
@@ -164,6 +166,7 @@ For WebGL builds or if you prefer Unity's coroutine-based approach, you can manu
 
 ```csharp
 using System.Collections;
+using Sentry.Unity;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -171,8 +174,13 @@ public class TraceSender : MonoBehaviour
 {
     IEnumerator SendRequest()
     {
-        var jsonData = "{}";
-        using var www = UnityWebRequest.Post("https://example.com/api/action", jsonData, "application/json");
+        var jsonData = System.Text.Encoding.UTF8.GetBytes("{}");
+        using var www = new UnityWebRequest("https://example.com/api/action", UnityWebRequest.kHttpVerbPOST)
+        {
+            uploadHandler = new UploadHandlerRaw(jsonData),
+            downloadHandler = new DownloadHandlerBuffer()
+        };
+        www.SetRequestHeader("Content-Type", "application/json");
 
         // Add Sentry trace headers to propagate the trace
         var traceHeader = SentrySdk.GetTraceHeader();
