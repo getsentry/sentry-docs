@@ -1,4 +1,3 @@
-import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs/config';
 
 import {redirects} from './redirects.js';
@@ -125,23 +124,9 @@ const nextConfig = {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
   },
-  webpack: (config, options) => {
-    config.plugins.push(
-      codecovNextJSWebpackPlugin({
-        enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
-        bundleName: 'sentry-docs',
-        uploadToken: process.env.CODECOV_TOKEN,
-        webpack: options.webpack,
-      })
-    );
-
-    return config;
-  },
   env: {
-    // Inline NEXT_PUBLIC_DEVELOPER_DOCS into edge middleware at build time.
-    // Edge runtime doesn't have access to server env vars at request time.
-    DEVELOPER_DOCS: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
-    // Freeze this per-deployment value for middleware, matching the pattern above.
+    // Inline this per-deployment value into the edge middleware at build time.
+    // The edge runtime can't read server env vars at request time.
     VERCEL_ENV: process.env.VERCEL_ENV,
   },
   redirects,
