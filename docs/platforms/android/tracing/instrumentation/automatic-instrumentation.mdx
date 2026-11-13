@@ -141,7 +141,7 @@ For example, when the SDK uses process-start timing, the duration includes time 
 
 The SDK sets the Span operation to `app.start.cold` for _Cold start_ and `app.start.warm` for _Warm start_.
 
-On Android 7.0 (API 24) and later, the SDK can use process start as the beginning of an app start with [Performance V2](/platforms/android/tracing/instrumentation/perf-v2/) enabled. If that timestamp is unavailable or Performance V2 is disabled, it falls back to the SDK initialization time, usually recorded by `SentryPerformanceProvider`. The measurement ends when the first frame is drawn. **Note**: Performance V2 is enabled by default in SDK 8.0 and later. 
+On Android 7.0 (API 24) and later, the SDK uses process start as the beginning of an app start. If that timestamp is unavailable, it falls back to the SDK initialization time, usually recorded by `SentryPerformanceProvider`. The measurement ends when the first frame is drawn.
 
 <Alert>
 
@@ -310,7 +310,7 @@ Supported on Android OS version `7.0` and above.
 
 </Alert>
 
-Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are _slow frames_ and _frozen frames_. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the [Activity](/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation) transactions.
+Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are _slow frames_ and _frozen frames_. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements to every span.
 
 Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals/).
 
@@ -340,20 +340,6 @@ SentryAndroid.init(this) { options ->
 
 The option may contain a list of Strings (including regular expressions) which are matched against the URLs of outgoing requests. If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request. String entries do not have to be full matches, meaning the URL of a request is matched when it contains a string provided through the option.
 If `tracePropagationTargets` is not provided, trace data is attached to every outgoing request from the instrumented client.
-
-#### AndroidX Support
-
-Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
-
-We check for availability at runtime, so if you're not using `androidx.core`, you can remove it from Sentry's transitive dependencies.
-
-```Groovy
-implementation ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
-    exclude group: 'androidx.core', module: 'core'
-}
-```
-
-Note that by removing this transitive dependency, slow and frozen frames won't be reported.
 
 ### OkHttp Library Instrumentation
 
@@ -587,7 +573,7 @@ The span starts when each Activity is launched, which is defined as an applicati
 
 The span finishes after the Activity draws its first frame.
 
-For the first Activity in a cold start, the TTID span starts at the app-start timestamp rather than just before `Activity.onCreate()`. On Android 7.0 and later, with Performance V2 enabled, the SDK can use process start for this timestamp.
+For the first Activity in a cold start, the TTID span starts at the app-start timestamp rather than just before `Activity.onCreate()`. On Android 7.0 and later, the SDK can use process start for this timestamp.
 
 When it does, TTID includes `Application.attachBaseContext()` and `Application.onCreate()`. If the SDK falls back to its initialization timestamp, work before SDK initialization may not be included.
 
