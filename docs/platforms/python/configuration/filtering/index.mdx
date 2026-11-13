@@ -104,21 +104,21 @@ When a string or a non-error object is raised, Sentry creates a synthetic except
 
 ## Filtering Transactions and Spans
 
-To prevent certain transactions (or spans in <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>) from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" />, <PlatformIdentifier name="before-send-transaction" /> (for transaction mode), or <PlatformIdentifier name="ignore-spans" /> (for stream mode) configuration options. These allow you to provide a function to evaluate the current transaction or span and drop it if it's not one you want.
+To prevent certain spans from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="ignore-spans" /> configuration options. These allow you to evaluate the current span and drop it if it's not one you want. You can also use <PlatformIdentifier name="before-send-span" /> to modify span data.
 
-You can also use <PlatformIdentifier name="before-send-transaction" /> (for transaction mode) or <PlatformIdentifier name="before-send-span" /> (for stream mode) to modify transaction/span data.
+In SDK versions prior to `3.0`, <PlatformIdentifier name="ignore-spans" /> and <PlatformIdentifier name="before-send-span" /> are only available in <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink>. In the default transaction mode, use <PlatformIdentifier name="before-send-transaction" /> to drop or modify transactions instead.
 
 ### Using <PlatformIdentifier name="traces-sampler" />
 
-**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions/service spans, you must also handle the case of non-filtered transactions/service spans by returning the rate at which you'd like them sampled.
+**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain service spans, you must also handle the case of non-filtered service spans by returning the rate at which you'd like them sampled.
 
-In its simplest form, used just for filtering the transaction/service span, it looks like this:
+In its simplest form, used just for filtering the service span, it looks like this:
 
 <PlatformContent includePath="performance/traces-sampler-as-filter" />
 
-It also allows you to sample different transactions/service spans at different rates.
+It also allows you to sample different service spans at different rates.
 
-If the transaction or span currently being processed has a parent (from an upstream service calling this service), the parent's (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
+If the service span currently being processed has a parent (from an upstream service calling this service), the parent's (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
 
 Learn more about <PlatformLink to="/tracing/configure-sampling/">configuring sampling</PlatformLink>.
 
@@ -126,7 +126,7 @@ Learn more about <PlatformLink to="/tracing/configure-sampling/">configuring sam
 
 <Alert>
 
-Not available in stream mode. Use <PlatformIdentifier name="before-send-span" /> instead.
+Only available in SDK versions prior to `3.0`, and not in stream mode. Use <PlatformIdentifier name="before-send-span" /> to modify spans and <PlatformIdentifier name="ignore-spans" /> to drop them instead.
 
 </Alert>
 
@@ -136,7 +136,7 @@ Not available in stream mode. Use <PlatformIdentifier name="before-send-span" />
 
 <Alert>
 
-Only available in stream mode.
+In SDK versions prior to `3.0`, only available in stream mode.
 
 </Alert>
 
@@ -153,7 +153,7 @@ See <PlatformLink to="/configuration/options/#before_send_span">`before_send_spa
 
 <Alert>
 
-Only available in stream mode.
+In SDK versions prior to `3.0`, only available in stream mode.
 
 </Alert>
 
@@ -166,7 +166,6 @@ import re
 import sentry_sdk
 
 sentry_sdk.init(
-    trace_lifecycle="stream",
     ignore_spans=[
         # String match against span name
         "/health",
