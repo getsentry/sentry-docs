@@ -1,15 +1,22 @@
-name: Bump API Schema SHA
+name: Bump @sentry/api
 on:
-  # This could be run manually, but the general expectation is that this fires
-  # from GHA in getsentry/sentry-api-schema on changes there. See:
+  # The API reference is built from the pinned @sentry/api version. getsentry/sentry
+  # releases it whenever the API spec changes; this picks up the new version. See:
   #
   #   https://develop.sentry.dev/api/public/#build-process
-
+  #
+  # The file keeps its old name so existing dispatches still reach it.
+  schedule:
+    - cron: '17 * * * *'
   workflow_dispatch:
+# A dispatch and the hourly run must not both push the same bump branch.
+concurrency:
+  group: bump-sentry-api
+  cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: 'Bump API Schema SHA'
+    name: 'Bump @sentry/api'
     steps:
       - name: Get auth token
         id: token
@@ -18,53 +25,18 @@ jobs:
           app-id: ${{ vars.SENTRY_API_SCHEMA_UPDATER_APP_CLIENT_ID }}
           private-key: ${{ secrets.SENTRY_API_SCHEMA_UPDATER_PRIVATE_KEY }}
           owner: getsentry
-          repositories: |
-            sentry-docs
-            sentry-api-schema
+          repositories: sentry-docs
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.token.outputs.token }}
-      - name: 'Bump API Schema SHA'
-        shell: bash
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        with:
+          node-version-file: 'package.json'
+      - name: 'Bump @sentry/api'
         env:
           # An elevated token is necessary because with plain github.token
           # GitHub does not recursively call workflows, which means CI does not
           # kick off for the PR we're about to create.
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          set -euo pipefail
-
-          git config user.email "271575301+sentry-api-schema-updater[bot]@users.noreply.github.com"
-          git config user.name "sentry-api-schema-updater[bot]"
-
-          filepath="src/build/resolveOpenAPI.ts"
-
-          # Authenticate to avoid the low unauthenticated rate limit, and fail on
-          # HTTP errors so an error body never gets written in as the SHA.
-          sha="$(curl -sSL --fail \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H 'Accept: application/vnd.github.VERSION.sha' \
-            'https://api.github.com/repos/getsentry/sentry-api-schema/commits/main')"
-
-          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::Expected a 40-character commit SHA from the GitHub API, got: $sha"
-            exit 1
-          fi
-          echo "Latest commit to 'getsentry/sentry-api-schema' is $sha"
-
-          sed -i -e "s|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = '$sha';|g" "$filepath"
-          echo "Updated $filepath"
-
-          if git diff --quiet "$filepath"; then
-            echo "No changes to $filepath, skipping."
-            exit 0
-          fi
-
-          branch="bot/bump-api-schema-to-${sha:0:8}"
-          git checkout -b "$branch"
-          git add "$filepath"
-          git commit -m "Bump API schema to ${sha:0:8}"
-          git push --set-upstream origin "$branch"
-
-          gh pr create --fill
-          gh pr merge --squash --admin -d
+        run: sh scripts/bump-sentry-api.sh

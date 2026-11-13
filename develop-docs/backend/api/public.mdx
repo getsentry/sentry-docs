@@ -390,29 +390,27 @@ When you open the pull request, please add a screenshot of the page or pages you
 
 ### Build Process
 
-The openapi-diff test will fail when CI runs on your pull request, this is expected and meant to
-highlight the diff. It is not required to merge.
+The `openapi-diff` workflow compares your pull request's schemas with master where your branch
+started. Its **Public API changelog** job lists your public API changes in the job summary and
+never fails. Its **RPC schema breaking changes** job fails when an RPC method changes in a way that
+breaks existing callers. To see the changelog locally, run `make build-api-docs`, then
+`make diff-api-docs`.
 
-Once you make changes to an endpoint and merge the change into Sentry, a series of GitHub Actions
-will be triggered to make your changes automatically go live:
+Once you make changes to an endpoint and merge the change into Sentry, these steps make your changes go live:
 
 1. The [openapi workflow in
-   sentry](https://github.com/getsentry/sentry/blob/master/.github/workflows/openapi.yml) updates
-   the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the
-   OpenAPI build artifact.
-2. The [cascade-to-sentry-docs workflow in
-   sentry-api-schema](https://github.com/getsentry/sentry-api-schema/blob/main/.github/workflows/cascade-to-sentry-docs.yml)
-   reacts to the push to `main` in (1) by triggering the [bump-api-schema-sha workflow in
-   sentry-docs](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml).
-3. The [bump-api-schema-sha workflow in
+   sentry](https://github.com/getsentry/sentry/blob/master/.github/workflows/openapi.yml) builds
+   the schema. When the schema changed since the last release, sentry releases a new version of
+   the [`@sentry/api`](https://www.npmjs.com/package/@sentry/api) package from
+   `static/packages/api`. The package's `@sentry/api/docs` export holds the API reference data.
+2. The [bump workflow in
    sentry-docs](https://github.com/getsentry/sentry-docs/blob/master/.github/workflows/bump-api-schema-sha.yml)
-   fetches the latest commit SHA from `sentry-api-schema` and writes it into the correct file, then
-   makes and merges a PR in `sentry-docs`, which kicks off a deploy via Vercel to
-   https://docs.sentry.io/api/.
+   runs hourly. When npm has a newer `@sentry/api`, it pins that version, then makes and merges
+   a PR in `sentry-docs`, which kicks off a deploy via Vercel to https://docs.sentry.io/api/.
 
 ## Troubleshooting API Docs Tests
 
-NOTE: The `openapi-diff` test is supposed to fail when CI runs on your pull request as it is meant to highlight the schema changes. It is not required to merge.
+NOTE: The **Public API changelog** job of `openapi-diff` never fails. Read its job summary to check your public API changes.
 
 **Problem**: `TypeError: Cannot read properties of null (reading 'type')`
 
