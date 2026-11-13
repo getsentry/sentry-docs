@@ -236,6 +236,8 @@ Disposing the object that `SentrySdk.Init` returns sends any pending events befo
 
 If your app calls `SentrySdk.Init`, remove that call when you add `UseSentry`, unless it's there for [capturing startup crashes](#capturing-startup-crashes). Move its options into the `UseSentry` callback or the `Sentry` section. Whichever initialization runs last wins, and the two don't merge their options.
 
+If the app also calls `builder.Logging.AddSentry()`, remove that too. With `SentrySdk.Init`, it sent every `ILogger` entry as a structured log. `UseSentry` leaves that off, so set `EnableLogs = true` to keep sending them.
+
 ### Capturing Startup Crashes
 
 `UseSentry` starts Sentry in `Build()`. If the app crashes before then, for example while it reads configuration or registers services, the crash isn't sent.
@@ -298,7 +300,7 @@ public sealed class Worker(ILogger<Worker> logger) : BackgroundService
 
 `EnableLogs` doesn't change how errors and breadcrumbs are captured. Entries at `Error` and above are sent as events, and entries at `Information` and above are kept as breadcrumbs. To change that, set `MinimumEventLevel` and `MinimumBreadcrumbLevel`.
 
-To drop specific entries before they become breadcrumbs or events, call [`AddLogEntryFilter`](/platforms/dotnet/guides/extensions-logging/#filters) in the `UseSentry` callback.
+To drop specific entries before they become breadcrumbs or events, call [`AddLogEntryFilter`](/platforms/dotnet/guides/extensions-logging/#log-entry-filters) in the `UseSentry` callback.
 
 ## Send Application Metrics <FeatureBadge type="new" />
 

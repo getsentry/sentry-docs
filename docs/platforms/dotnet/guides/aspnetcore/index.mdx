@@ -18,7 +18,7 @@ dotnet add package Sentry.AspNetCore -v {{@inject packages.version('sentry.dotne
 ```
 
 ```shell {tabTitle:Paket CLI}
-paket add Sentry --version {{@inject packages.version('sentry.dotnet.aspnetcore') }}
+paket add Sentry.AspNetCore --version {{@inject packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
@@ -29,9 +29,9 @@ This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extens
 
 This guide also enables **Tracing**.
 
-The simplest way to initialize Sentry in ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-7.0).
+The simplest way to initialize Sentry in ASP.NET Core is by using the `UseSentry` extension method from the `Sentry.AspNetCore` package in conjunction with the [framework configuration system](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/).
 
-Call `UseSentry` with your DSN and the options you want. The SDK provides this as extension methods to support ASP.NET Core `2.X`, `3.X`, and `5.X` and later.
+`Sentry.AspNetCore` 6.x requires .NET 8 or later. Call `UseSentry` with your DSN and the options you want. For .NET 6 or 7, use `Sentry.AspNetCore` 4.x.
 
 The snippet also turns on:
 
@@ -82,11 +82,12 @@ public static IWebHost BuildWebHost(string[] args) =>
             // We recommend reducing this value in production.
             options.TracesSampleRate = 1.0;
         })
+        .Build();
 ```
 
 ### Additional configuration
 
-The framework takes configuration settings from `appsettings.json`, environment variables, or from code. These settings get applied to `Sentry.AspNetCore.SentryAspNetCoreOptions`, which extends `Sentry.Extensions.Logging.SentryLoggingOptions`, which in turn extends `Sentry.SentryOptions`. This means options for `Sentry.AspNetCore` as well as all the inner packages are available to be configured through the configuration system.
+The framework takes configuration settings from `appsettings.json`, environment variables, or from code. These settings get applied to `SentryAspNetCoreOptions`, which extends `SentryHostOptions`, which in turn extends `SentryOptions`. This means options for `Sentry.AspNetCore` as well as all the inner packages are available to be configured through the configuration system.
 
 ### appsettings.json
 
@@ -203,6 +204,21 @@ member this.ConfigureServices(services: IServiceCollection) =
     services.AddTransient<ISentryEventProcessor, MyEventProcessor>() |> ignore
     services.AddScoped<ISentryEventExceptionProcessor, MyExceptionProcessor>() |> ignore
 ```
+
+### Clearing Logger Providers
+
+`ClearProviders()` removes every logger provider registered before it, including the ones `UseSentry` adds. Without them, `ILogger` entries don't reach Sentry. Call `UseSentry` after it:
+
+```csharp {filename:Program.cs}
+var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.WebHost.UseSentry();
+```
+
+If the app has to clear the providers after `UseSentry`, call `builder.Logging.AddSentry()` after `ClearProviders()`. It adds Sentry's providers back, with the options of `UseSentry`. Leave it out if NLog, Serilog, or log4net already sends your `ILogger` entries to Sentry, because each entry would then arrive twice.
+
+With `Debug` on, the SDK logs a warning through `ILogger` when the app starts if Sentry's providers were removed and not added back.
 
 ### Options and Initialization
 
@@ -330,7 +346,7 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 ### View Captured Data in Sentry
 
-Open your Sentry project to view the captured event.
+<PlatformContent includePath="getting-started-verify-data" />
 
 ## Samples
 
