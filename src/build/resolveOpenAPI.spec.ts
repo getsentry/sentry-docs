@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
 
-import {toDocumentedParameter} from './resolveOpenAPI';
+import {apiLocation, toDocumentedParameter} from './resolveOpenAPI';
 
 const EXPERIMENTAL_NOTICE =
   '**Experimental:** This parameter is under active development and may change.\n\n';
@@ -42,5 +42,25 @@ describe('toDocumentedParameter', () => {
     expect(parameter.description).toBe(
       '**Experimental:** not really, this is just text.'
     );
+  });
+});
+
+describe('apiLocation', () => {
+  const regional = [{url: 'https://{region}.sentry.io/api/0'}];
+
+  test.each([
+    [
+      'paths carry the base path',
+      [{url: 'https://{region}.sentry.io'}],
+      undefined,
+      '/api/0/organizations/',
+    ],
+    ['the server URL carries it', regional, undefined, '/organizations/'],
+    ['an operation server carries it', regional, regional, '/organizations/'],
+  ])('shows the full path when %s', (_, specServers, operationServers, path) => {
+    expect(apiLocation(path, specServers, operationServers)).toEqual({
+      apiPath: '/api/0/organizations/',
+      server: operationServers ? 'https://{region}.sentry.io' : 'https://sentry.io',
+    });
   });
 });

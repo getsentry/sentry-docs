@@ -126,6 +126,25 @@ export function toDocumentedParameter<T extends ExperimentalExtension>(
   };
 }
 
+const DEFAULT_SERVER = 'https://sentry.io';
+const SERVER_URL = /^([a-z][a-z0-9+.-]*:\/\/[^/]*)(\/.*)?$/i;
+
+// Sentry's spec puts the API base path, such as `/api/0`, in its server URL, and its
+// paths are relative to it. Pages show the origin and the full path after it.
+export function apiLocation(
+  path: string,
+  specServers: {url: string}[] | undefined,
+  operationServers: {url: string}[] | undefined
+): {apiPath: string; server: string} {
+  const operationServer = operationServers?.[0]?.url;
+  const [, origin = DEFAULT_SERVER, basePath = ''] =
+    SERVER_URL.exec(operationServer ?? specServers?.[0]?.url ?? '') ?? [];
+  return {
+    apiPath: `${basePath.replace(/\/+$/, '')}${path}`,
+    server: operationServer ? origin : DEFAULT_SERVER,
+  };
+}
+
 function isDeprecatedOperationId(operationId: string | undefined): boolean {
   return operationId ? DEPRECATED_PREFIX_REGEX.test(operationId) : false;
 }
@@ -168,18 +187,14 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
       const titleSource = apiData.summary || apiData.operationId || '';
       const cleanName = stripDeprecatedPrefix(titleSource);
 
-      let server = 'https://sentry.io';
-      if (apiData.servers && apiData.servers[0]) {
-        server = apiData.servers[0].url;
-      }
+      const location = apiLocation(apiPath, data.servers, apiData.servers);
       apiData.tags.forEach(tag => {
         categoryMap[tag].apis.push({
-          apiPath,
+          ...location,
           method,
           name: cleanName,
           deprecated: isDeprecated,
           experimental: isExperimental,
-          server,
           slug: slugify(cleanName),
           summary: apiData.summary
             ? stripDeprecatedPrefix(apiData.summary)
