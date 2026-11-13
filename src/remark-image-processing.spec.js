@@ -3,10 +3,30 @@ import {mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 
+import {select} from 'hast-util-select';
+import {bundleMDX} from 'mdx-bundler';
+import {getMDXComponent} from 'mdx-bundler/client';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import rehypeParse from 'rehype-parse';
+import remarkMdxImages from 'remark-mdx-images';
 import sharp from 'sharp';
-import {beforeAll, describe, expect, it} from 'vitest';
+import {unified} from 'unified';
+import {afterAll, beforeAll, describe, expect, it, vi} from 'vitest';
 
+import DocImage from './components/docImage';
 import remarkImageProcessing from './remark-image-processing';
+import remarkImageResize from './remark-image-resize';
+
+vi.mock('server-only', () => ({}));
+
+vi.mock('sentry-docs/serverContext', () => ({
+  serverContext: () => ({path: []}),
+}));
+
+// Vitest uses the classic JSX transform for the application components.
+vi.stubGlobal('React', React);
+afterAll(() => vi.unstubAllGlobals());
 
 const createImage = (width, height, format) => {
   const image = sharp({
@@ -39,6 +59,10 @@ describe('remarkImageProcessing', () => {
       [path.join(sourceFolder, 'relative.png'), await createImage(200, 150, 'png')],
       [path.join(sourceFolder, 'photo.jpg'), await createImage(64, 48, 'jpeg')],
       [path.join(sourceFolder, 'animation.gif'), await createImage(30, 20, 'gif')],
+      [path.join(sourceFolder, 'wide.png'), await createImage(2942, 1360, 'png')],
+      [path.join(sourceFolder, 'boundary.png'), await createImage(900, 600, 'png')],
+      [path.join(sourceFolder, 'thin.png'), await createImage(1801, 1, 'png')],
+      [path.join(sourceFolder, 'portrait.png'), await createImage(600, 1200, 'png')],
       [
         path.join(sourceFolder, 'icon.svg'),
         Buffer.from(
@@ -76,6 +100,21 @@ describe('remarkImageProcessing', () => {
     expect(node.url).toBe(`/img/public.png?v=${hashes['public.png']}#120x80`);
   });
 
+  it.each([
+    ['wide.png', '900x416'],
+    ['boundary.png', '900x600'],
+    ['thin.png', '900x1'],
+    ['portrait.png', '600x1200'],
+  ])(
+    'caps width without upscaling and preserves the content hash for %s',
+    async (fixture, size) => {
+      const node = imageNode(`./${fixture}`);
+      await transform(tree(node));
+
+      expect(node.url).toBe(`./${fixture}?v=${hashes[fixture]}#${size}`);
+    }
+  );
+
   it.each(['https://example.com/img.png', 'http://example.com/img.png', '//cdn/img.png'])(
     'leaves the external image %s untouched',
     async url => {
@@ -98,5 +137,61 @@ describe('remarkImageProcessing', () => {
 
   it('rejects when the image is missing', async () => {
     await expect(transform(tree(imageNode('./nope.png')))).rejects.toThrow(/ENOENT/);
+  });
+
+  async function renderImage(suffix) {
+    const {code} = await bundleMDX({
+      source: `![Fixture${suffix}](./wide.png)`,
+      cwd: sourceFolder,
+      mdxOptions(options) {
+        options.remarkPlugins = [
+          ...(options.remarkPlugins ?? []),
+          [remarkImageProcessing, {sourceFolder, publicFolder}],
+          remarkMdxImages,
+          remarkImageResize,
+        ];
+        return options;
+      },
+      esbuildOptions(options) {
+        options.loader = {...options.loader, '.png': 'file'};
+        options.outdir = path.join(sourceFolder, 'output');
+        options.write = true;
+        return options;
+      },
+    });
+    const Content = getMDXComponent(code);
+    const html = renderToStaticMarkup(
+      React.createElement(Content, {components: {img: DocImage}})
+    );
+    return select('img', unified().use(rehypeParse, {fragment: true}).parse(html))
+      .properties;
+  }
+
+  describe('MDX image bundling and rendering', () => {
+    it.each`
+      sizing           | suffix         | width        | height
+      ${'inferred'}    | ${''}          | ${900}       | ${416}
+      ${'width only'}  | ${' =300x'}    | ${300}       | ${undefined}
+      ${'height only'} | ${' =x200'}    | ${undefined} | ${200}
+      ${'both axes'}   | ${' =300x200'} | ${300}       | ${200}
+    `(
+      'preserves $sizing sizing through bundling and rendering',
+      async ({suffix, width, height}) => {
+        const image = await renderImage(suffix);
+
+        expect(image.width).toBe(width);
+        expect(image.height).toBe(height);
+        expect(image.alt).toBe('Fixture');
+        expect(image.style).toContain(
+          `width:${width ? `min(100%, ${width}px)` : 'auto'};`
+        );
+        expect(image.style).toContain(
+          `height:${!width && height ? `${height}px` : 'auto'}`
+        );
+        expect(image.srcSet).toEqual(
+          width && height ? expect.stringContaining('/_next/image') : undefined
+        );
+      }
+    );
   });
 });

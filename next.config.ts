@@ -123,6 +123,7 @@ const nextConfig = {
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
     remotePatterns: REMOTE_IMAGE_PATTERNS,
+    minimumCacheTTL: 86400, // 1 day
   },
   env: {
     // Inline this per-deployment value into the edge middleware at build time.

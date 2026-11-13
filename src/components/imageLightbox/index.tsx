@@ -12,7 +12,6 @@ interface ImageLightboxProps extends Omit<
   alt: string;
   imgPath: string;
   src: string;
-  hasDimensionOverrides?: boolean;
   height?: number;
   width?: number;
 }
@@ -53,7 +52,6 @@ export function ImageLightbox({
   width,
   height,
   imgPath,
-  hasDimensionOverrides: hasDimensionOverrides = false,
   style,
   className,
   ...props
@@ -98,19 +96,15 @@ export function ImageLightbox({
       ? className
       : 'max-h-[90vh] max-w-[90vw] object-contain';
 
-    // Apply sizing:
-    // - If manual: set only provided dimension(s); missing one becomes 'auto'
-    // - Else: default responsive
-    // TODO: support other units for overrides
+    // Fit the resolved width to the container; height follows the aspect ratio.
+    // Height-only overrides retain their requested height.
     const imageStyle = isInline
-      ? hasDimensionOverrides
-        ? {
-            width: width != null ? `${width}px` : 'auto',
-            height: height != null ? `${height}px` : 'auto',
-            maxWidth: 'min(100%, 1000px)',
-            ...style,
-          }
-        : {width: 'auto', maxWidth: 'min(100%, 1000px)', height: 'auto', ...style}
+      ? {
+          width: width != null ? `min(100%, ${width}px)` : 'auto',
+          height: width == null && height != null ? `${height}px` : 'auto',
+          maxWidth: '100%',
+          ...style,
+        }
       : {width: 'auto', height: 'auto'};
 
     if (shouldUseNextImage && dimensions) {
@@ -131,6 +125,8 @@ export function ImageLightbox({
       /* eslint-disable-next-line @next/next/no-img-element */
       <img
         src={renderedSrc}
+        width={width}
+        height={height}
         alt={alt}
         loading={isInline ? 'lazy' : 'eager'}
         decoding="async"
