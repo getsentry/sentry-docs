@@ -39,14 +39,14 @@ async def main():
     sentry_sdk.init(...)  # same as above
     redis = await create_pool(RedisSettings())
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         r = await redis.enqueue_job("add_numbers", 1, 2)
 
 asyncio.run(main())
 ```
 
-When you run `run.py` it will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create a span for enqueuing the job.
+When you run `run.py` it will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io), and create a span for enqueuing the job.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
@@ -66,7 +66,7 @@ class WorkerSettings:
     functions = [add_numbers]
 ```
 
-When you run a worker with `arq demo.WorkerSettings` it will create a transaction called `add_numbers` in the Performance section of [sentry.io](https://sentry.io), and will also create and issue in Sentry and connect it to the transaction.
+When you run a worker with `arq demo.WorkerSettings` it will create a service span called `add_numbers` in the Traces section of [sentry.io](https://sentry.io), and will also create an issue in Sentry and connect it to the service span.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
