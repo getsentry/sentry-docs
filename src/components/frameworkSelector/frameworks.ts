@@ -114,6 +114,7 @@ export const RUNTIMES: Record<string, Runtime> = {
     frameworkGuides: [
       guide('Elysia', 'elysia'),
       guide('Hono', 'hono'),
+      guide('Next.js', 'nextjs/manual-setup/bun'),
       guide('React Router', 'react-router/manual-setup/bun'),
     ],
     agentGuides: [guide('Pi Durable', 'pi-durable/manual-setup/bun')],
@@ -124,6 +125,7 @@ export const RUNTIMES: Record<string, Runtime> = {
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
     frameworkGuides: [
       guide('Hono', 'hono'),
+      guide('Next.js', 'nextjs/manual-setup/deno'),
       guide('React Router', 'react-router/manual-setup/deno'),
     ],
     agentGuides: [guide('Pi Durable', 'pi-durable/manual-setup/deno')],
