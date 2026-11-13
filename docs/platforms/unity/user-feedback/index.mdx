@@ -10,12 +10,6 @@ sidebar_section: features
 og_image: /og-images/platforms-unity-user-feedback.png
 ---
 
-<Alert level="info">
-
-The User Feedback Prefab is available in version `4.0.0` of the Sentry SDK for Unity, which is currently in beta.
-
-</Alert>
-
 When a user experiences an error, Sentry provides the ability to collect additional feedback. The Unity SDK provides both a simple prefab-based solution and a programmatic API for collecting user feedback.
 
 ## Use the User Feedback Prefab
@@ -30,6 +24,8 @@ The Unity SDK includes a ready-to-use prefab that provides a complete user feedb
   - Screenshot (optional, included by default and the user can uncheck it; the form hides itself before the screenshot gets taken)
 
 ### Adding the Prefab to Your Scene
+
+The prefab needs the uGUI package (`com.unity.ugui`).
 
 To add the prefab, drag and drop the User Feedback prefab from the Unity SDK package into any scene. The prefab is ready to use immediately without any additional configuration, and includes a scaling canvas that works across different screen sizes and resolutions.
 
@@ -54,12 +50,28 @@ You can customize the feedback form by:
   - Missing optional fields are highlighted in yellow
   - Missing required fields are highlighted in red
 
-## Use the .NET SDK API
+## Use the API
 
 If you prefer to create your own feedback form or need programmatic control, you can use the SDK's API to send feedback to Sentry:
+
+```csharp {tabTitle:C#}
+SentrySdk.CaptureFeedback("It broke.", "user@example.com", "The User", addScreenshot: true);
+```
+
+The SDK attaches a screenshot only when `addScreenshot` is `true`.
+
+To link the feedback to an event, pass the event's ID:
 
 ```csharp {tabTitle:C#}
 var eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.");
 
 SentrySdk.CaptureFeedback("It broke.", "user@example.com", "The User", associatedEventId: eventId);
+```
+
+To link the feedback to the last event the SDK captured, including errors it captures automatically, such as from `Debug.LogError`, use `SentrySdk.LastEventId`. It's `SentryId.Empty` when no event was captured or the last one was dropped, and native crashes don't set it:
+
+```csharp {tabTitle:C#}
+var lastEventId = SentrySdk.LastEventId;
+
+SentrySdk.CaptureFeedback("It broke.", "user@example.com", "The User", associatedEventId: lastEventId != SentryId.Empty ? lastEventId : null);
 ```
