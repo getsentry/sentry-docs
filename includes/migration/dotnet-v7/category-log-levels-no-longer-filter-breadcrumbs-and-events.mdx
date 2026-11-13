@@ -1,0 +1,44 @@
+---
+id: category-log-levels-no-longer-filter-breadcrumbs-and-events
+title: "Category Log Levels No Longer Filter Breadcrumbs and Events"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 15
+---
+
+In version 7, category entries under `Logging:Sentry:LogLevel` filter only the `ILogger` entries that Sentry sends as logs. In version 6.12.1 and earlier, these entries also filtered breadcrumbs and events from the same category. The `Default` entry is unchanged: it has always applied only to logs.
+
+For example, this entry keeps `Microsoft.EntityFrameworkCore` entries below `Error` out of the logs:
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "LogLevel": {
+        "Microsoft.EntityFrameworkCore": "Error"
+      }
+    }
+  }
+}
+```
+
+In 6.x, it kept them out of the breadcrumbs too. In 7.x, they show up as breadcrumbs.
+
+To keep filtering breadcrumbs and events by category, add a log entry filter where you initialize Sentry. The SDK drops an entry from breadcrumbs and events when the filter returns `true`:
+
+```csharp {filename:Program.cs}
+using Sentry.Extensions.Logging;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.AddLogEntryFilter((category, level, eventId, exception) =>
+        category.StartsWith("Microsoft.EntityFrameworkCore") && level < LogLevel.Error);
+});
+```
+
+If the app calls `Logging.AddSentry()` after `SentrySdk.Init`, call `AddLogEntryFilter` on the options of `Logging.AddSentry()` instead.
