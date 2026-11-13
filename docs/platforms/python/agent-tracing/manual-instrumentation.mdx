@@ -349,6 +349,71 @@ If you call Jev through the <PlatformLink to="/agent-tracing/typesafe/">TypeSafe
   <Include name="tracing/ai-agents-module/evaluation-span" />
 </Expandable>
 
+## Extraction Span
+
+This span represents an extraction of typed fields from an input, such as pulling the invoice number, due date, and total out of an invoice. Extraction models like Cloudflare Clairic produce these spans. They return typed values instead of a chat reply, so they get their own span type.
+
+Sentry identifies an extraction by `gen_ai.operation.name: "extract"`.
+
+```python
+import json
+import sentry_sdk
+
+extraction_request = {
+    "state": (
+        "Invoice INV-2291 from Northwind Supply, issued 2026-09-02, net 30. "
+        "4 pallets at $250.00 each, shipping $80.00. Contact: Dana Ruiz, Priya Shah."
+    ),
+    "fields": {
+        "invoice_number": {"type": "text"},
+        "due_date": {
+            "type": "date",
+            "instructions": "Issue date plus the net payment days",
+        },
+        "total": {
+            "type": "number",
+            "decimals": 2,
+            "unit": "USD",
+            "instructions": "Amount due including shipping",
+        },
+        "contacts": {"type": "list", "items": "text"},
+    },
+}
+
+with sentry_sdk.start_span(
+    op="gen_ai.extract",
+    name="extract @cf/cloudflare/clairic",
+    attributes={
+        "gen_ai.operation.name": "extract",
+        "gen_ai.request.model": "@cf/cloudflare/clairic",
+        "gen_ai.provider.name": "cloudflare.workers_ai",
+        "gen_ai.agent.name": "Billing Agent",  # when this extraction runs under an agent
+        # The request body as you send it, without "model"
+        "gen_ai.input.messages": json.dumps([extraction_request]),
+    },
+) as span:
+    # Call your extraction model; map its response into span attributes below
+    result = your_extractor.extract(model="@cf/cloudflare/clairic", **extraction_request)
+    response = {k: v for k, v in result.items() if k not in ("model", "usage")}
+
+    span.set_data("gen_ai.response.model", result["model"])  # e.g. "clairic"
+    # The response body as the provider returned it, without "model" and "usage":
+    # {"answers": {"total": {"type": "number", "value": 1080, "confidence": 0.9999}, ...}, "truncated": False}
+    span.set_data("gen_ai.output.messages", json.dumps([response]))
+    span.set_data("gen_ai.usage.input_tokens", result["usage"]["input_tokens"])
+    span.set_data("gen_ai.usage.output_tokens", result["usage"]["output_tokens"])
+```
+
+The input is a single object holding the request body: `state` is the text the model reads, and each entry in `fields` describes one field to extract. The output is a single object holding the response body, with `answers` keyed by those same field names. Record both as you sent and received them, without changing the values. If the request includes images, replace each one with the string `"[Blob substitute]"` instead of recording the image data. See the attributes below for the full shape.
+
+Text and list answers include `[start, end]` character offsets into `state`. Sentry uses them to highlight each extracted value in the source text, so keep them as the provider returned them.
+
+Pass the raw provider model string in `gen_ai.request.model` (and `gen_ai.response.model`) so Sentry can resolve the model icon and any [model costs](/product/agents/costs/).
+
+<Expandable title="Extraction span attributes">
+  <Include name="tracing/ai-agents-module/extraction-span" />
+</Expandable>
+
 ## Memory Span
 
 This span represents a read from, write to, or management operation against an agent's persistent memory store, such as retrieving relevant memories before a model call or saving new ones after it.

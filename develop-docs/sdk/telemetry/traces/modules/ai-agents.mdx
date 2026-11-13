@@ -2,11 +2,16 @@
 title: AI Agents Module
 ---
 
-The AI Agents module is agnostic to the library used. The SDK will instrument existing AI agents in certain frameworks or libraries (at the time of writing those are `openai-agents` in Python and `Vercel AI` in Javascript). You may need to manually annotate spans for other libraries.
+Agent tracing is agnostic to the library used.
+Agent invocation and tool execution spans are automatically instrumented in supported agent frameworks (such as LangChain).
+Requests to model providers are automatically instrumented when the request is issued with a client library instrumented by the SDK (first-party libraries from OpenAI, Anthropic, etc.). Requests through supported client libraries are instrumented even when triggered indirectly by an agent framework.
 
 ## Spans Conventions
 
-For your AI agents data to show up in the Sentry [Agents Dashboard](https://sentry.io/orgredirect/organizations/:orgslug/dashboards/), at least one of the AI spans needs to be created and have well-defined names and data attributes. If the required data (marked with MUST or required) is missing, the data will not show up in the Agents dashbboard.
+The `gen_ai.operation.name` attribute is essential to accurately categorize the GenAI span. The list of expected values is documented in the [conventions page](https://github.com/getsentry/sentry-conventions/blob/main/model/attributes/gen_ai/gen_ai__operation__name.json).
+For accurate cost calculation, token attributes and `gen_ai.response.model` are required. Cached and reasoning tokens are crucial if available, since they are subtracted from input and output tokens.
+The `gen_ai.agent.name`, or its `gen_ai.function_id` fallback drive grouping. The values allow users to filter for interactions with a specific identifier.
+For a span to show on the conversations page, `gen_ai.conversation.id` is required. The `gen_ai.input.messages` and `gen_ai.output.messages` are required to view the actual back-and-forth with a GenAI model. The page highlights an expanding set of part types, such as text, reasoning and tool uses.
 
 <Alert level="success" title="Hint">
 The [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) have all the detailed specifications for `"gen_ai.*"` span attributes.
@@ -15,106 +20,221 @@ Sentry Conventions is the single source of truth.
 
 </Alert>
 
+
+## Span Relationships
+
+An agent invocation span has tool execution and chat span children, but chat spans need not have an agent invocation parent (not all chat requests are triggered by an agent).
+Agents can have other children such as extraction, decision and memory spans, depending on what's considered part of an agent execution in a given application.
+Automatic instrumentation considers an agent execution to be one run of the agent as represented by the supported library.
+
+All span types can be children of a tool execution span because tools can be arbitrary functions (including starting subagents and performing handoffs).
+Chat, extraction and decision spans are basic building blocks and should not have GenAI spans as children.
+
+Valid examples:
+
+### Agent execution with extraction, decision and memory children
+
+```
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.memory
+├── gen_ai.extract
+├── gen_ai.chat
+├── gen_ai.execute_tool
+├── gen_ai.chat
+└── gen_ai.decide
+```
+
+### Chat, memory, decision, and extraction spans outside of an agent execution
+
+```
+gen_ai.chat
+gen_ai.extract
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.execute_tool
+└── gen_ai.chat
+gen_ai.decide
+gen_ai.memory
+```
+
+### Subagent
+
+```
+gen_ai.invoke_agent
+├── gen_ai.chat
+├── gen_ai.execute_tool
+│   └── gen_ai.invoke_agent
+│       ├── gen_ai.chat
+│       ├── gen_ai.execute_tool
+│       └── gen_ai.chat
+└── gen_ai.chat
+```
+
 ## Invoke Agent Span
 
 Describes AI agent invocation.
 Agent invocations represent operations that can include multiple model calls, or some auxiliary work that goes beyond transforming the model input and output.
 
-- Span `op` **SHOULD** be `"gen_ai.invoke_agent"`.
-- Span `name` **SHOULD** be `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) **[4]**
-- Attribute `gen_ai.operation.name` **MUST** be `"invoke_agent"`.
-- Attribute `gen_ai.agent.name` **SHOULD** be set to the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` is `"gen_ai.invoke_agent"`.
+- Span `name` is `"invoke_agent {gen_ai.agent.name}"`. (e.g. `"invoke_agent Weather Agent"`) In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents. In these cases, the span name is `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+- Attribute `gen_ai.operation.name` is `"invoke_agent"`.
+- Attribute `gen_ai.agent.name` is the agent's name. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
+- If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 - As a fallback to missing inputs and outputs on child chat spans, the Invoke Agent Span can carry `gen_ai.input.messages` and `gen_ai.system_instructions` based on the input of the first model call, and `gen_ai.output.messages` based on the output of the final model call under the agent execution.
 
 ## AI Client Span
 
-This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
+This span represents a chat model or text completion request.
 
-- Span `op` **SHOULD** be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
-- Span `name` **SHOULD** be `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"chat"`, `"embeddings"`, `"generate_content"` or `"text_completion"`.
-- Attribute `gen_ai.provider.name` **MUST** be the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
-- Attribute `gen_ai.request.model` **MUST** be the requested model. (e.g. `"gpt-4o"`)
-- Attribute `gen_ai.response.model` **MUST** be the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
-- If the request originates from an agent, the `gen_ai.agent.name` attribute **SHOULD** be set to the name of the agent. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` is `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- Span `name` is `"{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- Attribute `gen_ai.operation.name` is `"chat"`, `"generate_content"` or `"text_completion"`.
+- Attribute `gen_ai.provider.name` is the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"gpt-4o"`)
+- Attribute `gen_ai.response.model` is the concrete response model. (e.g. `"gpt-4o-2024-08-06"`)
+- If the request originates from an agent, the `gen_ai.agent.name` attribute is  the name of the agent. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
+- If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
 ### Request Data
 
-| Attribute                          | Type   | Description                                                                                                                          | Example                                                               |
-| :--------------------------------- | :----- | :----------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| `gen_ai.input.messages`            | string | List of dictionaries describing the messages (prompts) sent to the LLM. **[0]**, **[1]**, **[4]**, **[5]**, **[7]**                  | `'[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]'` |
-| `gen_ai.tool.definitions`          | string | List of dictionaries describing the available tools. **[0]**                                                                         | `'[{"name": "random_number", "description": "..."}, ...]'`            |
-| `gen_ai.system_instructions`       | string | The system instructions passed to the model.                                                                                         | `"You are a helpful assistant."`                                      |
-| `gen_ai.request.max_tokens`        | int    | Model configuration parameter.                                                                                                       | `500`                                                                 |
-| `gen_ai.request.seed`              | string | Seed for reproducible outputs.                                                                                                       | `"12345"`                                                             |
-| `gen_ai.request.frequency_penalty` | float  | Model configuration parameter.                                                                                                       | `0.5`                                                                 |
-| `gen_ai.request.presence_penalty`  | float  | Model configuration parameter.                                                                                                       | `0.5`                                                                 |
-| `gen_ai.request.temperature`       | float  | Model configuration parameter.                                                                                                       | `0.1`                                                                 |
-| `gen_ai.request.top_p`             | float  | Model configuration parameter.                                                                                                       | `0.7`                                                                 |
-| `gen_ai.request.top_k`             | int    | Limits model to K most likely next tokens.                                                                                           | `40`                                                                  |
-| `gen_ai.request.reasoning.level`   | string | The reasoning or thinking effort level requested for a GenAI model. Supported values vary by provider.                               | `"medium"`                                                            |
+<ConventionAttributes
+  attributes={[
+    'gen_ai.input.messages',
+    'gen_ai.tool.definitions',
+    'gen_ai.system_instructions',
+    'gen_ai.request.max_tokens',
+    'gen_ai.request.seed',
+    'gen_ai.request.frequency_penalty',
+    'gen_ai.request.presence_penalty',
+    'gen_ai.request.temperature',
+    'gen_ai.request.top_p',
+    'gen_ai.request.top_k',
+    'gen_ai.request.reasoning.level',
+  ]}
+/>
 
 ### Response Data
 
-| Attribute                             | Type    | Description                                                                                                         | Example                                                                      |
-| :------------------------------------ | :------ | :------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------- |
-| `gen_ai.output.messages`              | string  | Stringified array of message objects representing the model's output. **[0]**, **[1]**                              | `'[{"role": "assistant", "parts": [{"type": "text", "content": "..."}]}]'`   |
-| `gen_ai.response.finish_reasons`      | string  | The reason why the model stopped generating.                                                                        | `"stop"`                                                                     |
-| `gen_ai.response.id`                  | string  | Unique identifier for the completion.                                                                               | `"chatcmpl-abc123"`                                                          |
-| `gen_ai.response.streaming`           | boolean | Whether response was streamed asynchronously.                                                                       | `true`                                                                       |
-| `gen_ai.response.time_to_first_chunk` | double  | Seconds until first response chunk in streaming.                                                                    | `0.5`                                                                        |
+<ConventionAttributes
+  attributes={[
+    'gen_ai.output.messages',
+    'gen_ai.response.finish_reasons',
+    'gen_ai.response.id',
+    'gen_ai.response.streaming',
+    'gen_ai.response.time_to_first_chunk',
+  ]}
+/>
 
 ### Token Usage Data
 
-| Attribute                                  | Type | Description                                                                                                                    | Example |
-| :----------------------------------------- | :--- | :----------------------------------------------------------------------------------------------------------------------------- | :------ |
-| `gen_ai.usage.input_tokens`                | int  | The number of tokens used in the AI input (prompt), including cached tokens. **[2]**                                           | `60`    |
-| `gen_ai.usage.cache_read.input_tokens`     | int  | The number of cached tokens used in the AI input (prompt).                                                                     | `50`    |
-| `gen_ai.usage.cache_creation.input_tokens` | int  | Tokens written to cache when processing input.                                                                                 | `20`    |
-| `gen_ai.usage.output_tokens`               | int  | The number of tokens used in the AI output, including reasoning tokens. **[3]**                                                | `130`   |
-| `gen_ai.usage.reasoning.output_tokens`     | int  | The number of tokens used for reasoning.                                                                                       | `30`    |
-| `gen_ai.usage.total_tokens`                | int  | The sum of `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`.                                                       | `190`   |
+<ConventionAttributes
+  attributes={[
+    'gen_ai.usage.input_tokens',
+    'gen_ai.usage.cache_read.input_tokens',
+    'gen_ai.usage.cache_creation.input_tokens',
+    'gen_ai.usage.output_tokens',
+    'gen_ai.usage.reasoning.output_tokens',
+    'gen_ai.usage.total_tokens',
+  ]}
+/>
+
+## Embedding Span
+
+This span represents a request to encode input into numeric vector embeddings.
+
+- Span `op` is `"gen_ai.embeddings"`.
+- Span `name` is `"embeddings {gen_ai.request.model}"`. (e.g. `"embeddings text-embedding-3-small"`)
+- Attribute `gen_ai.operation.name` is `"embeddings"`.
+- Attribute `gen_ai.provider.name` is the Generative AI product as identified by the client or server instrumentation. (e.g. `"openai"`)
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"text-embedding-3-small"`)
+- Attribute `gen_ai.response.model` is the concrete response model. (e.g. `"text-embedding-3-small-001"`)
+
+Additional attributes on the span:
+
+<ConventionAttributes
+  attributes={['gen_ai.embeddings.input', 'gen_ai.usage.input_tokens']}
+/>
 
 ## Execute Tool Span
 
 Describes a tool execution.
 
-- Span `op` **SHOULD** be `"gen_ai.execute_tool"`.
-- Span `name` **SHOULD** be `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
-- Attribute `gen_ai.operation.name` **MUST** be `"execute_tool"`.
-- Attribute `gen_ai.agent.name` **SHOULD** be set to the name of the agent that invoked the tool. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
-- If relevant, the `gen_ai.pipeline.name` attribute **SHOULD** be set to the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
+- Span `op` is `"gen_ai.execute_tool"`.
+- Span `name` is `"execute_tool {gen_ai.tool.name}"`. (e.g. `"execute_tool query_database"`)
+- Attribute `gen_ai.operation.name` is `"execute_tool"`.
+- Attribute `gen_ai.agent.name` is the name of the agent that invoked the tool. (e.g. `"Weather Agent"`). As a fallback to `gen_ai.agent.name`, the product also interprets `gen_ai.function_id` as an agent name for libraries that let users set a tracing identifier on a per-invocation basis.
+- If relevant, the `gen_ai.pipeline.name` attribute is the name of the AI workflow, pipeline or chain within which the agent operates. (e.g. `"weather-pipeline"`)
 
 Additional attributes on the span:
 
-| Attribute                    | Type   | Description                                                                                                    | Example                                    |
-| :--------------------------- | :----- | :------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
-| `gen_ai.tool.name`           | string | Name of the tool executed.                                                                                     | `"random_number"`                          |
-| `gen_ai.tool.description`    | string | Description of the tool executed.                                                                              | `"Tool returning a random number"`         |
-| `gen_ai.tool.call.arguments` | string | Arguments of the tool call (stringified).                                                                      | `'{"max":10}'`                             |
-| `gen_ai.tool.call.result`    | string | Result of the tool call (stringified).                                                                         | `"7"`                                      |
+<ConventionAttributes
+  attributes={[
+    'gen_ai.tool.name',
+    'gen_ai.tool.description',
+    'gen_ai.tool.call.arguments',
+    'gen_ai.tool.call.result',
+  ]}
+/>
 
-**[0]:**
+## Decision Span
 
-Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
+Describes a decision on generated content against a set of questions, such as grading a model's reply for accuracy or classifying a support message, for example from TypeSafe Jev. Sentry shows decisions as their own rows in the conversation transcript and timeline, with dedicated **Input** and **Output** views.
 
-**[1]:**
+- Span `op` is `"gen_ai.decide"`.
+- Span `name` is `"decide {gen_ai.request.model}"`. (e.g. `"decide typesafe/jev-1.13"`)
+- Attribute `gen_ai.operation.name` is `"decide"`. Decisions share the `ai_client` operation type with model calls, so this attribute is what tells them apart.
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"typesafe/jev-1.13"`) Without a model, Relay doesn't classify the span as `ai_client`.
+- Attribute `gen_ai.response.model` is the concrete response model, if the provider reports one. (e.g. `"typesafe/jev-1.13-20260917"`)
+- If the decision runs under an agent, the `gen_ai.agent.name` attribute is the name of the agent. (e.g. `"Support Agent"`)
 
-Messages use the format `{role, parts}` where `parts` is an array of typed objects: `[{"role": "user", "parts": [{"type": "text", "content": "..."}]}]`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. Each part has a `type`; common types include `"text"` (user-visible content), `"reasoning"` (internal thinking/chain-of-thought), `"tool_call"`, and `"tool_call_response"`. Use `{"type": "reasoning", "content": "..."}` for the model's thinking output — Sentry surfaces it separately and does not render it as a user-visible message in Conversations, so do not represent thinking content as a `"text"` part. For backwards compatibility, the legacy format `{role, content}` is also accepted.
+Additional attributes on the span:
 
-**[2]:**
+<ConventionAttributes
+  attributes={[
+    {key: 'gen_ai.input.messages', example: 1},
+    {key: 'gen_ai.output.messages', example: 1},
+    'gen_ai.usage.input_tokens',
+    'gen_ai.usage.output_tokens',
+  ]}
+/>
 
-Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.cache_read.input_tokens`.
+`gen_ai.input.messages` holds a one-element array with the content being evaluated (`state`) and the questions asked about it (`questions`). `gen_ai.output.messages` holds a one-element array with the answers (`answers`), keyed by the same question names.
 
-**[3]:**
+## Extraction Span
 
-Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.reasoning.output_tokens`.
+Describes an extraction of typed fields from an input, such as the total and due date of an invoice, for example from Cloudflare Clairic. The model can extract values that are in the input, compute values from them, and estimate or forecast values that the input doesn't determine.
 
-**[4]**
+- Span `op` is `"gen_ai.extract"`.
+- Span `name` is `"extract {gen_ai.request.model}"`. (e.g. `"extract @cf/cloudflare/clairic"`)
+- Attribute `gen_ai.operation.name` is `"extract"`.
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"@cf/cloudflare/clairic"`)
+- Attribute `gen_ai.response.model` is the concrete response model, if the provider reports one. (e.g. `"clairic"`)
+- If the extraction runs under an agent, the `gen_ai.agent.name` attribute is the name of the agent. (e.g. `"Billing Agent"`)
 
-In some agent libraries, the agent name is optional, and some do not provide the user an option to name their agents.
-In these cases, the span name **SHOULD** be `"invoke_agent {call_id}"`, where `call_id` is some user-provided identifier for the agent invocation. For example, `functionId` in Vercel AI.
+Additional attributes on the span:
+
+<ConventionAttributes
+  attributes={[
+    {key: 'gen_ai.input.messages', example: 2},
+    {key: 'gen_ai.output.messages', example: 2},
+    'gen_ai.usage.input_tokens',
+    'gen_ai.usage.output_tokens',
+  ]}
+/>
+
+`gen_ai.input.messages` holds a one-element array with the request body as the caller passed it, without `model`. `gen_ai.output.messages` holds a one-element array with the response body as the provider returned it, without `model` and `usage`. Don't send the other usage counts that the provider reports (such as Clairic's `state_tokens`, `image_tokens`, `schema_tokens`, and `passes`). `gen_ai.usage.input_tokens` already includes them.
+
+## Derived by Relay
+
+Relay sets these attributes during ingestion:
+
+- `gen_ai.operation.type` is inferred from `gen_ai.operation.name` with a `sentry.op` fallback.
+- `gen_ai.response.model` is set to `gen_ai.request.model` if not already present.
+- `gen_ai.usage.total_tokens` is computed as `gen_ai.usage.input_tokens + gen_ai.usage.output_tokens`.
+- `gen_ai.response.tokens_per_second` is computed as `gen_ai.usage.output_tokens` divided by the span duration.
+- `gen_ai.context.window_size` is looked up from the model metadata registry by `gen_ai.response.model`.
+- `gen_ai.context.utilization` is computed as `gen_ai.usage.total_tokens / gen_ai.context.window_size`.
+- `gen_ai.cost.input_tokens`, `gen_ai.cost.output_tokens`, and `gen_ai.cost.total_tokens` are calculated from token counts and per-token pricing in the model registry.
