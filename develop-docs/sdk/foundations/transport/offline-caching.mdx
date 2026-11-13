@@ -24,6 +24,7 @@ Envelope sizes vary widely. Most are a few kilobytes, but envelopes with screens
 |---|---|---|---|
 | `max_cache_items` | `int` | `1000`, or `30` if the SDK doesn't support `max_cache_size` | Maximum number of envelopes in the cache. **MUST** be supported. |
 | `max_cache_size` | `int` | `536870912` (512 MiB) | Maximum total size of the cached envelopes, in bytes. **SHOULD** be supported. |
+| `max_cache_age` | duration | Not set: 90 or 30 days, depending on the envelope's items | Maximum age of a cached envelope. Replaces the default ages in [Maximum Age](#maximum-age) for all envelopes. **MAY** be supported. |
 
 SDKs **SHOULD** use the platform's naming convention, for example `maxCacheSize` or `MaxCacheSize`. SDKs **SHOULD** use a 64-bit integer type for `max_cache_size` where the platform has one, so users can set limits above 2 GiB.
 
@@ -52,18 +53,27 @@ SDKs **SHOULD NOT** list the cache directory or read file metadata for every cac
 
 ### Maximum Age
 
-Sentry's retention period limits how long cached data is useful. Relay corrects error timestamps older than the project's retention period to the time it received them, and rejects logs, spans, and trace metrics older than their retention period. SDKs **SHOULD** delete cached envelopes that are older than a fixed maximum age:
+Sentry's retention period limits how long cached data is useful. Relay corrects error timestamps older than the project's retention period to the time it received them, and rejects logs, spans, and trace metrics older than their retention period. SDKs **SHOULD** delete cached envelopes that are older than a default maximum age:
 
 - **90 days** for envelopes that contain an event item, such as `event`, `transaction`, or `feedback`.
 - **30 days** for all other envelopes, for example those containing only logs, spans, trace metrics, sessions, replays, profiles, check-ins, or client reports.
 
-The maximum age isn't an option. SDKs **MUST NOT** expose it to users.
+These ages work as follows:
 
 - The age of an envelope is the time since it was written to the cache, for example the file's modification time.
 - An envelope with items of different types gets the longest maximum age of its items, so an event isn't deleted because it shares an envelope with a log.
 - SDKs **SHOULD** determine the maximum age when they write the envelope and record it in the index or the file name, so they don't have to parse envelopes later. SDKs **MAY** read the envelope's item headers when they build the index at initialization.
 - SDKs **SHOULD** delete expired envelopes when the SDK initializes, and **MAY** also delete them at other times, such as before writing an envelope.
 - When an envelope is deleted because it's too old, the rules in [Eviction Order](#eviction-order) for client reports and session integrity apply.
+
+SDKs **MAY** expose a `max_cache_age` option to override these defaults, for example to delete cached data sooner for privacy reasons or on devices with little storage. When the user sets it:
+
+- The SDK **MUST** apply it to all envelopes, regardless of their items, instead of the 90-day and 30-day defaults.
+- The SDK **MUST** apply it to envelopes already in the cache, including those written before the user set or changed it.
+- SDKs **SHOULD** use the platform's duration type, or seconds where the platform has none.
+- If the value is `0` or negative, SDKs **MUST** ignore it, use the defaults, and log a warning in debug mode. To remove the age limit, users set it to the platform's maximum value.
+
+Values longer than the defaults keep data that Sentry is likely to reject or correct once it's sent.
 
 ### Measuring Size
 
