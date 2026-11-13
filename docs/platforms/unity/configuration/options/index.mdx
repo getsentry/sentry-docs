@@ -80,7 +80,7 @@ Sets the logger for the SDK's own diagnostic messages. The SDK uses it only when
 
 <SdkOption name="SampleRate" type="float?" defaultValue="null">
 
-The sample rate for error events, from `0` to `1`. At `0`, the SDK sends no error events. When `null`, the SDK sends every error event. In the configuration window, it's the **Event Sample Rate** field, where `1` means `null`. Learn more in <PlatformLink to="/configuration/sampling/">Sampling</PlatformLink>.
+The sample rate for error events, greater than `0` and up to `1`. When `null`, the SDK sends every error event. In the configuration window, it's the **Event Sample Rate** field, which accepts `0.01` to `1`, where `1` means `null`. Native crashes on Android, iOS, and macOS with the Cocoa backend follow this rate too. On Windows, Linux, macOS with the Native backend, and game consoles, the native SDK always sends crashes. Learn more in <PlatformLink to="/configuration/sampling/">Sampling</PlatformLink>.
 
 </SdkOption>
 
@@ -94,15 +94,15 @@ Limits repeated errors, breadcrumbs, and structured logs that come from Unity lo
 
 Drops exceptions of type `System.Exception` whose message starts with `Error: HTTP/1.1 502 Bad Gateway`.
 
-Set it in the window or in `Configure`. When you initialize the SDK with `SentrySdk.Init`, setting it to `false` has no effect: call `DisableBadGatewayExceptionFilter()` instead.
+Set it to `false` to keep these exceptions. This works in the window, in `Configure`, and when you initialize the SDK with `SentrySdk.Init`.
 
-On iOS with `BuildTime` native initialization, this option also makes the iOS SDK drop events for requests to `operate-sdk-telemetry.unity3d.com`.
+On iOS with `BuildTime` native initialization, this option also makes the iOS SDK drop events for requests to `operate-sdk-telemetry.unity3d.com`. The iOS SDK takes this value from the window and `Configure` at build time, so setting it in `SentrySdk.Init` doesn't change it.
 
 </SdkOption>
 
 <SdkOption name="DisableBadGatewayExceptionFilter" type="method">
 
-Removes the filter that drops Bad Gateway exceptions. Use it when you initialize the SDK with `SentrySdk.Init`, or in your options configuration script.
+Removes the filter that drops Bad Gateway exceptions. It leaves <PlatformIdentifier name="FilterBadGatewayExceptions" /> set to `true`, so on iOS with `BuildTime` native initialization, the iOS SDK still drops events for requests to `operate-sdk-telemetry.unity3d.com`. To turn off both, set <PlatformIdentifier name="FilterBadGatewayExceptions" /> to `false` in the window or in `Configure` instead.
 
 </SdkOption>
 
