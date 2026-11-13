@@ -3,9 +3,9 @@
 /**
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
- * Both files share the same body: product description, AI instructions,
- * platforms and frameworks, and the doc sections listed for agents.
- * index.md adds YAML frontmatter for the Markdown export.
+ * Both files include a product description, AI instructions, platforms and
+ * frameworks, setup guidance for agents, and doc sections. index.md adds
+ * YAML frontmatter for the Markdown export.
  *
  * Platforms with a guides/ directory list those guides as frameworks.
  * Platforms that document frameworks as integrations (Python, Elixir, and
@@ -25,13 +25,12 @@ import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import * as path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+import {DOCS_ORIGIN, DOCTREE_FILENAME} from '../src/docsSite.mjs';
+
 import {frameworkNodes} from './platform-frameworks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const DOCS_ORIGIN = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
 
 const EXCLUDED_SECTIONS = new Set(['platforms', 'contributing', 'changelog', 'ai']);
 
@@ -219,6 +218,10 @@ When helping a developer set up or use Sentry, follow these guidelines:
 - **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`).
 - **Pricing questions**: Don't quote prices or quotas from memory; fetch ${DOCS_ORIGIN}/pricing.md. Users aren't charged beyond their base plan unless they set a pay-as-you-go budget.`;
 
+const SETUP_INSTRUCTIONS = `\
+- **Setting up Sentry in a project**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/get-started.md before the platform or framework guide. It covers setup through the Sentry CLI, the Sentry MCP server, or neither, from choosing a project to confirming a real error reaches Sentry.
+- **Adding a feature to a project that already uses Sentry**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/instrument.md for tracing, logs, Session Replay, metrics, profiling, crons, uptime, or AI agent monitoring.`;
+
 const ABOUT_SENTRY_DOCS = `\
 ## About Sentry Docs
 
@@ -228,10 +231,7 @@ const ABOUT_SENTRY_DOCS = `\
 // --- Main ---
 
 async function main() {
-  const doctreeFilename = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-    ? 'doctree-dev.json'
-    : 'doctree.json';
-  const doctreePath = path.join(ROOT, 'public', doctreeFilename);
+  const doctreePath = path.join(ROOT, 'public', DOCTREE_FILENAME);
   let docTree;
   try {
     docTree = JSON.parse(await readFile(doctreePath, 'utf8'));
@@ -255,6 +255,7 @@ async function main() {
     DESCRIPTION,
     '',
     INSTRUCTIONS,
+    SETUP_INSTRUCTIONS,
     '',
     buildPlatformsExpanded(platformsNode),
     '',

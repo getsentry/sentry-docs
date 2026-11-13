@@ -84,6 +84,37 @@ An alert action component allows users to specify details specific to your servi
 }
 ```
 
+## Settings Request Format
+
+When a user saves an alert rule with your alert action, Sentry sends a `POST` request to the settings `uri`, so you can validate what they entered. The request is signed with the `Sentry-App-Signature` header (see [Verifying Requests](/integrations/integration-platform/ui-components/#verifying-requests)).
+
+```json
+{
+  "fields": [
+    {
+      "name": "ticket_type",
+      "value": "feat"
+    },
+    {
+      "name": "runbook",
+      "value": "Follow up in #triage-feature-requests with sales if this is actionable."
+    },
+    {
+      "name": "assignee",
+      "value": "team:789"
+    }
+  ],
+  "installationId": <String>
+}
+```
+
+### Attributes
+
+- `fields` - The values the user entered, as a list of `name` and `value` pairs. This is the same format as the `settings` in alert webhooks.
+- `installationId` - The ID of the installation associated with the request
+
+Respond with a `2xx` status code to accept the settings. To reject them, respond with a status code of `400` or higher and a `message` in the JSON response body. Sentry shows the message to the user, prefixed with your integration's name, and doesn't save the alert rule. See [Surfacing Errors](#surfacing-errors) for the response format.
+
 ## Issue Alert Request Format
 
 When an issue alert fires, your service will need to read the settings from the alert payload. The `settings` are in `data.issue_alert.settings`. Check out the full [Issue Alert webhook documentation](/integrations/integration-platform/webhooks/issue-alerts/) for more information.
@@ -116,7 +147,12 @@ When an issue alert fires, your service will need to read the settings from the 
 
 ## Metric Alert Request Format
 
-When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` in this example are nested in `data.metric_alert.alert_rule.triggers[1].actions[0].settings`. You will have to identify which trigger and action contains your settings based on the webhook type, so `triggers[1]` and `actions[0]` may not be accurate in your case. Check out the full [Metric Alert webhook documentation](/integrations/integration-platform/webhooks/metric-alerts/) for more information.
+When a metric alert fires, your service will need to read the settings from the alert payload. The `settings` are in `data.metric_alert.alert_rule.triggers[].actions[].settings`. An alert rule can have several triggers, and each trigger can have several actions with different settings. To find yours:
+
+1. For `metric_alert.critical` and `metric_alert.warning` webhooks, pick the trigger whose `label` matches the webhook action (`critical` or `warning`).
+2. In that trigger's `actions`, pick the action whose `sentry_app_installation_uuid` matches `installation.uuid` in the webhook body.
+
+Check out the full [Metric Alert webhook documentation](/integrations/integration-platform/webhooks/metric-alerts/) for more information.
 
 ```json
 {
@@ -131,9 +167,11 @@ When a metric alert fires, your service will need to read the settings from the 
           ...
           {
             ...
+            "label": "critical",
             "actions": [
               {
                 ...
+                "sentry_app_installation_uuid": "<installation_uuid>",
                 "settings": [
                   {
                     "name": "ticket_type",
