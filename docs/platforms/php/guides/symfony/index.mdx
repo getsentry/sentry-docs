@@ -1,27 +1,49 @@
 ---
 title: Symfony
 sdk: sentry.php.symfony
-description: "Symfony is a set of reusable PHP components and a PHP framework to build web applications and services. Learn how to set it up with Sentry."
+description: Learn how to set up Sentry in your Symfony application and capture your first events.
 ---
 
 ## Prerequisites
 
-- You need a [Sentry account](https://sentry.io/signup/) and project
-- Your Symfony application needs to run on PHP 7.2 or later
+You need:
+
+- a [Sentry account](https://sentry.io/signup/) and project
+- a Symfony app running on PHP `7.2` or later
+- [Composer](https://getcomposer.org/)
+
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Install the `sentry/sentry-symfony` bundle:
+Install the latest `sentry/sentry-symfony` bundle:
 
 ```bash
 composer require sentry/sentry-symfony
 ```
 
-If you're already using [Monolog](https://github.com/Seldaek/monolog), see the [Monolog integration docs](integrations/monolog/) for Monolog-related configuration.
+### Install Monolog for Logs
+
+The logging configuration below also requires MonologBundle. If it isn't already installed, add it:
+
+```bash
+composer require symfony/monolog-bundle
+```
+
+### Install Excimer for Profiling
+
+<Include name="php-quick-start-excimer" />
 
 ## Configure
 
-Add your DSN to your `.env` file:
+**Error Monitoring** starts working as soon as the bundle is enabled and your DSN is set. **Application Metrics** need no extra configuration and you'll learn how to send them in step [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Profiling**, and **Logs**.
+
+<Include name="quick-start-features-expandable" />
+
+### Initialize the Sentry SDK
+
+Add your Sentry DSN to your `.env` file:
 
 ```plain {filename:.env}
 ###> sentry/sentry-symfony ###
@@ -29,16 +51,87 @@ SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
 ```
 
-When using Symfony Flex, the Sentry bundle is configured to be enabled in the `prod` environment only by default. You can change this behaviour in your `config/packages/sentry.yaml` and `config/bundles.php` files.
+Then configure the bundle in `config/packages/sentry.yaml` as shown in the snippet below.
 
-<Alert level="warning">
-  In order to receive stack trace arguments in your errors, make sure to set
-  `zend.exception_ignore_args: Off` in your php.ini
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profiles_sample_rate">`profiles_sample_rate`</PlatformLink>
+- Logs: via the <PlatformLink to="/logs/">`sentry_logs` Monolog handler</PlatformLink>
+
+Don't need a feature? Remove its options from the snippet.
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+when@prod:
+    sentry:
+        dsn: '%env(SENTRY_DSN)%'
+        options:
+            # Enables Tracing.
+            # Set to 1.0 to capture 100% of spans for tracing.
+            # We recommend reducing this value in production.
+            traces_sample_rate: 1.0
+
+            # Enables Profiling.
+            # Profiles are sampled relative to traces_sample_rate.
+            profiles_sample_rate: 1.0
+
+    # Sends Monolog records to Sentry as Logs.
+    monolog:
+        handlers:
+            sentry_logs:
+                type: service
+                id: Sentry\SentryBundle\Monolog\LogsHandler
+
+    services:
+        Sentry\SentryBundle\Monolog\LogsHandler:
+            arguments:
+                # The minimum level of logs to send to Sentry.
+                - !php/const Monolog\Logger::INFO
+```
+
+<Alert level="warning" title="Capture stack trace arguments">
+  To receive stack trace arguments in your errors, set `zend.exception_ignore_args = Off` in your `php.ini`.
 </Alert>
 
-## Verify
+### Control the Data You Send to Sentry
 
-To test that Sentry is capturing unhandled exceptions, you can create the following controller:
+By default, the SDK sends user identity data (IP address, ID, and similar) and other data (HTTP bodies, URL query parameters, etc.), with sensitive values scrubbed.
+
+To opt out of individual categories use the `data_collection` option. For the full list of categories and their defaults, <PlatformLink to="/configuration/options/#data_collection">see the `data_collection` options</PlatformLink>.
+
+```yaml {filename:config/packages/sentry.yaml}
+when@prod:
+    sentry:
+        options:
+            data_collection:
+                # opt out of collecting user info
+                user_info: false
+                # opt out of collecting cookies
+                cookies:
+                    mode: "off"
+                # other categories
+            # your other Sentry options
+],
+```
+
+### Enable Sentry in Other Environments
+
+When using Symfony Flex, the Sentry bundle is enabled in the `prod` environment only by default, which is why the snippet uses `when@prod`. To use Sentry in other environments, update `config/packages/sentry.yaml` and the Sentry bundle entry in `config/bundles.php`.
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Create the following controller, then visit `/_sentry-test` in an environment where Sentry is enabled:
 
 ```php
 <?php
@@ -58,8 +151,25 @@ class SentryTestController extends AbstractController
 }
 ```
 
-After you visit the `/_sentry-test` page, you can view and resolve the recorded error by logging into [sentry.io](https://sentry.io) and opening your project.
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+At this point, you should have integrated Sentry into your Symfony application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after Setup
+- Learn how to use <PlatformLink to="/crons/">Crons</PlatformLink> and <PlatformLink to="/feature-flags/">Feature Flags</PlatformLink>
+- Collect user feedback via the <PlatformLink to="/user-feedback/">Crash-Report Modal</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
