@@ -1,6 +1,6 @@
 ---
 title: Android
-description: "Learn how to set up Sentry's Android SDK for error monitoring and performance tracking."
+description: "Learn how to set up Sentry's Android SDK, capture your first events, and monitor performance."
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.java.android
@@ -14,178 +14,151 @@ keywords:
 
 <AgentSetupCallout skill="sentry-android-sdk" platformName="Android" />
 
-On this page, we get you up and running with Sentry's Android SDK, automatically reporting errors and exceptions in your application.
+## Prerequisites
 
-<Alert>
+You need:
 
-If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Android 5.0 (API level 21) or higher
+  - Session Replay requires at least Android 8.0 (API level 26)
 
-</Alert>
-
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/profiling/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
-<OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance',
-    'profiling',
-    'session-replay',
-    'logs'
-  ]}
-/>
-
-<OnboardingOption optionId="profiling">
-
-<Alert level="info">
-  On Android 15 (API level 35) and higher, profiling uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, the SDK automatically falls back to the <PlatformLink to="/profiling/legacy/">legacy profiler</PlatformLink>.
-</Alert>
-
-</OnboardingOption>
+<StepConnector selector="h2" showNumbers={true}>
 
 ## Install
 
-Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
-
 We recommend installing the SDK through our [Sentry Wizard](https://github.com/getsentry/sentry-wizard) by running one of the following commands inside your project directory:
 
-```bash {tabTitle:brew} {mdExpandTabs}
-brew install getsentry/tools/sentry-wizard && sentry-wizard -i android
-```
-
-```bash {tabTitle:npx}
-npx @sentry/wizard@latest -i android
-```
-
-```bash {tabTitle:macOS (Intel/x64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-darwin-x64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```bash {tabTitle:macOS (Apple Silicon/arm64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-darwin-arm64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```bash {tabTitle:Linux (x64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-linux-x64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```bash {tabTitle:Linux (arm64)}
-downloadUrl="https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-linux-arm64"
-curl -L $downloadUrl -o sentry-wizard
-chmod +x sentry-wizard
-./sentry-wizard -i android
-```
-
-```powershell {tabTitle:Windows}
-$downloadUrl = "https://github.com/getsentry/sentry-wizard/releases/download/v5.1.0/sentry-wizard-win-x64.exe"
-Invoke-WebRequest $downloadUrl -OutFile sentry-wizard.exe
-./sentry-wizard.exe -i android
-```
+<PlatformContent includePath="getting-started-install" />
 
 This will patch your project and configure the SDK. You only need to patch the project once, then you can add the patched files to your version control system.
-If you prefer, you can also <PlatformLink to="/manual-setup/">set up the SDK manually</PlatformLink> or follow the instructions below to adapt the [configuration](#configure).
+
+Prefer to set things up yourself? Check out the <PlatformLink to="/manual-setup/">Manual Setup guide</PlatformLink>.
 
 <Expandable title="The following tasks will be performed by the Sentry Wizard">
 
 The wizard will prompt you to log in to Sentry. It'll then automatically do the following steps for you:
 
 - Update your app's `build.gradle` file with the Sentry Gradle plugin and configure it
-- Update your `AndroidManifest.xml` with the default Sentry configuration
+- Update your `AndroidManifest.xml` with your DSN, tracing, user-interaction tracing, screenshots, view hierarchies, and default PII collection
+- Ask whether to enable automatic Logs collection
 - Create `sentry.properties` with an auth token to upload proguard mappings (this file is automatically added to `.gitignore`)
 - Add an example error to your app's Main Activity to verify your Sentry setup
 
 </Expandable>
 
-## Configure
+The wizard does not enable Profiling or Session Replay. Follow [Additional Configuration](#additional-configuration) to add them and adjust the generated configuration, including <PlatformLink to="/data-management/data-collected/">data collection</PlatformLink>.
 
-Configuration is done via the application `AndroidManifest.xml`. Here's an example config which should get you started:
+## Additional Configuration
 
+**Error Monitoring** starts working as soon as you initialize the SDK. You can also send **Logs** and **Application Metrics** after initialization, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-). The configuration below also enables **Tracing**, **Profiling**, and **Session Replay**.
+
+<Include name="quick-start-features-expandable" />
+
+<Alert>
+Use SDK version **8.58.0 or later** for the full configuration below.
+</Alert>
+
+The SDK initializes automatically using your application's `AndroidManifest.xml`. If you ran the wizard, update the existing Sentry entries and add the missing options from the snippet below. Keep a single `io.sentry.dsn` entry.
+
+The snippet also turns on:
+
+- Data Collection: via <PlatformLink to="/configuration/options/#dataCollection">`data-collection`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#profileLifecycle">`profileLifecycle`</PlatformLink>
+- Session Replay: via `sessionSampleRate` and `onErrorSampleRate` in the <PlatformLink to="/session-replay/configuration/#general-configuration">Session Replay configuration</PlatformLink>
+- Logs: via <PlatformLink to="/logs/">`logs.enabled`</PlatformLink>
+
+Don't need a feature? Remove its options from your app's manifest. The `trace` profiling lifecycle requires tracing: if you disable tracing, also remove the profiling options or <PlatformLink to="/profiling/#enabling-manual-lifecycle-ui-profiling">configure manual profiling</PlatformLink>.
 
 ```xml {filename:AndroidManifest.xml}
 <application>
   <!-- Required: set your sentry.io project identifier (DSN) -->
   <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
   <!-- Use Data Collection defaults but don't collect automatic user information. -->
-  <!-- https://docs.sentry.io/platforms/android/data-management/data-collected/ -->
   <meta-data android:name="io.sentry.data-collection.user-info" android:value="false" />
-  <!-- ___PRODUCT_OPTION_START___ performance -->
-  <!-- Enable the performance API by setting a sample-rate, adjust in production env -->
+
+  <!-- Enables Tracing. -->
+  <!-- Set to 1.0 to capture 100% of transactions. -->
+  <!-- We recommend reducing this value in production. -->
   <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-  <!-- ___PRODUCT_OPTION_END___ performance -->
-  <!-- ___PRODUCT_OPTION_START___ profiling -->
-  <!-- Enable profiling, adjust in production env. This is evaluated only once per session -->
+
+  <!-- Enables Profiling while sampled traces are active. -->
+  <!-- Sampling is evaluated once per session. Reduce this value in production. -->
   <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
-  <!-- Set profiling lifecycle, can be `manual` (controlled through `Sentry.startProfiler()` and `Sentry.stopProfiler()`) or `trace` (automatically starts and stop a profile whenever a sampled trace starts and finishes) -->
   <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="trace" />
-  <!-- ___PRODUCT_OPTION_END___ profiling -->
-  <!-- ___PRODUCT_OPTION_START___ logs -->
-  <!-- Enable logs to be sent to Sentry -->
-  <meta-data android:name="io.sentry.logs.enabled" android:value="true" />
-  <!-- ___PRODUCT_OPTION_END___ logs -->
-  <!-- ___PRODUCT_OPTION_START___ session-replay -->
-  <!-- Record session replays for 100% of errors and 10% of sessions -->
+
+  <!-- Captures replays for 10% of sessions and 100% of sessions with errors. -->
   <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
-  <!-- ___PRODUCT_OPTION_END___ session-replay -->
+
+  <!-- Enables automatic Logs collection through integrations. -->
+  <meta-data android:name="io.sentry.logs.enabled" android:value="true" />
 </application>
 ```
 
-## Verify
 
-Verify that your app is sending events to Sentry by adding the following snippet, which includes an intentional error. You should see the error reported in Sentry within a few minutes.
+<Alert level="info" title="A note on Profiling">
 
-```java
-import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
-import java.lang.Exception;
+Starting with SDK version 8.51.0, profiling on Android 15 (API level 35) and higher uses the Android <Link to="https://developer.android.com/reference/android/os/ProfilingManager">ProfilingManager</Link> to capture <Link to="https://perfetto.dev/">Perfetto</Link> traces. On older devices, the SDK automatically falls back to the <PlatformLink to="/profiling/legacy/">legacy profiler</PlatformLink>.
+
+</Alert>
+
+### Configure the Sentry Android Gradle Plugin
+
+The Sentry Wizard configures the Gradle plugin, which supports automatic tracing instrumentation and uploads ProGuard/R8 mappings and source context. For manual setup, see the <PlatformLink to="/configuration/gradle/">Gradle plugin</PlatformLink>, <PlatformLink to="/enhance-errors/proguard/">ProGuard/R8</PlatformLink>, and <PlatformLink to="/enhance-errors/source-context/">source context</PlatformLink> guides.
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+We also provide integrations for:
+- <PlatformLink to="/integrations/timber/">Timber</PlatformLink>
+- <PlatformLink to="/integrations/logcat/">Logcat</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Trigger and capture a test error in your application:
+
+```java {tabTitle: Java}
 import io.sentry.Sentry;
 
-public class MyActivity extends AppCompatActivity {
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    try {
-      throw new Exception("This is a test.");
-    } catch (Exception e) {
-      Sentry.captureException(e);
-    }
-  }
-}
+Sentry.captureException(new Exception("This is a test."));
 ```
 
-```kotlin
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
+```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 
-class MyActivity : AppCompatActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    try {
-      throw Exception("This is a test.")
-    } catch (e: Exception) {
-      Sentry.captureException(e)
-    }
-  }
-}
+Sentry.captureException(Exception("This is a test."))
 ```
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Android application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/features/">Learn about the features of Sentry's Android SDK</PlatformLink>
-- <PlatformLink to="/enhance-errors/">Learn how to enhance stack traces of your Sentry errors</PlatformLink>
-- <PlatformLink to="/enriching-events/">Enrich events with additional context to make debugging simpler</PlatformLink>
-- <PlatformLink to="/configuration/app-not-respond/">Diagnose ANRs</PlatformLink> with profiling and automatic fingerprinting
-- Monitor <PlatformLink to="/configuration/memory-limiter/">Memory Limiter process deaths</PlatformLink> on supported Android 17+ devices
+- <PlatformLink to="/enhance-errors/">Enhance stack traces</PlatformLink> to
+  make error details more readable
+- <PlatformLink to="/user-feedback/">Collect User Feedback</PlatformLink> from
+  your users
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
