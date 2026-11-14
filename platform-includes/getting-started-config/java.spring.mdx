@@ -1,11 +1,10 @@
 Configuration should happen as early as possible in your application's lifecycle.
 
-The `sentry-spring`, `sentry-spring-jakarta`, and `sentry-spring-7` libraries provide an `@EnableSentry` annotation that registers all required Spring beans. `@EnableSentry` can be placed on any class annotated with [@Configuration](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html) including the main entry class in Spring Boot applications annotated with [@SpringBootApplication](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/autoconfigure/SpringBootApplication.html).
+The `sentry-spring`, `sentry-spring-jakarta`, and `sentry-spring-7` libraries provide an `@EnableSentry` annotation that registers all required Spring beans. Place it on any class annotated with [@Configuration](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html), including your main [@SpringBootApplication](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/autoconfigure/SpringBootApplication.html) class.
 
 
 ```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
 import io.sentry.spring.EnableSentry;
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
   dsn = "___PUBLIC_DSN___"
@@ -17,7 +16,6 @@ class SentryConfiguration {
 
 ```java {tabTitle:Java (Spring 6)}
 import io.sentry.spring.jakarta.EnableSentry;
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
   dsn = "___PUBLIC_DSN___"
@@ -29,7 +27,6 @@ class SentryConfiguration {
 
 ```java {tabTitle:Java (Spring 7)}
 import io.sentry.spring7.EnableSentry;
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
   dsn = "___PUBLIC_DSN___"
@@ -41,7 +38,6 @@ class SentryConfiguration {
 
 ```kotlin {tabTitle:Kotlin (Spring 5)}
 import io.sentry.spring.EnableSentry
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
   dsn = "___PUBLIC_DSN___"
@@ -52,7 +48,6 @@ class SentryConfiguration
 
 ```kotlin {tabTitle:Kotlin (Spring 6)}
 import io.sentry.spring.jakarta.EnableSentry
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
   dsn = "___PUBLIC_DSN___"
@@ -63,7 +58,6 @@ class SentryConfiguration
 
 ```kotlin {tabTitle:Kotlin (Spring 7)}
 import io.sentry.spring7.EnableSentry
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
 @EnableSentry(
   dsn = "___PUBLIC_DSN___"
@@ -72,19 +66,38 @@ import io.sentry.spring7.EnableSentry
 class SentryConfiguration
 ```
 
-Configure Data Collection in `sentry.properties`. Setting any Data Collection field applies its defaults to omitted fields:
+Then configure the remaining options in `sentry.properties`.
+
+The snippet also configures:
+
+- Data Collection: via <PlatformLink to="/data-management/data-collected/">`data-collection`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`traces-sample-rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profile-session-sample-rate`</PlatformLink> and <PlatformLink to="/configuration/options/#profileLifecycle">`profile-lifecycle`</PlatformLink>
+- Logs: via <PlatformLink to="/logs/">`logs.enabled`</PlatformLink>
+
+Don't need a feature? Remove its configuration. Remove the `sentry-async-profiler` dependency to disable Profiling.
 
 ```properties {filename:sentry.properties}
 # Use Data Collection defaults but don't collect automatic user information.
 data-collection.user-info=false
 # Configure other data categories here.
+
+# Enable tracing
+traces-sample-rate=1.0
+
+# Enable profiling
+profile-session-sample-rate=1.0
+profile-lifecycle=TRACE
+
+# Enable logs
+logs.enabled=true
 ```
 
-The DSN can be also provided through the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+The DSN can also come from the `sentry.dsn` system property, the `SENTRY_DSN` environment variable, or `sentry.properties`. See the [configuration page](/platforms/java/configuration/) for details on external configuration.
 
-Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), to record breadcrumbs, set the current user, or manually send events, for example.
+### Capture Handled Exceptions
 
-By default, only unhandled exceptions are sent to Sentry. This behavior can be tuned through configuring the `exceptionResolverOrder` property. For example, setting it to `Ordered#HIGHEST_PRECEDENCE` ensures exceptions that have been handled by exception resolvers with higher order are sent to Sentry - including ones handled by `@ExceptionHandler` annotated methods.
+By default, only unhandled exceptions are sent to Sentry. You can tune this behavior by configuring the `exceptionResolverOrder` property. For example, setting it to `Ordered#HIGHEST_PRECEDENCE` ensures exceptions that have been handled by exception resolvers with higher order are sent to Sentry – including ones handled by `@ExceptionHandler` annotated methods.
 
 
 ```java {tabTitle:Java (Spring 5)} {mdExpandTabs}
@@ -160,23 +173,4 @@ import org.springframework.core.Ordered
   exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
 )
 class SentryConfiguration
-```
-
-
-The SDK can be configured using a `sentry.properties` file:
-
-```properties {filename:sentry.properties}
-// ___PRODUCT_OPTION_START___ performance
-# Enable tracing
-traces-sample-rate=1.0
-// ___PRODUCT_OPTION_END___ performance
-// ___PRODUCT_OPTION_START___ profiling
-# Enable profiling
-profile-session-sample-rate=1.0
-profile-lifecycle=TRACE
-// ___PRODUCT_OPTION_END___ profiling
-// ___PRODUCT_OPTION_START___ logs
-# Enable logs
-logs.enabled=true
-// ___PRODUCT_OPTION_END___ logs
 ```
