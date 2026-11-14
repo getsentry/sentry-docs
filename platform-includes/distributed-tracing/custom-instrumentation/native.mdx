@@ -74,3 +74,20 @@ To create a transaction as a continuation of a trace retrieved from an upstream 
 ```
 
 The format of the `sentry-trace` header should follow the one defined in [the telemetry docs](https://develop.sentry.dev/sdk/telemetry/traces/#header-sentry-trace). It should consist of a 32 character hexadecimal string for the `traceId`, followed by a 16 character hexadecimal string for the `spanId` and an optional single character for the `sampled` flag. If the given string doesn't match this format, the update is ignored and the values in the transaction context will remain unchanged.
+
+## Propagating a Trace Without a Transaction
+
+<AvailableSince version="1.0.0" />
+
+An application that forwards work between services doesn't need a transaction to stay on the same trace. To continue an incoming trace, pass the `sentry-trace` and `baggage` headers to `sentry_continue_trace()`. Either header may be `NULL`. Events and transactions captured afterwards continue the trace and inherit its sampling decision, and transactions no longer act as automatic trace boundaries. If the headers carry no valid trace, or [strict trace continuation](/platforms/native/configuration/options/#strict_trace_continuation) rejects it, the SDK starts a new trace instead.
+
+To pass the trace on, use `sentry_iter_trace_propagation_headers()`. It iterates the headers of the span or transaction bound to the scope, if there is one, and otherwise those of the current trace. Without a span, the `sentry-trace` header only carries a sampling decision inherited with `sentry_continue_trace()`.
+
+```c
+sentry_continue_trace(incoming_sentry_trace, incoming_baggage);
+
+sentry_value_t headers = sentry_value_new_object();
+sentry_iter_trace_propagation_headers(copy_headers_to, (void *) &headers);
+```
+
+To keep the trace on a [scope you create](/platforms/native/enriching-events/scopes/#creating-a-scope), use `sentry_scope_continue_trace()`, `sentry_scope_set_trace()`, and `sentry_scope_iter_trace_propagation_headers()`.
