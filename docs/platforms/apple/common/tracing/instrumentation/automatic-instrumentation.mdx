@@ -519,6 +519,52 @@ The detail view of the transaction displays the slow, frozen, and total frames:
 
 Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/dashboards/sentry-dashboards/mobile/mobile-vitals/).
 
+### Tracking Frames Without Waking Up Your App
+
+<Alert>
+
+This feature is experimental and available since [version 9.35.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#9350) on iOS 18, tvOS 18, and visionOS 2 and later.
+
+</Alert>
+
+By default, the SDK tracks frames with a [`CADisplayLink`][CADisplayLink], which calls into your app at the refresh rate of the display for as long as the app is active, even when nothing on screen changes. An app that's idle still wakes up for every frame.
+
+With `enableUIUpdateLinkFramesTracking` enabled, the SDK observes the main run loop to measure how long the main thread is busy, and uses a [`UIUpdateLink`][UIUpdateLink] to observe the UI updates UIKit performs anyway. An idle app stays idle. The SDK still reports slow and frozen frames, [frames delay](/product/dashboards/sentry-dashboards/mobile/mobile-vitals/#frames-delay), and [time to display](#time-to-initial-display), and the values are comparable to the default implementation: a frame counts as slow or frozen when one piece of work blocks the main thread for longer than the duration of a frame, and the total frame count assumes one frame for every refresh of the display outside of slow and frozen frames.
+
+To enable it:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.enableUIUpdateLinkFramesTracking = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableUIUpdateLinkFramesTracking = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.enableUIUpdateLinkFramesTracking = YES;
+}];
+```
+
+On older OS versions and on Mac Catalyst, the SDK keeps using a `CADisplayLink`. Configure this option before starting the SDK.
+
+[CADisplayLink]: https://developer.apple.com/documentation/quartzcore/cadisplaylink
+[UIUpdateLink]: https://developer.apple.com/documentation/uikit/uiupdatelink
+
 ## Network Tracking
 
 Network Tracking is enabled by default once you <PlatformLink to="/tracing/">set up tracing</PlatformLink>. The Sentry SDK adds spans for outgoing HTTP requests to ongoing transactions bound to the Scope. Currently, the SDK supports requests with [NSURLSession][NSURLSession], but not the legacy [NSURLConnection][NSURLConnection].
