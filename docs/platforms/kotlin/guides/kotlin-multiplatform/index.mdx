@@ -1,5 +1,6 @@
 ---
 title: Kotlin Multiplatform
+description: "Learn how to set up Sentry in your Kotlin Multiplatform application and capture your first events."
 caseStyle: camelCase
 supportLevel: production
 sdk: sentry.kotlin.kmp
@@ -13,36 +14,157 @@ keywords:
 
 <PlatformContent includePath="getting-started-primer" />
 
+<StepConnector selector="h2" showNumbers={true}>
+
 ## Install
 
 Sentry captures data by using an SDK within your application's runtime.
 
 <PlatformContent includePath="getting-started-install" />
 
+If you can't (or prefer not to) use the Gradle plugin, follow the <PlatformLink to="/manual-setup/">Manual Setup</PlatformLink> guide instead.
+
 ## Configure
 
-Configuration should happen as early as possible in your application's lifecycle.
+**Error Monitoring** starts working as soon as you call `Sentry.init()`, including native crash reporting. **ANR detection** (Android), **App Hang detection** (iOS, macOS, and tvOS), and **Release Health** (Android and Apple) are on by default. **Logs** are supported in Kotlin Multiplatform SDK `0.24.0` and later, and you'll learn how to send them in step [#3](#send-logs).
+This guide also enables **Session Replay**, which is available on Android and iOS only.
 
-<PlatformContent includePath="getting-started-config" />
+You can also collect **User Feedback** from your own UI with the `Sentry.captureUserFeedback()` API. Learn more in <PlatformLink to="/user-feedback/">Set Up User Feedback</PlatformLink>.
 
-## Verify
+### Initialize the SDK
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Create a shared initializer in your `commonMain` source set. Configuration should happen as early as possible in your application's lifecycle.
 
-<PlatformContent includePath="getting-started-verify" />
+The snippet also turns on:
 
-<Alert>
+- User IP and HTTP header collection: via <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii`</PlatformLink>. Review the data your app sends before enabling this in production.
+- Logs: via <PlatformLink to="/logs/">`logs.enabled`</PlatformLink>
+- Session Replay: via <PlatformLink to="/session-replay/#sampling">`sessionReplay.sessionSampleRate` and `sessionReplay.onErrorSampleRate`</PlatformLink>. Session Replay requires Kotlin Multiplatform SDK `0.12.0` or later and Android 8 (API level 26) or newer, and isn't supported for Compose Multiplatform UI.
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Don't need a feature? Remove its options from the snippet.
 
-</Alert>
+```kotlin {filename:commonMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+
+fun initializeSentry() {
+  Sentry.init { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/kotlin/guides/kotlin-multiplatform/data-management/data-collected/
+    options.sendDefaultPii = true
+
+    // Enables Logs
+    options.logs.enabled = true
+
+    // Enables Session Replay on Android and iOS.
+    // Capture replays for 10% of all sessions,
+    // plus for 100% of sessions with an error.
+    options.sessionReplay.sessionSampleRate = 0.1
+    options.sessionReplay.onErrorSampleRate = 1.0
+  }
+}
+```
+
+### Call the Initializer on Each Platform
+
+Call `initializeSentry()` at an early lifecycle stage of each app, so the SDK is set up before your code uses it. To initialize with native SDK options instead, see <PlatformLink to="/initialization-strategies/">Initialization Options</PlatformLink>.
+
+```kotlin {filename:MainActivity.kt}{tabTitle: androidApp} {mdExpandTabs}
+import your.kmp.app.initializeSentry
+
+class YourApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+      initializeSentry()
+   }
+}
+```
+
+```swift {tabTitle: iosApp}
+import shared
+
+func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+) -> Bool {
+    SentrySetupKt.initializeSentry()
+    return true
+}
+
+// OR if you're using SwiftUI:
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySetupKt.initializeSentry()
+    }
+}
+```
+
+## Send Logs
+
+Use `Sentry.logger` to send logs at different levels, such as `info`, `warn`, or `error`. You can pass any attributes you want and search or filter by them later. Logs require Kotlin Multiplatform SDK `0.24.0` or later and the `logs.enabled` option from the snippet above.
+
+If you initialize the SDK with native platform options, enable logs through the native SDK's configuration instead. Learn more in <PlatformLink to="/logs/#using-native-platform-options">Using Native Platform Options</PlatformLink>.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and the syntax for formatting messages.
+
+```kotlin
+import io.sentry.kotlin.multiplatform.Sentry
+
+Sentry.logger.info("Order created") { this["orderId"] = "order_456" }
+Sentry.logger.warn("Rate limit approaching") { this["current"] = 95; this["max"] = 100 }
+Sentry.logger.error("Payment failed") { this["reason"] = "card_declined" }
+```
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add the following function to your shared code and call it from your app. It captures an intentional error:
+
+```kotlin
+import io.sentry.kotlin.multiplatform.Sentry
+
+fun captureError() {
+  try {
+    throw Exception("This is a test.")
+  } catch (e: Exception) {
+    Sentry.captureException(e)
+  }
+}
+```
+
+### View Captured Data in Sentry
 
 To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
 
 ## Next Steps
 
+At this point, you should have integrated Sentry into your Kotlin Multiplatform application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/features/">Learn more about Sentry's Kotlin Multiplatform SDK features</PlatformLink>
-- <PlatformLink to="/initialization-strategies/">Learn about different ways to initialize the SDK</PlatformLink>
-- <PlatformLink to="/configuration/gradle/">See configuration options for the Kotlin Multiplatform Gradle Plugin</PlatformLink>
-- <PlatformLink to="/debug-symbols/">Add readable stack traces to your errors</PlatformLink>
+- <PlatformLink to="/usage/">
+    Learn how to manually capture errors and messages
+  </PlatformLink>
+- <PlatformLink to="/features/">
+    Learn more about Sentry's Kotlin Multiplatform SDK features
+  </PlatformLink>
+- <PlatformLink to="/initialization-strategies/">
+    Learn about different ways to initialize the SDK
+  </PlatformLink>
+- <PlatformLink to="/configuration/gradle/">
+    See configuration options for the Kotlin Multiplatform Gradle Plugin
+  </PlatformLink>
+- <PlatformLink to="/debug-symbols/">
+    Add readable stack traces to your errors
+  </PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>
