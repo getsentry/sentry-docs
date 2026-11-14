@@ -280,7 +280,23 @@ Either this or `traces_sample_rate` must be defined to enable tracing.
 
 <SdkOption name="ignore_transactions" type='string[]'>
 
-A list of strings that match transaction names that shouldn't be sent to Sentry.
+A list of strings that match transaction names that shouldn't be sent to Sentry. Entries wrapped in `/` delimiters are treated as regular expressions. All other entries must match the transaction name exactly.
+
+<PlatformSection supported={["php.laravel"]}>
+
+The `config/sentry.php` file published by the SDK ignores transactions for Laravel's default health check URL (`/up`) and for the Laravel Horizon, Laravel Telescope, and Laravel Debugbar routes:
+
+```php {filename:config/sentry.php}
+'ignore_transactions' => [
+    // Ignore Laravel's default health URL
+    '/up',
+
+    // Ignore the Laravel Horizon, Laravel Telescope and Laravel Debugbar routes
+    '/^\/(horizon|telescope|_debugbar)(\/|$)/',
+],
+```
+
+</PlatformSection>
 
 </SdkOption>
 
