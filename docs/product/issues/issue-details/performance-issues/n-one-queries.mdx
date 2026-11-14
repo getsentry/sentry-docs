@@ -24,6 +24,18 @@ You can configure detector thresholds for N+1 Queries issues in [**Project Setti
 
 ![N+1 Query detector threshold settings](./img/n-plus-one-queries-detector-settings.png)
 
+### Repeating Query Patterns (MN+1)
+
+Sentry also detects a variant where a loop runs a _sequence_ of several different queries on each pass, instead of the same query over and over. For example, each iteration might fetch a row from one table and then a related row from another. These problems show up as regular N+1 Query issues. The detector uses these criteria:
+
+- A sequence of up to eight spans must repeat back to back at least three times
+- The sequence must contain at least one database query with a full description (not truncated with an ellipsis), and its spans can't all be the same query
+- Total duration of the repeating spans must be at least the duration threshold used for N+1 Queries (`50ms` by default)
+- Database query spans must account for at least 5% of that duration
+- All repeating spans must share a parent span within three levels of the trace
+
+Database connection spans don't count toward either query check, and Redis spans don't count as the required full-description query. Turning off N+1 Query detection for a project also turns off this check.
+
 ## Span Evidence
 
 The evidence for an N+1 Queries problem has four main aspects:
