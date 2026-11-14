@@ -240,15 +240,15 @@ config.enabled_environments = %w[production]
 
 </SdkOption>
 
-<SdkOption name="excluded_exceptions" type="Array" defaultValue="Sentry::Configuration::IGNORE_DEFAULT">
+<SdkOption name="excluded_exceptions" type="Array" defaultValue="Sentry::Configuration::IGNORE_DEFAULT + Sentry::Configuration::PUMA_IGNORE_DEFAULT">
 
-You can use this option to stop getting notifications about certain exceptions. In the example below, the exceptions Rails uses to generate 404 responses will be suppressed.
+You can use this option to stop getting notifications about certain exceptions. In the example below, `MyApp::IgnorableError` will be suppressed.
 
 ```ruby
-config.excluded_exceptions += ['ActionController::RoutingError', 'ActiveRecord::RecordNotFound']
+config.excluded_exceptions += ['MyApp::IgnorableError']
 ```
 
-You can find the list of exceptions that are excluded by default in `Sentry::Configuration::IGNORE_DEFAULT`. It is suggested that you append to these defaults rather than overwrite them with `=`.
+You can find the list of exceptions that are excluded by default in `Sentry::Configuration::IGNORE_DEFAULT` and `Sentry::Configuration::PUMA_IGNORE_DEFAULT`. Integrations add their own defaults too: `sentry-rails` excludes `Sentry::Rails::IGNORE_DEFAULT` (including `ActionController::RoutingError` and `ActiveRecord::RecordNotFound`), and `sentry-sidekiq` excludes `Sentry::Sidekiq::IGNORE_DEFAULT`. It is suggested that you append to these defaults rather than overwrite them with `=`.
 
 </SdkOption>
 
