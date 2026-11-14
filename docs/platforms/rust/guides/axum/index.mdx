@@ -1,20 +1,18 @@
 ---
 title: axum
-description: "Learn about monitoring your axum application with Sentry."
+description: "Learn how to set up Sentry in your axum application and capture your first events."
 ---
 
-The Sentry SDK offers a middleware for the [axum](https://github.com/tokio-rs/axum) framework that supports:
+The Sentry SDK offers middleware for the [axum](https://github.com/tokio-rs/axum) framework that supports:
 
 - Reporting errors and panics with the correct request correlation.
 - Starting a [transaction](/concepts/key-terms/tracing/) for each request-response cycle.
 
-The integration actually supports any crate based on [tower](https://github.com/tower-rs/tower), not just `axum`.
+The integration also supports any crate based on [tower](https://github.com/tower-rs/tower), not just `axum`.
 
 ## Install
 
-<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
-
-To add Sentry with the `axum` integration to your Rust project, add a new dependency to your `Cargo.toml`:
+Add Sentry with the `axum` integration to your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
 [dependencies]
@@ -26,14 +24,11 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 ## Configure
 
-Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
-Then, initialize `axum` with the Sentry middleware.
-
-This snippet sets up a service that always panics, so you can test that everything is working as soon as you set it up.
+Initialize the Sentry client, then add the Sentry middleware to your axum app. The example route panics so you can verify the setup in the next step.
 
 <Alert level="warning">
 
-Macros like `#[tokio::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+Macros like `#[tokio::main]` are not supported. Initialize the Sentry client before starting the async runtime, as shown below.
 
 </Alert>
 
@@ -43,8 +38,8 @@ use sentry::integrations::tower::{NewSentryLayer, SentryHttpLayer};
 use std::io;
 use tower::ServiceBuilder;
 
-async fn failing() -> () {
-    panic!("Everything is on fire!")
+async fn failing() {
+    panic!("Everything is on fire!");
 }
 
 fn main() -> io::Result<()> {
@@ -52,22 +47,21 @@ fn main() -> io::Result<()> {
         sentry::ClientOptions::new()
             .dsn("___PUBLIC_DSN___")
             .maybe_release(sentry::release_name!())
-            # ___PRODUCT_OPTION_START___ performance
-            // Capture all traces and spans. Set to a lower value in production
+            // Enable tracing and capture all traces and spans.
+            // Reduce this sample rate in production, or remove it to disable tracing.
             .traces_sample_rate(1.0)
-            # ___PRODUCT_OPTION_END___ performance
-            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
-            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+            // Capture user IPs and potentially sensitive headers when using HTTP server integrations.
+            // Review the data your app sends before enabling this option in production.
             .send_default_pii(true),
     );
 
     let app = Router::new().route("/", get(failing)).layer(
         ServiceBuilder::new()
-            .layer(NewSentryLayer::<Request<Body>>::new_from_top()) // Bind a new Hub per request, to ensure correct error <> request correlation
-            # ___PRODUCT_OPTION_START___ performance
-            .layer(SentryHttpLayer::new().enable_transaction()), // Start a transaction (Sentry root span) for each request
-            // If you're binding the layers directly on the `Router`, bind them in the opposite order, otherwise you might run into a memory leak
-            # ___PRODUCT_OPTION_END___ performance
+            // Bind a new Hub per request to associate errors with the correct request.
+            .layer(NewSentryLayer::<Request<Body>>::new_from_top())
+            // Start a transaction (Sentry root span) for each request.
+            // If binding layers directly to the Router, reverse their order to avoid a memory leak.
+            .layer(SentryHttpLayer::new().enable_transaction()),
     );
 
     tokio::runtime::Builder::new_multi_thread()
@@ -86,22 +80,19 @@ fn main() -> io::Result<()> {
 }
 ```
 
-## Verify
+## Verify Your Setup
 
-Send a request to the application. The panic will be captured by Sentry.
+Run the example above, then send a request to its failing route. The route panics, and Sentry captures the error.
 
 ```bash
 curl http://localhost:3001/
 ```
 
-<Alert>
-
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
-
-</Alert>
-
-To view and resolve the recorded panic, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded panic, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue.
 
 ## Next Steps
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup.
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>.
+- Instrument more operations with <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom tracing</PlatformLink>.
+- Add <PlatformLink to="/logs/">logs</PlatformLink> and <PlatformLink to="/metrics/">application metrics</PlatformLink> with manual instrumentation.
