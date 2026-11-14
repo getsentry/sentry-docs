@@ -7,6 +7,8 @@ For a quick reference, there is a [complete example](https://github.com/getsentr
 
 [Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/fasthttp) is also available.
 
+<StepConnector selector="h2" showNumbers={true}>
+
 ## Install
 
 ```bash
@@ -20,7 +22,7 @@ go get github.com/getsentry/sentry-go/fasthttp
 
 ### Initialize the Sentry SDK
 
-<PlatformContent includePath="getting-started-config" />
+<PlatformContent includePath="getting-started-config-quickstart" />
 
 ### Options
 
@@ -49,7 +51,7 @@ sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
 })
 ```
 
-## Verify
+### Set Up the Sentry Middleware
 
 ```go
 // Create an instance of sentryfasthttp
@@ -59,9 +61,6 @@ sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
 
 // After creating the instance, you can attach the handler as one of your middleware
 fastHTTPHandler := sentryHandler.Handle(func(ctx *fasthttp.RequestCtx) {
-	// capturing an error intentionally to simulate usage
-	sentry.CaptureMessage("It works!")
-	
 	ctx.SetStatusCode(fasthttp.StatusOK)
 })
 
@@ -73,7 +72,7 @@ if err := fasthttp.ListenAndServe(":3000", fastHTTPHandler); err != nil {
 }
 ```
 
-## Usage
+### Use Sentry in Your Application
 
 `sentryfasthttp` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
 You can access it by using the `sentryfasthttp.GetHubFromContext()` method on the context itself in any of your proceeding middleware and routes.
@@ -129,7 +128,7 @@ if err := fasthttp.ListenAndServe(":3000", sentryHandler.Handle(fastHTTPHandler)
 }
 ```
 
-### Accessing Context in `BeforeSend` callback
+#### Accessing Context in `BeforeSend` callback
 
 ```go
 sentry.Init(sentry.ClientOptions{
@@ -146,6 +145,17 @@ sentry.Init(sentry.ClientOptions{
 })
 ```
 
+<PlatformContent includePath="getting-started-send-logs" />
+
+<PlatformContent includePath="getting-started-send-metrics" />
+
+<PlatformContent includePath="getting-started-verify-quickstart" />
+
 ## Next Steps
 
+At this point, you've integrated Sentry into your Go application. Here's what to explore next:
+
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Set up [Source Context](/platforms/go/source-context/) for readable stack traces
+
+</StepConnector>
