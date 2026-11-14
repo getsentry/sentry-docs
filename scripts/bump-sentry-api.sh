@@ -3,25 +3,50 @@
 # release, then open and merge a PR for it.
 #
 # Environment:
-#   GITHUB_TOKEN  A token that can push branches and merge PRs. A GitHub App
-#                 token, unlike github.token, also starts CI on the new PR.
+#   GITHUB_TOKEN       A token that can push branches and merge PRs. A GitHub
+#                      App token, unlike github.token, also starts CI on the
+#                      new PR.
+#   GITHUB_EVENT_NAME  Set by GitHub Actions. getsentry/sentry dispatches this
+#                      workflow right after it publishes a release, and npm can
+#                      take a few minutes to serve it, so a dispatched run
+#                      waits for a new version before it gives up.
 set -eu
 
 package=@sentry/api
+# A dispatched run checks npm up to this many times, this many seconds apart.
+dispatch_attempts=20
+dispatch_delay=30
 
-latest=$(timeout 60 npm view "$package" version)
-case $latest in
-  '' | *[!0-9.]*)
-    echo "::error::Expected a release version of $package from npm, got: $latest"
-    exit 1
-    ;;
-esac
+latest_version() {
+  version=$(timeout 60 npm view "$package" version) || return 1
+  case $version in
+    '' | *[!0-9.]*)
+      echo "::error::Expected a release version of $package from npm, got: $version" >&2
+      return 1
+      ;;
+  esac
+  printf '%s\n' "$version"
+}
 
 current=$(node -p 'require("./package.json").dependencies[process.argv[1]]' "$package")
-if [ "$current" = "$latest" ]; then
-  echo "$package is already $latest, skipping."
-  exit 0
+attempts=1
+if [ "${GITHUB_EVENT_NAME:-}" = workflow_dispatch ]; then
+  attempts=$dispatch_attempts
 fi
+attempt=1
+while :; do
+  latest=$(latest_version)
+  if [ "$current" != "$latest" ]; then
+    break
+  fi
+  if [ "$attempt" -ge "$attempts" ]; then
+    echo "$package is already $latest, skipping."
+    exit 0
+  fi
+  echo "npm still has $package $latest; checking again in ${dispatch_delay}s ($attempt of $attempts)."
+  attempt=$((attempt + 1))
+  sleep "$dispatch_delay"
+done
 echo "Bumping $package from $current to $latest"
 
 timeout 600 pnpm add --save-exact --lockfile-only "$package@$latest"
