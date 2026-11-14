@@ -2,7 +2,7 @@
 title: Hooks
 description: Client lifecycle hooks, the on/emit subscription system, user-facing callbacks like before_send and the samplers, and how SDKs isolate errors raised inside them.
 spec_id: sdk/foundations/client/hooks
-spec_version: 1.1.0
+spec_version: 1.1.1
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/telemetry/client-reports
     version: ">=1.24.0"
 spec_changelog:
+  - version: 1.1.1
+    date: 2026-10-14
+    summary: Replaced the strict mode requirement to skip the failed callback with a requirement to prevent error loops between failing callbacks and uncaught exception handlers
   - version: 1.1.0
     date: 2026-08-31
     summary: Added callback error isolation requirements, the per-callback failure matrix, and the `callback_error` client report for dropped items; widened scope to all user-provided callbacks
@@ -122,7 +125,7 @@ When a user-provided callback fails due to a recoverable error, SDKs:
   - **SHOULD** drop the data passed to the callback. For callbacks that do not support dropping data (e.g. `before_send_span`), SDKs **SHOULD** instead send the data to Sentry unchanged.
   - **SHOULD** record a client report with reason `callback_error` for all data dropped as a result of the callback error.
 
-SDKs **MAY** offer an opt-in strict mode, disabled by default. In strict mode, a callback failure **MUST** propagate as an unhandled error of the host application instead of being isolated. SDKs **MUST NOT** pass the event reporting that error through the callback that failed. If any callback fails while processing that event, or data the SDK creates while reporting it (such as breadcrumbs), SDKs **MUST** isolate that failure instead of propagating it.
+SDKs **MAY** offer an opt-in strict mode, disabled by default. In strict mode, a callback failure **MUST** propagate as an unhandled error of the host application instead of being isolated. SDKs **MUST** prevent error loops caused by a failing callback and an uncaught exception handler, for example when the handler captures the propagated error and the resulting event fails the same callback again.
 
 </SpecSection>
 
