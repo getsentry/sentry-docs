@@ -617,6 +617,18 @@ Propagation over `stub.fetch()` and service binding `fetch()` uses HTTP headers,
 
 </SdkOption>
 
+<SdkOption name="queueTracePropagationBindings" type='Array<string | RegExp>' defaultValue='[]' availableSince='11.12.0'>
+
+Controls which [Queue](https://developers.cloudflare.com/queues/) producer bindings on `env` add tracing data to the messages they send. Queues have no message headers, so the SDK adds the producer's `sentry-trace` value to plain-object message bodies under a `__sentry_queue_trace__` field. Arrays, binary data, and other values that aren't plain objects are sent unchanged.
+
+String entries must match a binding name exactly, so `"JOBS"` matches `"JOBS"` but not `"MY_JOBS"`. Use a regular expression for pattern matching. Both match case-insensitively.
+
+This option controls the producer side only, and it's disabled by default. Sentry-instrumented consumers always remove the field before your queue handler runs and link their `queue.process` span to every producer in the batch, without configuring this option.
+
+Only list bindings whose consumer runs Sentry. Anywhere else the field stays in the message body your consumer receives. The field also adds about 80 bytes to each message, so a message close to the Cloudflare limit of 128 KB can fail to send. See <PlatformLink to="/tracing/distributed-tracing/#queue-trace-propagation">Queue Trace Propagation</PlatformLink>.
+
+</SdkOption>
+
 <SdkOption name="isStreamingResponse" type='(response: Response, request: Request) => boolean | undefined' availableSince='11.9.0'>
 
 Overrides whether Sentry treats a `fetch` response as streaming. Use this if your application streams responses, such as HTML rendered with streaming SSR, that Sentry doesn't detect automatically.
