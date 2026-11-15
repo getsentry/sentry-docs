@@ -46,10 +46,11 @@ sentry_sdk.metrics.count("checkout.failed", 1, attributes={
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Metrics.Counter("checkout.failed")
-    .Tag("user_tier", "premium")
-    .Tag("failure_reason", "payment_declined")
-    .Increment();
+SentrySdk.Metrics.EmitCounter("checkout.failed", 1, new Dictionary<string, object>
+{
+    ["user_tier"] = "premium",
+    ["failure_reason"] = "payment_declined",
+});
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -121,15 +122,17 @@ sentry_sdk.metrics.count("checkout.failed", 1, attributes={
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Metrics.Counter("checkout.completed")
-    .Tag("user_tier", "premium")
-    .Tag("payment_method", "card")
-    .Increment();
+SentrySdk.Metrics.EmitCounter("checkout.completed", 1, new Dictionary<string, object>
+{
+    ["user_tier"] = "premium",
+    ["payment_method"] = "card",
+});
 
-SentrySdk.Metrics.Counter("checkout.failed")
-    .Tag("user_tier", "premium")
-    .Tag("failure_reason", "payment_declined")
-    .Increment();
+SentrySdk.Metrics.EmitCounter("checkout.failed", 1, new Dictionary<string, object>
+{
+    ["user_tier"] = "premium",
+    ["failure_reason"] = "payment_declined",
+});
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -229,20 +232,23 @@ sentry_sdk.metrics.count("job.processed", 1, attributes={
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Metrics.Counter("email.sent")
-    .Tag("email_type", "welcome")
-    .Tag("provider", "sendgrid")
-    .Increment();
+SentrySdk.Metrics.EmitCounter("email.sent", 1, new Dictionary<string, object>
+{
+    ["email_type"] = "welcome",
+    ["provider"] = "sendgrid",
+});
 
-SentrySdk.Metrics.Counter("email.failed")
-    .Tag("email_type", "welcome")
-    .Tag("error", "rate_limited")
-    .Increment();
+SentrySdk.Metrics.EmitCounter("email.failed", 1, new Dictionary<string, object>
+{
+    ["email_type"] = "welcome",
+    ["error"] = "rate_limited",
+});
 
-SentrySdk.Metrics.Counter("job.processed")
-    .Tag("job_type", "invoice-generation")
-    .Tag("queue", "billing")
-    .Increment();
+SentrySdk.Metrics.EmitCounter("job.processed", 1, new Dictionary<string, object>
+{
+    ["job_type"] = "invoice-generation",
+    ["queue"] = "billing",
+});
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -341,13 +347,15 @@ use \Sentry\Metrics\Unit;
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Metrics.Gauge("queue.depth")
-    .Tag("queue_name", "notifications")
-    .Set(queue.Size);
+SentrySdk.Metrics.EmitGauge("queue.depth", queue.Size, MeasurementUnit.None, new Dictionary<string, object>
+{
+    ["queue_name"] = "notifications",
+});
 
-SentrySdk.Metrics.Gauge("pool.connections_active")
-    .Tag("pool_name", "postgres-primary")
-    .Set(pool.ActiveConnections);
+SentrySdk.Metrics.EmitGauge("pool.connections_active", pool.ActiveConnections, MeasurementUnit.None, new Dictionary<string, object>
+{
+    ["pool_name"] = "postgres-primary",
+});
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -436,15 +444,17 @@ use \Sentry\Metrics\Unit;
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Metrics.Distribution("api.latency", responseTimeMs,
-    unit: MeasurementUnit.Duration.Millisecond)
-    .Tag("endpoint", "/api/orders")
-    .Tag("method", "POST");
+SentrySdk.Metrics.EmitDistribution("api.latency", responseTimeMs, MeasurementUnit.Duration.Millisecond, new Dictionary<string, object>
+{
+    ["endpoint"] = "/api/orders",
+    ["method"] = "POST",
+});
 
-SentrySdk.Metrics.Distribution("db.query_time", queryDurationMs,
-    unit: MeasurementUnit.Duration.Millisecond)
-    .Tag("table", "orders")
-    .Tag("operation", "select");
+SentrySdk.Metrics.EmitDistribution("db.query_time", queryDurationMs, MeasurementUnit.Duration.Millisecond, new Dictionary<string, object>
+{
+    ["table"] = "orders",
+    ["operation"] = "select",
+});
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -543,15 +553,17 @@ use \Sentry\Metrics\Unit;
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Metrics.Distribution("order.amount", order.TotalUsd,
-    unit: MeasurementUnit.Custom("usd"))
-    .Tag("user_tier", "premium")
-    .Tag("region", "us-west");
+SentrySdk.Metrics.EmitDistribution("order.amount", (double)order.TotalUsd, MeasurementUnit.Custom("usd"), new Dictionary<string, object>
+{
+    ["user_tier"] = "premium",
+    ["region"] = "us-west",
+});
 
-SentrySdk.Metrics.Distribution("upload.size", fileSizeBytes,
-    unit: MeasurementUnit.Information.Byte)
-    .Tag("file_type", "image")
-    .Tag("source", "profile-update");
+SentrySdk.Metrics.EmitDistribution("upload.size", fileSizeBytes, MeasurementUnit.Information.Byte, new Dictionary<string, object>
+{
+    ["file_type"] = "image",
+    ["source"] = "profile-update",
+});
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -637,4 +649,3 @@ You can also [create dashboards with an AI coding agent](https://sentry.io/cookb
 All three are trace-connected. Start wherever makes sense and navigate to the others.
 
 Explore the [Application Metrics product walkthrough](/product/metrics/) to learn more about the Sentry interface and discover additional tips.
-
