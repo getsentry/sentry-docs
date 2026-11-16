@@ -1063,6 +1063,11 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/remix/cloudflare/',
   },
   {
+    // The React Router quick starts for other runtimes became manual setups.
+    source: '/platforms/javascript/guides/react-router/:runtime(bun|cloudflare|deno)/',
+    destination: '/platforms/javascript/guides/react-router/manual-setup/:runtime/',
+  },
+  {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
     destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },

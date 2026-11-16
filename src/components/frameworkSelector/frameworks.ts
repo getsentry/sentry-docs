@@ -114,7 +114,7 @@ export const RUNTIMES: Record<string, Runtime> = {
     frameworkGuides: [
       guide('Elysia', 'elysia'),
       guide('Hono', 'hono'),
-      guide('React Router', 'react-router/bun'),
+      guide('React Router', 'react-router/manual-setup/bun'),
     ],
     agentGuides: [guide('Pi Durable', 'pi-durable/bun')],
     includePaths: ['getting-started-verify-issues-tracing'],
@@ -122,7 +122,10 @@ export const RUNTIMES: Record<string, Runtime> = {
   deno: {
     title: 'Deno',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Hono', 'hono'), guide('React Router', 'react-router/deno')],
+    frameworkGuides: [
+      guide('Hono', 'hono'),
+      guide('React Router', 'react-router/manual-setup/deno'),
+    ],
     agentGuides: [guide('Pi Durable', 'pi-durable/deno')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
@@ -135,7 +138,7 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
-      guide('React Router', 'react-router/cloudflare'),
+      guide('React Router', 'react-router/manual-setup/cloudflare'),
       guide('Remix', 'remix/cloudflare'),
       guide('SvelteKit', 'sveltekit/cloudflare'),
       guide('TanStack Start', 'tanstackstart-react/cloudflare'),
