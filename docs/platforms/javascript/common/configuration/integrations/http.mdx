@@ -63,7 +63,7 @@ Note that even with the `'always'` setting, bodies exceeding 1 MB will never be 
 
 ### `ignoreRequestBody`
 
-_Type: `(url: string, request: RequestOptions) => boolean`_
+_Type: `(url: string, request: IncomingMessage) => boolean`_
 
 Allows you to ignore the request body for incoming HTTP requests to URLs where the given callback returns `true`.
 This can be useful for long running requests where the body is not needed and we want to avoid capturing it.
@@ -71,7 +71,7 @@ This can be useful for long running requests where the body is not needed and we
 The callback function receives two arguments:
 
 - `url`: The full URL of the incoming request, including the protocol, host, port, path and query string. For example: `https://example.com/users?name=John`.
-- `request`: An object of type `RequestOptions` containing the incoming request's options. You can use this to filter on properties like the request method or headers.
+- `request`: An object of type `IncomingMessage` containing the incoming request. You can use this to filter on properties like the request method or headers.
 
 ### `tracePropagation`
 
@@ -152,6 +152,22 @@ A hook that's called after a span is created for an incoming request, before it'
 Sentry.httpIntegration({
   onSpanCreated: (span, request, response) => {
     span.setAttribute("custom", true);
+  },
+});
+```
+
+### `onSpanEnd`
+
+<AvailableSince version="11.10.0" />
+
+_Type: `(span: Span, request: IncomingMessage, response: ServerResponse) => void`_
+
+A hook that's called when the response for an incoming request finishes. It runs after the SDK sets the response status on the span, and before the span ends. Use this to change the span based on the response.
+
+```javascript
+Sentry.httpIntegration({
+  onSpanEnd: (span, request, response) => {
+    span.setAttribute("cache_hit", response.getHeader("x-cache") === "HIT");
   },
 });
 ```
