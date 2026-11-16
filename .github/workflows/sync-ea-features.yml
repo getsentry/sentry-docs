@@ -12,14 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     name: 'Sync EA Features from Flagpole'
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
       - name: Get auth token
         id: token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
         with:
           app-id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
           private-key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+          # Without owner/repositories the token only covers this repo,
+          # so cloning the private sentry-options-automator repo fails.
+          owner: getsentry
+          repositories: sentry-docs,sentry-options-automator
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Push the sync branch as the app so the PR triggers CI.
+          token: ${{ steps.token.outputs.token }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
