@@ -34,6 +34,21 @@ You can resolve this issue by creating a clean build or choosing "Replace" when 
 
 This happens if you've copied some of the SDK files directly to the Assets folder. You can resolve this issue by installing the SDK with UPM.
 
+## Debug Symbol Upload
+
+If stack traces in Sentry are missing function names or line numbers, check the output of the debug symbol upload. The [Debug Symbols table](/platforms/unity/native-support/#debug-symbols) lists where the upload runs on each platform and where to find its log.
+
+If the upload doesn't run at all, check that:
+
+- Sentry is enabled and the DSN is set. Desktop and console builds skip the upload otherwise, and Android builds skip it if Sentry is disabled.
+- **Upload Symbols** is enabled on the **Debug Symbols** tab in **Tools > Sentry**.
+- The **Auth Token** and **Project Name** are set.
+- For development builds, **Upload Dev Symbols** is enabled.
+
+If the upload runs but fails, check that the **Org Slug** is set, unless the auth token is an organization token.
+
+If you enable **Ignore CLI Errors**, the SDK passes `--allow-failure` to `sentry-cli`, so upload errors don't fail the build. Check the log to make sure the upload worked. On iOS, `sentry-symbols-upload.log` then only contains what `sentry-cli` writes to stderr, and the rest of the upload output is in the Xcode build output, so check both.
+
 ## Runtime issues
 
 ### Android: Initialization fails - APK+OBB
