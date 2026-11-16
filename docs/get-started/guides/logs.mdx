@@ -26,7 +26,7 @@ sentry_sdk.logger.<level>(message, attribute=value)
 
 ```csharp {tabTitle: .NET}
 using Sentry;
-SentrySdk.Logger.<Level>(message);
+SentrySdk.Logger.Log<Level>(message);
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -48,7 +48,7 @@ import io.sentry.Sentry
 Sentry.logger().<level>(message)
 ```
 
-**Levels:** `trace`, `debug`, `info`, `warn` (or `warning` in Python), `error`, `fatal`
+**Levels:** `trace`, `debug`, `info`, `warn` (or `warning` in Python and .NET), `error`, `fatal`
 
 **Attributes:** Key-value pairs you can search and filter on. Consistency matters, so use whatever naming convention fits your codebase.
 
@@ -82,11 +82,13 @@ sentry_sdk.logger.info("Order completed",
 ```csharp {tabTitle: .NET}
 using Sentry;
 
-SentrySdk.Logger.Info("Order completed", logger => logger
-    .SetAttribute("orderId", "order_123")
-    .SetAttribute("userId", user.Id)
-    .SetAttribute("amount", 149.99)
-    .SetAttribute("paymentMethod", "stripe"));
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("orderId", "order_123");
+    log.SetAttribute("userId", user.Id);
+    log.SetAttribute("amount", 149.99);
+    log.SetAttribute("paymentMethod", "stripe");
+}, "Order completed");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -187,16 +189,20 @@ sentry_sdk.logger.warning("Login failed",
 
 ```csharp {tabTitle: .NET}
 // After successful authentication
-SentrySdk.Logger.Info("User logged in", logger => logger
-    .SetAttribute("userId", user.Id)
-    .SetAttribute("authMethod", "oauth")
-    .SetAttribute("provider", "google"));
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("userId", user.Id);
+    log.SetAttribute("authMethod", "oauth");
+    log.SetAttribute("provider", "google");
+}, "User logged in");
 
 // After authentication fails
-SentrySdk.Logger.Warning("Login failed", logger => logger
-    .SetAttribute("email", maskedEmail)
-    .SetAttribute("reason", "invalid_password")
-    .SetAttribute("attemptCount", 3));
+SentrySdk.Logger.LogWarning(log =>
+{
+    log.SetAttribute("email", maskedEmail);
+    log.SetAttribute("reason", "invalid_password");
+    log.SetAttribute("attemptCount", 3);
+}, "Login failed");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -306,12 +312,14 @@ sentry_sdk.logger.error("Payment failed",
 
 ```csharp {tabTitle: .NET}
 // After payment gateway returns an error
-SentrySdk.Logger.Error("Payment failed", logger => logger
-    .SetAttribute("orderId", "order_123")
-    .SetAttribute("amount", 99.99)
-    .SetAttribute("gateway", "stripe")
-    .SetAttribute("errorCode", "card_declined")
-    .SetAttribute("cartItems", 3));
+SentrySdk.Logger.LogError(log =>
+{
+    log.SetAttribute("orderId", "order_123");
+    log.SetAttribute("amount", 99.99);
+    log.SetAttribute("gateway", "stripe");
+    log.SetAttribute("errorCode", "card_declined");
+    log.SetAttribute("cartItems", 3);
+}, "Payment failed");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -435,17 +443,21 @@ $response = $shippingApi->getRates($items);
 var stopwatch = Stopwatch.StartNew();
 var response = await shippingApi.GetRatesAsync(items);
 
-SentrySdk.Logger.Info("Shipping rates fetched", logger => logger
-    .SetAttribute("service", "shipping-provider")
-    .SetAttribute("endpoint", "/rates")
-    .SetAttribute("durationMs", stopwatch.ElapsedMilliseconds)
-    .SetAttribute("rateCount", response.Rates.Count));
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("service", "shipping-provider");
+    log.SetAttribute("endpoint", "/rates");
+    log.SetAttribute("durationMs", stopwatch.ElapsedMilliseconds);
+    log.SetAttribute("rateCount", response.Rates.Count);
+}, "Shipping rates fetched");
 
 // Webhook received
-SentrySdk.Logger.Info("Webhook received", logger => logger
-    .SetAttribute("source", "stripe")
-    .SetAttribute("eventType", "payment_intent.succeeded")
-    .SetAttribute("paymentId", eventData.Object.Id));
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("source", "stripe");
+    log.SetAttribute("eventType", "payment_intent.succeeded");
+    log.SetAttribute("paymentId", eventData.Object.Id);
+}, "Webhook received");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -587,16 +599,20 @@ sentry_sdk.logger.error("Job failed",
 
 ```csharp {tabTitle: .NET}
 // Inside background job handler
-SentrySdk.Logger.Info("Job started", logger => logger
-    .SetAttribute("jobType", "email-digest")
-    .SetAttribute("jobId", "job_456")
-    .SetAttribute("queue", "notifications"));
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("jobType", "email-digest");
+    log.SetAttribute("jobId", "job_456");
+    log.SetAttribute("queue", "notifications");
+}, "Job started");
 
-SentrySdk.Logger.Error("Job failed", logger => logger
-    .SetAttribute("jobType", "email-digest")
-    .SetAttribute("jobId", "job_456")
-    .SetAttribute("retryCount", 3)
-    .SetAttribute("lastError", "SMTP timeout"));
+SentrySdk.Logger.LogError(log =>
+{
+    log.SetAttribute("jobType", "email-digest");
+    log.SetAttribute("jobId", "job_456");
+    log.SetAttribute("retryCount", 3);
+    log.SetAttribute("lastError", "SMTP timeout");
+}, "Job failed");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -716,14 +732,18 @@ sentry_sdk.logger.warning("Config reloaded",
 
 ```csharp {tabTitle: .NET}
 // When feature flag is checked or config changes
-SentrySdk.Logger.Info("Feature flag evaluated", logger => logger
-    .SetAttribute("flag", "new-checkout-flow")
-    .SetAttribute("enabled", true)
-    .SetAttribute("userId", user.Id));
+SentrySdk.Logger.LogInfo(log =>
+{
+    log.SetAttribute("flag", "new-checkout-flow");
+    log.SetAttribute("enabled", true);
+    log.SetAttribute("userId", user.Id);
+}, "Feature flag evaluated");
 
-SentrySdk.Logger.Warning("Config reloaded", logger => logger
-    .SetAttribute("reason", "env-change")
-    .SetAttribute("changedKeys", new[] { "API_TIMEOUT", "MAX_CONNECTIONS" }));
+SentrySdk.Logger.LogWarning(log =>
+{
+    log.SetAttribute("reason", "env-change");
+    log.SetAttribute("changedKeys", "API_TIMEOUT,MAX_CONNECTIONS");
+}, "Config reloaded");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -842,7 +862,6 @@ SentrySdk.Init(options =>
     options.Dsn = "...";
     options.Environment = "development";
     options.TracesSampleRate = 1.0;  // 100% of traces
-    options.EnableLogs = true;
 });
 ```
 
@@ -918,9 +937,9 @@ sentry_sdk.logger.error("Payment failed", reason="Insufficient Funds")
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Logger.Info("Checkout started", l => l.SetAttribute("userId", "882"));
-SentrySdk.Logger.Info("Discount applied", l => l.SetAttribute("code", "WINTER20"));
-SentrySdk.Logger.Error("Payment failed", l => l.SetAttribute("reason", "Insufficient Funds"));
+SentrySdk.Logger.LogInfo(log => log.SetAttribute("userId", "882"), "Checkout started");
+SentrySdk.Logger.LogInfo(log => log.SetAttribute("code", "WINTER20"), "Discount applied");
+SentrySdk.Logger.LogError(log => log.SetAttribute("reason", "Insufficient Funds"), "Payment failed");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -988,14 +1007,16 @@ sentry_sdk.logger.error("Checkout failed",
 ```
 
 ```csharp {tabTitle: .NET}
-SentrySdk.Logger.Error("Checkout failed", logger => logger
-    .SetAttribute("userId", "882")
-    .SetAttribute("orderId", "order_pc_991")
-    .SetAttribute("cartTotal", 142.50)
-    .SetAttribute("discountCode", "WINTER20")
-    .SetAttribute("paymentMethod", "stripe")
-    .SetAttribute("errorReason", "Insufficient Funds")
-    .SetAttribute("itemCount", 4));
+SentrySdk.Logger.LogError(log =>
+{
+    log.SetAttribute("userId", "882");
+    log.SetAttribute("orderId", "order_pc_991");
+    log.SetAttribute("cartTotal", 142.50);
+    log.SetAttribute("discountCode", "WINTER20");
+    log.SetAttribute("paymentMethod", "stripe");
+    log.SetAttribute("errorReason", "Insufficient Funds");
+    log.SetAttribute("itemCount", 4);
+}, "Checkout failed");
 ```
 
 ```ruby {tabTitle: Ruby}
@@ -1087,4 +1108,3 @@ To pipe Supabase infrastructure logs into Sentry and alert on them, see [Set up 
 ## Next Steps
 
 Explore the [Logs product walkthrough guides](/product/logs/) to learn more about the Sentry interface and discover additional tips.
-
