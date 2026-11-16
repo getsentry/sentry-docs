@@ -1046,25 +1046,35 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/nuxt/cloudflare/',
+    destination: '/platforms/javascript/guides/nuxt/manual-setup/cloudflare/',
   },
   // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
   {
-    source:
-      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
+    source: '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono)/',
     destination: '/platforms/javascript/guides/:framework/cloudflare/',
   },
   {
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(nextjs|nuxt|remix|sveltekit)/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
+  },
+  {
     source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
-    destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
+    destination:
+      '/platforms/javascript/guides/tanstackstart-react/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/',
-    destination: '/platforms/javascript/guides/remix/cloudflare/',
+    destination: '/platforms/javascript/guides/remix/manual-setup/cloudflare/',
+  },
+  // The quick starts for other runtimes became manual setups.
+  {
+    source:
+      '/platforms/javascript/guides/:framework(nextjs|nuxt|react-router|remix|sveltekit|tanstackstart-react)/cloudflare/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
   },
   {
-    // The React Router quick starts for other runtimes became manual setups.
-    source: '/platforms/javascript/guides/react-router/:runtime(bun|cloudflare|deno)/',
+    source: '/platforms/javascript/guides/react-router/:runtime(bun|deno)/',
     destination: '/platforms/javascript/guides/react-router/manual-setup/:runtime/',
   },
   {
@@ -1082,7 +1092,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
-    destination: '/platforms/javascript/guides/nextjs/cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
