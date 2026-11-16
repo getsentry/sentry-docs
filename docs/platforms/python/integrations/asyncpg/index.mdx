@@ -34,8 +34,8 @@ import asyncpg
 async def main():
     sentry_sdk.init(...)  # same as above
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         conn = await asyncpg.connect(DATABASE_URL)
         await conn.fetch("SELECT * FROM pg_catalog.pg_tables;")
         await conn.close()
@@ -43,7 +43,7 @@ async def main():
 asyncio.run(main())
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the `connect` and the `SELECT` operations.
+This will create a service span called `testing_sentry`, visible in the Traces section of [sentry.io](https://sentry.io), with child spans for the `connect` and the `SELECT` operations.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

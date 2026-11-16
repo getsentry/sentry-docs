@@ -27,7 +27,7 @@ Sentry's Boto3 integration is enabled automatically if you have the `boto3` pack
 
 ## Verify Your Setup
 
-To verify that Sentry captures your Boto3 requests to Amazon Web Services, add this code to your app, which will create a transaction called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section:
+To verify that Sentry captures your Boto3 requests to Amazon Web Services, add this code to your app, which will create a service span called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section:
 
 ```python
 import sentry_sdk
@@ -39,8 +39,8 @@ def main():
 
     s3 = boto3.resource('s3')
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         # make a request to the service and print out bucket names
         for bucket in s3.buckets.all():
             print(bucket.name)
