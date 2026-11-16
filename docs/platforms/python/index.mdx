@@ -92,7 +92,7 @@ asyncio.run(main())
 
 The Sentry SDK automatically enables integrations for <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">many popular libraries</PlatformLink>, so operations like HTTP requests or database queries made with supported libraries will be captured as spans automatically.
 
-However, spans are only created within an existing transaction. If you're not using a supported framework that creates transactions automatically, you'll need to create them manually using `sentry_sdk.start_transaction()`.
+In SDK versions prior to `3.0`, these spans are only created within an existing transaction. If you're not using a supported framework that starts transactions automatically, start one manually using `sentry_sdk.start_transaction()`.
 
 See <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink> for more info.
 
@@ -100,7 +100,7 @@ See <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom I
 import sentry_sdk
 
 def some_function():
-    with sentry_sdk.start_transaction(op="task", name="Test Transaction"):
+    with sentry_sdk.start_span(name="Test Span", attributes={"sentry.op": "task"}):
         ...
 ```
 
@@ -142,7 +142,8 @@ Run this code after `sentry_sdk.init()` to send a test error, along with a trace
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_transaction(op="test", name="Verify Sentry setup"):
+# In SDK 2.x, use sentry_sdk.start_transaction(op="test", name="Verify Sentry setup") instead
+with sentry_sdk.start_span(name="Verify Sentry setup", attributes={"sentry.op": "test"}):
     sentry_sdk.logger.info("Sentry verification log")
     sentry_sdk.metrics.count("sentry.verification", 1)
     1 / 0
