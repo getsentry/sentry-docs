@@ -15,7 +15,7 @@ With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can
 
 ## Supported Instrumentation
 
-As of SDK version `11.0.0`, Sentry auto-instruments the most popular AI SDKs and frameworks out of the box — you don't need to add their integrations yourself. Just enable <PlatformLink to="/tracing/">tracing</PlatformLink>, then pick your AI stack below. Each integration page has the details. To group multi-turn chats in Conversations, also [track conversations](#tracking-conversations) in the requests that make AI calls.
+As of SDK version `11.0.0`, Sentry auto-instruments the most popular AI SDKs and frameworks out of the box — you don't need to add their integrations yourself. Just enable <PlatformLink to="/tracing/">tracing</PlatformLink>, then pick your AI stack below. Each integration page has the details. To group multi-turn chats in Conversations, each chat needs a conversation ID. Some integrations set it for you, and others need you to set it. Check [Tracking Conversations](#tracking-conversations) for your integration.
 
 <IntegrationGrid
   integrations={[
@@ -130,13 +130,95 @@ Flue is the exception to this composition. Its blueprint owns the host and model
 
 ## Tracking Conversations
 
-[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Use `setConversationId()` so every AI span in a chat session shares the same `gen_ai.conversation.id`.
+[Conversations](/product/agents/conversations/) groups multi-turn AI activity into a single replay of messages and tool calls. Sentry groups spans by the `gen_ai.conversation.id` attribute. Each turn of a chat usually runs in its own request and trace, so without a conversation ID the turns can't be linked, and the chat doesn't appear in Conversations.
 
-Some integrations infer a conversation ID automatically. For everything else (including Workers AI), set it yourself at the start of **every request or operation that makes AI calls**, before those calls run. Reuse the same session ID across messages in the chat. The ID is applied to AI-related spans on the current isolation scope (which is typically request-scoped). Pass `null` to unset it.
+Some integrations set the conversation ID for you. Others only set it when your app passes a conversation or thread ID to the AI library, and the rest never set it. Check your integration in the table below. If it doesn't set an ID for your setup, [set it yourself](#set-the-conversation-id-yourself).
+
+### Integrations That Set the Conversation ID
+
+| Integration                                                                                                 | Sets the ID automatically?                                  | Where the ID comes from                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Cloudflare Agents SDK](/platforms/javascript/guides/cloudflare/agent-tracing/agents-sdk/#conversation-ids) | Yes                                                         | An ID that the SDK creates for each agent instance and stores in the Durable Object. Clearing the chat starts a new ID.                     |
+| [Eve](/platforms/javascript/guides/eve/#customize-conversation-grouping)                                    | Yes, with `eveInstrumentation()` or `eveConversationHook()` | The Eve session ID (`session.id`)                                                                                                           |
+| [Flue](/platforms/javascript/guides/flue/#link-conversations)                                               | Yes                                                         | The Flue conversation ID                                                                                                                    |
+| [Pi Durable](/platforms/javascript/guides/pi-durable/#link-conversations)                                   | Yes                                                         | The session ID that Pi Durable stores with each conversation. On Pi Durable versions earlier than `1.0.2`, `<harness id>:<conversation id>` |
+| [Mastra](/platforms/javascript/guides/mastra/#link-conversations)                                           | Only when you use memory threads                            | The `memory.thread` you pass when you call the agent                                                                                        |
+| <PlatformLink to="/configuration/integrations/langgraph/#conversation-ids">LangGraph</PlatformLink>         | Only when you pass a thread ID                              | `configurable.thread_id` in the invoke config                                                                                               |
+| <PlatformLink to="/configuration/integrations/langchain/#conversation-ids">LangChain</PlatformLink>         | Only when you pass a thread or session ID                   | `thread_id`, `session_id`, or `sessionId` in the `configurable` or `metadata` of the invoke config                                          |
+| <PlatformLink to="/configuration/integrations/openai/#conversation-ids">OpenAI</PlatformLink>               | Only with the Conversations API                             | The `conversation` request parameter (`conv_...`)                                                                                           |
+| <PlatformLink to="/configuration/integrations/vercelai/#conversation-ids">Vercel AI SDK</PlatformLink>      | Only with the OpenAI Conversations API                      | `providerOptions.openai.conversation` (or `providerOptions.azure.conversation`)                                                             |
+| <PlatformLink to="/configuration/integrations/anthropic/#conversation-ids">Anthropic</PlatformLink>         | Only for session tool runners                               | The session ID of `beta.sessions.events.toolRunner()`                                                                                       |
+| [Workers AI](/platforms/javascript/guides/cloudflare/agent-tracing/workers-ai/)                             | Only inside a Cloudflare Agents SDK agent                   | The agent's conversation ID                                                                                                                 |
+| Google Gen AI SDK, Mistral AI, Groq, Together AI, TypeSafe                                                  | No                                                          | You must call `setConversationId()`                                                                                                         |
+
+The LangChain and Vercel AI SDK rows require SDK version `11.5.0` or higher. The Pi Durable session ID requires `11.10.0` or higher, and the Anthropic row requires `11.12.0` or higher.
+
+The OpenAI integration doesn't use `previous_response_id` or response IDs, because they change on every turn. If you chain Responses API calls with `previous_response_id`, set the conversation ID yourself.
+
+For LangChain, LangGraph, OpenAI, the Vercel AI SDK, Anthropic, and the Cloudflare Agents SDK, an ID you set with `setConversationId()` replaces the inferred one. Eve, Flue, Mastra, and Pi Durable set the ID from the framework on every turn. To change it there, change the framework's ID (for example the Mastra thread, or `getConversationId` for Eve) instead of calling `setConversationId()`.
+
+### Set the Conversation ID Yourself
+
+Call `setConversationId()` when:
+
+- Your integration's row says **No**.
+- Your integration only sets the ID in some cases, and your app doesn't use that case (for example, OpenAI Chat Completions or Vercel AI SDK calls without a `conversation` option).
+- One agent instance or thread serves several chats, so the inferred ID would group unrelated chats together.
+- You instrument AI calls yourself with <PlatformLink to="/agent-tracing/manual-instrumentation/">manual instrumentation</PlatformLink>.
+
+Follow these rules so every turn lands in the same conversation:
+
+- **Use your app's own chat ID.** Pick the ID your app already stores for the chat, such as a chat session ID, thread ID, or `conv_...` value, and reuse it for every turn. Use a short, opaque value, like a UUID. Don't use a user ID, room name, request ID, trace ID, or a response ID that changes per turn. A user ID groups all of that user's chats together. A per-turn ID splits every turn into its own conversation. See [Choosing a Conversation ID](/product/agents/conversations/#choosing-a-conversation-id).
+- **Set it on every request that makes AI calls.** The ID is stored on the isolation scope, which the SDK creates for each incoming request. It doesn't carry over to the next request, so set it again for every turn.
+- **Set it before the first AI call.** Sentry adds the ID to AI spans when they start. Spans that started before the call don't get it.
+- **Pass `null` to unset it.**
+
+Sentry adds the ID only to AI spans, whose `op` starts with `gen_ai.`. Other spans in the same request, like HTTP or database spans, don't get it.
+
+In a request handler, set the ID with the user before calling the model:
 
 ```javascript
-Sentry.setConversationId("conv_abc123");
+app.post("/api/chat", async (req, res) => {
+  const { chatId, message } = req.body;
+
+  // Same chatId for every message in this chat
+  Sentry.setConversationId(chatId);
+  Sentry.setUser({ id: req.user.id });
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: await loadHistory(chatId, message),
+  });
+
+  res.json({ reply: response.choices[0].message.content });
+});
 ```
+
+Code that doesn't run inside an incoming request, like a queue consumer or a cron job, can share one isolation scope across jobs. Wrap each job in `withIsolationScope()` so its ID doesn't leak into the next job:
+
+```javascript
+worker.process(async (job) => {
+  await Sentry.withIsolationScope(async () => {
+    Sentry.setConversationId(job.data.chatId);
+    await runAgent(job.data);
+  });
+});
+```
+
+If one request works on several conversations at once, set each ID on its own scope with `withScope()`. An ID on the current scope takes precedence over the one on the isolation scope:
+
+```javascript
+await Promise.all(
+  chats.map((chat) =>
+    Sentry.withScope(async (scope) => {
+      scope.setConversationId(chat.id);
+      await summarizeChat(chat);
+    })
+  )
+);
+```
+
+To check that the ID is set, open a trace in Sentry and select a `gen_ai` span. Its attributes should include `gen_ai.conversation.id` with your chat ID. After two or more turns, the chat appears as one row in [Conversations](/product/agents/conversations/).
 
 ### Identifying Users in Conversations
 
