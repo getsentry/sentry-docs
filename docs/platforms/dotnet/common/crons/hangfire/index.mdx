@@ -25,13 +25,17 @@ builder.Services.AddHangfire(configuration => configuration
 );
 ```
 
-For each monitored job, the SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.ERROR` instead.
+For each monitored job, the SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.Ok` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.Error` instead.
 
 ## Monitor All Recurring Jobs
 
 We recommend monitoring every recurring job. From SDK version 6.13.0, you can do this without adding the `SentryMonitorSlug` attribute to each one. Turn on `MonitorAllRecurringJobs`, and add any recurring jobs you don't want to monitor to `ExcludedRecurringJobs`, by their exact ID (case-sensitive) or with a regular expression:
 
 ```csharp
+using System.Text.RegularExpressions;
+using Hangfire;
+using Sentry.Hangfire;
+
 GlobalConfiguration.Configuration.UseSentry(options =>
 {
     options.MonitorAllRecurringJobs = true;
@@ -40,9 +44,9 @@ GlobalConfiguration.Configuration.UseSentry(options =>
 });
 ```
 
-The monitor slug is the recurring job ID, normalized the same way Sentry normalizes monitor slugs: lowercased, accents removed, spaces and dashes replaced by a single `-`, other characters dropped, and cut to 50 characters. For example, the recurring job `Reports: Nightly Run` reports to the monitor `reports-nightly-run`. Jobs with the `SentryMonitorSlug` attribute keep their slug and are monitored even if their ID is excluded.
+The monitor slug is the recurring job ID, normalized the same way Sentry normalizes monitor slugs: lowercased, accents removed, spaces and dashes replaced by a single `-`, other characters except `_` dropped, and cut to 50 characters. For example, the recurring job `Reports: Nightly Run` reports to the monitor `reports-nightly-run`, and `cache_warmup` to `cache_warmup`. Jobs with the `SentryMonitorSlug` attribute keep their slug and are monitored even if their ID is excluded.
 
-The schedule is sent as described in [Send the Recurring Job Schedule](#send-the-recurring-job-schedule). Recurring jobs whose schedule Sentry doesn't support aren't monitored, and neither are recurring jobs that end up with the same monitor slug as another job with a different schedule. Add the `SentryMonitorSlug` attribute to monitor them anyway, and set up their monitors in Sentry. Jobs that aren't recurring, such as `BackgroundJob.Enqueue`, still need the attribute.
+The schedule is sent as described in [Send the Recurring Job Schedule](#send-the-recurring-job-schedule). Recurring jobs whose schedule Sentry doesn't support aren't monitored. To monitor one anyway, add the `SentryMonitorSlug` attribute and set up its monitor in Sentry. Recurring jobs that end up with the same monitor slug as another job with a different schedule aren't monitored either. Change one of their IDs so each gets its own slug. Jobs that aren't recurring, such as `BackgroundJob.Enqueue`, still need the attribute.
 
 ## Monitor Specific Jobs
 
@@ -100,4 +104,4 @@ When you upgrade, existing monitors for recurring jobs get their schedule and ti
 GlobalConfiguration.Configuration.UseSentry(options => options.SendMonitorConfig = false);
 ```
 
-If you delete a monitor while its job is still monitored, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, remove the attribute, or add the job to `ExcludedRecurringJobs`.
+If you delete a monitor while its job is still monitored, the next run creates it again. To stop monitoring a job, disable the monitor in Sentry, or remove the attribute and, if you [monitor all recurring jobs](#monitor-all-recurring-jobs), add the job to `ExcludedRecurringJobs`.
