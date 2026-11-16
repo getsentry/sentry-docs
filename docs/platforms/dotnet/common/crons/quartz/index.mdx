@@ -89,7 +89,7 @@ These jobs use the slug of their job key, described below.
 
 ### Monitor Specific Jobs
 
-To monitor only some jobs, add the `SentryMonitorSlug` attribute to each job class you want to monitor. Without `MonitorAllJobs`, jobs without it aren't monitored.
+To monitor only some jobs, add the `SentryMonitorSlug` attribute to each job class you want to monitor. Jobs without it aren't monitored unless `MonitorAllJobs` is set.
 
 ```csharp
 [SentryMonitorSlug]
@@ -130,7 +130,9 @@ Sentry only creates a monitor from a check-in that includes a schedule. For moni
 - Cron triggers, with the trigger's time zone. Quartz.NET cron triggers use the server's local time zone unless you set one with `InTimeZone`, so set it if your servers don't all use the same time zone. The cron expression must use a fixed number of seconds and no year, `L`, `W`, or `#`. Quartz.NET 3.x needs `?` in exactly one of the two day fields. Quartz.NET 4.x also accepts `*` or values in both. When both have values, the job runs on days that match either field, and Sentry reads the schedule the same way.
 - Simple triggers that repeat forever every whole number of minutes, hours, or days.
 
-Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule, and with `MonitorAllJobs` their jobs aren't monitored. Triggers that share a slug are also sent without one if their schedules differ, for example two triggers of the same job. To give each trigger its own monitor, set a different slug in each trigger's data map.
+Other triggers, triggers with a calendar, and time zones without an IANA ID (Windows time zone IDs on .NET Framework) are sent without a schedule. So are triggers that share a slug but have different schedules, for example two triggers of the same job. To give each trigger its own monitor, set a different slug in each trigger's data map.
+
+Sentry can't create a monitor from a check-in without a schedule, so `MonitorAllJobs` skips these jobs. To monitor one anyway, add `[SentryMonitorSlug]` to it, and either create its monitor in Sentry or set its schedule with [`ConfigureMonitorOptions`](#monitor-settings).
 
 Sentry sets the monitor's schedule and time zone from every check-in that includes them, so changes you make to those two settings in Sentry are overwritten. Other monitor settings are kept. To stop sending the schedule for one job, set `SendMonitorConfig` on its attribute:
 
