@@ -1,0 +1,109 @@
+---
+title: React Router Framework on Deno
+sidebar_title: Quick Start (Deno)
+sidebar_order: 0.6
+description: Learn how to set up Sentry in your React Router app (v7.15+) that runs on Deno and capture your first errors and traces.
+runtime: deno
+---
+
+This guide sets up Sentry in a React Router app in framework mode that you build with Vite and serve with `react-router-serve` on Deno. At the end, your app sends errors, traces, logs, and session replays to Sentry.
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A React Router app in framework mode, version `7.15.0` or above, with its dependencies in a `node_modules` folder
+- [Deno](https://deno.com/) version `2.9.0` or above
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Add the Sentry React Router SDK for your app and the Sentry Deno SDK for your server:
+
+```bash {tabTitle:npm}
+npm install @sentry/react-router @sentry/deno --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router @sentry/deno
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router @sentry/deno
+```
+
+## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+<Include name="react-router/client-setup" />
+
+### Configure Server-Side Sentry
+
+Create a file called `instrument.server.mjs` in the root of your project, and initialize Sentry with the Deno SDK. Don't use `Sentry.init()` from `@sentry/react-router` on the server: it's made for Node.js.
+
+```javascript {filename: instrument.server.mjs}
+import * as Sentry from "@sentry/deno";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+});
+```
+
+<Include name="react-router/server-entry" />
+
+To use a Content Security Policy nonce or your own `handleRequest` or `handleError` logic, see the <PlatformLink to="/manual-setup/#configure-server-side-sentry">manual setup</PlatformLink>.
+
+<Include name="react-router/source-maps" />
+
+### Start Your App
+
+Run the `react-router-serve` script with Deno, and preload two files: the Sentry import hook (`npm:@sentry/deno/import`), which instruments the packages that Deno loads from `node_modules`, such as Express, and then `instrument.server.mjs`. Update the `start` script in your `package.json`:
+
+```json {filename: package.json}
+"scripts": {
+  "start": "deno run --preload=npm:@sentry/deno/import --preload=./instrument.server.mjs --allow-net --allow-env --allow-read=. --allow-sys=hostname,osRelease,networkInterfaces ./node_modules/@react-router/serve/bin.cjs ./build/server/index.js"
+}
+```
+
+Deno blocks access to the network, the file system, and system information until you grant it:
+
+| Flag                                              | What it gives you                                                                                                      |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `--allow-net`                                     | The server port, and the delivery of events to Sentry.                                                                 |
+| `--allow-env`                                     | The import hook and `react-router-serve`, which read environment variables.                                           |
+| `--allow-read=.`                                  | The import hook, your server build, and the packages in `node_modules`.                                                |
+| `--allow-sys=hostname,osRelease,networkInterfaces` | The server name and the operating system version on events. `react-router-serve` needs `networkInterfaces` to start. |
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+<Include name="react-router/logs-metrics-verify" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your React Router Framework application on Deno. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
+- Learn more about the [Sentry Deno SDK](/platforms/javascript/guides/deno/)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If your app stops at start with `NotCapable`, Deno names the missing permission in the error. Add it to the `start` script.
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

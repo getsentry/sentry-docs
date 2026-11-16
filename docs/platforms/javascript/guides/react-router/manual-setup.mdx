@@ -34,76 +34,7 @@ This guide also enables **Tracing**, **Profiling**, **Session Replay**, and **Us
 
 <Include name="quick-start-features-expandable" />
 
-### Expose Entry Point Files
-
-Before configuring Sentry, you need to make React Router's entry files (`entry.client.tsx` and `entry.server.tsx`) visible in your project. Run this command to expose them:
-
-```bash
-npx react-router reveal
-```
-
-### Configure Client-Side Sentry
-
-Initialize Sentry in your `entry.client.tsx` file.
-
-The snippet also turns on:
-
-- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `reactRouterTracingIntegration()`
-- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
-- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
-
-Don't need a feature? Remove its integration and options from the snippet.
-
-The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
-
-```tsx {filename: entry.client.tsx}
-import * as Sentry from "@sentry/react-router";
-import { startTransition, StrictMode } from "react";
-import { hydrateRoot } from "react-dom/client";
-import { HydratedRouter } from "react-router/dom";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  integrations: [
-    // Registers and configures the Tracing integration,
-    // which automatically instruments your application to monitor its
-    // performance, including custom React Router routing instrumentation
-    Sentry.reactRouterTracingIntegration(),
-    // Registers the Replay integration,
-    // which automatically captures Session Replays
-    Sentry.replayIntegration(),
-    // Registers the User Feedback integration
-    Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
-      colorScheme: "system",
-    }),
-  ],
-
-  // Enables Tracing.
-  // Set to 1.0 to capture 100% of spans for tracing.
-  // We recommend reducing this value in production.
-  tracesSampleRate: 1.0,
-
-  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
-  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
-
-  // Capture replays for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  // Requires Sentry.replayIntegration()
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-});
-
-startTransition(() => {
-  hydrateRoot(
-    document,
-    <StrictMode>
-      <HydratedRouter onError={Sentry.sentryOnError} />
-    </StrictMode>
-  );
-});
-```
+<Include name="react-router/client-setup" />
 
 ### Configure Server-Side Sentry
 
@@ -147,35 +78,7 @@ Sentry.init({
 });
 ```
 
-Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions, and export `instrumentations` to enable automatic tracing.
-
-Exporting `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to automatically create spans for all loaders, actions, middleware, and request handlers — no need to wrap them individually.
-
-```tsx {diff} {filename: entry.server.tsx}
-+import * as Sentry from '@sentry/react-router';
- import { createReadableStreamFromReadable } from '@react-router/node';
- import { renderToPipeableStream } from 'react-dom/server';
- import { ServerRouter } from 'react-router';
- import { type HandleErrorFunction } from 'react-router';
-
-+const handleRequest = Sentry.createSentryHandleRequest({
-+  ServerRouter,
-+  renderToPipeableStream,
-+  createReadableStreamFromReadable,
-+});
-
- export default handleRequest;
-
-+export const handleError = Sentry.createSentryHandleError({
-+  logErrors: false
-+});
-
-+// Automatically instruments all server loaders, actions, middleware,
-+// and request handlers.
-+export const instrumentations = [Sentry.createSentryServerInstrumentation()];
-
-// ... rest of your server entry
-```
+<Include name="react-router/server-entry" />
 
 <Expandable title="Does your app use Content Security Policy nonces?">
 
@@ -357,59 +260,7 @@ When you import the instrumentation file directly instead of using the `--import
 
 </Alert>
 
-### Add Readable Stack Traces With Source Maps
-
-The stack traces in your Sentry errors probably won't look like your actual code without unminifying them. To fix this, upload your source maps to Sentry.
-
-First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
-
-```typescript {filename: vite.config.ts} {diff}
-import { reactRouter } from '@react-router/dev/vite';
-import { sentryReactRouter, type SentryReactRouterBuildOptions } from '@sentry/react-router/vite';
-import { defineConfig } from 'vite';
-
-const sentryConfig: SentryReactRouterBuildOptions = {
-  org: "___ORG_SLUG___",
-  project: "___PROJECT_SLUG___",
-
-  // An auth token is required for uploading source maps;
-  // store it in an environment variable to keep it secure.
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  // ...
-};
-
-export default defineConfig(config => {
-  return {
-+   plugins: [reactRouter(),sentryReactRouter(sentryConfig, config)],
-  };
-});
-```
-
-To keep your auth token secure, always store it in an environment variable instead of directly in your files:
-
-<OrgAuthTokenNote />
-
-```bash {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-<Include name="vite-loadenv-hint-splitlayout.mdx" />
-
-Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
-
-```typescript {filename: react-router.config.ts} {diff}
-import type { Config } from "@react-router/dev/config";
-import { sentryOnBuildEnd } from "@sentry/react-router/vite";
-
-export default {
-  ssr: true,
-  buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
-    // ...
-    // Call this at the end of the hook
-+    await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
-  },
-} satisfies Config;
-```
+<Include name="react-router/source-maps" />
 
 ### Control the Data You Send to Sentry
 
