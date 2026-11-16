@@ -104,7 +104,7 @@ You can also manually capture performance data – see <PlatformLink to="/tracin
 
 Use `sentry_sdk.logger` to send structured logs at different levels. You can include searchable attributes with each message.
 
-To capture records from Python's standard-library `logging` module or Loguru, configure `capture_sentry_logs=True` on the corresponding integration. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
+To capture records from Python's standard-library `logging` module or Loguru as Sentry logs, add the corresponding integration to your `integrations`. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
 
@@ -167,12 +167,10 @@ sentry_sdk.init(
     # same as above
     integrations=[
         StarletteIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={403, *range(500, 599)},
             http_methods_to_capture=("GET",),
         ),
         FastApiIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={403, *range(500, 599)},
             http_methods_to_capture=("GET",),
         ),
@@ -183,6 +181,12 @@ sentry_sdk.init(
 You can pass the following keyword arguments to `StarletteIntegration()` and `FastApiIntegration()`:
 
 <SdkOption name='transaction_style' type='string' defaultValue='"url"'>
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, service spans are always named after the route pattern, for example `/catalog/product/{product_id}`.
+
+</Alert>
 
 How to name transactions that show up in Sentry tracing.
 The default is `"url"`.
