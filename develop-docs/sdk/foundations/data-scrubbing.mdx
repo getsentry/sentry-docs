@@ -89,7 +89,19 @@ Server-side scrubbing finds sensitive data that only content rules can find, for
 
 - The SDK **SHOULD NOT** parse a payload only to scrub it.
 - The SDK **SHOULD NOT** apply content rules to find sensitive values.
-- If the data already has a structure, the SDK **SHOULD** keep the structure when it sends the data. For example, the SDK sends the key-value pairs that it already has, and not one string that contains all pairs. Server-side scrubbing and trimming then apply to each value.
+- If the SDK already has the data as separate values, the SDK **SHOULD** send each value in its own attribute or list entry. The SDK **SHOULD NOT** join the values into one string. Server-side scrubbing and trimming then apply to each value separately. Sentry Conventions defines the attributes for this, for example [`http.request.header.<key>`](https://getsentry.github.io/sentry-conventions/attributes/http/#http-request-header-key).
+
+  For example, a framework supplies the request headers as a map:
+
+  ```
+  // Do: one attribute for each header
+  http.request.header.accept: ["text/html"]
+  http.request.header.x-request-id: ["7f3a9c"]
+
+  // Don't: all headers in one string
+  headers: "accept: text/html\nx-request-id: 7f3a9c"
+  ```
+
 - If [Sentry Conventions](https://getsentry.github.io/sentry-conventions/) defines an attribute for the data, the SDK **MUST** send the data in that attribute.
 - An attribute that can contain sensitive data **MUST** have `apply_scrubbing` set to `auto` or `manual` in Sentry Conventions. See the [Sentry Conventions contribution guidelines](https://github.com/getsentry/sentry-conventions/blob/main/CONTRIBUTING.md).
 
