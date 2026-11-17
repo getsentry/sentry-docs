@@ -13,7 +13,7 @@ import {usePathname} from 'next/navigation';
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createInsightsClient} from 'search-insights';
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {openKapa, prefetchKapa} from 'sentry-docs/lib/kapa';
 import {DocMetrics} from 'sentry-docs/metrics';
 

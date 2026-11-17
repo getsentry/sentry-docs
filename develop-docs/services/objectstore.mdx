@@ -199,8 +199,22 @@ this configuration automatically.
 The central Objectstore route already exists. Don't create another route for a
 new calling service. Instead, configure the client endpoint as
 `http://objectstore` and route the `objectstore` hostname through the service's
-Envoy sidecar. You can find a complete example in
-`k8s/services/launchpad/_values.yaml`.
+Envoy sidecar.
+
+For the sidecar to intercept these requests, map `objectstore` to its intercept
+IP in every deployment that calls Objectstore:
+
+```yaml {filename:k8s/services/<service>/deployment.yaml}
+spec:
+  template:
+    spec:
+      hostAliases:
+        - ip: "{{ intercept_ip }}"
+          hostnames:
+            - objectstore
+```
+
+You can find a complete example in `k8s/services/launchpad/_values.yaml`.
 
 If your service uses direct authentication, additionally provision credentials:
 

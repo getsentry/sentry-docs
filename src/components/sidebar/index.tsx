@@ -1,5 +1,5 @@
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {getCurrentGuide, getCurrentPlatform, getDocsRootNode} from 'sentry-docs/docTree';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import {CloseSidebarOnNavigation, ScrollActiveLink} from '../focus-active-link';
 import {PlatformSelector} from '../platformSelector';

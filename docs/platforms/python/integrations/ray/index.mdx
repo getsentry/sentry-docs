@@ -91,8 +91,8 @@ ray.init(
 def divide(a, b):
     return a/b
 
-# or sentry_sdk.traces.start_span(name="ray-test", parent_span=None) in stream mode
-with sentry_sdk.start_transaction(name="ray-test"):
+# In SDK 2.x, use sentry_sdk.start_transaction(name="ray-test") instead
+with sentry_sdk.start_span(name="ray-test"):
     futures = [
         divide.remote(10, 5),
         divide.remote(10, 0),
@@ -100,12 +100,12 @@ with sentry_sdk.start_transaction(name="ray-test"):
     print(ray.get(futures))
 ```
 
-Running this will create an error event (`ZeroDivisionError`) that will be sent to [sentry.io](https://sentry.io). Additionally, trace information will be created in the Performance section of [sentry.io](https://sentry.io).
+Running this will create an error event (`ZeroDivisionError`) that will be sent to [sentry.io](https://sentry.io). Additionally, trace information will be created in the Traces section of [sentry.io](https://sentry.io).
 
 ## Behavior
 
 - All unhandled exceptions will be captured and can be seen on [sentry.io](https://sentry.io).
-- Performance data will be captured and available in the Performance section of [sentry.io](https://sentry.io).
+- Performance data will be captured and available in the Traces section of [sentry.io](https://sentry.io).
 - Performance data from [Ray Tasks](https://docs.ray.io/en/latest/ray-core/tasks.html) will be captured and linked to the calling code.
 - **Note**: Capturing performance data from [Ray Actors](https://docs.ray.io/en/latest/ray-core/actors.html) is currently **not supported**. (As always, [PRs are welcome](https://github.com/getsentry/sentry-python/blob/master/CONTRIBUTING.md))
 

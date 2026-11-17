@@ -1,0 +1,34 @@
+Describes an extraction of typed fields from an input, such as the total and due date of an invoice (for example a Cloudflare Clairic call).
+
+- The span `op` (transaction mode) or the span's `sentry.op` attribute (stream mode) MUST be `"gen_ai.extract"`.
+- The span `name` SHOULD be `"extract {gen_ai.request.model}"`. (e.g. `"extract @cf/cloudflare/clairic"`)
+- The `gen_ai.operation.name` attribute MUST be `"extract"`.
+- The `gen_ai.request.model` attribute SHOULD be the requested extraction model. (e.g. `"@cf/cloudflare/clairic"`)
+- The `gen_ai.response.model` attribute SHOULD be the concrete model that responded. Omit it when the provider doesn't report one. (e.g. `"clairic"`)
+- The `gen_ai.provider.name` attribute SHOULD be set to the provider. (e.g. `"cloudflare.workers_ai"`)
+- The `gen_ai.agent.name` attribute SHOULD be set to the agent's name when the extraction runs under an agent. (e.g. `"Billing Agent"`)
+
+Additional attributes on the span:
+
+| Data Attribute               | Type   | Requirement Level | Description                                                                                        | Example                                                                                                 |
+| :--------------------------- | :----- | :---------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `gen_ai.input.messages`      | string | optional          | A single object holding the request body, without `model` (stringified JSON). **[0]**              | `'[{"state": "Invoice INV-2291 ...", "fields": {"total": {"type": "number", "unit": "USD"}}}]'`         |
+| `gen_ai.output.messages`     | string | optional          | A single object holding the response body, without `model` and `usage` (stringified JSON). **[1]** | `'[{"answers": {"total": {"type": "number", "value": 1080, "confidence": 0.99}}, "truncated": false}]'` |
+| `gen_ai.usage.input_tokens`  | int    | optional          | The number of input tokens used by the extraction, including all passes.                           | `655`                                                                                                   |
+| `gen_ai.usage.output_tokens` | int    | optional          | The number of output tokens used by the extraction.                                                | `0`                                                                                                     |
+
+Don't send the other usage counts that the provider reports (such as Clairic's `state_tokens`, `image_tokens`, `schema_tokens`, and `passes`). `gen_ai.usage.input_tokens` already includes them.
+
+**[0]** The input is the request body as the caller passed it. Don't change the values, and leave out the keys the caller didn't set:
+
+| Field            | Type         | Description                                                                                         |
+| :--------------- | :----------- | :-------------------------------------------------------------------------------------------------- |
+| `state`          | string       | The text the model reads. Required when there are no `images`. Text answers point into this string. |
+| `fields`         | object       | Required. The field specs, keyed by field name.                                                     |
+| `images`         | string array | One `"[Blob substitute]"` string for each image. Never send the image data.                         |
+| `reference_date` | string       | The ISO date that anchors dates written without a year.                                             |
+| `options`        | object       | Request options, such as `include_quantiles` or `return_state_text`.                                |
+
+Each field spec has a `type`: `text`, `number`, `date`, `time`, `datetime`, `duration`, `list`, `estimate`, or `forecast`. It can also carry `instructions` and type-specific settings, such as `unit`, `integer`, and `decimals` for numbers, `items` for lists (`text`, `number`, or `date`), and `min`, `max`, and `step` for estimates and forecasts.
+
+**[1]** The output is the response body as the provider returned it. Don't change the values. `answers` has one answer for each field in the input, keyed by field name, and `truncated` is copied as returned. Each answer has the field's `type` and a `value`, which is `null` when the input doesn't determine it. Answers can also carry `guess`, `p_null`, and `confidence`. `text` answers carry a `span` and `list` answers carry `spans`: `[start, end]` character offsets into `state` (or into `state_text`, if the provider returns it), where `end` is exclusive. `estimate` answers carry `mean`, `median`, `p10`, and `p90`, and `forecast` answers carry one estimate per step in `steps`.

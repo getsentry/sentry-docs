@@ -49,30 +49,11 @@ type BannerType = {
 
 const BANNERS: BannerType[] = [
   {
-    appearsOn: ['^/integrations/feature-flag/launchdarkly/$'],
-    text: '',
-    linkURL: 'https://sentry.io/resources/launchdarkly-workshop/',
-    linkText: 'Join a workshop',
-    textAfterLink:
-      ' on September 23rd about protecting releases and fixing bugs with Sentry & LaunchDarkly.',
-    expiresOn: '2026-09-22T23:59:59Z',
-  },
-  {
-    appearsOn: ['^/product/logs/$', '^/platforms/.*/logs/'],
-    text: 'Go deeper with Logs.',
-    linkURL: 'https://sentry.io/resources/beyond-logs-basics-workshop/',
-    linkText: 'Join the workshop',
-    textAfterLink: ' on Oct. 1.',
-    expiresOn: '2026-09-30T23:59:59Z',
-  },
-  {
-    appearsOn: ['^/product/agents/$', '^/platforms/.*/agent-tracing/'],
-    text: "Join Sentry's",
-    linkURL: 'https://sentry.io/resources/agent-tracing-series/',
-    linkText: 'agent debugging series',
-    textAfterLink:
-      ' on October 7th and 14th to learn best practices, including how the Sentry team debugs their own agents.',
-    expiresOn: '2026-10-13T23:59:59Z',
+    appearsOn: ['^/pricing/$'],
+    text: 'On December 8, Seer moves from active-contributor pricing to usage-based credits.',
+    linkURL: '/pricing/#seer-pricing',
+    linkText: 'Seer pricing',
+    expiresOn: '2026-12-22T00:00:00Z',
   },
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`

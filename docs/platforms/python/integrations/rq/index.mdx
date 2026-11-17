@@ -183,14 +183,14 @@ sentry_sdk.init(
 
 q = Queue(connection=Redis())
 
-# or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-with sentry_sdk.start_transaction(name="testing_sentry"):
+# In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+with sentry_sdk.start_span(name="testing_sentry"):
     result = q.enqueue(hello, "World")
 ```
 
-When you run `python main.py` a transaction named `testing_sentry` will be created in the Performance section of [sentry.io](https://sentry.io) and spans for the enqueueing will be created.
+When you run `python main.py` a service span named `testing_sentry` will be created in the Traces section of [sentry.io](https://sentry.io) and spans for the enqueueing will be created.
 
-If you run the RQ worker with `rq worker -c mysettings`, a transaction for the execution of `hello()` will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+If you run the RQ worker with `rq worker -c mysettings`, a service span for the execution of `hello()` will be created. Additionally, an error event will be sent to [sentry.io](https://sentry.io) and will be connected to the service span.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

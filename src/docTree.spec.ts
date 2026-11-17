@@ -11,6 +11,12 @@ import {
 } from './docTree';
 import {FrontMatter} from './types';
 
+// vi.mock is hoisted, so this applies to every test in the file.
+vi.mock('./docsSite.mjs', async importOriginal => ({
+  ...(await importOriginal<typeof import('./docsSite.mjs')>()),
+  isDeveloperDocs: true,
+}));
+
 const createRootNode = (): DocNode => ({
   children: [],
   frontmatter: {title: 'Home', slug: 'home'},
@@ -368,10 +374,6 @@ describe('docTree', () => {
     });
 
     test('should return undefined for getting-started page in developer docs', () => {
-      vi.mock('./isDeveloperDocs', () => ({
-        isDeveloperDocs: true,
-      }));
-
       const home = createNode('', 'Home');
       const gettingStarted = createNode('getting-started', 'Getting Started');
       home.children = [gettingStarted];
