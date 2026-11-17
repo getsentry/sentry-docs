@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.17.0
+spec_version: 0.18.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.18.0
+    date: 2026-11-17
+    summary: Define the installation identifier. `userInfo` does not gate it, and SDKs must generate it at random instead of deriving it from hardware or system values.
   - version: 0.17.0
     date: 2026-10-12
     summary: "Attach text bodies unchanged. SDKs no longer parse bodies to scrub them. Server-side scrubbing applies to the body."
@@ -97,7 +100,7 @@ Collected data is grouped into three sensitivity levels. These levels form the o
 
 Non-identifying context used for debugging and performance. Examples include, but are not limited to:
 
-- Device and environment context (OS, runtime, non-PII identifiers)
+- Device and environment context (OS, runtime, non-PII identifiers such as a random [installation identifier](#installation-identifier))
 - Performance and error context (stack frames, breadcrumbs, span metadata)
 - Framework/routing context where it does not contain PII or secrets
 - Generative AI metadata (model name, token counts, tool names, etc.)
@@ -340,6 +343,20 @@ Concretely:
 - **User-set data** — Data the user explicitly sets (e.g., via `Sentry.setUser()`, `scope.setTag()`, or direct attribute assignment) is **never** gated by `dataCollection`. The user has made a deliberate choice to include that data.
 
 This means if a user calls `Sentry.setUser({ email: "jane@example.com" })`, that email **MUST** appear on logs, metrics, and events regardless of `dataCollection.userInfo` or `sendDefaultPii`. The gate only applies to auto-instrumentation that would populate user fields without the user's explicit action.
+
+</SpecSection>
+
+<SpecSection id="installation-identifier" status="candidate" since="0.18.0">
+
+### Installation Identifier
+
+SDKs **MAY** generate an identifier for each installation of an app. SDKs that do **MAY** send it as the session `did`, and as `user.id` when no user ID is set, so Sentry can count affected users.
+
+`dataCollection` options, including `userInfo`, **MUST NOT** gate this identifier. It identifies an installation, not a person.
+
+The SDK **MUST** generate the identifier at random, for example as a UUID. It **MUST NOT** derive the identifier from hardware or system values, such as a MAC address, a serial number, or a host name, because those values also identify the device outside Sentry. If the SDK can't store the identifier, it **SHOULD** keep a random one in memory for the life of the process.
+
+A user ID that the user sets, for example with `Sentry.setUser()`, always takes precedence over the installation identifier.
 
 </SpecSection>
 
@@ -657,7 +674,7 @@ init({
 
   | Key | Option Type | Default | Since | Description |
 |-----|-------------|---------|-------|-------------|
-| `userInfo` | Boolean | `true` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from auto-instrumentation (e.g., inferring `user.ip_address` from an incoming HTTP request, or deriving user identity from framework session/auth context). Does **not** gate data explicitly set via `Sentry.setUser()`, which is always attached (see [User-Set Data and Scrubbing](#user-set-data-scrubbing)). Does not affect any other data category. Default changed to `true` in 0.2.0. |
+| `userInfo` | Boolean | `true` | 0.1.0 | Automatically populate `user.*` fields (`user.id`, `user.email`, `user.username`, `user.ip_address`) from auto-instrumentation (e.g., inferring `user.ip_address` from an incoming HTTP request, or deriving user identity from framework session/auth context). Does **not** gate data explicitly set via `Sentry.setUser()`, which is always attached (see [User-Set Data and Scrubbing](#user-set-data-scrubbing)). Does not affect any other data category. Default changed to `true` in 0.2.0. Since 0.18.0, it does not gate the [installation identifier](#installation-identifier). |
 | `cookies` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
 | `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
@@ -700,7 +717,7 @@ init({
 });
 ```
 
-**Result:** The SDK no longer populates `user.id`, `user.email`, `user.username`, or `user.ip_address` from instrumentation sources. User data explicitly set via `Sentry.setUser()` is still attached. All other options use their defaults.
+**Result:** The SDK no longer populates `user.id`, `user.email`, `user.username`, or `user.ip_address` from instrumentation sources. The random [installation identifier](#installation-identifier) can still fill `user.id` when no user ID is set. User data explicitly set via `Sentry.setUser()` is still attached. All other options use their defaults.
 
 ### Restrict Body Collection
 
@@ -792,7 +809,7 @@ If the SDK can cleanly map what `sendDefaultPii` did to data collection options,
 
 If the SDK cannot cleanly map the `sendDefaultPii` behavior to data collection options, it **MUST NOT** derive data collection options from the configured `sendDefaultPii` value. Instead, the following rules apply:
 - If the user sets at least one data collection option, the SDK **MUST** ignore `sendDefaultPii`. The SDK **MUST** apply the options the user set, and the spec defaults for all `dataCollection` options. This also means that the SDK might send more data when `sendDefaultPii` was set to `false` before, so users should be made aware of that.
- 
+
 - If the user sets no data collection options, the SDK **MUST** keep the legacy `sendDefaultPii` behavior unchanged.
 This prevents breaking changes in PII filtering and allows customers to migrate to data collection at their own pace. Customers may keep using `sendDefaultPii` without changes to SDK behavior as long as they don't opt into data collection.
 
