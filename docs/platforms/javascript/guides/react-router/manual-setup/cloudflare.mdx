@@ -20,7 +20,7 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - A React Router app in framework mode, version `7.15.0` or above, that uses `@cloudflare/vite-plugin`
-- `@sentry/react-router` and `@sentry/cloudflare` version `11.8.0` or above
+- `@sentry/react-router` and `@sentry/cloudflare` version `11.13.0` or above
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -105,12 +105,9 @@ export default Sentry.createSentryHandleRequest({
   renderToReadableStream,
 });
 
-export const handleError: HandleErrorFunction = (error, { request }) => {
-  // React Router aborts some requests, for example when the user navigates away
-  if (!request.signal.aborted) {
-    Sentry.captureException(error);
-  }
-};
+export const handleError: HandleErrorFunction = Sentry.createSentryHandleError({
+  logErrors: false,
+});
 
 export const instrumentations = [Sentry.createSentryServerInstrumentation()];
 ```
@@ -167,6 +164,17 @@ At this point, you should have integrated Sentry into your React Router Framewor
 - Learn what the [Sentry Cloudflare Vite plugin](/platforms/javascript/guides/cloudflare/install/vite-plugin/) instruments and how to configure it
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If `@sentry/react-router/cloudflare` doesn't export `createSentryHandleError`, your SDK is older than version `11.13.0`. Update `@sentry/react-router` and `@sentry/cloudflare`, or, on versions `11.8.0` to `11.12.x`, use this `handleError` instead:
+
+  ```tsx {filename: entry.server.tsx}
+  export const handleError: HandleErrorFunction = (error, { request }) => {
+    // React Router aborts some requests, for example when the user navigates away
+    if (!request.signal.aborted) {
+      Sentry.captureException(error);
+    }
+  };
+  ```
 
 - Find various topics in [Cloudflare troubleshooting](/platforms/javascript/guides/cloudflare/troubleshooting/) and <PlatformLink to="/troubleshooting/">React Router troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
