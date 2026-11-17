@@ -49,8 +49,33 @@ export type Runtime = {
   title: string;
 };
 
-/** Runtime guides (keyed by guide slug) that have a framework selector on their getting started page. */
+/**
+ * Runtime guides (keyed by guide slug) that have a framework selector on their getting started
+ * page. `browser` is the Browser JavaScript page at `/platforms/javascript/`.
+ */
 export const RUNTIMES: Record<string, Runtime> = {
+  browser: {
+    title: 'Browser JavaScript',
+    frameworks: [],
+    frameworkGuides: [
+      guide('Angular', 'angular'),
+      guide('Astro', 'astro'),
+      guide('Ember', 'ember'),
+      guide('Gatsby', 'gatsby'),
+      guide('Next.js', 'nextjs'),
+      guide('Nuxt', 'nuxt'),
+      guide('React', 'react'),
+      guide('React Router', 'react-router'),
+      guide('Remix', 'remix'),
+      guide('Solid', 'solid'),
+      guide('SolidStart', 'solidstart'),
+      guide('Svelte', 'svelte'),
+      guide('SvelteKit', 'sveltekit'),
+      guide('TanStack Start', 'tanstackstart-react'),
+      guide('Vue', 'vue'),
+    ],
+    includePaths: [],
+  },
   node: {
     title: 'Node.js',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
@@ -86,14 +111,18 @@ export const RUNTIMES: Record<string, Runtime> = {
   bun: {
     title: 'Bun',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Elysia', 'elysia'), guide('Hono', 'hono')],
+    frameworkGuides: [
+      guide('Elysia', 'elysia'),
+      guide('Hono', 'hono'),
+      guide('React Router', 'react-router/bun'),
+    ],
     agentGuides: [guide('Pi Durable', 'pi-durable/bun')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   deno: {
     title: 'Deno',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Hono', 'hono')],
+    frameworkGuides: [guide('Hono', 'hono'), guide('React Router', 'react-router/deno')],
     agentGuides: [guide('Pi Durable', 'pi-durable/deno')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
@@ -106,6 +135,7 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
       guide('Next.js', 'nextjs/cloudflare'),
       guide('Nuxt', 'nuxt/cloudflare'),
+      guide('React Router', 'react-router/cloudflare'),
       guide('Remix', 'remix/cloudflare'),
       guide('SvelteKit', 'sveltekit/cloudflare'),
       guide('TanStack Start', 'tanstackstart-react/cloudflare'),

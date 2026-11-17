@@ -9,7 +9,7 @@ platformCategory: all
 order: 20
 ---
 
-Worker services, Azure Functions isolated worker apps, Windows services and console apps on `Host.CreateApplicationBuilder` often started Sentry with `Logging.AddSentry`. Install `Sentry.Extensions.Hosting` and call `UseSentry` on the host builder instead.
+Worker services, Azure Functions isolated worker apps, Windows services and console apps on `Host.CreateApplicationBuilder` often started Sentry with `Logging.AddSentry`. Install `Sentry.Extensions.Hosting` and call `UseSentry` on the host builder instead. The [Generic Host](/platforms/dotnet/guides/extensions-hosting/) guide shows the full setup.
 
 ```shell
 dotnet add package Sentry.Extensions.Hosting
@@ -85,7 +85,7 @@ builder.Services.AddHostedService<Worker>();
 builder.Build().Run();
 ```
 
-`UseSentry` also registers `IHub` for dependency injection and sets the environment from the host environment. It works on `IHostApplicationBuilder` types such as `Host.CreateApplicationBuilder` on .NET 8 and later. It also works on `IHostBuilder` types such as `Host.CreateDefaultBuilder` on every target, including .NET Framework.
+`UseSentry` also registers `IHub` for dependency injection and sets the environment from the host environment. It works on `IHostApplicationBuilder` types such as `Host.CreateApplicationBuilder` on .NET 8 and later. It also works on `IHostBuilder` types such as `Host.CreateDefaultBuilder` on every target, including .NET Framework. The [Generic Host](/platforms/dotnet/guides/extensions-hosting/) guide shows the full setup.
 
 If the app calls `builder.Logging.ClearProviders()`, call `UseSentry` after it. `ClearProviders` removes every logger provider registered before it, including Sentry's, and the app then sends no errors from `ILogger`. If the app has to clear providers after `UseSentry`, call `builder.Logging.AddSentry()` after `ClearProviders` to add Sentry's providers back. Skip that if Serilog, NLog or log4net already sends the app's `ILogger` entries to Sentry, because each entry would then arrive twice.
 

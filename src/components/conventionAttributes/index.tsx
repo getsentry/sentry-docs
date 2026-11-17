@@ -6,7 +6,7 @@ import {
 import {micromark} from 'micromark';
 
 type Props = {
-  attributes: (string | {key: string; notes?: string})[];
+  attributes: (string | {key: string; example?: number; notes?: string})[];
 };
 
 const metadata: Record<string, AttributeMetadata> = ATTRIBUTE_METADATA;
@@ -17,7 +17,11 @@ const metadata: Record<string, AttributeMetadata> = ATTRIBUTE_METADATA;
  */
 export function ConventionAttributes({attributes}: Props) {
   const rows = attributes.map(row => {
-    const {key, notes} = typeof row === 'string' ? {key: row} : row;
+    const {
+      key,
+      notes,
+      example: exampleIndex,
+    } = typeof row === 'string' ? {key: row} : row;
     // `Object.hasOwn` so keys like `constructor` don't pass as known attributes.
     const attribute = Object.hasOwn(metadata, key) ? metadata[key] : undefined;
     if (!attribute) {
@@ -26,7 +30,18 @@ export function ConventionAttributes({attributes}: Props) {
     const description = micromark([attribute.brief, notes].filter(Boolean).join(' '))
       .replace(/^<p>/, '')
       .replace(/<\/p>$/, '');
-    return {key, attribute, description};
+    // Pick one of `examples` by index when the page asks for it, so a page can
+    // show the example that fits its context.
+    let example = attribute.example;
+    if (exampleIndex !== undefined) {
+      if (!attribute.examples || !Object.hasOwn(attribute.examples, exampleIndex)) {
+        throw new Error(
+          `<ConventionAttributes>: attribute "${key}" has no example at index ${exampleIndex}`
+        );
+      }
+      example = attribute.examples[exampleIndex];
+    }
+    return {key, attribute, description, example};
   });
 
   return (
@@ -40,7 +55,7 @@ export function ConventionAttributes({attributes}: Props) {
         </tr>
       </thead>
       <tbody>
-        {rows.map(({key, attribute, description}) => (
+        {rows.map(({key, attribute, description, example}) => (
           <tr key={key}>
             <td>
               <code>{key}</code>
@@ -51,11 +66,7 @@ export function ConventionAttributes({attributes}: Props) {
               style={{whiteSpace: 'normal', minWidth: '300px'}}
               dangerouslySetInnerHTML={{__html: description}}
             />
-            <td>
-              {attribute.example !== undefined && (
-                <code>{formatExample(attribute.example)}</code>
-              )}
-            </td>
+            <td>{example !== undefined && <code>{formatExample(example)}</code>}</td>
           </tr>
         ))}
       </tbody>

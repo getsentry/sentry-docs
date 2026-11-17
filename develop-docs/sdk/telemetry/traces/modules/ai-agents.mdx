@@ -38,7 +38,7 @@ Valid examples:
 gen_ai.invoke_agent
 ├── gen_ai.chat
 ├── gen_ai.memory
-├── gen_ai.extraction
+├── gen_ai.extract
 ├── gen_ai.chat
 ├── gen_ai.execute_tool
 ├── gen_ai.chat
@@ -49,7 +49,7 @@ gen_ai.invoke_agent
 
 ```
 gen_ai.chat
-gen_ai.extraction
+gen_ai.extract
 gen_ai.invoke_agent
 ├── gen_ai.chat
 ├── gen_ai.execute_tool
@@ -178,6 +178,54 @@ Additional attributes on the span:
     'gen_ai.tool.call.result',
   ]}
 />
+
+## Decision Span
+
+Describes a decision on generated content against a set of questions, such as grading a model's reply for accuracy or classifying a support message, for example from TypeSafe Jev. Sentry shows decisions as their own rows in the conversation transcript and timeline, with dedicated **Input** and **Output** views.
+
+- Span `op` is `"gen_ai.decide"`.
+- Span `name` is `"decide {gen_ai.request.model}"`. (e.g. `"decide typesafe/jev-1.13"`)
+- Attribute `gen_ai.operation.name` is `"decide"`. Decisions share the `ai_client` operation type with model calls, so this attribute is what tells them apart.
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"typesafe/jev-1.13"`) Without a model, Relay doesn't classify the span as `ai_client`.
+- Attribute `gen_ai.response.model` is the concrete response model, if the provider reports one. (e.g. `"typesafe/jev-1.13-20260917"`)
+- If the decision runs under an agent, the `gen_ai.agent.name` attribute is the name of the agent. (e.g. `"Support Agent"`)
+
+Additional attributes on the span:
+
+<ConventionAttributes
+  attributes={[
+    {key: 'gen_ai.input.messages', example: 1},
+    {key: 'gen_ai.output.messages', example: 1},
+    'gen_ai.usage.input_tokens',
+    'gen_ai.usage.output_tokens',
+  ]}
+/>
+
+`gen_ai.input.messages` holds a one-element array with the content being evaluated (`state`) and the questions asked about it (`questions`). `gen_ai.output.messages` holds a one-element array with the answers (`answers`), keyed by the same question names.
+
+## Extraction Span
+
+Describes an extraction of typed fields from an input, such as the total and due date of an invoice, for example from Cloudflare Clairic. The model can extract values that are in the input, compute values from them, and estimate or forecast values that the input doesn't determine.
+
+- Span `op` is `"gen_ai.extract"`.
+- Span `name` is `"extract {gen_ai.request.model}"`. (e.g. `"extract @cf/cloudflare/clairic"`)
+- Attribute `gen_ai.operation.name` is `"extract"`.
+- Attribute `gen_ai.request.model` is the requested model. (e.g. `"@cf/cloudflare/clairic"`)
+- Attribute `gen_ai.response.model` is the concrete response model, if the provider reports one. (e.g. `"clairic"`)
+- If the extraction runs under an agent, the `gen_ai.agent.name` attribute is the name of the agent. (e.g. `"Billing Agent"`)
+
+Additional attributes on the span:
+
+<ConventionAttributes
+  attributes={[
+    {key: 'gen_ai.input.messages', example: 2},
+    {key: 'gen_ai.output.messages', example: 2},
+    'gen_ai.usage.input_tokens',
+    'gen_ai.usage.output_tokens',
+  ]}
+/>
+
+`gen_ai.input.messages` holds a one-element array with the request body as the caller passed it, without `model`. `gen_ai.output.messages` holds a one-element array with the response body as the provider returned it, without `model` and `usage`. Don't send the other usage counts that the provider reports (such as Clairic's `state_tokens`, `image_tokens`, `schema_tokens`, and `passes`). `gen_ai.usage.input_tokens` already includes them.
 
 ## Derived by Relay
 
