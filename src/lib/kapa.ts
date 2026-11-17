@@ -12,6 +12,11 @@ import {captureException} from '@sentry/nextjs';
 
 const KAPA_SRC = 'https://widget.kapa.ai/kapa-widget.bundle.js';
 
+// The UTM params make this URL unique to the Contact support button, so a click
+// on it can't be confused with an answer that links to the help center.
+const CONTACT_SUPPORT_URL =
+  'https://www.sentry.help/en/?utm_source=docs&utm_medium=ask-ai&utm_content=contact-support';
+
 // Mirrors the data-* attributes the <Script> tag used to carry in app/layout.tsx.
 const KAPA_ATTRIBUTES: Record<string, string> = {
   'data-website-id': 'cac7cc70-969e-4bc1-a968-55534a839be4',
@@ -27,7 +32,7 @@ const KAPA_ATTRIBUTES: Record<string, string> = {
     'How to set up Sentry for Next.js?,What are tracePropagationTargets?',
   'data-answer-cta-button-enabled': 'true',
   'data-answer-cta-button-text': 'Contact support',
-  'data-answer-cta-button-link': 'https://www.sentry.help/en/',
+  'data-answer-cta-button-link': CONTACT_SUPPORT_URL,
   'data-user-analytics-cookie-enabled': 'false',
   'data-color-scheme': 'auto',
   'data-color-scheme-selector': '.dark',
@@ -60,6 +65,27 @@ function whenKapaReady(): Promise<void> {
 }
 
 /**
+ * Kapa renders the Contact support button as a plain link inside its shadow
+ * root and fires no event for it, so count the clicks ourselves.
+ */
+function trackContactSupportClicks(): void {
+  document.addEventListener('click', event => {
+    const clickedContactSupport = event
+      .composedPath()
+      .some(
+        node =>
+          node instanceof HTMLAnchorElement &&
+          node.getAttribute('href') === CONTACT_SUPPORT_URL
+      );
+    if (clickedContactSupport) {
+      window.plausible?.('Ask AI Contact Support Click', {
+        props: {page: window.location.pathname},
+      });
+    }
+  });
+}
+
+/**
  * Inject the widget. Safe to call repeatedly: the work happens once, and a
  * failed attempt is cleared so the next interaction can retry.
  */
@@ -83,7 +109,9 @@ export function loadKapa(): Promise<void> {
       reject(new Error('Failed to load the Kapa widget'))
     );
     document.body.appendChild(script);
-  }).then(whenKapaReady);
+  })
+    .then(whenKapaReady)
+    .then(trackContactSupportClicks);
 
   promise.catch(() => {
     // let the next click try again rather than wedging Ask AI for the session
