@@ -43,7 +43,7 @@ sentry_sdk.init(
     },
     # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
+    # of service spans for tracing.
     traces_sample_rate=1.0,
     # ___PRODUCT_OPTION_END___ performance
     # ___PRODUCT_OPTION_START___ profiling
