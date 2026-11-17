@@ -10,6 +10,13 @@ export const isNotNil = <T>(x?: T): x is Exclude<T, null | undefined> => {
   return x !== null && x !== undefined;
 };
 
+/**
+ * Whether a page's "new" badge should still show. `newUntil` comes from the
+ * `new_until` frontmatter, which YAML parses into a Date when unquoted.
+ */
+export const isNew = (newUntil?: string | Date): boolean =>
+  newUntil !== undefined && new Date() < new Date(newUntil);
+
 export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   return arr.sort((a, b) => {
     const aComp = comp(a);
