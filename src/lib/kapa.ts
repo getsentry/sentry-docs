@@ -25,6 +25,9 @@ const KAPA_ATTRIBUTES: Record<string, string> = {
     'Please note: This is a tool that searches publicly available sources. Do not include any sensitive or personal information in your queries. For more on how Sentry handles your data, see our [Privacy Policy](https://sentry.io/privacy/).',
   'data-modal-example-questions':
     'How to set up Sentry for Next.js?,What are tracePropagationTargets?',
+  'data-answer-cta-button-enabled': 'true',
+  'data-answer-cta-button-text': 'Contact support',
+  'data-answer-cta-button-link': 'https://www.sentry.help/en/',
   'data-user-analytics-cookie-enabled': 'false',
   'data-color-scheme': 'auto',
   'data-color-scheme-selector': '.dark',
