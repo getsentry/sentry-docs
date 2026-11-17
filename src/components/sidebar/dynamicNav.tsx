@@ -290,6 +290,8 @@ type Props = {
   collapsible?: boolean;
   exclude?: string[];
   extraLinks?: ExternalSidebarLink[];
+  /** The title of the link to the `root` page in a platform sidebar. */
+  quickStartTitle?: string;
   title?: string;
 };
 
@@ -300,6 +302,7 @@ export function DynamicNav({
   collapsible = false,
   exclude = [],
   extraLinks,
+  quickStartTitle = 'Quick Start',
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -363,7 +366,7 @@ export function DynamicNav({
           {isPlatformSidebar && (
             <CollapsibleSidebarLink
               to={`/${root}/`}
-              title="Quick Start"
+              title={quickStartTitle}
               collapsed={false}
               path={linkPath}
               key={`${root}-quickstart`}

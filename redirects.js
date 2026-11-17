@@ -1046,7 +1046,38 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/nuxt/cloudflare/',
+  },
+  // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
+    destination: '/platforms/javascript/guides/:framework/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
+    destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/',
+    destination: '/platforms/javascript/guides/remix/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/',
+    destination: '/platforms/javascript/guides/remix/hydrogen/',
+  },
+  {
+    // The Cloudflare quick start links to every framework page.
+    source: '/platforms/javascript/guides/cloudflare/frameworks/',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -1064,17 +1095,17 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/express/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/express/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/fastify/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/fastify/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hapi/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/hapi/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hono/install/lightweight/',
@@ -1084,7 +1115,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/koa/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source:
@@ -1095,6 +1126,20 @@ const userDocsRedirects = [
     source:
       '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
+  },
+  // Express, Fastify, Hapi and Koa are single landing pages, their subpages moved to Node.js.
+  {
+    source: '/platforms/javascript/guides/fastify/features/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/fastify/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)__v:version/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)/:path+',
+    destination: '/platforms/javascript/guides/node/:path+/',
   },
   {
     source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',
@@ -2107,13 +2152,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {

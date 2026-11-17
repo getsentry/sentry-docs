@@ -30,7 +30,9 @@ Note that setting this to `false` doesn't prevent all overhead from Sentry instr
 
 <SdkOption name="debug" type="bool" defaultValue="false">
 
-Turns debug mode on or off. If debug is enabled, SDK will attempt to print out useful debugging information if something goes wrong with sending the event. It's generally not recommended to turn it on in production, though this will not cause any safety concerns.
+Turns debug mode on or off. If debug is enabled, SDK will attempt to print out useful debugging information if something goes wrong with sending the event.
+
+We don't recommend enabling debug mode in production. The SDK writes debug logs to the console synchronously, on the thread that logs them. When the SDK logs a lot, for example while tracing many view controllers, this can noticeably slow down your app and even cause app hangs. To log fewer messages while debugging, set <PlatformIdentifier name="diagnosticLevel" /> to a less verbose level, such as `warning`.
 
 </SdkOption>
 
@@ -1100,6 +1102,14 @@ This option is enabled by default starting with SDK version 9.0.0. Learn more in
 When enabled, the SDK tracks performance for HTTP requests if auto performance tracking and `enableSwizzling` are enabled.
 
 Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#network-tracking">Network Tracking</PlatformLink> documentation.
+
+</SdkOption>
+
+<SdkOption name="webViewTracing" type="SentryWebViewTracingOptions" defaultValue="nil" availableSince="9.34.0">
+
+Connects the traces of every `WKWebView` in the app with the app's trace, without calling `SentryWebViewTracing.addTracePropagation` for each WebView. Only pages on the hosts in `allowedHosts` receive the trace. Requires `enableSwizzling`. Not available on tvOS and watchOS.
+
+Learn more in the <PlatformLink to="/configuration/webview/#automatic-trace-propagation">WebView</PlatformLink> documentation.
 
 </SdkOption>
 

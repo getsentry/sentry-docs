@@ -29,6 +29,7 @@ import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {getSdkPackageName} from '../platformSdkPackageName';
+import {RuntimeSelector} from '../runtimeSelector';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
@@ -123,6 +124,7 @@ export async function DocPage({
               </hgroup>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
+                {frontMatter.runtime && <RuntimeSelector />}
                 <CodeContextProvider sdkPackage={sdkPackage}>
                   {children}
                 </CodeContextProvider>

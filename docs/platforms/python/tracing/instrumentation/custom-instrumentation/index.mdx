@@ -7,7 +7,7 @@ The Sentry SDK for Python does a very good job of auto instrumenting your applic
 
 <Alert>
 
-This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
+The examples on this page are for SDK `3.x`. The **SDK 2.x** tabs show the equivalent code for the default transaction mode of SDK `2.x`. If you use <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> in SDK `2.x`, follow the **SDK 3.x** examples, but call the tracing functions on `sentry_sdk.traces` (for example, `sentry_sdk.traces.start_span()`) and set `trace_lifecycle="stream"` in `sentry_sdk.init()`.
 
 </Alert>
 
@@ -17,19 +17,38 @@ The parameter `name` in `start_span()` used to be called `description`. In versi
 
 </Alert>
 
-## Add a Transaction/Service Span
+## Add a Service Span
 
-Adding transactions or service spans (in stream mode) will allow you to instrument and capture certain regions of your code.
+Adding service spans (transactions in SDK `2.x`) will allow you to instrument and capture certain regions of your code.
 
 <Alert>
 
-If you're using one of Sentry's SDK integrations, transactions/service spans will be created for you automatically.
+If you're using one of Sentry's SDK integrations, service spans will be created for you automatically.
 
 </Alert>
 
-The following example creates a transaction/service span for an expensive operation (in this case, `eat_pizza`), and then sends the result to Sentry:
+The following example creates a service span for an expensive operation (in this case, `eat_pizza`), and then sends the result to Sentry:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
+import sentry_sdk
+
+def eat_slice(slice):
+    ...
+
+def eat_pizza(pizza):
+    with sentry_sdk.start_span(
+        name="Eat Pizza",
+        attributes={"sentry.op": "task"},
+        # set parent span to None to create service span
+        parent_span=None,
+    ):
+        while pizza.slices > 0:
+            span = sentry_sdk.start_span(name="Eat Slice")
+            eat_slice(pizza.slices.pop())
+            span.end()
+```
+
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 def eat_slice(slice):
@@ -41,48 +60,46 @@ def eat_pizza(pizza):
             eat_slice(pizza.slices.pop())
 ```
 
-```python {tabTitle:Stream Mode}
+The [API reference](https://getsentry.github.io/sentry-python/api.html#performance-monitoring) documents `start_span`, along with its parameters.
+
+<Alert>
+
+`sentry_sdk.start_span()` can, but doesn't have to be, used as a context manager. If you don't use it as a context manager, make sure to call `span.end()` to finish the span.
+
+In SDK `2.x`, `sentry_sdk.start_transaction()` is meant to be used as a context manager. This ensures that the transaction will be properly set as active and any spans created within will be attached to it.
+
+</Alert>
+
+## Add Spans to a Service Span
+
+If you want to have more fine-grained performance monitoring, you can add child spans to your service span, which can be done by either:
+
+- Using a context manager
+- Using a decorator (this works on sync and async functions)
+- Manually starting and finishing a span
+
+Calling `sentry_sdk.start_span()` will find the current active span and attach the new span to it.
+
+### Using a Context Manager
+
+```python {tabTitle:SDK 3.x}
 import sentry_sdk
 
 def eat_slice(slice):
     ...
 
 def eat_pizza(pizza):
-    with sentry_sdk.traces.start_span(
+    with sentry_sdk.start_span(
         name="Eat Pizza",
         attributes={"sentry.op": "task"},
-        # set parent span to None to create service span
         parent_span=None,
     ):
         while pizza.slices > 0:
-            span = sentry_sdk.traces.start_span(name="Eat Slice")
-            eat_slice(pizza.slices.pop())
-            span.end()
+            with sentry_sdk.start_span(name="Eat Slice"):
+                eat_slice(pizza.slices.pop())
 ```
 
-The [API reference](https://getsentry.github.io/sentry-python/api.html#performance-monitoring) documents `start_transaction` and `start_span`, along with their parameters.
-
-<Alert>
-
-Note that `sentry_sdk.start_transaction()` (transaction mode) is meant be used as a context manager. This ensures that the transaction/service span will be properly set as active and any spans created within will be attached to it.
-
-In stream mode, `sentry_sdk.traces.start_span()` can, but doesn't have to be, used as a context manager. If you don't use it as a context manager, make sure to call `span.end()` to finish the span.
-
-</Alert>
-
-## Add Spans to a Transaction/Service Span
-
-If you want to have more fine-grained performance monitoring, you can add child spans to your transaction/service span, which can be done by either:
-
-- Using a context manager
-- Using a decorator (this works on sync and async functions)
-- Manually starting and finishing a span
-
-Calling `sentry_sdk.start_span()` in transaction mode or `sentry_sdk.traces.start_span()` in stream mode will find the current active transaction/span and attach the new span to it.
-
-### Using a Context Manager
-
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 def eat_slice(slice):
@@ -95,26 +112,26 @@ def eat_pizza(pizza):
                 eat_slice(pizza.slices.pop())
 ```
 
-```python {tabTitle:Stream Mode}
+### Using a Decorator
+
+```python {tabTitle:SDK 3.x}
 import sentry_sdk
 
+@sentry_sdk.trace
 def eat_slice(slice):
     ...
 
 def eat_pizza(pizza):
-    with sentry_sdk.traces.start_span(
+    with sentry_sdk.start_span(
         name="Eat Pizza",
         attributes={"sentry.op": "task"},
         parent_span=None,
     ):
         while pizza.slices > 0:
-            with sentry_sdk.traces.start_span(name="Eat Slice"):
-                eat_slice(pizza.slices.pop())
+            eat_slice(pizza.slices.pop())
 ```
 
-### Using a Decorator
-
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 @sentry_sdk.trace
@@ -127,34 +144,35 @@ def eat_pizza(pizza):
             eat_slice(pizza.slices.pop())
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-@sentry_sdk.traces.trace
-def eat_slice(slice):
-    ...
-
-def eat_pizza(pizza):
-    with sentry_sdk.traces.start_span(
-        name="Eat Pizza",
-        attributes={"sentry.op": "task"},
-        parent_span=None,
-    ):
-        while pizza.slices > 0:
-            eat_slice(pizza.slices.pop())
-```
-
 See the [@sentry_sdk.trace decoration section](#sentry_sdktrace-decorator) below for more details.
 
 <Alert level="warning" title="Static & class methods">
 
-When tracing a static or class method, you **must** add the `@sentry_sdk.trace` (transaction mode)/`@sentry_sdk.traces.trace` (stream mode) decorator **after** the `@staticmethod` or `@classmethod` decorator (i.e., **closer** to the function definition). Otherwise, your function will break! This applies in both transaction mode and stream mode.
+When tracing a static or class method, you **must** add the `@sentry_sdk.trace` decorator **after** the `@staticmethod` or `@classmethod` decorator (i.e., **closer** to the function definition). Otherwise, your function will break.
 
 </Alert>
 
 ### Manually Starting and Finishing a Span
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
+import sentry_sdk
+
+def eat_slice(slice):
+    ...
+
+def eat_pizza(pizza):
+    with sentry_sdk.start_span(
+        name="Eat Pizza",
+        attributes={"sentry.op": "task"},
+        parent_span=None,
+    ):
+        while pizza.slices > 0:
+            span = sentry_sdk.start_span(name="Eat Slice")
+            eat_slice(pizza.slices.pop())
+            span.end()
+```
+
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 def eat_slice(slice):
@@ -168,25 +186,7 @@ def eat_pizza(pizza):
             span.finish()
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-def eat_slice(slice):
-    ...
-
-def eat_pizza(pizza):
-    with sentry_sdk.traces.start_span(
-        name="Eat Pizza",
-        attributes={"sentry.op": "task"},
-        parent_span=None,
-    ):
-        while pizza.slices > 0:
-            span = sentry_sdk.traces.start_span(name="Eat Slice")
-            eat_slice(pizza.slices.pop())
-            span.end()
-```
-
-When you create your span manually, make sure to call `span.finish()` (transaction mode) or `span.end()` (stream mode) after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
+When you create your span manually, make sure to call `span.end()` (in SDK `2.x`, `span.finish()`) after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
 
 ## Nested Spans
 
@@ -194,7 +194,7 @@ Spans can be nested to form a span tree. If you'd like to learn more, read our [
 
 ### Using a Context Manager
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
 import sentry_sdk
 
 def chew():
@@ -206,21 +206,21 @@ def eat_slice(slice):
             chew()
 ```
 
-```python {tabTitle:Stream Mode}
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 def chew():
     ...
 
 def eat_slice(slice):
-    with sentry_sdk.traces.start_span(name="Eat Slice"):
-        with sentry_sdk.traces.start_span(name="Chew"):
+    with sentry_sdk.start_span(name="Eat Slice"):
+        with sentry_sdk.start_span(name="Chew"):
             chew()
 ```
 
 ### Using a Decorator
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
 import sentry_sdk
 
 @sentry_sdk.trace
@@ -232,14 +232,14 @@ def eat_slice(slice):
     chew()
 ```
 
-```python {tabTitle:Stream Mode}
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
-@sentry_sdk.traces.trace
+@sentry_sdk.trace
 def chew():
     ...
 
-@sentry_sdk.traces.trace
+@sentry_sdk.trace
 def eat_slice(slice):
     chew()
 ```
@@ -248,7 +248,24 @@ See the [@sentry_sdk.trace decoration section](#sentry_sdktrace-decorator) below
 
 ### Manually Starting and Finishing
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
+import sentry_sdk
+
+def chew():
+    ...
+
+def eat_slice(slice):
+    parent_span = sentry_sdk.start_span(name="Eat Slice")
+
+    # pass the parent span via `parent_span` to create a child span
+    child_span = sentry_sdk.start_span(name="Chew", parent_span=parent_span)
+    chew()
+    child_span.end()
+
+    parent_span.end()
+```
+
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 def chew():
@@ -264,37 +281,21 @@ def eat_slice(slice):
     parent_span.finish()
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
+There's no separate `start_child()` method. Instead, the span will become the child of the currently active span. Alternatively, you can pass the parent span explicitly via `parent_span` when starting the child (as shown in the example above). See the [API reference](https://getsentry.github.io/sentry-python/api.html#sentry_sdk.api.start_span) for more details.
 
-def chew():
-    ...
+In SDK `2.x`, the parameters of `start_span()` and `start_child()` are the same.
 
-def eat_slice(slice):
-    parent_span = sentry_sdk.traces.start_span(name="Eat Slice")
-
-    # pass the parent span via `parent_span` to create a child span
-    child_span = sentry_sdk.traces.start_span(name="Chew", parent_span=parent_span)
-    chew()
-    child_span.end()
-
-    parent_span.end()
-```
-
-In transaction mode, the parameters of `start_span()` and `start_child()` are the same. See the [API reference](https://getsentry.github.io/sentry-python/api.html#sentry_sdk.api.start_span) for more details.
-In stream mode, however, there's no separate `start_child()` method. Instead, the span will become the child of the currently active span. Alternatively, you can pass the parent span explicitly via `parent_span` when starting the child (as shown in the example above).
-
-When you create your span manually, make sure to call `span.finish()` (transaction mode) or `span.end()` (stream mode) after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
+When you create your span manually, make sure to call `span.end()` (in SDK `2.x`, `span.finish()`) after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
 
 ### Sibling Spans
 
 <Alert>
 
-Only available in stream mode.
+In SDK `2.x`, only available in stream mode.
 
 </Alert>
 
-In stream mode, a span normally attaches to whatever span is currently active. To control parentage explicitly, for example to make a span a sibling instead of a child, pass `parent_span` directly:
+A span normally attaches to whatever span is currently active. To control parentage explicitly, for example to make a span a sibling instead of a child, pass `parent_span` directly:
 
 ```python
 import sentry_sdk
@@ -306,9 +307,9 @@ def chew():
     ...
 
 def eat_pizza(pizza):
-    with sentry_sdk.traces.start_span(name="Eat Pizza") as pizza_span:
-        with sentry_sdk.traces.start_span(name="Eat Slice"):
-            with sentry_sdk.traces.start_span(name="Chew", parent_span=pizza_span):
+    with sentry_sdk.start_span(name="Eat Pizza") as pizza_span:
+        with sentry_sdk.start_span(name="Eat Slice"):
+            with sentry_sdk.start_span(name="Chew", parent_span=pizza_span):
                 # "Chew" is a sibling of "Eat Slice", not its child
                 chew()
             eat_slice(pizza.slices.pop())
@@ -316,9 +317,9 @@ def eat_pizza(pizza):
 
 ## @sentry_sdk.trace decorator
 
-In transaction mode, you can set `op`, `name` and `attributes` parameters in the `@sentry_sdk.trace` decorator to customize your spans. Attribute values can only be primitive types (like `int`, `float`, `bool`, `str`) or a list of those types without mixing types.
+The `@sentry_sdk.trace` decorator accepts `name`, `attributes`, and `active` to customize your spans. Note that there's no `op` parameter; set the operation as the `sentry.op` key in `attributes` instead. Attribute values can only be primitive types (like `int`, `float`, `bool`, `str`) or a list of those types without mixing types.
 
-In stream mode, the decorator is `@sentry_sdk.traces.trace` and accepts `name`, `attributes`, and `active`. Note that there's no `op` parameter; set the operation as the `sentry.op` key in `attributes` instead. Attribute values can only be primitive types (like `int`, `float`, `bool`, `str`) or a list of those types without mixing types.
+In SDK `2.x`, the decorator accepts `op`, `name`, and `attributes`.
 
 <Alert level="warning" title="Static & class methods">
 
@@ -326,10 +327,10 @@ When tracing a static or class method, you **must** add the decorator **after** 
 
 </Alert>
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
 import sentry_sdk
 
-@sentry_sdk.trace(op="my_op", name="Paul", attributes={"x": True})
+@sentry_sdk.trace(name="Paul", attributes={"sentry.op": "my_op", "x": True})
 def my_function(i):
     ...
 
@@ -341,14 +342,14 @@ def root_function():
 root_function()
 ```
 
-```python {tabTitle:Stream Mode}
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
-@sentry_sdk.traces.trace(name="Paul", attributes={"sentry.op": "my_op", "x": True})
+@sentry_sdk.trace(op="my_op", name="Paul", attributes={"x": True})
 def my_function(i):
     ...
 
-@sentry_sdk.traces.trace
+@sentry_sdk.trace
 def root_function():
     for i in range(3):
         my_function(i)
@@ -373,7 +374,7 @@ gantt
 
 <Alert>
 
-The `template` parameter is only available in transaction mode.
+Only available in SDK versions prior to `3.0`.
 
 </Alert>
 
@@ -451,13 +452,13 @@ To enable performance monitoring for the functions specified in `functions_to_tr
 
 <Alert>
 
-Only available in transaction mode.
+Only available in SDK versions prior to `3.0`. Use [`sentry_sdk.get_current_span()`](#accessing-the-current-span) instead.
 
 </Alert>
 
 The `sentry_sdk.get_current_scope().transaction` property returns the active transaction or `None` if no transaction is active. You can use this property to modify data on the transaction.
 
-```python {tabTitle:Transaction Mode (Default)}
+```python
 import sentry_sdk
 
 def eat_pizza(pizza):
@@ -472,11 +473,22 @@ def eat_pizza(pizza):
 
 ## Accessing the Current Span
 
-To change data in the current span, use ` sentry_sdk.get_current_span()` (transaction mode) or `sentry_sdk.traces.get_current_span()` (stream mode). This function will return a span if there's one running, otherwise it will return `None`.
+To change data in the current span, use `sentry_sdk.get_current_span()`. This function will return a span if there's one running, otherwise it will return `None`.
 
 In this example, we'll set custom data in the span created by the `@sentry_sdk.trace` decorator.
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
+import sentry_sdk
+
+@sentry_sdk.trace
+def eat_slice(slice):
+    span = sentry_sdk.get_current_span()
+
+    if span is not None:
+        span.set_attribute("slice_id", slice.id)
+```
+
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 
 @sentry_sdk.trace
@@ -487,33 +499,14 @@ def eat_slice(slice):
         span.set_tag("slice_id", slice.id)
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-
-@sentry_sdk.traces.trace
-def eat_slice(slice):
-    span = sentry_sdk.traces.get_current_span()
-
-    if span is not None:
-        span.set_attribute("slice_id", slice.id)
-```
-
 ## Adding Span Attributes
 
 Span attributes describe an operation in a trace: which provider handled a request, which fallback ran, or what outcome it produced. When investigating a slow checkout, compare charge spans by `payment.provider` and open an outlier trace to see what happened. The span already records its duration, so you don't need a separate duration attribute.
 
-Add attributes to the span for the operation they describe, rather than creating an empty span just to hold attributes. In transaction mode, use `set_data()`; in stream mode, use `set_attribute()` or `set_attributes()`. Values can be strings, numbers, booleans, or arrays containing only one of these types. For example, record what happens during a payment charge:
+Add attributes to the span for the operation they describe, rather than creating an empty span just to hold attributes. Use `set_attribute()` or `set_attributes()` (in SDK `2.x`, `set_data()`). Values can be strings, numbers, booleans, or arrays containing only one of these types. For example, record what happens during a payment charge:
 
-```python {tabTitle:Transaction Mode (Default)}
-with sentry_sdk.start_span(op="payment.charge", name="Charge payment provider") as span:
-    span.set_data("payment.provider", provider.name)
-    result = provider.charge(order)
-    span.set_data("payment.retry_count", result.retry_count)
-    span.set_data("payment.outcome", result.outcome)
-```
-
-```python {tabTitle:Stream Mode}
-with sentry_sdk.traces.start_span(
+```python {tabTitle:SDK 3.x}
+with sentry_sdk.start_span(
     name="Charge payment provider",
     attributes={"sentry.op": "payment.charge", "payment.provider": provider.name},
 ) as span:
@@ -522,6 +515,14 @@ with sentry_sdk.traces.start_span(
         "payment.retry_count": result.retry_count,
         "payment.outcome": result.outcome,
     })
+```
+
+```python {tabTitle:SDK 2.x}
+with sentry_sdk.start_span(op="payment.charge", name="Charge payment provider") as span:
+    span.set_data("payment.provider", provider.name)
+    result = provider.charge(order)
+    span.set_data("payment.retry_count", result.retry_count)
+    span.set_data("payment.outcome", result.outcome)
 ```
 
 Choose consistent names and values you can filter or group by. Avoid sensitive values such as raw search terms and payment details. In [Trace Explorer](/product/trace-explorer/), filter on `span.op:payment.charge`, compare `span.duration` by `payment.provider`, and open a slow sample to inspect retries and other bottlenecks.
@@ -544,11 +545,11 @@ Attributes belong to sampled traces. For counters, gauges, or distributions inde
 
 <Alert>
 
-`sentry_sdk.update_current_span()` isn't available in stream mode. Retrieve the current span with `sentry_sdk.traces.get_current_span()` and update its attributes using `set_attribute()` or `set_attributes()`.
+Only available in SDK versions prior to `3.0`. Retrieve the current span with `sentry_sdk.get_current_span()` and update its attributes using `set_attribute()` or `set_attributes()` instead.
 
 </Alert>
 
-In transaction mode, you can update the data of the currently running span using the `sentry_sdk.update_current_span()` function. You can set `op`, `name` and `attributes` to update your span. Attribute values can only be primitive types (like `int`, `float`, `bool`, `str`) or a list of those types without mixing types.
+In SDK `2.x`, you can update the data of the currently running span using the `sentry_sdk.update_current_span()` function. You can set `op`, `name` and `attributes` to update your span. Attribute values can only be primitive types (like `int`, `float`, `bool`, `str`) or a list of those types without mixing types.
 
 ```python {diff}
  import sentry_sdk
