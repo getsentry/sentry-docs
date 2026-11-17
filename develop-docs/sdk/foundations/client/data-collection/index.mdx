@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 0.18.0
     date: 2026-11-17
-    summary: Define the installation identifier. `userInfo` does not gate it, and SDKs must generate it at random instead of deriving it from hardware or system values.
+    summary: Define the installation identifier. `userInfo` does not gate it, and SDKs must not base it on values that identify the device outside the app.
   - version: 0.17.0
     date: 2026-10-12
     summary: "Attach text bodies unchanged. SDKs no longer parse bodies to scrub them. Server-side scrubbing applies to the body."
@@ -100,7 +100,7 @@ Collected data is grouped into three sensitivity levels. These levels form the o
 
 Non-identifying context used for debugging and performance. Examples include, but are not limited to:
 
-- Device and environment context (OS, runtime, non-PII identifiers such as a random [installation identifier](#installation-identifier))
+- Device and environment context (OS, runtime, non-PII identifiers such as the [installation identifier](#installation-identifier))
 - Performance and error context (stack frames, breadcrumbs, span metadata)
 - Framework/routing context where it does not contain PII or secrets
 - Generative AI metadata (model name, token counts, tool names, etc.)
@@ -354,7 +354,7 @@ SDKs **MAY** generate an identifier for each installation of an app. SDKs that d
 
 `dataCollection` options, including `userInfo`, **MUST NOT** gate this identifier. It identifies an installation, not a person.
 
-The SDK **MUST** generate the identifier at random, for example as a UUID. It **MUST NOT** derive the identifier from hardware or system values, such as a MAC address, a serial number, or a host name, because those values also identify the device outside Sentry. If the SDK can't store the identifier, it **SHOULD** keep a random one in memory for the life of the process.
+The SDK **SHOULD** generate the identifier at random, for example as a UUID. It **MAY** instead use an identifier that the platform provides and scopes to the app, such as a pseudonymous per-device, per-app ID. It **MUST NOT** use values that identify the device outside the app, such as a MAC address, a serial number, or a host name. A plain hash of such a value still identifies the device. If the SDK can't store the identifier, it **SHOULD** keep a random one in memory for the life of the process.
 
 A user ID that the user sets, for example with `Sentry.setUser()`, always takes precedence over the installation identifier.
 
@@ -717,7 +717,7 @@ init({
 });
 ```
 
-**Result:** The SDK no longer populates `user.id`, `user.email`, `user.username`, or `user.ip_address` from instrumentation sources. The random [installation identifier](#installation-identifier) can still fill `user.id` when no user ID is set. User data explicitly set via `Sentry.setUser()` is still attached. All other options use their defaults.
+**Result:** The SDK no longer populates `user.id`, `user.email`, `user.username`, or `user.ip_address` from instrumentation sources. The [installation identifier](#installation-identifier) can still fill `user.id` when no user ID is set. User data explicitly set via `Sentry.setUser()` is still attached. All other options use their defaults.
 
 ### Restrict Body Collection
 
