@@ -210,6 +210,7 @@ When available, environment variable names are listed in the **Environment Varia
 | `legacy_web_symbolication` | —                    | boolean | `false`                                       | Uses legacy symbolication for Flutter Web. See [Debug IDs](#debug-ids-flutter-web) |
 | `commits`                  | —                    | string  | `auto`                                        | Release commits integration                                                        |
 | `ignore_missing`           | —                    | boolean | `false`                                       | Ignore missing commits previously used in the release                              |
+| `finalize_release`         | —                    | boolean | `true`                                        | Finalizes the release after upload. Set to `false` to finalize it later (3.5.0+)   |
 | `wait_for_processing`      | —                    | boolean | `false`                                       | Whether to wait for server-side processing of uploaded files                       |
 | `log_level`                | `SENTRY_LOG_LEVEL`   | string  | `warn`                                        | Log level for sentry-cli: `trace`, `debug`, `info`, `warn`, `error`                |
 | `bin_dir`                  | —                    | string  | `.dart_tool/pub/bin/sentry_dart_plugin`       | Folder where the plugin downloads the sentry-cli binary                            |
@@ -258,6 +259,25 @@ Set `ignore_missing: true` in your configuration to bypass this validation:
 ```yaml {filename:pubspec.yaml}
 sentry:
   ignore_missing: true
+```
+
+</Expandable>
+
+<Expandable title="How do I keep a release from being marked as released before it ships?">
+
+By default, the plugin finalizes the release after it uploads files, which sets the release date in Sentry. If you upload debug symbols at build time but ship later, for example with a staged rollout or a build that only goes to internal testers, Sentry marks the release as released before any users have it.
+
+Set `finalize_release: false` to skip this step. This option is available since version 3.5.0 of the Sentry Dart Plugin.
+
+```yaml {filename:pubspec.yaml}
+sentry:
+  finalize_release: false
+```
+
+When the build goes live, finalize the release with [Sentry CLI](/cli/releases/):
+
+```bash
+sentry-cli releases finalize <release> --released <timestamp>
 ```
 
 </Expandable>
