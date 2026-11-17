@@ -263,6 +263,45 @@ A more secure approach is to set authentication via environment variable or `~/.
 
 </Alert>
 
+## Uploading Debug Files Separately From the Build
+
+If you'd rather upload debug files in a separate pipeline step (for example, a release stage that runs after the build), turn off the MSBuild upload and collect the files yourself. Then run `sentry-cli debug-files upload` on them later.
+
+You don't need to filter files by extension. Sentry CLI reads each file's contents to find debug information, skips everything else, and looks inside `.zip` archives. You can upload a whole folder or a zipped artifact as-is.
+
+### Which Files to Collect
+
+**Android** (`net*-android`)
+- `bin/<Configuration>/<TargetFramework>/`: `.pdb`, plus `.dll` (may contain an embedded portable PDB)
+- `obj/<Configuration>/<TargetFramework>/`, recursively: `.so` and `.dbg.so` native libraries. Skip files ending in `.dll.so`.
+- If trimming is enabled: `obj/<Configuration>/<TargetFramework>/linked/*.pdb` or `postprocessed-assemblies/*.pdb`
+
+**iOS and Mac Catalyst** (`net*-ios`, `net*-maccatalyst`)
+- `bin/<Configuration>/<TargetFramework>/<RuntimeIdentifier>/`: the whole `.dSYM` bundle. The debug file inside has no extension, so copy the bundle folder rather than filtering by extension.
+- Trimmed PDBs: `obj/.../linked/*.pdb` or `obj/.../postprocessed-assemblies/*.pdb`
+
+**Windows, macOS, Linux (managed builds)**
+- Output folder: `.pdb` and `.dll`
+
+**Native AOT** (`PublishAot=true`)
+- Publish folder: `.pdb` (Windows), `.dbg` (Linux), `.dSYM` (macOS)
+
+### Source Context
+
+Sentry CLI reads source files from the paths recorded in your PDBs, so you must bundle sources on the machine that built the app. Run this as part of the build and include the resulting `.src.zip` files in your artifact:
+
+    sentry-cli debug-files bundle-sources path/to/*.pdb
+
+If you build with `EmbedAllSources`, the sources are already inside the PDBs and you can skip this step.
+
+### Uploading
+
+    sentry-cli debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ symbols.zip
+
+<Alert>
+Network errors such as timeouts aren't retried automatically, so add a retry around this step in your CI system (for example, `retryCountOnTaskFailure` in Azure Pipelines).
+</Alert>
+
 ## Building with Docker
 
 When building inside a Docker container, there are two things to handle: passing the auth token securely, and avoiding errors in multi-stage builds.
