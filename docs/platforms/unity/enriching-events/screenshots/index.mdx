@@ -42,13 +42,18 @@ If the screenshot can't be taken, for example because the main thread doesn't re
 
 ### Native Errors
 
-| Platform              | Screenshot for native errors and crashes                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| iOS                   | Captured by sentry-cocoa, only with <PlatformLink to="/native-support/#build-time-initialization">build time initialization</PlatformLink> |
-| Windows               | Captured by sentry-native when the game crashes                                                                                            |
-| Android, macOS, Linux | None                                                                                                                                       |
+| Platform              | Screenshot for native crashes                   |
+| --------------------- | ----------------------------------------------- |
+| iOS                   | Captured by sentry-cocoa when the game crashes  |
+| Windows               | Captured by sentry-native when the game crashes |
+| Android, macOS, Linux | None                                            |
 
-These screenshots are taken by the native SDK, so they include overlays, and <PlatformIdentifier name="SetBeforeCaptureScreenshot" /> and <PlatformIdentifier name="SetBeforeSendScreenshot" /> don't apply to them.
+Other events the native SDKs capture, such as failed HTTP requests captured by sentry-cocoa, don't get a screenshot.
+
+Native crash screenshots are taken by the native SDK in its crash handler, so they include overlays, and <PlatformIdentifier name="SetBeforeCaptureScreenshot" /> and <PlatformIdentifier name="SetBeforeSendScreenshot" /> can't run for them:
+
+- On iOS, setting either callback turns native crash screenshots off, so a crash doesn't send a screenshot your callbacks would have skipped or masked. With <PlatformLink to="/native-support/#build-time-initialization">build time initialization</PlatformLink>, the native SDK's options are fixed when you build, so only callbacks set in your [options configuration script](/platforms/unity/configuration/options/programmatic-configuration/) turn them off.
+- On Windows, sentry-native attaches them whether or not these callbacks are set.
 
 <Alert>
 
