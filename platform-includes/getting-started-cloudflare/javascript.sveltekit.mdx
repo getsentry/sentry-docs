@@ -26,21 +26,6 @@ The Sentry wizard, as well as this guide, will use it as the default way of sett
 
 ## Install
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-  ]}
-/>
-
-<Include name="quick-start-features-expandable-cloudflare-frameworks" />
-
-### Install the Sentry SDK
-
 Run the command for your preferred package manager to add the Sentry SDK to your application:
 
 If you're updating your Sentry SDK to the latest version, check out our <PlatformLink to="/migration/v10-to-v11/">migration guide</PlatformLink> to learn more about breaking changes.
@@ -58,6 +43,8 @@ pnpm add @sentry/sveltekit
 ```
 
 ## Configure
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
 
 You need to initialize and configure the Sentry SDK in three places: the client side, the server side, and your Vite config.
 
@@ -65,41 +52,39 @@ You need to initialize and configure the Sentry SDK in three places: the client 
 
 Create a client hooks file `src/hooks.client.(js|ts)` in your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError).
 
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippets.
+
 ```javascript {filename:src/hooks.client.(js|ts)} {1, 3-37, 43}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // ___PRODUCT_OPTION_START___ performance
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
   integrations: [
-    // ___PRODUCT_OPTION_START___ session-replay
+    // enables Session Replay (only available on client-side)
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
-    // ___PRODUCT_OPTION_START___ user-feedback
+    // enables User Feedback
     Sentry.feedbackIntegration({
       // Additional SDK configuration goes in here, for example:
       colorScheme: "system",
     }),
-    // ___PRODUCT_OPTION_END___ user-feedback
   ],
 
-  // ___PRODUCT_OPTION_START___ session-replay
-  // Capture Replay for 10% of all sessions,
+  // Capture replays for 10% of all sessions,
   // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  // Requires Sentry.replayIntegration()
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 const myErrorHandler = ({ error, event }) => {
@@ -125,11 +110,9 @@ const config = {
       instrumentation: {
         server: true,
       },
-      // ___PRODUCT_OPTION_START___ performance
       tracing: {
         server: true,
       },
-      // ___PRODUCT_OPTION_END___ performance
     },
   },
 };
@@ -144,11 +127,9 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     sveltekit({
-      // ___PRODUCT_OPTION_START___ performance
       tracing: {
         server: true,
       },
-      // ___PRODUCT_OPTION_END___ performance
       // ... rest of your SvelteKit config
     }),
   ],
@@ -171,15 +152,10 @@ export const handle = sequence(
   initCloudflareSentryHandle({
     dsn: "___PUBLIC_DSN___",
 
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for tracing.
-    // We recommend adjusting this value in production
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    // Enables Tracing.
+    // Set to 1.0 to capture 100% of spans for tracing.
+    // We recommend reducing this value in production.
     tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
   }),
   sentryHandle()
 );
@@ -215,7 +191,7 @@ export default defineConfig({
   platform="javascript.cloudflare"
 />
 
-### Add Readable Stack Traces With Source Maps (Optional)
+### Add Readable Stack Traces With Source Maps
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.(js|ts)` file:
 
@@ -247,87 +223,41 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 <Include name="vite-loadenv-hint-splitlayout.mdx" />
 
-### Control the Data You Send to Sentry (Optional)
+### Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+Add a test button to one of your pages that throws an error when clicked:
 
-To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/routes/sentry-example/+page.svelte` with a button that throws an error when clicked.
-
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page `sentry-example` in a browser and click the button to trigger a
-  frontend error.
-</OnboardingOption>
+```javascript
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Example Frontend Error");
+  }}
+>
+  <span>Throw Sample Error</span>
+</button>
+```
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-```html {filename:+page.svelte}
-<script>
-  function throwTestError() {
-    throw new Error("Sentry Example Frontend Error");
-  }
-</script>
-
-<button type="button" onclick="{throwTestError}">Throw error</button>
-```
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-To test tracing, create a test API route like `src/routes/sentry-example/+server.(js|ts)`.
-
-```javascript {filename:+server.(js|ts)}
-export const GET = async () => {
-  throw new Error("Sentry Example API Route Error");
-};
-```
-
-Next, update your test button to call this route and throw an error if the response isn't `ok`.
-
-Open the page `sentry-example` in a browser and click the button to trigger two errors:
-
-- a frontend error
-- an error within the API route
-
-Additionally, this starts a trace to measure the time it takes for the API request to complete.
-
-```html {filename:+page.svelte}
-<script>
-  import * as Sentry from "@sentry/sveltekit";
-
-  function throwTestError() {
-    Sentry.startSpan(
-      {
-        name: "Example Frontend Span",
-        op: "test",
-      },
-      async () => {
-        const res = await fetch("/sentry-example");
-        if (!res.ok) {
-          throw new Error("Sentry Example Frontend Error");
-        }
-      }
-    );
-  }
-</script>
-
-<button type="button" onclick="{throwTestError}">Throw error with trace</button>
-```
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/javascript-quick-start-verify-logs-splitlayout" />
-
-</OnboardingOption>
-
-<Include name="metrics/javascript-quick-start-verify-metrics-splitlayout" />
 
 ### View Captured Data in Sentry
 
@@ -337,15 +267,10 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your SvelteKit application and should already be sending data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics.
-Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to [manually capture errors](/platforms/javascript/guides/cloudflare/usage/)
-- Continue to [customize your configuration](/platforms/javascript/guides/cloudflare/configuration/)
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
 - Learn how to [manually instrument](/platforms/javascript/guides/sveltekit/apis/#load-function-instrumentation) SvelteKit-specific features
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">

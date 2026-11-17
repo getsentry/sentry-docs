@@ -4,7 +4,7 @@ This page describes how to manually propagate trace information into and out of 
 
 <Alert>
 
-This page covers both transaction mode (default) and stream mode. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> to learn more.
+The examples on this page are for SDK `3.x`. The **SDK 2.x** tabs show the equivalent code for the default transaction mode of SDK `2.x`. If you use <PlatformLink to="/tracing/streamed-spans/">stream mode</PlatformLink> in SDK `2.x`, follow the **SDK 3.x** examples, but call the tracing functions on `sentry_sdk.traces` (for example, `sentry_sdk.traces.start_span()`) and set `trace_lifecycle="stream"` in `sentry_sdk.init()`.
 
 </Alert>
 
@@ -17,15 +17,28 @@ Incoming tracing information has to be extracted and stored in memory for later 
 - You also can pick up tracing information from environment variables.
 
 <Alert>
-In **transaction mode**, `sentry_sdk.continue_trace()` returns a transaction, but does not start it. To start the transaction, use `start_transaction()`.
 
-In **stream mode**, `sentry_sdk.traces.continue_trace()` replaces `sentry_sdk.continue_trace()` and is not a context manager. The next span created with `sentry_sdk.traces.start_span()` picks it up automatically.
+`sentry_sdk.continue_trace()` isn't a context manager and doesn't start a span. The next span created with `sentry_sdk.start_span()` picks up the incoming trace automatically.
+
+In SDK `2.x`, `sentry_sdk.continue_trace()` returns a transaction, but doesn't start it. To start the transaction, use `start_transaction()`.
 
 </Alert>
 
 Here's an example of how to extract and store incoming tracing information using `continue_trace()`:
 
-```python {tabTitle:Transaction Mode (Default)}
+```python {tabTitle:SDK 3.x}
+import sentry_sdk
+from my_project import get_incoming_headers_as_dict
+
+headers = get_incoming_headers_as_dict()
+
+sentry_sdk.continue_trace(headers)
+
+with sentry_sdk.start_span(name="handle request"):
+    ...
+```
+
+```python {tabTitle:SDK 2.x}
 import sentry_sdk
 from my_project import get_incoming_headers_as_dict
 
@@ -36,38 +49,26 @@ with sentry_sdk.start_transaction(transaction):
     ...
 ```
 
-```python {tabTitle:Stream Mode}
-import sentry_sdk
-from my_project import get_incoming_headers_as_dict
-
-headers = get_incoming_headers_as_dict()
-
-sentry_sdk.traces.continue_trace(headers)
-
-with sentry_sdk.traces.start_span(name="handle request"):
-    ...
-```
-
 In these examples, `get_incoming_headers_as_dict()` returns a dictionary that contains tracing information from HTTP headers, environment variables, or any other mechanism your project uses to communicate with the outside world.
 
 ## 2. Start a New Trace
 
 <Alert level="warning">
-  This step only applies to stream mode and is not available in transaction
-  mode.
+  In SDK `2.x`, this step only applies to stream mode, where the function is
+  `sentry_sdk.traces.new_trace()`. It isn't available in transaction mode.
 </Alert>
 
-In stream mode, if you need to start a completely new trace unconnected to the current one, use `sentry_sdk.traces.new_trace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
+If you need to start a completely new trace unconnected to the current one, use `sentry_sdk.new_trace()`. This is useful for background jobs or scheduled tasks where you want a clean trace boundary:
 
 ```python
 import sentry_sdk
 
-with sentry_sdk.traces.start_span(name="span in trace 1"):
+with sentry_sdk.start_span(name="span in trace 1"):
     ...
 
-sentry_sdk.traces.new_trace()
+sentry_sdk.new_trace()
 
-with sentry_sdk.traces.start_span(name="span in trace 2"):
+with sentry_sdk.start_span(name="span in trace 2"):
     # This span is the root of a new, separate trace
     ...
 ```
