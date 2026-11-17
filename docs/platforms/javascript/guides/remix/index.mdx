@@ -1,11 +1,10 @@
 ---
 title: Remix
-description: Learn how to set up and configure Sentry in your Remix application using the installation wizard and capture your events.
+description: Learn how to set up and configure Sentry in your Remix application using the Sentry CLI and capture your events.
 sdk: sentry.javascript.remix
 categories:
   - browser
   - server
-runtime: node
 ---
 
 <Alert level="warning" title="Using Remix 3?">
@@ -20,29 +19,17 @@ This guide covers Remix 2. Support for [Remix 3](https://remix.run/blog/remix-3-
 
 ## Install
 
-To install Sentry using the installation wizard, run the following command within your project:
+<PlatformContent includePath="sentry-init/experimental-warning" />
 
-The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
+<PlatformContent includePath="sentry-init/install-command" />
+
 **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#4](#send-logs) and [#5](#send-application-metrics-).
-
-```bash
-npx @sentry/wizard@latest -i remix
-```
 
 <Include name="quick-start-features-expandable" />
 
-This guide assumes that you enable all features and allow the wizard to create an example page. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
+<PlatformContent includePath="sentry-init/how-it-works" />
 
-<Expandable title="What does the installation wizard change inside your application?">
-
-- Creates or updates `entry.(client|server).tsx` to initialize the SDK
-- Creates `.env.sentry-build-plugin` with an auth token to upload source maps
-  (this file is automatically added to `.gitignore`)
-- Updates your build script or Vite configuration to automatically upload source maps to Sentry
-- Instruments your application to support Remix v2 features if you use [Remix future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags)
-- Adds an example page to your application to help verify your Sentry setup
-
-</Expandable>
+<PlatformContent includePath="sentry-init/framework-wizard" />
 
 ## Configure Server-Side Performance Monitoring
 
@@ -102,7 +89,24 @@ On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`
 
 ## Verify Your Setup
 
-If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page created by the installation wizard:
+The `sentry init` command checks the integration files it creates or modifies before it finishes. To confirm runtime events are reaching Sentry, add a test button to one of your routes. Clicking it will trigger an error for Sentry to capture.
+
+```tsx {filename:app/routes/sentry-test.tsx}
+export default function SentryTest() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        throw new Error("Sentry Test Error");
+      }}
+    >
+      Test Sentry Error
+    </button>
+  );
+}
+```
+
+If you used the Remix wizard instead, you can also use the example page it created:
 
 1. Open the example page `/sentry-example-page` in your browser. For most Remix applications, this will be at localhost.
 2. Click the "Throw Sample Error" button to trigger a frontend error and trace.
@@ -131,7 +135,7 @@ At this point, you should have integrated Sentry into your application. Here's w
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- If you encountered issues with our installation wizard, try <PlatformLink to="/manual-setup/">setting up Sentry manually</PlatformLink>
+- If you encountered issues with `sentry init` or the installation wizard, try <PlatformLink to="/manual-setup/">setting up Sentry manually</PlatformLink>
 - Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 

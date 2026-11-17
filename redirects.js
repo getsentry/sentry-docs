@@ -1046,21 +1046,33 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/nuxt/cloudflare/',
+    destination: '/platforms/javascript/guides/nuxt/manual-setup/cloudflare/',
   },
   // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
   {
     source:
       '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
-    destination: '/platforms/javascript/guides/:framework/cloudflare/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
-    destination: '/platforms/javascript/guides/tanstackstart-react/cloudflare/',
+    destination:
+      '/platforms/javascript/guides/tanstackstart-react/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/',
-    destination: '/platforms/javascript/guides/remix/cloudflare/',
+    destination: '/platforms/javascript/guides/remix/manual-setup/cloudflare/',
+  },
+  // The quick starts for other runtimes became manual setups.
+  {
+    source:
+      '/platforms/javascript/guides/:framework(astro|flue|hono|mastra|nextjs|nuxt|pi-durable|react-router|remix|sveltekit|tanstackstart-react)/cloudflare/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:framework(pi-durable|react-router)/:runtime(bun|deno)/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/:runtime/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
@@ -1077,7 +1089,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
-    destination: '/platforms/javascript/guides/nextjs/cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -2592,11 +2604,11 @@ const userDocsRedirects = [
   // Cloudflare page is listed first so its readers keep landing on it.
   {
     source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/agent-tracing/flue.md',
@@ -2619,19 +2631,19 @@ const userDocsRedirects = [
   // paths, which the rules above redirect again — a 2-hop chain.
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/flue.md',
@@ -3201,10 +3213,6 @@ const userDocsRedirects = [
     destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
   },
   // End of Insights redirects.
-  {
-    source: '/platforms/javascript/guides/astro/manual-setup/',
-    destination: '/platforms/javascript/guides/astro/',
-  },
   {
     source: '/product/error-monitoring/dashboards/',
     destination: '/product/dashboards/',
