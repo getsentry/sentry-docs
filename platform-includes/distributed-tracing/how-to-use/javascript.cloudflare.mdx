@@ -2,6 +2,8 @@ The Sentry Cloudflare SDK automatically propagates traces for incoming and outgo
 
 For RPC calls within Cloudflare (Worker-to-Durable Object, Worker-to-Worker via service bindings), you name the bindings that should carry the trace. See [RPC Trace Propagation](#rpc-trace-propagation) below.
 
+For Cloudflare Queues, you name the producer bindings whose messages should carry the trace. See [Queue Trace Propagation](#queue-trace-propagation) below.
+
 ### RPC Trace Propagation
 
 <AvailableSince version="10.52.0" />
@@ -36,6 +38,35 @@ Strings match a binding name exactly, so `"DB"` does not also match `MY_DB`. Use
 </Alert>
 
 The receiver continues the trace it is sent, creates a span per RPC method, and strips the trailing argument, so your method signatures are unaffected. Listing bindings on the receiver does no harm, so you can share one options object across the whole deployment.
+
+### Queue Trace Propagation
+
+<AvailableSince version="11.12.0" />
+
+By default, the consumer of a [Cloudflare Queue](https://developers.cloudflare.com/queues/) starts a trace that isn't connected to the Worker that sent the message. To connect them, list the producer bindings in `queueTracePropagationBindings`:
+
+```typescript {filename:src/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  // Propagate to `env.BILLING_QUEUE` and every `env.JOBS_*` binding
+  queueTracePropagationBindings: ["BILLING_QUEUE", /^JOBS_/],
+}));
+```
+
+Queues have no message headers, so the producer adds its `sentry-trace` value to the message body under a `__sentry_queue_trace__` field. This only works for plain-object bodies. Arrays, binary data, and other values are sent unchanged, so their messages aren't linked.
+
+The consumer doesn't need any configuration. A Sentry-instrumented consumer removes the field before your queue handler runs, so your handler sees the original body.
+
+A batch can hold messages from unrelated traces, so the consumer doesn't continue any one of them. Instead, its `queue.process` span starts a new trace and links to the `queue.publish` span of every producer in the batch. Open the consumer's trace in Sentry to follow these links back to the producers.
+
+<Alert level="warning" title="Only List Queues Whose Consumer Runs Sentry">
+  A consumer that isn't instrumented with Sentry never removes the `__sentry_queue_trace__` field, so it arrives as part of the message body. The field also adds about 80 bytes to each message. Cloudflare [rejects messages over 128 KB](https://developers.cloudflare.com/queues/platform/limits/), so a message close to that limit can fail to send once you turn on propagation.
+</Alert>
+
+For the full definition, see <PlatformLink to="/configuration/options/#queueTracePropagationBindings">`queueTracePropagationBindings`</PlatformLink>.
 
 ### Custom Instrumentation
 

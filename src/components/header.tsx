@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {useCallback, useEffect, useState} from 'react';
 import {useBodyScrollLock} from 'sentry-docs/hooks/useBodyScrollLock';
+import {openKapa, prefetchKapa} from 'sentry-docs/lib/kapa';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import {MagicIcon} from './cutomIcons/magic';
@@ -274,8 +275,11 @@ export function Header({
               </button>
             )}
             <button
-              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
+              onPointerEnter={prefetchKapa}
+              onFocus={prefetchKapa}
+              onClick={() => openKapa({})}
             >
               <MagicIcon className="size-4" />
               <span className="uppercase text-xs">Ask AI</span>

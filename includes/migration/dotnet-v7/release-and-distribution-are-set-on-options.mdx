@@ -1,0 +1,38 @@
+---
+id: release-and-distribution-are-set-on-options
+title: "Release and Distribution Are Set on Options"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 110
+---
+
+Version 7 removes `Scope.Release`, `Scope.Distribution` and `SentryOptions.ApplyDefaultTags`. `Release` and `Distribution` also move from `IEventLike` to `ITransactionData`. Set the release and distribution on `SentryOptions` instead.
+
+In 6.x, the scope could set the release:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options => options.Dsn = "___PUBLIC_DSN___");
+SentrySdk.ConfigureScope(scope =>
+{
+    scope.Release = "my-app@1.2.3";
+    scope.Distribution = "42";
+});
+```
+
+In 7.x, set both on the options:
+
+```csharp {filename:Program.cs}
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Release = "my-app@1.2.3";
+    options.Distribution = "42";
+});
+```
+
+Events, transactions and check-ins keep their own `Release` property. To change the release of a single event, set `Release` on the event in `SetBeforeSend`. Code that reads `Release` or `Distribution` through an `IEventLike` variable needs a `SentryEvent` or `ITransactionData` variable instead.
+
+`DefaultTags` are still applied to events and transactions. Remove calls to `options.ApplyDefaultTags`.

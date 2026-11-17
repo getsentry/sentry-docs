@@ -98,6 +98,13 @@ export interface FrontMatter {
   previousPage?: PaginationNavNode;
 
   /**
+   * The runtime of a quick start or manual setup, for example `node` or `cloudflare`. The page
+   * then shows a runtime selector that links the quick starts or manual setups of the same
+   * guide for the other runtimes.
+   */
+  runtime?: string;
+
+  /**
    * Set this to true to show a separator/divider below this item in the sidebar
    * @deprecated Use sidebar_section instead
    */

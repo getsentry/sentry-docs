@@ -1,5 +1,6 @@
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 
+import {getQuickStartTitle} from '../runtimeLinks';
 import {DynamicNav, EntityTree, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
@@ -67,6 +68,7 @@ function getPlatformSidebarTree(
         early_access: n.frontmatter.early_access,
         section_end_divider: n.frontmatter.section_end_divider,
         sidebar_section: n.frontmatter.sidebar_section,
+        runtime: n.frontmatter.runtime,
       },
       path: '/' + n.path + '/',
     };
@@ -151,6 +153,9 @@ export function PlatformSidebar({
         tree={tree}
         title={sidebarTitle}
         exclude={[`/${pathRoot}/guides/`]}
+        quickStartTitle={getQuickStartTitle(
+          guide ? nodeForPath(rootNode, pathRoot) : undefined
+        )}
       />
     </ul>
   );

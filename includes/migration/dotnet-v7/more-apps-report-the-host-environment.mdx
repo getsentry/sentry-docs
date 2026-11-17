@@ -1,0 +1,34 @@
+---
+id: more-apps-report-the-host-environment
+title: "More Apps Report the Host Environment"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 30
+---
+
+More apps that don't set `Environment` now report the .NET host environment, such as `development` or `staging`. In 6.x, these apps reported `production`, or `debug` with a debugger attached.
+
+The change affects these apps:
+
+- Blazor WebAssembly apps.
+- Google Cloud Functions.
+- ASP.NET Core apps that call the `UseSentry` overload that takes an `ISentryBuilder` callback, as gRPC apps do.
+- Generic host apps that move from `Logging.AddSentry` to `UseSentry` from `Sentry.Extensions.Hosting`.
+
+The SDK lowercases the standard names `Production`, `Staging` and `Development`, and keeps custom names as they are. An `Environment` set in code or in the `Sentry` section of `appsettings.json` still wins, followed by the `SENTRY_ENVIRONMENT` environment variable.
+
+Update alerts, saved searches and dashboards that filter on the old value. To keep reporting `production`, set the environment explicitly:
+
+```csharp {filename:Program.cs}
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Environment = "production";
+});
+```

@@ -1,0 +1,47 @@
+---
+id: the-opentelemetry-exporter-no-longer-sets-a-propagator
+title: "The OpenTelemetry Exporter No Longer Sets a Propagator"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 120
+---
+
+`AddSentryOtlpExporter` and `UseOtlp` no longer set `SentryPropagator` as OpenTelemetry's default propagator, and they no longer take a `defaultTextMapPropagator` parameter. OpenTelemetry's default W3C propagator applies instead, so `sentry-trace` headers stop going out unless you set the propagator yourself.
+
+A call that passes `defaultTextMapPropagator` fails to compile with error CS1739. In 6.x, the exporter set the propagator:
+
+```csharp {filename:Program.cs}
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using Sentry.OpenTelemetry;
+
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddSource("MyApp")
+    .AddSentryOtlpExporter("___PUBLIC_DSN___", defaultTextMapPropagator: new SentryPropagator())
+    .Build();
+```
+
+In 7.x, set the propagator with the OpenTelemetry SDK. To keep sending and reading `sentry-trace` headers, add `SentryPropagator` next to the W3C propagator:
+
+```csharp {filename:Program.cs}
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using OpenTelemetry.Trace;
+using Sentry.OpenTelemetry;
+
+Sdk.SetDefaultTextMapPropagator(new CompositeTextMapPropagator(new TextMapPropagator[]
+{
+    new TraceContextPropagator(),
+    new SentryPropagator(),
+}));
+
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddSource("MyApp")
+    .AddSentryOtlpExporter("___PUBLIC_DSN___")
+    .Build();
+```
+
+Services that only talk to other OpenTelemetry services don't need `SentryPropagator`, because the W3C `traceparent` header connects their traces. See [OpenTelemetry (OTLP)](/platforms/dotnet/tracing/instrumentation/opentelemetry-otlp/) for details.

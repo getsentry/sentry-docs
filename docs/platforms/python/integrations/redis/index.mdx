@@ -27,12 +27,12 @@ The following information will be available to you on Sentry:
 
 - Performance information about requests to Redis will be available in the waterfall diagram in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section on Sentry.
 - Redis commands will be added as [breadcrumbs](/product/issues/issue-details/breadcrumbs/).
-- If `send_default_pii` is set to `True` in your app's `sentry_sdk.init()` call, you will also see the data used in your Redis commands.
+- By default, you will also see the data used in your Redis commands. Turn this off by setting `database_query_data` to `False` in the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>. In SDK versions prior to `3.0`, this data is only shown if you enable `database_query_data` in `data_collection` or set `send_default_pii` to `True`.
 - Sentry will never collect data of the `AUTH` command.
 
 ## Verify Your Setup
 
-To verify that Sentry captures your Redis commands, add this code to your app, which will create a transaction called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section:
+To verify that Sentry captures your Redis commands, add this code to your app, which will create a service span called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section:
 
 ### Standard Redis
 
@@ -43,8 +43,8 @@ def main():
     sentry_sdk.init(...)  # same as above
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         r.set("foo", "bar")
         r.get("foo")
 
@@ -60,8 +60,8 @@ def main():
     sentry_sdk.init(...)  # same as above
     rc = RedisCluster(host='localhost', port=16379)
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         rc.set("foo", "bar")
         rc.get("foo")
 
@@ -78,8 +78,8 @@ async def main():
     sentry_sdk.init(...)  # same as above
     r = redis.Redis(host='localhost', port=6379)
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         await r.set("foo", "bar")
         await r.get("foo")
 
@@ -98,7 +98,6 @@ sentry_sdk.init(
     # ...
     integrations=[
         RedisIntegration(
-            max_data_size=None,
             cache_prefixes=["mycache", "template.cache"],
         ),
     ],
@@ -108,6 +107,12 @@ sentry_sdk.init(
 You can pass the following keyword arguments to `RedisIntegration()`:
 
 <SdkOption name='max_data_size' type='int' defaultValue='1024'>
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`.
+
+</Alert>
 
 Set `max_data_size` to an integer to control how many characters should be collected.
 When you set this option to a value that evaluates to `False` (like `0` or `None`), no trimming will take place, and the entire Redis command will be recorded.

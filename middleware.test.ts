@@ -4,7 +4,7 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 // Helper to import the middleware module fresh with given env vars.
 // isDeveloperDocs and redirectMap are evaluated at module load time,
 // so we need a fresh import per env var scenario.
-const ENV_KEYS = ['DEVELOPER_DOCS', 'NEXT_PUBLIC_DEVELOPER_DOCS'] as const;
+const ENV_KEYS = ['NEXT_PUBLIC_DEVELOPER_DOCS'] as const;
 
 async function importMiddleware(env: Record<string, string> = {}) {
   vi.resetModules();
@@ -51,14 +51,7 @@ describe('middleware redirect set selection', () => {
   // "/" only exists in DEVELOPER_DOCS_REDIRECTS, so it's a good signal
   // for which redirect set is active without hardcoding destinations.
 
-  describe('when DEVELOPER_DOCS is set (build-time inline via next.config.ts)', () => {
-    it('activates developer docs redirect set', async () => {
-      const {middleware} = await importMiddleware({DEVELOPER_DOCS: '1'});
-      expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
-    });
-  });
-
-  describe('when NEXT_PUBLIC_DEVELOPER_DOCS is set (runtime fallback)', () => {
+  describe('when NEXT_PUBLIC_DEVELOPER_DOCS is set', () => {
     it('activates developer docs redirect set', async () => {
       const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
       expect(isRedirect(middleware(makeRequest('/')))).toBe(true);
@@ -113,8 +106,12 @@ describe('production build-url redirect to canonical (Deployment Protection off)
     vi.unstubAllEnvs();
   });
 
-  function makeHostRequest(url: string, method = 'GET'): NextRequest {
-    return new NextRequest(new URL(url), {method});
+  function makeHostRequest(
+    url: string,
+    method = 'GET',
+    headers?: HeadersInit
+  ): NextRequest {
+    return new NextRequest(new URL(url), {method, headers});
   }
 
   it('redirects a non-canonical production host to the canonical host', async () => {
@@ -191,6 +188,53 @@ describe('production build-url redirect to canonical (Deployment Protection off)
       makeHostRequest('https://sentry-docs-abc123.vercel.app/foo/', 'POST')
     );
     expect(res.status).not.toBe(308);
+  });
+
+  it('serves a production build URL to the evals pin header', async () => {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const res = middleware(
+      makeHostRequest('https://sentry-docs-abc123.vercel.app/llms.txt', 'GET', {
+        'x-sentry-evals-pin': '1',
+      })
+    );
+    expect(res.status).not.toBe(308);
+  });
+});
+
+describe('redirects for .md exports', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['/product/sentry-basics/sampling.md', '/organization/dynamic-sampling.md'],
+    [
+      '/platforms/javascript/guides/react/sourcemaps/multiple-origins.md',
+      '/platforms/javascript/guides/react/sourcemaps.md',
+    ],
+    [
+      '/pricing/quotas/manage-event-stream-guide/adjusting-quotas.md',
+      '/pricing/quotas/manage-event-stream-guide.md#adjusting-quotas',
+    ],
+  ])('redirects %s to %s', async (from, to) => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest(from));
+    expect(isRedirect(res)).toBe(true);
+    expect(res.headers.get('location')).toBe(`http://localhost:3000${to}`);
+  });
+
+  it('redirects to external destinations unchanged', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/product/sentry-mcp.md'));
+    expect(isRedirect(res)).toBe(true);
+    expect(res.headers.get('location')).toBe('https://mcp.sentry.dev/');
+  });
+
+  it('serves .md exports of pages that are not redirected', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
+    expect(isRedirect(res)).toBe(false);
   });
 });
 

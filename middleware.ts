@@ -2,22 +2,19 @@ import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
 import {canonicalPath} from 'sentry-docs/canonical';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
-// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
-// NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
-const isDeveloperDocs =
-  process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
+const CANONICAL_HOST = new URL(DOCS_ORIGIN).hostname;
 
-const BASE_URL = isDeveloperDocs
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
-
-const CANONICAL_HOST = new URL(BASE_URL).hostname;
+// sentry-for-ai-evals compares a PR's docs with the docs at its merge base, which it reads
+// from that commit's production build URL. It sends this header so the build serves its
+// own pages instead of redirecting to the canonical host.
+const EVALS_PIN_HEADER = 'x-sentry-evals-pin';
 
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
@@ -73,7 +70,10 @@ function redirectProductionBuildUrlToCanonical(
   ) {
     return null;
   }
-  if (request.nextUrl.hostname === CANONICAL_HOST) {
+  if (
+    request.nextUrl.hostname === CANONICAL_HOST ||
+    request.headers.has(EVALS_PIN_HEADER)
+  ) {
     return null;
   }
   const url = request.nextUrl.clone();
@@ -360,7 +360,7 @@ const handleAIClientRedirect = (
     const response = nextWithClassification(request, classification);
     response.headers.set(
       'Link',
-      `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
+      `<${DOCS_ORIGIN}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
     );
     return response;
   }
@@ -411,11 +411,30 @@ const handleAIClientRedirect = (
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
+  // Every page has a `.md` export, so a redirected page's `.md` URL redirects to the
+  // destination's `.md` export instead of falling through to the Markdown soft-404.
+  const isMarkdown = urlPath.endsWith('.md');
+  const htmlPath = isMarkdown
+    ? urlPath === '/index.md'
+      ? '/'
+      : `${urlPath.slice(0, -'.md'.length)}/`
+    : urlPath;
+
+  const redirectTo = resolveRedirect(htmlPath);
+  if (!redirectTo) {
+    return undefined;
+  }
+
+  const destination = isMarkdown ? toMarkdownDestination(redirectTo) : redirectTo;
+  return NextResponse.redirect(new URL(destination, request.url), {
+    status: redirectStatusCode,
+  });
+};
+
+const resolveRedirect = (urlPath: string): string | undefined => {
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {
-      status: redirectStatusCode,
-    });
+    return redirectTo;
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -430,20 +449,23 @@ const handleRedirects = (request: NextRequest) => {
   const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholder);
   const guide = match[1];
 
-  const redirectToGuide = redirectMap.get(pathWithPlaceholder);
-  if (redirectToGuide) {
-    const finalRedirectToPath = redirectToGuide.replace(
-      guidePlaceholder,
-      `/guides/${guide}/`
-    );
-
-    return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: redirectStatusCode,
-    });
-  }
-
-  return undefined;
+  return redirectMap
+    .get(pathWithPlaceholder)
+    ?.replace(guidePlaceholder, `/guides/${guide}/`);
 };
+
+/**
+ * Maps a redirect destination to its `.md` export. External URLs and
+ * destinations with a query string are returned unchanged.
+ */
+function toMarkdownDestination(destination: string): string {
+  if (/^https?:\/\//.test(destination) || destination.includes('?')) {
+    return destination;
+  }
+  const [path, hash] = destination.split('#');
+  const mdPath = `${path.replace(/\/+$/, '') || '/index'}.md`;
+  return hash === undefined ? mdPath : `${mdPath}#${hash}`;
+}
 
 type Redirect = {
   /** a string with a leading and a trailing slash */
@@ -544,6 +566,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/react-native/install/',
     to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
+    from: '/platforms/unity/configuration/app-not-responding/',
+    to: '/platforms/unity/app-hangs/',
   },
   {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',

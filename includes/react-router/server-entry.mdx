@@ -1,0 +1,26 @@
+Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's versions, and export `instrumentations`.
+
+`handleError` sends server errors to Sentry. `instrumentations` uses React Router's [instrumentation API](https://reactrouter.com/how-to/instrumentation) to create spans for all loaders, actions, middleware, and request handlers, and names each request after its route, for example `GET /users/:id`.
+
+```tsx {diff} {filename: entry.server.tsx}
++import * as Sentry from "@sentry/react-router";
+ import { createReadableStreamFromReadable } from "@react-router/node";
+ import { renderToPipeableStream } from "react-dom/server";
+ import { ServerRouter, type HandleErrorFunction } from "react-router";
+
++const handleRequest = Sentry.createSentryHandleRequest({
++  ServerRouter,
++  renderToPipeableStream,
++  createReadableStreamFromReadable,
++});
+
+ export default handleRequest;
+
++export const handleError: HandleErrorFunction = Sentry.createSentryHandleError({
++  logErrors: false,
++});
+
++export const instrumentations = [Sentry.createSentryServerInstrumentation()];
+
+ // ... rest of your server entry
+```
