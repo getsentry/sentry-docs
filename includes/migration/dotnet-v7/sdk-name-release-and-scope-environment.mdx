@@ -1,0 +1,25 @@
+---
+id: sdk-name-release-and-scope-environment
+title: "SDK Name, Release and Scope Environment"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 40
+---
+
+The SDK now resolves the SDK name, release and environment once, when Sentry starts, and applies them to every kind of telemetry the same way. Check searches, alerts and dashboards that depend on these values.
+
+Events, transactions, logs and metrics report the SDK name of the integration that initialized Sentry, such as `sentry.dotnet.aspnetcore`, `sentry.dotnet.extensions.hosting` or `sentry.dotnet`. Events captured by Serilog, NLog, log4net or `ILogger` no longer report `sentry.dotnet.serilog`, `sentry.dotnet.nlog`, `sentry.dotnet.log4net` or `sentry.dotnet.extensions.logging`. Blazor WebAssembly apps now report `sentry.dotnet.aspnetcore.blazor.webassembly`. Update searches and alerts that filter on `sdk.name`.
+
+On Android, iOS and Mac Catalyst, a `SENTRY_RELEASE` environment variable now takes precedence over the release that the SDK derives from the app package.
+
+An environment set on the scope now also applies to logs, metrics, sessions, check-ins and trace propagation, as it already did to events. Set `Scope.Environment` to `null` to go back to the environment from the options:
+
+```csharp {filename:Program.cs}
+SentrySdk.ConfigureScope(scope => scope.Environment = "canary");
+
+// Later, to report the environment from the options again:
+SentrySdk.ConfigureScope(scope => scope.Environment = null);
+```

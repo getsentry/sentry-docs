@@ -13,7 +13,7 @@ export interface ParameterDef {
   name: string;
   type: string | ObjectParameterDef;
   defaultValue?: string;
-  description?: string;
+  description?: React.ReactNode;
   required?: boolean;
 }
 
@@ -129,7 +129,13 @@ function NestedObject({
           <div key={prop.name}>
             {prop.description && (
               <div>
-                <code>{codeToJsx(`// ${prop.description}`, 'typescript')}</code>
+                <code>
+                  {typeof prop.description === 'string' ? (
+                    codeToJsx(`// ${prop.description}`, 'typescript')
+                  ) : (
+                    <span className="token comment">// {prop.description}</span>
+                  )}
+                </code>
               </div>
             )}
             <div>

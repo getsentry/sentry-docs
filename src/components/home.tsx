@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {Fragment, type ReactNode} from 'react';
 import {Banner} from 'sentry-docs/components/banner';
-import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import Cursor from 'sentry-docs/icons/cursor';
 import GitHub from 'sentry-docs/icons/github';
 import Jira from 'sentry-docs/icons/jira';
@@ -19,17 +18,10 @@ import {PlatformIcon} from './platformIcon';
 import {PreferredPlatformLink} from './preferredPlatformLink';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
-export async function Home() {
-  const rootNode = await getDocsRootNode();
-  const platforms = extractPlatforms(rootNode);
+export function Home() {
   return (
     <div className="tw-app">
-      <Header
-        pathname="/"
-        searchPlatforms={[]}
-        useStoredSearchPlatforms={false}
-        platforms={platforms}
-      />
+      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
       <main id="main">
         <div className="mt-[var(--header-height)]">
           <Banner />
@@ -165,7 +157,27 @@ export async function Home() {
             </Link>{' '}
             with one of these agent integrations.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4">
+            <AgentQuickLink
+              href="/concepts/otlp/direct/claude-platform/"
+              title="Anthropic"
+              desc="Trace Claude agents and the Messages API. No code needed."
+              icon={<PlatformIcon platform="anthropic" />}
+            />
+            <AgentQuickLink
+              to="/configuration/integrations/openai/"
+              defaultPlatform="javascript.node"
+              title="OpenAI"
+              desc="Instrument the OpenAI SDK."
+              icon={<PlatformIcon platform="openai" />}
+            />
+            <AgentQuickLink
+              to="/configuration/integrations/vercelai/"
+              defaultPlatform="javascript.node"
+              title="Vercel AI"
+              desc="Instrument the Vercel AI SDK."
+              icon={<PlatformIcon platform="vercel" />}
+            />
             <AgentQuickLink
               href="/platforms/javascript/guides/mastra/"
               title="Mastra"
@@ -185,18 +197,10 @@ export async function Home() {
               icon={<PlatformIcon platform="flue" />}
             />
             <AgentQuickLink
-              to="/configuration/integrations/vercelai/"
-              defaultPlatform="javascript.node"
-              title="Vercel AI"
-              desc="Instrument the Vercel AI SDK."
-              icon={<PlatformIcon platform="vercel" />}
-            />
-            <AgentQuickLink
-              to="/configuration/integrations/openai/"
-              defaultPlatform="javascript.node"
-              title="OpenAI"
-              desc="Instrument the OpenAI SDK."
-              icon={<PlatformIcon platform="openai" />}
+              href="/platforms/javascript/guides/pi-durable/"
+              title="Pi Durable"
+              desc="Send Pi Durable agent runs, tool calls, and errors to Sentry."
+              icon={<PlatformIcon platform="pi-durable" />}
             />
           </div>
         </section>

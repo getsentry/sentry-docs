@@ -15,7 +15,27 @@ cmake -B build -D SENTRY_BACKEND=native
 
 This builds the `sentry-crash` executable alongside the `sentry` library. Ship
 the executable with your application so the SDK can start it during
-initialization.
+initialization. On Windows, it also builds the `sentry-wer.dll` module for
+reporting fast-fail crashes via [Windows Error Reporting](/platforms/native/advanced-usage/windows-error-reporting/).
+Ship it in the same directory as `sentry-crash.exe`.
+
+The SDK will automatically look for a `sentry-crash` executable in the same
+directory as the running application. It will also use the `.sentry-native`
+directory as its database by default, relative to the current working directory
+of your application.
+This location temporarily hosts crash reports before they are uploaded to Sentry.
+
+Both of these paths can be customized like this:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_handler_path(options, "path/to/sentry-crash");
+sentry_options_set_database_path(options, "sentry-db-directory");
+sentry_init(options);
+```
+
+It is advised to specify both the path to the `sentry-crash` executable
+as well as the path to the database directory manually.
 
 ## Crash Reporting Modes
 

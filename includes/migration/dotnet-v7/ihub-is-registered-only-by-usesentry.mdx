@@ -1,0 +1,43 @@
+---
+id: ihub-is-registered-only-by-usesentry
+title: "IHub Is Registered Only by UseSentry"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 40
+---
+
+`Logging.AddSentry()` no longer registers `IHub`, `ISentryClient` or `Func<IHub>` for dependency injection. If the app initializes Sentry with `SentrySdk.Init` and injects one of them, the service container throws `InvalidOperationException` when it resolves the service.
+
+The compiler can't catch this. The app fails at runtime with an error like `Unable to resolve service for type 'Sentry.IHub'`.
+
+If the app has a host, use `UseSentry`, which registers all three. Otherwise, register `HubAdapter.Instance` for each one. `HubAdapter` is in the `Sentry.Extensibility` namespace.
+
+In 6.x, `Logging.AddSentry` registered them:
+
+```csharp {filename:Program.cs}
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+var services = new ServiceCollection();
+services.AddLogging(logging =>
+    logging.AddSentry(options => options.Dsn = "___PUBLIC_DSN___"));
+```
+
+In 7.x, if you are resolving any of these services for use in your application, you will need to register them yourself:
+
+```csharp {filename:Program.cs}
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Sentry.Extensibility;
+
+using var sentry = SentrySdk.Init(options => options.Dsn = "___PUBLIC_DSN___");
+
+var services = new ServiceCollection();
+services.AddLogging(logging => logging.AddSentry());
+services.AddSingleton<IHub>(HubAdapter.Instance);
+services.AddSingleton<ISentryClient>(HubAdapter.Instance);
+services.AddSingleton<Func<IHub>>(() => HubAdapter.Instance);
+```

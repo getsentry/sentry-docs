@@ -89,7 +89,7 @@ The NDK integration can detect when a native or game thread stops responding, ev
 
 <Alert title="Experimental">
 
-NDK app hang detection is experimental. It requires Sentry Android SDK version `8.48.0` or later and the NDK integration.
+NDK app hang detection is experimental. It requires Sentry Android SDK version `8.49.0` or later and the NDK integration.
 
 </Alert>
 
@@ -121,6 +121,8 @@ void game_loop(void) {
 
 The first heartbeat chooses the monitored thread. If it misses heartbeats for the configured timeout, the NDK integration captures an app hang event with that thread's stack trace. The timeout defaults to `5000` ms and has a minimum of `1000` ms.
 
+To pause detection, for example while your app is in the background, call `sentry_app_hang_pause()` from native code. The next heartbeat from the monitored thread resumes it. `sentry_app_hang_pause()` requires Sentry Android SDK version `8.52.0` or later.
+
 Android ANR detection remains independent. If the same freeze blocks both the Android UI thread and your monitored native thread, Sentry can report both an ANR and an app hang.
 
 You can also configure these options in `AndroidManifest.xml`, which is useful when the SDK initializes automatically:
@@ -133,6 +135,99 @@ You can also configure these options in `AndroidManifest.xml`, which is useful w
 ```
 
 For details about the native watchdog and heartbeat behavior, see the [Native SDK app hang documentation](/platforms/native/app-hangs/).
+
+## Out-of-Process Crash Handling
+
+By default, the NDK integration handles a native crash inside the crashing process, and the SDK sends it the next time the app starts. With out-of-process crash handling, a crash service in a separate process captures the crash and sends it right away. This way, you see native crashes even from users who don't open the app again.
+
+<Alert title="Experimental">
+
+Out-of-process crash handling is experimental. It requires Android 11 (API level 30) or later. On older Android versions, the SDK doesn't report native crashes in this mode.
+
+</Alert>
+
+To enable it, add `sentry-android-ndk-outproc` and exclude `sentry-native-ndk`, which the `sentry-android` bundle includes:
+
+```groovy {filename:app/build.gradle}
+dependencies {
+    implementation "io.sentry:sentry-android-ndk-outproc:{{@inject packages.version('sentry.java.android', '8.64.0') }}"
+}
+
+configurations.configureEach {
+    exclude group: "io.sentry", module: "sentry-native-ndk"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+dependencies {
+    implementation("io.sentry:sentry-android-ndk-outproc:{{@inject packages.version('sentry.java.android', '8.64.0') }}")
+}
+
+configurations.configureEach {
+    exclude(group = "io.sentry", module = "sentry-native-ndk")
+}
+```
+
+You don't need to exclude `sentry-native-ndk` if you use `sentry-android-core` instead of the `sentry-android` bundle. If the build contains both native packages, Gradle fails with a conflict on the capability `io.sentry:sentry-ndk-backend`.
+
+If you [link against the NDK libraries](#allowing-the-compiler-to-link-libraries), keep your `CMakeLists.txt`, but depend on `io.sentry:sentry-native-ndk-outproc` instead of `io.sentry:sentry-native-ndk`.
+
+Keep in mind:
+
+- The crash service runs in a separate process, `<applicationId>.sentry_ndk_crash`, while your app runs, and uses additional memory.
+- Android creates a second instance of your `Application` in that process. See [Second Application Instance](#second-application-instance).
+- With the [Tombstone Integration](/platforms/android/configuration/tombstones/) enabled on Android 12 (API level 31) or later, the crash service merges the tombstone into the native crash event before it sends it.
+- If the crash service can't finish sending the crash, the SDK sends it on a later app start. This can happen without a network connection, or on Android 14 (API level 34) and later, where Android freezes the service 10 seconds after the app exits.
+
+### Second Application Instance
+
+Android creates a second instance of your `Application` class in the crash service process. The SDK skips its own initialization there, so only one SDK runs and sessions aren't tracked twice.
+
+<Alert level="warning">
+
+Code in `Application.onCreate` also runs in the crash service process, which can initialize libraries twice, repeat background work, or cause conflicts over shared files.
+
+</Alert>
+
+To run startup code only in the main process, return early from `Application.onCreate` in other processes:
+
+```kotlin {filename:MyApplication.kt}
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        if (!isMainProcess()) return
+
+        // your startup work
+    }
+
+    private fun isMainProcess() =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+            Application.getProcessName() == applicationInfo.processName
+            // or, to skip only the crash service process:
+            // !Application.getProcessName().endsWith(".sentry_ndk_crash")
+}
+```
+
+```java {filename:MyApplication.java}
+public class MyApplication extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        if (!isMainProcess()) {
+            return;
+        }
+
+        // your startup work
+    }
+
+    private boolean isMainProcess() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.P
+            || Application.getProcessName().equals(getApplicationInfo().processName);
+            // or, to skip only the crash service process:
+            // || !Application.getProcessName().endsWith(".sentry_ndk_crash");
+    }
+}
+```
 
 ## Disable NDK Integration
 

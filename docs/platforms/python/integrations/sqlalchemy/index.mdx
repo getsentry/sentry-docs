@@ -11,8 +11,12 @@ You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 - Your application up and running
-- SQLAlchemy `1.2+`
-- Python `3.6+`
+- SQLAlchemy:
+  - `1.2+` (SDK &lt;3.0)
+  - `1.4+` (SDK 3.0+)
+- Python:
+  - `3.6+` (SDK &lt;3.0)
+  - `3.7+` (SDK 3.0+)
 
 <StepConnector selector="h2" showNumbers={true}>
 
@@ -23,14 +27,7 @@ Sentry's SQLAlchemy integration is enabled automatically if you have the `sqlalc
 
 ## Verify Your Setup
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To verify that Sentry captures your SQLAlchemy queries, add this code to your app, which will create a transaction called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section and will create a span for the `SELECT` statement:
-
-</SplitSectionText>
-<SplitSectionCode>
+To verify that Sentry captures your SQLAlchemy queries, add this code to your app, which will create a service span called `testing_sentry` in the [Traces](https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/) section and will create a span for the `SELECT` statement:
 
 ```python
 from sqlalchemy import create_engine
@@ -44,16 +41,12 @@ def main():
     statement = text("SELECT 'Hello World'")
 
     with engine.connect() as conn:
-        # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-        with sentry_sdk.start_transaction(name="testing_sentry"):
+        # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+        with sentry_sdk.start_span(name="testing_sentry"):
             result = conn.execute(statement)
 
 main()
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 ## Next Steps
 

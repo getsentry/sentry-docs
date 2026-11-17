@@ -37,9 +37,10 @@ from sentry_sdk.integrations.socket import SocketIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Add data like request headers and IP for users, if applicable;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "user_info": True,
+    },
     # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
@@ -67,20 +68,22 @@ import socket
 def main():
     sentry_init(...)  # same as above
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         timeout = 10
         socket.getaddrinfo("sentry.io", 443)
         socket.create_connection(("sentry.io", 443), timeout, None)
 main()
 ```
 
-This example will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the socket commands.
+This example will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io), and create spans for the socket commands.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
 ## Supported Versions
 
-- Python: 3.6+
+- Python:
+  - 3.6+ (SDK &lt;3.0)
+  - 3.7+ (SDK 3.0+)
 
 <Include name="python-use-older-sdk-for-legacy-support.mdx" />

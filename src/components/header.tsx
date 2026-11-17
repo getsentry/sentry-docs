@@ -7,8 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {useCallback, useEffect, useState} from 'react';
 import {useBodyScrollLock} from 'sentry-docs/hooks/useBodyScrollLock';
+import {openKapa, prefetchKapa} from 'sentry-docs/lib/kapa';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
-import {Platform} from 'sentry-docs/types';
 
 import {MagicIcon} from './cutomIcons/magic';
 import {mainSections} from './navigationData';
@@ -36,7 +36,6 @@ type Props = {
   pathname: string;
   searchPlatforms: string[];
   noSearch?: boolean;
-  platforms?: Platform[];
   useStoredSearchPlatforms?: boolean;
 };
 
@@ -45,7 +44,6 @@ export function Header({
   searchPlatforms,
   noSearch,
   useStoredSearchPlatforms,
-  platforms = [],
 }: Props) {
   const isHomePage = pathname === '/';
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
@@ -259,7 +257,7 @@ export function Header({
           </Link>
           {/* Top nav menu - anchored next to logo */}
           <div className="hidden md:block flex-1 min-w-0">
-            <TopNavClient platforms={platforms} />
+            <TopNavClient />
           </div>
           {/* Mobile: show search, Ask AI button and theme toggle (below md breakpoint) */}
           <div className="flex items-center md:hidden ml-auto gap-3">
@@ -277,8 +275,11 @@ export function Header({
               </button>
             )}
             <button
-              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
+              onPointerEnter={prefetchKapa}
+              onFocus={prefetchKapa}
+              onClick={() => openKapa({})}
             >
               <MagicIcon className="size-4" />
               <span className="uppercase text-xs">Ask AI</span>

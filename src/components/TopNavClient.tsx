@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
+import {usePlatforms} from 'sentry-docs/hooks/usePlatforms';
 import {Platform} from 'sentry-docs/types';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
@@ -48,7 +49,10 @@ function useDropdownPosition(triggerRef, open) {
   return position;
 }
 
-export default function TopNavClient({platforms}: {platforms: Platform[]}) {
+const NO_PLATFORMS: Platform[] = [];
+
+export default function TopNavClient() {
+  const platforms = usePlatforms().platforms ?? NO_PLATFORMS;
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [platformDropdownByClick, setPlatformDropdownByClick] = useState(false);
   const platformBtnRef = useRef<HTMLButtonElement>(null);
@@ -601,7 +605,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               align-items: center;
             }
           `}</style>
-            <PlatformSelector platforms={platforms} listOnly />
+            <PlatformSelector listOnly />
           </div>,
           document.body
         )}

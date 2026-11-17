@@ -19,16 +19,6 @@ pip install sentry-sdk
 uv add sentry-sdk
 ```
 
-If you're on Python 3.6, you also need the `aiocontextvars` package:
-
-```bash {tabTitle:pip}
-pip install "aiocontextvars"
-```
-
-```bash {tabTitle:uv}
-uv add "aiocontextvars"
-```
-
 ## Configure
 
 If you have the `sanic` package in your dependencies, the Sanic integration will be enabled automatically when you initialize the Sentry SDK.
@@ -56,9 +46,10 @@ app = Sanic(__main__)
 async def init_sentry(_):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        # Add data like request headers and IP for users;
-        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-        send_default_pii=True,
+        # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+        data_collection={
+            "user_info": True,
+        },
         # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
@@ -77,6 +68,12 @@ async def init_sentry(_):
 ```
 
 ### Configuration options
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, `SanicIntegration` doesn't accept `unsampled_statuses`, and the integration creates spans for requests with any HTTP status.
+
+</Alert>
 
 If you're using tracing, you can configure the Sanic integration to not send transactions for requests that resulted in certain HTTP statuses using the `unsampled_statuses` option.
 
@@ -103,7 +100,7 @@ async def init_sentry(_):
     )
 ```
 
-To specify a different set of HTTP statuses for which no transactions should be generated, set `unsampled_statuses` to a set containing the HTTP statuses that don't generate transactions. For example, if you wish to have no transactions for requests resulting in a 200 or 404 HTTP status, use `SanicIntegration(unsampled_statuses={200, 400})`.
+To specify a different set of HTTP statuses for which no transactions should be generated, set `unsampled_statuses` to a set containing the HTTP statuses that don't generate transactions. For example, if you wish to have no transactions for requests resulting in a 200 or 404 HTTP status, use `SanicIntegration(unsampled_statuses={200, 404})`.
 
 ## Verify
 
@@ -133,7 +130,7 @@ When you point your browser to [http://localhost:8000/](http://localhost:8000/) 
 
 - All exceptions leading to an Internal Server Error are reported.
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Personally identifiable information (such as user IDs, usernames, cookies, and IP addresses) is also attached, with sensitive values like authorization headers scrubbed. Use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to configure which categories to collect. In SDK versions prior to `3.0`, Sentry excludes this information unless you use `data_collection` or set `send_default_pii` to `True`.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
@@ -143,5 +140,9 @@ When you point your browser to [http://localhost:8000/](http://localhost:8000/) 
 
 ## Supported Versions
 
-- Sanic: 0.8+
-- Python: 3.6+ (Sanic 0.8+), 3.7+ (Sanic 21.0+)
+- Sanic:
+  - 0.8+ (SDK &lt;3.0)
+  - 22.0+ (SDK 3.0+)
+- Python:
+  - 3.6+ (SDK &lt;3.0)
+  - 3.7+ (SDK 3.0+)

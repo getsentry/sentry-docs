@@ -1,14 +1,13 @@
 import './type.scss';
 
 import {ReactNode} from 'react';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {
-  extractPlatforms,
   getCurrentGuide,
   getCurrentPlatform,
   getCurrentPlatformOrGuide,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {getSdkPageHeading} from 'sentry-docs/sdkPageHeading';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
@@ -30,6 +29,7 @@ import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {getSdkPackageName} from '../platformSdkPackageName';
+import {RuntimeSelector} from '../runtimeSelector';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
@@ -58,7 +58,6 @@ export async function DocPage({
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
-  const platforms = extractPlatforms(rootNode);
   const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const sdkPackage = await getSdkPackageName(platformOrGuide);
 
@@ -79,11 +78,7 @@ export async function DocPage({
       {isDeveloperDocs ? (
         <DevelopDocsHeader pathname={pathname} searchPlatforms={searchPlatforms} />
       ) : (
-        <Header
-          pathname={pathname}
-          searchPlatforms={searchPlatforms}
-          platforms={platforms}
-        />
+        <Header pathname={pathname} searchPlatforms={searchPlatforms} />
       )}
       <section className="px-0 flex relative">
         {sidebar ?? (
@@ -129,6 +124,7 @@ export async function DocPage({
               </hgroup>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
+                {frontMatter.runtime && <RuntimeSelector />}
                 <CodeContextProvider sdkPackage={sdkPackage}>
                   {children}
                 </CodeContextProvider>

@@ -76,6 +76,7 @@ import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
 import HuggingfaceSVG from 'platformicons/svg/huggingface.svg';
+import HydrogenSVG from 'platformicons/svg/hydrogen.svg';
 import IonicSVG from 'platformicons/svg/ionic.svg';
 import IrisSVG from 'platformicons/svg/iris.svg';
 import JavaSVG from 'platformicons/svg/java.svg';
@@ -105,6 +106,7 @@ import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
+import PiSVG from 'platformicons/svg/pi.svg';
 import PlaystationSVG from 'platformicons/svg/playstation.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
@@ -234,6 +236,7 @@ import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
 import HuggingfaceSVGLarge from 'platformicons/svg_80x80/huggingface.svg';
+import HydrogenSVGLarge from 'platformicons/svg_80x80/hydrogen.svg';
 import IonicSVGLarge from 'platformicons/svg_80x80/ionic.svg';
 import IrisSVGLarge from 'platformicons/svg_80x80/iris.svg';
 import JavaSVGLarge from 'platformicons/svg_80x80/java.svg';
@@ -263,6 +266,7 @@ import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
+import PiSVGLarge from 'platformicons/svg_80x80/pi.svg';
 import PlaystationSVGLarge from 'platformicons/svg_80x80/playstation.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
 import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
@@ -323,7 +327,6 @@ import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 import EveSVG from 'sentry-docs/icons/eve.svg';
 import ExpoSVG from 'sentry-docs/icons/expo.svg';
 import FlueSVG from 'sentry-docs/icons/flue.svg';
-import PiDurableSVG from 'sentry-docs/icons/pi-durable.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -671,6 +674,10 @@ const formatToSVG = {
     sm: HonoSVG,
     lg: HonoSVGLarge,
   },
+  hydrogen: {
+    sm: HydrogenSVG,
+    lg: HydrogenSVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -767,13 +774,13 @@ const formatToSVG = {
     sm: PerlSVG,
     lg: PerlSVGLarge,
   },
-  'pi-durable': {
-    sm: PiDurableSVG,
-    lg: PiDurableSVG,
-  },
   php: {
     sm: PhpSVG,
     lg: PhpSVGLarge,
+  },
+  pi: {
+    sm: PiSVG,
+    lg: PiSVGLarge,
   },
   playstation: {
     sm: PlaystationSVG,
@@ -986,6 +993,7 @@ export const PLATFORM_TO_ICON = {
   android: 'android',
   anthropic: 'anthropic',
   apple: 'apple',
+  aws: 'aws',
   capacitor: 'capacitor',
   clojure: 'clojure',
   cocoa: 'apple',
@@ -1031,7 +1039,9 @@ export const PLATFORM_TO_ICON = {
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
   'go-fiber': 'fiber',
+  'go-fiberv3': 'fiber',
   'go-gin': 'gin',
+  'go-grpc': 'grpc',
   'go-iris': 'iris',
   'go-negroni': 'go',
   'go-zerolog': 'go',
@@ -1073,6 +1083,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-hydrogen': 'hydrogen',
   'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
   'javascript-flue': 'flue',
@@ -1084,7 +1095,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nuxt': 'nuxt',
   'javascript-nitro': 'nitro',
   'javascript-node': 'nodejs',
-  'javascript-pi-durable': 'pi-durable',
+  'javascript-pi-durable': 'pi',
   'javascript-react': 'react',
   'javascript-react-router': 'react-router',
   'javascript-remix': 'remix',
@@ -1111,12 +1122,13 @@ export const PLATFORM_TO_ICON = {
   'nintendo-switch': 'nintendo-switch',
   openai: 'openai',
   perl: 'perl',
-  'pi-durable': 'pi-durable',
   php: 'php',
   'php-laravel': 'laravel',
   'php-monolog': 'php',
   'php-symfony2': 'symfony',
   'php-symfony': 'symfony',
+  pi: 'pi',
+  'pi-durable': 'pi',
   playstation: 'playstation',
   python: 'python',
   'python-aiohttp': 'aiohttp',
@@ -1128,6 +1140,7 @@ export const PLATFORM_TO_ICON = {
   'python-gcp-functions': 'gcp-functions',
   'python-anthropic': 'anthropic',
   'python-beam': 'apache-beam',
+  'python-bedrock': 'aws',
   'python-boto3': 'aws',
   'python-bottle': 'bottle',
   'python-celery': 'celery',

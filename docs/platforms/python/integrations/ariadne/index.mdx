@@ -78,27 +78,25 @@ This will create a corresponding `GraphQLError` in the Issues section of
 ## Options
 
 The Ariadne integration can capture request and response payload for each GraphQL
-error that happens. Since these may contain sensitive data, the SDK needs to be
-initialized with the
-[send_default_pii](/platforms/python/configuration/options/#send-default-pii)
-option set to `True`.
+error that happens. This is enabled by default.
 
-By default, no request and response data will be attached.
+To control which data is attached, use the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key controls the query document and its variables in the request
+payload, and the `outgoing_response` entry in `http_bodies` controls the response
+payload:
 
 ```python
 sentry_sdk.init(
     # same options as above
-    send_default_pii=True,
+    data_collection={
+        "graphql": {"document": True, "variables": True},
+        "http_bodies": ["incoming_request", "outgoing_request", "outgoing_response"],
+    },
 )
 ```
 
-<Alert level="warning" title="Note">
+These are the defaults, so you only need to set the keys you want to change. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
 
-Since `send_default_pii` is a global SDK option, setting it to `True` will affect all integrations, not just Ariadne. Please make sure to
-[scrub sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option.
-
-</Alert>
+In SDK versions prior to `3.0`, this data isn't attached by default. To attach it, pass a `data_collection` dictionary as shown above, or set the `send_default_pii` option to `True`. Since `send_default_pii` is a global SDK option, setting it to `True` affects all integrations, so make sure to [scrub sensitive data](/platforms/python/data-management/sensitive-data/) from events first.
 
 ## Supported Versions
 

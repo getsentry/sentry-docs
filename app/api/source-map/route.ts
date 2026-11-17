@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/frontmatter';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 /**
  * API endpoint that returns a mapping of slugs to their source file paths.

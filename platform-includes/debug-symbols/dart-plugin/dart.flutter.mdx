@@ -11,7 +11,19 @@ dev_dependencies:
 
 ## Configuration
 
-The Sentry Dart Plugin requires basic configuration in your `pubspec.yaml` file:
+### Set Your Auth Token
+
+The plugin needs a Sentry auth token to upload files. Set it with the `SENTRY_AUTH_TOKEN` environment variable so it doesn't end up in source control:
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+In CI, store the token as a secret and expose it to the build step as `SENTRY_AUTH_TOKEN`.
+
+### Configure the Plugin
+
+Add the rest of the plugin configuration to your `pubspec.yaml` file or a `sentry.properties` file:
 
 <OnboardingOptionButtons
   options={[
@@ -25,7 +37,6 @@ The Sentry Dart Plugin requires basic configuration in your `pubspec.yaml` file:
 sentry:
   project: ___PROJECT_SLUG___
   org: ___ORG_SLUG___
-  auth_token: ___ORG_AUTH_TOKEN___
   # Absolute or relative path to the Dart symbol map file
   # Used to make obfuscated Flutter issue titles readable on iOS and Android
   # See the "Building Your Application" section below for more details on how to generate the symbol map file
@@ -46,7 +57,6 @@ sentry:
 # Add this sentry.properties file to your Flutter project root.
 project=___PROJECT_SLUG___
 org=___ORG_SLUG___
-auth_token=___ORG_AUTH_TOKEN___
 # Absolute or relative path to the Dart symbol map file
 # Used to make obfuscated Flutter issue titles readable on iOS and Android
 # See the "Building Your Application" section below for more details on how to generate the symbol map file
@@ -185,7 +195,7 @@ When available, environment variable names are listed in the **Environment Varia
 | -------------------------- | -------------------- | ------- | --------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `project`                  | `SENTRY_PROJECT`     | string  |                                               | **(Required)** Your project's name (e.g., `sentry-flutter`)                        |
 | `org`                      | `SENTRY_ORG`         | string  |                                               | **(Required)** Your organization's slug (e.g., `sentry-sdks`)                      |
-| `auth_token`               | `SENTRY_AUTH_TOKEN`  | string  |                                               | **(Required)** The Sentry auth token                                               |
+| `auth_token`               | `SENTRY_AUTH_TOKEN`  | string  |                                               | **(Required)** The Sentry auth token. Prefer the `SENTRY_AUTH_TOKEN` env variable  |
 | `upload_debug_symbols`     | —                    | boolean | `true`                                        | Enables or disables automatic upload of debug symbols                              |
 | `upload_source_maps`       | —                    | boolean | `false`                                       | Enables or disables automatic upload of source maps (Flutter Web)                  |
 | `upload_sources`           | —                    | boolean | `false`                                       | Enables or disables source code upload                                             |
@@ -200,6 +210,7 @@ When available, environment variable names are listed in the **Environment Varia
 | `legacy_web_symbolication` | —                    | boolean | `false`                                       | Uses legacy symbolication for Flutter Web. See [Debug IDs](#debug-ids-flutter-web) |
 | `commits`                  | —                    | string  | `auto`                                        | Release commits integration                                                        |
 | `ignore_missing`           | —                    | boolean | `false`                                       | Ignore missing commits previously used in the release                              |
+| `finalize_release`         | —                    | boolean | `true`                                        | Finalizes the release after upload. Set to `false` to finalize it later (3.5.0+)   |
 | `wait_for_processing`      | —                    | boolean | `false`                                       | Whether to wait for server-side processing of uploaded files                       |
 | `log_level`                | `SENTRY_LOG_LEVEL`   | string  | `warn`                                        | Log level for sentry-cli: `trace`, `debug`, `info`, `warn`, `error`                |
 | `bin_dir`                  | —                    | string  | `.dart_tool/pub/bin/sentry_dart_plugin`       | Folder where the plugin downloads the sentry-cli binary                            |
@@ -248,6 +259,29 @@ Set `ignore_missing: true` in your configuration to bypass this validation:
 ```yaml {filename:pubspec.yaml}
 sentry:
   ignore_missing: true
+```
+
+</Expandable>
+
+<Expandable title="How do I keep a release from being marked as released before it ships?">
+
+By default, the plugin finalizes the release after it uploads files, which sets the release date in Sentry. If you upload debug symbols at build time but ship later, for example with a staged rollout or a build that only goes to internal testers, Sentry marks the release as released before any users have it.
+
+Set `finalize_release` to `false` to skip this step. This option is available since version 3.5.0 of the Sentry Dart Plugin.
+
+```yaml {filename:pubspec.yaml}
+sentry:
+  finalize_release: false
+```
+
+```properties {filename:sentry.properties}
+finalize_release=false
+```
+
+When the build goes live, finalize the release with [Sentry CLI](/cli/releases/):
+
+```bash
+sentry-cli releases finalize <release> --released <timestamp>
 ```
 
 </Expandable>
