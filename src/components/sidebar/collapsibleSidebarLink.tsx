@@ -41,6 +41,12 @@ interface SidebarLinkProps {
    * Shows an early access badge next to the title
    */
   earlyAccess?: boolean;
+
+  /**
+   * Highlights the link when it points to the current page. Turn it off when a child link
+   * points to the same page.
+   */
+  highlight?: boolean;
 }
 
 /**
@@ -57,6 +63,7 @@ export function CollapsibleSidebarLink({
   beta = false,
   isNew = false,
   earlyAccess = false,
+  highlight = true,
 }: SidebarLinkProps) {
   const isActive = path?.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
@@ -69,7 +76,7 @@ export function CollapsibleSidebarLink({
       <SidebarLink
         href={to}
         data-sidebar-link
-        isActive={to === getUnversionedPath(path)}
+        isActive={highlight && to === getUnversionedPath(path)}
         collapsible={hasSubtree}
         title={title}
         beta={beta}

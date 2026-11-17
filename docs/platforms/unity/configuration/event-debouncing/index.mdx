@@ -1,43 +1,96 @@
 ---
-title: Event Debouncing
-description: "Learn how the SDK handles high frequencies of events."
+title: Event Throttling
+description: "Learn how to limit repeated errors, breadcrumbs, and logs from Unity's logging system."
 sidebar_order: 20
 ---
 
-Because gameplay updates at a very high frequency of 60 times a second or even higher, an optional debouncing mechanism is in place. Every type of log has its own time slot. If `EnableLogDebounce` is enabled and the game triggers too many events of the same type in quick succession, Sentry will only capture the first of its kind, then ignore (debounce) the other events of the same type.
+A game can log the same error every frame. Throttling drops the repeats, so they don't use up your quota.
 
-Event debouncing is `disabled` by default.
+Throttling is off by default.
 
-The time that needs to pass after an event has been triggered to be captured again:
+## Configure Throttling in the Editor
 
-- `LogType.Log` - one second
-- `LogType.Warning` - one second
-- `LogType.Error`, `LogType.Exception`, `LogType.Assert` and actual exceptions - one second
+Open **Tools > Sentry > Logging** and turn on **Enable Error Event Throttling**. **Dedupe Window [ms]** sets how long the SDK waits before it captures the same error again. The default is `1000` milliseconds.
 
+The built-in throttler handles errors from `Debug.LogError`, `Debug.LogException`, and, in the editor and development builds, `Debug.LogAssertion`. It treats two errors as the same when their message and stack trace match, and remembers the last 100 distinct errors. It doesn't throttle breadcrumbs or structured logs.
+
+## Configure Throttling in Code
+
+To throttle in code, implement `IThrottler` and set it as the [`Throttler`](/platforms/unity/configuration/options/#Throttler) option. A custom throttler can also throttle breadcrumbs and structured logs. If you set a throttler in code, the SDK uses it instead of the editor settings.
+
+This example drops any error, breadcrumb, or log that repeats within five seconds. The SDK can call the throttler from any thread, so make it thread-safe and don't call Unity APIs in it.
 
 ```csharp
+using System;
+using System.Collections.Generic;
 using Sentry.Unity;
 using UnityEngine;
 
-public class DebouncerTestMonoBehaviour : MonoBehaviour
+public class RepeatThrottler : IThrottler
 {
-    void Start()
+    private static readonly TimeSpan Window = TimeSpan.FromSeconds(5);
+    private readonly Dictionary<string, DateTime> _lastSeen = new Dictionary<string, DateTime>();
+
+    public bool ShouldCaptureEvent(string message, string stackTrace, LogType logType) =>
+        ShouldCapture("event:" + message + stackTrace);
+
+    public bool ShouldCaptureException(Exception exception) =>
+        ShouldCapture("exception:" + exception.GetType().FullName + exception.Message + exception.StackTrace);
+
+    public bool ShouldCaptureBreadcrumb(string message, LogType logType) =>
+        ShouldCapture("breadcrumb:" + message);
+
+    public bool ShouldCaptureStructuredLog(string message, LogType logType) =>
+        ShouldCapture("log:" + message);
+
+    private bool ShouldCapture(string key)
     {
-        SentrySdk.Init(o =>
+        lock (_lastSeen)
         {
-            o.Dsn = "___PUBLIC_DSN___";
-            o.EnableLogDebouncing = true;
-        });
+            var now = DateTime.UtcNow;
+            if (_lastSeen.TryGetValue(key, out var last) && now - last < Window)
+            {
+                return false;
+            }
 
-        // The time between debug calls of the same type is less than 1s
-        // Every following call of the same type gets ignored until 1s has passed
+            if (_lastSeen.Count >= 100)
+            {
+                // Forget entries whose window has passed.
+                var expired = new List<string>();
+                foreach (var entry in _lastSeen)
+                {
+                    if (now - entry.Value >= Window)
+                    {
+                        expired.Add(entry.Key);
+                    }
+                }
 
-        Debug.Log("Log");              // recorded
-        Debug.Log("Log 2");            // not recorded
-        Debug.LogWarning("Warning");   // recorded
-        Debug.LogWarning("Warning 2"); // not recorded
-        Debug.LogError("Error");       // recorded
-        Debug.LogError("Error 2");     // not recorded
+                foreach (var expiredKey in expired)
+                {
+                    _lastSeen.Remove(expiredKey);
+                }
+
+                if (_lastSeen.Count >= 100)
+                {
+                    // Still full: capture without tracking.
+                    return true;
+                }
+            }
+
+            _lastSeen[key] = now;
+            return true;
+        }
     }
 }
 ```
+
+Set it in your [options configuration script](/platforms/unity/configuration/options/programmatic-configuration/):
+
+```csharp
+public override void Configure(SentryUnityOptions options)
+{
+    options.Throttler = new RepeatThrottler();
+}
+```
+
+`EnableLogDebouncing` and the `DebounceTime*` options are deprecated. Use `Throttler` instead.

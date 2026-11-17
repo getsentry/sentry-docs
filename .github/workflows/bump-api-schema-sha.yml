@@ -1,42 +1,22 @@
-name: Bump @sentry/api
+name: Bump @sentry/api (old dispatch name)
 on:
-  # The API reference is built from the pinned @sentry/api version. getsentry/sentry
-  # releases it whenever the API spec changes; this picks up the new version. See:
-  #
-  #   https://develop.sentry.dev/api/public/#build-process
-  #
-  # The file keeps its old name so existing dispatches still reach it.
-  schedule:
-    - cron: '17 * * * *'
+  # getsentry/sentry dispatches this file by name until it switches to
+  # bump-sentry-api.yml. Delete this file once it has.
   workflow_dispatch:
-# A dispatch and the hourly run must not both push the same bump branch.
 concurrency:
   group: bump-sentry-api
   cancel-in-progress: false
+permissions:
+  contents: read
 jobs:
-  release:
-    runs-on: ubuntu-latest
+  bump:
     name: 'Bump @sentry/api'
-    steps:
-      - name: Get auth token
-        id: token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ vars.SENTRY_API_SCHEMA_UPDATER_APP_CLIENT_ID }}
-          private-key: ${{ secrets.SENTRY_API_SCHEMA_UPDATER_PRIVATE_KEY }}
-          owner: getsentry
-          repositories: sentry-docs
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          token: ${{ steps.token.outputs.token }}
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
-        with:
-          node-version-file: 'package.json'
-      - name: 'Bump @sentry/api'
-        env:
-          # An elevated token is necessary because with plain github.token
-          # GitHub does not recursively call workflows, which means CI does not
-          # kick off for the PR we're about to create.
-          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
-        run: sh scripts/bump-sentry-api.sh
+    uses: getsentry/sentry/.github/workflows/bump-sentry-api-consumer.yml@master
+    with:
+      pin: dependency
+      mode: merge
+      app-client-id: ${{ vars.SENTRY_API_SCHEMA_UPDATER_APP_CLIENT_ID }}
+      commit-author-name: 'sentry-api-schema-updater[bot]'
+      commit-author-email: '271575301+sentry-api-schema-updater[bot]@users.noreply.github.com'
+    secrets:
+      app-private-key: ${{ secrets.SENTRY_API_SCHEMA_UPDATER_PRIVATE_KEY }}

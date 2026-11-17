@@ -68,6 +68,7 @@ function getPlatformSidebarTree(
         early_access: n.frontmatter.early_access,
         section_end_divider: n.frontmatter.section_end_divider,
         sidebar_section: n.frontmatter.sidebar_section,
+        runtime: n.frontmatter.runtime,
       },
       path: '/' + n.path + '/',
     };

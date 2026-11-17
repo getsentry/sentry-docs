@@ -54,7 +54,7 @@ sentry_sdk.init(
 Under the hood, the `OTLPIntegration` sets up the following parts:
 
 * A [`SpanExporter`](https://opentelemetry.io/docs/concepts/components/#exporters) that automatically configures the OTLP ingestion endpoint from your Sentry DSN. This enables tracing in Sentry. **Note:** _Do not_ also set up tracing via the Python SDK (i.e. do not set `traces_sample_rate` or `traces_sampler`).
-* A Sentry [`Propagator`](https://opentelemetry.io/docs/concepts/context-propagation/#propagation) for compatibility with services using Sentry's native tracing (see note below)
+* Optionally, a Sentry [`Propagator`](https://opentelemetry.io/docs/concepts/context-propagation/#propagation) for compatibility with services using Sentry's native tracing (see the `setup_propagator` option below)
 * Trace/Span linking for all other Sentry events such as Errors, Logs, and Metrics
 
 Cross-service trace propagation uses OTel's default W3C `traceparent` headers and does not require additional configuration. See [Exporters, Event Linking, and Propagation](/concepts/otlp/sentry-with-otel/#exporters-event-linking-and-propagation) for details.
@@ -76,15 +76,21 @@ You can pass the following keyword arguments to `OTLPIntegration()`:
 
 - `setup_propagator`:
 
-  Automatically configure the Sentry propagator for distributed tracing, defaults to `True`.
+  Replace the global OpenTelemetry propagator with the Sentry propagator, which uses Sentry's `sentry-trace` and `baggage` headers. Defaults to `False`, so distributed tracing uses the propagators configured in OpenTelemetry (by default, W3C `traceparent` and `baggage`). In SDK versions prior to `3.0`, the default is `True`.
 
-  Set to `False` to configure propagators manually or to disable propagation.
+  To propagate both W3C and Sentry headers, set up the `SentryOTLPPropagator` manually instead:
 
-  <Alert level="warning" title="Planned Removal">
+  ```python
+  from opentelemetry.propagate import set_global_textmap
+  from opentelemetry.propagators.composite import CompositePropagator
+  from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
-  The automatic propagator setup will be removed in the next major version. Configure propagators manually using the [OpenTelemetry propagation API](https://opentelemetry.io/docs/languages/python/propagation/) instead.
+  from sentry_sdk.integrations.otlp import SentryOTLPPropagator
 
-  </Alert>
+  set_global_textmap(
+      CompositePropagator([TraceContextTextMapPropagator(), SentryOTLPPropagator()])
+  )
+  ```
 
 - `capture_exceptions`:
 
