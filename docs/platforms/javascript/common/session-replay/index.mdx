@@ -160,6 +160,18 @@ If you're unable to update your CSP policy to allow inline web workers, you can 
   breadcrumbs, rage clicks, and dead clicks.
 </PlatformSection>
 
+### Linking
+
+Replays stay connected to the errors and traces from the same session, so you can move from what the user saw to the data around it.
+
+#### Error Linking
+
+Errors that happen while a replay is running are linked to that replay. Open the replay from the issue, or open the related issue from [Replay Details](/product/session-replay/replay-details/). The error count on Replay Details can be lower than the number of errors captured when the replay was rate-limited, deleted by someone in your organization, or not saved because of a network error.
+
+#### Trace Linking
+
+When <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled, traces appear in the replay timeline. Select a span to open the trace and see the network request, database queries, and API calls behind that moment. From a trace, open the replay to see what the user was doing. See <PlatformLink to="/tracing/#replay-linking">Replay Linking</PlatformLink>.
+
 ## Sampling
 
 Sampling controls how much of your traffic results in a Session Replay. There are two rates, and they do different jobs.
@@ -218,7 +230,7 @@ A customer reported a problem and you want their session. If the complaint arriv
 
 Two things that work better:
 
-- **Capture at the moment they tell you.** Sentry's [User Feedback widget](/product/user-feedback/#user-feedback-widget) sends a replay when a user submits feedback. This requires `replaysOnErrorSampleRate` to be above 0, which keeps a buffer of the session in memory so the replay includes what happened before the widget opened (up to 30 seconds). If it's 0, the feedback arrives without that context. You can do the same from your own support widget by calling `replay.flush()`, which uploads the buffered session and gives you a replay ID to attach to the ticket. The same requirement applies with an error rate of 0, `flush()` only records from the moment it's called.
+- **Capture at the moment they tell you.** Sentry's [User Feedback widget](/product/user-feedback/#user-feedback-widget) sends a replay when a user opens the feedback widget or submits feedback. This requires `replaysOnErrorSampleRate` to be above 0, which keeps a buffer of the session in memory so the replay includes what happened before the widget opened (up to 60 seconds). If it's 0, the feedback arrives without that context. You can do the same from your own support widget by calling `replay.flush()`, which uploads the buffered session and gives you a replay ID to attach to the ticket. The same requirement applies with an error rate of 0, `flush()` only records from the moment it's called.
 - **Record the users most likely to contact you.** Set a higher rate for logged-in users, paying accounts, or enterprise customers. This covers your support cases at a fraction of what raising the rate for all traffic would cost.
 
 Either way, call <PlatformLink to="/configuration/apis/#setUser">`setUser`</PlatformLink> so you can find the session once you have it.
