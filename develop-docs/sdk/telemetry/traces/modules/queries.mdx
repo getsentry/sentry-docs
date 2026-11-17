@@ -2,6 +2,12 @@
 title: Queries Module
 ---
 
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined
+  in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
 The SDK should auto-instrument all database queries, and each query to the database should result in a span. This includes queries made manually, or via ORM. The Queries module supports SQL databases like PostgreSQL and MySQL, as well as MongoDB. It does not support other databases like Neo4j or ClickHouse. Regardless of that, the SDK should instrument database queries as fully and correctly as possible to ensure correct behavior and future compatibility.
 
 ## Span Attributes
@@ -9,25 +15,39 @@ The SDK should auto-instrument all database queries, and each query to the datab
 | Attribute | Description | Notes |
 |:--|:--|:--|
 | `op` | Prefixed with `"db"` (e.g., `"db"`, `"db.query"`, `"db.sql.query"`) [^1] | Required |
-| `description` | The full scrubbed query (e.g., `SELECT * FROM users where id = ?`) | Required, see  [Query Scrubbing](#query-scrubbing) for details |
+| `description` | The parameterized query (e.g., `SELECT * FROM users where id = ?`) | Required, see [Query Parameterization](#query-parameterization) for details |
 | `data` | A key-value mapping of span attributes. (e.g., `{"db.system": "postgresql", "db.name": "prod-2"}`) | Required for full experience. See [Span Data](#span-data) for details |
 
-### Query Scrubbing
+### Query Parameterization
 
-The query description should be scrubbed of any user-supplied values.
+Parameterization replaces each literal value in a query with a placeholder, so Sentry can group the same query with different values.
+See [Data Scrubbing](/sdk/foundations/data-scrubbing/#parameterization).
 
-e.g., the query
+If the database driver supplies the parameterized query, the SDK **MUST** use it unchanged. Sentry supports the placeholders `?`, `%s`, `:c0` (e.g., `:c0`, `:c1`), and `$1` (e.g., `$1`, `$2`).
+
+If the driver does not supply a parameterized query, the SDK **SHOULD** replace all literals with `?`. For example, the query
 
 ```sql
 SELECT * FROM users WHERE id = 17;
 ```
-should be scrubbed to:
+
+becomes:
 
 ```sql
 SELECT * FROM users WHERE id = ?;
 ```
 
-The `?` parameter is a placeholder in the query. The SDK must scrub out all values and replace them with a placeholder. Supported placeholder values are `%s`, `?`, `:c0` (e.g., `:c0`, `:c1`) and `$1` (e.g., `$1`, `$2`).
+If the SDK does not replace the literals, the span description **MUST NOT** contain the query.
+The SDK uses the first available value of this list instead:
+
+1. `db.query.summary`
+2. `{db.operation.name} {target}`
+3. `{target}`, where the target is `db.collection.name`, `db.stored_procedure.name`, `db.namespace`, or `server.address`
+4. `db.system.name`
+
+If the SDK does not replace the literals, the SDK **MAY** set `db.query.text` to the query as it is. Server-side scrubbing applies to it (see [Server-Side Scrubbing](/sdk/foundations/data-scrubbing/#server-side-scrubbing)).
+
+The SDK **SHOULD** set `db.query.summary` when the driver supplies it. The SDK **MAY** generate the summary from the parameterized query. The summary contains the operation and the target names, for example `SELECT users`.
 
 For MongoDB, the description should contain valid JSON. If replacing values with a placeholder, the string `"?"` should be used.
 
@@ -66,7 +86,7 @@ This should result in the following span:
 
 ```json
 {
-  "description": "SELECT * FROM projects WHERE projects_user = 17",
+  "description": "SELECT * FROM projects WHERE projects_user = ?",
   "op": "db",
   "data": {
     "db.system": "postgresql",

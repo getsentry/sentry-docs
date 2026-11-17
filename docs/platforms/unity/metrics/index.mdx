@@ -21,6 +21,43 @@ With Sentry's [Application Metrics](/product/metrics/), you can send counters, g
 
 <PlatformContent includePath="metrics/usage" />
 
+## Automatic Game Metrics
+
+<Alert level="warning">
+
+Automatic game metrics are experimental.
+
+</Alert>
+
+The SDK can collect common game performance metrics for you. Each kind is off by default. Turn it on in **Tools > Sentry > Advanced > Metrics**, or in code with the options below.
+
+| Option                                                                                            | Interval option                                                                                           | Metrics                                                                                     |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| <PlatformLink to="/configuration/options/#AutoFrameMetrics">`AutoFrameMetrics`</PlatformLink>     | <PlatformLink to="/configuration/options/#FrameMetricsInterval">`FrameMetricsInterval`</PlatformLink>     | `game.perf.frame_time`, `game.perf.fps`, `game.perf.game_thread`, `game.perf.render_thread` |
+| <PlatformLink to="/configuration/options/#AutoMemoryMetrics">`AutoMemoryMetrics`</PlatformLink>   | <PlatformLink to="/configuration/options/#MemoryMetricsInterval">`MemoryMetricsInterval`</PlatformLink>   | `game.perf.used_memory`, `game.perf.reserved_memory`, `game.perf.mono_used_memory`          |
+| <PlatformLink to="/configuration/options/#AutoGcMetrics">`AutoGcMetrics`</PlatformLink>           | <PlatformLink to="/configuration/options/#GcMetricsInterval">`GcMetricsInterval`</PlatformLink>           | `game.perf.gc_collections`                                                                  |
+| <PlatformLink to="/configuration/options/#AutoNetworkMetrics">`AutoNetworkMetrics`</PlatformLink> | <PlatformLink to="/configuration/options/#NetworkMetricsInterval">`NetworkMetricsInterval`</PlatformLink> | `game.perf.net.ping`, `game.perf.net.num_clients`                                           |
+
+- `game.perf.game_thread` and `game.perf.render_thread` need Unity 2022 or later.
+- Network metrics need the Netcode for GameObjects package. Clients send `game.perf.net.ping`, and the server sends `game.perf.net.num_clients`.
+
+```csharp
+public override void Configure(SentryUnityOptions options)
+{
+    options.AutoFrameMetrics = true;
+    options.AutoMemoryMetrics = true;
+}
+```
+
+Automatic metrics have these attributes. The SDK leaves out `gpu.name`, `cpu.cores`, and `ram.gb` when the value isn't available.
+
+- `gpu.name`
+- `cpu.cores`
+- `ram.gb`
+- `res.x` and `res.y`, the screen resolution
+- `platform`
+- `map`, the name of the active scene
+
 ## Options
 
 <PlatformContent includePath="metrics/options" />
