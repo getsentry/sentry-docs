@@ -459,7 +459,7 @@ fun AppNavigation() {
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BackStackEntryMapper.KotlinxSerialName`              | The entry's [serial name](https://kotlinlang.org/api/kotlinx.serialization/kotlinx-serialization-core/kotlinx.serialization/-serial-name/), without arguments |
 | `BackStackEntryMapper.KotlinxSerialNameAndProperties` | The entry's serial name and serialized properties as arguments                                                                                                |
-| A custom `BackStackEntryMapper`                       | The name and arguments you specify (see [Verify](#verify-2) for an example)                                                                                                  |
+| A custom `BackStackEntryMapper`                       | The name and arguments you specify (see [Verify](#verify-2) for an example)                                                                                   |
 
 The built-in mappers require `@Serializable`, non-generic entry classes. Names come from `@SerialName`, or the fully qualified class name if no serial name is specified. Entries that can't be mapped appear as `/unknown`.
 
@@ -511,7 +511,7 @@ SentryAndroid.init(this) { options ->
 
 The snippet below defines `Home` and `ProductDetail` routes and a composable for displaying them. It adds both routes to an in-memory back stack and captures a message from the `ProductDetail` destination so you can verify the navigation data the Sentry SDK emits.
 
-The snippet assumes the default `SentryNavOptions`. Screen names additionally require screen tracking to be enabled.
+This example uses `KotlinxSerialNameAndProperties` to capture the test product ID. Use this mapper only when all entry properties are safe to send to Sentry. The snippet assumes the default `SentryNavOptions`. Screen names additionally require screen tracking to be enabled.
 
 ```kotlin
 import androidx.compose.material3.Button
@@ -524,13 +524,19 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import io.sentry.Sentry
-import io.sentry.compose.navigation3.SentryBackStackEntry
+import io.sentry.compose.navigation3.BackStackEntryMapper
 import io.sentry.compose.navigation3.SentryNavEffect
 import kotlinx.coroutines.delay
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
+@SerialName("Home")
 data object Home : NavKey
 
-data class ProductDetail(val productId: String) : NavKey
+@Serializable
+@SerialName("ProductDetail")
+data class ProductDetail(@SerialName("product_id") val productId: String) : NavKey
 
 @Composable
 fun AppNavigation() {
@@ -538,16 +544,7 @@ fun AppNavigation() {
 
   SentryNavEffect(
     backStack = backStack,
-    backStackEntryMapper = { entry ->
-      when (entry) {
-        is Home -> SentryBackStackEntry("Home")
-        is ProductDetail -> SentryBackStackEntry(
-          name = "ProductDetail",
-          arguments = mapOf("product_id" to entry.productId),
-        )
-        else -> null
-      }
-    },
+    backStackEntryMapper = BackStackEntryMapper.KotlinxSerialNameAndProperties,
   )
 
   NavDisplay(
