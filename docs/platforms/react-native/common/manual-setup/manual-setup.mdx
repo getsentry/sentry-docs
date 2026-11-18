@@ -184,7 +184,7 @@ apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 
 ### Enable Sentry AGP
 
-You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle/) dependency to `android/build.gradle`.
+This step is optional. You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle/) dependency to `android/build.gradle`.
 
 ```groovy {filename:android/build.gradle}
 buildscript {
@@ -203,6 +203,12 @@ The `autoInstallation` option **must** be set to `false` when using the Sentry A
 
 </Alert>
 
+<Alert level="warning" title="Native Symbol Upload Needs an Auth Token">
+
+When `uploadNativeSymbols` is enabled, every release build uploads native symbols and fails if no valid auth token is available. The Sentry Android Gradle Plugin doesn't read `SENTRY_DISABLE_AUTO_UPLOAD` on its own. The snippet below uses the `shouldSentryAutoUpload()` helper from the [Gradle integration](#enable-gradle-integration), so `SENTRY_DISABLE_AUTO_UPLOAD=true` skips both the source map upload and the native symbol upload.
+
+</Alert>
+
 ```groovy {filename:android/app/build.gradle}
 apply plugin: "io.sentry.android.gradle"
 
@@ -210,8 +216,9 @@ sentry {
     // Enables or disables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
     // you don't need to do it manually.
+    // Requires a Sentry auth token. Skipped when SENTRY_DISABLE_AUTO_UPLOAD=true.
     // Default is disabled.
-    uploadNativeSymbols = true
+    uploadNativeSymbols = shouldSentryAutoUpload()
 
     // Enables or disables the automatic upload of the app's native source code to Sentry.
     // This executes sentry-cli with the --include-sources param automatically so
