@@ -1,0 +1,74 @@
+---
+title: Express
+description: "Adds error capturing and performance instrumentation for Express. (default)"
+supportedCategories:
+  - server
+notSupported:
+  - javascript.cloudflare
+---
+
+For more information on setting up Sentry Express support, see the [Express Sentry documentation](/platforms/javascript/guides/express/).
+
+_Import name: `Sentry.expressIntegration`_
+
+This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `expressIntegration` captures errors thrown in your Express route handlers and middleware, and creates spans for your Express middleware, routers, and request handlers. It also names your transactions after the matched route, such as `GET /users/:id`.
+
+For the integration to work, Sentry has to instrument Express before your app loads it. Run your app with the `--import` flag or use one of the other [installation methods](/platforms/javascript/guides/node/install/).
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.expressIntegration()],
+});
+```
+
+<PlatformContent
+  includePath="getting-started-capture-errors"
+  platform="javascript.express"
+  noGuides
+/>
+
+## Options
+
+### `shouldHandleError`
+
+_Type: `((error: Error) => boolean) | false`_
+
+Decides whether an error thrown from a route handler or middleware is sent to Sentry. Set it to `false` to turn off automatic error capturing. See [Report Unhandled Exceptions](#report-unhandled-exceptions) above for the default behavior and an example.
+
+### `ignoreLayers`
+
+_Type: `Array<string | RegExp | ((name: string) => boolean)>`_
+
+An array of patterns matched against the span name of an Express layer. Matching layers don't create spans. Strings must match the name exactly.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.expressIntegration({
+      ignoreLayers: ["jsonParser", /^cors/],
+    }),
+  ],
+});
+```
+
+### `ignoreLayersType`
+
+_Type: `Array<'middleware' | 'router' | 'request_handler'>`_
+
+An array of Express layer types to ignore when creating spans. Use this to filter out all middleware, router, or request handler spans.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.expressIntegration({
+      ignoreLayersType: ["middleware"],
+    }),
+  ],
+});
+```
+
+## Supported Versions
+
+- `express`: `^4.0.0 || ^5.0.0`
