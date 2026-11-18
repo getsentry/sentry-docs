@@ -20,7 +20,6 @@ Transaction names follow the pattern `<HTTP method> <Route>`; for example, a req
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 public class HomeController : Controller
 {
@@ -33,7 +32,6 @@ Transactions created by this integration are automatically added to the current 
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 public class HomeController : Controller
 {
@@ -50,10 +48,11 @@ public class HomeController : Controller
             // Do the work that gets measured.
 
             childSpan?.Finish(SpanStatus.Ok);
+            return Ok(id);
         }
         catch (Exception e)
         {
-            childSpan?.Finish(SpanStatus.InternalError);
+            childSpan?.Finish(e);
             throw;
         }
     }
