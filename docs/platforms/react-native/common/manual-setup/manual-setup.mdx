@@ -203,16 +203,22 @@ The `autoInstallation` option **must** be set to `false` when using the Sentry A
 
 </Alert>
 
-<Alert level="warning" title="Native Symbol Upload Needs an Auth Token">
+<Alert level="warning" title="Symbol and Mapping Uploads Need an Auth Token">
 
-When `uploadNativeSymbols` is enabled, every release build uploads native symbols and fails if no valid auth token is available. The Sentry Android Gradle Plugin doesn't read `SENTRY_DISABLE_AUTO_UPLOAD` on its own. The snippet below uses the `shouldSentryAutoUpload()` helper from the [Gradle integration](#enable-gradle-integration), so `SENTRY_DISABLE_AUTO_UPLOAD=true` skips both the source map upload and the native symbol upload.
+When `uploadNativeSymbols` or `autoUploadProguardMapping` is enabled, every release build uploads to Sentry and fails if no valid auth token is available. The Sentry Android Gradle Plugin doesn't read `SENTRY_DISABLE_AUTO_UPLOAD` on its own. The snippet below uses the `shouldSentryAutoUpload()` helper from the [Gradle integration](#enable-gradle-integration), so `SENTRY_DISABLE_AUTO_UPLOAD=true` skips the source map, native symbol, and ProGuard mapping uploads. Place the snippet after the `apply from: ".../sentry.gradle"` line, which defines the helper.
 
 </Alert>
 
 ```groovy {filename:android/app/build.gradle}
+// Must come after `apply from: "../../node_modules/@sentry/react-native/sentry.gradle"`
 apply plugin: "io.sentry.android.gradle"
 
 sentry {
+    // Enables or disables the automatic upload of the ProGuard/R8 mapping file.
+    // Requires a Sentry auth token. Skipped when SENTRY_DISABLE_AUTO_UPLOAD=true.
+    // Default is enabled.
+    autoUploadProguardMapping = shouldSentryAutoUpload()
+
     // Enables or disables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
     // you don't need to do it manually.
