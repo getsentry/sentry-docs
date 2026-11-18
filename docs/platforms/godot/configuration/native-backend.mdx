@@ -1,0 +1,78 @@
+---
+title: Native Backend
+description: "Learn how to use the experimental native crash backend as an alternative to the default backend on Windows and Linux."
+sidebar_order: 15
+---
+
+The native crash backend is an alternative to Crashpad on Windows and Linux that provides tighter integration with the Sentry SDK. Its crash handler uses the SDK’s own event processing, attachments, and upload infrastructure. Like Crashpad, it handles crashes in a separate process and uploads reports at crash time.
+
+<Alert level="warning" title="Experimental">
+
+The native crash backend is experimental and under active development. It may have incomplete features or unexpected behavior.
+
+</Alert>
+
+## Select a Backend for Export
+
+Both backends ship with the addon, so switching doesn't require rebuilding the SDK.
+
+1. Open **Project > Export** and select your Linux or Windows preset.
+2. Under **Options > Sentry > Crash Backend**, select **Native** or **Crashpad**.
+3. Export your game. The Sentry export plugin packages the matching GDExtension and crash handler automatically.
+
+The default selection, **Auto**, uses Crashpad by default. This may change in a future release.
+
+## Test from the Editor
+
+To run your game with the native backend before exporting:
+
+1. Open **Debug > Customize Run Instances**.
+2. Add `sentry_crash_backend_native` to **Main Feature Tags**.
+3. Click **OK** to save the settings.
+4. Run your game.
+
+## Configuration
+
+Configure native backend crash collection in the project settings under **Sentry > Native > Native Crash Backend**.
+
+### Crash Reporting Mode
+
+Controls how crash data is collected and sent to Sentry. You can adjust it in **Project Settings** under **Sentry > Native > Native Crash Backend > Crash Reporting Mode**.
+
+- **Minidump Only**: Send a minidump for server-side stack walking and symbolication.
+- **Native Stackwalking Only**: Send an event with client-side stack traces, without a minidump, for smaller reports and faster uploads.
+- **Native Stackwalking With Minidump** (default): Use client-side stack traces for the event and include a minidump as an additional attachment for deeper crash investigations.
+
+Crash reports still need <PlatformLink to="/configuration/stack-traces/">debug symbols</PlatformLink> for useful function names and source locations.
+
+### Minidump Mode
+
+Controls how much memory is captured when the report includes a minidump. You can adjust it in **Project Settings** under **Sentry > Native > Native Crash Backend > Minidump Mode**.
+
+- **Stack Only**: Capture stack memory only to keep reports small.
+- **Smart** (default): Capture stack memory and heap memory around the crash site.
+- **Full Memory**: Capture the entire process memory for detailed investigations. This takes longer to generate and upload.
+
+Use **Stack Only** or **Smart** for production. Reserve **Full Memory** for development or targeted crash investigations.
+
+To retain minidumps for download and investigation, enable <PlatformLink to="/data-management/store-minidumps-as-attachments/">Store Minidumps As Attachments</PlatformLink>.
+
+### Thread Stackwalk Mode
+
+Controls which threads receive client-side stack traces. You can adjust it in **Project Settings** under **Sentry > Native > Native Crash Backend > Thread Stackwalk Mode**. Applies only when **Crash Reporting Mode** is **Native Stackwalking Only** or **Native Stackwalking With Minidump**.
+
+- **Crashed Thread Only**: Collect the crashed thread's stack trace. Other threads retain their IDs and names, without stack traces.
+- **All Threads** (default): Collect stack traces for every thread to provide more context.
+
+Collecting all thread stacks can delay crash processing in games with many threads. Choose **Crashed Thread Only** to reduce collection overhead.
+
+### Crash Upload Mode
+
+Controls whether the crashed game waits for the upload to finish. You can adjust it in **Project Settings** under **Sentry > Native > Native Crash Backend > Crash Upload Mode**.
+
+- **Synchronous** (default): Keep the game blocked while the crash handler waits for pending uploads and shuts down.
+- **Asynchronous**: Let the game terminate after capture while the crash handler continues uploading and shutting down.
+
+Capture itself blocks in both modes. Asynchronous upload avoids keeping the game frozen during a lengthy upload, such as a report containing a large minidump.
+
+The upload wait is limited by <PlatformLink to="/configuration/options/#shutdown_timeout_ms">`shutdown_timeout_ms`</PlatformLink>; synchronous mode does not guarantee successful delivery.
