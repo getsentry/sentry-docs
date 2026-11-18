@@ -3,13 +3,19 @@
 You need:
 
 - A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- A Next.js application that runs on Cloudflare Workers with the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare) or [vinext](https://github.com/cloudflare/vinext)
+- A Next.js application that runs on Cloudflare Workers with the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare)
 
 <Alert level="info">
   If you haven't deployed a Next.js app to Cloudflare Workers before, follow
   Cloudflare's [Next.js deployment
   guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
   first.
+</Alert>
+
+<Alert level="info">
+  If you build your app with [vinext](https://github.com/cloudflare/vinext),
+  follow the [vinext on Cloudflare](/platforms/javascript/guides/vinext/) guide
+  instead.
 </Alert>
 
 <StepConnector selector="h2" showNumbers={true}>
@@ -62,8 +68,6 @@ compatibility_date = "2025-08-16"
 
 <AvailableSince version="11.6.0" />
 
-If you build your app with vinext, skip to [Wrap the Worker Entry With vinext](#wrap-the-worker-entry-with-vinext).
-
 On Cloudflare Workers, your Next.js app runs inside the Worker entry that OpenNext generates (`.open-next/worker.js`). Wrap this entry with `withSentry` from `@sentry/nextjs/cloudflare` to get the same Next.js spans as on Node.js, plus Cloudflare data such as spans for D1 queries. Each request gets one `http.server` span with the name of the Next.js route, and the Next.js spans become its children.
 
 `@sentry/nextjs` depends on `@sentry/cloudflare`, so you don't need to install another package.
@@ -103,10 +107,6 @@ Then, point `main` in your Wrangler configuration to this file:
 ```toml {tabTitle:Toml} {filename:wrangler.toml}
 main = "./worker.ts"
 ```
-
-#### Wrap the Worker Entry With vinext
-
-With [vinext](https://github.com/cloudflare/vinext), you don't need a custom Worker. Add the [Sentry Vite plugin](/platforms/javascript/guides/cloudflare/install/vite-plugin/) to your Vite config, and it wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare` automatically.
 
 #### Server and Edge Configuration in the Worker
 
