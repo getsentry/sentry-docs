@@ -39,17 +39,45 @@ If you _do not_ wish to use the default PII behavior, you can also choose to ide
 
 ## Scrubbing Data
 
-### `event_scrubber`
+### Local Variables
 
-<Alert>
+<Alert level="warning">
 
-Only available in SDK versions prior to `3.0`. In SDK `3.x`, the SDK scrubs sensitive values through the built-in denylist of the [`data_collection`](../../configuration/options/#data_collection) option, which you can extend with your own `terms`. Use <PlatformIdentifier name="before-send" /> for custom scrubbing.
+By default, the SDK sends the values of **all** local variables in stack frames, without scrubbing them. In SDK versions prior to `3.0`, the event scrubber removed values of variables with sensitive names, like `password` or `token`.
 
 </Alert>
+
+To filter out variables with sensitive names, set the `stack_frame_variables` setting of the [`data_collection`](../../configuration/options/#data_collection) option to denylist mode. The SDK then removes the values of variables whose names contain a term from its built-in denylist, such as `auth`, `token`, `secret`, `password`, `key`, or `session`. Matching is case-insensitive, so `user_password` and `API_KEY` are both scrubbed.
+
+To scrub additional variables, list them in `terms`. They're applied on top of the built-in denylist:
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    data_collection={
+        "stack_frame_variables": {
+            "mode": "denylist",
+            "terms": ["ssn", "birthday"],
+        },
+    },
+)
+```
+
+To stop sending local variables entirely, set `stack_frame_variables` to `False`.
+
+### `event_scrubber`
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, use [`data_collection`](../../configuration/options/#data_collection) to control which data is collected, and <PlatformIdentifier name="before-send" /> for custom scrubbing.
+
+<Expandable title="Configure the event scrubber (SDK 2.x)">
 
 If using `send_default_pii`, you can use the <PlatformIdentifier name="event-scrubber" /> configuration parameter to simplify removing sensitive data from your event payload. The event scrubber has no effect when using `data_collection`.
 
 <PlatformContent includePath="configuration/event-scrubber" />
+
+</Expandable>
 
 ### <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-send-transaction" />, & <PlatformIdentifier name="before-send-span" />
 
@@ -59,7 +87,7 @@ The SDK provides a <PlatformIdentifier name="before-send" /> hook, which is invo
 
 Sensitive data may appear in the following areas:
 
-- Stack-locals → The SDK picks up variable values within the stack trace. These can be scrubbed with the `stack_frame_variables` setting of `data_collection`, or this behavior can be disabled altogether if necessary.
+- Stack-locals → The SDK picks up variable values within the stack trace, and doesn't scrub them by default. These can be scrubbed with the `stack_frame_variables` setting of `data_collection` (see [Local Variables](#local-variables)), or this behavior can be disabled altogether if necessary.
 - Breadcrumbs → The SDK picks up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. The SDK will also record database queries, which may need to be scrubbed. The SDK will add the HTTP query string and fragment as a data attribute to the breadcrumb, which may need to be scrubbed.
 - User context → Automated behavior is controlled via the `user_info` setting of `data_collection` (in SDK versions prior to `3.0`, also via <PlatformIdentifier name="send-default-pii" />).
 - HTTP context → Query strings are picked up in web frameworks as part of the HTTP request context.
