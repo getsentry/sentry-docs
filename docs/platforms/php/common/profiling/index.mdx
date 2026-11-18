@@ -60,22 +60,66 @@ phpenmod -s fpm excimer
 phpenmod -s apache2 excimer
 ```
 
-## Enable Tracing
+## Enable Continuous Profiling
 
-Sentry's tracing product has to be enabled in order for Profiling to work.
-To begin capturing profiling data, you first need to start a transaction.
-Check out the <PlatformLink to="/tracing/">performance setup</PlatformLink> and <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink> documentation for more detailed information.
+<Alert>
 
+Continuous profiling is available in Sentry PHP SDK version `4.36.0` and above.
+
+</Alert>
+
+The continuous profiler samples your code for as long as it runs and sends the samples to Sentry in chunks. Enable it with <PlatformLink to="/configuration/options/#profile-session-sample-rate">`profile_session_sample_rate`</PlatformLink>. The sampling decision is made once per profiling session.
+
+### Manual Lifecycle
+
+By default, you start and stop the profiler yourself. This doesn't require tracing.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'profile_session_sample_rate' => 1.0,
+]);
+
+\Sentry\profiler()->start();
+
+// Run some code here
+
+\Sentry\profiler()->stop();
+```
+
+In long-running workers, such as FrankenPHP, RoadRunner, or Swoole, start the profiler once and pause it between requests:
+
+```php
+\Sentry\profiler()->start();
+
+$handler = static function (): void {
+    \Sentry\profiler()->resume();
+
+    // Handle the request
+
+    \Sentry\profiler()->pause();
+};
+
+while (frankenphp_handle_request($handler)) {
+}
+```
+
+### Trace Lifecycle
+
+Set <PlatformLink to="/configuration/options/#profile-lifecycle">`profile_lifecycle`</PlatformLink> to `trace` to run the profiler automatically while a sampled transaction is active:
 
 ```php
 \Sentry\init([
     'dsn' => '___PUBLIC_DSN___',
     'traces_sample_rate' => 1.0,
+    'profile_session_sample_rate' => 1.0,
+    'profile_lifecycle' => 'trace',
 ]);
 ```
 
-## Enabling Profiling
+## Enable Transaction-Based Profiling
 
+Transaction-based profiling captures a profile for each sampled transaction, so tracing has to be enabled. Check out the <PlatformLink to="/tracing/">performance setup</PlatformLink> and <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink> documentation for more detailed information.
 
 ```php
 \Sentry\init([
@@ -85,6 +129,8 @@ Check out the <PlatformLink to="/tracing/">performance setup</PlatformLink> and 
     'profiles_sample_rate' => 1.0,
 ]);
 ```
+
+Setting <PlatformLink to="/configuration/options/#profiles-sample-rate">`profiles_sample_rate`</PlatformLink> disables continuous profiling.
 
 ## Improve Response Time
 
