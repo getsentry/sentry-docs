@@ -168,13 +168,38 @@ Many integrations now emit a smaller, framework-neutral set of span operations. 
 
 If you have alerts, dashboards, or queries that filter on specific span ops, check the [detailed migration guide](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md#span-operation-consolidation) for the complete list of renamed ops.
 
+### Span Names
+
+Some span names change, which can affect alerts, dashboards, and `ignore_spans` rules that match on them:
+
+- Service spans of web frameworks are always named after the route pattern (for example, `/users/<id>`), since `transaction_style` was removed. For Flask, Quart, Bottle, Pyramid, and AIOHTTP, this changes the default name, which was previously based on the endpoint, route, or handler name.
+- The boto3 integration names spans `<Service>.<Operation>` (for example, `S3.GetObject`) instead of `aws.<service>.<Operation>`, and uses the origin `auto.aws.boto3` instead of `auto.http.boto3`. SQS and SNS calls are named after the queue or topic, for example `send <queue name>` or `receive <queue name>`.
+
+### Span Attributes
+
+- The `http.request.header.<name>` attributes set by server integrations are now lists of strings.
+- Deprecated generative AI attributes were replaced:
+
+| Old attribute                              | New attribute                                            |
+| ------------------------------------------ | -------------------------------------------------------- |
+| `gen_ai.system`                            | `gen_ai.provider.name`                                   |
+| `gen_ai.usage.input_tokens.cached`         | `gen_ai.usage.cache_read.input_tokens`                   |
+| `gen_ai.usage.input_tokens.cache_write`    | `gen_ai.usage.cache_creation.input_tokens`               |
+| `gen_ai.usage.output_tokens.reasoning`     | `gen_ai.usage.reasoning.output_tokens`                   |
+| `gen_ai.response.time_to_first_token`      | `gen_ai.response.time_to_first_chunk`                    |
+| `gen_ai.tool.input` / `gen_ai.tool.output` | `gen_ai.tool.call.arguments` / `gen_ai.tool.call.result` |
+| `mcp.tool.name` / `mcp.prompt.name`        | `gen_ai.tool.name` / `gen_ai.prompt.name`                |
+| `mcp.tool.result.content`                  | `gen_ai.tool.call.result`                                |
+
+See the [detailed migration guide](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md#genai-span-attributes) for the complete list.
+
 ## Behavior Changes
 
 Some changes don't require any code updates, but they affect what you see in Sentry after upgrading. Check whether any of your saved searches, alerts, or dashboards rely on the old behavior.
 
 ### Tags Set by the SDK
 
-The SDK no longer sets any tags on its own. Previously, some integrations added tags to events, for example `aws_region`, `batch_request`, and `batch_size` in the AWS Lambda integration, and `gcp_region` in the GCP integration. Where it makes sense, this data is now available as span attributes instead, for example `cloud.region` and `messaging.batch.message_count` for AWS Lambda.
+The SDK no longer sets any tags on its own. Previously, some integrations added tags to events, for example `aws_region`, `batch_request`, and `batch_size` in the AWS Lambda integration, and `gcp_region` in the GCP integration. Where it makes sense, this data is now available as span attributes instead, for example `cloud.region` for AWS Lambda.
 
 If you rely on any of these tags, set them yourself with `sentry_sdk.set_tag()` (on events) or `sentry_sdk.set_attribute()` (on spans, metrics, and logs).
 
@@ -186,6 +211,18 @@ You might see some new issues, or existing issues grouped differently, after upg
 - The ASGI and asyncio integrations no longer suppress chained exceptions. The experimental `suppress_asgi_chained_exceptions` option was removed.
 - Exception groups that are part of an exception chain are now fully unpacked.
 - The text of the warning that the AWS Lambda and GCP integrations can emit when a function is about to time out has changed to "WARNING: Function is about to time out.". If you filter or alert on this message, update your filters.
+- The `DedupeIntegration` drops any further event for an exception instance it has already seen, wherever it's captured. Previously, only consecutive captures of the same exception were deduplicated.
+
+### AI Agent Spans
+
+- Enabling the LangChain, OpenAI Agents, or Pydantic AI integration no longer disables the OpenAI, Anthropic, and Google GenAI integrations. Those integrations don't create chat spans for requests made from within an agent framework's chat span, but still create other spans, such as embedding spans.
+- The OpenAI Agents integration no longer creates workflow or handoff spans. Agents that hand off to each other appear as sibling `invoke_agent` spans. The LangGraph integration no longer creates a `create_agent` span when a graph is compiled.
+- Invoke agent spans no longer carry the model, request parameters, available tools, or token usage. This data is available on the child AI client spans.
+
+### Breadcrumbs and Span Status
+
+- The keys in HTTP breadcrumbs (stdlib and boto3) and in PyMongo, asyncpg, and aiomysql breadcrumbs follow OpenTelemetry naming, for example `http.request.method` instead of `http.method` and `url.full` instead of `url`.
+- Celery task spans are no longer marked as errors when a task raises `Retry`, `Ignore`, or `Reject`.
 
 ## Scopes
 
@@ -266,6 +303,8 @@ sentry_sdk.init(
 ### OpenTelemetry
 
 The `SentrySpanProcessor`, `SentryPropagator`, and the `instrumenter` option were removed along with the `opentelemetry` extra. Use the <PlatformLink to="/integrations/otlp/">`OTLPIntegration`</PlatformLink> instead.
+
+The `OTLPIntegration` no longer sets up Sentry's propagator by default. Distributed tracing uses the propagators configured in OpenTelemetry (by default, W3C `traceparent` and `baggage`) instead of Sentry's `sentry-trace` header. To keep the previous behavior, set `OTLPIntegration(setup_propagator=True)`.
 
 ## Profiling
 
