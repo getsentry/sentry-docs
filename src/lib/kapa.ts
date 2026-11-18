@@ -9,6 +9,7 @@
  */
 
 import {captureException} from '@sentry/nextjs';
+import {DocMetrics} from 'sentry-docs/metrics';
 
 const KAPA_SRC = 'https://widget.kapa.ai/kapa-widget.bundle.js';
 
@@ -81,6 +82,7 @@ function trackContactSupportClicks(): void {
       window.plausible?.('Ask AI Contact Support Click', {
         props: {page: window.location.pathname},
       });
+      DocMetrics.askAiContactSupport(window.location.pathname);
     }
   });
 }
