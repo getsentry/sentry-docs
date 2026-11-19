@@ -69,7 +69,89 @@ This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
+<Alert>
+
+For more fine-grained control, use the [`data_collection`](#data_collection) option. `send_default_pii` remains fully supported until the next major version.
+
+If you set both, `send_default_pii` is ignored.
+
+</Alert>
+
 </SdkOption>
+
+<PlatformSection notSupported={["php.laravel", "php.symfony"]}>
+
+<SdkOption name="data_collection" type='array|\Sentry\DataCollection\DataCollectionOptions|null' defaultValue='null' availableSince="4.33.0">
+
+Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'data_collection' => [
+        'user_info' => false,
+        'http_bodies' => ['incomingRequest'],
+    ],
+]);
+```
+
+Passing a `data_collection` array opts you into its defaults, which are more permissive than `send_default_pii` set to `false`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (the user's IP address, cookies, and request and response bodies) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar).
+
+If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored. The `context_lines` option is ignored as well, in favor of `frame_context_lines`.
+
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink>.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["php.symfony"]}>
+
+<SdkOption name="data_collection" type='array|null' defaultValue='null' availableSince="5.14.0">
+
+Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            user_info: false
+            http_bodies: ['incomingRequest']
+```
+
+Setting `data_collection` opts you into its defaults, which are more permissive than `send_default_pii` set to `false`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (the logged-in user, cookies, request and response bodies, and database query parameters) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar). Set it to `{}` to apply the defaults of every key.
+
+If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored. The `context_lines` option is ignored as well, in favor of `frame_context_lines`.
+
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink>.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["php.laravel"]}>
+
+<SdkOption name="data_collection" type='array|null' defaultValue='null' availableSince="4.29.0">
+
+Controls which categories of data the SDK collects automatically, replacing the single `send_default_pii` boolean with a per-category configuration. All keys are optional.
+
+```php {filename:config/sentry.php}
+'data_collection' => [
+    'user_info' => false,
+    'http_bodies' => ['incomingRequest'],
+],
+```
+
+Passing a `data_collection` array opts you into its defaults, which are more permissive than `send_default_pii` set to `false`. Any key you don't set falls back to its default, so the SDK collects rich debugging context (the logged-in user, cookies, request and response bodies, SQL query bindings, and AI prompts and responses) and scrubs values whose keys match the built-in sensitive denylist (`auth`, `token`, `password`, and similar). Pass an empty array to apply the defaults of every key.
+
+If you set both `data_collection` and `send_default_pii`, `send_default_pii` is ignored. The `context_lines`, `breadcrumbs.sql_bindings`, and `tracing.sql_bindings` options are ignored as well, in favor of `frame_context_lines` and `database_query_data`.
+
+For the full reference of available keys and their defaults, see <PlatformLink to="/data-management/data-collection/">Data Collection</PlatformLink>.
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="server_name" type='string' defaultValue='gethostname()'>
 
@@ -116,8 +198,8 @@ For example, if your code is deployed in different locations across environments
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
 - `never`: Request bodies are never sent.
-- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
-- `medium`: Medium and small requests will be captured (typically 10KB).
+- `small`: Only small request bodies (up to 1,000 bytes) will be captured.
+- `medium`: Medium and small request bodies (up to 10,000 bytes) will be captured.
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
 </SdkOption>
@@ -133,9 +215,21 @@ The number of characters after which the values containing text in the event pay
 
 </SdkOption>
 
-<SdkOption name="before_breadcrumb" type='function (\Sentry\Breadcrumb $breadcrumb): \Sentry\Breadcrumb'>
+<SdkOption name="max_breadth" type='int|null' defaultValue='null'>
 
-This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the breadcrumb itself.
+The number of items of an array or object after which the next ones are left out when serializing frame arguments and query bindings. When `null`, there is no limit. Available in `sentry/sentry` `4.35.0` and `sentry/sentry-symfony` `5.17.0` and later.
+
+</SdkOption>
+
+<SdkOption name="before_breadcrumb" type='function (\Sentry\Breadcrumb $breadcrumb): ?\Sentry\Breadcrumb'>
+
+This function is called with a breadcrumb object before the breadcrumb is added to the scope. When `null` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the breadcrumb itself.
+
+</SdkOption>
+
+<SdkOption name="send_client_reports" type='bool' defaultValue='false'>
+
+If enabled, the SDK sends client reports with the number of events, transactions, spans, logs, metrics, and profiles it dropped, for example because of sampling, rate limits, or `before_send` callbacks. Available in `sentry/sentry` `4.35.0` and `sentry/sentry-symfony` `5.17.0` and later.
 
 </SdkOption>
 
@@ -174,6 +268,8 @@ By default, the error types reported are determined by the value returned by the
 
 The number of context lines for each frame in the stack trace when loading a file.
 
+This option is ignored when [`data_collection`](#data_collection) is set. Use its <PlatformLink to="/data-management/data-collection/#source-context">`frame_context_lines`</PlatformLink> key instead.
+
 </SdkOption>
 
 ## Tracing Options
@@ -199,6 +295,35 @@ Either this or `traces_sample_rate` must be defined to enable tracing.
 A list of strings that match transaction names that shouldn't be sent to Sentry.
 
 </SdkOption>
+
+<PlatformSection notSupported={["php.symfony"]}>
+
+<SdkOption name="trace_ignore_status_codes" type='array' defaultValue='[]'>
+
+A list of HTTP status codes. The SDK drops the transaction of an incoming request when the response has one of these status codes. Each entry is either a single status code or an inclusive `[min, max]` range, for example `[[400, 404], 429]`. Available in `sentry/sentry` `4.35.0` and later.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["php.symfony"]}>
+
+<SdkOption name="trace_ignore_status_codes" type='array' defaultValue='[]' availableSince="5.16.0">
+
+A list of HTTP status codes. The SDK drops the transaction of an incoming request when the response has one of these status codes. Each entry is either a single status code or an inclusive `[min, max]` range.
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        trace_ignore_status_codes:
+            - [400, 404]
+            - 429
+```
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="before_send_transaction" type='function (\Sentry\Event $transaction, ?\Sentry\EventHint $hint): ?\Sentry\Event'>
 

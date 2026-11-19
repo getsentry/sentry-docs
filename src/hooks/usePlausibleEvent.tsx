@@ -64,6 +64,10 @@ type PlausibleEventProps = {
     page: string;
     source: string;
   };
+  ['Open in Cursor']: {
+    page: string;
+    source: string;
+  };
   ['Read Progress']: {
     page: string;
     readProgress: ReadProgressMilestone;

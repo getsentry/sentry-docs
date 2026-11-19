@@ -7,8 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {useCallback, useEffect, useState} from 'react';
 import {useBodyScrollLock} from 'sentry-docs/hooks/useBodyScrollLock';
+import {openKapa, prefetchKapa} from 'sentry-docs/lib/kapa';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
-import {Platform} from 'sentry-docs/types';
 
 import {MagicIcon} from './cutomIcons/magic';
 import {mainSections} from './navigationData';
@@ -36,7 +36,6 @@ type Props = {
   pathname: string;
   searchPlatforms: string[];
   noSearch?: boolean;
-  platforms?: Platform[];
   useStoredSearchPlatforms?: boolean;
 };
 
@@ -45,7 +44,6 @@ export function Header({
   searchPlatforms,
   noSearch,
   useStoredSearchPlatforms,
-  platforms = [],
 }: Props) {
   const isHomePage = pathname === '/';
   const [homeMobileNavOpen, setHomeMobileNavOpen] = useState(false);
@@ -191,7 +189,10 @@ export function Header({
         className={`header-content flex items-center w-full ${isHomePage ? 'header-content-home' : ''}`}
       >
         {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
-        <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4">
+        <nav
+          aria-label="Main"
+          className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4"
+        >
           {/* Hamburger menu - different behavior on home page vs other pages */}
           {isHomePage ? (
             <button
@@ -218,12 +219,13 @@ export function Header({
               )}
             </button>
           ) : (
-            <button className="md:hidden mr-3 flex items-center">
-              <label
-                htmlFor={sidebarToggleId}
-                aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-                className="inline-flex items-center cursor-pointer"
-              >
+            <button
+              type="button"
+              className="md:hidden mr-3 flex items-center"
+              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              onClick={() => document.getElementById(sidebarToggleId)?.click()}
+            >
+              <span className="inline-flex items-center cursor-pointer">
                 {sidebarOpen ? (
                   <Cross1Icon
                     className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
@@ -238,7 +240,7 @@ export function Header({
                     height="22"
                   />
                 )}
-              </label>
+              </span>
             </button>
           )}
           <Link
@@ -259,7 +261,7 @@ export function Header({
           </Link>
           {/* Top nav menu - anchored next to logo */}
           <div className="hidden md:block flex-1 min-w-0">
-            <TopNavClient platforms={platforms} />
+            <TopNavClient />
           </div>
           {/* Mobile: show search, Ask AI button and theme toggle (below md breakpoint) */}
           <div className="flex items-center md:hidden ml-auto gap-3">
@@ -277,8 +279,11 @@ export function Header({
               </button>
             )}
             <button
-              className="kapa-ai-class flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)] px-2 py-1.5 rounded-md hover:bg-[var(--gray-a3)] transition-colors"
               aria-label="Ask AI"
+              onPointerEnter={prefetchKapa}
+              onFocus={prefetchKapa}
+              onClick={() => openKapa({})}
             >
               <MagicIcon className="size-4" />
               <span className="uppercase text-xs">Ask AI</span>
@@ -330,7 +335,7 @@ export function Header({
           className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40 overflow-y-auto overscroll-none"
           style={{top: 'var(--header-height)'}}
         >
-          <nav className="px-4 py-4 space-y-1">
+          <nav aria-label="Mobile menu" className="px-4 py-4 space-y-1">
             {mainSections.map(section => (
               <Link
                 key={section.href}

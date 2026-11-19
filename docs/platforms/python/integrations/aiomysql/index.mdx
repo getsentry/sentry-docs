@@ -30,11 +30,12 @@ from sentry_sdk.integrations.aiomysql import AioMySQLIntegration
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
+    # of service spans for tracing.
     traces_sample_rate=1.0,
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "database_query_data": True,
+    },
     integrations=[
         AioMySQLIntegration(),
     ],
@@ -52,7 +53,10 @@ import asyncio
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "database_query_data": True,
+    },
     integrations=[
         AioMySQLIntegration(),
     ],
@@ -67,8 +71,8 @@ async def main():
         db="test",
     )
     try:
-        # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-        with sentry_sdk.start_transaction(name="testing_sentry"):
+        # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+        with sentry_sdk.start_span(name="testing_sentry"):
             async with conn.cursor() as cur:
                 await cur.execute("SELECT 'Hello World'")
                 result = await cur.fetchone()
@@ -78,7 +82,7 @@ async def main():
 asyncio.run(main())
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create a span for the `SELECT` statement.
+This will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io) and will create a span for the `SELECT` statement.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

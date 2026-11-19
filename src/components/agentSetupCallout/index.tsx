@@ -1,15 +1,15 @@
 'use client';
 
-import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
-import Link from 'next/link';
-import {useCallback, useState} from 'react';
+import {Fragment, useCallback, useState} from 'react';
 import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
-import {CodeBlock} from '../codeBlock';
-import {buildPrompt} from './shared';
+import {CliInstallCommand} from '../cliInstallCommand';
+import {ExternalLink} from '../externalLink';
+import {CliSetupMarkdown, InstructionMarkdown} from './markdown';
+import {SENTRY_CLI_URL} from './shared';
 import styles from './style.module.scss';
 
 type Props = {
@@ -17,7 +17,7 @@ type Props = {
   platformName?: string;
   /** Skill package name, e.g. "sentry-nextjs-sdk". Omit for generic/all skills. */
   skill?: string;
-  /** Custom instructions for tasks other than SDK setup. */
+  /** Custom instructions for tasks other than SDK setup, such as migrations. */
   instructions?: {
     title: string;
     prompt: string;
@@ -26,12 +26,35 @@ type Props = {
 };
 
 export function AgentSetupCallout({skill, platformName, instructions}: Props) {
-  const [copied, setCopied] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const {emit} = usePlausibleEvent();
+  if (instructions) {
+    return <InstructionPrompt instructions={instructions} />;
+  }
 
-  const prompt = instructions?.prompt ?? buildPrompt(platformName);
-  const title = instructions?.title ?? 'Agent-Assisted Setup';
+  return (
+    <Fragment>
+      <div className={styles.wrapper} data-mdast="ignore">
+        <div className={styles.setup}>
+          <span className={styles.title}>Set up with Sentry CLI</span>
+          <CliInstallCommand source="callout" skill={skill} platformName={platformName} />
+        </div>
+        <div className={styles.subRow}>
+          <ExternalLink href={SENTRY_CLI_URL} className={styles.viewDocs}>
+            Learn more about the Sentry CLI
+          </ExternalLink>
+        </div>
+      </div>
+      <CliSetupMarkdown platformName={platformName} />
+    </Fragment>
+  );
+}
+
+function InstructionPrompt({
+  instructions,
+}: {
+  instructions: NonNullable<Props['instructions']>;
+}) {
+  const [copied, setCopied] = useState(false);
+  const {emit} = usePlausibleEvent();
 
   const copyPrompt = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -41,87 +64,52 @@ export function AgentSetupCallout({skill, platformName, instructions}: Props) {
       emit('Copy AI Prompt', {
         props: {
           page: window.location.pathname,
-          title: instructions?.title ?? 'Agent Setup Callout',
+          title: instructions.title,
         },
       });
 
       try {
         setCopied(false);
-        await navigator.clipboard.writeText(prompt);
+        await navigator.clipboard.writeText(instructions.prompt);
         setCopied(true);
-        DocMetrics.copyAIPrompt(window.location.pathname, skill, true);
+        DocMetrics.copyAIPrompt(window.location.pathname, undefined, true);
         setTimeout(() => setCopied(false), 1500);
       } catch (error) {
         Sentry.logger.warn('clipboard.writeText failed', {
           error: (error as Error)?.message,
           errorName: (error as Error)?.name,
         });
-        DocMetrics.copyAIPrompt(window.location.pathname, skill, false);
+        DocMetrics.copyAIPrompt(window.location.pathname, undefined, false);
         setCopied(false);
       }
     },
-    [prompt, emit, skill, instructions?.title]
+    [emit, instructions.prompt, instructions.title]
   );
 
-  const description =
-    instructions?.description ??
-    (platformName
-      ? `Your agent will set up Sentry in your ${platformName} app automatically.`
-      : 'Your agent will set up Sentry automatically.');
-
   return (
-    <div className={styles.wrapper} data-mdast="ignore">
-      <div className={styles.mainRow}>
-        <div className={styles.left}>
-          <span className={styles.title}>{title}</span>
-        </div>
-        <div className={styles.promptArea}>
-          <code className={styles.promptText}>{prompt}</code>
-        </div>
-        <button className={styles.copyButton} onClick={copyPrompt} type="button">
-          <Copy size={14} />
-          {copied ? 'Copied!' : 'Copy Prompt'}
-        </button>
-      </div>
-
-      <div className={styles.subRow}>
-        <span className={styles.description}>
-          {description} Works with Cursor, Claude Code, Codex, and more.
-        </span>
-        {!instructions && (
-          <Link href="/ai/agent-plugin/" className={styles.viewDocs}>
-            View docs ↗
-          </Link>
-        )}
-      </div>
-
-      {!instructions && (
-        <details
-          className={styles.expandSection}
-          open={isExpanded}
-          onToggle={e => setIsExpanded(e.currentTarget.open)}
-        >
-          <summary className={styles.expandSummary}>
-            {isExpanded ? (
-              <ChevronDownIcon className={styles.expandIcon} />
-            ) : (
-              <ChevronRightIcon className={styles.expandIcon} />
-            )}
-            <span>Install the full plugin</span>
-          </summary>
-          <div className={styles.expandBody}>
-            <p>
-              Install the Sentry plugin to give your assistant every skill. See the{' '}
-              <Link href="/ai/agent-plugin/">installation docs</Link> for more details.
-            </p>
-            <CodeBlock language="bash">
-              <pre className="language-bash">
-                <code>npx @sentry/agent-plugin install</code>
-              </pre>
-            </CodeBlock>
+    <Fragment>
+      <div className={styles.wrapper} data-mdast="ignore">
+        <div className={styles.mainRow}>
+          <div className={styles.left}>
+            <span className={styles.title}>{instructions.title}</span>
           </div>
-        </details>
-      )}
-    </div>
+          <div className={styles.promptArea}>
+            <code className={styles.promptText}>{instructions.prompt}</code>
+          </div>
+          <button className={styles.copyButton} onClick={copyPrompt} type="button">
+            <Copy size={14} />
+            {copied ? 'Copied' : 'Copy Prompt'}
+          </button>
+        </div>
+        <div className={styles.subRow}>
+          <span className={styles.description}>{instructions.description}</span>
+        </div>
+      </div>
+      <InstructionMarkdown
+        title={instructions.title}
+        prompt={instructions.prompt}
+        description={instructions.description}
+      />
+    </Fragment>
   );
 }

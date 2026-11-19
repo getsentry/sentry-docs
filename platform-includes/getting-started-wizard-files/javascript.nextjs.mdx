@@ -1,0 +1,143 @@
+### Initialize the SDK
+
+Next.js runs code in different environments, so the wizard creates a separate initialization file for each in your project's root directory (or `src` folder):
+
+- `instrumentation-client.ts`: runs in the browser
+- `sentry.server.config.ts`: runs in the Node.js runtime
+- `sentry.edge.config.ts`: runs in the Edge runtime
+
+Use the tabs in the code box below to view each file.
+
+The snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> in all three files
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>. The wizard doesn't add this integration, so add it to `instrumentation-client.ts` yourself.
+
+Don't need a feature? Remove its integration and options from the snippets.
+
+```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enables Session Replay
+    Sentry.replayIntegration(),
+    // enables User Feedback
+    Sentry.feedbackIntegration({
+      // Additional integration configuration goes in here
+      colorScheme: "system",
+    }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+// Instruments client-side navigations
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+});
+```
+
+### Register the Server-Side Configuration
+
+The wizard creates a [Next.js instrumentation file](https://nextjs.org/docs/app/guides/instrumentation) named `instrumentation.ts`. It loads your server and edge configurations, and exports `onRequestError` to capture errors from Server Components, route handlers, and middleware.
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+
+export const onRequestError = Sentry.captureRequestError;
+```
+
+### Capture React Render Errors
+
+If you use the App Router, the wizard adds Sentry to `app/global-error.tsx` to capture React rendering errors. If you use the Pages Router, it adds Sentry to `pages/_error.tsx` instead.
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/app-router-global-error" />
+
+### Apply Instrumentation to Your App
+
+The wizard wraps your Next.js configuration with `withSentryConfig`. This instruments your app at build time, uploads source maps, and, if you said yes in the wizard, routes browser requests to Sentry through your server to avoid ad blockers.
+
+To forward only the request body to Sentry, add a tunnel route handler (SDK version `10.77.1` and later on v10, `11.9.0` and later on v11). Use the handler if Vercel Deployment Protection or another login protects your app.
+Learn more about the [`tunnelRoute` option](/platforms/javascript/guides/nextjs/configuration/build/#tunnelRoute).
+
+```typescript {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
+
+const nextConfig: NextConfig = {
+  // Your existing Next.js configuration
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to avoid ad blockers.
+  // This can increase your server load as well as your hosting bill.
+  tunnelRoute: "/monitoring",
+});
+```
+
+### Add Readable Stack Traces With Source Maps
+
+The wizard stores your auth token in `.env.sentry-build-plugin` and adds the file to `.gitignore`. The Sentry build plugin uses this token to upload source maps when you build your app locally.
+
+For CI/CD builds, set the `SENTRY_AUTH_TOKEN` environment variable in your build system instead.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```

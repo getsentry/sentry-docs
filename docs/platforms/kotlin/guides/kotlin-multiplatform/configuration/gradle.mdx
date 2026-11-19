@@ -7,9 +7,10 @@ description: "Learn how to set up Sentry's Kotlin Multiplatform Gradle Plugin."
 The [Sentry Kotlin Multiplatform Gradle Plugin](https://github.com/getsentry/sentry-kotlin-multiplatform/tree/main/sentry-kotlin-multiplatform-gradle-plugin) is a plugin that simplifies the set up process. It can be used to configure the Sentry SDK for Kotlin Multiplatform projects.
 
 The Gradle Plugin supports the following features:
+
 - Auto-installation of the Sentry Kotlin Multiplatform SDK.
-- Auto-installation of the Sentry Cocoa SDK via Cocoapods (if the Kotlin Cocoapods plugin is applied).
-- Automatic configuration of the Kotlin/Native linker for seamless usage with the Swift Package Manager.
+- Auto-installation of the Sentry Cocoa SDK with Swift Package Manager (SwiftPM), through Kotlin's official SwiftPM import (Kotlin 2.4 and newer) or the [spm4Kmp](https://github.com/frankois944/spm4Kmp) plugin.
+- Automatic configuration of the Kotlin/Native linker if you add the Sentry Cocoa SDK to your Xcode project yourself.
 
 ## Setup
 
@@ -19,25 +20,29 @@ Using Gradle in your `shared/build.gradle.kts` add:
 
 ```kotlin {filename:shared/build.gradle.kts}
 plugins {
-  id("io.sentry.kotlin.multiplatform.gradle") version "{{@inject packages.version('sentry.kotlin.kmp', '0.9.0') }}"
+  id("io.sentry.kotlin.multiplatform.gradle") version "{{@inject packages.version('sentry.kotlin.kmp.gradle-plugin', '0.28.0') }}"
 }
 ```
+
+If you use spm4Kmp, apply the Sentry Gradle plugin before spm4Kmp in the `plugins` block.
 
 ### Configure
 
 We expose the following configuration values:
 
 ```kotlin {filename:shared/build.gradle.kts}
+import io.sentry.kotlin.multiplatform.gradle.AppleDependencyProvider
+
 sentryKmp {
   // Configure auto-installation of Sentry components.
   autoInstall {
     // Enable auto-installation of Sentry components:
     //  - Sentry Kotlin Multiplatform SDK
-    //  - Sentry Cocoa SDK with Cocoapods if Kotlin Cocoapods plugin is applied.
+    //  - Sentry Cocoa SDK with SwiftPM
     // Default is enabled.
     enabled = true
 
-    // Configure the commonMain source set -
+    // Configure the commonMain source set.
     commonMain {
       // Enable auto-installation of the Sentry Kotlin Multiplatform SDK in commonMain.
       // Default is enabled.
@@ -45,32 +50,120 @@ sentryKmp {
 
       // Specify the version of the Sentry Kotlin Multiplatform SDK to use.
       // Default is the corresponding Kotlin Multiplatform SDK version.
-      sentryKmpVersion = "{{@inject packages.version('sentry.kotlin.kmp', '0.9.0') }}"
+      sentryKmpVersion = "{{@inject packages.version('sentry.kotlin.kmp', '0.28.0') }}"
     }
 
-    // Configure the Cocoapods plugin.
-    cocoapods {
-      // Enable auto-installation of the Sentry Cocoa SDK with Cocoapods.
-      // Default is enabled.
-      enabled = true
+    // Configure auto-installation of the Sentry Cocoa SDK for Apple targets.
+    apple {
+      // Select how the Sentry Cocoa SDK is installed:
+      //  - AUTO: Use spm4Kmp if it's applied, install nothing if the Kotlin CocoaPods plugin
+      //    is applied, and otherwise use Kotlin's official SwiftPM import on Kotlin 2.4+.
+      //  - SWIFT_PM: Use Kotlin's official SwiftPM import. Requires Kotlin 2.4+.
+      //  - SPM4KMP: Use the spm4Kmp plugin. Requires the spm4Kmp plugin to be applied.
+      //  - NONE: Don't install the Sentry Cocoa SDK.
+      // Default is AUTO.
+      provider = AppleDependencyProvider.AUTO
 
-      // Specify the version of the Sentry Cocoa SDK to install.
+      // Specify the exact version of the Sentry Cocoa SDK to install.
       // Default is the Cocoa SDK version used in the Kotlin Multiplatform SDK.
-      sentryCocoaVersion = "8.38.0"
+      sentryCocoaVersion = "9.29.2"
     }
+  }
 
-    // Configure the linker. This is only relevant if you are using SPM.
-    linker {
-      // Path to the Xcode project that will be used to link the framework.
-      // This is used to find the derived data path in which the framework is stored for SPM.
-      // Default is the current project directory.
-      xcodeprojPath = "path/to/your/project.xcodeproj"
+  // Configure linking of the Sentry Cocoa framework for Apple targets that don't
+  // get the Sentry Cocoa SDK through the plugin's SwiftPM installation.
+  linker {
+    // Enable linker configuration.
+    // Default is enabled.
+    enabled = true
 
-      // Path to the framework that will be linked.
-      // Takes precedence over xcodeprojPath if both are set.
-      // Default is null.
-      frameworkPath = "path/to/your/framework.framework"
-    }
+    // Path to the Xcode project that will be used to link the framework.
+    // This is used to find the derived data path in which the framework is stored for SPM.
+    // Default is the current project directory.
+    xcodeprojPath = "path/to/your/project.xcodeproj"
+
+    // Path to the framework that will be linked.
+    // Takes precedence over xcodeprojPath if both are set.
+    // Default is null.
+    frameworkPath = "path/to/your/Sentry.xcframework"
   }
 }
 ```
+
+If you explicitly select a provider that isn't available (for example, `SWIFT_PM` on Kotlin versions older than 2.4), the build fails instead of falling back to another provider.
+
+## Apple Installation Methods
+
+### Official Kotlin SwiftPM Import
+
+On Kotlin 2.4 and newer, the plugin installs the Sentry Cocoa SDK through Kotlin's official SwiftPM import without additional `sentryKmp` configuration.
+
+Xcode links the Sentry Cocoa SDK through a Swift package that Kotlin generates for its SwiftPM dependencies. Run Kotlin's one-time [Xcode linkage package setup](https://kotlinlang.org/docs/multiplatform/multiplatform-spm-import.html#run-the-swiftpm-integration-task):
+
+```bash
+XCODEPROJ_PATH='/path/to/iosApp/iosApp.xcodeproj' ./gradlew :shared:integrateLinkagePackage
+```
+
+Commit the generated `KotlinMultiplatformLinkedPackage` and the updated Xcode project. Don't also add `sentry-cocoa` to your Xcode project yourself.
+
+### spm4Kmp
+
+If you apply the [spm4Kmp](https://github.com/frankois944/spm4Kmp) plugin (`io.github.frankois944.spmForKmp`), the plugin installs the Sentry Cocoa SDK through spm4Kmp. Apply the Sentry Gradle plugin before spm4Kmp:
+
+```kotlin {filename:shared/build.gradle.kts}
+plugins {
+  kotlin("multiplatform")
+  id("io.sentry.kotlin.multiplatform.gradle") version "{{@inject packages.version('sentry.kotlin.kmp.gradle-plugin', '0.28.0') }}"
+  id("io.github.frankois944.spmForKmp")
+}
+```
+
+### Install the Sentry Cocoa SDK Yourself
+
+If you prefer to manage the Sentry Cocoa SDK yourself, set the provider to `NONE`. Use the exact Sentry Cocoa SDK version listed in the [version compatibility table](https://github.com/getsentry/sentry-kotlin-multiplatform?tab=readme-ov-file#cocoa-sdk-version-compatibility-table).
+
+If you add `sentry-cocoa` to your Xcode project with [Swift Package Manager](/platforms/apple/install/swift-package-manager/), keep the linker enabled so the plugin can find and link the framework:
+
+```kotlin {filename:shared/build.gradle.kts}
+import io.sentry.kotlin.multiplatform.gradle.AppleDependencyProvider
+
+sentryKmp {
+  autoInstall.apple.provider = AppleDependencyProvider.NONE
+}
+```
+
+If you declare the Sentry Cocoa SDK in Kotlin's `swiftPMDependencies` yourself, also disable the linker, since Kotlin links those packages itself:
+
+```kotlin {filename:shared/build.gradle.kts}
+import io.sentry.kotlin.multiplatform.gradle.AppleDependencyProvider
+
+sentryKmp {
+  autoInstall.apple.provider = AppleDependencyProvider.NONE
+  linker.enabled = false
+}
+
+kotlin {
+  swiftPMDependencies {
+    swiftPackage(
+      url = url("https://github.com/getsentry/sentry-cocoa.git"),
+      version = exact("9.29.2"),
+      products = listOf(product("Sentry")),
+    )
+    // Only if you target macOS or tvOS. Use a higher version if your app needs it.
+    macosMinimumDeploymentTarget.set("12.0")
+    tvosMinimumDeploymentTarget.set("15.0")
+  }
+}
+```
+
+## Migrate From CocoaPods
+
+Starting with version `0.28.0`, the SDK uses Sentry Cocoa 9, which doesn't support CocoaPods. The plugin no longer installs the Sentry pod, and the build fails if you still configure `sentryKmp.autoInstall.cocoapods`.
+
+To migrate:
+
+1. Remove the `sentryKmp.autoInstall.cocoapods` configuration.
+2. Remove any `pod("Sentry")` declaration from your `cocoapods` block. Other CocoaPods dependencies can stay.
+3. Install the Sentry Cocoa SDK with SwiftPM using one of the [Apple installation methods](#apple-installation-methods).
+
+The Kotlin CocoaPods plugin doesn't allow SwiftPM dependencies in the same module. If you keep the Kotlin CocoaPods plugin applied, the plugin doesn't install the Sentry Cocoa SDK. In that case, add `sentry-cocoa` to your Xcode project with Swift Package Manager and let the plugin link it, or [migrate your project from CocoaPods to SwiftPM](https://kotl.in/cocoapods-to-swiftpm-migration).

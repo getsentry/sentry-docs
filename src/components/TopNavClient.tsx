@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
 import {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
+import {usePlatforms} from 'sentry-docs/hooks/usePlatforms';
 import {Platform} from 'sentry-docs/types';
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
@@ -48,7 +49,10 @@ function useDropdownPosition(triggerRef, open) {
   return position;
 }
 
-export default function TopNavClient({platforms}: {platforms: Platform[]}) {
+const NO_PLATFORMS: Platform[] = [];
+
+export default function TopNavClient() {
+  const platforms = usePlatforms().platforms ?? NO_PLATFORMS;
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [platformDropdownByClick, setPlatformDropdownByClick] = useState(false);
   const platformBtnRef = useRef<HTMLButtonElement>(null);
@@ -314,7 +318,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                         setConceptsDropdownOpen(v => !v);
                         setMoreDropdownOpen(false);
                       }}
-                      aria-haspopup="true"
                       aria-expanded={conceptsDropdownOpen}
                     >
                       {section.label}
@@ -399,7 +402,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                         setMoreDropdownOpen(v => !v);
                         setConceptsDropdownOpen(false);
                       }}
-                      aria-haspopup="true"
                       aria-expanded={moreDropdownOpen}
                     >
                       {section.label}
@@ -458,6 +460,9 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                   <a
                     href={sdkLinkHref}
                     onClick={handleSdkClick}
+                    aria-current={
+                      pathname?.startsWith('/platforms/') ? 'true' : undefined
+                    }
                     className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal border-b-2 ${
                       pathname?.startsWith('/platforms/')
                         ? 'border-[var(--accent-purple)]'
@@ -469,6 +474,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                 ) : (
                   <Link
                     href={section.href}
+                    aria-current={pathname?.startsWith(section.href) ? 'true' : undefined}
                     className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal border-b-2 ${
                       pathname?.startsWith(section.href)
                         ? 'border-[var(--accent-purple)]'
@@ -601,7 +607,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               align-items: center;
             }
           `}</style>
-            <PlatformSelector platforms={platforms} listOnly />
+            <PlatformSelector listOnly />
           </div>,
           document.body
         )}

@@ -1,0 +1,571 @@
+---
+title: Attachments
+description: File attachments associated with events and traces, including screenshots, minidumps, crash reports, view hierarchies, and flame graphs.
+spec_id: sdk/telemetry/attachments
+spec_version: 1.8.0
+spec_status: stable
+spec_depends_on:
+  - id: sdk/foundations/transport/envelopes
+    version: ">=1.0.0"
+  - id: sdk/telemetry/profiles
+    version: ">=2.0.0"
+spec_changelog:
+  - version: 1.8.0
+    date: 2026-10-02
+    summary: Added draft flame graph attachment contract
+  - version: 1.7.0
+    date: 2026-09-08
+    summary: Disallowed sending attachments in separate envelopes
+  - version: 1.6.0
+    date: 2026-02-24
+    summary: Added attachment placeholders for resumable uploads (experimental)
+  - version: 1.5.2
+    date: 2025-12-17
+    summary: Added experimental warning to trace attachments
+  - version: 1.5.1
+    date: 2025-12-10
+    summary: Changed trace attachment content_type to application/vnd.sentry.trace-attachment
+  - version: 1.5.0
+    date: 2025-12-04
+    summary: Added trace attachments — trace-level file attachments (experimental)
+  - version: 1.4.1
+    date: 2025-05-15
+    summary: Relaxed screenshot naming — filename just needs to contain "screenshot"
+  - version: 1.4.0
+    date: 2025-04-30
+    summary: Added native SDK view hierarchy guidance (Crashpad naming constraint)
+  - version: 1.3.0
+    date: 2024-03-25
+    summary: Added event.view_hierarchy attachment type
+  - version: 1.2.1
+    date: 2022-04-26
+    summary: Added multi-screenshot naming convention (screenshot-n)
+  - version: 1.2.0
+    date: 2022-03-11
+    summary: Added screenshots as special attachment type (attachScreenshot option)
+  - version: 1.1.0
+    date: 2021-01-20
+    summary: Added SDK API guidance — path/byte-array constructors, addToTransactions, maxAttachmentSize
+  - version: 1.0.1
+    date: 2021-01-07
+    summary: Clarified content_type to allow any MIME type
+  - version: 1.0.0
+    date: 2020-05-05
+    summary: Initial spec — attachment envelope item type, constraints, headers, attachment_type values
+---
+
+<SpecRfcAlert />
+
+<SpecMeta />
+
+## Overview
+
+Attachments are files stored alongside an event or trace. They are sent as envelope items with type `"attachment"` and carry raw file payloads such as crash dumps, screenshots, view hierarchies, flame graphs, or arbitrary user-provided files.
+
+Related specs:
+
+- [Envelopes](/sdk/foundations/envelopes/) — transport format
+- [Envelope Items](/sdk/foundations/envelopes/envelope-items/) — item type reference
+
+---
+
+## Concepts
+
+### Attachment Types
+
+Attachments are distinguished by the `attachment_type` header on the envelope item:
+
+- **Standard attachments** (`event.attachment`) — arbitrary files with no special processing.
+- **Crash-related attachments** — minidumps (`event.minidump`), Apple crash reports (`event.applecrashreport`), and Unreal Engine metadata (`unreal.context`, `unreal.logs`). These trigger error event creation and/or symbolication.
+- **View hierarchies** (`event.view_hierarchy`) — JSON snapshots of the application's UI tree.
+- **Flame Graphs** (`event.flamegraph`) — aggregated call trees using profiling frames.
+- **Screenshots** — image captures taken during a crash or error, identified by filename containing `"screenshot"`.
+
+### Association Model
+
+Standard attachments are associated with an **event** via `event_id`. They must be sent in the same envelope as the event.
+
+Trace attachments (experimental) are associated with a **trace** via `trace_id` and are optionally linked to specific spans or logs.
+
+---
+
+## Behavior
+
+<SpecSection id="standard-attachments" status="stable" since="1.0.0">
+
+### Standard Attachments
+
+Envelope item type `"attachment"`. Contains the raw payload of an attachment file, always associated with an event or transaction.
+
+**Constraints:**
+
+- This item **MAY** occur multiple times per envelope.
+- For **minidump** and **apple crash report** attachments, the corresponding `"event"` item **MUST** be sent within the same envelope.
+- Generic attachments **MUST** be sent in the same envelope as their corresponding event. This ensures consistent filtering and rate limiting.
+- The Sentry server supports special attachments to ingest event payloads for backwards compatibility. These are not part of the official public API and the behavior **MUST NOT** be relied upon.
+
+</SpecSection>
+
+<SpecSection id="attachment-types" status="stable" since="1.0.0">
+
+### Attachment Types
+
+The `attachment_type` header declares the special type of an attachment. Possible values:
+
+| Type                         | Since | Description                                                                                                                      |
+| ---------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `event.attachment` (default) | 1.0.0 | A standard attachment without special meaning.                                                                                   |
+| `event.minidump`             | 1.0.0 | A minidump file that creates an error event and is symbolicated. The file **SHOULD** start with the `MDMP` magic bytes.          |
+| `event.applecrashreport`     | 1.0.0 | An Apple crash report file that creates an error event and is symbolicated.                                                      |
+| `unreal.context`             | 1.0.0 | An XML file containing UE4 crash metadata. During event ingestion, event contexts and extra fields are extracted from this file. |
+| `unreal.logs`                | 1.0.0 | A plain-text log file obtained from UE4 crashes. During event ingestion, the last logs are extracted into event breadcrumbs.     |
+| `event.view_hierarchy`       | 1.3.0 | A JSON file with a predefined structure, see [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md). |
+| `event.flamegraph`           | 1.8.0 | A JSON attachment containing aggregated call trees and symbolication inputs.                                                     |
+
+</SpecSection>
+
+<SpecSection id="screenshots" status="stable" since="1.2.0">
+
+### Screenshots
+
+When the user opts in, SDKs with a user interface (mobile, desktop) **SHOULD** take a screenshot of the application during a crash or error and include it as an attachment in the envelope with the event.
+
+This is inherently a best-effort feature. Some environments restrict UI access during hard crashes — for example, iOS does not allow running Objective-C code after a signal break, so hard crash screenshot capture is not possible there.
+
+SDKs **SHOULD** provide this feature through a single option called `attachScreenshot`.
+
+The screenshot attachment **MUST** meet these requirements:
+
+- The filename **MUST** contain the word `screenshot` (since 1.4.1).
+- Image size **SHOULD** stay below 2 MB, but quality/size **MAY** be configurable.
+- Content type **MUST** be `image/jpg` or `image/png`.
+
+Whenever possible, SDKs **SHOULD** avoid adding the attachment altogether if taking the screenshot fails. If the envelope header was already flushed before the screenshot attempt, a 0-byte attachment will be included. Sentry will not show a screenshot preview in that case.
+
+</SpecSection>
+
+<SpecSection id="view-hierarchy" status="stable" since="1.3.0">
+
+### View Hierarchy
+
+SDKs **MAY** attach a `view-hierarchy.json` file following the structure described in [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md). The attachment **MUST** use `attachment_type: "event.view_hierarchy"` and `content_type: "application/json"`.
+
+For native SDKs (since 1.4.0), the path to the view hierarchy file **SHOULD** be configurable at SDK initialization. The SDK monitors the file and uploads it along with any event or crash:
+
+```c
+void setup_scope(sentry_scope_t *scope, void *user_data) {
+  sentry_value_t attachment = sentry_attachment_from_file("./view-hierarchy.json");
+  sentry_attachment_set_type(attachment, SENTRY_ATTACHMENT_TYPE_VIEW_HIERARCHY);
+  sentry_scope_add_attachment(scope, attachment);
+}
+
+sentry_options_set_initial_scope(options, setup_scope, NULL);
+```
+
+<Alert>
+
+When using `Crashpad` as the crash-capturing backend in the Native SDK, the file **MUST** have the exact name `view-hierarchy.json` to be parsed correctly by the ingestion pipeline.
+
+</Alert>
+
+</SpecSection>
+
+<SpecSection id="flamegraph" status="draft" since="1.8.0">
+
+### Flame Graph
+
+SDKs **MAY** attach a `flamegraph.json` file containing aggregated call trees, such as those captured for application hangs. The attachment **MUST** use `attachment_type: "event.flamegraph"` and `content_type: "application/json"`.
+
+The format reuses profiling frame objects and debug metadata to support symbolication. A flat node table describes aggregated call paths and sample counts. Child references use node indices to avoid deeply nested JSON and allow iterative processing without recursive traversal.
+
+#### Flame Graph Attachment Transport
+
+The attachment **MUST** use these envelope item headers:
+
+| Header            | Value                                                     |
+| ----------------- | --------------------------------------------------------- |
+| `type`            | `"attachment"`                                            |
+| `attachment_type` | `"event.flamegraph"`                                      |
+| `filename`        | `"flamegraph.json"`                                       |
+| `content_type`    | `"application/json"`                                      |
+| `length`          | The number of bytes in the serialized UTF-8 JSON payload. |
+
+The attachment **MUST** be sent in the same envelope as its associated event. The envelope's `event_id` supplies the association. Existing attachment size limits and rate limiting apply.
+
+Event context such as release, environment, SDK identity, device, OS, and hang duration belongs on the associated event. Symbolication inputs belong in the attachment so they remain available when the diagnostic describes a different process run from the uploading SDK.
+
+#### Flame Graph Payload
+
+The top-level object describes one collection of call trees and their shared frame and node tables.
+
+| Field        | Type                   | Requirement                                      | Description                                                                                                                         |
+| ------------ | ---------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `version`    | String                 | **REQUIRED**                                     | `"1"` for this wire format.                                                                                                         |
+| `platform`   | String                 | **REQUIRED**                                     | Existing Sentry platform identifier. Used as the default platform for frames. Native Apple frames use `"cocoa"`.                    |
+| `frames`     | Array of frame objects | **REQUIRED**                                     | Non-empty frame table using the same frame objects as a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data).                  |
+| `nodes`      | Array of node objects  | **REQUIRED**                                     | Non-empty flat node table. Child and root references are zero-based indices into this array.                                       |
+| `trees`      | Array of tree objects  | **REQUIRED**                                     | Non-empty collection of independent call trees.                                                                                     |
+| `debug_meta` | Debug Meta object      | **REQUIRED** for native frames with known images | Existing debug metadata for the process that produced the diagnostic. See [Native Symbolication](#flame-graph-native-symbolication). |
+
+Consumers **MUST** process the payload according to its `version`. Within version `"1"`, consumers **SHOULD** ignore unknown fields and **SHOULD** retain them when rewriting the attachment.
+
+##### Flame Graph Frames
+
+Frame entries **MUST** use the same schema as the `profile.frames` entries in a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data). Each entry **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. Native frames **MUST** retain `instruction_addr`, even when already symbolicated.
+
+Producers **SHOULD** deduplicate frames using their complete frame data, including addressing mode and binary association. The same frame index **MAY** occur at multiple tree positions, including recursive calls. The frame table has no stack ordering.
+
+Nodes carry sample counts. Debug images carry binary UUIDs. Symbolicated frames use the existing `function`, `filename` or `abs_path`, and `lineno` fields.
+
+##### Flame Graph Trees
+
+A tree object groups root nodes that share the same sample population. Each object preserves a separate source call stack or thread.
+
+| Field               | Type           | Requirement  | Description                                                                                                                           |
+| ------------------- | -------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `roots`             | Array of integers | **REQUIRED** | Non-empty list of zero-based indices into `nodes`. Roots are the oldest retained callers.                                                                |
+| `thread_id`         | String         | **OPTIONAL** | Actual source thread identifier, if known. Uses the string representation used by profiling samples.                                  |
+| `thread_attributed` | Boolean        | **OPTIONAL** | Whether the diagnostic source identifies this tree's thread as responsible for the reported issue, such as a hang. Omit when unknown. |
+
+Each tree is an independent sample population. Producers **MUST** include `thread_id` only when the source provides a thread identifier.
+
+##### Flame Graph Nodes
+
+Each entry in the top-level `nodes` array describes one frame occurrence in a call path.
+
+| Field          | Type           | Requirement  | Description                                                                      |
+| -------------- | -------------- | ------------ | -------------------------------------------------------------------------------- |
+| `frame_id`     | Integer        | **REQUIRED** | Zero-based index into `frames`. **MUST** be between `0` and `frames.length - 1`. |
+| `sample_count` | Integer        | **REQUIRED** | Positive inclusive count of samples containing this call-path prefix.            |
+| `children`     | Array of integers | **OPTIONAL** | Zero-based indices into `nodes` for direct callees. Defaults to `[]` when omitted. |
+
+Root and child indices **MUST** be between `0` and `nodes.length - 1`. Node references **MUST** form independent trees without cycles or shared nodes. Recursive calls use separate nodes that **MAY** reference the same `frame_id`.
+
+Paths **MUST** run from caller to callee. Each root-to-leaf path is one observed call path, potentially ending before the true bottom or top of the stack if the source was incomplete.
+
+Counts **MUST** be exact integers no greater than `9007199254740991`, the largest integer exactly representable by common JSON number implementations.
+
+`sample_count` includes samples attributed to the node and its descendants. The sum of direct children's counts **MUST NOT** exceed the node's count. The difference represents samples whose call path ends at the node.
+
+A tree can have multiple roots representing different oldest captured callers. Its total sample count is the sum of its root counts.
+
+#### Flame Graph Native Symbolication
+
+Native frames require an `instruction_addr` and a matching debug image for symbolication. The attachment's `debug_meta` **MUST** use the same format as a [V2 profile chunk](/sdk/telemetry/profiles/#v2-sample-format-payload), as defined by the [Debug Meta Interface](/sdk/foundations/envelopes/event-payloads/debugmeta/). Image metadata **MUST** describe the process that produced the diagnostic.
+
+Frame addresses **MUST** follow the existing [`instruction_addr` and `addr_mode` definitions](/sdk/foundations/envelopes/event-payloads/stacktrace/#frame-attributes).
+
+Symbolication **MUST** preserve captured addresses, addressing modes, and debug images. Resolved function names and source locations **MUST** populate the standard profiling frame fields. Unresolved frames **MUST** retain their original data.
+
+Consumers **MUST** track symbolication state and skip symbolication for already-processed payloads. If symbolication is rerun, it **MUST** start from the original, unexpanded frames, nodes, and trees.
+
+##### Flame Graph Inline Frames
+
+Compiler-inlined functions share a physical stack frame with their caller. [Native symbolication](/ingestion/symbolicator/#native-symbolication) can recover these functions as separate logical frames.
+
+A processor that expands inline frames **MUST** replace each affected node occurrence with a caller-to-callee chain, assign the original `sample_count` to every node in that chain, and attach the original children to its innermost node. The expansion **MUST** preserve the tree's total sample count. Frame-table changes **MUST** update all affected `frame_id` values. Node-table changes **MUST** update all affected `roots` and `children` indices.
+
+#### Flame Graph Example
+
+This example contains 10 samples. Six continue from `main` into `process` and four end at `main`. Both frames retain their captured addresses alongside symbolicated function names. The leaf omits `children`, which defaults to `[]`.
+
+```json {filename:flamegraph.json}
+{
+  "version": "1",
+  "platform": "cocoa",
+  "debug_meta": {
+    "images": [
+      {
+        "type": "macho",
+        "debug_id": "84a04d24-0e60-3810-a8c0-90a65e2df61a",
+        "code_file": "ExampleApp",
+        "image_addr": "0x100000000",
+        "image_size": 8192,
+        "arch": "arm64"
+      }
+    ]
+  },
+  "frames": [
+    {
+      "instruction_addr": "0x100001000",
+      "package": "ExampleApp",
+      "function": "main"
+    },
+    {
+      "instruction_addr": "0x100001200",
+      "package": "ExampleApp",
+      "function": "process",
+      "filename": "Sources/Processor.swift",
+      "lineno": 42
+    }
+  ],
+  "nodes": [
+    {
+      "frame_id": 0,
+      "sample_count": 10,
+      "children": [1]
+    },
+    {
+      "frame_id": 1,
+      "sample_count": 6
+    }
+  ],
+  "trees": [
+    {
+      "thread_attributed": true,
+      "roots": [0]
+    }
+  ]
+}
+```
+
+#### Flame Graph Validation and Limits
+
+A flame graph attachment **MUST NOT** exceed 10 MiB of serialized UTF-8 JSON.
+
+Symbolication **MUST** process at most 2,500 entries from the attachment's `frames` array, in frame-index order. This limit applies to input frames, before inline expansion. Each frame-table entry counts once, regardless of how many tree nodes reference it.
+
+Frames beyond this limit **MUST** retain their original data. Processing **MUST** preserve call-path relationships and sample counts. Inline expansion **MAY** add nodes and remap frame indices as described in [Inline Frames](#flame-graph-inline-frames).
+
+</SpecSection>
+
+<SpecSection id="trace-attachments" status="draft" since="1.5.0">
+
+### Trace Attachments
+
+<Alert level="warning">
+  Trace attachments are an experimental feature that is still under development.
+</Alert>
+
+Trace attachments use item type `"attachment"` with content type `"application/vnd.sentry.trace-attachment"` (since 1.5.1). Unlike standard attachments, trace attachments are associated with a **trace** rather than an event. They are only optionally associated with other trace items (spans, logs).
+
+**Envelope headers:**
+
+- `trace` _(optional)_: If the envelope containing the trace attachment has a [Dynamic Sampling Context](/sdk/foundations/trace-propagation/dynamic-sampling-context/), it will be subject to trace-based dynamic sampling rules and potentially dropped.
+
+</SpecSection>
+
+<SpecSection id="attachment-placeholders" status="draft" since="1.6.0">
+
+### Attachment Placeholders
+
+<Alert level="warning">
+  Attachment placeholders are an experimental feature, the protocol is subject
+  to change.
+</Alert>
+
+Attachment placeholders use item type `"attachment"` with content type `"application/vnd.sentry.attachment-ref+json"`. A placeholder contains a **reference** to an attachment uploaded elsewhere — it does _not_ contain the actual attachment payload. The purpose is for the attachment to be handled (rate limited, filtered, etc.) together with the event payload, even if it was uploaded separately.
+
+SDKs **MUST** send placeholders in the same envelope as the event the file is attached to.
+
+See [Resumable Uploads](/sdk/telemetry/attachments/upload/) for a detailed guide on how to obtain an attachment placeholder.
+
+</SpecSection>
+
+---
+
+## Wire Format
+
+<SpecSection id="wire-standard-attachment" status="stable" since="1.0.0">
+
+### Standard Attachment Item
+
+**Envelope headers:**
+
+| Field      | Type        | Required     | Since | Description                                 |
+| ---------- | ----------- | ------------ | ----- | ------------------------------------------- |
+| `event_id` | UUID string | **REQUIRED** | 1.0.0 | The identifier of the event or transaction. |
+
+**Item headers:**
+
+| Field             | Type    | Required     | Since | Description                                                                                                                                                                                       |
+| ----------------- | ------- | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`            | String  | **REQUIRED** | 1.0.0 | **MUST** be `"attachment"`.                                                                                                                                                                       |
+| `length`          | Integer | **REQUIRED** | 1.0.0 | Payload size in bytes.                                                                                                                                                                            |
+| `filename`        | String  | **REQUIRED** | 1.0.0 | The name of the uploaded file without a path component.                                                                                                                                           |
+| `attachment_type` | String  | **OPTIONAL** | 1.0.0 | The special type of this attachment. See [Attachment Types](#attachment-types). Defaults to `event.attachment`.                                                                                   |
+| `content_type`    | String  | **OPTIONAL** | 1.0.0 | The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream` (since 1.0.1). |
+
+</SpecSection>
+
+<SpecSection id="wire-attachment-placeholder" status="draft" since="1.6.0">
+
+### Attachment Placeholder Item
+
+**Envelope headers:**
+
+| Field      | Type        | Required     | Description                                 |
+| ---------- | ----------- | ------------ | ------------------------------------------- |
+| `event_id` | UUID string | **REQUIRED** | The identifier of the event or transaction. |
+
+**Item headers:**
+
+| Field               | Type    | Required     | Description                                                 |
+| ------------------- | ------- | ------------ | ----------------------------------------------------------- |
+| `type`              | String  | **REQUIRED** | **MUST** be `"attachment"`.                                 |
+| `content_type`      | String  | **REQUIRED** | **MUST** be `"application/vnd.sentry.attachment-ref+json"`. |
+| `length`            | Integer | **REQUIRED** | Size of the placeholder payload in bytes.                   |
+| `attachment_length` | Integer | **REQUIRED** | Size of the referenced attachment in bytes.                 |
+| `filename`          | String  | **REQUIRED** | The name of the uploaded file without a path component.     |
+
+The item header **MUST** also contain the original file's `attachment_type` if it was set. The item payload **MUST** contain the original file's `content_type` as a field in the JSON object (see [Standard Attachment Item](#standard-attachment-item)).
+
+**Item payload:**
+
+```json
+{
+  "location": "/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz",
+  "content_type": "text/plain"
+}
+```
+
+| Field          | Type   | Required     | Description                                                                                                     |
+| -------------- | ------ | ------------ | --------------------------------------------------------------------------------------------------------------- |
+| `location`     | String | **REQUIRED** | The identifier of the upload, as returned in the `Location` header of the upload endpoint response.             |
+| `content_type` | String | **OPTIONAL** | The content type of the represented attachment (as opposed to the content type of the placeholder item itself). |
+
+</SpecSection>
+
+<SpecSection id="wire-trace-attachment" status="draft" since="1.5.0">
+
+### Trace Attachment Item
+
+**Item headers:**
+
+| Field          | Type    | Required     | Since | Description                                                            |
+| -------------- | ------- | ------------ | ----- | ---------------------------------------------------------------------- |
+| `type`         | String  | **REQUIRED** | 1.5.0 | **MUST** be `"attachment"`.                                            |
+| `content_type` | String  | **REQUIRED** | 1.5.0 | **MUST** be `"application/vnd.sentry.trace-attachment"` (since 1.5.1). |
+| `length`       | Integer | **REQUIRED** | 1.5.0 | Total payload size in bytes (metadata JSON + attachment body).         |
+| `meta_length`  | Integer | **REQUIRED** | 1.5.0 | Size of the metadata JSON portion of the payload in bytes.             |
+
+**Item payload:**
+
+The trace attachment payload consists of a JSON metadata object immediately followed by the raw attachment body:
+
+```json
+{
+  "trace_id": "12312012123120121231201212312012",
+  "attachment_id": "019a72d07ffe77208c013ac888b38d9e",
+  "timestamp": 1760520026.781239,
+  "filename": "myfile.txt",
+  "content_type": "text/plain",
+  "attributes": {
+    "foo": {"type": "string", "value": "bar"}
+  }
+}helloworld
+```
+
+**Metadata fields:**
+
+| Field           | Type   | Required     | Description                                                                                                  |
+| --------------- | ------ | ------------ | ------------------------------------------------------------------------------------------------------------ |
+| `trace_id`      | String | **REQUIRED** | 32-character hexadecimal string identifying the trace.                                                       |
+| `attachment_id` | String | **REQUIRED** | 32-character hexadecimal string (Version 7 or Version 4 UUID without dashes).                                |
+| `timestamp`     | Float  | **REQUIRED** | UNIX timestamp of the attachment's occurrence.                                                               |
+| `filename`      | String | **OPTIONAL** | The file name of the attachment.                                                                             |
+| `content_type`  | String | **REQUIRED** | Content type of the attachment body (not the envelope item content type).                                    |
+| `attributes`    | Object | **OPTIONAL** | Arbitrary key-value pairs queryable on the attachment trace item, similar to spans, logs, and trace metrics. |
+
+</SpecSection>
+
+---
+
+## Public API
+
+<SpecSection id="sdk-api" status="stable" since="1.1.0">
+
+### Attachment Constructors
+
+SDKs **SHOULD** implement two types of attachment constructors:
+
+1. **Path-based** — takes a file path. The SDK reads the file when an event is captured, not when the user adds the attachment to the scope.
+2. **Byte-array-based** — takes raw bytes directly.
+
+If the programming language allows it, SDKs **SHOULD** use one class with multiple constructors and infer the `content_type` from the filename.
+
+**Path-based error handling:**
+
+- If reading the attachment fails, the SDK **MUST NOT** drop the whole envelope — only the attachment's envelope item.
+- If the SDK is in debug mode (`debug=true`), the SDK **SHOULD** log the error.
+
+**Transaction association:**
+
+Attachments **SHOULD** offer a flag `addToTransactions` that specifies whether the SDK adds the attachment to every transaction. The default **MUST** be `false`.
+
+</SpecSection>
+
+<SpecSection id="configuration-options" status="stable" since="1.1.0">
+
+### Configuration Options
+
+| Option              | Type            | Default | Since | Description                                                                                                             |
+| ------------------- | --------------- | ------- | ----- | ----------------------------------------------------------------------------------------------------------------------- |
+| `maxAttachmentSize` | Integer (bytes) | 20 MiB  | 1.1.0 | Maximum size of a single attachment. The SDK **MUST** discard items larger than this when converting to envelope items. |
+| `attachScreenshot`  | Boolean         | `false` | 1.2.0 | When `true`, the SDK captures a screenshot during crashes/errors and attaches it (mobile/desktop SDKs only).            |
+
+</SpecSection>
+
+---
+
+## Examples
+
+### Standard Attachment Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
+{"type":"attachment","length":12,"filename":"log.txt","content_type":"text/plain"}
+Hello World!
+```
+
+### Screenshot Attachment Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
+{"type":"attachment","length":1024,"filename":"screenshot.jpg","content_type":"image/jpg","attachment_type":"event.attachment"}
+<binary image data>
+```
+
+### View Hierarchy Attachment Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
+{"type":"attachment","length":245,"filename":"view-hierarchy.json","content_type":"application/json","attachment_type":"event.view_hierarchy"}
+{"rendering_system":"compose","windows":[{"type":"com.example.MyActivity","width":1080,"height":1920,"visible":true,"children":[{"type":"android.widget.TextView","width":200,"height":48,"visible":true}]}]}
+```
+
+### Attachment Placeholder Envelope
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}
+{"type":"event","length":74}
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","timestamp":1234567890}
+{"type":"attachment","content_type":"application/vnd.sentry.attachment-ref+json","length":123,"attachment_length":212341234,"filename":"myfile.log"}
+{"location":"/api/42/upload/019c7a950dd376a1817a9ced5cb7c4b5/?length=212341234&signature=Zct1IMmM3BIJrzDOwG3tUn5AlrLhqIJFBu8Kd59dXCz","content_type":"text/plain"}
+```
+
+### Trace Attachment Envelope
+
+```
+{}
+{"type":"attachment","content_type":"application/vnd.sentry.trace-attachment","length":234,"meta_length":224}
+{"trace_id":"12312012123120121231201212312012","attachment_id":"019a72d07ffe77208c013ac888b38d9e","timestamp":1760520026.781239,"filename":"myfile.txt","content_type":"text/plain","attributes":{"foo":{"type":"string","value":"bar"}}}helloworld
+```
+
+### Reference Implementations
+
+- [Java — Attachment.java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java)
+- [Objective-C — SentryAttachment.m](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryAttachment.m)
+- [Python — attachments.py](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/attachments.py)
+
+---
+
+## Changelog
+
+<SpecChangelog />

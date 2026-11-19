@@ -1,0 +1,290 @@
+---
+title: Data Collection
+description: "See what data the Sentry Symfony SDK collects when you use the data_collection option, and how to control it."
+sidebar_order: 3
+sidebar_section: configuration
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Symfony SDK collects when you use the `data_collection` option.
+
+<Expandable title="Options to control data collection">
+
+You can control the categories listed here with the `data_collection` option, which lets you opt in or out of each data category individually. The option is available in version 5.14.0 and later.
+
+Configure it under `sentry.options.data_collection` in `config/packages/sentry.yaml`. Omitting it, or setting it to `~` (`null`), keeps the legacy options. An empty map applies the defaults of every category:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection: {}
+```
+
+Setting `data_collection` to `~` in a later config file, such as an environment-specific one, switches back to the legacy options, even if an earlier file opted in. `false` isn't a valid value.
+
+The <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii` option</PlatformLink> remains fully supported until the next major version. Without `data_collection`, the SDK collects conservatively, and the defaults described on <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> apply.
+
+As soon as you set `data_collection`, the categories you don't set explicitly fall back to the defaults described on this page, which are more permissive. For example, cookies, the user's IP address, request and response bodies, and database query parameters are then collected unless you opt out. Values whose keys match the built-in sensitive denylist are always scrubbed.
+
+If you set both, `send_default_pii` is ignored. The same applies to the `context_lines` option, which `data_collection` replaces with `frame_context_lines`.
+
+Regardless of these options, you can always scrub any data before it's sent to Sentry. See <PlatformLink to="/data-management/sensitive-data/">Scrubbing Sensitive Data</PlatformLink> for details.
+
+</Expandable>
+
+## HTTP Headers
+
+By default, the SDK collects the headers of the requests your application handles and of the responses it sends, as well as the request and response headers of the Symfony HTTP Client. Values of sensitive headers are scrubbed. Use `http_headers` to control this. A single behavior applies to both request and response headers:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            # Collect nothing:
+            http_headers:
+                mode: 'off'
+            # Or only send real values for the listed headers:
+            # http_headers:
+            #     mode: allowList
+            #     terms: ['content-type']
+            # Or configure request and response headers separately:
+            # http_headers:
+            #     request:
+            #         mode: denyList
+            #         terms: ['-ip']
+            #     response:
+            #         mode: 'off'
+```
+
+Values whose keys match Sentry's built-in sensitive denylist (such as `auth`, `token`, or `password`) are always scrubbed, while the keys are kept. The `Cookie` and `Set-Cookie` headers are never included in the collected headers. Use the [`cookies`](#cookies) category to control them instead. See [Key-Value Collection Behavior](#key-value-collection-behavior) below for details on `mode` and `terms`.
+
+For the Symfony HTTP Client, the SDK only collects the headers you pass with the `headers` option, including the client's default headers. Headers the client adds itself, for example, through the `auth_bearer` or `json` options, aren't collected.
+
+## Cookies
+
+By default, the SDK collects cookies, with sensitive values scrubbed. Opt out with `mode: 'off'`, or restrict which values are sent using `allowList` or `denyList` mode:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            cookies:
+                mode: 'off'
+            # Or only send the real value of the `locale` cookie:
+            # cookies:
+            #     mode: allowList
+            #     terms: ['locale']
+```
+
+## Information About Logged-in User
+
+By default, when a user is authenticated with the Symfony Security component, the SDK sends the user identifier as the user's ID. If the user is being impersonated, the username of the impersonator is sent as well.
+
+The `user_info` category controls this, as well as the user's IP address (see the next section). User data you set with <PlatformLink to="/enriching-events/identify-user/">`setUser()`</PlatformLink> is always sent to Sentry, regardless of `data_collection`.
+
+## Users' IP Address
+
+By default, the SDK sends the user's IP address. Disable it, together with the logged-in user information, by setting `user_info` to `false`:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            user_info: false
+```
+
+Even when this is disabled, IP addresses can still reach Sentry through collected HTTP headers, cookies, or query parameters (for example, the `X-Forwarded-For` header). Add these terms to the deny lists for those categories so their values are filtered:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            user_info: false
+            http_headers:
+                mode: denyList
+                terms: ['forwarded', '-ip', 'remote-', 'via', '-user']
+            cookies:
+                mode: denyList
+                terms: ['forwarded', '-ip', 'remote-', 'via', '-user']
+            url_query_params:
+                mode: denyList
+                terms: ['forwarded', '-ip', 'remote-', 'via', '-user']
+```
+
+## Request URL
+
+The full URL of the requests your application handles and of the requests made with the Symfony HTTP Client is sent to Sentry. Depending on your application, this could contain PII data. Credentials in the URL (for example, `https://user:password@example.com`) are replaced with `[Filtered]`, and query parameters are filtered as described in [Request Query String](#request-query-string).
+
+## Request Query String
+
+By default, the SDK sends the query string of incoming and outgoing HTTP requests. Depending on your application, this could contain PII data. Values whose keys match the built-in sensitive denylist (such as `auth`, `token`, `password`, and `secret`) are replaced with `[Filtered]`.
+
+Use `url_query_params` to control this. Set its `mode` to `'off'` to disable collection entirely, or use `allowList` or `denyList` mode to filter which values are sent:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            url_query_params:
+                mode: 'off'
+```
+
+Sentry also has some additional [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from the query string.
+
+## Request and Response Bodies
+
+By default, the SDK collects HTTP request and response bodies. Whether a body is sent depends on its type and size:
+
+- **The type of the body:**
+  - JSON and form bodies are sent, with values whose keys match the built-in sensitive denylist scrubbed
+  - Bodies in other formats, or bodies that can't be parsed, are replaced with `[Filtered]`
+  - Streamed responses and file downloads (`StreamedResponse` and `BinaryFileResponse`) are replaced with `[Filtered]`
+  - Uploaded files are never sent to Sentry
+- **The size of the body:** There's a <PlatformLink to="/configuration/options/#max_request_body_size">`max_request_body_size` option</PlatformLink> that's set to `medium` by default. Bodies that exceed the size limit aren't sent to Sentry.
+
+To disable body collection, set `http_bodies` to an empty list, or provide only the body types you want:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            # Collect only incoming request bodies:
+            http_bodies: ['incomingRequest']
+```
+
+The valid body types are:
+
+- `incomingRequest`: The body of the request your application handles.
+- `outgoingResponse`: The body of the response your application sends.
+- `outgoingRequest`: The body of a request sent with the Symfony HTTP Client.
+- `incomingResponse`: The body of a response received with the Symfony HTTP Client. It's only collected when your application reads it with `getContent()` or `toArray()`.
+
+## Database Query Parameters
+
+When <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled, the SDK attaches the parameters of Doctrine DBAL queries to `db.sql.execute` spans. Disable this by setting `database_query_data` to `false`:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            database_query_data: false
+```
+
+<Alert level="warning">
+
+Doctrine usually binds parameters by position rather than by name, so the built-in sensitive denylist can't recognize them and their values are sent as is. If your queries contain sensitive values, such as passwords or tokens, set `database_query_data` to `false`.
+
+</Alert>
+
+## Console Commands
+
+When a console command runs, the SDK attaches the command as it was run to the events captured during it. Values of arguments and options whose names match the built-in sensitive denylist are replaced with `[Filtered]`. For example, `app:import --password=secret` becomes `app:import --password=[Filtered]`.
+
+If the input can't be parsed, for example, because it contains an unknown option, all arguments and options are replaced with `[Filtered]`.
+
+## Source Context
+
+When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
+
+Use `frame_context_lines` to control how many lines above and below each stack frame are captured. It defaults to `5`. Set it to `0` to only send the line where the error occurred:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            frame_context_lines: 0
+```
+
+## Local Variables In Stack Trace
+
+When unhandled errors and exceptions are sent to Sentry, the names and values of local variables that were set when the errors occurred are sent at the same time.
+
+`stack_frame_variables` controls this and defaults to `true`. Values of variables whose names match the built-in sensitive denylist are scrubbed. Set it to `false` to stop sending variables, or use a key-value behavior to filter which variables are sent by name:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            stack_frame_variables: false
+            # Or filter additional variables by name:
+            # stack_frame_variables:
+            #     mode: denyList
+            #     terms: ['email']
+```
+
+Setting `zend.exception_ignore_args=1` in your `php.ini` prevents PHP from providing variables to the SDK, regardless of `stack_frame_variables`. On some distributions, this setting is already set to `1` by default.
+
+## `data_collection` Reference
+
+### Keys
+
+| Key                     | Type                                                 | Default                                                                          | Description                                                                                                                                                                                        |
+| ----------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user_info`             | `bool`                                               | `true`                                                                           | Populate user fields, such as the user identifier and IP address, from instrumentation.                                                                                                            |
+| `cookies`               | key-value behavior                                   | `{ mode: denyList }`                                                             | Collect cookies.                                                                                                                                                                                   |
+| `http_headers`          | key-value behavior, or `{ request: …, response: … }` | `{ mode: denyList }`                                                             | Collect HTTP headers. A single behavior applies to both request and response headers.                                                                                                              |
+| `http_bodies`           | `string[]`                                           | `['incomingRequest', 'outgoingRequest', 'incomingResponse', 'outgoingResponse']` | Body types to collect. Set to `[]` to disable.                                                                                                                                                     |
+| `url_query_params`      | key-value behavior                                   | `{ mode: denyList }`                                                             | Collect URL query parameters.                                                                                                                                                                      |
+| `database_query_data`   | `bool`                                               | `true`                                                                           | Collect the parameters of Doctrine DBAL queries.                                                                                                                                                   |
+| `stack_frame_variables` | `bool` or key-value behavior                         | `true`                                                                           | Include variable values captured within stack frames. Accepts a boolean (`true` collects all variables, `false` collects none) or a key-value behavior to filter which variables are sent by name. |
+| `frame_context_lines`   | `int`                                                | `5`                                                                              | Source code lines captured above and below each stack frame.                                                                                                                                       |
+
+The `gen_ai` and `queues` keys are accepted as well, but the Symfony SDK doesn't collect any data in these categories yet.
+
+Invalid values, such as an unknown `mode` or body type, fail the container build with a configuration error.
+
+### Key-Value Collection Behavior
+
+The `cookies`, `http_headers`, `url_query_params`, and `stack_frame_variables` categories take a `mode` and an optional list of `terms`:
+
+{/* prettier-ignore */}
+```yaml
+mode: denyList
+terms: ['forwarded', '-ip', 'remote-', 'via', '-user']
+```
+
+| `mode`      | Behavior                                                                                                              |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `denyList`  | Collect everything, replacing the value of any key matching `terms` (in addition to the built-in sensitive denylist). |
+| `allowList` | Only keys matching `terms` send their real value. Every other key is kept, but its value is replaced.                 |
+| `'off'`     | Collect nothing in this category.                                                                                     |
+
+If you omit `mode`, it defaults to `denyList`. `terms` match partially and case-insensitively, so `-ip` matches `X-Real-IP`. Filtered values are replaced with `[Filtered]`; the key itself is always preserved. The built-in sensitive denylist (`auth`, `token`, `secret`, `password`, `key`, `session`, and similar) always applies, even in `allowList` mode.
+
+### Preserving `send_default_pii` Behavior
+
+To keep roughly the conservative collection you get with `send_default_pii` set to `false` while using `data_collection`, opt out of each category explicitly:
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        data_collection:
+            user_info: false
+            cookies:
+                mode: 'off'
+            http_headers:
+                request:
+                    mode: denyList
+                    terms: ['forwarded', '-ip', 'remote-', 'via', '-user']
+                response:
+                    mode: 'off'
+            url_query_params:
+                mode: denyList
+                terms: ['forwarded', '-ip', 'remote-', 'via', '-user']
+            http_bodies: ['incomingRequest']
+            database_query_data: false
+```
+
+If you previously set `send_default_pii` to `true`, set `data_collection` to an empty map (`{}`) to use the defaults described on this page.

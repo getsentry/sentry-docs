@@ -2,7 +2,7 @@
 title: Dynamic Sampling Context (DSC)
 description: How SDKs propagate Dynamic Sampling Context via baggage headers and envelope headers.
 spec_id: sdk/foundations/trace-propagation/dynamic-sampling-context
-spec_version: 1.3.0
+spec_version: 1.4.0
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/trace-propagation
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/foundations/transport/envelopes
     version: ">=1.0.0"
 spec_changelog:
+  - version: 1.4.0
+    date: 2026-10-19
+    summary: Don't freeze an empty DSC when continuing a trace without baggage; create it from the segment span instead (required for span streaming)
   - version: 1.3.0
     date: 2026-02-24
     summary: Moved to trace-propagation sub-spec
@@ -203,6 +206,7 @@ DSC leaves SDKs in two situations:
 
 When an SDK receives an HTTP request that was "instrumented" or "traced" by a Sentry SDK, the receiving SDK **MUST** consider the incoming DSC as instantly frozen.
 Any values on the DSC **MUST** be propagated "as is" — this includes values like "environment" or "release".
+If the incoming request has a `sentry-trace` header but no DSC (no `baggage` header with `sentry-` values), see [Incoming Trace Without DSC](#incoming-trace-without-dsc).
 
 SDKs **SHOULD** recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
 
@@ -217,7 +221,52 @@ After the DSC of a particular trace has been frozen, API calls like `set_user` *
 
 ### Unified Propagation Mechanism
 
-SDKs **SHOULD** follow these steps for any incoming and outgoing requests (in python pseudo-code for illustrative purposes):
+SDKs **SHOULD** follow these steps for any incoming and outgoing requests (in python pseudo-code for illustrative purposes). For transaction-based SDKs, the segment span is the transaction:
+
+```python
+def collect_dynamic_sampling_context():
+  # Placeholder function that collects as many values for Dynamic Sampling Context
+  # as possible and returns a dict
+
+def has_sentry_value_in_baggage_header(request):
+  # Placeholder function that returns True when there is at least one key-value pair in the baggage
+  # header of `request`, for which the key starts with "sentry-". Otherwise, it returns False.
+
+def on_incoming_request(request):
+  # Only applies if the SDK continues the incoming trace (see strict trace continuation)
+  if request.has_header("sentry-trace") and (not request.has_header("baggage") or not has_sentry_value_in_baggage_header(request)):
+    # Request comes from an old SDK which doesn't support Dynamic Sampling Context yet
+    # --> we don't freeze the DSC. Instead, it is created from our own segment span
+    # as late as possible (on the first outgoing request or when the envelope is sent)
+    current_segment_span.dynamic_sampling_context_frozen = False
+  elif request.has_header("sentry-trace") and request.has_header("baggage") and has_sentry_value_in_baggage_header(request):
+    current_segment_span.dynamic_sampling_context_frozen = True
+    current_segment_span.dynamic_sampling_context = baggage_header_to_dict(request.headers.baggage)
+
+def on_outgoing_request(request):
+  if not current_segment_span.dynamic_sampling_context_frozen:
+    current_segment_span.dynamic_sampling_context_frozen = True
+    current_segment_span.dynamic_sampling_context = merge_dicts(collect_dynamic_sampling_context(), current_segment_span.dynamic_sampling_context)
+
+  if request.has_header("baggage"):
+    outgoing_baggage_dict = baggage_header_to_dict(request.headers.baggage)
+    merged_baggage_dict = merge_dicts(outgoing_baggage_dict, current_segment_span.dynamic_sampling_context)
+    request.set_header("baggage", dict_to_baggage_header(merged_baggage_dict))
+  else:
+    request.set_header("baggage", dict_to_baggage_header(current_segment_span.dynamic_sampling_context))
+
+def on_envelope_send(envelope):
+  if not current_segment_span.dynamic_sampling_context_frozen:
+    current_segment_span.dynamic_sampling_context_frozen = True
+    current_segment_span.dynamic_sampling_context = merge_dicts(collect_dynamic_sampling_context(), current_segment_span.dynamic_sampling_context)
+
+  envelope.headers.trace = current_segment_span.dynamic_sampling_context
+```
+
+<Expandable title="Previous behavior (spec versions 1.0.0 to 1.3.0)">
+
+Before spec version `1.4.0`, SDKs froze an empty DSC when the incoming request had a `sentry-trace` header but no DSC.
+SDKs that don't implement [span streaming](/sdk/telemetry/spans/) **MAY** keep following this behavior:
 
 ```python
 def collect_dynamic_sampling_context():
@@ -255,10 +304,29 @@ def on_outgoing_request(request):
     request.set_header("baggage", dict_to_baggage_header(current_transaction.dynamic_sampling_context))
 ```
 
-While there is no strict necessity for the `current_transaction.dynamic_sampling_context_frozen` flag yet, there is a future use case where we need it:
+</Expandable>
+
+While there is no strict necessity for the `dynamic_sampling_context_frozen` flag yet, there is a future use case where we need it:
 We might want users to be able to set Dynamic Sampling Context values themselves.
 The flag becomes relevant after the first propagation, where Dynamic Sampling Context becomes immutable.
 When users attempt to set DSC afterwards, our SDKs **SHOULD** make this operation a noop.
+
+#### Incoming Trace Without DSC
+
+If an SDK receives a `sentry-trace` header but no DSC (no `baggage` header with `sentry-` values), continues the trace, and starts a segment span:
+
+- The SDK **MUST** create the DSC from its own segment span, collecting as many [DSC values](#dsc-specification) as possible. `trace_id` **MUST** match the continued trace, and `sampled` **MUST** match the segment span's sampling decision.
+- The new DSC's `sample_rate` **MUST** be set to:
+  - the returned sample rate if a `tracesSampler` callback was invoked.
+  - `1.0` for a positive and `0.0` for a negative sampling decision, if the sampling decision was inherited from the `sentry-trace` header.
+  - the local `tracesSampleRate` from the SDK's options, if the incoming `sentry-trace` header had no sampling decision ("deferred sampling").
+    - omit `sample_rate` in the DSC, if there is no local `tracesSampleRate` or `tracesSampler`, in which case [deferred sampling DSC](../#deferred-sampling) is created.
+- The SDK **SHOULD** materialize and freeze this DSC as late as possible, either on the first outgoing request or when the first envelope is sent. For span streaming, see [Serialization and Dynamic Sampling Context](/sdk/telemetry/spans/#serialization-and-dynamic-sampling-context).
+
+SDKs implementing [span streaming](/sdk/telemetry/spans/) **MUST** follow this behavior, because span envelopes require a `trace` envelope header. Other SDKs **SHOULD** follow it, but **MAY** keep the previous behavior from versions 1.0.0 to 1.3.0.
+
+A common reason for this scenario is old SDKs not compatible with DSC starting traces. Therefore, they
+only send the `sentry-trace` but no `baggage` header with `sentry-` values.
 
 </SpecSection>
 

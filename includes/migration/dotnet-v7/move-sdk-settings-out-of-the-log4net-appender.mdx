@@ -1,0 +1,46 @@
+---
+id: move-sdk-settings-out-of-the-log4net-appender
+title: "Move SDK Settings Out of the log4net Appender"
+phase: code-changes
+category: removed-api
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 80
+---
+
+The log4net appender no longer initializes Sentry, and version 7 removes its `Environment` setting. Initialize Sentry first, and remove `Dsn` and `Environment` from the appender. log4net writes an error to standard error for each of them.
+
+In 6.x, the appender initialized Sentry from its configuration:
+
+```xml {filename:app.config}
+<appender name="SentryAppender" type="Sentry.Log4Net.SentryAppender, Sentry.Log4Net">
+  <Dsn value="___PUBLIC_DSN___" />
+  <Environment value="staging" />
+  <SendIdentity value="true" />
+  <threshold value="INFO" />
+</appender>
+```
+
+In 7.x, the appender keeps `SendIdentity`, `MinimumEventLevel` and the log4net settings such as `threshold`:
+
+```xml {filename:app.config}
+<appender name="SentryAppender" type="Sentry.Log4Net.SentryAppender, Sentry.Log4Net">
+  <SendIdentity value="true" />
+  <threshold value="INFO" />
+</appender>
+```
+
+Initialize Sentry in code before log4net writes its first entry:
+
+```csharp {filename:Program.cs}
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Environment = "staging";
+});
+
+log4net.Config.XmlConfigurator.Configure();
+```
+
+In an ASP.NET app on .NET Framework, call `SentrySdk.Init` in `Application_Start`, as the ASP.NET integration already requires. The appender now sends logs once you add it. See [Logging Integrations Send Logs](#logging-integrations-send-logs).

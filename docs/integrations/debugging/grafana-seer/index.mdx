@@ -1,0 +1,71 @@
+---
+title: Grafana Seer Integration
+sidebar_order: 1
+
+description: "Learn how adding Grafana data to Seer's context helps you debug and fix issues."
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+The Grafana for Seer integration gives [Seer Agent](/product/ai-in-sentry/seer/#seer-agent) access to metrics and logs through your Grafana Cloud data sources. Seer can then use Grafana data to enhance or supplement Sentry telemetry in issue analysis or investigations.
+
+The connection is shared across your Sentry organization. You can connect one Grafana Cloud stack per Sentry organization. Seer authenticates to the Grafana HTTP API using a **service account token** created in that stack, and inherits the service account's permissions.
+
+## Install the Grafana for Seer Integration
+
+<Alert>
+
+Sentry Owner, Manager, or Admin permissions are required to install this integration.
+
+You also need Grafana permissions to create a service account, assign its roles, and generate a token. By default, these actions require Grafana organization administrator permissions. A Grafana administrator can complete these steps for you.
+
+</Alert>
+
+1. Navigate to [Seer Connector Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/connectors/).
+2. Select the Grafana for Seer integration and click **Add Stack**.
+3. In the Grafana Cloud stack you want to connect, open **Administration > Users and access > Service accounts**. Click **Add service account**, enter a display name such as `sentry-seer`, and click **Create**.
+
+   For more details, see Grafana's [Create a service account](https://grafana.com/docs/grafana/latest/administration/service-accounts/#create-a-service-account-in-grafana) instructions.
+
+4. Open the service account and use the role picker to assign the **Viewer** role.
+
+   If you use granular role-based access control (RBAC), you can instead assign **Data sources Reader** (`fixed:datasources:reader`), which grants `datasources:read` and `datasources:query`. See Grafana's [role definitions](https://grafana.com/docs/grafana/latest/administration/roles-and-permissions/access-control/rbac-fixed-basic-role-definitions/) and [role assignment instructions](https://grafana.com/docs/grafana/latest/administration/roles-and-permissions/access-control/assign-rbac-roles/).
+
+   If your stack restricts individual data sources, ensure the service account has **Query** permission for each data source you want Seer to use. See [Grafana data source permissions](https://grafana.com/docs/grafana/latest/administration/data-source-management/#data-source-permissions).
+
+5. On the service account's page, click **Add service account token**. Enter a token name such as `sentry-seer`, optionally set an expiration date, and click **Generate token**. Copy the generated token immediately; Grafana only displays it once.
+
+   For more details, see Grafana's [Add a token to a service account](https://grafana.com/docs/grafana/latest/administration/service-accounts/#add-a-token-to-a-service-account-in-grafana) instructions.
+
+   **Use a Grafana service account token.** [Grafana Cloud Access Policy tokens](https://grafana.com/docs/grafana-cloud/security-and-account-management/authentication-and-permissions/access-policies/) authorize direct access to telemetry backends, but do not authorize the Grafana HTTP API used by this integration.
+
+6. Return to the Sentry setup modal and fill in the connection details:
+
+   - **Grafana URL:** Enter your stack's base URL, such as `https://your-stack.grafana.net`. Use the URL you visit to open Grafana, without a dashboard path. Only Grafana Cloud stack URLs in this format are supported; self-managed instances and custom domains are not supported.
+   - **Service account token:** Paste the token you just generated, without an `Authorization:` or `Bearer` prefix. Sentry adds the authentication header for you.
+
+7. Click **Continue**. Sentry checks that the stack is reachable and the token can read at least one data source before completing installation.
+
+   If the check fails, correct the URL, token, or permissions and click **Continue** again. You can retry in the same setup modal.
+
+## Configure
+
+You can update your connector settings by clicking the **Configurations** tab on the [Grafana for Seer settings page](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/grafana/?tab=configurations), then clicking **Configure** for the connector.
+
+Update **Grafana URL** or **Service account token**, then click **Save and test**. Leave the token field blank to keep the current token. If you change stacks, enter a service account token created in the new stack.
+
+Sentry validates the connection before saving changes. If validation fails, the previous configuration remains in place. To test the existing connection, leave the settings unchanged and click **Save and test**.
+
+To rotate the token, generate a new token for the service account in Grafana, enter it in Sentry, and click **Save and test**. After the new token passes validation, delete the old token in Grafana. Sentry does not automatically refresh tokens, so replace an expiring token before its expiration date to keep the connection working.
+
+## Troubleshooting
+
+If the connection needs attention:
+
+- **Invalid Grafana URL:** Use your Grafana Cloud stack's base URL, such as `https://your-stack.grafana.net`, without a port number or embedded credentials.
+- **Could not reach Grafana:** Check that the stack URL is correct and that the stack is running and reachable.
+- **Grafana rejected the token:** Confirm that the token belongs to a service account in the stack you entered, that the service account is enabled, and that the token has not expired or been deleted. Paste only the token value. A Cloud Access Policy token will not work.
+- **The service account can't read any data sources:** Give the service account the **Viewer** or **Data sources Reader** role, and confirm the stack has at least one data source it can read.
+- **Setup succeeds, but Seer cannot query a data source:** The connection check lists data sources; it does not test queries against each one. Check the service account's **Query** permission and the affected data source's configuration in Grafana.
+
+After correcting the setup, retry **Continue** during installation or **Save and test** in the integration settings.

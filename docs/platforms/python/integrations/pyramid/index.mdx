@@ -58,9 +58,9 @@ When you point your browser to [http://localhost:6543/](http://localhost:6543/) 
 
 - The SDK will report all exceptions leading to an Internal Server Error. These two kinds of exceptions are:
   - exceptions that are not handled by any exception view
-  - exceptions whose exception view returns a status code of 500 (Pyramid version 1.9+ only)
+  - exceptions whose exception view returns a status code of 500
 
-- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Personally identifiable information (such as user IDs, usernames, cookies, and IP addresses) is also attached, with sensitive values like authorization headers scrubbed. Use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to configure which categories to collect. In SDK versions prior to `3.0`, Sentry excludes this information unless you use `data_collection` or set `send_default_pii` to `True`.
 
 - Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
@@ -70,7 +70,11 @@ When you point your browser to [http://localhost:6543/](http://localhost:6543/) 
 
 ## Options
 
-<Include name="python-stream-mode-integration-option-callout.mdx" />
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, `PyramidIntegration` doesn't accept any options, and service spans are always named after the route pattern, for example `/myurl/{id}`.
+
+</Alert>
 
 By adding `PyramidIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `PyramidIntegration` to change its behavior:
 
@@ -105,7 +109,11 @@ You can pass the following keyword arguments to `PyramidIntegration()`:
 
 ## Supported Versions
 
-- Pyramid: 1.6+
-- Python: 3.6+
+- Pyramid:
+  - 1.6+ (SDK &lt;3.0)
+  - 2.0+ (SDK 3.0+)
+- Python:
+  - 3.6+ (SDK &lt;3.0)
+  - 3.7+ (SDK 3.0+)
 
 <Include name="python-use-older-sdk-for-legacy-support.mdx" />
