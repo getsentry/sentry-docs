@@ -455,13 +455,13 @@ fun AppNavigation() {
 
 `BackStackEntryMapper` maps each back stack entry to a screen name and optional arguments. Choose a mapper:
 
-| Mapper                                         | What Sentry Records                                                                                                                                           |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mapper                                         | What Sentry Records                                                                                                                                                                             |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BackStackEntryMapper.SerialName`              | The entry's [serial name](https://kotlinlang.org/api/kotlinx.serialization/kotlinx-serialization-core/kotlinx.serialization.descriptors/-serial-descriptor/serial-name.html), without arguments |
-| `BackStackEntryMapper.SerialNameAndProperties` | The entry's serial name and serialized properties as arguments                                                                                                |
-| A custom `BackStackEntryMapper`                | The name and arguments you specify (see [Verify](#verify-2) for an example)                                                                                   |
+| `BackStackEntryMapper.SerialNameAndProperties` | The entry's serial name and serialized properties as arguments                                                                                                                                  |
+| A custom `BackStackEntryMapper`                | The name and arguments you specify (see [Choosing Which Arguments to Send](#choosing-which-arguments-to-send))                                                                                |
 
-The built-in mappers require `@Serializable`, non-generic entry classes. Names come from `@SerialName`, or the fully qualified class name if no serial name is specified. Entries that can't be mapped appear as `/unknown`.
+The built-in mappers require non-generic entry classes annotated directly with `@Serializable`. Custom `@MetaSerializable` annotations are not supported. Names come from `@SerialName`, or the fully qualified class name if no serial name is specified. Entries that can't be mapped appear as `/unknown`.
 
 For custom mappers, keep names stable and arguments lightweight. Avoid `::class.simpleName`, which R8 obfuscates. A custom mapper can delegate entries that don't need special handling to `BackStackEntryMapper.SerialName.map(entry)` or `BackStackEntryMapper.SerialNameAndProperties.map(entry)`.
 
@@ -604,7 +604,7 @@ Tap **Open product detail**, then **Send test message**. In Sentry, open the eve
 
 If you use kotlinx.serialization with your navigation back stack, consider giving `@Serializable` entry types explicit `@SerialName` annotations for stable, readable destination names. Use a custom mapper to select arguments when entries are large, deeply nested, or contain sensitive information.
 
-#### Choosing Which Properties to Send
+#### Choosing Which Arguments to Send
 
 `BackStackEntryMapper.SerialNameAndProperties` uses kotlinx.serialization to convert the properties of each of your back stack entries into Sentry arguments. Values whose property names contain a term from [Sentry's sensitive denylist](https://develop.sentry.dev/sdk/foundations/client/data-collection/#sensitive-denylist) are replaced with `"[Filtered]"`. Matching is case-insensitive and can also filter harmless names, such as `keyword`, which contains `key`.
 
@@ -663,13 +663,43 @@ val mapper = BackStackEntryMapper<NavKey> { entry ->
 
 Use `BackStackEntryMapper.SerialName.map(entry)` as the fallback to record other entries without their properties.
 
+Alternatively, wrap the built-in mapper and remove properties from the arguments it returns. Arguments use each property's `@SerialName`, or the property name if it has no annotation. For example, to remove `userEmail`:
+
+```kotlin
+val mapper = BackStackEntryMapper<NavKey> { entry ->
+  BackStackEntryMapper.SerialNameAndProperties.map(entry)?.let { mapped ->
+    SentryBackStackEntry(
+      name = mapped.name,
+      arguments = mapped.arguments?.filterKeys { it != "userEmail" },
+    )
+  }
+}
+```
+
+<Alert>
+
+Choosing the properties to send is safer than removing unwanted properties. If you add a property to an entry class later, this filtering approach sends it unless you also remove it.
+
+</Alert>
+
+Pass your custom mapper to `SentryNavEffect`:
+
+```kotlin
+SentryNavEffect(
+  backStack = backStack,
+  backStackEntryMapper = mapper,
+)
+```
+
 #### Troubleshooting kotlinx.serialization Mappers
 
 The built-in mappers record entries as `/unknown` when they can't determine a name. Enable the SDK's [`debug`](/platforms/android/configuration/options/#debug) option to see the reason. The first entry of each class that can't be named logs a warning.
 
 **The entry class isn't `@Serializable` or is generic**
 
-Annotate the class with `@Serializable`, or name it with a custom `BackStackEntryMapper`. Generic classes, such as `SettingsScreen<T>`, require a custom mapper because their serializers need type arguments that can't be recovered at runtime.
+Annotate the class itself with `@Serializable`, or name it with a custom `BackStackEntryMapper`. The built-in mappers only check for `@Serializable` on the entry class. They don't name classes made serializable through a custom annotation marked [`@MetaSerializable`](https://kotlinlang.org/api/kotlinx.serialization/kotlinx-serialization-core/kotlinx.serialization/-meta-serializable/). For those classes, use a custom mapper that takes the name from the serializer, such as `MyRoute.serializer().descriptor.serialName`.
+
+Generic classes, such as `SettingsScreen<T>`, require a custom mapper because their serializers need type arguments that can't be recovered at runtime.
 
 **The entry's serializer throws**
 
