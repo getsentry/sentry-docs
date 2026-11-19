@@ -1,0 +1,214 @@
+---
+title: Instrument Custom Job Backends
+sidebar_order: 3500
+description: "Learn how to report errors and trace jobs from a custom background job backend with the Ruby SDK's job extensions."
+---
+
+<AvailableSince version="7.3.0" />
+
+Sentry's Sidekiq, Resque, Delayed Job, and Active Job integrations are built on job extensions. If you maintain a background job backend that Sentry doesn't support, write a job extension to get the same telemetry from your jobs:
+
+- A `queue.publish` span when a job is enqueued
+- A `queue.process` transaction for each run that continues the trace the job was enqueued in
+- Job context and tags on the scope, and `messaging.*` data for the [Queues](/product/dashboards/sentry-dashboards/backend/queues/) dashboard
+- Error events for failed jobs, by default captured only when your backend won't retry them
+
+To instrument individual queue operations without writing an extension, see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/queues-module/">Instrument Queues</PlatformLink>.
+
+## Define Your Extension
+
+Subclass `Sentry::JobExtensions::Extension` to describe your backend's jobs, trace propagation, and retry policy. This example uses Hash jobs; adapt the hooks to your backend's job format.
+
+```ruby {filename:lib/my_queue/sentry.rb}
+require "json"
+require "sentry-ruby"
+require "sentry/integrable"
+
+module MyQueue
+  module Sentry
+    extend ::Sentry::Integrable
+    register_integration name: "my_queue", version: MyQueue::VERSION
+
+    class JobExtension < ::Sentry::JobExtensions::Extension
+      def initialize
+        super(name: :my_queue, integration: MyQueue::Sentry, origin: "auto.queue.my_queue")
+      end
+
+      def scope_data(job:, **)
+        {
+          contexts: { my_queue: job.slice("class", "jid", "queue", "attempts") },
+          tags: { "my_queue.queue" => job["queue"] }
+        }
+      end
+
+      def transaction_name(job:, **)
+        "MyQueue/#{job["class"]}"
+      end
+
+      def publish_description(job:, **)
+        job["class"]
+      end
+
+      def extract_trace_headers(job:, **)
+        job["sentry_trace_headers"] || {}
+      end
+
+      def inject_trace_headers(job:, payload:, headers:, **)
+        payload.merge("sentry_trace_headers" => headers)
+      end
+
+      def messaging_data(job:, **)
+        data = {
+          system: "my_queue",
+          message_id: job["jid"],
+          destination: job["queue"],
+          retry_count: job["attempts"]
+        }
+        if job["enqueued_at"]
+          data[:receive_latency] = ((Time.now.to_f - job["enqueued_at"]) * 1000).round
+        end
+        data[:body_size] = JSON.generate(job).bytesize if ::Sentry.get_current_scope.get_span&.sampled
+        data
+      end
+
+      def will_retry?(job:, **)
+        job["attempts"] < job["max_attempts"]
+      end
+    end
+
+    EXTENSION = JobExtension.new
+  end
+end
+```
+
+## Connect Your Backend
+
+Use the extension in your enqueue code to trace publishing and pass trace headers to the worker. Replace `push(job)` with your backend's enqueue operation.
+
+```ruby {filename:lib/my_queue/client.rb}
+module MyQueue
+  class Client
+    def enqueue(job)
+      return push(job) unless ::Sentry.initialized?
+
+      extension = MyQueue::Sentry::EXTENSION
+      headers = ::Sentry.get_trace_propagation_headers
+      if headers
+        job = extension.safely("inject trace headers", fallback: job) do
+          extension.inject_trace_headers(job: job, payload: job, headers: headers)
+        end
+      end
+
+      extension.instrument_enqueue(job: job) { push(job) }
+    end
+  end
+end
+```
+
+Use the extension in your worker to trace execution and report failures. Replace `perform(job)` with your backend's execution operation.
+
+```ruby {filename:lib/my_queue/worker.rb}
+module MyQueue
+  class Worker
+    def run(job)
+      return perform(job) unless ::Sentry.initialized?
+
+      extension = MyQueue::Sentry::EXTENSION
+      ::Sentry.clone_hub_to_current_thread
+
+      ::Sentry.with_scope do |scope|
+        transaction = extension.start_job(scope: scope, job: job)
+
+        begin
+          result = perform(job)
+          extension.finish_job(transaction: transaction, status: 200)
+          result
+        rescue => error
+          extension.finish_job(transaction: transaction, status: 500)
+
+          report = extension.safely("decide whether to report the job exception", fallback: true) do
+            extension.report_exception?(job: job, exception: error)
+          end
+          extension.capture_exception(job: job, exception: error) if report
+
+          raise
+        end
+      end
+    end
+  end
+end
+```
+
+## Active Job Adapters
+
+Choose whether Active Job or your backend handles telemetry for jobs run through your adapter.
+
+### Let Active Job Handle Telemetry
+
+By default, `sentry-rails` handles instrumentation, tracing, and error reporting for custom adapters. To add your backend's metadata, subclass `Sentry::Rails::ActiveJobExtension` and register it under your adapter's name:
+
+```ruby {filename:lib/my_queue/sentry/active_job_extension.rb}
+require "sentry-rails"
+
+module MyQueue
+  module Sentry
+    class ActiveJobExtension < ::Sentry::Rails::ActiveJobExtension
+      def initialize(**options)
+        super(name: :my_queue_active_job, integration: MyQueue::Sentry, origin: "auto.queue.my_queue", **options)
+      end
+
+      def scope_data(job:, **)
+        { tags: { "my_queue.queue" => job.queue_name } }
+      end
+
+      def messaging_data(job:, **)
+        super.merge(system: "my_queue")
+      end
+
+      def publish_messaging_data(job:, **)
+        super.merge(system: "my_queue")
+      end
+
+      def transaction_name(job:, **)
+        "MyQueue/#{super}"
+      end
+    end
+
+    ::Sentry::Rails.register_active_job_extension(:my_queue, ActiveJobExtension.new)
+  end
+end
+```
+
+### Let Your Backend Handle Telemetry
+
+To handle telemetry in your backend by default, register its adapter in your gem's Railtie. Use a configuration callback and cover applications that have already initialized Sentry:
+
+```ruby {filename:lib/my_queue/sentry/railtie.rb}
+module MyQueue
+  module Sentry
+    class Railtie < ::Rails::Railtie
+      ADAPTER = "ActiveJob::QueueAdapters::MyQueueAdapter"
+
+      initializer "my_queue.sentry.skippable_job_adapter", before: :load_environment_config do
+        next unless defined?(::Sentry::Rails)
+
+        ::Sentry::Configuration.after(:initialize) do
+          rails.skippable_job_adapters << ADAPTER
+        end
+
+        if ::Sentry.initialized?
+          ::Sentry.configuration.rails.skippable_job_adapters << ADAPTER
+        end
+      end
+    end
+  end
+end
+```
+
+Load the Railtie from your gem's entry point when Rails is present:
+
+```ruby {filename:lib/my_queue/sentry.rb}
+require "my_queue/sentry/railtie" if defined?(::Rails::Railtie)
+```
+
+Active Job then skips its instrumentation for your adapter, including any registered Active Job extension. Your backend handles telemetry through its own enqueue and worker instrumentation shown above.

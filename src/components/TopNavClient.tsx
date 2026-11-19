@@ -318,7 +318,6 @@ export default function TopNavClient() {
                         setConceptsDropdownOpen(v => !v);
                         setMoreDropdownOpen(false);
                       }}
-                      aria-haspopup="true"
                       aria-expanded={conceptsDropdownOpen}
                     >
                       {section.label}
@@ -403,7 +402,6 @@ export default function TopNavClient() {
                         setMoreDropdownOpen(v => !v);
                         setConceptsDropdownOpen(false);
                       }}
-                      aria-haspopup="true"
                       aria-expanded={moreDropdownOpen}
                     >
                       {section.label}
@@ -462,6 +460,9 @@ export default function TopNavClient() {
                   <a
                     href={sdkLinkHref}
                     onClick={handleSdkClick}
+                    aria-current={
+                      pathname?.startsWith('/platforms/') ? 'true' : undefined
+                    }
                     className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal border-b-2 ${
                       pathname?.startsWith('/platforms/')
                         ? 'border-[var(--accent-purple)]'
@@ -473,6 +474,7 @@ export default function TopNavClient() {
                 ) : (
                   <Link
                     href={section.href}
+                    aria-current={pathname?.startsWith(section.href) ? 'true' : undefined}
                     className={`text-[var(--gray-12)] transition-all duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal border-b-2 ${
                       pathname?.startsWith(section.href)
                         ? 'border-[var(--accent-purple)]'

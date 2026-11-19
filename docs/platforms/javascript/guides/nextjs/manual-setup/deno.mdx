@@ -1,0 +1,89 @@
+---
+title: Next.js on Deno
+sidebar_title: Deno
+sidebar_order: 3
+description: "Learn how to set up Sentry in your Next.js application that you build and run with Deno and capture your first errors."
+runtime: deno
+---
+
+This guide sets up Sentry in a Next.js app that you build and run with Deno. At the end, your app sends errors, traces, logs, and session replays to Sentry.
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A Next.js app, version `16.0.0` or above, with its dependencies in a `node_modules` folder
+- [Deno](https://deno.com/) version `2.9.0` or above
+
+<StepConnector selector="h2" showNumbers={true}>
+
+<Include name="nextjs/wizard-install" />
+
+### Add the Sentry Deno SDK
+
+<AvailableSince version="11.13.0" />
+
+On Deno, the Next.js SDK uses the integrations of the Sentry Deno SDK, for example to create spans for outgoing `fetch` requests. Add it to your app:
+
+```bash {tabTitle:npm}
+npm install @sentry/deno --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/deno
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/deno
+```
+
+Without `@sentry/deno`, your app fails to start on Deno.
+
+<Include name="nextjs/wizard-configure" />
+
+On Deno, `sentry.server.config.ts` runs in the Deno runtime, and `Sentry.init()` from `@sentry/nextjs` sets up Sentry for Deno. You don't need `Sentry.init()` from `@sentry/deno`.
+
+### Build and Start Your App With Deno
+
+Run `next build` and `next start` with Deno, and start your app with the `--conditions=deno` flag. Update the scripts in your `package.json`:
+
+```json {filename:package.json}
+"scripts": {
+  "build": "deno run -A npm:next build",
+  "start": "deno run -A --conditions=deno npm:next start"
+}
+```
+
+Next.js loads the Sentry SDK with `require`, and Deno uses the Deno version of a package for `require` only with `--conditions=deno`. Without this flag, Sentry uses its setup for Node.js, and outgoing `fetch` requests get no spans. If you build your app with Node.js and start it with Deno, Sentry also uses its setup for Node.js.
+
+`-A` gives Next.js all permissions. It needs to read and write files, open the server port, read environment variables, and start worker threads, and Sentry needs the network to send events.
+
+If the build stops with `ReferenceError: require is not defined` in `next.config.js`, Deno loaded your configuration as an ES module. Rename the file to `next.config.ts`, and use `import` and `export default` in it.
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+<Include name="nextjs/logs-metrics" />
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+The wizard created an example page that sends a test error from both your frontend and your backend:
+
+1. Build and start your app with Deno:
+
+   ```bash
+   deno task build && deno task start
+   ```
+
+2. Open [localhost:3000/sentry-example-page](http://localhost:3000/sentry-example-page) in your browser.
+3. Click **Throw Sample Error**.
+
+<Include name="nextjs/verify-test-error" />
+
+<Include name="nextjs/next-steps" />
+
+</StepConnector>

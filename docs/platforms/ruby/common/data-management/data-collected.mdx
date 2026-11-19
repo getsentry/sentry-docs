@@ -56,6 +56,16 @@ The Rails integration stores trace propagation headers in serialized Active Job 
 
 When `config.data_collection.user_info` is enabled, the payload also includes the current user's `id`, `email`, and `username`. Failed-job events include serialized job arguments and, on Rails 7 or later, context set with `Rails.error.set_context` when `config.data_collection.queues` is enabled.
 
+## Background Job Arguments
+
+Since version 7.3.0, the Sidekiq, Resque, and Delayed Job integrations only send job arguments when `config.data_collection.queues` is enabled. This also applies to Active Job jobs that these integrations report. With the option disabled, events still include the rest of the job context, such as the job class, queue, and job ID.
+
+| Integration          | Data sent only when `queues` is enabled                         |
+| -------------------- | --------------------------------------------------------------- |
+| `sentry-sidekiq`     | The job's `args` and `jobstr`, and Active Job `arguments`       |
+| `sentry-resque`      | The job's `arguments` in the `Resque` and `Active-Job` contexts |
+| `sentry-delayed_job` | The job's `handler`, and Active Job `arguments`                 |
+
 ## Source Context
 
 When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
@@ -80,3 +90,8 @@ config.data_collection.graphql.variables = false
 ## SQL Queries
 
 SQL queries are sent to Sentry in a parameterized form. To control whether associated query data, such as bound parameter values and Redis command arguments, is collected, set `config.data_collection.database_query_data = false`.
+
+Since version 7.3.0, the SDK keeps credentials in Redis commands out of span descriptions and breadcrumbs, regardless of the `database_query_data` setting:
+
+- For `AUTH` and `HELLO`, the SDK records only the command name and none of its arguments.
+- For `ACL`, `CONFIG`, `MIGRATE`, and `SENTINEL`, the SDK records the command name and its first argument, such as the `SETUSER` subcommand of `ACL`, and drops all other arguments.

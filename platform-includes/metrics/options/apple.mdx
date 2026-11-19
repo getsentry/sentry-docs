@@ -1,25 +1,18 @@
 The Sentry Cocoa SDK provides several options to configure how metrics are captured and sent to Sentry.
 
-### Enabling/Disabling Metrics
+### Enabling and Disabling Metrics
 
-Metrics are enabled by default, but are not collected automatically. You must manually call the `SentrySDK.metrics` API to record metrics. If you need to disable metrics entirely, set `options.enableMetrics` to `false` when initializing the SDK:
+Metrics are enabled by default, but are not collected automatically. Call the `SentrySDK.metrics` API to record metrics.
+
+Starting with SDK 9.27.0, manual metric calls aren't gated by `enableMetrics`; the option is deprecated. To stop sending metrics, remove the recording calls or drop them with `beforeSendMetric`:
 
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.enableMetrics = false // Metrics are enabled by default
+    options.beforeSendMetric = { _ in nil }
 }
-```
-
-```objc {tabTitle:Objective-C}
-@import Sentry;
-
-[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
-    options.dsn = @"___PUBLIC_DSN___";
-    options.enableMetrics = NO; // Metrics are enabled by default
-}];
 ```
 
 ```objc {tabTitle:Objective-C (SentryObjC)}
@@ -27,9 +20,13 @@ SentrySDK.start { options in
 
 [SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.enableMetrics = NO; // Metrics are enabled by default
+    options.beforeSendMetric = ^SentryObjCMetric *(SentryObjCMetric *metric) {
+        return nil;
+    };
 }];
 ```
+
+For SDK 9.12.0–9.26.x, `options.enableMetrics = false` disables metrics. Before 9.12.0, use `options.experimental.enableMetrics = false`.
 
 ### Filtering and Modifying Metrics
 

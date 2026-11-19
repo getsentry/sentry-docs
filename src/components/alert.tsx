@@ -27,7 +27,7 @@ export function Alert({title, children, level = 'info'}: AlertProps) {
   }
 
   return (
-    <Callout role="alert" level={level} Icon={Icon} title={title}>
+    <Callout role="note" level={level} Icon={Icon} title={title}>
       {children}
     </Callout>
   );

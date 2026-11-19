@@ -44,9 +44,12 @@ export interface FrontMatter {
   keywords?: string[];
 
   /**
-   * Set this to true to show a "new" badge next to the title in the sidebar
+   * Show a "new" badge next to the title until this date (YYYY-MM-DD, UTC).
+   * The badge is static and recomputed on each build: builds before this date
+   * show it, builds on or after it don't. It disappears at the first deploy on
+   * or after this date.
    */
-  new?: boolean;
+  new_until?: string | Date;
   /**
    * Set this to true to show an "EA" (early access) badge next to the title in the sidebar
    */
@@ -96,6 +99,13 @@ export interface FrontMatter {
    * The previous page in the bottom pagination navigation.
    */
   previousPage?: PaginationNavNode;
+
+  /**
+   * The runtime of a quick start or manual setup, for example `node` or `cloudflare`. The page
+   * then shows a runtime selector that links the quick starts or manual setups of the same
+   * guide for the other runtimes.
+   */
+  runtime?: string;
 
   /**
    * Set this to true to show a separator/divider below this item in the sidebar
