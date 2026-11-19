@@ -34,6 +34,12 @@ const guidePages = (guide: string) => {
   return {path, frontmatter: frontmatter('index.mdx'), children};
 };
 
+/** The quick start page of a runtime. Browser JavaScript is the platform's own page. */
+const quickStartFile = (runtime: string) =>
+  runtime === 'browser'
+    ? 'docs/platforms/javascript/common/index.mdx'
+    : join(GUIDES_DIR, runtime, 'index.mdx');
+
 const PLATFORM_CONTENT_RE = /<PlatformContent\s+includePath=["']([^"']+)["']([^>]*)\/>/g;
 
 /**
@@ -56,7 +62,7 @@ const switchableIncludePaths = (runtime: string) => {
       }
     }
   };
-  scan(readFileSync(join(GUIDES_DIR, runtime, 'index.mdx'), 'utf8'), true);
+  scan(readFileSync(quickStartFile(runtime), 'utf8'), true);
   return [...found].sort();
 };
 

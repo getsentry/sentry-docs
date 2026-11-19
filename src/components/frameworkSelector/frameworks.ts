@@ -49,8 +49,33 @@ export type Runtime = {
   title: string;
 };
 
-/** Runtime guides (keyed by guide slug) that have a framework selector on their getting started page. */
+/**
+ * Runtime guides (keyed by guide slug) that have a framework selector on their getting started
+ * page. `browser` is the Browser JavaScript page at `/platforms/javascript/`.
+ */
 export const RUNTIMES: Record<string, Runtime> = {
+  browser: {
+    title: 'Browser JavaScript',
+    frameworks: [],
+    frameworkGuides: [
+      guide('Angular', 'angular'),
+      guide('Astro', 'astro'),
+      guide('Ember', 'ember'),
+      guide('Gatsby', 'gatsby'),
+      guide('Next.js', 'nextjs'),
+      guide('Nuxt', 'nuxt'),
+      guide('React', 'react'),
+      guide('React Router', 'react-router'),
+      guide('Remix', 'remix'),
+      guide('Solid', 'solid'),
+      guide('SolidStart', 'solidstart'),
+      guide('Svelte', 'svelte'),
+      guide('SvelteKit', 'sveltekit'),
+      guide('TanStack Start', 'tanstackstart-react'),
+      guide('Vue', 'vue'),
+    ],
+    includePaths: [],
+  },
   node: {
     title: 'Node.js',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
@@ -86,34 +111,44 @@ export const RUNTIMES: Record<string, Runtime> = {
   bun: {
     title: 'Bun',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Elysia', 'elysia'), guide('Hono', 'hono')],
-    agentGuides: [guide('Pi Durable', 'pi-durable/bun')],
+    frameworkGuides: [
+      guide('Elysia', 'elysia'),
+      guide('Hono', 'hono'),
+      guide('Next.js', 'nextjs/manual-setup/bun'),
+      guide('React Router', 'react-router/manual-setup/bun'),
+    ],
+    agentGuides: [guide('Pi Durable', 'pi-durable/manual-setup/bun')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   deno: {
     title: 'Deno',
     frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
-    frameworkGuides: [guide('Hono', 'hono')],
-    agentGuides: [guide('Pi Durable', 'pi-durable/deno')],
+    frameworkGuides: [
+      guide('Hono', 'hono'),
+      guide('Next.js', 'nextjs/manual-setup/deno'),
+      guide('React Router', 'react-router/manual-setup/deno'),
+    ],
+    agentGuides: [guide('Pi Durable', 'pi-durable/manual-setup/deno')],
     includePaths: ['getting-started-verify-issues-tracing'],
   },
   cloudflare: {
     title: 'Cloudflare Workers',
     frameworks: [],
     frameworkGuides: [
-      guide('Astro', 'astro/cloudflare'),
-      guide('Hono', 'hono/cloudflare'),
+      guide('Astro', 'astro/manual-setup/cloudflare'),
+      guide('Hono', 'hono/manual-setup/cloudflare'),
       guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
-      guide('Next.js', 'nextjs/cloudflare'),
-      guide('Nuxt', 'nuxt/cloudflare'),
-      guide('Remix', 'remix/cloudflare'),
-      guide('SvelteKit', 'sveltekit/cloudflare'),
-      guide('TanStack Start', 'tanstackstart-react/cloudflare'),
+      guide('Next.js', 'nextjs/manual-setup/cloudflare'),
+      guide('Nuxt', 'nuxt/manual-setup/cloudflare'),
+      guide('React Router', 'react-router/manual-setup/cloudflare'),
+      guide('Remix', 'remix/manual-setup/cloudflare'),
+      guide('SvelteKit', 'sveltekit/manual-setup/cloudflare'),
+      guide('TanStack Start', 'tanstackstart-react/manual-setup/cloudflare'),
     ],
     agentGuides: [
-      guide('Flue', 'flue/cloudflare'),
-      guide('Mastra', 'mastra/cloudflare'),
-      guide('Pi Durable', 'pi-durable/cloudflare'),
+      guide('Flue', 'flue/manual-setup/cloudflare'),
+      guide('Mastra', 'mastra/manual-setup/cloudflare'),
+      guide('Pi Durable', 'pi-durable/manual-setup/cloudflare'),
     ],
     includePaths: [],
   },

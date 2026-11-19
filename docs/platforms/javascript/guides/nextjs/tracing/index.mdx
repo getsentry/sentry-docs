@@ -62,8 +62,40 @@ The SDK instruments different operations depending on where your code runs:
 | Runtime | Auto-Instrumented |
 |---------|-------------------|
 | **Client** | Page loads, navigations, fetch requests, Web Vitals |
-| **Server** | API routes, Server Components, `getServerSideProps` |
+| **Server** | API routes, Server Components, `getServerSideProps`, `use cache` functions and components |
 | **Edge** | Middleware, edge API routes |
+
+### `use cache` Spans
+
+<AvailableSince version="11.11.0" />
+
+This requires Next.js 16 with `'use cache'` enabled through `cacheComponents`. It works with both webpack and Turbopack.
+
+The server SDK records a `cache.get` span every time a `'use cache'` entry is read, and a `cache.put` span when an entry is filled. This covers cached functions, components, and pages.
+
+These spans include the following attributes:
+
+| Attribute | Description |
+|-----------|-------------|
+| `cache.key` | An array with the entry's digest |
+| `cache.hit` | `true` or `false`, set on `cache.get` |
+| `cache.item_age` | The entry's age in seconds, set on a hit |
+| `cache.ttl` | The entry's expiry in seconds |
+| `cache.tags` | The entry's cache tags |
+| `code.file.path` | The file that defines the cached function, set on `cache.put` |
+
+A `cache.get` span that hits links to the `cache.put` span of the request that filled the entry, with `sentry.link.type: cache_origin`. This also works when another instance filled the entry. The link is only added if that request was sampled. This lets you open the trace that produced the cached value.
+
+### Pageloads of Cached Pages
+
+When Next.js serves a document from its cache, such as an ISR page or a Cache Components shell, the pageload span gets a `page.server_rendering.type` attribute:
+
+- `static`: The whole page came from the cache. The pageload starts its own trace. If the request that rendered the page was sampled, the pageload links to it with `sentry.link.type: cache_origin`.
+- `partially_static`: Only the shell came from the cache, and the rest was rendered for this request. The pageload continues that request's trace and links to the shell's render the same way.
+
+If the attribute isn't set, the page was rendered for this request.
+
+The attribute is set when the span starts, so you can search for it like any other span attribute.
 
 ```tsx
 // All of these create spans automatically

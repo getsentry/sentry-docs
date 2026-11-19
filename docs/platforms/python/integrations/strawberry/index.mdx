@@ -45,7 +45,7 @@ sentry_sdk.init(
     },
     # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
+    # of service spans for tracing.
     traces_sample_rate=1.0,
     # ___PRODUCT_OPTION_END___ performance
     # ___PRODUCT_OPTION_START___ profiling
@@ -106,12 +106,12 @@ Type `query HelloQuery { hello }` into the query input field then press the
 exception due to the `ZeroDivisionError` we've snuck into the `resolve_hello`
 resolver.
 
-This will create a `GraphQLError` in the Issues section as well as a transaction
-in the Performance section of [sentry.io](https://sentry.io). As long as the GraphQL
-query has a name (like `HelloQuery` in our example), the transaction will be named
+This will create a `GraphQLError` in the Issues section as well as a service span
+in the Traces section of [sentry.io](https://sentry.io). As long as the GraphQL
+query has a name (like `HelloQuery` in our example), the service span will be named
 after it.
 
-It might take a couple of moments for the error and transaction to appear in [sentry.io](https://sentry.io).
+It might take a couple of moments for the error and service span to appear in [sentry.io](https://sentry.io).
 
 ## Options
 
@@ -139,10 +139,9 @@ sentry_sdk.init(
 ### Capturing Request and Response Bodies
 
 The Strawberry integration can capture request and response bodies
-for each GraphQL error that happens. Since these may contain sensitive data,
-this isn't the default behavior.
+for each GraphQL error that happens. This is enabled by default.
 
-To enable capturing request and response bodies, use the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key controls the query document and its variables in the request
+To control capturing request and response bodies, use the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key controls the query document and its variables in the request
 body, and the `outgoing_response` entry in `http_bodies` controls the response body:
 
 ```python
@@ -155,27 +154,9 @@ sentry_sdk.init(
 )
 ```
 
-These are also the defaults when you pass a `data_collection` dictionary, so you only
-need to set the keys you want to change. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
+These are the defaults, so you only need to set the keys you want to change. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
 
-Alternatively, you can initialize the SDK with the <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink> option set to `True`, though `send_default_pii` will be removed in version 3.0 of the SDK:
-
-```python
-sentry_sdk.init(
-    # ...
-    send_default_pii=True,
-)
-```
-
-<Alert level="warning" title="Note">
-
-Since `send_default_pii` is a global SDK option, setting it to `True` will affect all
-integrations, not just Strawberry. Please make sure to
-[remove sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option. With `data_collection`, you can enable
-only the categories you need instead.
-
-</Alert>
+In SDK versions prior to `3.0`, this data isn't attached by default. To attach it, pass a `data_collection` dictionary as shown above, or set the `send_default_pii` option to `True`. Since `send_default_pii` is a global SDK option, setting it to `True` affects all integrations, so make sure to [scrub sensitive data](/platforms/python/data-management/sensitive-data/) from events first.
 
 ## Notes
 

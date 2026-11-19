@@ -189,7 +189,10 @@ export function Header({
         className={`header-content flex items-center w-full ${isHomePage ? 'header-content-home' : ''}`}
       >
         {/* Left: logo + nav links, capped so right block can anchor to viewport edge */}
-        <nav className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4">
+        <nav
+          aria-label="Main"
+          className="nav-inner flex items-center gap-4 min-h-[64px] min-w-0 flex-1 px-4 md:pl-3 md:pr-4"
+        >
           {/* Hamburger menu - different behavior on home page vs other pages */}
           {isHomePage ? (
             <button
@@ -216,12 +219,13 @@ export function Header({
               )}
             </button>
           ) : (
-            <button className="md:hidden mr-3 flex items-center">
-              <label
-                htmlFor={sidebarToggleId}
-                aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-                className="inline-flex items-center cursor-pointer"
-              >
+            <button
+              type="button"
+              className="md:hidden mr-3 flex items-center"
+              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              onClick={() => document.getElementById(sidebarToggleId)?.click()}
+            >
+              <span className="inline-flex items-center cursor-pointer">
                 {sidebarOpen ? (
                   <Cross1Icon
                     className="inline dark:text-[var(--foreground)] text-[var(--gray-10)]"
@@ -236,7 +240,7 @@ export function Header({
                     height="22"
                   />
                 )}
-              </label>
+              </span>
             </button>
           )}
           <Link
@@ -331,7 +335,7 @@ export function Header({
           className="md:hidden fixed inset-0 bg-[var(--gray-1)] z-40 overflow-y-auto overscroll-none"
           style={{top: 'var(--header-height)'}}
         >
-          <nav className="px-4 py-4 space-y-1">
+          <nav aria-label="Mobile menu" className="px-4 py-4 space-y-1">
             {mainSections.map(section => (
               <Link
                 key={section.href}

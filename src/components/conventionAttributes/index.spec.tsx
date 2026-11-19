@@ -58,4 +58,22 @@ describe('ConventionAttributes', () => {
       `<code>&quot;${ATTRIBUTE_METADATA['gen_ai.tool.name'].example}&quot;</code>`
     );
   });
+
+  it('renders the example at the given index', () => {
+    const html = renderToStaticMarkup(
+      <ConventionAttributes attributes={[{key: 'gen_ai.input.messages', example: 1}]} />
+    );
+    const examples = ATTRIBUTE_METADATA['gen_ai.input.messages'].examples!;
+
+    expect(html).toContain(`&#x27;${examples[1]}&#x27;`.replaceAll('"', '&quot;'));
+    expect(html).not.toContain(`&#x27;${examples[0]}&#x27;`.replaceAll('"', '&quot;'));
+  });
+
+  it('throws on an example index that does not exist', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <ConventionAttributes attributes={[{key: 'gen_ai.tool.name', example: 99}]} />
+      )
+    ).toThrow('attribute "gen_ai.tool.name" has no example at index 99');
+  });
 });

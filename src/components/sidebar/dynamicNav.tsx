@@ -3,6 +3,7 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
+import {getRuntimeTitle} from '../runtimeLinks';
 import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import type {ExternalSidebarLink} from './types';
@@ -46,6 +47,8 @@ type Node = {
     href?: string;
     new?: boolean;
     early_access?: boolean;
+    /** The `runtime` frontmatter of the page, for example `node`. */
+    runtime?: string;
     section_end_divider?: boolean;
     sidebar_hidden?: boolean;
     sidebar_order?: number;
@@ -116,6 +119,52 @@ export function getSectionOverviewPath(
   return landingNode?.context.sidebar_hidden ? landingNode.path : null;
 }
 
+/**
+ * Renders the sidebar link of `node` with its subtree. A page that sets `runtime` and has child
+ * pages for other runtimes, for example a manual setup, links to itself as its first child,
+ * titled with its runtime (for example "Node.js"), so each runtime has its own entry. Only that
+ * entry is highlighted on the page.
+ */
+const renderNode = (
+  node: Node,
+  nodeChildren: EntityTree[],
+  exclude: string[],
+  path: string,
+  showDepth: number,
+  depth: number
+): React.ReactNode => {
+  const subtree = renderChildren(nodeChildren, exclude, path, showDepth, depth + 1);
+  const runtime = node.context.runtime;
+  const hasRuntimeLink =
+    !!runtime && nodeChildren.some(child => child.node?.context.runtime);
+  if (hasRuntimeLink) {
+    subtree.unshift(
+      <CollapsibleSidebarLink
+        to={node.path}
+        key={`${node.path}-${runtime}`}
+        title={getRuntimeTitle(runtime)}
+        path={path}
+      />
+    );
+  }
+
+  return (
+    <CollapsibleSidebarLink
+      to={node.context.href ?? node.path}
+      key={node.path}
+      title={node.context.sidebar_title || node.context.title!}
+      collapsed={depth >= showDepth}
+      path={path}
+      highlight={!hasRuntimeLink}
+      beta={node.context.beta}
+      isNew={node.context.new}
+      earlyAccess={node.context.early_access}
+    >
+      {subtree}
+    </CollapsibleSidebarLink>
+  );
+};
+
 export const renderChildren = (
   children: EntityTree[],
   exclude: string[],
@@ -162,20 +211,7 @@ export const renderChildren = (
         return;
       }
 
-      result.push(
-        <CollapsibleSidebarLink
-          to={node.context.href ?? node.path}
-          key={node.path}
-          title={node.context.sidebar_title || node.context.title!}
-          collapsed={depth >= showDepth}
-          path={path}
-          beta={node.context.beta}
-          isNew={node.context.new}
-          earlyAccess={node.context.early_access}
-        >
-          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
-        </CollapsibleSidebarLink>
-      );
+      result.push(renderNode(node, nodeChildren, exclude, path, showDepth, depth));
 
       // Keep backwards compatibility with section_end_divider
       if (node.context.section_end_divider) {
@@ -225,20 +261,7 @@ export const renderChildren = (
           return;
         }
 
-        result.push(
-          <CollapsibleSidebarLink
-            to={node.context.href ?? node.path}
-            key={node.path}
-            title={node.context.sidebar_title || node.context.title!}
-            collapsed={depth >= showDepth}
-            path={path}
-            beta={node.context.beta}
-            isNew={node.context.new}
-            earlyAccess={node.context.early_access}
-          >
-            {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
-          </CollapsibleSidebarLink>
-        );
+        result.push(renderNode(node, nodeChildren, exclude, path, showDepth, depth));
 
         // Keep backwards compatibility with section_end_divider
         if (node.context.section_end_divider) {
@@ -253,20 +276,7 @@ export const renderChildren = (
         return;
       }
 
-      result.push(
-        <CollapsibleSidebarLink
-          to={node.context.href ?? node.path}
-          key={node.path}
-          title={node.context.sidebar_title || node.context.title!}
-          collapsed={depth >= showDepth}
-          path={path}
-          beta={node.context.beta}
-          isNew={node.context.new}
-          earlyAccess={node.context.early_access}
-        >
-          {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
-        </CollapsibleSidebarLink>
-      );
+      result.push(renderNode(node, nodeChildren, exclude, path, showDepth, depth));
     });
   }
 
