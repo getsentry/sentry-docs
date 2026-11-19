@@ -1,4 +1,5 @@
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
+import {isNew} from 'sentry-docs/utils';
 
 import {getQuickStartTitle} from '../runtimeLinks';
 import {DynamicNav, EntityTree, toTree} from './dynamicNav';
@@ -64,7 +65,7 @@ function getPlatformSidebarTree(
         sidebar_title: n.frontmatter.sidebar_title,
         sidebar_hidden: n.frontmatter.sidebar_hidden,
         beta: n.frontmatter.beta,
-        new: n.frontmatter.new,
+        new: isNew(n.frontmatter.new_until),
         early_access: n.frontmatter.early_access,
         section_end_divider: n.frontmatter.section_end_divider,
         sidebar_section: n.frontmatter.sidebar_section,

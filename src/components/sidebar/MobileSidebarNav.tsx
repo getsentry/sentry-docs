@@ -93,7 +93,7 @@ export function MobileSidebarNav() {
       </button>
       {menuOpen && (
         // Main navigation sections - simple links that navigate to index pages
-        <nav className="space-y-1 mt-1">
+        <nav aria-label="Mobile menu" className="space-y-1 mt-1">
           {mainSections.map(section =>
             section.label === 'SDKs' ? (
               <a
