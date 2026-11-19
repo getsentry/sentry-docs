@@ -1235,9 +1235,9 @@ Learn more in the <PlatformLink to="/configuration/metric-kit/">MetricKit</Platf
 
 <SdkOption name="experimental.metrickit.enabledDiagnosticReports" type="array" defaultValue="[]" availableSince="9.32.0">
 
-The MetricKit diagnostic reports the SDK captures as events: `.hang`, `.cpuException`, `.diskWriteException`, `.appLaunch` and `.crash`. A non-empty set enables the MetricKit integration and captures exactly these reports, regardless of `enableMetricKit`. When the set is empty, `enableMetricKit` decides whether the integration is enabled.
+The MetricKit diagnostic reports the SDK captures as events: `.hang`, `.cpuException`, `.diskWriteException`, `.appLaunch`, `.crash` and `.memoryException`. A non-empty set enables the MetricKit integration and captures exactly these reports, regardless of `enableMetricKit`. When the set is empty, `enableMetricKit` decides whether the integration is enabled.
 
-Enabling `.crash` sends the crashes MetricKit reports in addition to the ones the SDK's crash handler reports, so the same crash can show up twice.
+Enabling `.crash` sends the crashes MetricKit reports in addition to the ones the SDK's crash handler reports, so the same crash can show up twice. The same applies to `.memoryException` and the out-of-memory terminations the SDK's watchdog termination tracking reports.
 
 This option is available from Swift and through the SentryObjC SDK as the `SentryObjCMetricKitDiagnosticReport` bitmask.
 
@@ -1249,7 +1249,9 @@ Learn more in the <PlatformLink to="/configuration/metric-kit/#choose-diagnostic
 
 The MetricKit metric reports the SDK sends as Sentry metrics, such as `.cpuCumulativeTime`, `.memoryPeakUsage` or `.exitForegroundWatchdog`. Use `.all` to send every metric report. A non-empty set enables the MetricKit integration, even when no diagnostic reports are enabled.
 
-MetricKit delivers metric payloads about once a day, and each enabled report adds up to one metric per payload, which counts towards your metrics quota. This option is only available from Swift.
+MetricKit delivers metric payloads about once a day. Each enabled report adds up to one metric per payload, except for histogram reports such as `.launchTimeToFirstDraw`, which add up to about 100. Metrics count towards your metrics quota.
+
+This option is available from Swift and, since SDK version 9.33.0, through the SentryObjC SDK as the `SentryObjCMetricKitMetricReport` bitmask.
 
 Learn more in the <PlatformLink to="/configuration/metric-kit/#metric-reports">MetricKit</PlatformLink> documentation.
 
@@ -1259,7 +1261,7 @@ Learn more in the <PlatformLink to="/configuration/metric-kit/#metric-reports">M
 
 How the SDK reports MetricKit hang diagnostics. `.legacy` flattens the call stack tree into the stack traces of the event. `.flamegraphAttachment` attaches the aggregated call trees as a flame graph instead. Configure this option before starting the SDK.
 
-Learn more in the <PlatformLink to="/configuration/metric-kit/#hang-flame-graphs">MetricKit</PlatformLink> documentation.
+Learn more in the <PlatformLink to="/configuration/metric-kit/#enable-flame-graph-attachments">MetricKit</PlatformLink> documentation.
 
 </SdkOption>
 
