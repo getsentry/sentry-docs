@@ -15,6 +15,7 @@ USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem
 SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
 {
     // Enable specific severity levels for UE_LOG forwarding
+    Settings->StructuredLoggingLevels.bOnTraceLog = false;
     Settings->StructuredLoggingLevels.bOnDebugLog = false;
     Settings->StructuredLoggingLevels.bOnInfoLog = true;
     Settings->StructuredLoggingLevels.bOnWarningLog = true;
@@ -24,6 +25,17 @@ SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::Create
     Settings->bSendBreadcrumbsWithStructuredLogging = false; // Send as structured logs instead of breadcrumbs
 }));
 ```
+
+The SDK maps `UE_LOG` verbosity to structured log levels as follows:
+
+| `UE_LOG` verbosity | Setting | Sentry Logs UI Severity |
+| --- | --- | --- |
+| `Fatal` | `bOnFatalLog` | FATAL |
+| `Error` | `bOnErrorLog` | ERROR |
+| `Warning` | `bOnWarningLog` | WARN |
+| `Display`, `Log` | `bOnInfoLog` | INFO |
+| `Verbose` | `bOnDebugLog` | DEBUG |
+| `VeryVerbose` | `bOnTraceLog` | TRACE |
 
 #### Log Category Filtering
 
@@ -63,8 +75,8 @@ class UCustomLogFilter : public USentryBeforeLogHandler
 public:
     virtual USentryLog* HandleBeforeLog_Implementation(USentryLog* LogData) override
     {
-        // Filter out all debug logs
-        if (LogData->GetLevel() == ESentryLevel::Debug)
+        // Filter out all trace and debug logs
+        if (LogData->GetLevel() == ESentryLogLevel::Trace || LogData->GetLevel() == ESentryLogLevel::Debug)
         {
             return nullptr; // Return null to prevent sending
         }
@@ -93,6 +105,7 @@ SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
 void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
 {
     // Configure individual severity levels
+    Settings->StructuredLoggingLevels.bOnTraceLog = false;
     Settings->StructuredLoggingLevels.bOnDebugLog = false;
     Settings->StructuredLoggingLevels.bOnInfoLog = true;
     Settings->StructuredLoggingLevels.bOnWarningLog = true;
@@ -111,9 +124,9 @@ SentrySubsystem->InitializeWithSettings(SettingsDelegate);
 The `HandleBeforeLog_Implementation` method receives a `USentryLog` object, and should return the log event if you want it to be sent to Sentry, or `nullptr` if you want to discard it.
 
 The `USentryLog` object has the following methods:
-- `GetLevel()`: Returns the severity level of the log (`ESentryLevel`)
+- `GetLevel()`: Returns the severity level of the log (`ESentryLogLevel`)
 - `GetBody()`: Returns the formatted log message (`FString`)
-- `SetLevel(ESentryLevel Level)`: Sets the Level of the Log Event
+- `SetLevel(ESentryLogLevel Level)`: Sets the Level of the Log Event
 - `SetBody(FString& Body)`: Sets the Body of the Log Event
 - `SetAttribute(Key, Value)`: Sets a custom attribute on the log
 - `GetAttribute(Key)`: Gets an attribute value
