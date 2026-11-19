@@ -57,8 +57,7 @@ When used together with one of our web framework integrations like
 [FastAPI](/platforms/python/integrations/fastapi/) or
 [Flask](/platforms/python/integrations/flask/), the Graphene
 integration can capture the request body for each GraphQL error that happens.
-Since the requests may contain sensitive data, no request bodies will be attached
-by default.
+This is enabled by default.
 
 To capture request bodies:
 
@@ -77,28 +76,9 @@ sentry_sdk.init(
 )
 ```
 
-Both are enabled by default when you pass a `data_collection` dictionary. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
+Both are enabled by default. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
 
-Alternatively, you can initialize the SDK with the <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink> option set to `True`, though `send_default_pii` will be removed in version 3.0 of the SDK:
-
-```python
-sentry_sdk.init(
-    # same options as above
-    # Add data like request headers and IP for users, if applicable;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
-)
-```
-
-<Alert level="warning" title="Note">
-
-Since `send_default_pii` is a global SDK option, setting it to `True` affects all
-integrations, not just Graphene. Please make sure to take care of
-[scrubbing sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option. With `data_collection`, you can enable
-only the categories you need instead.
-
-</Alert>
+In SDK versions prior to `3.0`, the request body isn't attached by default. To attach it, pass a `data_collection` dictionary as shown above, or set the `send_default_pii` option to `True`. Since `send_default_pii` is a global SDK option, setting it to `True` affects all integrations, so make sure to [scrub sensitive data](/platforms/python/data-management/sensitive-data/) from events first.
 
 ## Supported Versions
 

@@ -43,7 +43,7 @@ sentry_sdk.init(
     },
     # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
+    # of service spans for tracing.
     traces_sample_rate=1.0,
     # ___PRODUCT_OPTION_END___ performance
     # ___PRODUCT_OPTION_START___ profiling
@@ -68,15 +68,15 @@ import socket
 def main():
     sentry_init(...)  # same as above
 
-    # or sentry_sdk.traces.start_span(name="testing_sentry", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         timeout = 10
         socket.getaddrinfo("sentry.io", 443)
         socket.create_connection(("sentry.io", 443), timeout, None)
 main()
 ```
 
-This example will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the socket commands.
+This example will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io), and create spans for the socket commands.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
