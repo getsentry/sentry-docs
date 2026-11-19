@@ -1,0 +1,56 @@
+---
+title: Migration Guide
+description: "Learn how to migrate to version 1.0.0 of the Native SDK, including the new default backend, versioned library names, and removed APIs."
+sidebar_order: 8000
+sidebar_section: configuration
+---
+
+<Alert level="warning" title="Pre-Release">
+
+There is no stable 1.0 release of the Native SDK yet. Until 1.0.0 ships, use the latest [pre-release](https://github.com/getsentry/sentry-native/releases), and [open an issue on GitHub](https://github.com/getsentry/sentry-native/issues) if you run into problems.
+
+The rest of the Native docs still describe 0.x, so where they differ from this guide, follow this guide.
+
+</Alert>
+
+## Migrating to 1.0.0
+
+Version 1.0.0 changes the default crash backend and the names of shared libraries, and removes deprecated APIs.
+
+### Default Backend
+
+On Windows, macOS, and Linux, builds that don't set `SENTRY_BACKEND` now use the [`native` backend](/platforms/native/configuration/backends/native/) instead of `crashpad`. Other targets keep their defaults. When moving to `native`, review the following:
+
+- **Deployment**: Ship the `sentry-crash` executable instead of `crashpad_handler`, and update any build or packaging scripts that copy it. On Windows, also ship `sentry-wer.dll` in the same directory as `sentry-crash.exe`.
+- **Handler path**: If you call `sentry_options_set_handler_path`, point it to `sentry-crash`.
+- **Crash reports**: `native` sends an event with client-side stack traces and attaches a minidump by default. To send only a minidump, as `crashpad` does, use `SENTRY_CRASH_REPORTING_MODE_MINIDUMP`. See [Crash Reporting Modes](/platforms/native/configuration/backends/native/#crash-reporting-modes).
+- **Hooks**: `before_send` and `on_crash` now also run on macOS, where `crashpad` doesn't call them. Instead of an empty event, `on_crash` receives exception metadata, registers, and a basic stack of the crashing thread.
+- **Crashpad options**: `crashpad_wait_for_upload` and `crashpad_limit_stack_capture_to_sp` have no effect. By default, the crashed application waits until the `sentry-crash` daemon finishes uploading or [`shutdown_timeout`](/platforms/native/configuration/options/#shutdown_timeout) expires. To let it exit earlier, use [`crash_upload_mode`](/platforms/native/configuration/options/#crash_upload_mode).
+
+To keep using `crashpad`, configure the CMake build with `-D SENTRY_BACKEND=crashpad`.
+
+### Shared Library Names
+
+On macOS and Linux, shared libraries now use ABI-versioned names, such as `libsentry.1.dylib` or `libsentry.so.1`. Applications link to and load the versioned name, so package the real library and its symlinks. Windows, Android, and static libraries are unchanged.
+
+### Release Archive Names
+
+Release archives now include the SDK version in the filename, such as `sentry-native-1.0.0.zip`. Update any scripts that download them.
+
+### Removed APIs
+
+The following deprecated APIs have been removed:
+
+| Removed | Replacement |
+| ------- | ----------- |
+| `sentry_capture_event_with_scope` | Use `sentry_scope_capture_event` instead. The arguments are now scope, event, and hint (can be `NULL`). |
+| `sentry_capture_user_feedback` | Use `sentry_capture_feedback` instead. |
+| `sentry_clear_crashed_last_run` | Remove the call. `sentry_init` clears the crash marker automatically. |
+| `sentry_event_value_add_stacktrace` | Use `sentry_value_new_thread`, `sentry_value_set_stacktrace`, and `sentry_event_add_thread` instead. |
+| `sentry_new_function_transport` | Use `sentry_transport_new` and `sentry_transport_set_state` instead. The send callback now receives a mutable envelope, takes ownership of it, and must free it with `sentry_envelope_free`. See [Custom Transports](/platforms/native/configuration/transports/#custom-transports). |
+| `sentry_options_add_view_hierarchy`<br />`sentry_options_add_view_hierarchy_n`<br />`sentry_options_add_view_hierarchyw`<br />`sentry_options_add_view_hierarchyw_n` | Use `sentry_attachment_from_file` or its `_n` and wide-string variants, `sentry_attachment_set_type`, and `sentry_add_attachment` instead. During startup, call `sentry_scope_add_attachment` in an [`initial_scope`](/platforms/native/configuration/options/#initial_scope) callback. |
+| `sentry_options_set_http_proxy`<br />`sentry_options_set_http_proxy_n` | Use `sentry_options_set_proxy` and `sentry_options_set_proxy_n` instead. |
+| `sentry_regenerate_trace` | Use `sentry_start_new_trace` instead. |
+| `sentry_sdk_name`<br />`sentry_sdk_user_agent` | Use `sentry_options_get_sdk_name` and `sentry_options_get_user_agent` instead, or `SENTRY_SDK_NAME` and `SENTRY_SDK_USER_AGENT` for build-time values. |
+| `sentry_shutdown` | Use `sentry_close` instead. |
+| `sentry_value_new_user_feedback`<br />`sentry_value_new_user_feedback_n` | Use `sentry_value_new_feedback` and `sentry_value_new_feedback_n` instead. The arguments are now message, contact email, name, and associated event ID, with lengths following each string in the `_n` variant. |

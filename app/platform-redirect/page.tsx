@@ -7,7 +7,7 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
-import {platformUrlFor, sanitizeNext} from './utils';
+import {landingPageFallbackGuide, platformUrlFor, sanitizeNext} from './utils';
 
 export const metadata: Metadata = {
   robots: 'noindex',
@@ -142,9 +142,11 @@ export default async function Page(props: {
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {
-    const validPlatform = platformOrGuideList.find(
-      p => p.key === requestedPlatform?.toLowerCase()
-    );
+    const requestedKey = requestedPlatform.toLowerCase();
+    const fallbackKey = landingPageFallbackGuide(rootNode, requestedKey);
+    const validPlatform =
+      platformOrGuideList.find(p => p.key === requestedKey) ??
+      platformOrGuideList.find(p => p.key === fallbackKey);
     if (validPlatform) {
       return redirect(platformUrlFor(validPlatform.url, sanitized));
     }

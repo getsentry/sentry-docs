@@ -6,11 +6,33 @@ import {ExternalLink} from './externalLink';
 type FeatureKey =
   | 'issues'
   | 'tracing'
+  | 'tracingWithAgents'
   | 'sessionReplay'
   | 'logs'
   | 'profiling'
   | 'userFeedback'
   | 'metrics';
+
+const TRACING = {
+  title: 'Tracing',
+  link: '/product/tracing',
+  learnMore:
+    'Track software performance while seeing the impact of errors across multiple systems. For example, distributed tracing allows you to follow a request from the frontend to the backend and back.',
+  findInSentry: (
+    <Fragment>
+      Open the{' '}
+      <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/">
+        <strong>Traces</strong>
+      </ExternalLink>{' '}
+      page and select a trace to reveal more information about each span, its duration,
+      and any errors. For an interactive UI walkthrough, click{' '}
+      <a href="/product/sentry-basics/getting-started-tutorial/generate-first-error/#ui-walkthrough">
+        here
+      </a>
+      .
+    </Fragment>
+  ),
+};
 
 const FEATURE_DATA: Record<
   FeatureKey,
@@ -38,23 +60,15 @@ const FEATURE_DATA: Record<
       </Fragment>
     ),
   },
-  tracing: {
-    title: 'Tracing',
-    link: '/product/tracing',
-    learnMore:
-      'Track software performance while seeing the impact of errors across multiple systems. For example, distributed tracing allows you to follow a request from the frontend to the backend and back.',
-    findInSentry: (
+  tracing: TRACING,
+  tracingWithAgents: {
+    ...TRACING,
+    learnMore: (
       <Fragment>
-        Open the{' '}
-        <ExternalLink href="https://sentry.io/orgredirect/organizations/:orgslug/explore/traces/">
-          <strong>Traces</strong>
-        </ExternalLink>{' '}
-        page and select a trace to reveal more information about each span, its duration,
-        and any errors. For an interactive UI walkthrough, click{' '}
-        <a href="/product/sentry-basics/getting-started-tutorial/generate-first-error/#ui-walkthrough">
-          here
-        </a>
-        .
+        {TRACING.learnMore} On the server, this includes{' '}
+        <a href="/product/agents/">Agent Tracing</a>: supported AI libraries are
+        instrumented automatically, so you can see model calls, tool executions, and token
+        usage.
       </Fragment>
     ),
   },
@@ -145,6 +159,7 @@ const FEATURE_DATA: Record<
 
 type FeatureInfoProps = {
   features: FeatureKey[];
+  overrides?: Partial<Record<FeatureKey, {learnMore?: ReactNode; link?: string}>>;
   type: 'learnMore' | 'findInSentry';
 };
 
@@ -155,11 +170,11 @@ type FeatureInfoProps = {
  * @param features - Array of feature keys to display
  * @param type - learnMore shows feature descriptions, findInSentry shows navigation help
  */
-export function FeatureInfo({features, type}: FeatureInfoProps) {
+export function FeatureInfo({features, overrides, type}: FeatureInfoProps) {
   return (
     <ul>
       {features.map(key => {
-        const feature = FEATURE_DATA[key];
+        const feature = {...FEATURE_DATA[key], ...overrides?.[key]};
 
         if (type === 'learnMore') {
           return (

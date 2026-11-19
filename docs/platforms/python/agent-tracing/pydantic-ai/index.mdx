@@ -215,7 +215,7 @@ Data on the following will be collected:
 - LLM models usage
 - model settings (temperature, max_tokens, etc.)
 
-Sentry considers LLM and tool inputs/outputs as PII and doesn't include prompts, messages, or responses by default. Tool definitions are still attached by default; setting `inputs` to `False` in the `gen_ai` key described below removes them. To include prompts, messages, and responses, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately. When you pass a `data_collection` dictionary, both are collected by default and `include_prompts` is ignored:
+By default, the SDK records LLM and tool inputs and outputs, such as prompts, messages, and responses. Tool definitions are recorded too; setting `inputs` to `False` in the `gen_ai` key removes them. To control this, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately:
 
 ```python
 sentry_sdk.init(
@@ -227,7 +227,7 @@ sentry_sdk.init(
 )
 ```
 
-Alternatively, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the Options section below. `send_default_pii` will be removed in version 3.0 of the SDK.
+In SDK versions prior to `3.0`, Sentry considers LLM and tool inputs and outputs as PII and doesn't include prompts, messages, or responses unless you pass a `data_collection` dictionary or set `send_default_pii=True`. With `send_default_pii=True`, you can exclude them with the integration's `include_prompts=False` option, as shown in the [Options section](#options) below.
 
 ## Options
 
@@ -239,12 +239,9 @@ from sentry_sdk.integrations.pydantic_ai import PydanticAIIntegration
 
 sentry_sdk.init(
     # ...
-    # Add data like inputs and responses;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
     integrations=[
         PydanticAIIntegration(
-            include_prompts=False,  # LLM and tool inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            handled_tool_call_exceptions=False,
         ),
     ],
 )
@@ -254,16 +251,18 @@ You can pass the following keyword arguments to `PydanticAIIntegration()`:
 
 - `include_prompts`:
 
+  Only available in SDK versions prior to `3.0`. In SDK `3.x`, use the `gen_ai` key of the `data_collection` option instead.
+
   Whether LLM and tool inputs and outputs should be sent to Sentry. If you use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, this option is ignored. Use the `gen_ai` key instead.
 
-  Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`. `send_default_pii` will be removed in version 3.0 of the SDK.
+  Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
 
   The default is `True`.
 
 - `handled_tool_call_exceptions`:
 
   Option to capture tool call exceptions that Pydantic AI prevents from bubbling up. These include validation errors when an agent is configured to
-  retry tool calls. All additional tool call exceptions reported when this option is `True` are handled errors in Sentry. This option has no effect on exceptions that are not handled by Pydantic AI.
+  retry tool calls. All additional tool call exceptions reported when this option is `True` are handled errors in Sentry. This option has no effect on exceptions that are not handled by Pydantic AI. Starting with SDK `3.0`, an error is reported for every failed tool argument validation attempt, including retries.
 
   The default is `True`.
 

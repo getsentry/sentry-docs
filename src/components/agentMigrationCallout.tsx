@@ -1,3 +1,4 @@
+import {DOCS_ORIGIN} from 'sentry-docs/docsSite.mjs';
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
@@ -18,10 +19,8 @@ export function AgentMigrationCallout({
 }: Props) {
   const {rootNode, path} = serverContext();
   const platform = getCurrentPlatformOrGuide(rootNode, path);
-  const resolvedGuideUrl = new URL(
-    guideUrl,
-    `https://docs.sentry.io${platform?.url ?? '/'}`
-  ).href;
+  const resolvedGuideUrl = new URL(guideUrl, `${DOCS_ORIGIN}${platform?.url ?? '/'}`)
+    .href;
 
   return (
     <AgentSetupCallout

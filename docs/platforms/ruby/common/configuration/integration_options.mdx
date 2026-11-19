@@ -19,11 +19,21 @@ config.rails.report_rescued_exceptions = false
 
 `rails.skippable_job_adapters`
 
-Use this option to disable Active Job error reporting, tracing, and context propagation for an adapter. Queue-specific integrations for Sidekiq, Delayed Job, and Resque add their adapters automatically to prevent duplicate instrumentation.
+The Active Job integration skips error reporting, tracing, and context propagation for the adapters in this list. When you install `sentry-sidekiq`, `sentry-resque`, or `sentry-delayed_job`, the gem adds its adapter to the list by default, so it reports the Active Job jobs on its backend and Sentry doesn't report them twice.
+
+To skip a custom adapter, add it to the list:
 
 ```ruby
-config.rails.skippable_job_adapters = ["ActiveJob::QueueAdapters::MyAdapter"]
+config.rails.skippable_job_adapters << "ActiveJob::QueueAdapters::MyAdapter"
 ```
+
+Since version 7.3.0, removing a backend gem's adapter from the list hands its Active Job jobs to `sentry-rails`:
+
+```ruby
+config.rails.skippable_job_adapters.delete("ActiveJob::QueueAdapters::SidekiqAdapter")
+```
+
+Learn what changes in [Report Jobs Through the Active Job Integration](/platforms/ruby/guides/rails/integrations/active-job/#report-jobs-through-the-active-job-integration).
 
 `rails.active_job_propagate_traces`
 
@@ -40,6 +50,21 @@ By default, Sentry reports an Active Job failure after all `retry_on` attempts a
 ```ruby
 config.rails.active_job_report_on_retry_error = true
 ```
+
+`rails.good_job_exclude_cron_jobs`
+
+<AvailableSince version="7.3.0" />
+
+Excludes GoodJob cron entries from monitoring when the `:good_job_cron` patch is enabled. Defaults to `[]`. Strings and symbols match entry keys exactly; regular expressions match patterns.
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.enabled_patches << :good_job_cron
+  config.rails.good_job_exclude_cron_jobs = [:clear_cache, /\Atmp_/]
+end
+```
+
+See <PlatformLink to="/crons/#goodjob">GoodJob cron monitoring</PlatformLink> for setup.
 
 `rails.tracing_subscribers`
 
@@ -62,9 +87,23 @@ config.rails.tracing_subscribers = [MySubscriber]
 
 `sentry-delayed_job` captures exceptions whenever they occur in a job execution. You can make it wait until the retry is exhausted. Default is `false`.
 
-```
+```ruby
 config.delayed_job.report_after_job_retries = true
 ```
+
+If you [hand Active Job jobs to `sentry-rails`](/platforms/ruby/guides/rails/integrations/active-job/#report-jobs-through-the-active-job-integration), this option only applies to the errors `sentry-delayed_job` still reports for those jobs, such as errors raised before the job starts.
+
+## sentry-resque
+
+`resque.report_after_job_retries`
+
+`sentry-resque` captures exceptions whenever they occur in a job execution. If your jobs use the [resque-retry](https://github.com/lantins/resque-retry) plugin, you can make it wait until the retry limit is reached. Default is `false`.
+
+```ruby
+config.resque.report_after_job_retries = true
+```
+
+If you [hand Active Job jobs to `sentry-rails`](/platforms/ruby/guides/rails/integrations/active-job/#report-jobs-through-the-active-job-integration), this option doesn't apply to those jobs.
 
 ## sentry-sidekiq
 
@@ -72,8 +111,16 @@ config.delayed_job.report_after_job_retries = true
 
 `sentry-sidekiq` captures exceptions whenever they occur in a job execution. You can make it wait until the retry is exhausted. Default is `false`.
 
-```
+```ruby
 config.sidekiq.report_after_job_retries = true
+```
+
+`sidekiq.report_only_dead_jobs`
+
+When enabled, `sentry-sidekiq` skips error reporting for jobs that set `dead: false` in their `sidekiq_options`. Default is `false`.
+
+```ruby
+config.sidekiq.report_only_dead_jobs = true
 ```
 
 `attempt_threshold`
@@ -84,3 +131,5 @@ config.sidekiq.report_after_job_retries = true
 # Report only the last of 5 attempts (1 initial execution + 4 retries)
 sidekiq_options retry: 4, attempt_threshold: 5
 ```
+
+If you [hand Active Job jobs to `sentry-rails`](/platforms/ruby/guides/rails/integrations/active-job/#report-jobs-through-the-active-job-integration), `sidekiq.report_after_job_retries`, `sidekiq.report_only_dead_jobs`, and `attempt_threshold` only apply to the errors `sentry-sidekiq` still reports for those jobs, such as errors raised before the job starts. Plain Sidekiq jobs aren't affected.

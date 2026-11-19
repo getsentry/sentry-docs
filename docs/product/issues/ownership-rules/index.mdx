@@ -32,12 +32,12 @@ The general format of a rule is: `type:pattern owners`
 
 **Types of matches:**
 
-| Type | Matches Against | Example Pattern |
-|------|----------------|-----------------|
-| `path` | File paths in the event's stack trace | `src/javascript/*.[tj]sx` |
-| `module` | Module names in the event's stack trace | `com.example.app` |
-| `url` | The event's request URL | `https://www.example.io/v/[0-9]/checkout` |
-| `tags.TAG_NAME` | A specific event tag | `tags.browser:Chrome 81.0.?` |
+| Type            | Matches Against                         | Example Pattern                           |
+| --------------- | --------------------------------------- | ----------------------------------------- |
+| `path`          | File paths in the event's stack trace   | `src/javascript/*.[tj]sx`                 |
+| `module`        | Module names in the event's stack trace | `com.example.app`                         |
+| `url`           | The event's request URL                 | `https://www.example.io/v/[0-9]/checkout` |
+| `tags.TAG_NAME` | A specific event tag                    | `tags.browser:Chrome 81.0.?`              |
 
 **Patterns** support unix-style [glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)>). Use `*` to match anything and `?` to match a single character. This is not regex.
 
@@ -62,7 +62,7 @@ You can add and edit ownership rules from your project's [Ownership Rules](https
 
 ### Permissions
 
-Teams _must_ have access to the project to become owners, unless the organization has [Open Membership](/organization/membership/#open-membership) enabled. To grant a team access to a project, go to your project's [Project Teams](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/teams/) settings and click "Add Team".
+Teams _must_ have access to the project to become owners. This applies even when the organization has [Open Membership](/organization/membership/#open-membership) enabled. To grant a team access to a project, go to your project's [Project Teams](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/teams/) settings and click "Add Team".
 
 To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a team, navigate to [**Settings > Teams**](https://sentry.io/orgredirect/organizations/:orgslug/settings/teams/), select a team, and click "Add Member".
 
@@ -117,11 +117,11 @@ To create these mappings, go to [**Settings > Integrations**](https://sentry.io/
 ### Limitations
 
 - CODEOWNERS files have a maximum size of **3MB**. If your file exceeds this, use wildcard rules to consolidate multiple entries.
-- Sentry syncs your CODEOWNERS file periodically from your repository. Changes may not be reflected immediately.
+- Sentry re-syncs your CODEOWNERS file when it receives a commit that adds or changes it, as long as **Sync changes from CODEOWNERS** is turned on in your project's Ownership Rules settings (it's on by default). Changes made without a commit Sentry knows about aren't picked up until you import the file again.
 
 ## Evaluation Flow
 
-Ownership rules and code owners are matched against individual events in an issue. Sentry evaluates an event by checking if _any_ of its in-app stack trace frames match a rule. Rules are evaluated in this order:
+Ownership rules and code owners are matched against individual events in an issue. Sentry evaluates an event by checking if _any_ of its stack trace frames match a rule. `path` and `module` ownership rules check every frame. Code owners rules skip frames marked as not in-app. Rules are evaluated in this order:
 
 1. Code owners, top-to-bottom
 2. Ownership rules, top-to-bottom

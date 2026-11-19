@@ -70,7 +70,7 @@ sentry_sdk.init(
     # Enables Profiling.
     # Set to 1.0 to profile 100% of sessions.
     profile_session_sample_rate=1.0,
-    # Profiles are collected while a transaction is active.
+    # Profiles are collected while there is an active span.
     profile_lifecycle="trace",
 )
 ```
@@ -83,8 +83,8 @@ Sentry automatically captures errors and reports issues for you.
 You can also expect the following for your Starlette project:
 
 - By default, all exceptions leading to an Internal Server Error are reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
-- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
-- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you configure which categories to collect with the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> or set `send_default_pii` to `True`. `send_default_pii` will be removed in version 3.0 of the SDK.
+- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads. Form data and JSON payloads are only attached if your handler already read them with `await request.form()` or `await request.json()` before the event was captured.
+- Personally identifiable information (such as user IDs, usernames, cookies, and IP addresses) is also attached, with sensitive values like authorization headers scrubbed. Use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to configure which categories to collect. In SDK versions prior to `3.0`, Sentry excludes this information unless you use `data_collection` or set `send_default_pii` to `True`.
 
 To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
 
@@ -92,7 +92,7 @@ To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing
 
 Use `sentry_sdk.logger` to send structured logs at different levels. You can include searchable attributes with each message.
 
-To capture records from Python's standard-library `logging` module or Loguru, configure `capture_sentry_logs=True` on the corresponding integration. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
+To capture records from Python's standard-library `logging` module or Loguru as Sentry logs, add the corresponding integration to your `integrations`. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
 
 See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
 
@@ -152,7 +152,6 @@ sentry_sdk.init(
     # ...
     integrations=[
         StarletteIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={403, *range(500, 599)},
             middleware_spans=False,
             http_methods_to_capture=("GET",),
@@ -164,6 +163,12 @@ sentry_sdk.init(
 You can pass the following keyword arguments to `StarletteIntegration()`:
 
 <SdkOption name='transaction_style' type='string' defaultValue='"url"'>
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, service spans are always named after the route pattern, for example `/catalog/product/{product_id}`.
+
+</Alert>
 
 How to name transactions that show up in Sentry tracing.
 The default is `"url"`.
@@ -211,7 +216,7 @@ The default is `False`.
 
 <SdkOption name='http_methods_to_capture' type='Tuple[str, ...]' defaultValue='("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)' availableSince='2.15.0'>
 
-A tuple containing all the HTTP methods (as uppercase strings) that should create a transaction in Sentry.
+A tuple containing all the HTTP methods (as uppercase strings) that should create a service span in Sentry.
 The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
 
 Note that `OPTIONS` and `HEAD` are excluded by default.
