@@ -30,6 +30,16 @@ OpenTelemetry in .NET is implemented via the System.Diagnostics.Activity namespa
 
 Instead you should either log the exceptions (using `ILogger`) or capture the exceptions directly using `SentrySdk.CaptureException`.
 
+## Data Collection
+
+The user and span attributes this integration collects don't follow the options you set with `SentryOptions.ConfigureDataCollection`, an experimental API that controls which data the SDK collects automatically. Instead, it:
+
+- Sets the user from ASP.NET Core only when <PlatformLink to="/configuration/options/#SendDefaultPii">`SendDefaultPii`</PlatformLink> is `true`.
+- Replaces the values of sensitive URL query parameters on spans, such as `token` or `password`, with `[Filtered]`.
+- Sends all other span attributes as they are.
+
+The `Sentry.OpenTelemetry` integration has been deprecated and we recommend migrating to the <PlatformLink to="/tracing/instrumentation/opentelemetry-otlp/">OTLP exporter</PlatformLink> to replace this.
+
 ## Additional Configuration
 
 If you need more fine grained control over Sentry, take a look at the <PlatformLink to="/configuration/">Configuration page</PlatformLink>. In case you'd like to filter out transactions before sending them to Sentry (to get rid of health checks, for example), you may find the <PlatformLink to="/configuration/filtering/#filtering-transaction-events">Filtering page</PlatformLink> helpful.
