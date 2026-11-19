@@ -62,8 +62,8 @@ const optionDetails: Record<
     description: (
       <span>
         Tracing and automatic performance issue detection across services and context on
-        who is impacted, outliers, regressions, and the root cause of your
-        slowdown or failure.
+        who is impacted, outliers, regressions, and the root cause of your slowdown or
+        failure.
       </span>
     ),
   },
