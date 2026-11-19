@@ -1,0 +1,297 @@
+---
+title: Lint Incubator
+description: How Sentry rolls out new JavaScript and TypeScript lint rules incrementally using Oxlint suppression budgets and CI ratcheting.
+sidebar_order: 76
+---
+
+The lint incubator is a ratcheting system in [`getsentry/sentry`](https://github.com/getsentry/sentry) for rolling out new JavaScript and TypeScript lint rules incrementally. It lets us enforce a new rule immediately on changed and new code without fixing every pre-existing violation in the repository first.
+
+Turning on a new lint rule across a large codebase usually forces an uncomfortable tradeoff. Setting the rule to `error` blocks your pull request behind hundreds or thousands of existing violations, while setting it to `warn` lets new violations keep landing on `master`.
+
+The incubator avoids that tradeoff:
+
+1. Pre-existing violations on `master` are recorded as per-file, per-rule count budgets in `oxlint-suppressions.json` files.
+2. Any new violation (either in a clean file or above a file's recorded budget) fails `pnpm run lint:js`, `prek`, and CI.
+3. As contributors fix existing violations, the recorded budgets decrease and cannot increase again. Once all violations of a rule are fixed, the rule graduates out of the incubator into the standard lint configuration.
+
+## How It Works
+
+The incubator is built on [Oxlint](https://oxc.rs/docs/guide/usage/linter.html)'s native bulk suppression files and a Git-aware wrapper at `scripts/oxlint-suppressions.ts`. Three pieces work together during local development and CI.
+
+### The `incubator` Registry (`oxlint.config.ts`)
+
+Enrolled rules live in the exported `incubator` configuration object at the top of `oxlint.config.ts`:
+
+```ts
+export const incubator = defineConfig({
+  rules: {
+    '@sentry/prefer-nuqs': 'error',
+    '@sentry/scraps/no-dom-coupling': 'error',
+    '@sentry/scraps/no-manual-table': 'error',
+    '@sentry/scraps/prefer-primitives': 'error',
+    '@sentry/scraps/prefer-container-responsive-props': 'error',
+  },
+  overrides: [
+    // File-scoped exclusions or test-only incubator rules...
+  ],
+});
+```
+
+`oxlint.config.ts` merges `incubator.rules` and `incubator.overrides` into the default Oxlint configuration automatically, but adjusts their severity depending on how Oxlint is invoked:
+
+- **In editors (`warn`)**: Oxlint's editor language server does not read `oxlint-suppressions.json` files yet. To avoid flooding editors with red errors on pre-existing debt, `oxlint.config.ts` downgrades incubator rules to `warn` when `SENTRY_OXLINT_ENFORCE` is not set.
+- **In CLI, `prek`, and CI (`error`)**: `scripts/oxlint-suppressions.ts` sets `SENTRY_OXLINT_ENFORCE=true`, which promotes enabled incubator rules to `error` so Oxlint's native bulk suppressions apply and over-budget violations fail the run.
+
+### Per-Workspace `oxlint-suppressions.json` Files
+
+Suppression budgets are stored in one `oxlint-suppressions.json` file per `pnpm` workspace. Examples include `static/app/oxlint-suppressions.json`, `static/gsApp/oxlint-suppressions.json`, and `static/gsAdmin/oxlint-suppressions.json`.
+
+Each file maps workspace-relative file paths to rule names and allowed violation counts:
+
+```json
+{
+  "components/acl/featureDisabled.tsx": {
+    "@sentry/scraps/no-dom-coupling": {
+      "count": 2
+    },
+    "@sentry/scraps/prefer-primitives": {
+      "count": 1
+    }
+  }
+}
+```
+
+Keep these details in mind when reading or staging suppression files:
+
+- **Missing files mean zero budget**: If a workspace has no violations, it has no `oxlint-suppressions.json` file. When the last violation in a workspace is fixed and pruned, the file is deleted instead of leaving `{}`.
+- **The root `/oxlint-suppressions.json` is ignored by Git**: Native Oxlint only reads `oxlint-suppressions.json` from its current working directory. During a root `pnpm run lint:js` run, `scripts/oxlint-suppressions.ts` temporarily combines all workspace `oxlint-suppressions.json` files into the root directory and removes the temporary root file when the run finishes. Because `/oxlint-suppressions.json` is listed in `.gitignore`, files outside `pnpm` workspaces cannot carry suppression budgets. Any violation in a root-level file must be fixed or disabled inline.
+- **Isolated workspace packages**: Packages that define their own `oxlint.config.ts` (such as `static/packages/scraps`, `static/packages/icons`, and `static/packages/search-syntax`) run native Oxlint in their own directory. When an isolated package enables an incubator rule, `pnpm run lint:suppressions` scans that package with its own config and stores budgets in `<package>/oxlint-suppressions.json`.
+
+### Transaction Locking and Crash Recovery
+
+To keep concurrent `prek` hooks, editor tasks, and CLI runs from corrupting suppression files, `scripts/oxlint-suppressions.ts` acquires a lock and writes a backup journal at `.artifacts/lint-incubator/transactions/owner.json`.
+
+If another lint process is already running, a new invocation waits up to 120 seconds for the active run to finish. If a previous lint process crashed or was killed mid-run, the next invocation detects that the recorded process ID is no longer alive and restores all workspace `oxlint-suppressions.json` files from the backup journal automatically.
+
+## Day-to-Day Contributor Guide
+
+Most contributors interact with the lint incubator through normal linting commands, `prek` hooks, and pull request checks.
+
+### Running Lint Locally
+
+Run `pnpm run lint:js` to lint the repository, or pass specific file paths to lint only those files in their owning workspace:
+
+```bash
+# Lint all workspaces
+pnpm run lint:js
+
+# Lint specific files
+pnpm run lint:js static/app/components/acl/featureDisabled.tsx
+
+# Run autofixes (also lowers budgets for fixed violations in root-linted files)
+pnpm run fix:oxlint
+```
+
+`pnpm run lint:js` rejects flags that override lint policy or suppressions (such as `--config`, `--allow`, `--warn`, `--deny`, `--suppress-all`, and `--prune-suppressions`) so local checks always match CI.
+
+### Fixing `New incubator violations` Failures
+
+When a change adds a violation in a clean file or pushes a file above its existing count budget, lint and CI fail with an error like this:
+
+```text
+New incubator violations:
+static/app/views/example.tsx @sentry/scraps/no-dom-coupling: 3 violations, budget 2
+Current violations for over-budget file/rule pairs:
+static/app/views/example.tsx:14:5 @sentry/scraps/no-dom-coupling ...
+static/app/views/example.tsx:28:3 @sentry/scraps/no-dom-coupling ...
+static/app/views/example.tsx:42:3 @sentry/scraps/no-dom-coupling ...
+```
+
+Because suppression budgets track counts per file rather than line numbers, the error output prints every current violation of that rule in the over-budget file. Fix the new violation (or any violation of that rule in the file) so the total count is back at or below the budget.
+
+Do not manually increase `count` in `oxlint-suppressions.json` to make local lint pass. CI compares your pull request against the `master` base commit and rejects any count higher than `master`.
+
+If a specific line genuinely cannot follow the rule, add a targeted inline disable comment (`// oxlint-disable-next-line <rule>` or `// eslint-disable-next-line <rule>`) with a short explanation of why. If that file also had a budget entry in `oxlint-suppressions.json`, run `pnpm run lint:suppressions --prune` to lower its count by one.
+
+### Fixing `Suppression budgets are stale` Failures
+
+When your pull request fixes or removes code that previously had budgeted violations, the committed count in `oxlint-suppressions.json` becomes higher than the live violation count. CI then fails with:
+
+```text
+Suppression budgets are stale. Run pnpm run lint:suppressions --prune and commit the updated oxlint-suppressions.json.
+static/app/views/example.tsx @sentry/scraps/prefer-primitives: budget 2, 1 violations
+```
+
+Stale budgets can happen in three ways:
+
+- You fixed or deleted a violation directly in a file.
+- You fixed code in an isolated workspace package (whose budgets are not rewritten by root `lint:js --fix`).
+- You updated a shared TypeScript type or helper in one file, which resolved a type-aware lint violation in another file.
+
+To update the budgets across all workspaces, run:
+
+```bash
+pnpm run lint:suppressions --prune
+```
+
+Then stage and commit the updated (or deleted) `oxlint-suppressions.json` files alongside your code changes.
+
+<Alert>
+  On non-draft pull requests opened from branches in `getsentry/sentry`, the `pre-commit` CI workflow runs `pnpm run lint:suppressions --prune` and commits the updated `oxlint-suppressions.json` files automatically. On draft pull requests or fork pull requests, run `pnpm run lint:suppressions --prune` locally and commit the result.
+</Alert>
+
+### Renaming, Moving, or Splitting Files
+
+Suppression budgets are keyed by file path, which affects how edits, renames, and refactors behave:
+
+- **Edits within the same file**: Replacing one violation with another of the same rule in the same file passes as long as the file's total violation count for that rule does not increase.
+- **Exact renames (`100%` match)**: If you move or rename a file with zero content edits (`git diff --find-renames=100%`), the ratchet transfers the old file's budget to the new path, even across workspaces. Run `pnpm run lint:suppressions --enroll --base origin/master` to update `oxlint-suppressions.json` with the new path.
+- **Edited renames, copies, and file splits**: If you rename a file and modify its contents in the same pull request, copy code into another file, or split one file into multiple files, Git does not treat the new file as a `100%` rename. The new file starts with a budget of `0`. Fix the incubator violations in the new file (or perform an unmodified file rename in a separate pull request first), and run `pnpm run lint:suppressions --prune` to lower or remove the old file's budget.
+
+## How CI Enforces the Ratchet
+
+Three GitHub Actions workflows enforce and maintain `oxlint-suppressions.json` files in CI.
+
+### 1. Ratchet Check (`frontend.yml` `oxlint` Job)
+
+The `oxlint` job in `.github/workflows/frontend.yml` runs whenever `frontend_lint` matches in `.github/file-filters.yml`. Pull requests that only modify `oxlint-suppressions.json` run lint verification without triggering unrelated Jest or TypeScript build jobs.
+
+On a pull request, GitHub Actions checks out a synthetic merge commit (`HEAD`) where `HEAD^1` is `master` and `HEAD^2` is your pull request head. The job runs these steps in order:
+
+1. **Find verified lint baseline (`find-verified-lint-base.js`)**: Scanning `HEAD^1` from scratch on every pull request would double lint time. Instead, this step checks recent `master` push runs of `frontend.yml` for an ancestor commit where the **Verify exact lint budgets** step succeeded (allowing backend-only Python commits in between):
+   - **Fast path (reuse budgets)**: When a verified base is found and your pull request did not touch lint policy inputs (`oxlint.config.ts`, `oxlint.base.ts`, `static/oxlint/**`, `scripts/oxlint-suppressions.ts`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.node-version`, `tsconfig*.json`, or ignore files), CI sets `SENTRY_OXLINT_VERIFIED_BASE` so `--ci` reuses `HEAD^1`'s committed `oxlint-suppressions.json` files directly.
+   - **Fallback path (rescan base)**: When no verified base is found or lint policy inputs changed, CI extracts `HEAD^1` into a temporary directory and scans it with your branch's lint policy.
+2. **Verify lint ratchet (`pnpm run lint:suppressions --ci --base HEAD^1`)**: Runs a full type-aware scan of all incubator rules with suppressions turned off, then verifies two invariants:
+   - Every `(file, rule)` live count is less than or equal to the count at `HEAD^1` (after transferring `100%` exact renames).
+   - Every `(file, rule)` live count fits within the committed `oxlint-suppressions.json` budgets, and there are no stale budgets owned by your pull request.
+3. **Verify exact lint budgets**: Runs only when `steps.ratchet.outputs.budgets == 'exact'`. On `master` pushes, this step certifies that the committed `oxlint-suppressions.json` files match live violations exactly, making that `master` commit reusable as a fast baseline for future pull requests.
+4. **Standard Oxlint pass (`oxlint (impacted files)` or `oxlint (all files)`)**: Runs `pnpm run lint:js` (scoped to transitively impacted files via `lint:js:changed` when only `static/**` or `oxlint-suppressions.json` changed, or across all files when global config or dependencies changed) to check all standard, non-incubator lint rules.
+
+#### Owned vs. Inherited Stale Budgets
+
+When two pull requests merge to `master` without rebasing onto each other, their combined changes can leave `master` with fewer live violations than its committed budgets. Failing every open pull request until `master` is pruned would block unrelated work, so `--ci` separates stale budgets into two categories:
+
+- **Owned stale budgets (fail CI)**: Budgets that your pull request edited in `oxlint-suppressions.json`, or files whose live violation count decreased compared to `HEAD^1`. You must prune these with `pnpm run lint:suppressions --prune`.
+- **Inherited stale budgets (warn only)**: Stale budgets already present on `HEAD^1` where live violations did not change in your pull request. CI logs a warning, lets the pull request pass, and outputs `budgets=stale` instead of `budgets=exact`.
+
+### 2. Pull Request Auto-Pruning (`pre-commit.yml`)
+
+In `.github/workflows/pre-commit.yml`, the `lint` job runs `prek` on changed files and then runs `pnpm run lint:suppressions --prune` whenever frontend or lint files changed. On non-draft pull requests with secret access (`getsentry/sentry` branches), the workflow automatically commits any pruned `oxlint-suppressions.json` files back to the pull request branch.
+
+### 3. Automated `master` Cleanup (`prune-oxlint-suppressions.yml`)
+
+When a push to `master` finishes the `oxlint` job with `budgets == 'stale'`, `frontend.yml` triggers `.github/workflows/prune-oxlint-suppressions.yml` (which can also be run manually via `workflow_dispatch`):
+
+1. An unprivileged `prune` job checks out `master`, runs `pnpm run lint:suppressions --prune`, and uploads the resulting budgets as an artifact.
+2. A `publish` job downloads the artifact, runs `.github/workflows/scripts/validate-pruned-suppressions.js` to verify that every entry only lowers or deletes an existing count without adding new files or rules, and opens or updates a bot pull request on branch `bot/prune-oxlint-suppressions` (`chore(lint): prune oxlint suppressions`).
+
+Once that cleanup pull request merges, `master` returns to `budgets=exact` and fast baseline reuse resumes.
+
+## Enrolling and Managing Incubator Rules
+
+Use the maintenance commands on `pnpm run lint:suppressions` when adding a new rule to the incubator, inspecting remaining debt, changing rule scope, or graduating a rule.
+
+### 1. Enrolling a New Rule
+
+Follow these steps to turn on a rule in the incubator without fixing existing violations upfront:
+
+1. **Add the rule to `incubator` in `oxlint.config.ts`**: Configure the rule with `'error'` severity (or `['error', options]`) inside `export const incubator`:
+
+   ```ts
+   export const incubator = defineConfig({
+     rules: {
+       // ...existing incubator rules
+       '@sentry/scraps/my-new-rule': 'error',
+     },
+     overrides: [
+       {
+         files: testFiles,
+         rules: {
+           '@sentry/scraps/my-new-rule': 'off',
+         },
+       },
+     ],
+   });
+   ```
+
+   Keep these configuration rules in mind:
+
+   - Always configure enabled rules in `incubator` as `'error'`, never `'warn'`. `oxlint.config.ts` handles downgrading incubator rules to `'warn'` in editors automatically.
+   - Use Oxlint's canonical rule key. For core ESLint rules, omit the `eslint/` prefix (write `'no-debugger'`, not `'eslint/no-debugger'`).
+   - To enable a rule only for certain files (such as test files), add it with `'error'` inside `incubator.overrides` instead of `incubator.rules`. To exclude files from a top-level incubator rule, set the rule to `'off'` in `incubator.overrides`.
+   - If isolated workspace packages (`static/packages/scraps`, `static/packages/icons`, `static/packages/search-syntax`) should also run the rule, enable it in `oxlint.base.ts` (`createPackageConfig`) or in each package's `oxlint.config.ts`.
+
+2. **Generate baseline budgets against `origin/master`**: Fetch the latest `master` and run `--enroll` with `--base`:
+
+   ```bash
+   git fetch origin master
+   pnpm run lint:suppressions --enroll --base origin/master
+   ```
+
+   `--enroll` scans the source tree at `origin/master` using your branch's new lint policy, verifies that your working tree has no more violations per file than `origin/master`, and writes the exact per-workspace `oxlint-suppressions.json` files. Avoid mixing unrelated source edits that introduce new violations of the rule in the same enrollment pull request, or `--enroll` will reject them.
+
+3. **Verify and commit**: Run a local check against `origin/master`, then commit `oxlint.config.ts` (plus any custom rule files) alongside all generated `oxlint-suppressions.json` files:
+
+   ```bash
+   pnpm run lint:suppressions --check --base origin/master
+   ```
+
+### 2. Inspecting the Violation Backlog
+
+Because `oxlint-suppressions.json` hides budgeted errors during ordinary `pnpm run lint:js` runs, use `--backlog` or `--snapshot` to see what violations remain:
+
+```bash
+# List every suppressed violation across all workspaces (file:line:column, rule, message)
+pnpm run lint:suppressions --backlog
+
+# Filter to one rule
+pnpm run lint:suppressions --backlog --rule @sentry/scraps/prefer-primitives
+
+# Filter to one repository-relative file
+pnpm run lint:suppressions --backlog --file static/app/components/acl/featureDisabled.tsx
+
+# Output structured JSON (useful for scripts, codemods, and AI agents)
+pnpm run lint:suppressions --backlog --rule @sentry/scraps/no-dom-coupling --json
+
+# Print live counts in oxlint-suppressions.json format without modifying files
+pnpm run lint:suppressions --snapshot
+```
+
+### 3. Changing Rule Scope or Options
+
+When you update an existing incubator rule's file scope, options, or implementation, update `oxlint-suppressions.json` to match:
+
+- **Narrowing a rule** (for example, turning an incubator rule `'off'` in test files or fixing false positives in a custom rule): Run `pnpm run lint:suppressions --prune` and commit the reduced or deleted `oxlint-suppressions.json` files.
+- **Broadening a rule** (for example, enabling a stricter rule option or removing a file exclusion): Run `pnpm run lint:suppressions --enroll --base origin/master` so the newly covered pre-existing violations on `master` are recorded in `oxlint-suppressions.json`. Because lint policy changed, CI will rescan `HEAD^1` with the updated policy and verify your new budgets.
+
+### 4. Graduating a Rule Out of the Incubator
+
+Once every violation of an incubator rule has been fixed across all workspaces:
+
+1. Confirm zero findings remain by running:
+
+   ```bash
+   pnpm run lint:suppressions --backlog --rule <rule-name>
+   ```
+
+2. Remove the rule from `export const incubator` in `oxlint.config.ts`.
+3. Add the rule with `'error'` severity to `oxlint.base.ts` (if shared across the root app and workspace packages) or to `config` in `oxlint.config.ts` (if root-only).
+4. Run `pnpm run lint:suppressions --prune` (to remove any leftover stale entries) and `pnpm run lint:js` to verify a clean pass.
+
+Once graduated, the rule runs as a standard error in editors, `pnpm run lint:js`, `prek`, and CI alike.
+
+## Command Reference
+
+All maintenance flags must be passed to `pnpm run lint:suppressions` as the first argument, and always run a full type-aware scan across all workspaces.
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm run lint:js [paths...]` | Run Oxlint with incubator budgets enforced. Rejects config, rule, and suppression overrides. |
+| `pnpm run fix:oxlint` | Run `pnpm run lint:js --fix` and automatically lower budgets for fixed violations in root-linted files. |
+| `pnpm run lint:suppressions --prune` | Lower or delete stale `oxlint-suppressions.json` entries across all workspaces to match live violation counts. Fails if any file exceeds its committed budget. |
+| `pnpm run lint:suppressions --check [--base REF]` | Compare live incubator violations against the source tree at `REF` (defaults to the merge base of `HEAD` and `origin/master`). |
+| `pnpm run lint:suppressions --enroll --base REF` | Scan `REF` with the current lint policy, verify live counts do not exceed `REF`, and write updated `oxlint-suppressions.json` files. |
+| `pnpm run lint:suppressions --ci [--base REF]` | Run the CI ratchet check against committed budgets and `REF`, failing on new violations or PR-owned stale budgets. |
+| `pnpm run lint:suppressions --backlog [--rule RULE] [--file PATH] [--json]` | Print all current incubator findings ignoring suppression budgets, with optional rule, file, and JSON output filters. |
+| `pnpm run lint:suppressions --snapshot` | Print live violation counts in `oxlint-suppressions.json` format to stdout without modifying files. |
+| `pnpm run lint:suppressions --help` | Show maintenance flag usage alongside native Oxlint CLI options. |
