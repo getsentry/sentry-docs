@@ -77,6 +77,12 @@ Sentry.setTag("tag", "value");
   Returns true if the SDK is initialized & enabled.
 </SdkApi>
 
+<SdkApi name="isInitialized" signature="function isInitialized(): boolean">
+  Returns `true` if a client is set up, for example after calling `init()`.
+  Unlike [`isEnabled`](#isEnabled), this also returns `true` when the SDK is
+  disabled with `enabled: false`.
+</SdkApi>
+
 <SdkApi
   name="close"
   signature="function close(timeout?: number): Promise<boolean>"
@@ -181,6 +187,37 @@ See <PlatformLink to="/configuration/integrations/">Integrations</PlatformLink> 
 more information on how to use integrations.
 
 </SdkApi>
+
+<SdkApi
+  name="diagnoseSdkConnectivity"
+  signature="function diagnoseSdkConnectivity(): Promise<'no-client-active' | 'sentry-unreachable' | 'no-dsn-configured' | void>"
+  categorySupported={['browser']}
+>
+Checks why the SDK might not be sending data. It sends a test request to Sentry, or to your <PlatformLink to="/configuration/options/#tunnel">`tunnel`</PlatformLink> if you set one, and resolves to one of these values:
+
+- `'no-client-active'`: There's no active client. The SDK probably isn't initialized yet.
+- `'no-dsn-configured'`: The client has no DSN.
+- `'sentry-unreachable'`: The request failed. An ad blocker or a network problem likely blocks requests to Sentry.
+- `undefined`: No problem was found.
+
+Without a tunnel, the test request goes to a disabled Sentry project, so it doesn't create data in your organization.
+
+</SdkApi>
+
+<PlatformSection notSupported={["javascript.wasm"]}>
+
+<SdkApi
+  name="getReplay"
+  signature="function getReplay(): ReturnType<replayIntegration> | undefined"
+  categorySupported={['browser']}
+>
+  Get the Replay integration, if it has been added. Use it to access the
+  integration in a type-safe way, for example to call `start()` or `flush()`.
+  See <PlatformLink to="/session-replay/">Session Replay</PlatformLink> for more
+  information.
+</SdkApi>
+
+</PlatformSection>
 
 ## Capturing Events
 
@@ -304,6 +341,42 @@ Capture a message event and send it to Sentry. Optionally, instead of a
 `"error"` or `"warning"`.
 
 Messages show up as issues on your issue stream, with the message as the issue name.
+
+</SdkApi>
+
+<SdkApi
+  name="captureEvent"
+  signature="function captureEvent(event: Event, hint?: EventHint): string"
+  parameters={[
+    {
+      name: "event",
+      required: true,
+      type: "Event",
+      description: "The event to send to Sentry.",
+    },
+    {
+      name: "hint",
+      type: "EventHint",
+      description: "Optional additional data to attach to the Sentry event.",
+    },
+  ]}
+>
+  Capture a manually created event and send it to Sentry. Returns the ID of the
+  captured event. In most cases, use [`captureException`](#captureException) or
+  [`captureMessage`](#captureMessage) instead.
+</SdkApi>
+
+<SdkApi
+  name="parameterize"
+  signature="function parameterize(strings: TemplateStringsArray, ...values: unknown[]): ParameterizedString"
+>
+A tagged template function that keeps the message template and its values apart. Pass the result to [`captureMessage`](#captureMessage) or to the [`logger`](#logger) methods, and the SDK sends the template and the values separately. `Sentry.logger.fmt` is an alias of this function.
+
+```javascript
+Sentry.captureMessage(
+  Sentry.parameterize`User ${userId} failed to check out ${cartId}`
+);
+```
 
 </SdkApi>
 
@@ -562,6 +635,40 @@ Sentry.setContext("character", {
   example, you might manually record a breadcrumb if the user authenticates or
   another state change occurs.
 </SdkApi>
+
+## Logs and Metrics
+
+<SdkApi
+  name="logger"
+  signature="const logger: { trace, debug, info, warn, error, fatal, fmt }"
+>
+Sends structured logs to Sentry. Each method takes a message and optional attributes, and sends a log with the matching level. `logger.fmt` is an alias of [`parameterize`](#parameterize).
+
+```javascript
+Sentry.logger.info("Order created", { orderId: "123" });
+```
+
+See <PlatformLink to="/logs/">Logs</PlatformLink> for setup and usage.
+
+</SdkApi>
+
+<PlatformSection notSupported={["javascript.capacitor"]}>
+
+<SdkApi
+  name="metrics"
+  signature="const metrics: { count, gauge, distribution }"
+>
+Sends application metrics to Sentry: `count` increments a counter, `gauge` sets a gauge to its current value, and `distribution` records a value in a distribution. Each method takes a name, a value, and optional options, such as `attributes`.
+
+```javascript
+Sentry.metrics.count("checkout.completed", 1);
+```
+
+See <PlatformLink to="/metrics/">Application Metrics</PlatformLink> for setup and usage.
+
+</SdkApi>
+
+</PlatformSection>
 
 ## Tracing
 
@@ -891,8 +998,71 @@ These utilities can be used for more advanced tracing use cases.
 </SdkApi>
 
 <SdkApi
+  name="getSpanDescendants"
+  signature="function getSpanDescendants(span: Span): Span[]"
+>
+  Returns an array with the given span and all of its descendants.
+</SdkApi>
+
+<SdkApi
+  name="spanToTraceHeader"
+  signature="function spanToTraceHeader(span: Span): string"
+>
+  Convert a span to a `sentry-trace` header value.
+</SdkApi>
+
+<SdkApi
+  name="spanToBaggageHeader"
+  signature="function spanToBaggageHeader(span: Span): string | undefined"
+>
+  Convert a span to a `baggage` header value that contains the dynamic sampling
+  context of the span's trace.
+</SdkApi>
+
+<SdkApi
+  name="getTraceData"
+  signature="function getTraceData(options?: { span?: Span; scope?: Scope; client?: Client; propagateTraceparent?: boolean }): { 'sentry-trace'?: string; baggage?: string; traceparent?: string }"
+>
+Returns the trace propagation data of the active span, or of the current scope if there's no active span, as `sentry-trace` and `baggage` values. Use these values to propagate a trace manually, for example as headers of an outgoing request that the SDK doesn't instrument. If `propagateTraceparent` is `true`, the result also contains a W3C `traceparent` value.
+
+Returns an empty object if the SDK isn't initialized or is disabled.
+
+</SdkApi>
+
+<SdkApi
+  name="getTraceMetaTags"
+  signature="function getTraceMetaTags(traceData?: { 'sentry-trace'?: string; baggage?: string; traceparent?: string }): string"
+  categorySupported={['server', 'serverless']}
+>
+Returns the current trace data as HTML `<meta>` tags. Add them to the `<head>` of server-rendered HTML to continue the server trace in the browser. By default, it uses the result of [`getTraceData`](#getTraceData).
+
+```javascript
+function renderHtml() {
+  return `
+    <head>
+      ${Sentry.getTraceMetaTags()}
+    </head>
+  `;
+}
+```
+
+</SdkApi>
+
+<SdkApi
+  name="withStaticSpan"
+  signature="function withStaticSpan(callback: (span: SpanJSON) => SpanJSON): (span: StreamedSpanJSON) => StreamedSpanJSON"
+>
+  Wraps a <PlatformLink to="/configuration/options/#beforeSendSpan">`beforeSendSpan`</PlatformLink>{" "}
+  callback so it receives and returns the static `SpanJSON` format. Use it when
+  you set{" "}
+  <PlatformLink to="/configuration/options/#traceLifecycle">`traceLifecycle: 'static'`</PlatformLink>.
+  Without the wrapper, `beforeSendSpan` receives `StreamedSpanJSON`.
+</SdkApi>
+
+<SdkApi
   name="setConversationId"
   signature="function setConversationId(conversationId: string | null): void"
+  availableSince="10.37.0"
 >
   Set a conversation ID that will be automatically applied to all subsequent AI spans within the current scope. This is useful for tracking multiple AI API calls that are part of the same conversation, allowing you to analyze entire conversation flows in Sentry.
 
@@ -1168,6 +1338,19 @@ Note that in most cases you should not use this API, but instead use `withScope`
   to Sentry. It will reject if the feedback cannot be sent.
 </SdkApi>
 
+<SdkApi
+  name="showReportDialog"
+  signature="function showReportDialog(options?: ReportDialogOptions): void"
+  categorySupported={['browser']}
+>
+Shows the Crash-Report modal, which asks the user for feedback about an error. By default, the dialog is linked to the last captured error event and prefills the user set on the scope. Pass `eventId` to link it to a different event.
+
+Use `onLoad`, `onClose`, and `onError` to react to the dialog. `onError` is called when there's no event ID, or when the dialog script fails to load, for example because an ad blocker blocks it.
+
+See <PlatformLink to="/user-feedback/configuration/#crash-report-modal">Crash-Report Modal</PlatformLink> for all options.
+
+</SdkApi>
+
 <PlatformCategorySection supported={['server']}>
 
 ## Cron Monitoring
@@ -1258,6 +1441,85 @@ parameters={[
 >
 Wraps a callback with a cron monitor check in. The check in will be sent to Sentry when the callback finishes.
 </SdkApi>
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno"]}>
+
+<SdkApi
+  name="cron"
+  signature="const cron: { instrumentNodeSchedule, instrumentCron, instrumentNodeCron }"
+  categorySupported={['server']}
+>
+Helpers that send check-ins for jobs scheduled with popular cron libraries. Use `cron.instrumentNodeSchedule` to instrument the `schedule` export of [`node-schedule`](https://www.npmjs.com/package/node-schedule).
+
+`cron.instrumentCron` and `cron.instrumentNodeCron` are deprecated. Use `cronJobIntegration` and `nodeCronIntegration` instead.
+
+See <PlatformLink to="/crons/">Crons</PlatformLink> for setup and examples.
+
+</SdkApi>
+
+</PlatformSection>
+
+## Library Instrumentation
+
+<SdkApi
+  name="trpcMiddleware"
+  signature="function trpcMiddleware(options?: { attachRpcInput?: boolean }): <T>(opts: SentryTrpcMiddlewareArguments<T>) => Promise<T>"
+  categorySupported={['server']}
+  parameters={[
+    {
+      name: "attachRpcInput",
+      type: "boolean",
+      description:
+        "Whether to include procedure inputs in reported events. If you don't set it, inputs are included when `dataCollection.httpBodies` includes `incomingRequest`.",
+    },
+  ]}
+>
+  Returns a tRPC middleware that creates spans for tRPC procedures and captures
+  their errors. Add it to your tRPC procedures with `.use()`. See{" "}
+  <PlatformLink to="/configuration/integrations/trpc/">tRPC</PlatformLink> for
+  an example.
+</SdkApi>
+
+<SdkApi
+  name="wrapMcpServerWithSentry"
+  signature="function wrapMcpServerWithSentry<S extends object>(mcpServerInstance: S, options?: McpServerWrapperOptions): S"
+  categorySupported={['server']}
+  parameters={[
+    {
+      name: "options",
+      type: {
+        name: "McpServerWrapperOptions",
+        properties: [
+          {
+            name: "recordInputs",
+            type: "boolean",
+            description:
+              "Whether to record tool and prompt input arguments. Defaults to `dataCollection.mcp.inputs`, then `dataCollection.genAI.inputs`.",
+          },
+          {
+            name: "recordOutputs",
+            type: "boolean",
+            description:
+              "Whether to record tool and prompt output results. Defaults to `dataCollection.mcp.outputs`, then `dataCollection.genAI.outputs`.",
+          },
+          {
+            name: "getOAuthClientName",
+            type: "(authInfo: { clientId: string; extra?: Record<string, unknown> } | undefined) => string | undefined",
+            description:
+              "Returns the registered OAuth client name for each incoming request. The SDK records it as `mcp.auth.client.name`. Tokens aren't recorded.",
+          },
+        ],
+      },
+    },
+  ]}
+>
+  Instruments an MCP server instance and returns the same instance. It supports
+  `@modelcontextprotocol/sdk` 1.x (from `1.9.0`) and `@modelcontextprotocol/server`
+  2.x, and you can call it before or after registering tools, resources, and
+  prompts. See <PlatformLink to="/mcp-monitoring/">MCP Monitoring</PlatformLink>{" "}
+  for setup.
+</SdkApi>
+
 </PlatformCategorySection>
 
 <PlatformSection supported={["javascript.sveltekit"]}>
@@ -1398,7 +1660,7 @@ export const GET = wrapServerRouteWithSentry(async () => {
 </SdkApi>
 
 <SdkApi
-  name="wrapGetInitialPropsWithSentry "
+  name="wrapGetInitialPropsWithSentry"
   signature={`function wrapGetInitialPropsWithSentry(
   origGetInitialProps: GetInitialProps
   ): GetInitialProps`}
@@ -1408,7 +1670,7 @@ export const GET = wrapServerRouteWithSentry(async () => {
 </SdkApi>
 
 <SdkApi
-  name="wrapGetServerSidePropsWithSentry "
+  name="wrapGetServerSidePropsWithSentry"
   signature={`function wrapGetServerSidePropsWithSentry(
   origGetInitialProps: GetInitialProps,
   parameterizedRoute: string
@@ -1419,7 +1681,7 @@ export const GET = wrapServerRouteWithSentry(async () => {
 </SdkApi>
 
 <SdkApi
-  name="wrapGetStaticPropsWithSentry "
+  name="wrapGetStaticPropsWithSentry"
   signature={`function wrapGetStaticPropsWithSentry(
   origGetStaticPropsa: GetStaticProps<Props>,
   _parameterizedRoute: string
@@ -1430,7 +1692,7 @@ export const GET = wrapServerRouteWithSentry(async () => {
 </SdkApi>
 
 <SdkApi
-  name="wrapErrorGetInitialPropsWithSentry "
+  name="wrapErrorGetInitialPropsWithSentry"
   signature={`function wrapErrorGetInitialPropsWithSentry(
   origErrorGetInitialProps: ErrorGetInitialProps
   ): ErrorGetInitialProps`}
@@ -1441,7 +1703,7 @@ export const GET = wrapServerRouteWithSentry(async () => {
 </SdkApi>
 
 <SdkApi
-  name="wrapAppGetInitialPropsWithSentry "
+  name="wrapAppGetInitialPropsWithSentry"
   signature={`function wrapAppGetInitialPropsWithSentry(
   origAppGetInitialProps: AppGetInitialProps
   ): AppGetInitialProps`}
@@ -1452,7 +1714,7 @@ export const GET = wrapServerRouteWithSentry(async () => {
 </SdkApi>
 
 <SdkApi
-  name="wrapDocumentGetInitialPropsWithSentry "
+  name="wrapDocumentGetInitialPropsWithSentry"
   signature={`function wrapDocumentGetInitialPropsWithSentry(
   origDocumentGetInitialProps: DocumentGetInitialProps
   ): DocumentGetInitialProps`}
@@ -1460,6 +1722,108 @@ export const GET = wrapServerRouteWithSentry(async () => {
   Instrument a `getInitialProps` function in a custom document (`_document.js`)
   with Sentry error and performance monitoring by creating and returning a
   wrapped version of the function.
+</SdkApi>
+
+<SdkApi
+  name="wrapPageComponentWithSentry"
+  signature={`function wrapPageComponentWithSentry<C>(
+  pageComponent: C
+  ): C`}
+>
+  Wraps a Pages Router page component with Sentry error instrumentation.
+</SdkApi>
+
+<SdkApi
+  name="wrapApiHandlerWithSentryVercelCrons"
+  signature={`function wrapApiHandlerWithSentryVercelCrons<F extends (...args: any[]) => any>(
+  handler: F,
+  vercelCronsConfig: { path?: string; schedule?: string }[] | undefined
+  ): F`}
+>
+  Wraps a Pages Router API route handler so it sends cron check-ins for the
+  Vercel Cron Jobs that call it. Pass the `crons` array from your `vercel.json`
+  as `vercelCronsConfig`. With webpack, the{" "}
+  <PlatformLink to="/configuration/build/#webpack.automaticVercelMonitors">`webpack.automaticVercelMonitors`</PlatformLink>{" "}
+  option applies this wrapper for you.
+</SdkApi>
+
+## App Router Instrumentation
+
+When you build with webpack, the SDK wraps App Router components, route handlers, and middleware automatically. Use these wrappers to instrument code manually, for example if you turned off <PlatformLink to="/configuration/build/#webpack.autoInstrumentAppDirectory">`webpack.autoInstrumentAppDirectory`</PlatformLink> or <PlatformLink to="/configuration/build/#webpack.autoInstrumentMiddleware">`webpack.autoInstrumentMiddleware`</PlatformLink>.
+
+<SdkApi
+  name="wrapRouteHandlerWithSentry"
+  signature={`function wrapRouteHandlerWithSentry<F extends (...args: any[]) => any>(
+  routeHandler: F,
+  context: {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+    parameterizedRoute: string;
+    headers?: WebFetchHeaders;
+  }
+  ): (...args: Parameters<F>) => ReturnType<F> extends Promise<unknown> ? ReturnType<F> : Promise<ReturnType<F>>`}
+>
+  Wraps an App Router route handler (`route.(js|ts)`) with Sentry error and
+  performance instrumentation. For Pages Router API routes, use
+  [`wrapApiHandlerWithSentry`](#wrapApiHandlerWithSentry) instead.
+</SdkApi>
+
+<SdkApi
+  name="wrapServerComponentWithSentry"
+  signature={`function wrapServerComponentWithSentry<F extends (...args: any[]) => any>(
+  appDirComponent: F,
+  context: {
+    componentRoute: string;
+    componentType: 'Page' | 'Layout' | 'Head' | 'Not-found' | 'Loading' | 'Unknown';
+    headers?: WebFetchHeaders;
+  }
+  ): F`}
+>
+  Wraps an App Router server component with Sentry error instrumentation.
+</SdkApi>
+
+<SdkApi
+  name="wrapGenerationFunctionWithSentry"
+  signature={`function wrapGenerationFunctionWithSentry<F extends (...args: any[]) => any>(
+  generationFunction: F,
+  context: {
+    componentRoute: string;
+    componentType: string;
+    generationFunctionIdentifier: string;
+  }
+  ): F`}
+>
+  Wraps an App Router generation function, such as `generateMetadata`, with
+  Sentry error instrumentation.
+</SdkApi>
+
+<SdkApi
+  name="wrapMiddlewareWithSentry"
+  signature={`function wrapMiddlewareWithSentry<H extends (...args: any[]) => any>(
+  middleware: H
+  ): (...params: Parameters<H>) => Promise<ReturnType<H>>`}
+>
+  Wraps Next.js middleware with Sentry error instrumentation. The middleware
+  span itself comes from Next.js's built-in OpenTelemetry instrumentation.
+</SdkApi>
+
+## Request Error Capturing
+
+<SdkApi
+  name="captureRequestError"
+  signature={`function captureRequestError(
+  error: unknown,
+  request: { path: string; method: string; headers: Record<string, string | string[] | undefined> },
+  errorContext: { routerKind: string; routePath: string; routeType: string }
+  ): void`}
+>
+Reports errors that Next.js passes to the `onRequestError` instrumentation hook. Export it from your `instrumentation.(js|ts)` file:
+
+```javascript {filename:instrumentation.js}
+import * as Sentry from "@sentry/nextjs";
+
+export const onRequestError = Sentry.captureRequestError;
+```
+
 </SdkApi>
 
 </PlatformSection>

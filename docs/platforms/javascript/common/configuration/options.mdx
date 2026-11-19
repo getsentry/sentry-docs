@@ -42,6 +42,14 @@ It is also used for features like <PlatformLink to="/configuration/options/#stri
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information about what the SDK is doing.
 
+<PlatformCategorySection supported={["server", "serverless"]}>
+<PlatformSection notSupported={["javascript.bun", "javascript.deno", "javascript.elysia"]}>
+
+In Node.js-based SDKs and on Cloudflare, you can also turn on debug mode with the `SENTRY_DEBUG` environment variable. A `debug` value passed to `init` takes precedence.
+
+</PlatformSection>
+</PlatformCategorySection>
+
 </SdkOption>
 
 <SdkOption name="release" type='string' envVar="SENTRY_RELEASE">
@@ -80,6 +88,12 @@ Environments tell you where an error occurred, whether that's in your production
 Sentry automatically creates an environment when it receives an event with the environment parameter set.
 
 Environments are case-sensitive. The environment name can't contain newlines, spaces or forward slashes, can't be the string "None", or exceed 64 characters. You can't delete environments, but you can hide them.
+
+</SdkOption>
+
+<SdkOption name="dist" type='string'>
+
+Sets the distribution of the application. Use distributions to tell apart build or deployment variants of the same release.
 
 </SdkOption>
 
@@ -199,6 +213,24 @@ Some headers, cookies, and query parameters identify a user without being creden
 
 </SdkOption>
 
+<PlatformSection supported={["javascript.remix"]}>
+
+<SdkOption name="captureActionFormDataKeys" type='Record<string, string | boolean>' categorySupported={['server']}>
+
+Controls which `action` form data fields the SDK captures and attaches to spans. Set a field to `true` to capture it, or to a string to report it under a different name. For example, `{ username: 'user' }` reports `username` as `user`.
+
+Setting this option captures the listed fields even if `dataCollection.httpBodies` doesn't include `"incomingRequest"`. Without it, the SDK captures all form fields when `dataCollection.httpBodies` includes `"incomingRequest"`, which is the default. Either way, values with a sensitive-looking field name, such as `password` or `token`, are replaced with `[Filtered]`.
+
+```javascript
+Sentry.init({
+  captureActionFormDataKeys: { username: true, email: "user_email" },
+});
+```
+
+</SdkOption>
+
+</PlatformSection>
+
 <SdkOption name="maxBreadcrumbs" type='number' defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. You should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
@@ -223,7 +255,51 @@ This option can be used to supply a server name. When provided, the name of the 
 
 Most SDKs will attempt to auto-discover this value.
 
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno"]}>
+
+If you don't set it, the SDK reads the `SENTRY_NAME` environment variable and falls back to the hostname of the machine.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+If you don't set it, the SDK uses the `SENTRY_NAME` variable of `env`. When you build with the <PlatformLink to="/install/vite-plugin/">Sentry Vite plugin</PlatformLink>, it falls back to the `name` in your wrangler config.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+If you don't set it, the SDK uses the hostname of the machine.
+
+</PlatformSection>
+
 </SdkOption>
+
+<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno", "javascript.elysia"]}>
+
+<SdkOption name="includeServerName" type='boolean' defaultValue='true' categorySupported={['server', 'serverless']}>
+
+Set this option to `false` to stop the SDK from detecting the [`serverName`](#serverName) automatically. This is useful in CLI apps, where the hostname might be considered personal data. A `serverName` you set explicitly is also dropped.
+
+</SdkOption>
+
+<SdkOption name="clientReportFlushInterval" type='number' defaultValue='60000' categorySupported={['server', 'serverless']}>
+
+How often, in milliseconds, the SDK sends pending client reports. See [`sendClientReports`](#sendClientReports).
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.deno"]}>
+
+<SdkOption name="onFatalError" type='(error: Error) => void' categorySupported={['server', 'serverless']}>
+
+Called when an uncaught exception would make the process exit. The SDK captures the error first. By default, the SDK then logs the error and exits the process. If you pass a callback, the SDK calls it instead, and your callback decides whether to exit.
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="initialScope" type="CaptureContext">
   <PlatformSection supported={["javascript.electron"]}>
@@ -269,6 +345,38 @@ Sentry SDKs normalize any contextual data to a given depth. Any data beyond this
 <SdkOption name="normalizeMaxBreadth" type='number' defaultValue='1000'>
 
 This is the maximum number of properties or entries that will be included in any given object or array when the SDK is normalizing contextual data. Any data beyond this depth will be dropped.
+
+</SdkOption>
+
+<PlatformSection notSupported={["javascript.bun", "javascript.deno", "javascript.electron", "javascript.elysia"]}>
+
+<SdkOption name="spotlight" type='boolean | string' envVar='SENTRY_SPOTLIGHT'>
+
+Forwards captured data to [Spotlight](https://spotlightjs.com/) during development. Set it to `true` to use the default Spotlight sidecar URL, or pass the sidecar URL as a string.
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+
+On the server, the SDK also reads the `SENTRY_SPOTLIGHT` environment variable, which can be `true`, `false`, or a sidecar URL. Setting the option to `false` turns Spotlight off, even if the environment variable is set.
+
+</PlatformCategorySection>
+
+Only turn on this option during development, not in production.
+
+</SdkOption>
+
+</PlatformSection>
+
+<SdkOption name="cdnBaseUrl" type='string' defaultValue='https://browser.sentry-cdn.com' categorySupported={['browser']}>
+
+The base URL that <PlatformLink to="/configuration/apis/#lazyLoadIntegration">`lazyLoadIntegration`</PlatformLink> loads integration bundles from.
+
+</SdkOption>
+
+<SdkOption name="skipBrowserExtensionCheck" type='boolean' defaultValue='false' categorySupported={['browser']}>
+
+By default, the SDK doesn't initialize and logs a warning if `Sentry.init` is called in a browser extension, because browser extensions need a different setup. Set this option to `true` to skip the check if the SDK wrongly detects your app as a browser extension.
+
+See <PlatformLink to="/best-practices/shared-environments/" fallbackPlatform="javascript">Shared Environments</PlatformLink> for how to set up Sentry in a browser extension.
 
 </SdkOption>
 
@@ -320,6 +428,12 @@ See <PlatformLink to="/configuration/integrations/#modifying-default-integration
 
 This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</SdkOption>
+
+<SdkOption name="stackParser" type='StackParser | StackLineParser[]'>
+
+A stack parser implementation, or an array of stack line parsers. The SDK sets a default stack parser for every supported platform, so you only need this option for custom stack trace formats.
 
 </SdkOption>
 
@@ -541,6 +655,18 @@ Available options:
 
 </SdkOption>
 
+<PlatformSection supported={["javascript.nuxt"]}>
+
+<SdkOption name="enableNitroErrorHandler" type='boolean' defaultValue='true' categorySupported={['server']}>
+
+Controls whether the SDK captures errors from the Nitro `error` hook. The SDK sends these errors to Sentry with additional data, such as the transaction name and the Nitro error context.
+
+Keep this option enabled unless you want to capture Nitro errors with your own error handler. Set this option in `sentry.server.config.ts`.
+
+</SdkOption>
+
+</PlatformSection>
+
 <PlatformSection supported={["javascript.vue", "javascript.nuxt"]}>
 
 <SdkOption name="attachProps" type='boolean' defaultValue='true' categorySupported={['browser']}>
@@ -707,6 +833,39 @@ This is useful to prevent traces of unknown third-party services from being cont
 
 </SdkOption>
 
+<SdkOption name="parentSpanIsAlwaysRootSpan" type='boolean'>
+
+If set to `true`, new spans always become children of the active root span instead of the active span. This avoids wrong parent-child relationships in environments where the SDK can't reliably isolate async contexts, for example with nested `startSpan()` calls in the browser.
+
+Defaults to `true` in the browser and to `false` on the server.
+
+</SdkOption>
+
+<SdkOption name="routeProvider" type='RouteProvider' availableSince='11.3.0' categorySupported={['browser']}>
+
+Resolves URLs to low-cardinality route names, for example `/users/42` to `/users/:id`. The SDK uses these names for spans.
+
+Framework SDKs set this for you. Set it yourself to name routes of a router that the SDK has no integration for. A `RouteProvider` has two methods:
+
+- `resolveRoute(url)`: Returns the path template for the given URL, or `undefined` if the URL matches no known route.
+- `resolveCurrentRoute()`: Returns the path template of the route the app is on, or `undefined`.
+
+If your router uses the browser's address bar (not a memory or hash router), `Sentry.createUrlRouteProvider(resolveRoute)` builds a provider from a single `resolveRoute` function. To replace the provider after `init`, call `Sentry.setRouteProvider()`. Prefer the option where you can: the SDK names the pageload span during setup, so a provider set later can only rename it afterward.
+
+</SdkOption>
+
+<PlatformSection supported={['javascript.aws-lambda']}>
+
+<SdkOption name="ignoreStaticAssets" type='boolean' defaultValue='true' availableSince='11.13.0'>
+
+Controls whether the SDK skips spans for `GET` invocations that request common static assets, such as `favicon.ico`, `robots.txt`, `.js` files, or images. Set this option to `false` to keep these spans.
+
+The SDK always skips spans for CORS preflight (`OPTIONS`) and `HEAD` invocations.
+
+</SdkOption>
+
+</PlatformSection>
+
 <SdkOption name="beforeSendSpan" type='(span: StreamedSpanJSON) => StreamedSpanJSON'>
 
 Called for each finished span before it is sent to Sentry, including service spans and their child spans. Return the modified span to rename it or remove sensitive data. Check `span.is_segment` to apply changes only to service spans.
@@ -862,6 +1021,14 @@ Controls how spans are sent to Sentry:
   defaults to `'stream'` since version `8.0.0`.
 </PlatformSection>
 
+<PlatformCategorySection supported={["server", "serverless"]}>
+<PlatformSection notSupported={["javascript.bun", "javascript.deno", "javascript.elysia"]}>
+
+In Node.js-based SDKs and on Cloudflare, you can also set the trace lifecycle with the `SENTRY_TRACE_LIFECYCLE` environment variable (`stream` or `static`). A `traceLifecycle` value passed to `init` takes precedence.
+
+</PlatformSection>
+</PlatformCategorySection>
+
 To opt out of span streaming, set `traceLifecycle: 'static'`. If you use `beforeSendSpan`, wrap it with `Sentry.withStaticSpan()` to receive the `SpanJSON` format:
 
 ```javascript
@@ -937,7 +1104,9 @@ Controls whether the SDK installs runtime hooks that instrument supported depend
 
 <Alert>
   On SDK versions below `10.71.0`, logs are opt-in. Set `enableLogs: true` in
-  your `Sentry.init` to send them.
+  your `Sentry.init` to send them. SDK version 11 removed the `enableLogs`
+  option: the SDK sends logs whenever you use `Sentry.logger` or a logging
+  integration.
 </Alert>
 
 <SdkOption name="beforeSendLog" type='(log: Log) => Log | null'>
