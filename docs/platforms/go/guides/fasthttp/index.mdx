@@ -27,8 +27,8 @@ go get github.com/getsentry/sentry-go/fasthttp
 `sentryfasthttp` accepts a struct of `Options` that allows you to configure how the handler will behave.
 
 ```go
-// Repanic configures whether Sentry should repanic after recovery, in most cases, it defaults to false,
-// as fasthttp doesn't include its own Recovery handler.
+// Repanic configures whether Sentry should repanic after recovery. fasthttp doesn't
+// recover panics, so in most cases it should be false.
 Repanic bool
 // WaitForDelivery configures whether you want to block the request before moving forward with the response.
 // Because fasthttp doesn't include its own `Recovery` handler, it will restart the application,
@@ -54,14 +54,14 @@ sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
 ```go
 // Create an instance of sentryfasthttp
 sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
-// specify options here...
+	// specify options here...
 })
 
 // After creating the instance, you can attach the handler as one of your middleware
 fastHTTPHandler := sentryHandler.Handle(func(ctx *fasthttp.RequestCtx) {
 	// capturing an error intentionally to simulate usage
-	sentry.CaptureMessage("It works!")
-	
+	sentry.CaptureMessage(sentryfasthttp.GetContext(ctx), "It works!")
+
 	ctx.SetStatusCode(fasthttp.StatusOK)
 })
 
@@ -75,19 +75,15 @@ if err := fasthttp.ListenAndServe(":3000", fastHTTPHandler); err != nil {
 
 ## Usage
 
-`sentryfasthttp` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
-You can access it by using the `sentryfasthttp.GetHubFromContext()` method on the context itself in any of your proceeding middleware and routes.
-And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException`, or any other calls, as it keeps the separation of data between the requests.
+`sentryfasthttp` forks a scope for each request. Use `sentryfasthttp.GetContext(ctx)` to get the request's Go context.
 
-<PlatformContent includePath="tracing/automatic-instrumentation/middleware-note" />
-
-**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryfasthttp`!**
+<Include name="go/request-scope-usage" />
 
 ```go
 func enhanceSentryEvent(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		if hub := sentryfasthttp.GetHubFromContext(ctx); hub != nil {
-			hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+		if scope := sentry.ScopeFromContext(sentryfasthttp.GetContext(ctx)); scope != nil {
+			scope.SetTag("someRandomTag", "maybeYouNeedIt")
 		}
 		handler(ctx)
 	}
@@ -95,17 +91,14 @@ func enhanceSentryEvent(handler fasthttp.RequestHandler) fasthttp.RequestHandler
 
 // Later in the code
 sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
-	Repanic: true,
+	Repanic:         false,
 	WaitForDelivery: true,
 })
 
 defaultHandler := func(ctx *fasthttp.RequestCtx) {
-	if hub := sentryfasthttp.GetHubFromContext(ctx); hub != nil {
-		hub.WithScope(func(scope *sentry.Scope) {
-			scope.SetAttributes(attribute.String("unwantedQuery", "someQueryDataMaybe"))
-			hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-		})
-	}
+	captureCtx, scope := sentry.WithScope(sentryfasthttp.GetContext(ctx))
+	scope.SetContext("query", sentry.Context{"unwanted": "someQueryDataMaybe"})
+	sentry.CaptureMessage(captureCtx, "User provided unwanted query string, but we recovered just fine")
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
@@ -145,6 +138,8 @@ sentry.Init(sentry.ClientOptions{
 	},
 })
 ```
+
+<Include name="go/framework-background-work" />
 
 ## Next Steps
 
