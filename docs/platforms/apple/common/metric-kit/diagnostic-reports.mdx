@@ -15,7 +15,7 @@ Identify MetricKit events by their `mechanism.type`, which is listed for each re
 
 ## Enable MetricKit
 
-Enable the integration by setting the `enableMetricKit` option to `true`. It captures [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic), [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic) and [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic):
+Enable the integration by setting the `enableMetricKit` option to `true`. It captures [HangDiagnostic](https://developer.apple.com/documentation/metrickit/hangdiagnostic), [DiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/diskwriteexceptiondiagnostic) and [CPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/cpuexceptiondiagnostic):
 
 ```swift {tabTitle:Swift} {mdExpandTabs}
 import Sentry
@@ -123,14 +123,14 @@ This option is experimental and may change in future releases. It's available on
 
 Use `options.experimental.metrickit.enabledDiagnosticReports` to choose which diagnostic reports the SDK captures. A non-empty set enables the integration and captures exactly these reports, regardless of `enableMetricKit`. When the set is empty, which is the default, `enableMetricKit` decides whether the integration captures hangs, CPU exceptions and disk write exceptions.
 
-| Report                | MetricKit diagnostic                                                                                                 | `mechanism.type`           | Availability                                                  |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------- |
-| `.hang`               | [MXHangDiagnostic](https://developer.apple.com/documentation/metrickit/mxhangdiagnostic)                             | `mx_hang_diagnostic`       | All                                                           |
-| `.cpuException`       | [MXCPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxcpuexceptiondiagnostic)             | `mx_cpu_exception`         | All                                                           |
-| `.diskWriteException` | [MXDiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/mxdiskwriteexceptiondiagnostic) | `mx_disk_write_exception`  | All                                                           |
-| `.appLaunch`          | [MXAppLaunchDiagnostic](https://developer.apple.com/documentation/metrickit/mxapplaunchdiagnostic)                   | `mx_app_launch_diagnostic` | iOS 16 and later, visionOS 26 and earlier, macOS 27 and later |
-| `.crash`              | [MXCrashDiagnostic](https://developer.apple.com/documentation/metrickit/mxcrashdiagnostic)                           | `MXCrashDiagnostic`        | All                                                           |
-| `.memoryException`    | `MemoryExceptionDiagnostic`                                                                                          | `mx_memory_exception`      | iOS 27 and later                                              |
+| Report                | MetricKit diagnostic                                                                                             | `mechanism.type`           | Availability                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------- |
+| `.hang`               | [HangDiagnostic](https://developer.apple.com/documentation/metrickit/hangdiagnostic)                             | `mx_hang_diagnostic`       | All                                                           |
+| `.cpuException`       | [CPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/cpuexceptiondiagnostic)             | `mx_cpu_exception`         | All                                                           |
+| `.diskWriteException` | [DiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/diskwriteexceptiondiagnostic) | `mx_disk_write_exception`  | All                                                           |
+| `.appLaunch`          | [AppLaunchDiagnostic](https://developer.apple.com/documentation/metrickit/applaunchdiagnostic)                   | `mx_app_launch_diagnostic` | iOS 16 and later, visionOS 26 and earlier, macOS 27 and later |
+| `.crash`              | [CrashDiagnostic](https://developer.apple.com/documentation/metrickit/crashdiagnostic)                           | `MXCrashDiagnostic`        | All                                                           |
+| `.memoryException`    | [MemoryExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/memoryexceptiondiagnostic)       | `mx_memory_exception`      | iOS 27 and later                                              |
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -156,17 +156,13 @@ SentrySDK.start { options in
 
 The option is available from Swift and through the <PlatformLink to="/install/swift-package-manager/#sentryobjc-objective-c">SentryObjC</PlatformLink> SDK. Objective-C apps that import `Sentry` can only use `enableMetricKit`.
 
-On iOS, macOS and visionOS 27 and later, apps built with Xcode 27 or later receive diagnostics through MetricKit's `MetricManager`. The SDK creates the same events as on earlier OS versions.
+On iOS, macOS and visionOS 27 and later, apps built with Xcode 27 or later receive diagnostics through MetricKit's [`MetricManager`](https://developer.apple.com/documentation/metrickit/metricmanager). The SDK creates the same events as on earlier OS versions.
 
-<Alert level="warning" title="Crash diagnostics">
+<Alert level="warning" title="Duplicate events">
 
-The SDK's crash handler already reports crashes. Enabling `.crash` sends the crashes MetricKit reports in addition, so the same crash can show up twice in Sentry.
+MetricKit can report a crash or a termination that the SDK already reported itself. The SDK's crash handler reports crashes, which `.crash` reports as well, and its <PlatformLink to="/configuration/watchdog-terminations/">watchdog termination tracking</PlatformLink> reports out-of-memory terminations, which `.memoryException` reports as well.
 
-</Alert>
-
-<Alert level="warning" title="Memory exception diagnostics">
-
-The SDK's <PlatformLink to="/configuration/watchdog-terminations/">watchdog termination tracking</PlatformLink> already reports out-of-memory terminations. Enabling `.memoryException` sends the terminations MetricKit reports in addition, so the same termination can show up twice in Sentry. Memory exception diagnostics are available on Cocoa 9.32.0 and up.
+The SDK tries to deduplicate these events, but it can't match every MetricKit diagnostic to the event it already sent, so some crashes and terminations can show up twice in Sentry.
 
 </Alert>
 
