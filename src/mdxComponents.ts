@@ -47,6 +47,7 @@ import {PlatformCategorySection} from './components/platformCategorySection';
 import {PlatformFilter} from './components/platformFilter';
 import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
+import {PlatformIntegrationList} from './components/platformIntegrationList';
 import {PlatformLink} from './components/platformLink';
 import {PlatformLinkWithLogo} from './components/platformLinkWithLogo';
 import {PlatformOrGuideName} from './components/platformOrGuideName';
@@ -118,6 +119,7 @@ export function mdxComponents(
     PiiFields,
     PlatformGrid,
     PlatformIdentifier,
+    PlatformIntegrationList,
     PlatformLink,
     PlatformLinkWithLogo,
     PlatformSection,
