@@ -1,0 +1,124 @@
+---
+title: Metric Reports
+sidebar_order: 20
+description: "Send the metrics MetricKit collects, such as CPU time, memory, launch times and app exit counts, as Sentry metrics."
+---
+
+The <PlatformLink to="/metric-kit/">MetricKit</PlatformLink> integration sends the metric payloads of [MetricKit](https://developer.apple.com/documentation/metrickit), such as CPU time, network transfer, memory, launch times and app exit counts, as <PlatformLink to="/metrics/">Sentry metrics</PlatformLink>. Metric reports are independent of <PlatformLink to="/metric-kit/diagnostic-reports/">diagnostic reports</PlatformLink>, and you can enable either without the other.
+
+<Alert level="warning" title="Experimental">
+
+This option is experimental and may change in future releases. It's available from Swift on Cocoa 9.32.0 and up, and through the <PlatformLink to="/install/swift-package-manager/#sentryobjc-objective-c">SentryObjC</PlatformLink> SDK on Cocoa 9.33.0 and up.
+
+</Alert>
+
+## Enable Metric Reports
+
+Use `options.experimental.metrickit.enabledMetricReports` to choose the [metric reports](#available-reports) the SDK sends. A non-empty set enables the integration, even when no diagnostic reports are enabled. Use `.all` (`SentryObjCMetricKitMetricReportAll` in Objective-C) to send every metric report. The option defaults to an empty set.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.metrickit.enabledMetricReports = [
+        .cpuCumulativeTime,
+        .memoryPeakUsage,
+        .exitForegroundWatchdog,
+        .exitForegroundMemoryResourceLimit,
+    ]
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.metrickit.enabledMetricReports =
+        SentryObjCMetricKitMetricReportCPUCumulativeTime
+        | SentryObjCMetricKitMetricReportMemoryPeakUsage
+        | SentryObjCMetricKitMetricReportExitForegroundWatchdog
+        | SentryObjCMetricKitMetricReportExitForegroundMemoryResourceLimit;
+}];
+```
+
+## Volume and Attributes
+
+MetricKit delivers metric payloads about once a day, so metrics can arrive up to a day after the values were recorded. Each enabled report adds up to one metric per payload, except for [histogram reports](#histogram-reports), which add up to about 100. Metrics count towards your metrics quota. Counts of zero aren't sent. Every metric is placed in the middle of the payload's reporting interval and carries these attributes:
+
+- `app.version` and `app.build`: the app version the values were recorded with. They're left out when the payload spans an app update.
+- `sentry.release`: the release of that app version, when it differs from the running release.
+- `os.version`: the OS version the values were recorded on.
+- `metal.layer_name`: the name of the Metal layer, only on the `metrickit.metal.*` metrics.
+
+## Available Reports
+
+On macOS, MetricKit delivers metric payloads from macOS 26, and only to apps built with Xcode 26 or later.
+
+On iOS and macOS 27 and later, apps built with Xcode 27 or later receive metrics through MetricKit's `MetricManager`, with the same names, types and units as on earlier OS versions. Only `MetricManager` provides the reports listed as available on iOS and macOS 27 and later, and it doesn't report `.animationScrollHitchTimeRatio`, because it only reports the hitch time of all animations. These reports are available on Cocoa 9.33.0 and up.
+
+| Report                                   | Metric                                          | Type                     | Unit                | Availability                             |
+| ---------------------------------------- | ----------------------------------------------- | ------------------------ | ------------------- | ---------------------------------------- |
+| `.cpuCumulativeTime`                     | `metrickit.cpu.cumulative_time`                 | distribution             | second              |                                          |
+| `.cpuCumulativeInstructions`             | `metrickit.cpu.cumulative_instructions`         | distribution             | none (instructions) |                                          |
+| `.gpuCumulativeTime`                     | `metrickit.gpu.cumulative_time`                 | distribution             | second              |                                          |
+| `.appTimeForeground`                     | `metrickit.app_time.foreground`                 | distribution             | second              |                                          |
+| `.appTimeBackground`                     | `metrickit.app_time.background`                 | distribution             | second              |                                          |
+| `.appTimeBackgroundAudio`                | `metrickit.app_time.background_audio`           | distribution             | second              |                                          |
+| `.appTimeBackgroundLocation`             | `metrickit.app_time.background_location`        | distribution             | second              |                                          |
+| `.networkWifiUpload`                     | `metrickit.network.wifi_upload`                 | distribution             | byte                |                                          |
+| `.networkWifiDownload`                   | `metrickit.network.wifi_download`               | distribution             | byte                |                                          |
+| `.networkCellularUpload`                 | `metrickit.network.cellular_upload`             | distribution             | byte                |                                          |
+| `.networkCellularDownload`               | `metrickit.network.cellular_download`           | distribution             | byte                |                                          |
+| `.diskIOLogicalWrites`                   | `metrickit.disk_io.logical_writes`              | distribution             | byte                |                                          |
+| `.locationBestAccuracyTime`              | `metrickit.location.best_accuracy_time`         | distribution             | second              |                                          |
+| `.locationBestAccuracyForNavigationTime` | `metrickit.location.best_accuracy_for_nav_time` | distribution             | second              |                                          |
+| `.locationNearestTenMetersTime`          | `metrickit.location.nearest_ten_meters_time`    | distribution             | second              |                                          |
+| `.locationHundredMetersTime`             | `metrickit.location.hundred_meters_time`        | distribution             | second              |                                          |
+| `.locationKilometerTime`                 | `metrickit.location.kilometer_time`             | distribution             | second              |                                          |
+| `.locationThreeKilometersTime`           | `metrickit.location.three_kilometers_time`      | distribution             | second              |                                          |
+| `.memoryPeakUsage`                       | `metrickit.memory.peak_usage`                   | gauge                    | byte                |                                          |
+| `.memoryAverageSuspended`                | `metrickit.memory.avg_suspended`                | gauge                    | byte                |                                          |
+| `.displayAveragePixelLuminance`          | `metrickit.display.avg_pixel_luminance`         | gauge                    | `apl`               |                                          |
+| `.animationScrollHitchTimeRatio`         | `metrickit.animation.scroll_hitch_time_ratio`   | gauge                    | ratio               | iOS and macOS 26 and earlier, visionOS   |
+| `.animationHitchTimeRatio`               | `metrickit.animation.hitch_time_ratio`          | gauge                    | ratio               | iOS, macOS and visionOS 26 and later     |
+| `.animationTotalHitchTime`               | `metrickit.animation.total_hitch_time`          | distribution             | second              | iOS and macOS 27 and later               |
+| `.animationTotalAnimationTime`           | `metrickit.animation.total_animation_time`      | distribution             | second              | iOS and macOS 27 and later               |
+| `.metalFramesPerSecond`                  | `metrickit.metal.frames_per_second`             | gauge                    | `fps`               | iOS and macOS 27 and later               |
+| `.metalFrameCount`                       | `metrickit.metal.frame_count`                   | count                    |                     | iOS and macOS 27 and later               |
+| `.metalActiveDrawingDuration`            | `metrickit.metal.active_drawing_duration`       | distribution             | second              | iOS and macOS 27 and later               |
+| `.diskSpaceBinaryFileSize`               | `metrickit.disk_space.binary_file_size`         | gauge                    | byte                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceBinaryFileCount`              | `metrickit.disk_space.binary_file_count`        | gauge                    | none                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceDataFileSize`                 | `metrickit.disk_space.data_file_size`           | gauge                    | byte                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceDataFileCount`                | `metrickit.disk_space.data_file_count`          | gauge                    | none                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceCacheFolderSize`              | `metrickit.disk_space.cache_folder_size`        | gauge                    | byte                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceCloneSize`                    | `metrickit.disk_space.clone_size`               | gauge                    | byte                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceTotalUsed`                    | `metrickit.disk_space.total_used`               | gauge                    | byte                | iOS, macOS and visionOS 26 and later     |
+| `.diskSpaceTotalCapacity`                | `metrickit.disk_space.total_capacity`           | gauge                    | byte                | iOS, macOS and visionOS 26 and later     |
+| `.launchTimeToFirstDraw`                 | `metrickit.launch.time_to_first_draw`           | distribution (histogram) | second              |                                          |
+| `.launchResumeTime`                      | `metrickit.launch.resume_time`                  | distribution (histogram) | second              |                                          |
+| `.launchOptimizedTimeToFirstDraw`        | `metrickit.launch.optimized_time_to_first_draw` | distribution (histogram) | second              | iOS 15.2 and later, macOS 12.2 and later |
+| `.launchExtended`                        | `metrickit.launch.extended_launch`              | distribution (histogram) | second              | iOS 16 and later, macOS 13 and later     |
+| `.responsivenessHangTime`                | `metrickit.responsiveness.hang_time`            | distribution (histogram) | second              |                                          |
+| `.cellularConditionTime`                 | `metrickit.cellular.condition_time`             | distribution (histogram) | `bars`              | Not on macOS                             |
+| `.exitForegroundNormal`                  | `metrickit.exit.fg.normal`                      | count                    |                     |                                          |
+| `.exitForegroundMemoryResourceLimit`     | `metrickit.exit.fg.memory_resource_limit`       | count                    |                     |                                          |
+| `.exitForegroundBadAccess`               | `metrickit.exit.fg.bad_access`                  | count                    |                     |                                          |
+| `.exitForegroundAbnormal`                | `metrickit.exit.fg.abnormal`                    | count                    |                     |                                          |
+| `.exitForegroundIllegalInstruction`      | `metrickit.exit.fg.illegal_instruction`         | count                    |                     |                                          |
+| `.exitForegroundWatchdog`                | `metrickit.exit.fg.watchdog`                    | count                    |                     |                                          |
+| `.exitBackgroundNormal`                  | `metrickit.exit.bg.normal`                      | count                    |                     |                                          |
+| `.exitBackgroundMemoryResourceLimit`     | `metrickit.exit.bg.memory_resource_limit`       | count                    |                     |                                          |
+| `.exitBackgroundCPUResourceLimit`        | `metrickit.exit.bg.cpu_resource_limit`          | count                    |                     |                                          |
+| `.exitBackgroundMemoryPressure`          | `metrickit.exit.bg.memory_pressure`             | count                    |                     |                                          |
+| `.exitBackgroundBadAccess`               | `metrickit.exit.bg.bad_access`                  | count                    |                     |                                          |
+| `.exitBackgroundAbnormal`                | `metrickit.exit.bg.abnormal`                    | count                    |                     |                                          |
+| `.exitBackgroundIllegalInstruction`      | `metrickit.exit.bg.illegal_instruction`         | count                    |                     |                                          |
+| `.exitBackgroundWatchdog`                | `metrickit.exit.bg.watchdog`                    | count                    |                     |                                          |
+| `.exitBackgroundSuspendedWithLockedFile` | `metrickit.exit.bg.suspended_with_locked_file`  | count                    |                     |                                          |
+| `.exitBackgroundTaskTimeout`             | `metrickit.exit.bg.background_task_timeout`     | count                    |                     |                                          |
+
+## Histogram Reports
+
+MetricKit reports launch times, hang times and the cellular condition as histograms, which only count samples per range of values. Starting with SDK version 9.35.0, the SDK sends each sample as one distribution value at the middle of its range, spread evenly across the reporting interval. A histogram with more than 100 samples is scaled down to about 100 values and keeps its shape.
