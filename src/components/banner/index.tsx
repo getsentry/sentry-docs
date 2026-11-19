@@ -1,6 +1,7 @@
 'use client';
 
 import {Fragment, useEffect, useState} from 'react';
+import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 import styles from './banner.module.scss';
 
@@ -82,6 +83,9 @@ const fastHash = (input: string) => {
 };
 
 const readOrResetLocalStorage = () => {
+  if (!isLocalStorageAvailable()) {
+    return null;
+  }
   const stored = localStorage.getItem(LOCALSTORAGE_NAMESPACE);
   if (!stored) {
     return null;
@@ -164,9 +168,11 @@ export function Banner() {
         className={styles['promo-banner-dismiss']}
         aria-label="Dismiss banner"
         onClick={() => {
-          const manifest = readOrResetLocalStorage() || [];
-          const payload = JSON.stringify([...manifest, banner.hash]);
-          localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
+          if (isLocalStorageAvailable()) {
+            const manifest = readOrResetLocalStorage() || [];
+            const payload = JSON.stringify([...manifest, banner.hash]);
+            localStorage.setItem(LOCALSTORAGE_NAMESPACE, payload);
+          }
           setBanner(null);
         }}
       >
