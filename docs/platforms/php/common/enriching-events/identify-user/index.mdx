@@ -39,3 +39,28 @@ To opt out of storing users' IP addresses in your event data, users with project
 </DefinitionList>
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+
+## Resolve the User Lazily
+
+<Alert level="info">Available in SDK versions newer than 4.37.1.</Alert>
+
+If looking up the current user is expensive or has side effects, for example because it starts a session, you can set a user resolver instead of setting the user up front. A user resolver is a callback that returns a `\Sentry\UserDataBag`, or `null` when no user is available yet:
+
+```php
+\Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
+    $scope->setUserResolver(function (): ?\Sentry\UserDataBag {
+        $user = getAuthenticatedUser(); // Your application's user lookup
+
+        if ($user === null) {
+            return null;
+        }
+
+        return \Sentry\UserDataBag::createFromArray([
+            'id' => $user->id,
+            'email' => $user->email,
+        ]);
+    });
+});
+```
+
+The SDK calls the resolver every time it reads the user from the scope, which happens for every event, log, and metric, so keep it fast. Data set with `setUser()` takes precedence over the data the resolver returns, and the resolver only fills in the fields that aren't set. If the resolver throws an exception, the SDK ignores it and uses only the data set with `setUser()`. Calling `removeUser()` also removes the resolver.
