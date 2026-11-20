@@ -27,7 +27,7 @@ Sentry.init({
 });
 ```
 
-To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+The integration sets a conversation ID for [Conversations](/product/agents/conversations/) only when you use the OpenAI Conversations API to pass OpenAI Conversations API ID, `conv_...`, through the AI SDK. For every other call, including other OpenAI calls and every other provider, call Sentry.setConversationId() yourself. To show who started each chat, also call `Sentry.setUser()` in every request that makes AI calls. See [Conversation IDs](#conversation-ids) for more information.
 
 <PlatformSection supported={['javascript.nextjs']}>
 
@@ -109,6 +109,26 @@ Each call creates a `gen_ai.decide` span named `decide <model>`, with model, lat
 Decision inputs and outputs follow the same [`recordInputs`](#recordinputs) and [`recordOutputs`](#recordoutputs) options as other Vercel AI calls. Disable these options if decision state or answers contain sensitive data.
 
 The AI SDK's [decision API](https://ai-sdk.dev/docs/ai-sdk-core/decisions) is experimental and may change in patch releases. If you use `TypeSafeClient.systemOne()` directly instead, see the [TypeSafe integration](/platforms/javascript/guides/node/configuration/integrations/typesafe/).
+
+## Conversation IDs
+
+The integration sets `gen_ai.conversation.id` automatically only when you pass an OpenAI [Conversations API](https://platform.openai.com/docs/guides/conversation-state) ID in `providerOptions.openai.conversation` (or `providerOptions.azure.conversation`). This requires SDK version `11.5.0` or higher and AI SDK v6 or later:
+
+```javascript
+import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
+
+const result = await generateText({
+  model: openai.responses("gpt-4o"),
+  prompt: "Hello!",
+  // Reuse the same conversation ID for every turn of the chat
+  providerOptions: { openai: { conversation: "conv_abc123" } },
+});
+```
+
+For every other provider and call, call `Sentry.setConversationId()` with your app's chat ID before the first AI call of each request. An ID you set with `Sentry.setConversationId()` replaces the provider option. See <PlatformLink to="/agent-tracing/#set-the-conversation-id-yourself">Set the Conversation ID Yourself</PlatformLink>.
+
+If you run the AI SDK inside [Eve](/platforms/javascript/guides/eve/), Eve sets the conversation ID for you.
 
 ## Supported Versions
 

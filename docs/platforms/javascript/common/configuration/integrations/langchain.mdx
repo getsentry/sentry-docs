@@ -27,7 +27,7 @@ Sentry.init({
 });
 ```
 
-To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+The integration sets a conversation ID for [Conversations](/product/agents/conversations/) when you pass a thread or session ID in the invoke config. See [Conversation IDs](#conversation-ids) for when you need to call `Sentry.setConversationId()` yourself. To show who started each chat, also call `Sentry.setUser()` in every request that makes AI calls.
 
 ## Supported Operations
 
@@ -91,6 +91,22 @@ Each `invoke()` call creates a `gen_ai.decide` span named `decide <model>`, with
 Evaluation inputs and outputs follow the same [`recordInputs`](#recordinputs) and [`recordOutputs`](#recordoutputs) options as other LangChain calls. Disable these options if evaluation state or answers contain sensitive data.
 
 If you call Jev through `TypeSafeClient.systemOne()` or Vercel AI SDK's `experimental_decide()` instead, see the <PlatformLink to="/configuration/integrations/typesafe/">TypeSafe</PlatformLink> or <PlatformLink to="/configuration/integrations/vercelai/#trace-jev-decisions">Vercel AI</PlatformLink> integration.
+
+## Conversation IDs
+
+The integration reads the conversation ID from the config you pass to `invoke()` or `stream()`. It looks for these keys in `configurable` or `metadata`, in this order: `thread_id`, `session_id`, `sessionId`. The first one it finds becomes `gen_ai.conversation.id` on the spans of that run and its child runs. This requires SDK version `11.5.0` or higher.
+
+```javascript
+// Reuse the same chatId for every turn of the chat
+await chain.invoke(
+  { topic: "weather" },
+  { configurable: { sessionId: chatId } }
+);
+```
+
+`RunnableWithMessageHistory` already requires `configurable.sessionId`, so chains that use it get a conversation ID with no extra setup.
+
+If you don't pass any of these keys, call `Sentry.setConversationId()` with your app's chat ID before the first AI call of each request. An ID you set with `Sentry.setConversationId()` replaces the one from the config. See <PlatformLink to="/agent-tracing/#set-the-conversation-id-yourself">Set the Conversation ID Yourself</PlatformLink>.
 
 ## Supported Versions
 
