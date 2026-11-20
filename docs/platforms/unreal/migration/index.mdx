@@ -9,6 +9,37 @@ sidebar_section: configuration
 We recommend using this guide starting from the version closes to your current version which might require scrolling further down before jumping to the latest guide.
 </Alert>
 
+## Migrating to 2.0.0
+
+### Breaking changes
+
+#### Assert Handling
+
+`FSentryOutputDevice` and `FSentryErrorOutputDevice` are no longer part of the public API. If you subscribed to the `OnAssert` delegate of `FSentryErrorOutputDevice`, use the static `FSentryDelegates::OnAssert` delegate instead:
+
+```cpp
+// Handling failed assertions before v2.0.0
+
+#include "SentryErrorOutputDevice.h"
+
+FSentryErrorOutputDevice* SentryErrorDevice = static_cast<FSentryErrorOutputDevice*>(GError);
+SentryErrorDevice->OnAssert.AddLambda([](const FString& Message)
+{
+    // Handle the assertion
+});
+
+// Handling failed assertions in v2.0.0
+
+#include "SentryDelegates.h"
+
+FSentryDelegates::OnAssert.AddLambda([](const FString& Message)
+{
+    // Handle the assertion
+});
+```
+
+The delegate is called on the thread that hit the assertion, before the crash is reported. Your handler must be thread-safe and must not access UObjects.
+
 ## Migrating to 1.0.0
 
 ### Breaking changes
