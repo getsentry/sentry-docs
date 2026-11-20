@@ -1,7 +1,7 @@
 ---
 title: Solid 2 (Alpha)
 sidebar_order: 2
-description: "Learn how to set up Sentry in a Solid 2 app, on Node or Cloudflare Workers, and capture your first errors."
+description: "Learn how to set up Sentry in a Solid 2 app and capture your first errors."
 ---
 
 <Alert level="warning" title="Alpha">
@@ -10,7 +10,7 @@ Support for Solid 2 is in alpha. The API can change in any release. It lives und
 
 </Alert>
 
-This guide covers Solid 2 apps built with `@solidjs/vite-plugin`. You import the SDK from `@sentry/solid/solid2` in the browser, on Node, and on Cloudflare Workers. The SDK picks the right build for each one.
+This guide covers Solid 2 apps built with `@solidjs/vite-plugin`. You import the SDK from `@sentry/solid/solid2` in the browser and on the server. The SDK picks the right build for each one.
 
 Everything works on Solid's production build. You don't need a dev or observe build.
 
@@ -76,10 +76,6 @@ export default function App() {
 
 ## Configure the Server
 
-Set up the server for where your app runs: Node or Cloudflare Workers.
-
-### Node
-
 Call `init()` in a setup file, and point `start.serverSetup` to it. Use the same import path as in the browser.
 
 ```ts {filename:src/instrument.server.ts}
@@ -116,56 +112,6 @@ export default defineConfig({
 Errors thrown during server rendering and in server functions are reported. If a boundary rendered a fallback for an error, the error is marked as handled.
 
 With the router wrapped, request spans are named after the route, for example `GET /user/:id`. The browser page load continues the server's trace, so you see the request and the page load in one trace.
-
-### Cloudflare Workers
-
-Add the Cloudflare Vite plugin, and the Sentry Cloudflare Vite plugin after `solid(...)`. Don't set `start.serverSetup` on Workers.
-
-```ts {filename:vite.config.ts}
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
-import solid from "@solidjs/vite-plugin";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [
-    solid({
-      start: {
-        clientSetup: "./src/instrument.client.ts",
-      },
-      ssr: true,
-      serverFunctions: true,
-    }),
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
-    sentryCloudflareVitePlugin(),
-  ],
-});
-```
-
-Keep Solid's server handler as the Worker entry, and enable Node.js compatibility:
-
-```jsonc {filename:wrangler.jsonc}
-{
-  "main": "virtual:solid-ssr-handler",
-  "compatibility_flags": ["nodejs_compat"],
-}
-```
-
-Put your server options in `instrument.server.ts` next to `wrangler.jsonc`. Add `solidServerErrorsIntegration()` so errors during server rendering and in server functions are reported.
-
-```ts {filename:instrument.server.ts}
-import { defineCloudflareOptions } from "@sentry/cloudflare";
-import { solidServerErrorsIntegration } from "@sentry/solid/solid2";
-
-export default defineCloudflareOptions((env) => ({
-  dsn: env.SENTRY_DSN,
-  integrations: [solidServerErrorsIntegration()],
-  // Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1.0,
-}));
-```
-
-On Workers, the browser page load doesn't continue the server's trace yet.
 
 ## Upload Source Maps
 
