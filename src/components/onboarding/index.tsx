@@ -62,7 +62,8 @@ const optionDetails: Record<
     description: (
       <span>
         Tracing and automatic performance issue detection across services and context on
-        who is impacted, outliers, regressions, and the root cause of your slowdown.
+        who is impacted, outliers, regressions, and the root cause of your slowdown or
+        failure.
       </span>
     ),
   },
@@ -475,7 +476,7 @@ export function OnboardingOptionButtons({
           key={option.id}
           className="w-full md:w-auto"
         >
-          <label role="button">
+          <label>
             <Checkbox
               defaultChecked={option.disabled}
               checked={option.checked}

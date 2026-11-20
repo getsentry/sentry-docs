@@ -184,7 +184,7 @@ apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 
 ### Enable Sentry AGP
 
-You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle/) dependency to `android/build.gradle`.
+This step is optional. You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle/) dependency to `android/build.gradle`.
 
 ```groovy {filename:android/build.gradle}
 buildscript {
@@ -203,15 +203,28 @@ The `autoInstallation` option **must** be set to `false` when using the Sentry A
 
 </Alert>
 
+<Alert level="warning" title="Symbol and Mapping Uploads Need an Auth Token">
+
+When `uploadNativeSymbols` or `autoUploadProguardMapping` is enabled, every release build uploads to Sentry and fails if no valid auth token is available. The Sentry Android Gradle Plugin doesn't read `SENTRY_DISABLE_AUTO_UPLOAD` on its own. The snippet below uses the `shouldSentryAutoUpload()` helper from the [Gradle integration](#enable-gradle-integration), so `SENTRY_DISABLE_AUTO_UPLOAD=true` skips the source map, native symbol, and ProGuard mapping uploads. Place the snippet after the `apply from: ".../sentry.gradle"` line, which defines the helper.
+
+</Alert>
+
 ```groovy {filename:android/app/build.gradle}
+// Must come after `apply from: "../../node_modules/@sentry/react-native/sentry.gradle"`
 apply plugin: "io.sentry.android.gradle"
 
 sentry {
+    // Enables or disables the automatic upload of the ProGuard/R8 mapping file.
+    // Requires a Sentry auth token. Skipped when SENTRY_DISABLE_AUTO_UPLOAD=true.
+    // Default is enabled.
+    autoUploadProguardMapping = shouldSentryAutoUpload()
+
     // Enables or disables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
     // you don't need to do it manually.
+    // Requires a Sentry auth token. Skipped when SENTRY_DISABLE_AUTO_UPLOAD=true.
     // Default is disabled.
-    uploadNativeSymbols = true
+    uploadNativeSymbols = shouldSentryAutoUpload()
 
     // Enables or disables the automatic upload of the app's native source code to Sentry.
     // This executes sentry-cli with the --include-sources param automatically so

@@ -21,11 +21,15 @@ export interface FrontMatter {
    */
   beta?: boolean;
   /**
-   * A description to use in the <meta> header, as well as in auto generated page grids.
+   * Override the page canonical URL. A site-relative path (for example
+   * `/platforms/react/options/`) is resolved against the docs origin. An
+   * absolute http(s) URL is used as written. Omit it to use the page URL.
    */
   customCanonicalTag?: string;
 
-  /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
+  /**
+   * A description to use in the <meta> header, as well as in auto generated page grids.
+   */
   description?: string;
 
   /**
@@ -44,9 +48,12 @@ export interface FrontMatter {
   keywords?: string[];
 
   /**
-   * Set this to true to show a "new" badge next to the title in the sidebar
+   * Show a "new" badge next to the title until this date (YYYY-MM-DD, UTC).
+   * The badge is static and recomputed on each build: builds before this date
+   * show it, builds on or after it don't. It disappears at the first deploy on
+   * or after this date.
    */
-  new?: boolean;
+  new_until?: string | Date;
   /**
    * Set this to true to show an "EA" (early access) badge next to the title in the sidebar
    */
