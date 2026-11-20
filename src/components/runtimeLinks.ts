@@ -16,12 +16,30 @@ type QuickStartNode = {
   frontmatter: {runtime?: string};
   path: string;
   children?: QuickStartNode[];
+  parent?: QuickStartNode;
 };
 
+/** Returns the display name of `runtime`, for example "Node.js" for `node`. */
+export function getRuntimeTitle(runtime: string): string {
+  return RUNTIME_TITLES[runtime] ?? runtime;
+}
+
 /**
- * Returns the links to the quick starts of `guide`: the guide page and its child pages that
- * set `runtime` in their frontmatter, in doc tree order. The page at `path` is selected.
- * Returns `null` if the guide has quick starts for fewer than two runtimes.
+ * Returns the page whose runtime links `page` shows: `page` itself if one of its child pages
+ * sets `runtime`, for example a guide page or a manual setup page, otherwise its parent.
+ */
+export function getRuntimeGroup(
+  page: QuickStartNode | undefined
+): QuickStartNode | undefined {
+  return page?.children?.some(child => child.frontmatter.runtime) ? page : page?.parent;
+}
+
+/**
+ * Returns the links to the pages of `guide` for each runtime: the `guide` page and its child
+ * pages that set `runtime` in their frontmatter, in doc tree order. `guide` is a guide page
+ * with its quick starts, or a manual setup page with the manual setups for other runtimes.
+ * The page at `path` is selected. Returns `null` if there are pages for fewer than two
+ * runtimes.
  */
 export function getRuntimeLinks(
   guide: QuickStartNode | undefined,
@@ -39,7 +57,7 @@ export function getRuntimeLinks(
           {
             runtime,
             selected: page.path === current,
-            title: RUNTIME_TITLES[runtime] ?? runtime,
+            title: getRuntimeTitle(runtime),
             url: `/${page.path}/`,
           },
         ]

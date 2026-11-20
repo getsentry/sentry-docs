@@ -1,0 +1,70 @@
+### Expose Entry Point Files
+
+Before configuring Sentry, you need to make React Router's entry files (`entry.client.tsx` and `entry.server.tsx`) visible in your project. Run this command to expose them:
+
+```bash
+npx react-router reveal
+```
+
+### Configure Client-Side Sentry
+
+Initialize Sentry in your `entry.client.tsx` file. This code runs in the browser, so it's the same on every server runtime.
+
+The snippet also turns on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `reactRouterTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
+The `sentryOnError` handler integrates with React Router's [`onError` hook](https://reactrouter.com/how-to/error-reporting) to automatically capture and report client-side errors to Sentry.
+
+```tsx {filename: entry.client.tsx}
+import * as Sentry from "@sentry/react-router";
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    // Registers and configures the Tracing integration,
+    // which automatically instruments your application to monitor its
+    // performance, including custom React Router routing instrumentation
+    Sentry.reactRouterTracingIntegration(),
+    // Registers the Replay integration,
+    // which automatically captures Session Replays
+    Sentry.replayIntegration(),
+    // Registers the User Feedback integration
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+startTransition(() => {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      <HydratedRouter onError={Sentry.sentryOnError} />
+    </StrictMode>
+  );
+});
+```

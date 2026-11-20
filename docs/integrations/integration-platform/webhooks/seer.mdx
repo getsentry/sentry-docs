@@ -13,7 +13,7 @@ Sentry integrations that have subscribed to Seer webhooks can receive notificati
 
 ## Webhook Types
 
-Seer webhooks support seven different event types that track the complete lifecycle of AI-powered issue resolution:
+Seer webhooks support the following event types, which track the complete lifecycle of AI-powered issue resolution:
 
 ### Root Cause Analysis
 
@@ -30,6 +30,12 @@ Seer webhooks support seven different event types that track the complete lifecy
 - `seer.coding_started` - Triggered when the coding step (code fix generation) begins
 - `seer.coding_completed` - Triggered when code changes are ready
 - `seer.pr_created` - Triggered when pull request(s) are created
+- `seer.pr_ready_for_review` - Triggered when pull request(s) are ready for review: right away for non-draft PRs, or when a draft PR is marked ready
+
+### Run End
+
+- `seer.stopped` - Triggered when a run stops early, before it can produce code changes
+- `seer.errored` - Triggered when a run fails
 
 ## Common Attributes
 
@@ -262,6 +268,95 @@ Includes pull request details, there may be more than one pull request if there 
         "provider": "unknown"
       }
     ]
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### PR Ready for Review
+
+Same `pull_requests` shape as `pr_created`, limited to the pull requests that are ready for review:
+
+```json
+{
+  "action": "pr_ready_for_review",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "pull_requests": [
+      {
+        "pull_request": {
+          "pr_number": 123,
+          "pr_url": "https://github.com/owner/repo/pull/123",
+          "pr_id": 456789
+        },
+        "repo_name": "my-app",
+        "provider": "github"
+      }
+    ]
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Stopped
+
+Sent when a run stops early because it can't continue, for example when it can't reproduce the issue or is missing configuration. `stop.reason` explains why, and `stop.suggestion` says what you can do about it:
+
+```json
+{
+  "action": "stopped",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "stop": {
+      "reason": "The DATABASE_URL environment variable isn't set in the runtime environment.",
+      "suggestion": "Set DATABASE_URL in the deployment or runtime environment."
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Errored
+
+Sent when a run fails. `failure_reason` is one of:
+
+- `timeout`: The run took too long.
+- `stalled`: The run stopped making progress.
+- `out_of_credits`: The organization ran out of Seer credits.
+- `pr_creation_failed`: The code changes were ready, but no pull request could be opened.
+
+It can be `null` when the reason is unknown.
+
+```json
+{
+  "action": "errored",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "failure_reason": "timeout"
   },
   "installation": {
     "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"

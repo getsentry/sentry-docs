@@ -1,5 +1,5 @@
 import type {MetadataRoute} from 'next';
-import {canonicalPath} from 'sentry-docs/canonical';
+import {canonicalPath, isExternalCanonical} from 'sentry-docs/canonical';
 import {DEVELOP_DOCS_INDEXABLE_ROOTS} from 'sentry-docs/developDocsConfig';
 import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
@@ -12,8 +12,14 @@ import {type DocNode, getDocsRootNode} from 'sentry-docs/docTree';
 function extractSlugsFromDocTree(node: DocNode): string[] {
   const slugs: string[] = [];
 
-  // Add current node's path (skip root, empty paths, and synthetic nodes)
-  if (node.path && node.path !== '/' && !node.missing) {
+  // Add current node's path (skip root, empty paths, synthetic nodes, and pages
+  // whose canonical points to another site)
+  if (
+    node.path &&
+    node.path !== '/' &&
+    !node.missing &&
+    !isExternalCanonical(node.frontmatter.customCanonicalTag)
+  ) {
     slugs.push(node.path);
   }
 

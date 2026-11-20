@@ -1,11 +1,10 @@
 ---
 title: Remix
-description: Learn how to set up and configure Sentry in your Remix application using the installation wizard, capture your first errors, and view them in Sentry.
+description: Learn how to set up and configure Sentry in your Remix application using the Sentry CLI and capture your events.
 sdk: sentry.javascript.remix
 categories:
   - browser
   - server
-runtime: node
 ---
 
 <Alert level="warning" title="Using Remix 3?">
@@ -20,32 +19,21 @@ This guide covers Remix 2. Support for [Remix 3](https://remix.run/blog/remix-3-
 
 ## Install
 
-To install Sentry using the installation wizard, run the following command within your project:
+<PlatformContent includePath="sentry-init/experimental-warning" />
 
-The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
+<PlatformContent includePath="sentry-init/install-command" />
 
-```bash
-npx @sentry/wizard@latest -i remix
-```
+**Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#4](#send-logs) and [#5](#send-application-metrics-).
 
 <Include name="quick-start-features-expandable" />
 
-This guide assumes that you enable all features and allow the wizard to create an example page. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
+<PlatformContent includePath="sentry-init/how-it-works" />
 
-<Expandable title="What does the installation wizard change inside your application?">
+<PlatformContent includePath="sentry-init/framework-wizard" />
 
-- Creates or updates `entry.(client|server).tsx` to initialize the SDK
-- Creates `.env.sentry-build-plugin` with an auth token to upload source maps
-  (this file is automatically added to `.gitignore`)
-- Updates your build script or Vite configuration to automatically upload source maps to Sentry
-- Instruments your application to support Remix v2 features if you use [Remix future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags)
-- Adds an example page to your application to help verify your Sentry setup
+## Configure Client-Side Tracing
 
-</Expandable>
-
-## Configure Server-Side Performance Monitoring
-
-To capture performance data on the server side, wrap your Remix root component (`root.tsx`) with `withSentry`:
+To trace client-side navigations and see where they fail or slow down, wrap your Remix root component (`root.tsx`) with `withSentry`:
 
 ```tsx {filename: root.tsx}
 import {
@@ -79,17 +67,46 @@ function App() {
 export default withSentry(App);
 ```
 
-## Avoid Ad Blockers With Tunneling (Optional)
-
-<PlatformContent includePath="getting-started-tunneling" />
-
-## Control the Data You Send to Sentry (Optional)
+## Control the Data You Send to Sentry
 
 <PlatformContent includePath="getting-started-data-collection" />
 
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
 ## Verify Your Setup
 
-If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page created by the installation wizard:
+The `sentry init` command checks the integration files it creates or modifies before it finishes. To confirm runtime events are reaching Sentry, add a test button to one of your routes. Clicking it will trigger an error for Sentry to capture.
+
+```tsx {filename:app/routes/sentry-test.tsx}
+export default function SentryTest() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        throw new Error("Sentry Test Error");
+      }}
+    >
+      Test Sentry Error
+    </button>
+  );
+}
+```
+
+If you used the Remix wizard instead, you can also use the example page it created:
 
 1. Open the example page `/sentry-example-page` in your browser. For most Remix applications, this will be at localhost.
 2. Click the "Throw Sample Error" button to trigger a frontend error and trace.
@@ -99,8 +116,6 @@ If you haven't tested your Sentry configuration yet, let's do it now. You can co
 Don't forget to explore the example page's code in your project to understand what's happening after your button click.
 
 </Alert>
-
-<PlatformContent includePath="getting-started-wizard-verify-additional-features" />
 
 ### View Captured Data in Sentry
 
@@ -112,18 +127,15 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Remix application and should already be sending error and performance data to your Sentry project.
-
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+At this point, you should have integrated Sentry into your application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- Learn how to [manually capture errors](/platforms/javascript/guides/remix/usage/)
-- Continue to [customize your configuration](/platforms/javascript/guides/remix/configuration/)
-- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+- <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">Set up tunneling</PlatformLink> to avoid ad blockers blocking Sentry events
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
-- If you encountered issues with our installation wizard, try <PlatformLink to="/manual-setup/">setting up Sentry manually</PlatformLink>
+- If you encountered issues with `sentry init` or the installation wizard, try <PlatformLink to="/manual-setup/">setting up Sentry manually</PlatformLink>
 - Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
 - [Get support](https://www.sentry.help/en/)
 

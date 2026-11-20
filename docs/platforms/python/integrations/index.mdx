@@ -44,6 +44,7 @@ The tables on this page show which integrations are auto-enabled in the current 
 
 |                                                                                                                                   | **Auto-enabled** |
 | --------------------------------------------------------------------------------------------------------------------------------- | :--------------: |
+| <LinkWithPlatformIcon platform="aws"             label="Amazon Bedrock" url="/platforms/python/agent-tracing/bedrock/" />           |        ✓         |
 | <LinkWithPlatformIcon platform="anthropic"       label="Anthropic" url="/platforms/python/agent-tracing/anthropic/" />              |        ✓         |
 | <LinkWithPlatformIcon platform="google-genai"    label="Google Gen AI" url="/platforms/python/agent-tracing/google-genai/" />       |        ✓         |
 | <LinkWithPlatformIcon platform="huggingface_hub" label="Hugging Face Hub" url="/platforms/python/agent-tracing/huggingface_hub/" /> |        ✓         |
@@ -143,16 +144,18 @@ The tables on this page show which integrations are auto-enabled in the current 
 
 ### Default Integrations
 
-| Integration                                          |
-| ---------------------------------------------------- |
-| [Argv](default-integrations/#argv)                   |
-| [Atexit](default-integrations/#atexit)               |
-| [Excepthook](default-integrations/#excepthook)       |
-| [Deduplication](default-integrations/#deduplication) |
-| [Stdlib](default-integrations/#stdlib)               |
-| [Modules](default-integrations/#modules)             |
-| [Logging](default-integrations/#logging)             |
-| [Threading](default-integrations/#threading)         |
+| Integration                                            |
+| ------------------------------------------------------ |
+| [Argv](default-integrations/#argv)                     |
+| [Atexit](default-integrations/#atexit)                 |
+| [Excepthook](default-integrations/#excepthook)         |
+| [Unraisablehook](default-integrations/#unraisablehook) |
+| [Deduplication](default-integrations/#deduplication)   |
+| [Stdlib](default-integrations/#stdlib)                 |
+| [Modules](default-integrations/#modules)               |
+| [Threading](default-integrations/#threading)           |
+
+In SDK `2.x`, the <PlatformLink to="/integrations/logging/">Logging</PlatformLink> integration is also a default integration, and Unraisablehook has to be enabled manually.
 
 ## Configuration
 
@@ -169,9 +172,9 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 sentry_sdk.init(
     integrations=[
-        # The Flask integration is auto-enabling, but we want to change
-        # transaction_style from the default "endpoint" to "url"
-        FlaskIntegration(transaction_style="url"),
+        # The Flask integration is auto-enabling, but we want to only
+        # create spans for GET requests
+        FlaskIntegration(http_methods_to_capture=("GET",)),
         # The asyncio integration is not enabled automatically
         # and needs to be added manually.
         AsyncioIntegration(),
@@ -201,7 +204,7 @@ It's also possible to disable all automatically-added integrations. There are tw
   if the SDK detects that you have a corresponding package (like Flask) installed.
   This happens when the [`auto_enabling_integrations`](/platforms/python/configuration/options/#auto-enabling-integrations) option is set to
   `True` (default).
-- **Default integrations** like `logging` or `excepthook` are always enabled,
+- **Default integrations** like `excepthook` or `atexit` are always enabled,
   regardless of what packages you have installed, as long as the
   [`default_integrations`](/platforms/python/configuration/options/#default-integrations) option is `True` (default). They provide essential
   SDK functionality like error deduplication or event flushing at interpreter
@@ -238,7 +241,7 @@ from sentry_sdk.integrations.modules import ModulesIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 sentry_sdk.init(
-    # Turn off the default logging integration, but keep the rest.
+    # Turn off the default Unraisablehook integration, but keep the rest.
     default_integrations=False,
     integrations=[
         AtexitIntegration(),

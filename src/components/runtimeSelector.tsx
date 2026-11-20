@@ -4,17 +4,17 @@ import {nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {PlatformIcon} from './platformIcon';
-import {getRuntimeLinks} from './runtimeLinks';
+import {getRuntimeGroup, getRuntimeLinks} from './runtimeLinks';
 
 /**
- * Links the quick starts of the current guide for each runtime: the guide page and its child
- * pages that set `runtime` in their frontmatter. `DocPage` renders it on each page that sets
- * `runtime`. The links are plain anchors, so they are also in the page's Markdown export for
- * AI agents.
+ * Links the pages of the current guide for each runtime: the quick starts (the guide page and
+ * its child pages), or the manual setups (the manual setup page and its child pages), that set
+ * `runtime` in their frontmatter. `DocPage` renders it on each page that sets `runtime`. The
+ * links are plain anchors, so they are also in the page's Markdown export for AI agents.
  */
 export function RuntimeSelector() {
   const {rootNode, path} = serverContext();
-  const links = getRuntimeLinks(nodeForPath(rootNode, path.slice(0, 4)), path);
+  const links = getRuntimeLinks(getRuntimeGroup(nodeForPath(rootNode, path)), path);
   if (!links) {
     return null;
   }
