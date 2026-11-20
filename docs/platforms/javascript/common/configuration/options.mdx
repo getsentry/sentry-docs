@@ -73,7 +73,23 @@ Sets the release. Release names are strings, but some formats are detected by Se
     **Note:** Electron `main` process only.
   </PlatformSection>
 
+<PlatformSection notSupported={["javascript.electron", "javascript.nextjs"]}>
+
+Sets the environment. Defaults to `production`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+Sets the environment. If you don't set it, the SDK uses `SENTRY_ENVIRONMENT`, then the Vercel environment when deployed on Vercel, then `NODE_ENV`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
 Sets the environment. Defaults to `development` or `production` depending on whether the application is packaged.
+
+</PlatformSection>
 
 Environments tell you where an error occurred, whether that's in your production system, your staging server, or elsewhere.
 
@@ -126,7 +142,7 @@ Controls whether the SDK proxies envelopes through the Sentry Lambda extension a
 
 Defaults to `true` when the SDK detects it's running inside the [Sentry Lambda Layer](/platforms/javascript/guides/aws-lambda/install/layer/). Has no effect outside the layer — set [`tunnel`](#tunnel) explicitly instead, for example, when [installing the extension into a container image](/platforms/javascript/guides/aws-lambda/install/container-image/).
 
-Set to `false` to opt out, for example, when using a custom `tunnel` or when running behind an HTTP proxy that intercepts `localhost`.
+The SDK doesn't use the extension by default when you set [`tunnel`](#tunnel), or when `http_proxy` is set and `no_proxy` doesn't exempt `localhost`. Set this option to `false` to opt out in other cases.
 
 </SdkOption>
 
@@ -211,7 +227,7 @@ This variable controls the total amount of breadcrumbs that should be captured. 
   Enabled per Electron process.
 </PlatformSection>
 
-When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all messages captured with `Sentry.captureMessage()`.
+Attaches a stack trace pointing to the call site to events that don't otherwise have one. This applies to messages captured with `Sentry.captureMessage()` and to non-`Error` values passed to `Sentry.captureException()`. Stack traces are always attached to `Error` objects. Set this option to `false` to stop attaching these stack traces.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
@@ -491,9 +507,9 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 </SdkOption>
 
-<SdkOption name="beforeSend" type='(event: Event, hint: EventHint) => Event | null'>
+<SdkOption name="beforeSend" type='(event: ErrorEvent, hint: EventHint) => ErrorEvent | null | PromiseLike<ErrorEvent | null>'>
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. It can also return a promise that resolves to either of these. This can be used, for instance, for manual PII stripping before sending.
 
 By the time `beforeSend` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -609,10 +625,13 @@ An optional property that controls which downstream services receive tracing dat
 The option may contain a list of strings or regex against which the URLs of outgoing requests are matched.
 If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
 String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+Matching is case-insensitive, and the `g` and `y` flags on regular expressions are ignored.
 
 <PlatformCategorySection supported={["browser"]}>
   On the browser, all outgoing requests to the same origin will be propagated by
-  default.
+  default. For requests to the same origin, entries are also matched against the
+  pathname of the request, so `/^\/api/` matches same-origin requests to `/api`
+  routes.
 </PlatformCategorySection>
 
 <PlatformCategorySection supported={["server", "serverless"]}>
@@ -626,6 +645,8 @@ If you want to disable trace propagation, you can set this option to `[]`.
 <PlatformSection supported={['javascript.cloudflare']}>
 
 <SdkOption name="cacheClient" type="boolean" defaultValue="true">
+
+**Deprecated:** This option will be removed in the next major version (v12), and the client will then always be cached. If you set `cacheClient: false`, [open an issue](https://github.com/getsentry/sentry-javascript/issues) and tell us why the cached client doesn't work for your use case.
 
 Reuses the SDK client across invocations within the same [isolate](https://developers.cloudflare.com/workers/reference/how-workers-works/#isolates). The cached client keeps the options from its first initialization. Set this to `false` if you experience any issues (this is the same behavior as in v10).
 
