@@ -74,14 +74,26 @@ const config = getSentryExpoConfig(__dirname, {
 
 ### Reduce Bundle Size
 
-If you're not targeting React Native for Web, you can exclude web-only packages like Session Replay and User Feedback from the bundle by opting out via the Metro Plugin options. When set to `false`, the Sentry Metro Plugin resolves the matching Sentry sub-packages to an empty module so they're not included in the output bundle.
+Session Replay and User Feedback for the web are only used by React Native for Web. Starting with SDK version 8.37.0, the Sentry Metro Plugin removes these packages from Android and iOS bundles by default, so you don't need to configure anything. Web bundles keep them.
 
-| Option                | Default | Effect when set to `false`                                               |
-| --------------------- | ------- | ------------------------------------------------------------------------ |
-| `includeWebReplay`    | `true`  | Excludes `@sentry/replay` and `@sentry-internal/replay` from the bundle. |
-| `includeWebFeedback`  | `true`  | Excludes `@sentry-internal/feedback` from the bundle.                    |
+The plugin resolves the matching Sentry sub-packages to an empty module, so they're not included in the output bundle. You can change this behavior with the following options:
 
-Note that these options only affect bundling. They do not disable the corresponding native (Android/iOS) integrations.
+| Option               | Packages                                       |
+| -------------------- | ---------------------------------------------- |
+| `includeWebReplay`   | `@sentry/replay` and `@sentry-internal/replay` |
+| `includeWebFeedback` | `@sentry-internal/feedback`                    |
+
+Each option accepts the following values:
+
+| Value             | Android and iOS bundles | Web bundles |
+| ----------------- | ----------------------- | ----------- |
+| Not set (default) | Excluded                | Included    |
+| `true`            | Included                | Included    |
+| `false`           | Excluded                | Excluded    |
+
+These options only affect bundling. They don't disable the corresponding native (Android/iOS) integrations, and `includeWebFeedback` doesn't affect the React Native feedback widget.
+
+If your app targets React Native for Web and you don't use Session Replay or User Feedback there, set the options to `false` to also remove these packages from the web bundle. On SDK versions older than 8.37.0, this is also the only way to remove them from Android and iOS bundles.
 
 ```javascript {tabTitle:React Native} {mdExpandTabs} {filename:metro.config.js}
 const { getDefaultConfig } = require("@react-native/metro-config");
