@@ -1,0 +1,285 @@
+---
+title: Micrometer Integration
+description: "Learn how to send Micrometer metrics to Sentry from Java and Spring Boot applications."
+---
+
+The Sentry Micrometer integration adds Sentry as another destination for metrics recorded through [Micrometer](https://micrometer.io/). It works alongside Prometheus, Datadog, OTLP, and other registries without changing their behavior.
+
+The integration is available in Sentry Java SDK version `8.58.0` and later. It's built against Micrometer `1.9.17` and tested with the Micrometer versions used by supported Spring Boot 2, 3, and 4 releases.
+
+## Install
+
+Add `sentry-micrometer` to the application that records your Micrometer metrics.
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+In addition to the matching Sentry Spring Boot starter for your Spring Boot version, add `sentry-micrometer`. Spring Boot Actuator supplies Micrometer and its automatically registered HTTP server, JVM, process, and logging metrics. Add Actuator if your application doesn't already use it.
+
+```groovy {tabTitle:Gradle}{filename:build.gradle}
+implementation 'io.sentry:sentry-micrometer:{{@inject packages.version('sentry.java.micrometer', '8.58.0') }}'
+implementation 'org.springframework.boot:spring-boot-starter-actuator'
+```
+
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-micrometer</artifactId>
+    <version>{{@inject packages.version('sentry.java.micrometer', '8.58.0') }}</version>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Add Micrometer Core if your application doesn't already include it. Use the Micrometer version managed by your framework or dependency platform when applicable.
+
+```groovy {tabTitle:Gradle}{filename:build.gradle}
+implementation 'io.sentry:sentry-micrometer:{{@inject packages.version('sentry.java.micrometer', '8.58.0') }}'
+implementation 'io.micrometer:micrometer-core:MICROMETER_VERSION'
+```
+
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-micrometer</artifactId>
+    <version>{{@inject packages.version('sentry.java.micrometer', '8.58.0') }}</version>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-core</artifactId>
+    <version>MICROMETER_VERSION</version>
+</dependency>
+```
+
+```scala {tabTitle:SBT}{filename:build.sbt}
+libraryDependencies += "io.sentry" % "sentry-micrometer" % "{{@inject packages.version('sentry.java.micrometer', '8.58.0') }}"
+libraryDependencies += "io.micrometer" % "micrometer-core" % "MICROMETER_VERSION"
+```
+
+</PlatformSection>
+
+## Configure
+
+The integration sends metrics through the current Sentry SDK instance.
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+The Sentry Spring Boot integration initializes the SDK and can add `SentryMeterRegistry` to the application's composite registry. Enable this opt-in integration in your configuration:
+
+```properties {tabTitle:application.properties}{filename:application.properties}
+sentry.micrometer.enabled=true
+sentry.micrometer.poll-interval-millis=60000
+```
+
+```yaml {tabTitle:application.yml}{filename:application.yml}
+sentry:
+  micrometer:
+    enabled: true
+    poll-interval-millis: 60000
+```
+
+The polling interval is optional and defaults to 60 seconds.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Create a `SentryMeterRegistry` and add it to Micrometer's global registry after initializing Sentry:
+
+```java {tabTitle:Java}{filename:Main.java}
+import io.micrometer.core.instrument.Metrics;
+import io.sentry.micrometer.SentryMeterRegistry;
+
+SentryMeterRegistry sentryRegistry = new SentryMeterRegistry();
+Metrics.addRegistry(sentryRegistry);
+```
+
+```kotlin {tabTitle:Kotlin}{filename:Main.kt}
+import io.micrometer.core.instrument.Metrics
+import io.sentry.micrometer.SentryMeterRegistry
+
+val sentryRegistry = SentryMeterRegistry()
+Metrics.addRegistry(sentryRegistry)
+```
+
+You can also add `SentryMeterRegistry` to an application-owned `CompositeMeterRegistry`.
+
+</PlatformSection>
+
+## Verify
+
+Record a counter through the `MeterRegistry` your application already uses:
+
+```java {tabTitle:Java}{filename:CheckoutMetrics.java}
+import io.micrometer.core.instrument.MeterRegistry;
+
+public final class CheckoutMetrics {
+    private final MeterRegistry registry;
+
+    public CheckoutMetrics(MeterRegistry registry) {
+        this.registry = registry;
+    }
+
+    public void recordCompletedOrder(String paymentMethod) {
+        registry.counter("checkout.completed", "payment_method", paymentMethod).increment();
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}{filename:CheckoutMetrics.kt}
+import io.micrometer.core.instrument.MeterRegistry
+
+class CheckoutMetrics(private val registry: MeterRegistry) {
+    fun recordCompletedOrder(paymentMethod: String) {
+        registry.counter("checkout.completed", "payment_method", paymentMethod).increment()
+    }
+}
+```
+
+Call `recordCompletedOrder`, then open [Metrics in Sentry](/product/metrics/) and query for `checkout.completed`. The default naming convention preserves metric names exactly as written. For example, `server.request_url` is exported as `server.request_url`. The `payment_method` tag is available as a metric attribute.
+
+## Metric Mappings
+
+The registry applies its configured Micrometer `NamingConvention` to metric names, tag keys, and tag values. It defaults to `NamingConvention.identity`, which doesn't replace or normalize any characters. You can configure another naming convention on `SentryMeterRegistry` without affecting other registries.
+
+The registry forwards active meters when your application records them:
+
+| Micrometer Meter      | Sentry Metric                | Name          |
+| --------------------- | ---------------------------- | ------------- |
+| `Counter`             | Counter increment            | Exported name |
+| `Timer`               | Distribution in milliseconds | Exported name |
+| `DistributionSummary` | Distribution                 | Exported name |
+
+The registry polls meters that only expose their current or cumulative value every 60 seconds by default:
+
+| Micrometer Meter                | Sentry Metric                          | Name                         |
+| ------------------------------- | -------------------------------------- | ---------------------------- |
+| `Gauge`                         | Gauge                                  | Exported name                |
+| `TimeGauge`                     | Gauge in milliseconds                  | Exported name                |
+| `LongTaskTimer` active tasks    | Gauge                                  | `${exportedName}.active`     |
+| `LongTaskTimer` active duration | Gauge in milliseconds                  | `${exportedName}.duration`   |
+| `FunctionCounter`               | Positive counter delta                 | Exported name                |
+| `FunctionTimer` count           | Positive counter delta                 | `${exportedName}.count`      |
+| `FunctionTimer` total time      | Positive counter delta in milliseconds | `${exportedName}.total_time` |
+
+The first successful finite poll establishes a function meter's baseline and sends nothing. For `FunctionTimer`, count and total time are polled and baselined independently. Later polls send positive deltas for each value. If a value decreases, the integration treats it as a reset and establishes a new baseline without sending a delta.
+
+`FunctionTimer` doesn't expose individual durations, so the integration can't produce a distribution or percentiles. Count and total-time deltas can cover different polling windows after a failed or non-finite read or an independent reset, so they can't always be combined to calculate a reliable mean.
+
+## Configure Polling
+
+Passive polling uses one background worker per `SentryMeterRegistry`. Active metrics use the Sentry scope and trace context present when they're recorded, while passive metrics use the context available on the polling thread.
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+Change the interval in milliseconds, or set it to `0` to disable passive polling:
+
+```properties {filename:application.properties}
+sentry.micrometer.poll-interval-millis=0
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Pass the interval in milliseconds to the registry constructor. Set it to `0` to disable passive polling:
+
+```java
+import io.sentry.micrometer.SentryMeterRegistry;
+
+SentryMeterRegistry sentryRegistry = new SentryMeterRegistry(30_000);
+SentryMeterRegistry activeMetersOnly = new SentryMeterRegistry(0);
+```
+
+</PlatformSection>
+
+Disabling polling doesn't affect immediate forwarding for counters, timers, or distribution summaries.
+
+## Control Metric Volume
+
+Each counter increment, timer recording, and distribution summary recording creates one Sentry metric before the SDK batches metrics for transport. Apply a Micrometer `MeterFilter` to the Sentry registry to exclude noisy or high-cardinality meters without affecting other destinations.
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+Use a typed `MeterRegistryCustomizer` so the filter applies only to `SentryMeterRegistry`:
+
+```java {tabTitle:Spring Boot 2 and 3}{filename:MetricsConfiguration.java}{mdExpandTabs}
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.sentry.micrometer.SentryMeterRegistry;
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+class MetricsConfiguration {
+    @Bean
+    MeterRegistryCustomizer<SentryMeterRegistry> sentryMetricsFilter() {
+        return registry -> registry.config()
+            .meterFilter(MeterFilter.denyNameStartsWith("jvm.buffer"));
+    }
+}
+```
+
+```java {tabTitle:Spring Boot 4}{filename:MetricsConfiguration.java}
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.sentry.micrometer.SentryMeterRegistry;
+import org.springframework.boot.micrometer.metrics.autoconfigure.MeterRegistryCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+class MetricsConfiguration {
+    @Bean
+    MeterRegistryCustomizer<SentryMeterRegistry> sentryMetricsFilter() {
+        return registry -> registry.config()
+            .meterFilter(MeterFilter.denyNameStartsWith("jvm.buffer"));
+    }
+}
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Configure filters before registering meters:
+
+```java
+import io.micrometer.core.instrument.config.MeterFilter;
+
+sentryRegistry.config()
+    .meterFilter(MeterFilter.denyNameStartsWith("jvm.buffer"));
+```
+
+</PlatformSection>
+
+Micrometer tags are forwarded to Sentry as metric attributes. Don't put sensitive or unbounded values in tags. For value- or attribute-based filtering, use Sentry's <PlatformLink to="/metrics/#options">metrics `beforeSend` callback</PlatformLink>.
+
+Unsupported custom meter types remain available through Micrometer but aren't sent to Sentry.
+
+## Shut Down
+
+<PlatformSection supported={["java.spring-boot"]}>
+
+Spring Boot closes `SentryMeterRegistry` with the application context. No additional shutdown code is required.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["java.spring-boot"]}>
+
+Remove and close the registry before closing Sentry. This stops passive polling and lets Sentry flush metrics it already accepted:
+
+```java
+import io.micrometer.core.instrument.Metrics;
+import io.sentry.Sentry;
+
+Metrics.removeRegistry(sentryRegistry);
+sentryRegistry.close();
+Sentry.close();
+```
+
+</PlatformSection>
