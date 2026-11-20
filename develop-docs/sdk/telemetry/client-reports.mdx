@@ -10,7 +10,7 @@ spec_depends_on:
 spec_changelog:
   - version: 1.26.0
     date: 2026-10-21
-    summary: Downgraded log and metric byte outcomes from MUST to SHOULD; SDKs MAY omit them if calculating item size of a dropped item has a performance impact
+    summary: Downgraded log and metric byte outcomes from MUST to SHOULD; SDKs MAY omit them if calculating item size of a dropped item has a performance impact; recommended Relay's byte size calculation
   - version: 1.25.0
     date: 2026-10-08
     summary: Clarified that discarded envelopes are counted per contained item, not as a quantity of 1
@@ -244,7 +244,13 @@ When a log is dropped, SDKs **SHOULD** record an additional `log_byte` category 
 
 Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped log produces two entries in the map: one incrementing the `log_item` count by 1, and one incrementing the `log_byte` count by the log's byte size.
 
-The byte size does not need to be exact. SDKs **MAY** use an approximation, such as the in-memory size of the log object or the size of its serialized representation. The goal is to provide a useful signal, not a precise measurement.
+The byte size does not need to be exact. SDKs **SHOULD** calculate it the same way [Relay does](https://github.com/getsentry/relay/blob/3130b829598fc58a79ec5de4be0da45ad274d6df/relay-ourlogs/src/size.rs), since Relay's calculation is the one Sentry uses for log outcomes and is often cheaper than serializing the log:
+
+- Count the UTF-8 byte length of the log body and of every attribute key.
+- Add the size of every attribute value: strings count their UTF-8 byte length, booleans count 1 byte, and integers and doubles count 8 bytes. Arrays count the sum of their elements, and objects count the sum of their keys and values.
+- Count an empty log (no body and no attributes) as 1 byte.
+
+SDKs **MAY** use a different approximation, such as the in-memory size of the log object or the size of its serialized representation, if that is cheaper on their platform. The goal is to provide a useful signal, not a precise measurement.
 
 </SpecSection>
 
@@ -256,7 +262,14 @@ When a metric is dropped, SDKs **SHOULD** record an additional `trace_metric_byt
 
 Since client reports use a `(reason, category) → quantity` map for aggregation, byte sizes are tracked as a separate category rather than an extra field. Each dropped metric produces two entries in the map: one incrementing the `trace_metric` count by 1, and one incrementing the `trace_metric_byte` count by the metric's byte size.
 
-The byte size does not need to be exact. SDKs **MAY** use an approximation, such as the in-memory size of the metric object or the size of its serialized representation. The goal is to provide a useful signal, not a precise measurement.
+The byte size does not need to be exact. SDKs **SHOULD** calculate it the same way [Relay does](https://github.com/getsentry/relay/blob/3130b829598fc58a79ec5de4be0da45ad274d6df/relay-server/src/processing/trace_metrics/utils.rs):
+
+- Count the UTF-8 byte length of the metric name and of every attribute key.
+- Count the metric value as 8 bytes.
+- Add the size of every attribute value, using the same rules as for [log byte outcomes](#log-byte-outcomes).
+- Count a metric as at least 1 byte.
+
+SDKs **MAY** use a different approximation, such as the in-memory size of the metric object or the size of its serialized representation, if that is cheaper on their platform. The goal is to provide a useful signal, not a precise measurement.
 
 </SpecSection>
 
