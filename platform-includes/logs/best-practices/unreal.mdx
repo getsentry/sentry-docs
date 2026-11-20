@@ -6,17 +6,16 @@ This makes debugging dramatically faster — one query returns everything about 
 
 ```cpp
 // ❌ Scattered thin logs
-SentrySubsystem->AddLog(TEXT("Starting checkout"), ESentryLevel::Info);
-SentrySubsystem->AddLog(TEXT("Validating cart"), ESentryLevel::Info);
-SentrySubsystem->AddLog(TEXT("Processing payment"), ESentryLevel::Info);
-SentrySubsystem->AddLog(TEXT("Checkout complete"), ESentryLevel::Info);
+SentrySubsystem->LogInfo(TEXT("Starting checkout"));
+SentrySubsystem->LogInfo(TEXT("Validating cart"));
+SentrySubsystem->LogInfo(TEXT("Processing payment"));
+SentrySubsystem->LogInfo(TEXT("Checkout complete"));
 
 // ✅ One wide event with full context
 // Use categories and descriptive messages
-SentrySubsystem->AddLog(
+SentrySubsystem->LogInfo(
     FString::Printf(TEXT("Checkout completed - Order: %s, User: %s, Value: %.2f"),
         *OrderId, *UserId, CartValue),
-    ESentryLevel::Info,
     TEXT("Checkout")
 );
 ```
@@ -34,17 +33,15 @@ Use categories to organize logs and make them easier to search and filter.
 
 ```cpp
 // Use categories for different systems
-SentrySubsystem->AddLog(
+SentrySubsystem->LogInfo(
     FString::Printf(TEXT("Purchase completed - User: %s, Tier: %s, Value: %.2f"),
         *UserId, *UserTier, PurchaseValue),
-    ESentryLevel::Info,
     TEXT("IAP")
 );
 
-SentrySubsystem->AddLog(
+SentrySubsystem->LogInfo(
     FString::Printf(TEXT("Level loaded - Name: %s, LoadTime: %.2fs"),
         *LevelName, LoadTime),
-    ESentryLevel::Info,
     TEXT("GameFlow")
 );
 ```
@@ -57,13 +54,13 @@ Pick a naming convention and stick with it across your codebase. Inconsistent na
 
 ```cpp
 // ❌ Inconsistent categories
-SentrySubsystem->AddLog(TEXT("..."), ESentryLevel::Info, TEXT("player"));
-SentrySubsystem->AddLog(TEXT("..."), ESentryLevel::Info, TEXT("Player"));
-SentrySubsystem->AddLog(TEXT("..."), ESentryLevel::Info, TEXT("PLAYER"));
-SentrySubsystem->AddLog(TEXT("..."), ESentryLevel::Info, TEXT("PlayerSystem"));
+SentrySubsystem->LogInfo(TEXT("..."), TEXT("player"));
+SentrySubsystem->LogInfo(TEXT("..."), TEXT("Player"));
+SentrySubsystem->LogInfo(TEXT("..."), TEXT("PLAYER"));
+SentrySubsystem->LogInfo(TEXT("..."), TEXT("PlayerSystem"));
 
 // ✅ Consistent PascalCase categories
-SentrySubsystem->AddLog(TEXT("Player spawned"), ESentryLevel::Info, TEXT("Player"));
-SentrySubsystem->AddLog(TEXT("Player died"), ESentryLevel::Warning, TEXT("Player"));
-SentrySubsystem->AddLog(TEXT("Player score updated"), ESentryLevel::Debug, TEXT("Player"));
+SentrySubsystem->LogInfo(TEXT("Player spawned"), TEXT("Player"));
+SentrySubsystem->LogWarning(TEXT("Player died"), TEXT("Player"));
+SentrySubsystem->LogDebug(TEXT("Player score updated"), TEXT("Player"));
 ```

@@ -9,6 +9,42 @@ sidebar_section: configuration
 We recommend using this guide starting from the version closes to your current version which might require scrolling further down before jumping to the latest guide.
 </Alert>
 
+## Migrating to 2.0.0
+
+### Breaking changes
+
+#### Structured Logs Level
+
+Structured logs now use the new `ESentryLogLevel` enum instead of `ESentryLevel`. It adds the `Trace` level, which the logs protocol supports but events, breadcrumbs, and scopes don't. Events, breadcrumbs, and scopes still use `ESentryLevel`.
+
+If you set or read the level of a `USentryLog` (for example, in a custom `USentryBeforeLogHandler`), update your code to use `ESentryLogLevel`:
+
+```cpp
+// Filtering logs by level before v2.0.0
+
+if (LogData->GetLevel() == ESentryLevel::Debug)
+{
+    return nullptr;
+}
+
+// Filtering logs by level in v2.0.0
+
+if (LogData->GetLevel() == ESentryLogLevel::Debug || LogData->GetLevel() == ESentryLogLevel::Trace)
+{
+    return nullptr;
+}
+```
+
+If you use Blueprints, recreate the **Set Level** and **Get Level** nodes of `Sentry Log` objects and the nodes connected to them.
+
+#### Unreal Engine Log Forwarding
+
+`UE_LOG` messages with `VeryVerbose` verbosity are now sent as `trace` structured logs instead of `debug` ones. The `Verbose/VeryVerbose` option in the plugin settings (`StructuredLoggingLevels.bOnDebugLog`) is split into the `Verbose` (`bOnDebugLog`) and `VeryVerbose` (`bOnTraceLog`) options.
+
+The `VeryVerbose` option is disabled by default. If your project forwards `Verbose` messages and you also want to forward `VeryVerbose` messages, enable `bOnTraceLog`.
+
+Breadcrumbs for `VeryVerbose` messages still use the `Debug` level.
+
 ## Migrating to 1.0.0
 
 ### Breaking changes
