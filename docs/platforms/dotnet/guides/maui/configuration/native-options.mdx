@@ -4,16 +4,16 @@ description: "Configure the embedded native Sentry SDKs when targeting Android, 
 sidebar_order: 5
 ---
 
-When your .NET MAUI app targets Android, iOS, or Mac Catalyst, Sentry embeds the native [Android SDK](/platforms/android/) or [Cocoa SDK](/platforms/apple/). The `options.Native` property exposes configuration for these embedded SDKs. It isn't available when targeting Windows or Tizen, so wrap native options in a conditional compilation directive:
+When your .NET MAUI app targets Android, iOS, or Mac Catalyst, Sentry embeds the native [Android SDK](/platforms/android/) or [Cocoa SDK](/platforms/apple/). The `options.Native` property exposes configuration for these embedded SDKs. It only exists on those targets, so code that uses it won't compile for Windows. Wrap native options in a conditional compilation directive:
 
 ```csharp
 builder.UseSentry(options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
 
-#if __ANDROID__
+#if ANDROID
     options.Native.AnrEnabled = true;
-#elif __IOS__ || __MACCATALYST__
+#elif IOS || MACCATALYST
     options.Native.EnableAppHangTracking = true;
 #endif
 });
