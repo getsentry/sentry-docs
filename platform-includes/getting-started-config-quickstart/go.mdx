@@ -1,0 +1,27 @@
+**Error Monitoring** starts working when you initialize the SDK. This snippet also enables **Tracing**. **Logs** are enabled by default in Go SDK `0.33.0` and later; **Application Metrics** are supported in `0.42.0` and later and need no extra `ClientOptions` option. You'll send logs and metrics in their own steps below.
+
+Initialize the SDK as early as possible in your application's lifecycle. Set `TracesSampleRate` to `1.0` to capture 100% of transactions while testing; reduce it in production to control volume.
+
+Don't need Tracing? Remove `EnableTracing` and `TracesSampleRate` from the snippet.
+
+```go
+err := sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    // Enable printing of SDK debug messages.
+    // Useful when getting started or trying to figure something out.
+    Debug: true,
+    // Adds request headers and IP for users,
+    // visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
+    SendDefaultPII: true,
+    EnableTracing: true,
+    // Set TracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    TracesSampleRate: 1.0,
+})
+if err != nil {
+    log.Fatalf("sentry.Init: %s", err)
+}
+// Flush buffered events before the program terminates.
+// Set the timeout to the maximum duration the program can afford to wait.
+defer sentry.Flush(2 * time.Second)
+```
