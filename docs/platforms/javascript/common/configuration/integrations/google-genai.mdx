@@ -39,12 +39,36 @@ By default, tracing support is added to the following Google Gen AI SDK calls:
 - `chats.create()` - Create chat sessions
 - `sendMessage()` - Send messages in chat sessions
 - `sendMessageStream()` - Stream messages in chat sessions
+- `decisions.create()` - Evaluate questions with the [Gemini Decisions API](https://blog.google/innovation-and-ai/technology/developers-tools/gemini-decisions-api/)
 
 Streaming and non-streaming requests are automatically detected and handled appropriately.
 
+### Trace Decisions
+
+With Sentry SDK `11.14.0` or higher and `@google/genai` `3.2.0` or higher, each `decisions.create()` call creates a `gen_ai.decide` span named `decide <model>`, with model, latency, and token usage. When recording is enabled, Sentry captures `input` and `questions` as input messages and `answers` as output messages.
+
+The Decisions API requires API version `v1beta`. Set it on the client:
+
+```javascript
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: { apiVersion: "v1beta" },
+});
+
+const decision = await ai.decisions.create({
+  model: "models/gemini-decision-1",
+  input: "I was charged twice this month and want a refund.",
+  questions: {
+    wants_refund: { type: "noul", instructions: "Is a refund requested?" },
+  },
+});
+```
+
 ## Supported Versions
 
-- `@google/genai`: `>=0.10.0 <3`
+- `@google/genai`: `>=0.10.0 <4`
 
 ## Options
 

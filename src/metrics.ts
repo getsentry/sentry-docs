@@ -171,6 +171,18 @@ export const DocMetrics = {
   },
 
   /**
+   * Track clicks on the Contact support button under Ask AI (Kapa) answers
+   * @param pathname - Page where the Ask AI widget was opened
+   */
+  askAiContactSupport: (pathname: string) => {
+    Sentry.metrics.count('docs.ask_ai.contact_support', 1, {
+      attributes: {
+        page_path: pathname.split('/').slice(0, 3).join('/'), // First 3 segments
+      },
+    });
+  },
+
+  /**
    * Track Sentry CLI setup copies from the callout, homepage card, and inline buttons
    * @param pathname - Page where the prompt was copied
    * @param skill - Skill name if present (e.g., "sentry-nextjs-sdk")
