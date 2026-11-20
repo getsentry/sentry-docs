@@ -1,0 +1,107 @@
+---
+title: Amazon Bedrock
+sidebar_title: Amazon Bedrock
+sidebar_hidden: true
+description: "Learn how Sentry instruments Amazon Bedrock Runtime calls made with the AWS SDK for JavaScript to capture gen_ai spans."
+supportedCategories:
+  - server
+  - serverless
+notSupported:
+  - javascript.cloudflare
+  - javascript.effect
+  - javascript.elysia
+  - javascript.gcp-functions
+  - javascript.hono
+---
+
+<AvailableSince version="11.0.0" />
+
+Sentry automatically instruments [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) model calls that you make with the AWS SDK for JavaScript v3 Bedrock Runtime client (`@aws-sdk/client-bedrock-runtime`). Each call creates a `gen_ai` span that follows Sentry's <PlatformLink to="/agent-tracing/">Agent Tracing</PlatformLink> conventions and records the model, request parameters, token usage, and finish reasons.
+
+There's no separate Bedrock integration to add. The spans come from the <PlatformLink to="/configuration/integrations/aws/">`awsIntegration`</PlatformLink>, which is on by default. Enable tracing and Bedrock calls are instrumented:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Tracing must be enabled for agent tracing to work.
+  // `awsIntegration` is then on by default and instruments Bedrock Runtime calls.
+  tracesSampleRate: 1.0,
+});
+```
+
+<PlatformSection supported={["javascript.bun"]}>
+
+On Bun, the AWS SDK is only instrumented when you build your app with `sentryBunPlugin()` and the AWS SDK is part of the bundle. See <PlatformLink to="/#build-with-the-sentry-plugin-recommended">Build With the Sentry Plugin</PlatformLink>.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.deno"]}>
+
+On Deno, start your app with `--preload=npm:@sentry/deno/import` so the AWS SDK can be instrumented. See <PlatformLink to="/#start-your-app">Start Your App</PlatformLink>.
+
+</PlatformSection>
+
+Your Bedrock code doesn't change:
+
+```javascript
+import {
+  BedrockRuntimeClient,
+  ConverseCommand,
+} from "@aws-sdk/client-bedrock-runtime";
+
+const client = new BedrockRuntimeClient({ region: "us-east-1" });
+
+// Creates a `gen_ai.chat` span named `chat anthropic.claude-3-5-sonnet-20240620-v1:0`
+const response = await client.send(
+  new ConverseCommand({
+    modelId: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    messages: [
+      { role: "user", content: [{ text: "What is the capital of France?" }] },
+    ],
+    inferenceConfig: { maxTokens: 100, temperature: 0.5 },
+  })
+);
+```
+
+To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+
+## Supported Operations
+
+| Command                                | Span operation            | Span name                    |
+| -------------------------------------- | ------------------------- | ---------------------------- |
+| `ConverseCommand`                      | `gen_ai.chat`             | `chat <modelId>`             |
+| `ConverseStreamCommand`                | `gen_ai.chat`             | `chat <modelId>`             |
+| `InvokeModelCommand`                   | `gen_ai.generate_content` | `generate_content <modelId>` |
+| `InvokeModelWithResponseStreamCommand` | `gen_ai.generate_content` | `generate_content <modelId>` |
+
+Streaming spans end once your code has finished reading the response stream.
+
+Other Bedrock Runtime commands, and other Bedrock clients such as `@aws-sdk/client-bedrock-agent-runtime`, get regular AWS SDK `rpc` spans instead of `gen_ai` spans.
+
+## Captured Data
+
+Bedrock spans set `gen_ai.provider.name` to `aws.bedrock`, set `gen_ai.operation.name` to `chat` or `generate_content`, and have the span origin `auto.ai.aws_sdk` (`auto.aws.aws_sdk` before SDK version `11.10.0`). When the values are available, they also include:
+
+- `gen_ai.request.model`: The `modelId` of the request
+- `gen_ai.request.max_tokens`, `gen_ai.request.temperature`, `gen_ai.request.top_p`, and `gen_ai.request.stop_sequences`
+- `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`
+- `gen_ai.response.finish_reasons`
+
+The Converse APIs use the same request and response format for every model, so these attributes are recorded for any model you call with `ConverseCommand` or `ConverseStreamCommand`.
+
+`InvokeModel` request and response bodies differ by model, so request parameters, token usage, and finish reasons are only recorded for model IDs that contain `amazon.titan`, `amazon.nova`, `anthropic.claude`, `meta.llama`, `cohere.command`, or `mistral`. Cohere and Mistral `InvokeModel` bodies don't include token counts, so for those models Sentry estimates token usage from the text length (one token per six characters). Spans for other models record the model ID but no parameters or token usage.
+
+Sentry doesn't record prompts, messages, or model responses for Bedrock calls, so the `dataCollection.genAI` option has no effect on these spans.
+
+## Disable Bedrock Instrumentation
+
+Bedrock instrumentation is part of `awsIntegration`, so you can't turn it off on its own. Removing the integration also stops spans for every other AWS SDK client, such as S3, SQS, and DynamoDB:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: (integrations) =>
+    integrations.filter((integration) => integration.name !== "Aws"),
+});
+```
