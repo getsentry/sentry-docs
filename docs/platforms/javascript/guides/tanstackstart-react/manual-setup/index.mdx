@@ -228,12 +228,6 @@ You start your production build as usual, without the `--import` flag.
 
 This doesn't apply to Cloudflare. For Cloudflare Workers, follow the [Cloudflare guide](/platforms/javascript/guides/tanstackstart-react/manual-setup/cloudflare/).
 
-##### Update an Existing Setup
-
-If you set up Sentry before version 11.13.0, your existing setup keeps working. This includes a `--import` preload in your `start` script and an `import "../instrument.server.mjs"` at the top of `src/server.ts`. The SDK then logs that it's already initialized and that you can remove the preload or the import.
-
-You can also remove the step that copies `instrument.server.mjs` to `.output/server` from your `build` script.
-
 ##### Without Nitro
 
 The plugin loads the server config through a Nitro hook. If you deploy to Node.js without Nitro, load `instrument.server.mjs` yourself: add the `--import` flag to your start command, or import the file at the top of `src/server.ts`.
@@ -242,7 +236,7 @@ The plugin loads the server config through a Nitro hook. If you deploy to Node.j
 
 #### Capture Server-Side Errors
 
-To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file. `sentryGlobalFunctionMiddleware` also creates a span for every server function call, including calls from other server functions or from loaders on the server. Without this middleware, Sentry doesn't create server function spans.
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file. Since version 11.15.0, `sentryGlobalFunctionMiddleware` also creates a span for every server function call, including calls from other server functions or from loaders on the server. Without this middleware, Sentry doesn't create server function spans.
 
 The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
 
@@ -268,10 +262,6 @@ export const startInstance = createStart(() => {
   };
 });
 ```
-
-<AvailableSince version="11.15.0" />
-
-Server function spans have the op `function` and the attributes `code.function.name`, `code.file.path`, and `http.request.method`.
 
 #### Capture Errors in Route Loaders
 
