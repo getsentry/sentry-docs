@@ -65,7 +65,7 @@ be included in the results of the organization details response.
 
 ### Add your feature to the FeatureManager
 
-If you want to back your feature flag via options, you can do so using the [Flagpole](/backend/application-domains/feature-flags/flagpole/) library
+If you want to back your feature flag via options, you can do so using [Flagpole](/backend/application-domains/feature-flags/flagpole/)
 by adding the feature to the `FeatureManager` with the `FLAGPOLE` enum set as the feature strategy:
 
 ```python
@@ -181,7 +181,7 @@ configuration file:
 SENTRY_FEATURES['organizations:test-feature'] = True
 ```
 
-Alternatively, you can test Flagpole features by setting custom options locally.
+Alternatively, you can test Flagpole features with a local values file or `sentry-options-cli eval`.
 See the [Flagpole Local Development](/backend/application-domains/feature-flags/flagpole/#testing-a-flagpole-feature-locally) docs for more information on this.
 
 ## Enabling your feature in production
@@ -191,8 +191,8 @@ flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
 you have the choice of using an option backed rollout via Options Automator with Flagpole,
 or by writing a custom feature flag handler.
 
-[Flagpole](/backend/application-domains/feature-flags/flagpole/) is Sentry's internal feature
-flagging library, allowing a feature with multiple target segments and
+[Flagpole](/backend/application-domains/feature-flags/flagpole/) is Sentry's internal, sentry-options-backed feature
+flagging standard, allowing a feature with multiple target segments and
 condition filters to be defined in YAML within Options Automator.
 
 ## After launch (Graduation)
@@ -221,9 +221,8 @@ Getsentry contains a variety of feature handlers that override the
 If your feature is available for a subset of plans (eg. only on Business plans)
 you need to:
 
-1. Disable the feature in `getsentry/conf/settings/defaults.py` by updating `SENTRY_FEATURES`.
-2. Add your feature to the appropriate plan feature list.
-3. Update `SubscriptionPlanFeatureHandler` to handle your feature.
+1. Register your feature with `FeatureHandlerStrategy.FLAGPOLE`.
+2. Add a [Flagpole](/backend/application-domains/feature-flags/flagpole/) config for it whose segments only match organizations on those plans.
 
 ### Custom handlers
 

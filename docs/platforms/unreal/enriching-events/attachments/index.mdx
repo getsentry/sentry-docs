@@ -96,6 +96,38 @@ Attachments are retained for 30 or 90 days, based on [your plan's data retention
 
 Learn more about how attachments impact your [quota](/pricing/quotas/).
 
+## Add or Modify Attachments Before Sending
+
+It's possible to add or remove attachments before an event is sent by way of the `beforeSend` and `beforeSendFeedback` <PlatformLink to="/configuration/filtering/">hooks</PlatformLink>. The hint passed to the handler contains all attachments that will be sent with the event, including the ones added to the scope and the ones added by the SDK, such as the game log or screenshot.
+
+```cpp
+USentryEvent* USomeBeforeSendHandler::HandleBeforeSend_Implementation(USentryEvent* Event, USentryHint* Hint)
+{
+	// Add an attachment to this event only
+	USentryAttachment* Attachment = NewObject<USentryAttachment>();
+	Attachment->InitializeWithPath(TEXT("your/path/config.json"), TEXT("config.json"));
+	Hint->AddAttachment(Attachment);
+
+	// Remove attachments whose filename matches a pattern (case-insensitive, supports `*` and `?` wildcards)
+	Hint->RemoveAttachments(TEXT("*.log"));
+
+	// Or remove all attachments
+	Hint->ClearAttachments();
+
+	return Super::HandleBeforeSend_Implementation(Event, Hint);
+}
+```
+
+The same result can be achieved by calling the corresponding functions on the hint in blueprint.
+
+Changes made to the hint only affect the event being sent and don't modify the scope. Crash reports, such as minidumps, aren't part of the hint and can't be removed this way.
+
+<Alert>
+
+On Android, native crashes are sent the next time the app launches. The scope attachments captured at the time of the crash are sent separately from the event, so they aren't included in the hint.
+
+</Alert>
+
 ## Store Minidumps as Attachments
 
 <Include name="store-minidumps-as-attachments-intro" />

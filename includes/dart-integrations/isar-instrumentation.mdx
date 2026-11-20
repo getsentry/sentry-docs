@@ -63,7 +63,42 @@ final isar = await SentryIsar.open(
 
 ### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_isar/sentry_isar.dart';
+
+import 'user.dart'; // Import your Isar model instead
+
+Future<void> runApp() async {
+  await Sentry.startSpan('isarTest', (span) async {
+    final dir = await getApplicationDocumentsDirectory();
+
+    final isar = await SentryIsar.open(
+      [UserSchema],
+      directory: dir.path,
+    );
+
+    final newUser = User()
+      ..name = 'Joe Dirt'
+      ..age = 36;
+
+    await isar.writeTxn(() async {
+      await isar.users.put(newUser); // insert & update
+    });
+
+    final existingUser = await isar.users.get(newUser.id); // get
+
+    await isar.writeTxn(() async {
+      await isar.users.delete(existingUser!.id); // delete
+    });
+  }, parentSpan: null);
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sentry_isar/sentry_isar.dart';
@@ -98,39 +133,14 @@ Future<void> runApp() async {
 }
 ```
 
-```dart {tabTitle:Stream Mode}
-import 'package:path_provider/path_provider.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:sentry_isar/sentry_isar.dart';
-
-import 'user.dart'; // Import your Isar model instead
-
-Future<void> runApp() async {
-  await Sentry.startSpan('isarTest', (span) async {
-    final dir = await getApplicationDocumentsDirectory();
-
-    final isar = await SentryIsar.open(
-      [UserSchema],
-      directory: dir.path,
-    );
-
-    final newUser = User()
-      ..name = 'Joe Dirt'
-      ..age = 36;
-
-    await isar.writeTxn(() async {
-      await isar.users.put(newUser); // insert & update
-    });
-
-    final existingUser = await isar.users.get(newUser.id); // get
-
-    await isar.writeTxn(() async {
-      await isar.users.delete(existingUser!.id); // delete
-    });
-  }, parentSpan: null);
-}
-```
-
 ### 2. View the Transaction on Sentry.io
 
 To view the recorded transaction, log into [sentry.io](https://sentry.io). Use the left sidebar to navigate to the **Performance** page. Select your project and scroll down to the transactions table to see the just recorded transaction with the name `isarTest`. You can also use the search bar to find the transaction. Click on the transaction to open its **Transaction Summary** page for more performance details.
+
+## Span Attributes
+
+Database spans identify the database system with `db.system.name` (`isar`) and the database name with `db.namespace`, when available. Use these keys in queries and span-filtering callbacks.
+
+Collection names use `db.collection.name`.
+
+Database breadcrumbs also use `db.system.name` and `db.namespace`.

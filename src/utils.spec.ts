@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
-import {marketingUrlParams} from './utils';
+import {isNew, marketingUrlParams, safeDecodeHash} from './utils';
 
 describe('marketingUrlParams', () => {
   const originalLocation = window.location;
@@ -119,5 +119,48 @@ describe('marketingUrlParams', () => {
       Utm_Medium: 'cpc',
       GCLID: 'abc',
     });
+  });
+});
+
+describe('safeDecodeHash', () => {
+  test('decodes a percent-encoded fragment', () => {
+    expect(safeDecodeHash('#hello%20world')).toBe('hello world');
+  });
+
+  test('decodes non-ASCII characters', () => {
+    expect(safeDecodeHash('#%E4%B8%AD%E6%96%87')).toBe('中文');
+  });
+
+  test('works without a leading #', () => {
+    expect(safeDecodeHash('my-section')).toBe('my-section');
+  });
+
+  test('returns the raw value for invalid percent-encoding instead of throwing', () => {
+    expect(safeDecodeHash('#dsn%SENTRY_ENVIRONMENT')).toBe('dsn%SENTRY_ENVIRONMENT');
+  });
+
+  test('handles an empty hash', () => {
+    expect(safeDecodeHash('#')).toBe('');
+  });
+});
+
+describe('isNew', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test.each([new Date('2027-02-17'), '2027-02-17'])(
+    'shows the badge before the UTC date and hides it from that date on (%s)',
+    newUntil => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2027-02-16T23:59:59Z'));
+      expect(isNew(newUntil)).toBe(true);
+      vi.setSystemTime(new Date('2027-02-17T00:00:00Z'));
+      expect(isNew(newUntil)).toBe(false);
+    }
+  );
+
+  test('hides the badge without new_until', () => {
+    expect(isNew(undefined)).toBe(false);
   });
 });

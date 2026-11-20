@@ -58,10 +58,14 @@ export const showSigninNote = (children: ReactNode) => {
   });
 };
 
+const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  value != null && typeof (value as PromiseLike<unknown>).then === 'function';
+
 // Resolve React lazy elements from RSC serialization (Next.js 15.5+).
 // Client component children serialized through RSC boundaries arrive as
 // lazy elements with _init/_payload instead of the usual type/props shape.
-function resolveElement(child: any): ReactElement<CodeBlockProps> | null {
+/** @internal Only exported for testing. */
+export function resolveElement(child: any): ReactElement<CodeBlockProps> | null {
   if (child == null || typeof child !== 'object') {
     return null;
   }
@@ -70,8 +74,14 @@ function resolveElement(child: any): ReactElement<CodeBlockProps> | null {
   }
   if (child._init && child._payload) {
     try {
-      return child._init(child._payload);
-    } catch {
+      return resolveElement(child._init(child._payload));
+    } catch (error) {
+      // A lazy element that has not loaded yet throws a thenable to suspend
+      // rendering. Rethrow it so React renders again once it has loaded,
+      // instead of dropping the tab.
+      if (isThenable(error)) {
+        throw error;
+      }
       return null;
     }
   }
@@ -140,7 +150,9 @@ export function CodeTabs({children}: CodeTabProps) {
   const buttons = possibleChoices.map((choice, idx) => (
     <TabButton
       key={idx}
+      type="button"
       data-active={choice === possibleChoices[selectedTabIndex]}
+      aria-pressed={choice === possibleChoices[selectedTabIndex]}
       onClick={() => {
         if (containerRef.current) {
           // see useEffect above.
@@ -166,7 +178,7 @@ const Container = styled('div')`
   position: relative;
   overflow-y: visible; /* Allow copy button to be visible */
 
-  pre[class*='language-'] {
+  pre {
     padding: 10px 12px;
     border-radius: 0 0 6px 6px;
     border: 1px solid var(--accent-11);

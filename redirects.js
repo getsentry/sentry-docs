@@ -295,6 +295,38 @@ const developerDocsRedirects = [
     destination: '/sdk/foundations/processing/batch-processor/',
   },
   {
+    source: '/sdk/telemetry/spans/filtering/',
+    destination: '/sdk/telemetry/spans/#spec-filtering',
+  },
+  {
+    source: '/sdk/telemetry/spans/implementation/',
+    destination: '/sdk/telemetry/spans/#implementation-guidelines',
+  },
+  {
+    source: '/sdk/telemetry/spans/sampling/',
+    destination: '/sdk/telemetry/spans/#spec-sampling',
+  },
+  {
+    source: '/sdk/telemetry/spans/scrubbing-data/',
+    destination: '/sdk/telemetry/spans/#spec-data-scrubbing',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-api/',
+    destination: '/sdk/telemetry/spans/#public-api',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-buffer/',
+    destination: '/sdk/telemetry/spans/#spec-span-buffer',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-protocol/',
+    destination: '/sdk/telemetry/spans/#wire-format',
+  },
+  {
+    source: '/sdk/telemetry/spans/span-trace-propagation/',
+    destination: '/sdk/telemetry/spans/#spec-trace-propagation',
+  },
+  {
     source: '/sdk/telemetry/telemetry-buffer/',
     destination: '/sdk/foundations/processing/telemetry-processor/',
   },
@@ -593,11 +625,6 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry/',
   },
-  {
-    source: '/platforms/javascript/guides/:guide/opentelemetry/integration.md',
-    destination:
-      '/platforms/javascript/guides/:guide/configuration/integrations/opentelemetry.md',
-  },
 
   // Guides → Get Started restructure
   {
@@ -894,6 +921,10 @@ const userDocsRedirects = [
     destination: '/integrations/source-code-mgmt/github/',
   },
   {
+    source: '/integrations/source-code-mgmt/github-enterprise/',
+    destination: '/integrations/source-code-mgmt/github/',
+  },
+  {
     source: '/integrations/gitlab/',
     destination: '/integrations/source-code-mgmt/gitlab/',
   },
@@ -907,6 +938,22 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/cursor/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/daveio/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fixa/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fixa/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -999,7 +1046,50 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/nuxt/manual-setup/cloudflare/',
+  },
+  // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
+    destination:
+      '/platforms/javascript/guides/tanstackstart-react/manual-setup/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/',
+    destination: '/platforms/javascript/guides/remix/manual-setup/cloudflare/',
+  },
+  // The quick starts for other runtimes became manual setups.
+  {
+    source:
+      '/platforms/javascript/guides/:framework(astro|flue|hono|mastra|nextjs|nuxt|pi-durable|react-router|remix|sveltekit|tanstackstart-react)/cloudflare/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:framework(pi-durable|react-router)/:runtime(bun|deno)/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/:runtime/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/',
+    destination: '/platforms/javascript/guides/remix/hydrogen/',
+  },
+  {
+    // The Cloudflare quick start links to every framework page.
+    source: '/platforms/javascript/guides/cloudflare/frameworks/',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -1017,17 +1107,17 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/express/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/express/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/fastify/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/fastify/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hapi/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/hapi/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hono/install/lightweight/',
@@ -1037,7 +1127,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/koa/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source:
@@ -1048,6 +1138,20 @@ const userDocsRedirects = [
     source:
       '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
+  },
+  // Express, Fastify, Hapi and Koa are single landing pages, their subpages moved to Node.js.
+  {
+    source: '/platforms/javascript/guides/fastify/features/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/fastify/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)__v:version/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)/:path+',
+    destination: '/platforms/javascript/guides/node/:path+/',
   },
   {
     source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',
@@ -1091,14 +1195,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/watchdog-security/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/organization/integrations/releasetag/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1135,7 +1231,19 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1159,6 +1267,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/shipfox/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/specsource/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1176,6 +1288,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/hookdeck/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1211,6 +1327,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/clip-by-arito/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1239,6 +1359,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1260,10 +1384,6 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/superlog/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/organization/integrations/synthreo/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1290,6 +1410,10 @@ const userDocsRedirects = [
     source: '/organization/integrations/modem/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1299,14 +1423,6 @@ const userDocsRedirects = [
   // via the wildcard redirect at the bottom of this file
   {
     source: '/integrations/sonarly-integration/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/work-os/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
-    source: '/integrations/watchdog-security/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1346,7 +1462,19 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/struct-managed-monitors/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/aether/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/aldena/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ando/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1370,6 +1498,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/shipfox/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/specsource/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1387,6 +1519,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/flow-relay/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/hookdeck/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1422,6 +1558,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/clip-by-arito/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/ellipsis/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1450,6 +1590,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/holmes/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/notilens/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1474,10 +1618,6 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/synthreo/',
-    destination: '/integrations/third-party-integrations/',
-  },
-  {
     source: '/integrations/waroom/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1499,6 +1639,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/modem/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/motir/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1862,6 +2006,18 @@ const userDocsRedirects = [
     destination:
       '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly',
   },
+  // The Ionic Capacitor source maps page only exists for the Capacitor guide.
+  {
+    source: '/platforms/javascript/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(angular|astro|aws-lambda|azure-functions|bun|cloudflare|cordova|deno|effect|electron|elysia|ember|eve|express|fastify|firebase|flue|gatsby|gcp-functions|hapi|hono|koa|mastra|nestjs|nextjs|nitro|node|nuxt|react|react-router|remix|solid|solidstart|svelte|sveltekit|tanstackstart-react|vue|wasm)/sourcemaps/uploading/ionic-capacitor/',
+    destination:
+      '/platforms/javascript/guides/capacitor/sourcemaps/uploading/ionic-capacitor/',
+  },
   {
     source:
       '/platforms/:platform/sourcemaps/:section(generating|validating|best-practices|artifact-and-release-bundles|)/',
@@ -2008,13 +2164,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
@@ -2057,14 +2211,6 @@ const userDocsRedirects = [
   {
     source: '/product/explore/logs/:path*',
     destination: '/product/logs/:path*',
-  },
-  {
-    source: '/product/explore',
-    destination: '/product/trace-explorer/',
-  },
-  {
-    source: '/product/explore/',
-    destination: '/product/trace-explorer/',
   },
   {
     source: '/platforms/javascript/best-practices/browser-extensions/',
@@ -2211,10 +2357,6 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/expo/',
     destination: '/platforms/react-native/guides/expo/',
-  },
-  {
-    source: '/platforms/react-native/manual-setup/expo.md',
-    destination: '/platforms/react-native/guides/expo.md',
   },
   {
     source: '/platforms/react-native/manual-setup/expo/eas-build-hooks/',
@@ -2462,11 +2604,11 @@ const userDocsRedirects = [
   // Cloudflare page is listed first so its readers keep landing on it.
   {
     source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/agent-tracing/flue.md',
@@ -2489,19 +2631,19 @@ const userDocsRedirects = [
   // paths, which the rules above redirect again — a 2-hop chain.
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/flue.md',
@@ -3006,16 +3148,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-monitoring.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-monitoring/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-monitoring.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-monitoring/',
@@ -3063,16 +3197,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/node/agent-tracing/:path*',
   },
   {
-    source: '/platforms/react-native/ai-agent-tracing.md',
-    destination: '/platforms/javascript/guides/node/agent-tracing.md',
-  },
-  {
     source: '/platforms/react-native/guides/:guide/ai-agent-tracing/',
     destination: '/platforms/react-native/guides/:guide/agent-tracing/',
-  },
-  {
-    source: '/platforms/react-native/guides/:guide/ai-agent-tracing.md',
-    destination: '/platforms/react-native/guides/:guide/agent-tracing.md',
   },
   {
     source: '/platforms/php/guides/laravel/ai-agent-tracing/',
@@ -3087,10 +3213,6 @@ const userDocsRedirects = [
     destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
   },
   // End of Insights redirects.
-  {
-    source: '/platforms/javascript/guides/astro/manual-setup/',
-    destination: '/platforms/javascript/guides/astro/',
-  },
   {
     source: '/product/error-monitoring/dashboards/',
     destination: '/product/dashboards/',
@@ -3156,12 +3278,67 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
+    source: '/product/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
   {
+    source: '/concepts/key-terms/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/concepts/key-terms/key-terms/tracing/trace-view/',
+    destination: '/concepts/key-terms/tracing/trace-view/',
+  },
+  {
     source: '/organization/integrations/shortcut/',
     destination: '/integrations/issue-tracking/shortcut/',
+  },
+  // Former span metrics pages now live in SDK instrumentation guides.
+  {
+    source: '/platforms/javascript/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/examples/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/python/metrics/',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/examples/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
+  },
+  {
+    source: '/platforms/python/tracing/span-metrics/',
+    destination:
+      '/platforms/python/tracing/instrumentation/custom-instrumentation/#adding-span-attributes',
   },
   // Redirects for JavaScript tracing docs
   {
@@ -3170,17 +3347,18 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source:
       '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/',
+    destination: '/platforms/javascript/tracing/instrumentation/#adding-span-attributes',
   },
   {
     source: '/platforms/javascript/profiling/browser-profiling/',
@@ -3215,11 +3393,6 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/profiling/',
   },
   {
-    source:
-      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
-  },
-  {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
   },
@@ -3233,6 +3406,12 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
     destination:
       '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/integrations/anr/event-loop-block/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/integrations/event-loop-block/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
@@ -3275,6 +3454,16 @@ const userDocsRedirects = [
     source:
       '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
     destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/profiling/troubleshooting/',
+    destination:
+      '/platforms/dart/guides/flutter/migration/v9-to-v10/#profiling-and-deprecated-apis-are-removed',
   },
   {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
@@ -3580,6 +3769,69 @@ const userDocsRedirects = [
   },
 ];
 
+// Matches the trailing `/` of a page URL or the `.md` of its export.
+const MD_SUFFIX_PARAM = ':mdSuffix(/|\\.md)';
+
+// Destination compilation rejects adjacent params (`/:guide:mdSuffix`).
+const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
+
+/**
+ * Every page has a `.md` export, so a redirected page's `.md` URL must redirect too.
+ * Each redirect whose source ends in `/` also matches its `.md` URL and sends it to the
+ * destination's `.md` export (external, query-string and platform-picker destinations
+ * stay as they are).
+ * Where possible this is folded into the same rule through `:mdSuffix`, so the route
+ * count does not grow. Destinations ending in a param or pointing to the root need a
+ * separate `.md` rule. Wildcards with fixed destinations get a `.md` rule before the
+ * catch-all; wildcards forwarding `:path*` already preserve the requested extension.
+ *
+ * @template {{source: string, destination: string}} R
+ * @param {R[]} list
+ * @returns {R[]}
+ */
+function withMarkdownRedirects(list) {
+  return list.flatMap(r => {
+    const isWildcard = r.source.endsWith('/:path*');
+    if (r.source === '/' || (!r.source.endsWith('/') && !isWildcard)) {
+      return [r];
+    }
+    const keepDestination =
+      /^https?:\/\//.test(r.destination) ||
+      r.destination.includes('?') ||
+      r.destination === '/platform-redirect/';
+    if (isWildcard && (keepDestination || r.destination.includes(':path*'))) {
+      return [r];
+    }
+    const source = isWildcard ? r.source : r.source.slice(0, -1);
+    const [path, hash] = r.destination.split('#');
+    const destination = path.replace(/\/+$/, '');
+    const fragment = hash === undefined ? '' : `#${hash}`;
+
+    const canFold =
+      !isWildcard &&
+      (keepDestination || (destination !== '' && !ENDS_WITH_PARAM.test(destination)));
+    if (canFold) {
+      return [
+        {
+          ...r,
+          source: `${source}${MD_SUFFIX_PARAM}`,
+          destination: keepDestination
+            ? r.destination
+            : `${destination}:mdSuffix${fragment}`,
+        },
+      ];
+    }
+    const markdownRedirect = {
+      ...r,
+      source: `${source}.md`,
+      destination: keepDestination
+        ? r.destination
+        : `${destination || '/index'}.md${fragment}`,
+    };
+    return isWildcard ? [markdownRedirect, r] : [r, markdownRedirect];
+  });
+}
+
 /**
  * @type {import('next').NextConfig['redirects']}
  *
@@ -3592,9 +3844,16 @@ const redirects = async () => {
     isDeveloperDocs ? 'developer' : 'sdk',
     'docs redirects in next.config.js'
   );
-  return (isDeveloperDocs ? developerDocsRedirects : userDocsRedirects).map(r => {
+  return withMarkdownRedirects(
+    isDeveloperDocs ? developerDocsRedirects : userDocsRedirects
+  ).map(r => {
     return {...r, permanent: true};
   });
 };
 
-module.exports = {redirects, developerDocsRedirects, userDocsRedirects};
+module.exports = {
+  redirects,
+  developerDocsRedirects,
+  userDocsRedirects,
+  withMarkdownRedirects,
+};

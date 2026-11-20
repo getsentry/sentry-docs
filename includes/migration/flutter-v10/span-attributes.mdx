@@ -1,0 +1,31 @@
+---
+id: span-attributes
+title: "Span Attribute Names Have Changed"
+phase: code-changes
+category: rename
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 110
+---
+
+Update queries, dashboards, alerts, and callbacks that read the old attribute keys:
+
+| Previous Attribute             | v10 Attribute             | Affected Instrumentation       |
+| ------------------------------ | ------------------------- | ------------------------------ |
+| `db.system`                    | `db.system.name`          | Database integrations          |
+| `db.name`                      | `db.namespace`            | Drift, Hive, Isar, and sqflite |
+| `db.operation`                 | `db.operation.name`       | Supabase                       |
+| `db.table`                     | `db.collection.name`      | Supabase                       |
+| `db.collection`                | `db.collection.name`      | Isar                           |
+| `url`                          | `url.full`                | HTTP spans                     |
+| `http.response_content_length` | `http.response.body.size` | HTTP spans                     |
+| `app_start_type`               | `app.vitals.start.type`   | App start                      |
+
+Drift's database system value changes from `db.sqlite` to `sqlite`. Supabase replaces the raw filter list under `db.query` and the SQL under `db.sql.query` with a parameterized SQL statement under `db.query.text`, and adds `db.query.summary`. The SQL statement uses placeholders for values and is emitted regardless of `sendDefaultPii`.
+
+The `sentry_file` integration no longer emits `file.async`. `SentrySpanData` has been removed. If you referenced this internal class, use the attribute strings listed above in application code. `SemanticAttributesConstants` and `ProposedSemanticAttributes` are also internal APIs.
+
+For custom code that used internal constants, the old `appApp*`, `osBuild`, `deviceConnectionType`, `deviceLocale`, and `deviceTimezone` constants have been removed. Use the corresponding attribute strings: `app.build`, `app.identifier`, `app.name`, `app.start_time`, `app.version`, `os.build_id`, `network.connection.type`, `culture.locale`, and `culture.timezone`. The `appVitalsStartValue` constant moves to `ProposedSemanticAttributes`; its wire key remains `app.vitals.start.value`.
+
+Database breadcrumb data also uses `db.system.name` and `db.namespace` instead of `db.system` and `db.name` in Hive, Isar, and sqflite. Update `beforeBreadcrumb` callbacks that read these fields.

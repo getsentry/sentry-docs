@@ -41,8 +41,20 @@ If you set up the Sentry SDK and it's not sending any data to Sentry:
 <Expandable permalink title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
+
+<PlatformSection notSupported={["javascript.electron"]}>
+
 Check out our <PlatformLink to="/migration/v10-to-v11/">migration guide</PlatformLink> to learn everything you need
 to know to get up and running again with the latest Sentry features.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+Check out the [Electron SDK migration guide](https://github.com/getsentry/sentry-electron/blob/master/MIGRATION.md) to learn everything you need
+to know to get up and running again with the latest Sentry features.
+
+</PlatformSection>
 
 </Expandable>
 
@@ -98,6 +110,24 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
  Access-Control-Allow-Origin: *
 ```
+
+</Expandable>
+
+<Expandable permalink title="Events blocked by Chrome's local network access prompt">
+
+If your users see a Chrome prompt asking to allow the page to access devices on their local network, or events never reach Sentry and the browser console shows failed requests to your Sentry or Spotlight URL, Chrome's local network access check may be blocking them.
+
+Chrome groups network addresses into three address spaces, from least to most private: public, private network (for example `10.x.x.x` or `192.168.x.x`), and loopback (`localhost`).
+Since Chrome 142, a page needs the user's permission before it can send requests to a more private address space than the one it was loaded from.
+
+| App runs on                  | Sends events to              | Result            |
+| ---------------------------- | ---------------------------- | ----------------- |
+| localhost                    | localhost                    | Allowed           |
+| localhost or private network | public Sentry                | Allowed           |
+| public                       | private network or localhost | Permission prompt |
+| private network              | localhost                    | Permission prompt |
+
+This affects a publicly hosted app reporting to a self-hosted Sentry that is only reachable on an internal address, and Spotlight enabled on a non-localhost page. To avoid the prompt, expose Sentry on a public hostname, or use a <PlatformLink to="/configuration/tunneling/">tunnel</PlatformLink> to send events through your app's own origin.
 
 </Expandable>
 
@@ -184,154 +214,10 @@ Chrome then ignores the SDK stack frames when debugging.
 <PlatformCategorySection supported={['browser']}>
 <Expandable permalink title="Dealing with Ad-Blockers">
 
-When you are using our CDN, ad-blocking or script-blocking extensions may prevent our SDK from being fetched and initialized properly. Because of this, any call to the SDKs API will fail and may cause your application to behave unexpectedly.
+Ad-blocking or script-blocking extensions may block Sentry in two ways:
 
-Additionally, even when the SDK is downloaded and initialized correctly, Sentry endpoints that need to receive captured data may be blocked as well. This prevents any error reports, sessions health, or performance data from being delivered, making it effectively unavailable in [sentry.io](https://sentry.io).
-
-Furthermore, some browsers, like [Brave](https://brave.com/), have built-in ad-blockers that may block requests sent to our endpoint. Even if users deactivate your domain from blocking, Brave might continue to block [requests made from service workers](https://github.com/getsentry/sentry/issues/47912#issuecomment-1573714875).
-
-You can work around our CDN bundles being blocked by [using our NPM packages](#using-the-npm-package) and bundling our SDK with your app. However, the endpoint blockage can only be resolved by using a tunnel as explained below.
-
-</Expandable>
-
-<Expandable permalink title="Using the `tunnel` Option">
-
-<PlatformSection supported={["javascript.nextjs"]}>
-
-The Sentry Next.js SDK has a separate option to make setting up tunnels very
-straight-forward, allowing you to skip the setup below. See <PlatformLink to="/configuration/build/#tunnelRoute">
-`tunnelRoute`</PlatformLink> to learn how to set up tunneling on Next.js.
-
-If you do not want to configure `tunnelRoute`, you can follow the guide below.
-
-</PlatformSection>
-
-A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your application. Because you control this server, there is no risk of any requests sent to it being blocked. When the endpoint lives under the same origin (although it does not have to in order for the tunnel to work), the browser will not treat any requests to the endpoint as a third-party request. As a result, these requests will have different security measures applied which, by default, don't trigger ad-blockers. A quick summary of the flow can be found below.
-
-![Tunnel Flow](./img/tunnel.png)
-
-Starting with version `6.7.0` of the JavaScript SDK, you can use the `tunnel` option to tell the SDK to deliver events to the configured URL, instead of using the DSN. This allows the SDK to remove `sentry_key` from the query parameters, which is one of the main reasons ad-blockers prevent sending events in the first place. This option also stops the SDK from sending preflight requests, which was one of the requirements that necessitated sending the `sentry_key` in the query parameters.
-
-To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests. When using tunneling with server-side SDKs like `@sentry/node` or `@sentry/bun` you must provide an absolute URL.
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tunnel: "/tunnel",
-});
-```
-
-Once configured, all events will be sent to the `/tunnel` endpoint. This solution, however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here's an example for your server component:
-
-```csharp
-
-// This functionality is now built-in to the Sentry.AspNetCore package.
-// See https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/#tunnel
-// docs for more information.
-
-// This example shows how you could implement it yourself:
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Text.Json;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-
-// Change host appropriately if you run your own Sentry instance.
-const string host = "sentry.io";
-// Set knownProjectIds to a list with your Sentry project IDs which you
-// want to accept through this proxy.
-var knownProjectIds = new HashSet<string>() {  };
-
-var client = new HttpClient();
-WebHost.CreateDefaultBuilder(args).Configure(a =>
-    a.Run(async context =>
-    {
-        context.Request.EnableBuffering();
-        using var reader = new StreamReader(context.Request.Body);
-        var header = await reader.ReadLineAsync();
-        var headerJson = JsonSerializer.Deserialize<Dictionary<string, object>>(header);
-        if (headerJson.TryGetValue("dsn", out var dsnString)
-            && Uri.TryCreate(dsnString.ToString(), UriKind.Absolute, out var dsn))
-        {
-            var projectId = dsn.AbsolutePath.Trim('/');
-            if (knownProjectIds.Contains(projectId) && string.Equals(dsn.Host, host, StringComparison.OrdinalIgnoreCase)) {
-              context.Request.Body.Position = 0;
-              await client.PostAsync($"https://{dsn.Host}/api/{projectId}/envelope/",
-                  new StreamContent(context.Request.Body));
-            }
-        }
-    })).Build().Run();
-```
-
-```ruby
-require 'net/http'
-
-class HomeController < ApplicationController
-
-  SENTRY_HOST = "oXXXXXX.ingest.sentry.io"
-  SENTRY_PROJECT_IDS = ["123456"]
-
-  def tunnel
-    envelope = request.body.read
-    piece = envelope.split("\n").first
-    header = JSON.parse(piece)
-    dsn = URI.parse(header['dsn'])
-    project_id = dsn.path.tr('/', '')
-
-    raise "Invalid sentry hostname: #{dsn.hostname}" if dsn.hostname != SENTRY_HOST
-    raise "Invalid sentry project id: #{project_id}" unless SENTRY_PROJECT_IDS.include?(project_id)
-
-    upstream_sentry_url = "https://#{SENTRY_HOST}/api/#{project_id}/envelope/"
-    Net::HTTP.post(URI(upstream_sentry_url), envelope)
-
-    head(:ok)
-  rescue => e
-    # handle exception in your preferred style,
-    # e.g. by logging or forwarding to server Sentry project
-    Rails.logger.error('error tunneling to sentry')
-  end
-
-end
-```
-
-```javascript
-const SENTRY_HOST = "oXXXXXX.ingest.sentry.io";
-const SENTRY_PROJECT_IDS = ["123456"];
-
-export const postAction = async ({ request }) => {
-  try {
-    const envelopeBytes = await req.arrayBuffer();
-    const envelope = new TextDecoder().decode(envelopeBytes);
-    const piece = envelope.split("\n")[0];
-    const header = JSON.parse(piece);
-    const dsn = new URL(header["dsn"]);
-    const project_id = dsn.pathname?.replace("/", "");
-
-    if (dsn.hostname !== SENTRY_HOST) {
-      throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
-    }
-
-    if (!project_id || !SENTRY_PROJECT_IDS.includes(project_id)) {
-      throw new Error(`Invalid sentry project id: ${project_id}`);
-    }
-
-    const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
-    await fetch(upstream_sentry_url, { method: "POST", body: envelopeBytes });
-
-    return json({}, { status: 200 });
-  } catch (e) {
-    console.error("error tunneling to sentry", e);
-    return json({ error: "error tunneling to sentry" }, { status: 500 });
-  }
-};
-```
-
-If your use-case is related to the SDK package itself being blocked, any of the following solutions will help you resolve this issue.
+- They block requests to Sentry's ingest endpoints, so captured data never reaches [sentry.io](https://sentry.io). Send events through your own server to avoid this, as described in <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
+- When you load the SDK from our CDN, they may prevent it from being fetched and initialized. Any call to the SDK's API then fails and may cause your application to behave unexpectedly. Any of the following solutions resolves this.
 
 ### Using the NPM Package
 
@@ -449,7 +335,7 @@ Remember to pass in `true` as the second parameter to `addEventListener()`. With
 In very rare cases, the SDK can cause callbacks added via `addEventListener` to an event target (such as a button) to be invoked twice.
 This is usually a sign of the SDK being initialized too late in the lifecycle of the page. If you can, try initializing the SDK earlier in your application.
 
-If this is not possible or doesn't apply to your use case, set the `unregisterOriginalCallbacks` option in the [`browserApiErrors` integration](../configuration/integrations/browserapierrors) to `true`.
+If this is not possible or doesn't apply to your use case, set the `unregisterOriginalCallbacks` option in the [`browserApiErrors` integration](../configuration/integrations/browserapierrors/) to `true`.
 
 </Expandable>
 </PlatformCategorySection>
@@ -496,7 +382,7 @@ export default defineConfig({
   permalink
   title="Invalid hashes in Angular Service Worker ngsw.json"
 >
-If you upload source maps for your Angular application with <PlatformLink to="/sourcemaps/uploading/cli">Sentry CLI</PlatformLink>, you might encounter caching issues if you use the [Angular service worker](https://angular.dev/ecosystem/service-workers).
+If you upload source maps for your Angular application with <PlatformLink to="/sourcemaps/uploading/cli/">Sentry CLI</PlatformLink>, you might encounter caching issues if you use the [Angular service worker](https://angular.dev/ecosystem/service-workers).
 Learn more about fixing these caching issues in the <PlatformLink to="/sourcemaps/uploading/cli/#fixing-angular-service-worker-caching-issues">Uploading Source Maps with Sentry CLI</PlatformLink> guide.
 
 </Expandable>
@@ -553,14 +439,14 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
   <Expandable permalink title="Nuxt: Server-side Nitro is not sending events">
     The SDK bundles `sentry.server.config.ts` into the Nitro server build and initializes Sentry when the server starts, in production and in development mode.
-    Read more about this in <PlatformLink to="/install">Server-Side Installation</PlatformLink>.
+    Read more about this in <PlatformLink to="/install/">Server-Side Installation</PlatformLink>.
 
     If the server side doesn't send events, check the following:
 
     - The `sentry.server.config.ts` file is in the root of your project, next to `nuxt.config.ts`.
     - Enable `debug` in the `sentry` options of your `nuxt.config.ts`. The SDK then prints a message during the build when it bundles the server config.
     - Remove the deprecated `autoInjectServerSentry` option, so that the SDK uses the bundled initialization.
-    - If you're using a Cloudflare Nitro preset, the SDK doesn't use `sentry.server.config.ts`. Use the [Cloudflare Nitro plugin](/platforms/javascript/guides/cloudflare/frameworks/nuxt/) instead.
+    - If you're using a Cloudflare Nitro preset, the SDK doesn't use `sentry.server.config.ts`. Use the [Cloudflare Nitro plugin](/platforms/javascript/guides/nuxt/manual-setup/cloudflare/) instead.
     - The SDK doesn't initialize while Nitro prerenders pages at build time, so builds don't send events.
 
     ---
@@ -695,7 +581,7 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
   </Expandable>
 
   <Expandable permalink title="My events have no release, or the wrong one">
-    The SDK resolves the release from the `release` option you pass, then the `SENTRY_RELEASE` environment variable, then the `CF_VERSION_METADATA.id` binding. The first one that is set wins. Reading the binding automatically needs `@sentry/cloudflare` version `10.35.0` or newer; on earlier versions, pass it as the `release` option yourself, as shown at the end of this entry.
+    The SDK resolves the release from the `release` option you pass, then the `SENTRY_RELEASE` environment variable, then the `CF_VERSION_METADATA.id` binding. The first one that is set wins. Reading the binding automatically needs `@sentry/cloudflare` version `10.35.0` or newer; on earlier versions, pass `release: env.CF_VERSION_METADATA?.id` to `withSentry` yourself.
 
     If your events carry no release, check that the binding is declared in your wrangler config:
 
@@ -718,15 +604,16 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
     To pin the release to the Cloudflare version ID no matter what else is set, pass it yourself:
 
-    ```javascript
-    Sentry.withSentry(
-      (env) => ({
-        dsn: "___PUBLIC_DSN___",
-        release: env.CF_VERSION_METADATA?.id,
-      })
-      // ...
-    );
+    ```typescript {filename:src/instrument.server.ts}
+    import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+    export default defineCloudflareOptions((env) => ({
+      dsn: "___PUBLIC_DSN___",
+      release: env.CF_VERSION_METADATA?.id,
+    }));
     ```
+
+    If you deploy with `wrangler` directly, or your SDK version is older than `10.68.0`, add the same `release` option to the options you pass to `withSentry`, as shown in the <PlatformLink to="/install/wrangler/#configure">Wrangler setup</PlatformLink>.
 
   </Expandable>
 </PlatformSection>
@@ -778,11 +665,7 @@ error: Uncaught SyntaxError: Unexpected token ':'
 
 This is a Deno bug ([denoland/deno#36240](https://github.com/denoland/deno/issues/36240)): while any module hook is registered, Deno loads `.json` files with the wrong format. Express, Fastify, Hapi, Koa and mysql2 all read a JSON file this way.
 
-Remove the `@sentry/deno/import` line from your entry file to start your app again:
-
-```javascript {filename: main.ts}
-import * as Sentry from "npm:@sentry/deno";
-```
+Remove the `--preload=npm:@sentry/deno/import` flag from your `deno run` command to start your app again.
 
 Errors, `Deno.serve` and `node:http` spans, logs and metrics all keep working without the hook. You lose the integrations that depend on it, such as `mysql` 2.x and `pg`. Drivers that publish their own diagnostics channels, among them `mysql2` 3.20.0 and later and `ioredis` 5.11.0 and later, are instrumented either way.
 

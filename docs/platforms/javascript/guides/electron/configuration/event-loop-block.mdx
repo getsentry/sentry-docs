@@ -80,41 +80,26 @@ export interface ThreadBlockedIntegrationOptions {
 
 # Renderer Processes:
 
+## Usage
+
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  anrDetection: { captureStackTrace: true },
+  integrations: [Sentry.eventLoopBlockIntegration({ threshold: 500 })],
 });
 ```
 
 ## Configuration options
 
-You can pass a configuration object for `anrDetection` in the renderer to
-customize the ANR detection behavior.
-
-```Typescript
+```typescript
 interface Options {
   /**
-   * Interval to send heartbeat messages to the child process.
+   * Threshold in milliseconds to trigger an event.
    *
-   * Main process: Defaults to 50ms.
-   * Renderer process: Defaults to 1000ms.
+   * Defaults to 1000ms.
    */
-  pollInterval: number;
-  /**
-   * Threshold in milliseconds to trigger an ANR event.
-   *
-   * Defaults to 5000ms.
-   */
-  anrThreshold: number;
-  /**
-   * Whether to capture a stack trace when the ANR event is triggered.
-   *
-   * Defaults to `false`.
-   */
-  captureStackTrace: boolean;
+  threshold: number;
 }
 ```
 
@@ -130,10 +115,27 @@ traces. The pause time is considered inconsequential if the event loop has
 already been blocked for hundreds of milliseconds.
 
 In the renderer processes, a similar polling mechanism is used to detect event
-loop blocks. In Electron v34 or newer, the
+loop blocks. By default, the `v8` inspector API is used to capture stack traces
+when an event loop block is detected. The inspector API can have a slight
+negative impact on performance since it can cause v8 to de-optimize some code
+paths.
+
+To capture stack traces without the inspector API, enable the
+`captureNativeStacktrace` option of the `rendererEventLoopBlockIntegration` in
+the main process. The SDK then uses the
 [`frame.collectJavaScriptCallStack()`](https://www.electronjs.org/docs/latest/api/web-frame-main#framecollectjavascriptcallstack-experimental)
-API is used to capture stack traces when an event loop block is detected. In
-older Electron versions, the `v8` inspector API is used to capture stack traces.
-The inspector API can have a slight negative impact on performance since it can
-cause v8 to de-optimize some code paths. For this reason we recommend updating
-to Electron v34 or newer to use this feature in production.
+API to capture stack traces, which avoids the performance impact of the
+inspector API.
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.rendererEventLoopBlockIntegration({
+      captureNativeStacktrace: true,
+    }),
+  ],
+});
+```

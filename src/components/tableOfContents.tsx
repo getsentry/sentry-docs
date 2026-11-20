@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect, useRef, useState} from 'react';
+import {safeDecodeHash} from 'sentry-docs/utils';
 
 type TreeItem = {
   children: TreeItem[];
@@ -85,7 +86,7 @@ export function TableOfContents({ignoreIds = []}: Props) {
     }
     hasScrolledToHash.current = true;
     requestAnimationFrame(() => {
-      const id = decodeURIComponent(hash.slice(1));
+      const id = safeDecodeHash(hash);
       document.getElementById(id)?.scrollIntoView();
     });
   }, [treeItems]);

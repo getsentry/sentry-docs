@@ -5,90 +5,183 @@ sidebar_order: 100
 sidebar_section: features
 ---
 
-The Sentry SDK supports C# and Native crashes on Android, iOS, Windows, macOS and Linux. The support is set to `enabled` by default.
-For Game Consoles, the SDK supports C# errors. While Sentry supports native crashes on consoles, support for that through the Unity SDK is a work in progress. Reach out via GitHub for the platform you're interested in: [PlayStation](https://github.com/getsentry/sentry-unity/issues/2050), [Switch](https://github.com/getsentry/sentry-unity/issues/2052) and [Xbox](https://github.com/getsentry/sentry-unity/issues/2051)
+The Unity SDK captures C# errors on every platform it supports. On most platforms, it also includes a native SDK that captures native crashes, such as crashes in the Unity engine or in native plugins. Native support is on by default.
+
+## Supported Platforms
+
+| Platform                           | Native crashes | Native SDK                                                          | Requirements            |
+| ---------------------------------- | -------------- | ------------------------------------------------------------------- | ----------------------- |
+| Android                            | Yes            | sentry-java with the NDK integration                                | IL2CPP                  |
+| iOS                                | Yes            | sentry-cocoa                                                        |                         |
+| Windows (x64, x86)                 | Yes            | sentry-native with Crashpad, or the experimental Native backend     |                         |
+| macOS                              | Yes            | sentry-cocoa, or sentry-native with the experimental Native backend | IL2CPP for sentry-cocoa |
+| Linux (x86_64, ARM64)              | Yes            | sentry-native with Breakpad, or the experimental Native backend     |                         |
+| Xbox, PlayStation, Nintendo Switch | Yes            | See <PlatformLink to="/game-consoles/">Game Consoles</PlatformLink> |                         |
+| WebGL                              | No             |                                                                     |                         |
+| visionOS, UWP                      | No             |                                                                     |                         |
+
+On visionOS and UWP, the SDK runs on a best-effort basis, without offline caching or session tracking. The SDK supports Unity 2021.3 and later. Dedicated server builds for Windows, macOS, and Linux get the same native support as players. On consoles, the SDK supports Xbox with the GDK, PlayStation 5, Nintendo Switch, and Nintendo Switch 2. The SDK doesn't support PlayStation 4, Xbox One without the GDK, tvOS, Embedded Linux, or Cloud Rendering.
+
+## Scope Sync
+
+The SDK syncs the scope you set in C# to the native SDK, so native crashes include it. It syncs:
+
+- Breadcrumbs
+- Tags
+- Extras
+- User
+- Environment
+- Trace
+- Attachments
+
+Some scope data doesn't reach native crashes:
+
+- Custom contexts you set through `scope.Contexts`. The SDK only syncs the contexts it collects itself, such as device and app data.
+- Attachments on iOS, and on macOS with the default Cocoa backend.
+- With <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>, the app's own SDK owns part of the scope. On iOS, that's the user, environment, and trace. On Android, it's the trace, and the user when the game runs in the app's process.
+- On Android, setting `NdkScopeSyncEnabled` to `false` turns off scope sync for NDK crashes.
 
 ## Mobile
 
 The native crash support for Android and iOS is provided by adding platform-specific SDKs to the generated Xcode and Gradle projects at build time.
 
+Android native support requires the IL2CPP scripting backend. With Mono, the SDK captures C# errors only.
+
+On Android, `NdkIntegrationEnabled`, `NdkScopeSyncEnabled`, `AndroidTombstoneEnabled`, and `AndroidReportHistoricalTombstones` control the NDK integration and tombstone reporting. On iOS, `IosWatchdogTerminationIntegrationEnabled` controls watchdog termination reporting. Learn more in <PlatformLink to="/configuration/options/">Options</PlatformLink>.
+
 ### Initialization of the Native SDKs
 
 The [iOS SDK](/platforms/apple/guides/ios/) and [Android SDK](/platforms/android/) are capable of self-initializing before the Unity engine itself is started. This allows us to capture bugs/crashes happening within the engine itself.
-There are two initialization types:
+There are three initialization types:
 
 - `NativeInitializationType.Runtime`: Native SDKs initialize during runtime alongside the C# SDK
 - `NativeInitializationType.BuildTime`: Native SDKs initialize before Unity engine starts
+- `NativeInitializationType.External`: The app that embeds the game provides and initializes the native SDKs, when using <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>
+
+Set the type with the `AndroidNativeInitializationType` and `IosNativeInitializationType` options in an [options configuration script](/platforms/unity/configuration/options/programmatic-configuration/). Both default to `Runtime`.
 
 ### Runtime Initialization (Default)
 
 With runtime initialization, the native SDKs are initialized at runtime alongside the C# SDK. This allows all options to be dynamically configured through C# code during execution.
 
 #### Android
+
 At build time, the SDK modifies the generated Gradle project to include the Android SDK but sets `io.sentry.auto-init` in the `AndroidManifest.xml` to `false`. The Unity SDK will then initialize the Android SDK when it initializes itself.
 
 #### iOS
-At built time, the SDK modifies the generated Xcode project to include the iOS SDK but will not modify the `main.m` file or write the options to file. The Unity SDK will then initialize the iOS SDK when it initializes itself.
+
+At build time, the SDK modifies the generated Xcode project to include the iOS SDK but will not modify the `main.mm` file or write the options to file. The Unity SDK will then initialize the iOS SDK when it initializes itself.
 
 ### Build Time Initialization
 
 When using build time initialization, the native SDKs are configured during build time and initialize before the Unity engine starts. This means the options are baked into the outputted projects and cannot be modified at runtime via C# code. Changes to properties like `Release` and `Environment` will not apply to events generated by the native SDKs.
 
 #### Android
+
 The SDK modifies the generated Gradle project to include the Android SDK. At build time, it will also write the options to the `AndroidManifest.xml`. These options cannot be changed at runtime. Changes to the options in the configuration callback will not affect the Android SDK.
 
 #### iOS
-The SDK modifies the generated Xcode project to include the iOS SDK. It adds the initialization code to the `main.m` and generates the options provided by the editor configuration window as `SentryOptions.m`. The SDK also copies the `SentryNativeBridge` that enables the C# layer to communicate with the iOS SDK. This means that there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
+
+The SDK modifies the generated Xcode project to include the iOS SDK. It adds the initialization code to the `main.mm` and generates the options provided by the editor configuration window as `SentryOptions.m`. The SDK also copies the `SentryNativeBridge` that enables the C# layer to communicate with the iOS SDK. This means that there's no need to use the Unity [built-in crash reporting](https://docs.unity3d.com/ScriptReference/CrashReport.html) functionality.
 
 The [iOS SDK](/platforms/apple/guides/ios/) supports capturing Objective-C exceptions which are disabled in the generated Xcode project by default. Consider enabling them in the "Build Settings" tab by setting `GCC_ENABLE_OBJC_EXCEPTIONS` to true.
+
+### External Initialization
+
+When your game runs inside an iOS or Android app with Unity as a Library, the app owns the native SDK. The Unity SDK doesn't bundle it and attaches to the one the app initialized. On Android, a game running in a separate process initializes it there. Learn more in <PlatformLink to="/native-support/unity-as-a-library/">Unity as a Library</PlatformLink>.
 
 ## Desktop
 
 The native support is configured and enabled as early as possible by the C# layer, right after the Unity engine starts. This is slightly different from on mobile where we inject native initialization code that runs before the Unity engine runs.
 
+Native support on Windows, Linux, and macOS with the Native backend writes files to disk. If you set `DisableFileWrite`, the SDK turns native support off on these platforms.
+
+With an out-of-process crash handler (Crashpad on Windows, or the Native backend), `NativeHandlerPath` sets where the SDK looks for the handler executable. By default, it's next to the player executable. Learn more in <PlatformLink to="/configuration/options/">Options</PlatformLink>.
+
 ### Windows
 
-On Windows, the Unity SDK includes the [Native SDK](/platforms/native/) with the crashpad backend. Windows native crashes are automatically captured through minidumps. To upload these to Sentry, the SDK copies the `crashpad_handler.exe` to the build output directory at the end of the build process. This executable must be included when shipping your game.
+On Windows, the Unity SDK includes the [Native SDK](/platforms/native/) with the Crashpad backend, for both 64-bit (x64) and 32-bit (x86) players. Windows native crashes are captured through minidumps. At the end of the build, the SDK copies `crashpad_handler.exe`, `crashpad_wer.dll`, and `sentry-native.dll` next to the player. Include all three files when you ship your game.
+
+With the Native backend, which you can select with `options.Experimental.WindowsBackend = WindowsBackend.Native`, the SDK uploads crashes right away through the out-of-process `sentry-crash.exe` handler. The build copies `sentry-crash.exe`, `sentry-wer.dll`, and `sentry-native.dll` next to the player instead. Include all three files when you ship your game.
 
 ### macOS
 
-The Native Support on macOS relies on the [macOS SDK](/platforms/apple/guides/macos/). Stackwalking happens in process.
+By default, native support on macOS relies on the [macOS SDK](/platforms/apple/guides/macos/). Stackwalking happens in process. This Cocoa backend needs IL2CPP. With Mono, the SDK captures C# errors only.
+
+With the Native backend, which you can select with `options.Experimental.MacosBackend = MacosBackend.Native`, the SDK uses the [Native SDK](/platforms/native/) instead. It uploads crashes right away through the out-of-process `sentry-crash` handler, which the build copies next to the player, and it works with both IL2CPP and Mono.
 
 ### Linux
 
-On Linux the Unity SDK includes the [Native SDK](/platforms/native/) with the breakpad backend. A minidump is created in process and no handler executable is required.
+On Linux the Unity SDK includes the [Native SDK](/platforms/native/) with the Breakpad backend by default. A minidump is created in process and no handler executable is required. With the experimental Native backend, which you can select with `options.Experimental.LinuxBackend = LinuxBackend.Native`, the SDK uploads crashes right away through the out-of-process `sentry-crash` handler, which the build copies next to the player.
+
+The Native SDK ships for `x86_64` and `ARM64`, and the build picks the one that matches the player's architecture. ARM64 is supported for dedicated servers built with IL2CPP on Unity 6000.3 and later. On both architectures, the Native SDK runs on distributions with older glibc versions, such as Ubuntu 22.04 and Debian 12.
 
 ## Debug Symbols
 
-Sentry requires [debug information files](/platforms/unity/data-management/debug-files/) to symbolicate your crashes. The Unity SDK provides an automated upload functionality for those symbol files that rely on the [sentry-cli](/cli/). This is done transparently so you're not required to run `sentry-cli` manually. The symbol upload happens during Unity build in the editor. We've included the executables for Windows, macOS, and Linux as part of the Unity SDK package.
+Sentry requires [debug information files](/platforms/unity/data-management/debug-files/) to symbolicate your crashes. The Unity SDK uploads them for you with [sentry-cli](/cli/), so you don't need to run `sentry-cli` yourself. The SDK package includes `sentry-cli` for Windows, macOS, and Linux.
 
-The automated debug symbols upload is enabled by default but requires configuration. Go to **Tools > Sentry > Editor** to enter the [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/), Organization Slug, and the Project Name. Note that the Unity SDK creates a file at `Assets/Plugins/Sentry/SentryCliOptions.asset` to store the configuration, that should **not** be made publicly available.
+The automated upload is on by default, but it needs your credentials. Go to **Tools > Sentry**, open the **Debug Symbols** tab, and enter your [Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) and the Project Name. Enter the Org Slug too, unless the auth token is an organization token. The SDK stores this configuration in `Assets/Plugins/Sentry/SentryCliOptions.asset`. Don't make this file publicly available. To set the auth token from code instead, for example from an environment variable in CI, see [Sentry CLI Options](/platforms/unity/configuration/options/cli-options/#programmatic-configuration).
+
+The SDK uploads debug symbols for release builds. To also upload them for development builds, enable **Upload Dev Symbols**.
+
+Where the upload runs depends on the platform:
+
+| Platform                                           | Where the upload runs                | Condition                                                                                   | Log                                                                                                                    |
+| -------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Windows, macOS, Linux, Xbox, PlayStation 5, Switch | In the Unity Editor, after the build | Sentry enabled with a DSN                                                                   | Unity Console                                                                                                          |
+| Android                                            | In the Gradle build                  | Sentry enabled, IL2CPP, and Android native support enabled                                  | `Logs/sentry-symbols-upload.log` in your Unity project, and `Logs/sentry-mapping-upload.log` with minification enabled |
+| iOS                                                | In an Xcode build phase              | Sentry configured in **Tools > Sentry**, also when Sentry or iOS native support is disabled | `sentry-symbols-upload.log` in the root of the Xcode project                                                           |
+| WebGL                                              | No upload                            |                                                                                             |                                                                                                                        |
+
+If you export a Gradle or Xcode project instead of building the app in Unity, the upload runs when you build the exported project. For exported Gradle projects, the SDK doesn't write the log files; the upload output is in the Gradle build output. The exported Gradle project contains the `sentry-cli` for the operating system you exported it from, so build it on that operating system. The exported Xcode project contains the macOS `sentry-cli`.
+
+<Alert level="warning">
+
+Exported Xcode and Gradle projects contain a `sentry.properties` file with your auth token in plain text. Don't commit this file to version control. The file is in the root of the Xcode project and in the `launcher` module of the Gradle project, or in the `unityLibrary` module for [Unity as a Library](/platforms/unity/native-support/unity-as-a-library/).
+
+</Alert>
 
 ### iOS - dSYM
 
-Debug information files on the iOS platform are called dSYM.
+Debug information files on Apple platforms are called dSYMs. The SDK adds a build phase to the Xcode project that uploads the dSYMs from the build output when Xcode builds the app. You don't need to do anything else.
 
-For Sentry to symbolicate your crash logs we need two types of files:
+### Android - ProGuard and R8
 
-1. `dSYM` that the automated symbols upload will pick up at the end of the build process without further action required.
-2. `BCSymbolMap` files that are created during the archiving process
-
-The automated symbol upload will take care of the `BCSymbolMap` files by processing them during the archiving process.
+The SDK adds its ProGuard rules, `proguard-sentry-unity.pro`, to the Gradle project. If you enable **Minify** in **Player Settings > Publishing Settings**, the Gradle build also uploads the ProGuard mapping file, so Sentry can deobfuscate Java stack traces. With [Unity as a Library](/platforms/unity/native-support/unity-as-a-library/), the app that embeds the game minifies the code, so upload the mapping file from that app's build.
 
 ### Manual Upload Using sentry-cli
 
-If you don't want to rely on the automated symbol upload, you can run `sentry-cli` through the commandline. For that, you can use the provided executables from within the package or follow the [sentry-cli documentation](/cli/installation/) to make it available globally. To upload debug symbols, run it with:
+If you don't want to rely on the automated upload for desktop and console builds, you can run `sentry-cli` from the command line. Use the executables in the SDK package, or follow the [sentry-cli documentation](/cli/installation/) to install it globally. To upload your game's debug symbols, run:
 
 <OrgAuthTokenNote />
 
 ```bash
-sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
+sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --il2cpp-mapping --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_BUILD_OUTPUT
 ```
+
+`sentry-cli` scans `PATH_TO_BUILD_OUTPUT` recursively. Point it at the folder that contains your build and the `<Product>_BackUpThisFolder_ButDontShipItWithYourGame` and `<Product>_BurstDebugInformation_DoNotShip` folders that Unity creates next to it. These folders hold the IL2CPP output and the Burst debug information.
+
+- `--il2cpp-mapping` uploads the line mapping that Sentry needs for [C# line numbers in IL2CPP builds](/platforms/unity/configuration/il2cpp/). Leave it out for Mono builds.
+- `--include-sources` is optional. It uploads your source code so Sentry can show [source context](/platforms/unity/data-management/debug-files/source-context/).
+
+The build folder doesn't contain the symbols of the Sentry native SDK. The automated upload also uploads them from the SDK package, so upload them too if you want symbolicated frames from the Sentry native SDK:
+
+- Windows: the `.pdb` files in `Plugins/Windows/Sentry~/` or `Plugins/Windows/SentryNative~/`, in the `x64` or `x86` subfolder
+- Linux: the `.dbg` and `.dbg.so` files in `Plugins/Linux/Sentry~/` or `Plugins/Linux/SentryNative~/`, in the `x86_64` or `ARM64` subfolder
+- macOS: the `.dSYM` folders in `Plugins/macOS/Sentry~/` or `Plugins/macOS/SentryNative~/`
+- Consoles: your project's `Assets/Plugins/Sentry/` folder, and for a Nintendo Switch NSP build, `Library/Bee/artifacts/<target>PlayerBuildProgram`, because the NSP packs the assemblies
+
+These paths are relative to the SDK package. If you installed the SDK with UPM, the package is in `Library/PackageCache/` in your Unity project.
+
+For Android and iOS, rely on the automated upload. On Android, it uploads the symbols from `Library/Bee/` in your Unity project. On iOS, it uploads them from the Xcode build output.
 
 ## Store Minidumps as Attachments
 
 <Include name="store-minidumps-as-attachments-intro" />
 
-<Alert>☝ This feature is supported on Windows, Linux, and Android.</Alert>
+<Alert>
+  ☝ This feature is supported on Windows, Linux, and macOS with the Native
+  backend.
+</Alert>
 
 <Include name="store-minidumps-as-attachments-configuration" />

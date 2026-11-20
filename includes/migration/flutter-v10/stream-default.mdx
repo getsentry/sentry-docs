@@ -1,0 +1,18 @@
+---
+id: stream-default
+title: "Stream Mode Is the Default"
+phase: code-changes
+category: behavior
+severity: action-required
+frameworks: all
+platformCategory: all
+order: 65
+---
+
+In v10, `SentryTraceLifecycle.stream` is the default. The SDK sends spans in batches as they finish instead of waiting for a transaction to end. Tracing still requires `tracesSampleRate` or `tracesSampler` to be configured.
+
+Automatic instrumentation uses the streaming span APIs. If you use custom instrumentation, migrate `Sentry.startTransaction` and `ISentrySpan.startChild` to the streaming span APIs. Transaction APIs are ignored in stream mode. Move `beforeSendTransaction` and `ignoreTransactions` logic to `beforeSendSpan` and `ignoreSpans`, and update custom samplers to read `samplingContext.spanContext`.
+
+Follow the <PlatformLink to="/tracing/streamed-spans/migration-guide/">stream mode migration guide</PlatformLink> and use the two-parameter `beforeSendSpan` signature in [Telemetry Callbacks Receive a Hint](/platforms/dart/guides/flutter/migration/v9-to-v10/#telemetry-callbacks-receive-a-hint).
+
+To retain transaction mode while migrating, explicitly set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization. Removing this option uses stream mode in v10.

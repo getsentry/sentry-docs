@@ -1,5 +1,3 @@
-default_language_version:
-  node: "22"
 exclude: '\.snap|node_modules$'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -23,13 +21,20 @@ repos:
       - id: flake8
       - id: fix-encoding-pragma
         args: ['--remove']
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ['--shell=sh', '--enable=check-extra-masked-returns']
+        # Older scripts are bash and predate this hook.
+        files: '^scripts/bump-sentry-api\.sh$'
   - repo: local
     hooks:
       - id: prettier
         name: Prettier
         description: This hook runs Prettier on JavaScript and TypeScript files
-        entry: prettier
-        language: node
+        entry: pnpm exec prettier
+        language: system
         files: '\.[cm]?[jt]sx?$'
         exclude: 'node_modules'
         types: [text]
@@ -37,8 +42,8 @@ repos:
       - id: eslint
         name: eslint
         description: This hook runs eslint on JavaScript and TypeScript files
-        entry: eslint
-        language: node
+        entry: pnpm exec eslint
+        language: system
         files: '\.[cm]?[jt]sx?$'
         exclude: 'node_modules'
         types: [text]
@@ -54,3 +59,11 @@ repos:
         language: system
         files: \.(md|mdx)$
         verbose: true
+      - id: trailing-slashes
+        name: Add trailing slashes to internal links
+        description:
+          next.config.ts sets trailingSlash true, so internal links without one
+          are served a 308 redirect. This hook rewrites them in place.
+        entry: npx tsx scripts/lint-trailing-slashes.ts --fix
+        language: system
+        files: ^(docs|develop-docs|includes|platform-includes)/.*\.(md|mdx)$

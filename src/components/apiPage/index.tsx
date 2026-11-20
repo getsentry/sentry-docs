@@ -2,7 +2,7 @@ import './styles.scss';
 
 import {bundleMDX} from 'mdx-bundler';
 import {Fragment, ReactElement, useMemo} from 'react';
-import {type API} from 'sentry-docs/build/resolveOpenAPI';
+import {type API, type APIParameter} from 'sentry-docs/build/resolveOpenAPI';
 import {getMDXComponent} from 'sentry-docs/getMDXComponent';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import remarkCodeTabs from 'sentry-docs/remark-code-tabs';
@@ -12,7 +12,7 @@ import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
 
-function Params({params}) {
+function Params({params}: {params: APIParameter[]}) {
   return (
     <dl className="api-params">
       {params.map(param => {
@@ -26,6 +26,14 @@ function Params({params}) {
                     ({param.schema.type}
                     {param.schema.items && `(${param.schema.items.type})`})
                   </em>
+                )}
+                {param.experimental && (
+                  <span
+                    className="ml-2 align-middle text-xs font-medium px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                    title="This parameter is under active development and may change."
+                  >
+                    Experimental
+                  </span>
                 )}
               </div>
               {!!param.required && <div className="required">REQUIRED</div>}

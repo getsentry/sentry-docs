@@ -47,7 +47,9 @@ final sentryFile = file.sentryTrace();
 
 ### 1. Execute the Code
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 import 'package:sentry/sentry.dart';
 import 'package:sentry_file/sentry_file.dart';
 import 'dart:io';
@@ -55,6 +57,47 @@ import 'dart:io';
 Future<void> main() async {
   await Sentry.init(
     (options) {
+      options.dsn = 'https://example@sentry.io/example';
+      // To set a uniform sample rate
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: runApp, // Init your App.
+  );
+}
+
+Future<void> runApp() async {
+  final file = File('my_file.txt');
+  // Call the Sentry extension method to wrap up the File
+  final sentryFile = file.sentryTrace();
+
+  // Start a root span — file I/O spans attach to the active span
+  await Sentry.startSpan('MyFileExample', (span) async {
+    // create the File
+    await sentryFile.create();
+    // Write some content
+    await sentryFile.writeAsString('Hello World');
+    // Read the content
+    final text = await sentryFile.readAsString();
+
+    print(text);
+
+    // Delete the file
+    await sentryFile.delete();
+  }, parentSpan: null);
+
+  await Sentry.close();
+}
+```
+
+```dart {tabTitle:Transaction Mode}
+import 'package:sentry/sentry.dart';
+import 'package:sentry_file/sentry_file.dart';
+import 'dart:io';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.traceLifecycle = SentryTraceLifecycle.static;
       options.dsn = 'https://example@sentry.io/example';
       // To set a uniform sample rate
       options.tracesSampleRate = 1.0;
@@ -89,48 +132,6 @@ Future<void> runApp() async {
 
   // Finish the transaction
   await transaction.finish(status: SpanStatus.ok());
-
-  await Sentry.close();
-}
-```
-
-```dart {tabTitle:Stream Mode}
-import 'package:sentry/sentry.dart';
-import 'package:sentry_file/sentry_file.dart';
-import 'dart:io';
-
-Future<void> main() async {
-  await Sentry.init(
-    (options) {
-      options.dsn = 'https://example@sentry.io/example';
-      // To set a uniform sample rate
-      options.tracesSampleRate = 1.0;
-      // Enables stream mode
-      options.traceLifecycle = SentryTraceLifecycle.stream;
-    },
-    appRunner: runApp, // Init your App.
-  );
-}
-
-Future<void> runApp() async {
-  final file = File('my_file.txt');
-  // Call the Sentry extension method to wrap up the File
-  final sentryFile = file.sentryTrace();
-
-  // Start a root span — file I/O spans attach to the active span
-  await Sentry.startSpan('MyFileExample', (span) async {
-    // create the File
-    await sentryFile.create();
-    // Write some content
-    await sentryFile.writeAsString('Hello World');
-    // Read the content
-    final text = await sentryFile.readAsString();
-
-    print(text);
-
-    // Delete the file
-    await sentryFile.delete();
-  }, parentSpan: null);
 
   await Sentry.close();
 }

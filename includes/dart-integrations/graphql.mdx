@@ -21,6 +21,8 @@ It helps you capture:
 
 ## Compatibility
 
+Version 10 of `sentry_link` requires `gql_link >=0.5.1 <2.0.0`. Match the Sentry integration version to your core SDK version.
+
 `sentry_link` works with the `gql` ecosystem and is commonly used with:
 
 - [`gql_link`](https://pub.dev/packages/gql_link)
@@ -390,7 +392,21 @@ Map<String, dynamic>? _defaultHttpResponseDecoder(http.Response response) {
 
 The decoder itself creates the span. In transaction mode, it starts a child off the currently active transaction. In stream mode, `Sentry.startSpanSync()` is used instead, which attaches the new span to the currently active span automatically and sets its status based on whether the callback throws:
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
+
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
+Map<String, dynamic>? sentryResponseDecoder(
+  http.Response response, {
+  Hub? hub,
+}) {
+  return Sentry.startSpanSync(
+    'serialize.http.client',
+    (span) => _defaultHttpResponseDecoder(response),
+  );
+}
+```
+
+```dart {tabTitle:Transaction Mode}
 Map<String, dynamic>? sentryResponseDecoder(
   http.Response response, {
   Hub? hub,
@@ -412,18 +428,6 @@ Map<String, dynamic>? sentryResponseDecoder(
     unawaited(span?.finish());
   }
   return result;
-}
-```
-
-```dart {tabTitle:Stream Mode}
-Map<String, dynamic>? sentryResponseDecoder(
-  http.Response response, {
-  Hub? hub,
-}) {
-  return Sentry.startSpanSync(
-    'serialize.http.client',
-    (span) => _defaultHttpResponseDecoder(response),
-  );
 }
 ```
 

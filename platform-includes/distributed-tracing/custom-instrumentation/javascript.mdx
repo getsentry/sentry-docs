@@ -62,6 +62,70 @@ myButton.addEventListener("click", async () => {
 
 Once the callback ends, the SDK will continue the previous trace (if available).
 
+<PlatformSection supported={["javascript.effect"]}>
+
+### Continue External Traces in Effect
+
+<AvailableSince version="11.3.0" />
+
+Effect's `Tracer.externalSpan` sets a span parent from a trace that the Sentry SDK didn't start. For example, an OpenTelemetry span from another library in the same process, or trace data that you stored with a queue message.
+
+By default, `SentryEffectTracer` ignores external parents, so your spans don't join a trace that the SDK can't verify. The tracer places a span with an external parent as if it had no `parent` option: under the current span of the fiber, or as a new root span.
+
+To continue the trace of an external span, provide `SentryEffectExternalSpanLayer`. The span then joins the external trace as a child of the external span and uses the sampling decision of the external span.
+
+Add the layer next to the tracer layer to continue external spans in the whole runtime:
+
+```typescript {tabTitle: Effect v3} {filename: main.ts}
+import * as Sentry from "@sentry/effect";
+import * as Layer from "effect/Layer";
+
+const SentryLive = Layer.mergeAll(
+  Sentry.effectLayer({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  Layer.setTracer(Sentry.SentryEffectTracer),
+  Sentry.SentryEffectExternalSpanLayer
+);
+```
+
+```typescript {tabTitle: Effect v4} {filename: main.ts}
+import * as Sentry from "@sentry/effect";
+import * as Layer from "effect/Layer";
+import * as Tracer from "effect/Tracer";
+
+const SentryLive = Layer.mergeAll(
+  Sentry.effectLayer({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  Layer.succeed(Tracer.Tracer, Sentry.SentryEffectTracer),
+  Sentry.SentryEffectExternalSpanLayer
+);
+```
+
+To continue external spans for a single effect only, provide the layer to that effect with `Effect.provide`:
+
+```typescript
+import * as Sentry from "@sentry/effect";
+import * as Effect from "effect/Effect";
+import * as Tracer from "effect/Tracer";
+
+const processJob = handleMessage(message).pipe(
+  Effect.withSpan("process-job", {
+    parent: Tracer.externalSpan({
+      traceId: message.traceId,
+      spanId: message.spanId,
+      sampled: message.sampled,
+    }),
+  }),
+  Effect.provide(Sentry.SentryEffectExternalSpanLayer)
+);
+```
+
+</PlatformSection>
+
 ## Verification
 
 If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.

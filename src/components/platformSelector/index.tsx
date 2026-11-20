@@ -1,6 +1,11 @@
 'use client';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
-import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
+import {
+  CaretRightIcon,
+  CaretSortIcon,
+  MagnifyingGlassIcon,
+  UpdateIcon,
+} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
 import {usePathname} from 'next/navigation';
@@ -15,25 +20,72 @@ import {
   useState,
 } from 'react';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
+import {usePlatforms} from 'sentry-docs/hooks/usePlatforms';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
 import {isLocalStorageAvailable, uniqByReference} from 'sentry-docs/utils';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
+import {guideGroupTitle, sortRuntimesFirst} from './guideGroups';
+import {resolveSamePageUrl} from './samePageUrl';
 import styles from './style.module.scss';
 
+const NO_PLATFORMS: Platform[] = [];
+
+/**
+ * Shown below the list while the full list of platforms is loading or failed to load.
+ */
+function PlatformsListStatus({
+  status,
+  onRetry,
+}: {
+  onRetry: () => void;
+  status: 'loading' | 'error';
+}) {
+  if (status === 'loading') {
+    return (
+      <div className={styles['list-status']} role="status">
+        <UpdateIcon className="animate-spin" aria-hidden />
+        Loading platforms…
+      </div>
+    );
+  }
+  return (
+    <div className={styles['list-status']} role="alert">
+      Couldn't load platforms.
+      <button type="button" className={styles['retry-button']} onClick={onRetry}>
+        Retry
+      </button>
+    </div>
+  );
+}
+
 export function PlatformSelector({
-  platforms,
   currentPlatform,
+  initialPlatforms = NO_PLATFORMS,
   alwaysOpen = false,
   listOnly = false,
   dropdownStyle = false,
 }: {
-  platforms: Array<Platform>;
   alwaysOpen?: boolean;
   currentPlatform?: Platform | PlatformGuide;
   dropdownStyle?: boolean;
+  /**
+   * Rendered until the full list has loaded. Must contain the current platform or
+   * guide, as Radix Select needs the selected item to display it in the trigger.
+   */
+  initialPlatforms?: Platform[];
   listOnly?: boolean;
 }) {
+  const {
+    platforms: loadedPlatforms,
+    status: platformsStatus,
+    retry: retryPlatforms,
+  } = usePlatforms();
+  const platforms = useMemo(
+    () => loadedPlatforms ?? initialPlatforms,
+    [loadedPlatforms, initialPlatforms]
+  );
+
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
     title.replace(/\./g, ' ').replace(/ +/g, ' ').trim();
@@ -53,7 +105,7 @@ export function PlatformSelector({
         )
         .map(platform => [
           platform,
-          ...platform.guides.map(guide => ({
+          ...sortRuntimesFirst(platform.key, platform.guides).map(guide => ({
             ...guide,
             // add a reference to the parent platform instead of its key
             platform,
@@ -100,9 +152,12 @@ export function PlatformSelector({
     });
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
-    const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey
-    );
+    // A platform can have a guide with its own key (e.g. `javascript`). That guide
+    // is the selected item, as the platform item gets the `-redirect` suffix.
+    const selectedPlatform =
+      platformsAndGuides.find(
+        lang => lang.key === currentPlatformKey && lang.type !== 'platform'
+      ) ?? platformsAndGuides.find(lang => lang.key === currentPlatformKey);
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
@@ -117,10 +172,27 @@ export function PlatformSelector({
       if (isLocalStorageAvailable()) {
         localStorage.setItem('active-platform', platform_.key);
       }
-      // Use hard navigation for faster page load
-      window.location.href = platform_.url;
+      // Go to the same page for the selected platform if it exists. Finding it
+      // can take a moment, so show that we're navigating in the meantime.
+      setIsNavigating(true);
+      resolveSamePageUrl(platform_, pathname ?? '').then(url => {
+        // Use hard navigation for faster page load
+        window.location.href = url;
+      });
     }
   };
+
+  const [isNavigating, setIsNavigating] = useState(false);
+  useEffect(() => {
+    // Reset when coming back to this page from the back/forward cache
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsNavigating(false);
+      }
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
 
   const activeElementRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -188,6 +260,7 @@ export function PlatformSelector({
             value={searchValue}
             onChange={e => setSearchValue(e.target.value)}
             placeholder="Search platforms"
+            aria-label="Search platforms"
             className={styles.combobox}
             autoComplete="off"
             autoCorrect="off"
@@ -230,9 +303,13 @@ export function PlatformSelector({
               activeItemKey={currentPlatformKey}
               onPlatformExpand={onToggleExpand}
               dropdownStyle={dropdownStyle}
+              showGuideGroups={searchValue === ''}
               listOnly
             />
           ))}
+          {platformsStatus !== 'loaded' && (
+            <PlatformsListStatus status={platformsStatus} onRetry={retryPlatforms} />
+          )}
         </div>
       </div>
     );
@@ -245,6 +322,7 @@ export function PlatformSelector({
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
+        disabled={isNavigating}
       >
         <ComboboxProvider
           open={open}
@@ -253,10 +331,18 @@ export function PlatformSelector({
           setValue={v => startTransition(() => setSearchValue(v))}
         >
           {!alwaysOpen && (
-            <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
+            <RadixSelect.Trigger
+              aria-label="Platform"
+              aria-busy={isNavigating}
+              className={styles.select}
+            >
               <RadixSelect.Value placeholder="Choose your SDK" />
               <RadixSelect.Icon className={styles['select-icon']}>
-                <CaretSortIcon />
+                {isNavigating ? (
+                  <UpdateIcon className="animate-spin" />
+                ) : (
+                  <CaretSortIcon />
+                )}
               </RadixSelect.Icon>
             </RadixSelect.Trigger>
           )}
@@ -273,6 +359,7 @@ export function PlatformSelector({
               <Combobox
                 autoSelect
                 placeholder="Search platforms"
+                aria-label="Search platforms"
                 className={styles.combobox}
                 onBlurCapture={event => {
                   event.preventDefault();
@@ -322,11 +409,15 @@ export function PlatformSelector({
                     activeItemKey={currentPlatformKey}
                     onPlatformExpand={onToggleExpand}
                     dropdownStyle={dropdownStyle}
+                    showGuideGroups={searchValue === ''}
                     listOnly={false}
                   />
                 );
               })}
             </ComboboxList>
+            {platformsStatus !== 'loaded' && (
+              <PlatformsListStatus status={platformsStatus} onRetry={retryPlatforms} />
+            )}
           </RadixSelect.Content>
         </ComboboxProvider>
       </RadixSelect.Root>
@@ -352,6 +443,8 @@ type PlatformItemProps = {
   dropdownStyle?: boolean;
   listOnly?: boolean;
   onPlatformExpand?: (platformKey: string) => void;
+  /** Shows titles above the runtime guides and the guides after them. */
+  showGuideGroups?: boolean;
 };
 function PlatformItem({
   platform,
@@ -360,6 +453,7 @@ function PlatformItem({
   onPlatformExpand: onExpand,
   dropdownStyle = false,
   listOnly = false,
+  showGuideGroups = false,
 }: PlatformItemProps) {
   const showCaret = (p: Platform) => p.guides.length > 0 || p.integrations.length > 0;
 
@@ -377,6 +471,15 @@ function PlatformItem({
   const guides = platform.isExpanded
     ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
     : [];
+
+  const groupTitle = (index: number) => {
+    const title = showGuideGroups && guideGroupTitle(platform.key, guides, index);
+    return title ? (
+      <div className={styles['guide-group-title']} aria-hidden="true">
+        {title}
+      </div>
+    ) : null;
+  };
 
   if (listOnly) {
     return (
@@ -425,13 +528,11 @@ function PlatformItem({
             </button>
           )}
         </div>
-        {guides.map(guide => (
-          <GuideItem
-            key={guide.key}
-            guide={guide}
-            dropdownStyle={dropdownStyle}
-            listOnly
-          />
+        {guides.map((guide, i) => (
+          <Fragment key={guide.key}>
+            {groupTitle(i)}
+            <GuideItem guide={guide} dropdownStyle={dropdownStyle} listOnly />
+          </Fragment>
         ))}
       </Fragment>
     );
@@ -485,9 +586,12 @@ function PlatformItem({
           </Fragment>
         </RadixSelect.Label>
       </RadixSelect.Group>
-      {guides.map(guide => {
-        return <GuideItem key={guide.key} guide={guide} dropdownStyle={dropdownStyle} />;
-      })}
+      {guides.map((guide, i) => (
+        <Fragment key={guide.key}>
+          {groupTitle(i)}
+          <GuideItem guide={guide} dropdownStyle={dropdownStyle} />
+        </Fragment>
+      ))}
     </Fragment>
   );
 }

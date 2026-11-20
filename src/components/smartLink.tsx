@@ -3,6 +3,8 @@
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import {useCallback} from 'react';
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {getInternalLinkClickProps} from 'sentry-docs/internalLinkTracking';
 
 import {ExternalLink} from './externalLink';
 
@@ -27,9 +29,11 @@ export function SmartLink({
   remote = false,
   className = '',
   isActive,
+  onClick,
   ...props
 }: Props) {
   const realTo = to || href || '';
+  const {emit} = usePlausibleEvent();
 
   const handleAutolinkClick = useCallback(async (e: React.MouseEvent) => {
     const link = e.currentTarget as HTMLAnchorElement;
@@ -47,7 +51,7 @@ export function SmartLink({
 
   if (remote || realTo?.indexOf('://') !== -1) {
     return (
-      <ExternalLink href={realTo} className={className} {...props}>
+      <ExternalLink href={realTo} className={className} onClick={onClick} {...props}>
         {children || to || href}
       </ExternalLink>
     );
@@ -63,6 +67,7 @@ export function SmartLink({
         className={className}
         onClick={e => {
           handleAutolinkClick(e);
+          onClick?.(e);
           const targetId = realTo.slice(1);
           const target = targetId ? document.getElementById(targetId) : null;
           if (target?.closest('details:not([open])')) {
@@ -81,7 +86,17 @@ export function SmartLink({
   return (
     <Link
       href={to || href || ''}
-      onClick={handleAutolinkClick}
+      onClick={e => {
+        handleAutolinkClick(e);
+        const clickProps = getInternalLinkClickProps(
+          e.currentTarget.getAttribute('href') ?? realTo,
+          window.location.href
+        );
+        if (clickProps) {
+          emit('Internal Link Click', {props: clickProps});
+        }
+        onClick?.(e);
+      }}
       className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >

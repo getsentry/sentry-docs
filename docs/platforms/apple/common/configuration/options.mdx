@@ -30,7 +30,9 @@ Note that setting this to `false` doesn't prevent all overhead from Sentry instr
 
 <SdkOption name="debug" type="bool" defaultValue="false">
 
-Turns debug mode on or off. If debug is enabled, SDK will attempt to print out useful debugging information if something goes wrong with sending the event. It's generally not recommended to turn it on in production, though this will not cause any safety concerns.
+Turns debug mode on or off. If debug is enabled, SDK will attempt to print out useful debugging information if something goes wrong with sending the event.
+
+We don't recommend enabling debug mode in production. The SDK writes debug logs to the console synchronously, on the thread that logs them. When the SDK logs a lot, for example while tracing many view controllers, this can noticeably slow down your app and even cause app hangs. To log fewer messages while debugging, set <PlatformIdentifier name="diagnosticLevel" /> to a less verbose level, such as `warning`.
 
 </SdkOption>
 
@@ -377,7 +379,9 @@ Learn more in the <PlatformLink to="/configuration/graphql-operation-tracking/">
 
 <SdkOption name="enableLogs" type="bool" defaultValue="false">
 
-When enabled, the SDK sends logs to Sentry. You must explicitly set this option to `true` to enable log capturing.
+In SDK 9.0.0–9.26.x, set this option to `true` to send logs to Sentry.
+
+Since SDK 9.27.0, this option is deprecated and no longer gates calls to `SentrySDK.logger` or integrations that forward to it. Setting it to `false` doesn't drop those logs. Use <PlatformLink to="/logs/#beforesendlog">`beforeSendLog`</PlatformLink> to filter logs instead.
 
 Learn more about structured logging in the <PlatformLink to="/logs/">logs documentation</PlatformLink>.
 
@@ -1101,6 +1105,14 @@ Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumen
 
 </SdkOption>
 
+<SdkOption name="webViewTracing" type="SentryWebViewTracingOptions" defaultValue="nil" availableSince="9.34.0">
+
+Connects the traces of every `WKWebView` in the app with the app's trace, without calling `SentryWebViewTracing.addTracePropagation` for each WebView. Only pages on the hosts in `allowedHosts` receive the trace. Requires `enableSwizzling`. Not available on tvOS and watchOS.
+
+Learn more in the <PlatformLink to="/configuration/webview/#automatic-trace-propagation">WebView</PlatformLink> documentation.
+
+</SdkOption>
+
 <SdkOption name="enableFileIOTracing" type="bool" defaultValue="true">
 
 When enabled, the SDK tracks performance for file I/O reads and writes with NSData if auto performance tracking and `enableSwizzling` are enabled.
@@ -1289,6 +1301,8 @@ This option is only used when <PlatformIdentifier name="enableSpotlight" /> is s
 
 When enabled, the SDK can send metrics to Sentry. Note that metrics are not collected automatically — you must manually call the `SentrySDK.metrics` API to record counters, gauges, and distributions.
 
+Since SDK 9.27.0, this option is deprecated and no longer gates manual metric capture. To drop metrics, return `nil` from <PlatformIdentifier name="beforeSendMetric" />.
+
 Learn more in the <PlatformLink to="/metrics/">Metrics documentation</PlatformLink>.
 
 </SdkOption>
@@ -1341,6 +1355,16 @@ Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumen
 
 </SdkOption>
 
+<SdkOption name="experimental.enableUIUpdateLinkFramesTracking" type="bool" defaultValue="false" availableSince="9.35.0">
+
+When enabled, the SDK tracks slow and frozen frames, total frame delay, and time to display by observing the main run loop and a `UIUpdateLink`, instead of a `CADisplayLink` that wakes up the main thread for every refresh of the display while the app is active. An idle app stays idle.
+
+This option only applies to iOS 18, tvOS 18, and visionOS 2 and later. On older OS versions and on Mac Catalyst, the SDK keeps using a `CADisplayLink`. Configure this option before starting the SDK.
+
+Learn more in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#tracking-frames-without-waking-up-your-app">Slow and Frozen Frames</PlatformLink> documentation.
+
+</SdkOption>
+
 <SdkOption name="experimental.enableUIViewControllerInitSwizzling" type="bool" defaultValue="false" availableSince="9.26.0">
 
 When enabled, the SDK swizzles each `UIViewController` subclass the first time an instance of it is created, instead of scanning your app's binary images for `UIViewController` subclasses at startup. This fixes crashes that can occur during the startup scan.
@@ -1361,13 +1385,13 @@ When enabled, the SDK uses a more efficient mechanism for detecting watchdog ter
 
 </SdkOption>
 
-<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.4.0" removedSince="9.12.0">
+<SdkOption name="experimental.enableMetrics" type="bool" defaultValue="true" availableSince="9.2.0" removedSince="9.12.0">
 
 **Removed in version 9.12.0** — Metrics has graduated to GA. Use the top-level <PlatformIdentifier name="enableMetrics" /> option instead. See [sentry-cocoa#7842](https://github.com/getsentry/sentry-cocoa/pull/7842).
 
 </SdkOption>
 
-<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.4.0" removedSince="9.12.0">
+<SdkOption name="experimental.beforeSendMetric" type="function" availableSince="9.2.0" removedSince="9.12.0">
 
 **Removed in version 9.12.0** — Metrics has graduated to GA. Use the top-level <PlatformIdentifier name="beforeSendMetric" /> option instead. See [sentry-cocoa#7842](https://github.com/getsentry/sentry-cocoa/pull/7842).
 

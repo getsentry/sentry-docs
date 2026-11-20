@@ -28,23 +28,17 @@ If you have the `gql` package in your dependencies, the GQL integration will be 
 
 ## Data Privacy and the GQL Integration
 
-To ensure data privacy, the SDK avoids sending any information that may potentially contain personally identifiable information (PII) by default. See the docs for the [`send_default_pii` flag](/platforms/python/configuration/options/#send-default-pii) for more information.
-
-For the GQL integration, this policy means that the SDK **doesn't send** the GraphQL queries and the `errors` information that the GraphQL server returns, unless you override the default configuration via the `send_default_pii` flag.
-
-<Alert level="warning">
-
-Before enabling the `send_default_pii` flag, ensure you've configured Sentry's [sensitive data scrubbing](/platforms/python/data-management/sensitive-data/) tools to scrub all PII.
-
-</Alert>
-
-To have Sentry record the GraphQL queries and the `errors` information returned by the GraphQL server, add the following to your SDK init:
+By default, the SDK records the GraphQL queries and the `errors` information that the GraphQL server returns. To control this, use the `graphql` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option in your SDK init. The `document` key controls the queries and the `errors` information, and the `variables` key controls the query variables:
 
 ```python
 sentry_sdk.init(
     # ...
-    # Add data like request headers and IP for users, if applicable;
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
-    send_default_pii=True,
+    data_collection={
+        "graphql": {"document": True, "variables": True},
+    },
 )
 ```
+
+These are the defaults. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
+
+In SDK versions prior to `3.0`, this data isn't sent by default. To send it, pass a `data_collection` dictionary as shown above, or set the `send_default_pii` option to `True`. Since `send_default_pii` is a global SDK option, setting it to `True` affects all integrations, so make sure to [scrub sensitive data](/platforms/python/data-management/sensitive-data/) from events first.

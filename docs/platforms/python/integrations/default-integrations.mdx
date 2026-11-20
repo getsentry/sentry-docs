@@ -44,11 +44,29 @@ You can pass the following keyword arguments to `ExcepthookIntegration()`:
 
   By default, the SDK does not capture errors occurring in the REPL (`always_run=False`).
 
+## Unraisablehook
+
+_(SDK 3.0+)_
+
+_Import name: `sentry_sdk.integrations.unraisablehook.UnraisablehookIntegration`_
+
+This integration registers with the interpreter's unraisable hook system, which
+handles exceptions Python can't propagate to the caller — for example, an
+exception raised inside a `__del__` finalizer or in a garbage collection
+callback. Python would otherwise print these to `stderr` and continue, so
+without this integration they never reach Sentry. The integration marks these
+events as unhandled.
+
+This integration requires Python 3.8 or later. The SDK doesn't enable it on
+Python 3.7.
+
 ## Deduplication
 
 _Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`_
 
-This integration deduplicates certain events. The Sentry Python SDK enables it by default, and it should not be disabled except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging in the Flask framework.
+This integration deduplicates events for the same exception. Once an exception has been captured, any later event for the same exception instance is dropped, regardless of where it's captured. This also applies if the first event was dropped, for example by `before_send` or sampling. In SDK versions prior to `3.0`, only consecutive captures of the same exception in the same context are deduplicated.
+
+The Sentry Python SDK enables this integration by default, and it should not be disabled except in rare circumstances.
 
 ## Stdlib
 
@@ -71,12 +89,6 @@ Sends a list of installed Python packages along with each event.
 _Import name: `sentry_sdk.integrations.argv.ArgvIntegration`_
 
 Adds `sys.argv` as an `extra` attribute to each event.
-
-## Logging
-
-_Import name: `sentry_sdk.integrations.logging.LoggingIntegration`_
-
-See [_Logging_](/platforms/python/integrations/logging/)
 
 ## Threading
 

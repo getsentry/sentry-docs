@@ -4,6 +4,12 @@ description: How you can run all of Sentry on your own server, without paying an
 sidebar_order: 110
 ---
 
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined
+  in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
+  levels.
+</Alert>
+
 In addition to making its source code available publicly, Sentry offers and maintains a minimal setup that works out-of-the-box for simple use cases. This version comes with no guarantees or dedicated support. Sentry engineers will do their best to answer questions and are dedicated to making sure self-hosted is running, but that's where our involvement ends. For anything else, we expect users to rely on the [Sentry Self-Hosted community](https://discord.gg/sentry) on Discord. The self-hosted repository should serve as a blueprint for how various Sentry services connect for a complete setup. This will be useful for folks willing to maintain larger installations with custom infrastructure.
 
 For the sake of simplicity and ubiquity, we have chosen to use [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/), along with a bash-based install and upgrade script.
@@ -37,13 +43,15 @@ These are the minimum requirements:
 - 16 GB RAM + 16 GB swap
 - 20 GB Free Disk Space
 
+On x86-64 hosts, official `clickhouse/clickhouse-server` images for ClickHouse 26.6 and later **MUST** run on CPUs supporting the full x86-64-v3 CPU feature set, including AVX2.
+
 We recommend using 32 GB RAM, but it works with 16 GB RAM + 16 GB swap as well. You will not notice a downside if your 16 GB swap is on a high speed disk.
 
 Self-hosted Sentry relies heavily on disk I/O because it runs databases, message brokers, and other services on a single machine. If you're using a monitoring system that measures IOPS (Input/Output Operations Per Second) and `iowait`, we recommend monitoring `iowait` to see what number is fit for you, for Self-hosted Sentry, `iowait > 10%` of CPU time probably shows your system cannot handle the load. A high-IOPS disk will significantly improve your Sentry installation's performance. Additionally, configuring a hard IOPS limit helps prevent noisy neighbors and disk saturation issues.
 
 Depending on your traffic volume, you may want to increase your system specification to handle increased load. Although most of the times, this is not the case for self-hosted Sentry, since no matter how small or big the traffic is, you will most likely hover around the same used resources.
 
-If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_EVENT_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](/self-hosted/configuration#event-retention) section.
+If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_EVENT_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](/self-hosted/configuration/#event-retention) section.
 
 Below is a breakdown of self-hosted Sentry installation compatibility with various Linux distributions:
 * **Debian/Ubuntu-based** distros are preferred; most users succeed with them, and they're used on Sentry's dogfood instance.

@@ -5,13 +5,13 @@ sidebar_order: 90
 description: "Learn how to manually instrument your agents to capture spans, token usage, and tool execution."
 ---
 
-If your AI library does not have automatic instrumentation, create spans manually with well-defined names and data attributes. This gives Sentry a complete trace of how long the agent and each model or tool call took, where failures happened, and how the agent produced its final response.
+This page describes manual instrumentation for version `3.x` of the Python SDK. For `2.x`, switch to `2.x` in the version selector.
 
-The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also create these spans via templates.
+If your AI library does not have automatic instrumentation, create spans manually with well-defined names and data attributes. This gives Sentry a complete trace of how long the agent and each model or tool call took, where failures happened, and how the agent produced its final response.
 
 This page describes the minimum span structure and attributes Sentry needs, then covers richer data such as messages, streaming metrics, and custom costs.
 
-For conversations and privacy (`set_conversation_id`, `set_user`, `send_default_pii`), see the <PlatformLink to="/agent-tracing/">Agent Tracing guide</PlatformLink>.
+For conversations and privacy (`set_conversation_id`, `set_user`, `data_collection`), see the <PlatformLink to="/agent-tracing/">Agent Tracing guide</PlatformLink>.
 
 ## Span Hierarchy
 
@@ -38,7 +38,7 @@ Set these attributes **when the span starts**, before the model or tool call, so
 - `gen_ai.request.model` — requested model (pass the **raw** provider string)
 - `gen_ai.agent.name` / `gen_ai.tool.name` — when applicable
 
-Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {requested model}`, and `execute_tool {tool name}`. Record accurate start and end times. If an operation fails, set the span status to `ERROR` and set `error.type` to a low-cardinality error code or exception class.
+Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {requested model}`, and `execute_tool {tool name}`. Record accurate start and end times. If an operation fails, set the span status to `error` and set `error.type` to a low-cardinality error code or exception class.
 
 Run the agent span in the caller's active trace context. For calls between services, follow the <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink> guide so the agent run stays connected to the rest of the trace.
 
@@ -46,7 +46,7 @@ To group turns into a [Conversation](/product/agents/conversations/), call `set_
 
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
-Prompt, response, and tool content are treated as PII. They are only captured when `send_default_pii=True` (or per-integration `include_prompts`). See <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
+Prompt, response, and tool content can contain PII. The SDK doesn't filter attributes you set manually, so the `data_collection` option doesn't affect them. Decide what to record before you set these attributes. To learn how automatic integrations handle this data, see <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
 
 ## AI Request Span
 
@@ -60,9 +60,9 @@ messages = [{"role": "user", "parts": [{"type": "text", "content": "Tell me a jo
 tools = [{"name": "get_weather", "description": "Get weather for a city"}]
 
 with sentry_sdk.start_span(
-    op="gen_ai.chat",
     name="chat o3-mini",
     attributes={
+        "sentry.op": "gen_ai.chat",
         "gen_ai.operation.name": "chat",
         "gen_ai.request.model": "o3-mini",
         "gen_ai.provider.name": "openai",
@@ -74,17 +74,17 @@ with sentry_sdk.start_span(
 ) as span:
     result = client.chat.completions.create(model="o3-mini", messages=messages)
 
-    span.set_data("gen_ai.response.model", result.model)
-    span.set_data("gen_ai.response.id", result.id)
-    span.set_data("gen_ai.output.messages", json.dumps([
+    span.set_attribute("gen_ai.response.model", result.model)
+    span.set_attribute("gen_ai.response.id", result.id)
+    span.set_attribute("gen_ai.output.messages", json.dumps([
         {"role": "assistant", "parts": [{"type": "text", "content": result.choices[0].message.content}]}
     ]))
-    span.set_data("gen_ai.response.finish_reasons", json.dumps([result.choices[0].finish_reason]))
-    span.set_data("gen_ai.usage.input_tokens", result.usage.prompt_tokens)
-    span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
+    span.set_attribute("gen_ai.response.finish_reasons", json.dumps([result.choices[0].finish_reason]))
+    span.set_attribute("gen_ai.usage.input_tokens", result.usage.prompt_tokens)
+    span.set_attribute("gen_ai.usage.output_tokens", result.usage.completion_tokens)
     # If the provider reports cached tokens, record them as a subset of input tokens
     if getattr(result.usage, "prompt_tokens_details", None):
-        span.set_data(
+        span.set_attribute(
             "gen_ai.usage.cache_read.input_tokens",
             result.usage.prompt_tokens_details.cached_tokens,
         )
@@ -103,17 +103,17 @@ Keep system prompts in `gen_ai.system_instructions`, not inside `gen_ai.input.me
 Messages use `{role, parts}` where each part has a `type`. Common types:
 
 - `text` — user-visible content
-- `reasoning` — internal thinking (not shown in the user-facing Conversations view)
+- `reasoning` — internal thinking shown as a collapsible row in the conversation detail
 - `tool_call` / `tool_call_response` — tool invocations linked by a shared `id`
 
-Unknown part types are not shown prominently in the Conversations UI. They remain available only in the raw span attribute values.
+Unknown part types aren't shown prominently in the conversation detail. They remain available only in the raw span attribute values.
 
 #### Thinking / reasoning
 
 Models with extended thinking (such as Anthropic's `thinking` blocks, Gemini's `thought`, or DeepSeek's `reasoning_content`) produce internal reasoning that isn't part of the user-visible reply. Represent this as a `reasoning` part alongside the user-facing `text` part — don't fold thinking into `text`.
 
 ```python
-span.set_data("gen_ai.output.messages", json.dumps([
+span.set_attribute("gen_ai.output.messages", json.dumps([
     {
         "role": "assistant",
         "parts": [
@@ -122,9 +122,9 @@ span.set_data("gen_ai.output.messages", json.dumps([
         ],
     }
 ]))
-span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
+span.set_attribute("gen_ai.usage.output_tokens", result.usage.completion_tokens)
 # Reasoning tokens are a subset of output tokens
-span.set_data(
+span.set_attribute(
     "gen_ai.usage.reasoning.output_tokens",
     result.usage.completion_tokens_details.reasoning_tokens,
 )
@@ -138,7 +138,7 @@ Link a tool request to its result with the same `id`:
 
 ```python
 # Model asked to call a tool
-span.set_data("gen_ai.output.messages", json.dumps([
+span.set_attribute("gen_ai.output.messages", json.dumps([
     {
         "role": "assistant",
         "parts": [
@@ -202,9 +202,9 @@ input_messages = [
 ]
 
 with sentry_sdk.start_span(
-    op="gen_ai.invoke_agent",
     name="invoke_agent Weather Agent",
     attributes={
+        "sentry.op": "gen_ai.invoke_agent",
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.agent.name": "Weather Agent",
         "gen_ai.input.messages": json.dumps(input_messages),
@@ -213,7 +213,7 @@ with sentry_sdk.start_span(
     # Model and tool spans created here become children of the agent span.
     result = my_agent.run()
 
-    span.set_data("gen_ai.output.messages", json.dumps([
+    span.set_attribute("gen_ai.output.messages", json.dumps([
         {
             "role": "assistant",
             "parts": [{"type": "text", "content": str(result.output)}],
@@ -236,9 +236,9 @@ import json
 import sentry_sdk
 
 with sentry_sdk.start_span(
-    op="gen_ai.execute_tool",
     name="execute_tool get_weather",
     attributes={
+        "sentry.op": "gen_ai.execute_tool",
         "gen_ai.operation.name": "execute_tool",
         "gen_ai.agent.name": "Weather Agent",
         "gen_ai.tool.name": "get_weather",
@@ -248,10 +248,11 @@ with sentry_sdk.start_span(
 ) as span:
     try:
         result = get_weather(location="Paris")
-        span.set_data("gen_ai.tool.call.result", json.dumps(result))
+        span.set_attribute("gen_ai.tool.call.result", json.dumps(result))
     except Exception as exc:
-        span.set_status("internal_error")
-        span.set_data("error.type", type(exc).__name__)
+        span.status = "error"
+        span.set_attribute("sentry.status.message", repr(exc))
+        span.set_attribute("error.type", type(exc).__name__)
         raise
 ```
 
@@ -259,6 +260,201 @@ Marking failed tools with an error status populates the Tool Errors widget.
 
 <Expandable title="Execute Tool span attributes">
   <Include name="tracing/ai-agents-module/execute-tool-span" />
+</Expandable>
+
+## Decision Span
+
+This span represents a decision on generated content against a set of questions, such as grading a model's reply for accuracy or tone. Models like <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Jev</PlatformLink> produce these spans.
+
+Sentry identifies a decision by `gen_ai.operation.name: "decide"`. Decisions share the `ai_client` operation type with ordinary LLM calls, so the operation name is what sets them apart.
+
+```python
+import json
+import sentry_sdk
+
+questions = {
+    "resolves_issue": {
+        "type": "boolean",
+        "instructions": "Does the reply resolve the customer's issue?",
+    },
+    "accuracy": {
+        "type": "score",
+        "instructions": "Does the reply correctly answer the user's question?",
+        # For a score question, criteria is an ordered list; the index is the score.
+        "criteria": ["incorrect", "partially correct", "correct"],
+    },
+    "tone": {
+        "type": "choice",
+        "instructions": "Classify the tone of the reply.",
+        # For a choice question, criteria maps each label to its description.
+        "criteria": {
+            "friendly": "Warm and helpful",
+            "neutral": "Plain and factual",
+            "rude": "Dismissive or hostile",
+        },
+    },
+}
+
+evaluation_input = [
+    {
+        "type": "evaluation",
+        "state": "Your refund has been processed and will arrive in 3-5 days.",
+        "questions": questions,
+    }
+]
+
+with sentry_sdk.start_span(
+    name="decide typesafe/jev-1.13",
+    attributes={
+        "sentry.op": "gen_ai.decide",
+        "gen_ai.operation.name": "decide",
+        "gen_ai.request.model": "typesafe/jev-1.13",
+        "gen_ai.provider.name": "typesafe",
+        "gen_ai.agent.name": "Support Agent",  # when this evaluation runs under an agent
+        "gen_ai.input.messages": json.dumps(evaluation_input),
+    },
+) as span:
+    result = your_evaluator.evaluate(state=evaluation_input[0]["state"], questions=questions)
+
+    span.set_attribute("gen_ai.response.model", result.model)  # e.g. "typesafe/jev-1.13-20260917"
+    span.set_attribute("gen_ai.output.messages", json.dumps([
+        {
+            "type": "evaluation",
+            "answers": {
+                "resolves_issue": {"type": "boolean", "probability": 0.98},
+                "accuracy": {"type": "score", "score": 2, "confidence": 0.91},
+                "tone": {
+                    "type": "choice",
+                    "choice": "friendly",
+                    "probabilities": {"friendly": 0.87, "neutral": 0.1, "rude": 0.03},
+                    "confidence": 0.87,
+                },
+            },
+        }
+    ]))
+    span.set_attribute("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_attribute("gen_ai.usage.output_tokens", result.usage.output_tokens)
+```
+
+The input is a single `{"type": "evaluation", "state": ..., "questions": ...}` object. `state` is the text being evaluated, and each entry in `questions` describes one question. The output is a single `{"type": "evaluation", "answers": ...}` object keyed by those same question names. Answers come in a few types (`boolean`, `noul`, `score`, and `choice`), each with its own fields. See the attributes below for the full shape.
+
+Pass the raw provider model string in `gen_ai.request.model` (and `gen_ai.response.model`) so Sentry can resolve the model icon and any [model costs](/product/agents/costs/).
+
+<Alert>
+
+If you call Jev through the <PlatformLink to="/agent-tracing/typesafe/">TypeSafe Python SDK</PlatformLink>, these spans are created automatically, so you don't need to instrument them by hand.
+
+</Alert>
+
+<Expandable title="Decision span attributes">
+  <Include name="tracing/ai-agents-module/evaluation-span" />
+</Expandable>
+
+## Extraction Span
+
+This span represents an extraction of typed fields from an input, such as pulling the invoice number, due date, and total out of an invoice. Extraction models like Cloudflare Clairic produce these spans. They return typed values instead of a chat reply, so they get their own span type.
+
+Sentry identifies an extraction by `gen_ai.operation.name: "extract"`.
+
+```python
+import json
+import sentry_sdk
+
+extraction_request = {
+    "state": (
+        "Invoice INV-2291 from Northwind Supply, issued 2026-09-02, net 30. "
+        "4 pallets at $250.00 each, shipping $80.00. Contact: Dana Ruiz, Priya Shah."
+    ),
+    "fields": {
+        "invoice_number": {"type": "text"},
+        "due_date": {
+            "type": "date",
+            "instructions": "Issue date plus the net payment days",
+        },
+        "total": {
+            "type": "number",
+            "decimals": 2,
+            "unit": "USD",
+            "instructions": "Amount due including shipping",
+        },
+        "contacts": {"type": "list", "items": "text"},
+    },
+}
+
+with sentry_sdk.start_span(
+    name="extract @cf/cloudflare/clairic",
+    attributes={
+        "sentry.op": "gen_ai.extract",
+        "gen_ai.operation.name": "extract",
+        "gen_ai.request.model": "@cf/cloudflare/clairic",
+        "gen_ai.provider.name": "cloudflare.workers_ai",
+        "gen_ai.agent.name": "Billing Agent",  # when this extraction runs under an agent
+        # The request body as you send it, without "model"
+        "gen_ai.input.messages": json.dumps([extraction_request]),
+    },
+) as span:
+    # Call your extraction model; map its response into span attributes below
+    result = your_extractor.extract(model="@cf/cloudflare/clairic", **extraction_request)
+    response = {k: v for k, v in result.items() if k not in ("model", "usage")}
+
+    span.set_attribute("gen_ai.response.model", result["model"])  # e.g. "clairic"
+    # The response body as the provider returned it, without "model" and "usage":
+    # {"answers": {"total": {"type": "number", "value": 1080, "confidence": 0.9999}, ...}, "truncated": False}
+    span.set_attribute("gen_ai.output.messages", json.dumps([response]))
+    span.set_attribute("gen_ai.usage.input_tokens", result["usage"]["input_tokens"])
+    span.set_attribute("gen_ai.usage.output_tokens", result["usage"]["output_tokens"])
+```
+
+The input is a single object holding the request body: `state` is the text the model reads, and each entry in `fields` describes one field to extract. The output is a single object holding the response body, with `answers` keyed by those same field names. Record both as you sent and received them, without changing the values. If the request includes images, replace each one with the string `"[Blob substitute]"` instead of recording the image data. See the attributes below for the full shape.
+
+Text and list answers include `[start, end]` character offsets into `state`. Sentry uses them to highlight each extracted value in the source text, so keep them as the provider returned them.
+
+Pass the raw provider model string in `gen_ai.request.model` (and `gen_ai.response.model`) so Sentry can resolve the model icon and any [model costs](/product/agents/costs/).
+
+<Expandable title="Extraction span attributes">
+  <Include name="tracing/ai-agents-module/extraction-span" />
+</Expandable>
+
+## Memory Span
+
+This span represents a read from, write to, or management operation against an agent's persistent memory store, such as retrieving relevant memories before a model call or saving new ones after it.
+
+Sentry identifies a memory operation by the `gen_ai.memory.client` span op. The specific action goes in `gen_ai.operation.name`, and the span `name` matches it.
+
+```python
+import json
+import sentry_sdk
+
+query = "user dietary preferences"
+
+with sentry_sdk.start_span(
+    name="search_memory",
+    attributes={
+        "sentry.op": "gen_ai.memory.client",
+        "gen_ai.operation.name": "search_memory",
+        "gen_ai.memory.store.id": "user-preferences-store",
+        "gen_ai.agent.name": "Support Agent",  # when the operation runs under an agent
+        "gen_ai.memory.query.text": query,  # opt-in; may contain sensitive data
+    },
+) as span:
+    records = memory_store.search(query)
+
+    span.set_attribute("gen_ai.memory.record.count", len(records))
+    # opt-in; may contain sensitive data
+    span.set_attribute("gen_ai.memory.records", json.dumps([
+        {"id": record.id, "content": record.content, "score": record.score}
+        for record in records
+    ]))
+```
+
+Set `gen_ai.operation.name` to the action: `search_memory` to retrieve records, `create_memory` / `update_memory` / `upsert_memory` to write them, `delete_memory` to remove them, and `create_memory_store` / `delete_memory_store` to manage the store itself.
+
+`gen_ai.memory.query.text` applies only to `search_memory`. When an operation targets a single record, set `gen_ai.memory.record.id`; on `delete_memory`, omitting it can mean every record in the store is removed. `gen_ai.memory.record.count` is the number of records returned, written, or deleted.
+
+`gen_ai.memory.query.text` and `gen_ai.memory.records` can carry user data and PII, so they are opt-in. Omit them, or gate them yourself, when you don't want that content in Sentry.
+
+<Expandable title="Memory span attributes">
+  <Include name="tracing/ai-agents-module/memory-span" />
 </Expandable>
 
 ## Streaming Responses

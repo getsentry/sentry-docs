@@ -52,18 +52,9 @@ Future<void> main() async {
 If the view doesn't have the key assigned, the transaction and the breadcrumb won't be captured because it can't be uniquely identified.
 The key value should be unique across the whole application because the transactions are grouped by its name.
 
-```dart {tabTitle:Transaction Mode (Default)} {mdExpandTabs}
-ElevatedButton(
-  key: const Key('my_button_widget'),
-  onPressed: () {
-    final activeSpan = Sentry.getSpan();
-    final childSpan = activeSpan?.startChild('some operation', description: 'some description');
-    childSpan?.finish();
-  }, child: const Text('User Interaction Example'),
-),
-```
+To use the Transaction Mode tab, set `options.traceLifecycle = SentryTraceLifecycle.static` during SDK initialization.
 
-```dart {tabTitle:Stream Mode}
+```dart {tabTitle:Stream Mode (Default)} {mdExpandTabs}
 ElevatedButton(
   key: const Key('my_button_widget'),
   onPressed: () async {
@@ -71,6 +62,17 @@ ElevatedButton(
     await Sentry.startSpan('some operation', (span) async {
       // your operation
     });
+  }, child: const Text('User Interaction Example'),
+),
+```
+
+```dart {tabTitle:Transaction Mode}
+ElevatedButton(
+  key: const Key('my_button_widget'),
+  onPressed: () {
+    final activeSpan = Sentry.getSpan();
+    final childSpan = activeSpan?.startChild('some operation', description: 'some description');
+    childSpan?.finish();
   }, child: const Text('User Interaction Example'),
 ),
 ```

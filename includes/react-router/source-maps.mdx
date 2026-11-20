@@ -1,0 +1,32 @@
+### Add Readable Stack Traces With Source Maps
+
+The `sentryReactRouter` Vite plugin uploads your source maps, so stack traces in Sentry show your original code. It also instruments supported packages that your server code imports, such as database clients, when Vite builds your app.
+
+Add the plugin to your `vite.config.ts`, and pass both the Sentry options and the Vite configuration to it:
+
+```typescript {filename: vite.config.ts} {diff}
+import { reactRouter } from "@react-router/dev/vite";
++import {
++  sentryReactRouter,
++  type SentryReactRouterBuildOptions,
++} from "@sentry/react-router/vite";
+import { defineConfig } from "vite";
+
++const sentryConfig: SentryReactRouterBuildOptions = {
++  org: "___ORG_SLUG___",
++  project: "___PROJECT_SLUG___",
++
++  // An auth token is required for uploading source maps;
++  // store it in an environment variable to keep it secure.
++  authToken: process.env.SENTRY_AUTH_TOKEN,
++};
+
+export default defineConfig((config) => {
+  return {
+-   plugins: [reactRouter()],
++   plugins: [reactRouter(), sentryReactRouter(sentryConfig, config)],
+  };
+});
+```
+
+<Include name="react-router/source-maps-upload" />

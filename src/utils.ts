@@ -10,6 +10,13 @@ export const isNotNil = <T>(x?: T): x is Exclude<T, null | undefined> => {
   return x !== null && x !== undefined;
 };
 
+/**
+ * Whether a page's "new" badge should still show. `newUntil` comes from the
+ * `new_until` frontmatter, which YAML parses into a Date when unquoted.
+ */
+export const isNew = (newUntil?: string | Date): boolean =>
+  newUntil !== undefined && new Date() < new Date(newUntil);
+
 export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   return arr.sort((a, b) => {
     const aComp = comp(a);
@@ -142,4 +149,18 @@ export function debounce<T extends unknown[]>(func: (...args: T) => void, delay:
     clearTimeout(timer);
     timer = setTimeout(() => func.apply(this, args), delay);
   };
+}
+
+/**
+ * Decode a URL fragment (with or without the leading `#`) into an element id.
+ * Falls back to the raw value when the fragment has invalid percent-encoding,
+ * since `decodeURIComponent` throws a `URIError` on sequences like `%SE`.
+ */
+export function safeDecodeHash(hash: string): string {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }

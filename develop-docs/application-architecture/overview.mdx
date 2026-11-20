@@ -13,21 +13,26 @@ graph TD
   lb --> |"sentry.example.com/api/0/envelope/"| relay
   lb --> |"sentry.example.com"| sentry_web["Sentry (web)"]
   symbolicator --> sentry_web
-  relay --> kafka
+  relay --> kafka[(kafka)]
   relay --> redis
   sentry_web --> snuba
-  sentry_web --> memcached
-  sentry_web --> postgres
-  sentry_web --> redis
-  snuba --> kafka
+  sentry_web --> memcached[(memcached)]
+  sentry_web --> postgres[(postgres)]
+  sentry_web --> redis[(redis)]
+  sentry_web --> seer
+  sentry_web --> kafka
   snuba --> redis
-  snuba --> clickhouse
+  snuba --> clickhouse[(clickhouse)]
   sentry_web --> sentry_worker["Sentry (worker)"]
   sentry_worker --> memcached
   sentry_worker --> redis
   sentry_worker --> postgres
   sentry_worker --> symbolicator
+  sentry_worker --> launchpad
+  sentry_worker --> seer
+  seer --> postgres
 
+  snuba --> kafka
   click snuba "https://github.com/getsentry/snuba" "Snuba Documentation"
   click relay "https://github.com/getsentry/relay" "Relay Documentation"
 ```
@@ -41,7 +46,7 @@ This graph is extremely simplified mostly due to layout constraints. Missing fro
 * How Relay caches project configs. Answer: In memory, and in Redis
 * How Relay counts events and keeps track of quotas. Answer: more Redis
 * Symbolicator as auxiliary service to symbolicate-event
-* How alerting is triggered. Answer: postprocess-event, a Celery task which is responsible for alerting (spawned by a Kafka consumer in Sentry reading from eventstream)
+* How alerting is triggered. Answer: postprocess-event, a task which is responsible for alerting (spawned by a Kafka consumer in Sentry reading from eventstream)
 * Possibly more
 
 For more information read [Path of an event through Relay](https://getsentry.github.io/relay/relay_server/index.html#path-of-an-event-through-relay) and [Event Ingestion Pipeline](https://getsentry.github.io/event-ingestion-graph/).
@@ -54,7 +59,7 @@ graph TD
   kafka --> ingest-consumer["Sentry ingest consumer"]
   ingest-consumer --> preprocess-event
 
-  subgraph celery["Sentry celery tasks"]
+  subgraph tasks["Sentry tasks"]
     preprocess-event --> save-event
     preprocess-event --> process-event
     preprocess-event --> symbolicate-event

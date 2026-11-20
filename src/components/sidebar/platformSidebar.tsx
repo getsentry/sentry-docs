@@ -1,6 +1,8 @@
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
+import {isNew} from 'sentry-docs/utils';
 
-import {DynamicNav, toTree} from './dynamicNav';
+import {getQuickStartTitle} from '../runtimeLinks';
+import {DynamicNav, EntityTree, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
@@ -21,13 +23,34 @@ const AGENT_TRACING_ALIAS_PATH_OVERRIDES: Record<string, Record<string, string>>
 };
 
 const UNALIASED_AGENT_TRACING_PAGES = new Set(['manual-instrumentation']);
-const CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS = ['agents-sdk', 'workers-ai'];
 
-export function PlatformSidebar({
-  rootNode,
-  platformName,
-  guideName,
-}: PlatformSidebarProps) {
+/**
+ * Building the tree walks the whole platform subtree (including every guide),
+ * which is expensive for large platforms. The result only depends on the
+ * platform and guide, so cache it per root node instead of rebuilding it for
+ * every page.
+ */
+const sidebarTreeCache = new WeakMap<DocNode, Map<string, EntityTree[]>>();
+
+function getPlatformSidebarTree(
+  rootNode: DocNode,
+  platformNode: DocNode,
+  platformName: string,
+  guideName: string | undefined,
+  pathRoot: string
+): EntityTree[] {
+  let treesForRoot = sidebarTreeCache.get(rootNode);
+  if (!treesForRoot) {
+    treesForRoot = new Map();
+    sidebarTreeCache.set(rootNode, treesForRoot);
+  }
+
+  const cacheKey = `${platformName}:${guideName ?? ''}`;
+  const cached = treesForRoot.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const docNodeToPlatformSidebarNode = (n: DocNode) => {
     if (n.frontmatter.draft) {
       return undefined;
@@ -42,29 +65,17 @@ export function PlatformSidebar({
         sidebar_title: n.frontmatter.sidebar_title,
         sidebar_hidden: n.frontmatter.sidebar_hidden,
         beta: n.frontmatter.beta,
-        new: n.frontmatter.new,
+        new: isNew(n.frontmatter.new_until),
         early_access: n.frontmatter.early_access,
         section_end_divider: n.frontmatter.section_end_divider,
         sidebar_section: n.frontmatter.sidebar_section,
+        runtime: n.frontmatter.runtime,
       },
       path: '/' + n.path + '/',
     };
   };
 
-  const platformNode = nodeForPath(rootNode, ['platforms', platformName]);
-  if (!platformNode) {
-    return null;
-  }
-  const platform = getPlatform(rootNode, platformName);
-  if (!platform) {
-    return null;
-  }
   const nodes = getNavNodes([platformNode], docNodeToPlatformSidebarNode);
-  const guide = guideName && getGuide(rootNode, platformName, guideName);
-
-  const pathRoot = guide
-    ? `platforms/${platformName}/guides/${guideName}`
-    : `platforms/${platformName}`;
 
   // Mirror Agent Tracing pages elsewhere in the sidebar as link-only entries.
   // Most are integrations; guide-specific overrides can place pages in a more
@@ -83,6 +94,7 @@ export function PlatformSidebar({
           child =>
             !child.missing &&
             !child.frontmatter.draft &&
+            !child.frontmatter.sidebar_hidden &&
             !UNALIASED_AGENT_TRACING_PAGES.has(child.slug)
         )
         .map(child => ({
@@ -97,39 +109,36 @@ export function PlatformSidebar({
           path: `/${pathRoot}/${aliasPathOverrides?.[child.slug] ?? integrationsPath}/${child.slug}/`,
         }));
 
-  // Expose Cloudflare-only pages from every JavaScript Agent Tracing sidebar.
-  // Their links navigate to the canonical Cloudflare guide instead of creating
-  // unsupported copies under the current guide.
-  const cloudflareAgentTracingAliases =
-    platformName !== 'javascript' || guideName === 'cloudflare' || !agentTracingNode
-      ? []
-      : CLOUDFLARE_AGENT_TRACING_PAGE_SLUGS.map(slug => {
-          const target = nodeForPath(rootNode, [
-            'platforms',
-            'javascript',
-            'guides',
-            'cloudflare',
-            'agent-tracing',
-            slug,
-          ]);
-          if (!target || target.missing || target.frontmatter.draft) {
-            return undefined;
-          }
-          return {
-            context: {
-              platform: {platformName},
-              title: target.frontmatter.title,
-              sidebar_title: target.frontmatter.sidebar_title,
-              href: '/' + target.path + '/',
-            },
-            path: `/${pathRoot}/agent-tracing/${slug}/`,
-          };
-        }).filter(alias => alias !== undefined);
+  const tree = toTree([...nodes, ...agentTracingAliases].filter(n => !!n.context));
+  treesForRoot.set(cacheKey, tree);
+  return tree;
+}
 
-  const tree = toTree(
-    [...nodes, ...agentTracingAliases, ...cloudflareAgentTracingAliases].filter(
-      n => !!n.context
-    )
+export function PlatformSidebar({
+  rootNode,
+  platformName,
+  guideName,
+}: PlatformSidebarProps) {
+  const platformNode = nodeForPath(rootNode, ['platforms', platformName]);
+  if (!platformNode) {
+    return null;
+  }
+  const platform = getPlatform(rootNode, platformName);
+  if (!platform) {
+    return null;
+  }
+  const guide = guideName && getGuide(rootNode, platformName, guideName);
+
+  const pathRoot = guide
+    ? `platforms/${platformName}/guides/${guideName}`
+    : `platforms/${platformName}`;
+
+  const tree = getPlatformSidebarTree(
+    rootNode,
+    platformNode,
+    platformName,
+    guideName,
+    pathRoot
   );
 
   // Use "Getting Started" for Next.js, default title for other platforms
@@ -145,6 +154,9 @@ export function PlatformSidebar({
         tree={tree}
         title={sidebarTitle}
         exclude={[`/${pathRoot}/guides/`]}
+        quickStartTitle={getQuickStartTitle(
+          guide ? nodeForPath(rootNode, pathRoot) : undefined
+        )}
       />
     </ul>
   );

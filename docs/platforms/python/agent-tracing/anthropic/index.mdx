@@ -43,8 +43,8 @@ sentry_sdk.init(...)  # same as above
 client = Anthropic(api_key="(your Anthropic key)")
 
 def my_llm_stuff():
-    # or sentry_sdk.traces.start_span(name="The result of the AI inference", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="The result of the AI inference"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="The result of the AI inference") instead
+    with sentry_sdk.start_span(name="The result of the AI inference"):
         print(
             client.messages.create(
                 model="claude-3-5-sonnet-20240620",
@@ -68,9 +68,27 @@ It may take a couple of moments for the data to appear in [sentry.io](https://se
 
 - The supported function is currently `messages.create` (both sync and async).
 
-- Sentry considers LLM inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+- By default, the SDK records LLM inputs and outputs, such as prompts, messages, responses, and tool definitions. To control this, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately:
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      data_collection={
+          # Record LLM inputs, but not outputs
+          "gen_ai": {"inputs": True, "outputs": False},
+      },
+  )
+  ```
+
+  In SDK versions prior to `3.0`, Sentry considers LLM inputs and outputs as PII and doesn't include prompts, messages, or responses unless you pass a `data_collection` dictionary or set `send_default_pii=True`. With `send_default_pii=True`, you can exclude them with the integration's `include_prompts=False` option, as shown in the [Options section](#options) below.
 
 ## Options
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, `AnthropicIntegration` doesn't accept any options. Use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> instead.
+
+</Alert>
 
 By adding `AnthropicIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `AnthropicIntegration` to change its behavior:
 
@@ -95,7 +113,9 @@ You can pass the following keyword arguments to `AnthropicIntegration()`:
 
 - `include_prompts`:
 
-  Whether LLM inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+  Whether LLM inputs and outputs should be sent to Sentry. If you use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, this option is ignored. Use the `gen_ai` key instead.
+
+  Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
 
   The default is `True`.
 
