@@ -5,14 +5,17 @@ import path from 'path';
 import sharp from 'sharp';
 import {visit} from 'unist-util-visit';
 
+const MAX_IMAGE_WIDTH = 900;
+
 /**
  * Processes images in MDX content:
- * 1. Appends image dimensions as a URL hash (for next/image sizing)
+ * 1. Appends image dimensions capped at 900px wide as a URL hash (for next/image sizing)
  * 2. Appends content hash as query param (for Vercel CDN cache busting)
  *
  * e.g. /img.png -> /img.png?v=abc12345#100x100
  *
- * The size (#WxH) is consumed by docImage.tsx and passed down to next/image.
+ * For relative imports, remark-image-resize copies #WxH to JSX attributes before
+ * the bundler strips the hash. DocImage reads the hash for public asset URLs.
  * The content hash (?v=xxx) ensures browsers/CDN fetch fresh images when content changes.
  */
 export default function remarkImageProcessing(options) {
@@ -38,7 +41,12 @@ export default function remarkImageProcessing(options) {
 
         // Read file buffer once for both operations to avoid redundant disk I/O
         const imageBuffer = readFileSync(fullImagePath);
-        const {width, height} = await sharp(imageBuffer).metadata();
+        let {width, height} = await sharp(imageBuffer).metadata();
+        if (width > MAX_IMAGE_WIDTH) {
+          // cap new height proportionally to MAX_IMAGE_WIDTH
+          height = Math.max(1, Math.round((height * MAX_IMAGE_WIDTH) / width));
+          width = MAX_IMAGE_WIDTH;
+        }
         const contentHash = createHash('md5')
           .update(imageBuffer)
           .digest('hex')
