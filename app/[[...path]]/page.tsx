@@ -9,6 +9,7 @@ import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
+import {markdownExportUrl} from 'sentry-docs/components/markdownExportNotice';
 import {PageLoadMetrics} from 'sentry-docs/components/pageLoadMetrics';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {SpecChangelog} from 'sentry-docs/components/specChangelog';
@@ -414,6 +415,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     },
     alternates: {
       canonical,
+      types: {
+        'text/markdown': markdownExportUrl(params.path?.join('/') ?? ''),
+      },
     },
     robots: noindex ? 'noindex' : undefined,
   };

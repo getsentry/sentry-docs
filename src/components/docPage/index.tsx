@@ -25,6 +25,7 @@ import {DocFeedback} from '../docFeedback';
 import {FeatureBadge} from '../featureBadge';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
+import {MarkdownExportNotice} from '../markdownExportNotice';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -122,6 +123,7 @@ export async function DocPage({
                 </h1>
                 <h2>{frontMatter.description}</h2>
               </hgroup>
+              <MarkdownExportNotice pathname={pathname} />
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
                 {frontMatter.runtime && <RuntimeSelector />}
