@@ -18,13 +18,9 @@ Sentry.init({
   // in development and sample at a lower rate in production
   replaysSessionSampleRate: 0.1,
 
-  // You can remove this option if you're not planning to use the Sentry Session Replay feature:
+  // Replay is added after page load (see loadReplay below), not here, so it
+  // stays out of the first-load bundle.
   integrations: [
-    Sentry.replayIntegration({
-      // Additional Replay configuration goes in here, for example:
-      maskAllText: false,
-      blockAllMedia: false,
-    }),
     Sentry.spanStreamingIntegration(),
     Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-docs'],
@@ -49,5 +45,33 @@ Sentry.init({
     return metric;
   },
 });
+
+/**
+ * Session Replay is the largest part of the SDK and was the most expensive
+ * script on first load. Fetch it from the Sentry CDN once the page has loaded
+ * instead. The replay sample rates above still apply when it's added. Replays
+ * miss the first moments of a visit, and the CDN request can be blocked (for
+ * example by ad blockers), in which case the session runs without Replay.
+ */
+function loadReplay() {
+  Sentry.lazyLoadIntegration('replayIntegration')
+    .then(replayIntegration =>
+      Sentry.addIntegration(
+        replayIntegration({
+          maskAllText: false,
+          blockAllMedia: false,
+        })
+      )
+    )
+    .catch(() => {});
+}
+
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'complete') {
+    loadReplay();
+  } else {
+    window.addEventListener('load', loadReplay, {once: true});
+  }
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
