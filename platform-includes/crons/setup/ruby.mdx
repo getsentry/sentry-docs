@@ -12,6 +12,45 @@ Sentry.init do |config|
 end
 ```
 
+### GoodJob
+
+<AvailableSince version="7.3.0" />
+
+With `sentry-rails` and GoodJob 4.0 or later, enable the GoodJob cron patch to monitor scheduled jobs without adding check-ins to each job class:
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.enabled_patches << :good_job_cron
+end
+```
+
+Enable [GoodJob's cron scheduler](https://github.com/bensheldon/good_job#cron-style-repeatingrecurring-jobs) and define your entries:
+
+```ruby {filename:config/application.rb}
+config.good_job.enable_cron = true
+config.good_job.cron = {
+  nightly_report: {
+    cron: "0 9 * * * Europe/Vienna",
+    class: "ReportJob"
+  }
+}
+```
+
+Sentry creates a monitor from each entry's key, schedule, and time zone. Each run sends an `in_progress` check-in followed by `ok` or `error`. Retries send their own check-ins. Schedules without a time zone use the application's default time zone.
+
+To exclude entries, match their keys with strings, symbols, or regular expressions:
+
+```ruby {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.enabled_patches << :good_job_cron
+  config.rails.good_job_exclude_cron_jobs = [:clear_cache, /\Atmp_/]
+end
+```
+
+Proc schedules and schedules that Sentry Crons can't represent, such as every 10 seconds, are skipped. Entries whose keys produce the same monitor slug are also skipped; rename or exclude an entry to resolve the collision. Jobs already configured with `sentry_monitor_check_ins` keep their existing monitoring.
+
+### Other Scheduled Jobs
+
 More generally, popular job frameworks such as [Active Job](/platforms/ruby/guides/rails/integrations/active-job/)
 and `Sidekiq` with a `perform` method can use the
 `Sentry::Cron::MonitorCheckIns` mixin module to automatically capture check-ins.

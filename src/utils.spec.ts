@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
-import {marketingUrlParams, safeDecodeHash} from './utils';
+import {isNew, marketingUrlParams, safeDecodeHash} from './utils';
 
 describe('marketingUrlParams', () => {
   const originalLocation = window.location;
@@ -141,5 +141,26 @@ describe('safeDecodeHash', () => {
 
   test('handles an empty hash', () => {
     expect(safeDecodeHash('#')).toBe('');
+  });
+});
+
+describe('isNew', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test.each([new Date('2027-02-17'), '2027-02-17'])(
+    'shows the badge before the UTC date and hides it from that date on (%s)',
+    newUntil => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2027-02-16T23:59:59Z'));
+      expect(isNew(newUntil)).toBe(true);
+      vi.setSystemTime(new Date('2027-02-17T00:00:00Z'));
+      expect(isNew(newUntil)).toBe(false);
+    }
+  );
+
+  test('hides the badge without new_until', () => {
+    expect(isNew(undefined)).toBe(false);
   });
 });

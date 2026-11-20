@@ -7,7 +7,7 @@ An issue type is a way to group related issues together. Examples include `metri
 
 ## Register an Issue Type
 
-To register a new issue type you need to subclass <Link to="https://github.com/getsentry/sentry/blob/ef76b0765f6c057af12b1cd0dc2de6b42a938c02/src/sentry/issues/grouptype.py#L98-L108">`GroupType`</Link>
+To register a new issue type you need to subclass <Link to="https://github.com/getsentry/sentry/blob/9b76a0ffbcbde9a2d2a58bc5b5910fe33f1ea3ad/src/sentry/issues/grouptype.py#L227-L264">`GroupType`</Link>
 
 When registering the class, set the following required attributes on the class:
 
@@ -18,13 +18,13 @@ When registering the class, set the following required attributes on the class:
 - `description`: str
   - A human-readable description of your issue type.
 - `category`: int
-  - Categories are used to group related issue types together. Use one of the existing categories defined in <Link to="https://github.com/getsentry/sentry/blob/97f4174c28041357aa190f27012dc33c1c7bafc7/src/sentry/issues/grouptype.py#L17-L22">this enum</Link> or add a new one.
+  - Categories are used to group related issue types together. Use one of the existing categories defined in <Link to="https://github.com/getsentry/sentry/blob/9b76a0ffbcbde9a2d2a58bc5b5910fe33f1ea3ad/src/sentry/issues/grouptype.py#L35-L87">this enum</Link> or add a new one. Don't use the categories marked as deprecated (`PERFORMANCE`, `PROFILE`, `CRON`, `REPLAY`, `UPTIME`, `METRIC_ALERT`).
 
 You may also set these optional attributes:
 
 - `released`: bool
   - Whether this issue type has been released to all customers. See <Link to="#releasing-your-issue-type">Releasing your issue type</Link>.
-- `noise_config`: <Link to="https://github.com/getsentry/sentry/blob/2e5a39ff3dd4afbd33f2ff7d2ba161285107afe4/src/sentry/issues/grouptype.py#L102-L109">NoiseConfig</Link> | None
+- `noise_config`: <Link to="https://github.com/getsentry/sentry/blob/9b76a0ffbcbde9a2d2a58bc5b5910fe33f1ea3ad/src/sentry/issues/grouptype.py#L192-L199">NoiseConfig</Link> | None
   - A `NoiseConfig` that allows you to set policy on how many times a fingerprint must occur in a period of time before an issue is created. NoiseConfig has two attributes:
     - `ignore_limit`: int
       - How many occurrences need to occur before we create a new issue.
@@ -43,7 +43,7 @@ class ProfileFileIOGroupType(GroupType):
     type_id = 2001
     slug = "profile_file_io_main_thread"
     description = "File I/O on Main Thread"
-    category = GroupCategory.PROFILE.value
+    category = GroupCategory.MOBILE.value
 ```
 
 and here's one with `noise_config` configured
@@ -54,7 +54,7 @@ class ProfileFileIOGroupType(GroupType):
     type_id = 2001
     slug = "profile_file_io_main_thread"
     description = "File I/O on Main Thread"
-    category = GroupCategory.PROFILE.value
+    category = GroupCategory.MOBILE.value
     noise_config = NoiseConfig(5, timedelta(days=2))
 ```
 

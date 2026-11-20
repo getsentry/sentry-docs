@@ -10,7 +10,7 @@ The Rails integration instruments Active Job automatically, so you can follow wo
 
 When `perform_later` runs inside an active transaction, Sentry creates a `queue.publish` child span. The SDK adds trace headers to the serialized job payload and continues the trace with a `queue.process` transaction when the job runs.
 
-The execution transaction is named after the job class and includes the queue adapter, queue name, job ID, retry count, and queue latency. Spans created while the job runs, such as database or HTTP spans, become children of this transaction.
+The execution transaction is named after the job class and includes the queue adapter, queue name, job ID, retry count, and receive latency, which is how long the job waited in the queue before it started. Sampled transactions also include the size of the serialized message body. Spans created while the job runs, such as database or HTTP spans, become children of this transaction.
 
 If no span is active when the job is enqueued, Sentry doesn't create a `queue.publish` span. When the job runs, Sentry still instruments it with a `queue.process` transaction, subject to your tracing sampling configuration.
 
@@ -108,18 +108,62 @@ Exceptions suppressed by `discard_on` or `rescue_from` are handled by Active Job
 The Ruby SDK runs its Active Job integration test suite against these adapters:
 
 - Delayed Job (`:delayed_job`)
+- GoodJob (`:good_job`)
 - Resque (`:resque`)
 - Sidekiq (`:sidekiq`)
 - Solid Queue (`:solid_queue`)
 
 Other Active Job adapters may work, but aren't officially supported.
 
-<Alert level="info" title="Queue-Specific Integrations Take Precedence">
-
-If you install `sentry-sidekiq`, `sentry-delayed_job`, or `sentry-resque`, the queue-specific integration takes over. Sentry skips the generic Active Job instrumentation for that adapter to avoid duplicate events.
-
-</Alert>
-
 You can also skip a custom adapter with <PlatformLink to="/configuration/integration_options/">`rails.skippable_job_adapters`</PlatformLink>.
+
+If you maintain a queue adapter, register a job extension to add your backend's origin, tags, and messaging data to the jobs it runs. See <PlatformLink to="/tracing/instrumentation/custom-instrumentation/job-extensions/#active-job-adapters">Instrument Custom Job Backends</PlatformLink>.
+
+### GoodJob
+
+GoodJob uses the Active Job integration in `sentry-rails`; no separate Sentry gem is needed. Sentry supports GoodJob 4.0 or later. Configure GoodJob as your queue adapter to use the tracing and error reporting described above:
+
+```ruby {filename:config/application.rb}
+config.active_job.queue_adapter = :good_job
+```
+
+For scheduled jobs, enable <PlatformLink to="/crons/#goodjob">GoodJob cron monitoring</PlatformLink>.
+
+### Backend-Specific Integrations
+
+If you install `sentry-sidekiq`, `sentry-resque`, or `sentry-delayed_job`, that gem reports the Active Job jobs that run on its backend. Each gem adds its adapter to `rails.skippable_job_adapters`, so the Active Job integration skips those jobs and Sentry doesn't report them twice.
+
+#### Report Jobs Through the Active Job Integration
+
+<AvailableSince version="7.3.0" />
+
+To have `sentry-rails` report these jobs instead, remove the backend's adapter from `rails.skippable_job_adapters`:
+
+```ruby {tabTitle:Sidekiq} {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.rails.skippable_job_adapters.delete("ActiveJob::QueueAdapters::SidekiqAdapter")
+end
+```
+
+```ruby {tabTitle:Resque} {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.rails.skippable_job_adapters.delete("ActiveJob::QueueAdapters::ResqueAdapter")
+end
+```
+
+```ruby {tabTitle:Delayed Job} {filename:config/initializers/sentry.rb}
+Sentry.init do |config|
+  config.rails.skippable_job_adapters.delete("ActiveJob::QueueAdapters::DelayedJobAdapter")
+end
+```
+
+After you opt in, `sentry-rails` traces and reports these jobs as described on this page, and their telemetry still identifies the backend:
+
+- Spans keep the backend gem's origin, such as `auto.queue.sidekiq`, and events keep its SDK name.
+- Sidekiq transactions are still named `Sidekiq/<JobClass>`.
+- Resque and Delayed Job jobs keep their backend tags and `Active-Job` context. They also gain a `queue.publish` span when the job is enqueued, trace continuation into the job, and `messaging.*` data on the job's transaction.
+- The backend gem still captures errors raised before the job starts, such as a job class that can no longer be loaded. Sentry never reports a failed run twice.
+
+`sentry-resque` and `sentry-delayed_job` are in maintenance mode. They still receive fixes, but new background job features go into `sentry-rails`. If you run Active Job on Resque or Delayed Job, we recommend opting in. For Sidekiq, opting in is optional, and Sentry supports both setups.
 
 For scheduled jobs, see <PlatformLink to="/crons/">Cron Monitoring</PlatformLink>. To capture Active Job logs, see <PlatformLink to="/logs/">Logs</PlatformLink>.
