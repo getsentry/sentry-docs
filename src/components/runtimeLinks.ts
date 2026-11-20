@@ -67,13 +67,11 @@ export function getRuntimeLinks(
 }
 
 /**
- * Returns the sidebar title of the guide page of `guide`: "Quick Start", or
- * "Quick Start (<runtime>)", for example "Quick Start (Node.js)", if the guide has quick
- * starts for more than one runtime.
+ * Returns the sidebar title of the guide page of `guide`: "Quick Start (<runtime>)", for
+ * example "Quick Start (Node.js)", if the guide page sets `runtime` in its frontmatter, or else
+ * "Quick Start".
  */
 export function getQuickStartTitle(guide: QuickStartNode | undefined): string {
-  const runtime = getRuntimeLinks(guide, [])?.find(
-    link => link.url === `/${guide?.path}/`
-  )?.title;
-  return runtime ? `Quick Start (${runtime})` : 'Quick Start';
+  const runtime = guide?.frontmatter.runtime;
+  return runtime ? `Quick Start (${getRuntimeTitle(runtime)})` : 'Quick Start';
 }
