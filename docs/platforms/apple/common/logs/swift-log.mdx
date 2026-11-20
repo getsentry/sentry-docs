@@ -46,10 +46,12 @@ SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
 }
 
-LoggingSystem.bootstrap { _ in
-    SentryLogHandler(logLevel: .info)
+LoggingSystem.bootstrap { label in
+    SentryLogHandler(label: label, logLevel: .info)
 }
 ```
+
+SwiftLog passes the label of each `Logger` to the bootstrap closure. Passing it to `SentryLogHandler(label:logLevel:)` sends it as the `logger.name` attribute, so you can filter and group logs by the logger that wrote them. Handlers created with `SentryLogHandler(logLevel:)` don't send `logger.name`.
 
 ### Log Level Threshold
 
@@ -65,11 +67,12 @@ let handler = SentryLogHandler(logLevel: .warning)
 Add metadata that will be included with all log entries. Handler-level metadata is merged with per-message metadata, with per-message values taking precedence:
 
 ```swift
-var handler = SentryLogHandler(logLevel: .info)
-handler.metadata["app_version"] = "1.0.0"
-handler.metadata["environment"] = "production"
-
-LoggingSystem.bootstrap { _ in handler }
+LoggingSystem.bootstrap { label in
+    var handler = SentryLogHandler(label: label, logLevel: .info)
+    handler.metadata["app_version"] = "1.0.0"
+    handler.metadata["environment"] = "production"
+    return handler
+}
 ```
 
 ## Verify
@@ -110,5 +113,6 @@ The handler automatically includes the following attributes with every log entry
 | `code.file.path` | The source file path |
 | `code.function.name` | The function name |
 | `code.line.number` | The line number |
+| `logger.name` | The label of the logger, when the handler was created with `SentryLogHandler(label:logLevel:)` |
 
 All SwiftLog metadata is prefixed with `swift-log.` in Sentry attributes (for example, `swift-log.userId`).
