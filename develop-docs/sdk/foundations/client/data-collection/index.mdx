@@ -2,12 +2,15 @@
 title: Data Collection
 description: Configuration for what data SDKs collect by default, including technical context, PII, and sensitive data.
 spec_id: sdk/foundations/client/data-collection
-spec_version: 0.18.0
+spec_version: 0.19.0
 spec_status: candidate
 spec_depends_on:
   - id: sdk/foundations/client
     version: ">=1.0.0"
 spec_changelog:
+  - version: 0.19.0
+    date: 2026-11-19
+    summary: Gate URL fragments behind `urlQueryParams`. SDKs drop the fragment when the option is off and filter `key=value` pairs in it like query params.
   - version: 0.18.0
     date: 2026-11-17
     summary: Define the installation identifier. `userInfo` does not gate it, and SDKs must not base it on values that identify the device outside the app.
@@ -234,6 +237,11 @@ URL strings in span descriptions follow the format defined in [Structuring Data]
 
 The `urlQueryParams` option controls query parameter filtering wherever query strings appear — including `url.full`, `url.query`, and [`request.query_string`](/sdk/foundations/envelopes/event-payloads/request/). `url.path` and the span description are unaffected since they never contain query strings.
 
+The `urlQueryParams` option also controls the URL fragment (the part after `#`) wherever it appears, including `url.full`, `http.fragment`, [`request.url`](/sdk/foundations/envelopes/event-payloads/request/), and breadcrumb data. Fragments can carry the same sensitive data as query strings. For example, OAuth and OpenID Connect login redirects can return access and ID tokens in the fragment (`#access_token=...`), and apps with hash-based routing put their query string in the fragment (`#/callback?token=...`).
+
+- When `urlQueryParams` is `off`, SDKs **MUST NOT** collect the fragment. SDKs **MUST** remove it from every URL they attach, together with the query string.
+- Otherwise, SDKs **MUST** apply the `urlQueryParams` rules and terms to `key=value` pairs in the fragment, the same way they do for query parameters. When the fragment contains a `?`, the pairs are the `&`-separated segments after the first `?`. Otherwise, the pairs are the `&`-separated segments of the whole fragment. Text that isn't part of a `key=value` pair, such as an anchor (`#details`) or a hash route path (`#/settings`), is kept as-is.
+
 Encoded query parameters **MUST** be stored exactly as they appear in the URL.
 
 **Example:** Given a request to `https://example.com/api/users?token=abc123&q=a%20b%26c&page=5`:
@@ -245,6 +253,13 @@ Encoded query parameters **MUST** be stored exactly as they appear in the URL.
 | `url.path` | `/api/users` | same |
 | `url.query` | `token=[Filtered]&q=a%20b%26c&page=5` | not collected |
 | `request.query_string` | `token=[Filtered]&q=a%20b%26c&page=5` | not collected |
+
+**Example:** Given a page loaded from a login redirect at `https://example.com/callback#access_token=abc123&state=xyz`:
+
+| Attribute | `urlQueryParams` enabled | `urlQueryParams` off |
+|---|---|---|
+| `url.full` | `https://example.com/callback#access_token=[Filtered]&state=xyz` | `https://example.com/callback` |
+| `http.fragment` | `#access_token=[Filtered]&state=xyz` | not collected |
 
 #### Cookies and URL Query Params
 
@@ -678,7 +693,7 @@ init({
 | `cookies` | Key-value collection | `{ mode: "denyList" }` | 0.1.0 | Collect cookies. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
 | `httpHeaders` | `{ request?, response? }` | Both `{ mode: "denyList" }` | 0.1.0 | Collect HTTP headers. Configure request and response independently using key-value collection modes. All key names are always included. |
 | `httpBodies` | `string[]` (body types) | all valid body types | 0.1.0 | List of body types to collect. Omitted = all body types valid for the platform; empty array (`[]`) = off. Valid values: `"incomingRequest"`, `"outgoingRequest"`, `"incomingResponse"`, `"outgoingResponse"`. Default changed from `[]` (off) to all valid body types in 0.2.0. |
-| `urlQueryParams` | Key-value collection | `{ mode: "denyList" }` | 0.8.0 | Collect URL query parameters. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. |
+| `urlQueryParams` | Key-value collection | `{ mode: "denyList" }` | 0.8.0 | Collect URL query parameters and URL fragments. All key names are always included; the SDK scrubs values for keys matching the sensitive denylist or custom allow/deny terms. When `off`, the SDK drops the fragment too (see [URLs](#urls)). Fragments gated since 0.19.0. |
 | `graphQL` | `{ document?, variables? }` | Both `true` | 0.5.0 | For `document`: Collect the GraphQL document. <br /><br /> For `variables`: Collect the variables that are passed to GraphQL operations. |
 | `genAI` | `{ inputs?, outputs? }` | Both `true` | 0.1.0 | For `inputs`: Include the content of generative AI inputs. This gates system instructions, prompt messages, tool definitions, and tool call arguments. <br /><br /> For `outputs`: Include the content of generative AI outputs (e.g. completion text, tool call results). <br /><br /> Metadata such as model name and token counts is always collected regardless of these settings. <br /><br /> Content collected by MCP instrumentation is gated by `mcp`, not `genAI` (see below). |
 | `mcp` | `{ inputs?, outputs? }` | Both `true` | 0.14.0 | For `inputs`: Include the content of incoming MCP requests. This gates tool call arguments (`tools/call`), prompt arguments (`prompts/get`), and the message payload of MCP logging notifications. <br /><br /> For `outputs`: Include the content of MCP responses. This gates tool result content and prompt result messages. <br /><br /> Metadata is always collected (method name, tool or prompt name, session and protocol version, content counts, error status).<br /><br /> Content collected by MCP instrumentation is gated by the `mcp` option even when it is stored on the `gen_ai.*` attribute namespace (e.g. `gen_ai.tool.call.result`). |
