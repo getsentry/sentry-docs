@@ -11,9 +11,9 @@ This page describes **standalone** usage of Breakpad with Sentry. Unless you hav
 
 </Alert>
 
-## Integration
+## Install
 
-Build and integration depend on the target platform. Please refer to [Breakpad Integration Overview](https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/getting_started_with_breakpad.md#integration-overview) for official instructions on how to integrate with your program. Generally, you will need to add the Breakpad headers to the include path and then start a platform dependent `ExceptionHandler`.
+Build and integration depend on the target platform. Refer to the [Breakpad Integration Overview](https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/getting_started_with_breakpad.md#integration-overview) for official instructions on how to integrate Breakpad with your program. Generally, you'll need to add the Breakpad headers to the include path and then start a platform-dependent `ExceptionHandler`.
 
 For official platform documentation, visit:
 
@@ -21,9 +21,15 @@ For official platform documentation, visit:
 - [Mac Starter Guide](https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/mac_breakpad_starter_guide.md)
 - [Windows Starter Guide](https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/windows_client_integration.md)
 
-## Linux Example
+## Configure
 
-First, initialize the `ExceptionHandler` and pass it a callback that is invoked when a minidump is generated. This can be used to move it to a known location or register it for uploading:
+Sentry supports **Error Monitoring** for Breakpad: it processes the minidumps Breakpad writes into native crash reports. Tracing, Logs, Application Metrics, and custom attachments aren't available with standalone Breakpad. Use the [Native SDK](/platforms/native/) if you need them.
+
+The examples below are for Linux.
+
+### Initialize the Exception Handler
+
+Initialize the `ExceptionHandler` and pass it a callback that is invoked when a minidump is generated. You can use the callback to move the minidump to a known location or register it for uploading:
 
 ```cpp
 #include "client/linux/handler/exception_handler.h"
@@ -59,7 +65,16 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-Next, implement a minidump upload to Sentry. Since the exception handler callback should perform as little action as possible, this upload is ideally started at the next application start. You can use the `HttpUpload` class, which is provided as part of the Breakpad client:
+### Upload Minidumps to Sentry
+
+Since the exception handler callback should do as little as possible, start the upload at the next application start. You can use the `HttpUpload` class, which is part of the Breakpad client.
+
+The snippet also sets:
+
+- Release: via the `sentry[release]` form field, which associates crashes with a [release](/product/releases/)
+- Environment: via the `sentry[environment]` form field
+
+Sentry accepts more event attributes in form fields. See [Passing Additional Data](/platforms/native/guides/minidumps/#passing-additional-data) for the format. Don't need a field? Remove it from the snippet.
 
 ```cpp
 #include <string>
@@ -68,6 +83,10 @@ Next, implement a minidump upload to Sentry. Since the exception handler callbac
 bool UploadMinidump(std::string &path) {
   // Add additional arguments for Sentry
   std::map<string, string> parameters;
+  // Associates the crash with a release
+  parameters["sentry[release]"] = "my-project-name@2.3.12";
+  // Sets the environment, for example production or staging
+  parameters["sentry[environment]"] = "production";
 
   std::map<string, string> files;
   files["upload_file_minidump"] = path;
@@ -86,3 +105,30 @@ bool UploadMinidump(std::string &path) {
 }
 ```
 
+### Add Readable Stack Traces With Debug Information Files
+
+To see symbolicated stack traces, upload your application's debug information files to Sentry. See [Uploading Debug Information Files](/platforms/native/guides/breakpad/data-management/debug-files/upload/) for how to do this with `sentry-cli`.
+
+## Verify Your Setup
+
+Trigger a crash after the `ExceptionHandler` is installed, for example with a null pointer write:
+
+```cpp
+// Intentional crash to test your setup
+volatile int *ptr = nullptr;
+*ptr = 42;
+```
+
+Breakpad writes a minidump when the process crashes. Start the application again so your upload code sends the minidump to Sentry.
+
+### View Captured Data in Sentry
+
+To view and resolve the recorded crash, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue, then click its title to see the details and mark it as resolved.
+
+## Next Steps
+
+At this point, you should have integrated Breakpad with Sentry. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn more about [Minidumps](/platforms/native/guides/minidumps/), including size limits and storing minidumps as attachments
+- Switch to the [Native SDK](/platforms/native/) for out-of-process crash reporting, tracing, logs, and metrics

@@ -14,7 +14,24 @@ This page describes **standalone** usage of Crashpad with Sentry. We strongly en
 
 </Alert>
 
-Follow the [Crashpad developer docs](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md) for instructions on how to build Crashpad from source. Make sure that crashpad’s header files are in your include path, then add a call to [StartHandler()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a810ad9941bedba543bf60507c31c55da) during your program startup:
+## Install
+
+Follow the [Crashpad developer docs](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md) for instructions on how to build Crashpad from source. Make sure that Crashpad's header files are in your include path.
+
+## Configure
+
+Sentry supports **Error Monitoring** for Crashpad: it processes the minidumps Crashpad uploads into native crash reports. Tracing, Logs, Application Metrics, and custom attachments aren't available with standalone Crashpad. Use the [Native SDK](/platforms/native/) if you need them.
+
+### Start the Crashpad Handler
+
+Add a call to [StartHandler()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a810ad9941bedba543bf60507c31c55da) during your program startup.
+
+The snippet also sets:
+
+- Release: via the `sentry[release]` annotation, which associates crashes with a [release](/product/releases/)
+- Environment: via the `sentry[environment]` annotation
+
+Crashpad sends annotations as form fields with each minidump, and Sentry accepts more event attributes in the same format. See [Passing Additional Data](/platforms/native/guides/minidumps/#passing-additional-data). Don't need an annotation? Remove it from the snippet.
 
 ```cpp
 #include <map>
@@ -37,6 +54,10 @@ bool startCrashpad() {
   std::string http_proxy("");
   // Optional annotations passed via --annotations to the handler
   std::map<std::string, std::string> annotations;
+  // Associates crashes with a release
+  annotations["sentry[release]"] = "my-project-name@2.3.12";
+  // Sets the environment, for example production or staging
+  annotations["sentry[environment]"] = "production";
   // Optional arguments to pass to the handler
   std::vector<std::string> arguments;
 
@@ -57,9 +78,11 @@ bool startCrashpad() {
 }
 ```
 
-This method directs crashes to the Crashpad handler. On macOS, this is applicable to this process and all subsequent child processes. On other platforms, child processes must also register by using [SetHandlerIPCPipe()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a9f1d5d38e9b4f5781e3821551dcc39d5). For more information on configuring the crashpad handler, see [crashpad_handler](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/handler/crashpad_handler.md).
+This method directs crashes to the Crashpad handler. On macOS, this is applicable to this process and all subsequent child processes. On other platforms, child processes must also register by using [SetHandlerIPCPipe()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a9f1d5d38e9b4f5781e3821551dcc39d5). For more information on configuring the Crashpad handler, see [crashpad_handler](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/handler/crashpad_handler.md).
 
-If you also want Crashpad to upload crashes to Sentry, additionally configure the Crashpad database for automatic uploads:
+### Enable Uploads
+
+For Crashpad to upload crashes to Sentry, configure the Crashpad database for automatic uploads:
 
 ```cpp
 // #include "client/crash_report_database.h"
@@ -73,9 +96,36 @@ if (db != nullptr && db->GetSettings() != nullptr) {
 }
 ```
 
-By default, the crashpad handler will limit uploads to one per hour. To disable this limitation, pass the `--no-rate-limit` argument to the handler:
+By default, the Crashpad handler limits uploads to one per hour. To disable this limit, pass the `--no-rate-limit` argument to the handler:
 
 ```cpp
 arguments.push_back("--no-rate-limit");
 ```
 
+### Add Readable Stack Traces With Debug Information Files
+
+To see symbolicated stack traces, upload your application's debug information files to Sentry. See [Uploading Debug Information Files](/platforms/native/guides/crashpad/data-management/debug-files/upload/) for how to do this with `sentry-cli`.
+
+## Verify Your Setup
+
+Trigger a crash after `StartHandler()` returns, for example with a null pointer write:
+
+```cpp
+// Intentional crash to test your setup
+volatile int *ptr = nullptr;
+*ptr = 42;
+```
+
+The Crashpad handler writes a minidump and uploads it to Sentry. If you didn't disable the rate limit, the handler sends at most one crash per hour.
+
+### View Captured Data in Sentry
+
+To view and resolve the recorded crash, log into [sentry.io](https://sentry.io) and select your project. Select **Issues** in the sidebar to find the new issue, then click its title to see the details and mark it as resolved.
+
+## Next Steps
+
+At this point, you should have integrated Crashpad with Sentry. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- Learn more about [Minidumps](/platforms/native/guides/minidumps/), including size limits and storing minidumps as attachments
+- Use the [Native SDK with the Crashpad backend](/platforms/native/configuration/backends/crashpad/) to add tracing, logs, metrics, and attachments
