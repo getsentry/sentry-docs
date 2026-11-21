@@ -32,3 +32,12 @@ export function isExternalCanonical(customCanonicalTag: string | undefined): boo
 export function resolvePageCanonical(target: string, origin: string): string {
   return isExternalCanonical(target) ? target : `${origin}${canonicalPath(target)}`;
 }
+
+/**
+ * Path of the Markdown export for a docs page path.
+ * Examples: `/` → `/index.md`, `/platforms/python/` → `/platforms/python.md`.
+ */
+export function markdownExportPath(pathname: string): string {
+  const withLeadingSlash = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${withLeadingSlash.replace(/\/+$/, '') || '/index'}.md`;
+}

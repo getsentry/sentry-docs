@@ -412,6 +412,10 @@ function buildFrontmatterMap(docTree) {
   return map;
 }
 
+// Appended to every page export so an agent that doesn't find its answer on
+// this page can pick the next one to read.
+const DISCOVERY_FOOTER = `\n\n---\n\nFind other pages: [Sitemap](${DOCS_ORIGIN}/sitemap.md) lists every page with a one-line summary, and [llms.txt](${DOCS_ORIGIN}/llms.txt) gives an overview with guidance for agents.\n`;
+
 /**
  * Formats a YAML frontmatter block for a markdown file.
  * Only includes fields that have non-empty values.
@@ -1215,7 +1219,7 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         frontmatter?.url
       );
       const output = frontmatter
-        ? formatYamlFrontmatter(frontmatter) + resolved
+        ? formatYamlFrontmatter(frontmatter) + resolved.trimEnd() + DISCOVERY_FOOTER
         : resolved;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 

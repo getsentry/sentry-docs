@@ -34,6 +34,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* llms.txt covers every page on the site (llmstxt.org link relation). */}
+        <link rel="describedby" type="text/plain" href="/llms.txt" />
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>

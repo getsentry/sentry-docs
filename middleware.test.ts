@@ -246,7 +246,7 @@ describe('canonical Link header on .md responses', () => {
   it('adds Link rel=canonical pointing to the HTML page for a deep path', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
-    expect(res.headers.get('Link')).toBe(
+    expect(res.headers.get('Link')).toContain(
       '<https://docs.sentry.io/platforms/apple/cocoa/>; rel="canonical"'
     );
   });
@@ -257,7 +257,7 @@ describe('canonical Link header on .md responses', () => {
   ])('does not add a trailing slash to a dotted document path: %s', async path => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest(`${path}.md`));
-    expect(res.headers.get('Link')).toBe(
+    expect(res.headers.get('Link')).toContain(
       `<https://docs.sentry.io${path}>; rel="canonical"`
     );
   });
@@ -265,13 +265,15 @@ describe('canonical Link header on .md responses', () => {
   it('maps /index.md to the root canonical URL', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest('/index.md'));
-    expect(res.headers.get('Link')).toBe('<https://docs.sentry.io/>; rel="canonical"');
+    expect(res.headers.get('Link')).toContain(
+      '<https://docs.sentry.io/>; rel="canonical"'
+    );
   });
 
   it('handles top-level .md paths', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest('/platforms.md'));
-    expect(res.headers.get('Link')).toBe(
+    expect(res.headers.get('Link')).toContain(
       '<https://docs.sentry.io/platforms/>; rel="canonical"'
     );
   });
@@ -279,15 +281,34 @@ describe('canonical Link header on .md responses', () => {
   it('uses develop.sentry.dev origin in developer docs mode', async () => {
     const {middleware} = await importMiddleware({NEXT_PUBLIC_DEVELOPER_DOCS: '1'});
     const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
-    expect(res.headers.get('Link')).toBe(
+    expect(res.headers.get('Link')).toContain(
       '<https://develop.sentry.dev/platforms/apple/cocoa/>; rel="canonical"'
     );
   });
 
-  it('does not add Link header for non-.md paths', async () => {
+  it('adds Vary: Accept to .md responses', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/platforms/apple/cocoa.md'));
+    expect(res.headers.get('Vary')).toBe('Accept');
+  });
+});
+
+describe('HTML pages advertise their Markdown version', () => {
+  it('links the Markdown export and llms.txt', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest('/platforms/apple/cocoa/'));
-    expect(res.headers.get('Link')).toBeNull();
+    expect(res.headers.get('Link')).toBe(
+      '<https://docs.sentry.io/platforms/apple/cocoa.md>; rel="alternate"; type="text/markdown", ' +
+        '<https://docs.sentry.io/llms.txt>; rel="describedby"'
+    );
+  });
+
+  it('maps the root page to /index.md', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/'));
+    expect(res.headers.get('Link')).toContain(
+      '<https://docs.sentry.io/index.md>; rel="alternate"; type="text/markdown"'
+    );
   });
 });
 
@@ -316,5 +337,46 @@ describe('wantsMarkdownViaAccept: text/plain no longer triggers markdown', () =>
     const res = middleware(req);
     // A rewrite to .md will set x-middleware-rewrite
     expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
+  });
+});
+
+describe('content negotiation on page URLs', () => {
+  function pageRequest(headers: Record<string, string>): NextRequest {
+    return new NextRequest(new URL('/platforms/apple/cocoa/', 'http://localhost:3000'), {
+      headers,
+    });
+  }
+
+  it('serves Markdown with Vary and canonical headers', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(pageRequest({Accept: 'text/markdown, text/html, */*'}));
+    expect(res.headers.get('x-middleware-rewrite')).toContain(
+      '/platforms/apple/cocoa.md'
+    );
+    expect(res.headers.get('Vary')).toBe('Accept');
+    expect(res.headers.get('Link')).toBe(
+      '<https://docs.sentry.io/platforms/apple/cocoa/>; rel="canonical", ' +
+        '<https://docs.sentry.io/llms.txt>; rel="describedby"'
+    );
+  });
+
+  it('serves HTML when the client ranks HTML above Markdown', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(pageRequest({Accept: 'text/html, text/markdown;q=0.9'}));
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+  });
+
+  it('serves Markdown to a recognized AI agent with no format preference', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(pageRequest({'User-Agent': 'Claude-User', Accept: '*/*'}));
+    expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
+  });
+
+  it('serves HTML to a recognized AI agent that asks for HTML', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(
+      pageRequest({'User-Agent': 'ChatGPT-User/1.0', Accept: 'text/html,*/*;q=0.8'})
+    );
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
   });
 });

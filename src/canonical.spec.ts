@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {canonicalPath, resolvePageCanonical} from './canonical';
+import {canonicalPath, markdownExportPath, resolvePageCanonical} from './canonical';
 
 describe('canonicalPath', () => {
   it.each([
@@ -32,5 +32,17 @@ describe('resolvePageCanonical', () => {
 
   it('resolves a page path against the docs origin', () => {
     expect(resolvePageCanonical('cli', origin)).toBe('https://docs.sentry.io/cli/');
+  });
+});
+
+describe('markdownExportPath', () => {
+  it.each([
+    ['', '/index.md'],
+    ['/', '/index.md'],
+    ['platforms/python', '/platforms/python.md'],
+    ['/platforms/python/', '/platforms/python.md'],
+    ['/platforms/java/migration/7.x-to-8.0/', '/platforms/java/migration/7.x-to-8.0.md'],
+  ])('%j → %s', (pathname, expected) => {
+    expect(markdownExportPath(pathname)).toBe(expected);
   });
 });
