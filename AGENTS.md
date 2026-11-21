@@ -114,6 +114,7 @@ When writing requirements in `develop-docs/`:
 - Auto-generated from `public/doctree.json` by `scripts/generate-llms-txt.mjs`
 - Run `pnpm generate-llms-txt` to regenerate, or it runs automatically as part of `pnpm build`
 - Includes: product description, AI agent instructions, platform/section index, links to agent skills at `skills.sentry.dev`
+- The same script generates `/sitemap.md`, which lists every page with its description
 
 ## Sentry Product Skills (sentry-for-ai)
 
