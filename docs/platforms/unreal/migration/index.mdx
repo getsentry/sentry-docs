@@ -45,6 +45,32 @@ The `VeryVerbose` option is disabled by default. If your project forwards `Verbo
 
 Breadcrumbs for `VeryVerbose` messages still use the `Debug` level.
 
+#### Crash Backend Selection
+
+The `UseNativeBackend` option is replaced by the `CrashBackend` option (**Project Settings > Plugins > Sentry > Crash Handling > Crash backend**), and the native backend is now the default on Windows, Linux, and Xbox. `CrashBackend` accepts the following values:
+
+- `Auto` (default): uses the native backend on Windows, Linux, and Xbox, and sentry-cocoa on macOS.
+- `Native`: uses the native backend on Windows, Linux, macOS, and Xbox.
+- `Platform`: uses Crashpad on Windows and Linux, Breakpad on Xbox, and sentry-cocoa on macOS.
+
+The SDK no longer reads `UseNativeBackend`. If your project configuration file sets it, replace it with `CrashBackend`:
+
+```ini
+; Enabling the native backend before v2.0.0
+
+[/Script/Sentry.SentrySettings]
+UseNativeBackend=True
+
+; Enabling the native backend in v2.0.0 (also on macOS)
+
+[/Script/Sentry.SentrySettings]
+CrashBackend=Native
+```
+
+If you want to keep using Crashpad on Windows and Linux or Breakpad on Xbox, set `CrashBackend=Platform`.
+
+The backend is selected at build time, so rebuild your project after changing this option.
+
 ## Migrating to 1.0.0
 
 ### Breaking changes
