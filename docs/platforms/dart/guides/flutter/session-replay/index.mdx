@@ -166,6 +166,23 @@ try {
 
 Here, `showSensitiveScreen()` represents your app's navigation flow and should complete after the sensitive screen closes. Continue to configure <PlatformLink to="/session-replay/privacy/">masking rules</PlatformLink> for recorded content. Pausing Replay does not disable other SDK features, such as error reporting.
 
+### Pause Touch Tracking Around Sensitive Content
+
+Starting with version 10.5.0, the SDK can stop recording touches while it continues to record the screen. Use this on screens where masking hides the content, but the touch positions could reveal the input, such as a custom PIN pad or a masked `WebView`.
+
+Call `pauseTouchTracking()` before showing the sensitive content and `resumeTouchTracking()` after hiding it. Touch tracking stays paused for all replays in the same app process, including new replays and replays restarted with `stop()` and `start()`, until you call `resumeTouchTracking()`. Calling `resume()` doesn't resume touch tracking, and `resumeTouchTracking()` doesn't record touches while the replay is paused with `pause()`. You can call `pauseTouchTracking()` before a replay starts. Breadcrumbs aren't affected; use [`beforeBreadcrumb`](/platforms/dart/guides/flutter/enriching-events/breadcrumbs/#customize-breadcrumbs) to filter them.
+
+```dart
+await SentryFlutter.replay.pauseTouchTracking();
+try {
+  await showSensitiveScreen();
+} finally {
+  await SentryFlutter.replay.resumeTouchTracking();
+}
+```
+
+`pauseTouchTracking()` and `resumeTouchTracking()` are supported on iOS and Android only. On other platforms, including Web, they do nothing.
+
 ### End or Send a Replay
 
 Call `stop()` to end the current replay. Starting again creates a new replay with a new replay ID:
