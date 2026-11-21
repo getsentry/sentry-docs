@@ -24,7 +24,7 @@ Attributes can currently be used to enrich the following:
 
 Passing the same attributes to every call gets repetitive once a group of logs or metrics shares context. Set them on a scope instead, and everything captured with that scope inherits them.
 
-`sentry_set_attribute` writes to the global scope, so every log and metric the SDK sends carries the attribute:
+`sentry_set_attribute` writes to the isolation scope, so every log and metric the SDK sends carries the attribute:
 
 ```c
 sentry_set_attribute("cache.backend",
@@ -47,6 +47,6 @@ sentry_scope_free(scope);
 
 Both setters have an `_n` variant that takes an explicit key length, and `sentry_remove_attribute` / `sentry_scope_remove_attribute` remove an attribute again.
 
-Attribute precedence is resolved from most to least specific: **per-call attributes** > **passed scope** > **global scope**. Attributes are merged from every source, so differently named attributes from all three are included on the resulting log or metric. When the same attribute is set in more than one source, the most specific one is used.
+Attribute precedence is resolved from most to least specific: **per-call attributes** > **passed scope** > **isolation scope** > **global scope**. Attributes are merged from every source, so differently named attributes from all sources are included on the resulting log or metric. When the same attribute is set in more than one source, the most specific one is used.
 
 See [Scopes](/platforms/native/enriching-events/scopes/) for how scopes are created and freed.
