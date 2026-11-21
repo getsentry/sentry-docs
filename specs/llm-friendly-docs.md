@@ -24,7 +24,7 @@ Markdown files are pre-generated at build time and served from `public/md-export
 
 - Every Markdown response sets `Vary: Accept` and a `Link` header with `rel="canonical"` (the HTML page) and `rel="describedby"` (`/llms.txt`).
 - Every HTML page sets a `Link` header with `rel="alternate"; type="text/markdown"` (its `.md` export) and `rel="describedby"` (`/llms.txt`), and renders the same two links as `<link>` tags in `<head>`. These are the [llmstxt.org](https://llmstxt.org) link relations.
-- Every page export ends with a footer that links `/sitemap.md` and `/llms.txt`.
+- Every export ends with a footer that links `/sitemap.md` and `/llms.txt`.
 - `/sitemap.md` lists every visible page, nested like the sidebar, with its description. `scripts/generate-llms-txt.mjs` generates it.
 
 ## How Markdown Pages Differ from HTML

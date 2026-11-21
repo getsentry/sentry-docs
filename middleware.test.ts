@@ -286,6 +286,14 @@ describe('canonical Link header on .md responses', () => {
     );
   });
 
+  it('uses the Markdown URL itself as canonical for /sitemap.md', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(makeRequest('/sitemap.md'));
+    expect(res.headers.get('Link')).toContain(
+      '<https://docs.sentry.io/sitemap.md>; rel="canonical"'
+    );
+  });
+
   it('adds Vary: Accept to .md responses', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(makeRequest('/platforms/apple/cocoa.md'));

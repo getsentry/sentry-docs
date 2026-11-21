@@ -1218,9 +1218,10 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         applyKeywordDefaults(data),
         frontmatter?.url
       );
-      const output = frontmatter
-        ? formatYamlFrontmatter(frontmatter) + resolved.trimEnd() + DISCOVERY_FOOTER
-        : resolved;
+      const output =
+        (frontmatter ? formatYamlFrontmatter(frontmatter) : '') +
+        resolved.trimEnd() +
+        DISCOVERY_FOOTER;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 
       if (r2Hash !== null && s3Client) {

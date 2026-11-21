@@ -15,6 +15,9 @@ const CANONICAL_HOST = new URL(DOCS_ORIGIN).hostname;
 // llms.txt covers every page on the site (llmstxt.org link relation).
 const LLMS_TXT_LINK = `<${DOCS_ORIGIN}/llms.txt>; rel="describedby"`;
 
+// Markdown-only resources with no HTML page; they are their own canonical URL.
+const MARKDOWN_ONLY_PATHS = new Set(['/sitemap.md']);
+
 // sentry-for-ai-evals compares a PR's docs with the docs at its merge base, which it reads
 // from that commit's production build URL. It sends this header so the build serves its
 // own pages instead of redirecting to the canonical host.
@@ -329,7 +332,12 @@ const handleAIClientRedirect = (
   // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
     const response = nextWithClassification(request, classification);
-    setMarkdownResponseHeaders(response, mdToCanonicalPath(url.pathname));
+    setMarkdownResponseHeaders(
+      response,
+      MARKDOWN_ONLY_PATHS.has(url.pathname)
+        ? url.pathname
+        : mdToCanonicalPath(url.pathname)
+    );
     return response;
   }
 
