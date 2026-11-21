@@ -916,7 +916,11 @@ async function createWork() {
       : buildFallbackChildSection(parentPath, children);
 
     if (childSection) {
-      const updatedContent = existingContent + childSection;
+      // Insert the listing before the discovery footer so the footer stays last.
+      const body = existingContent.endsWith(DISCOVERY_FOOTER)
+        ? existingContent.slice(0, -DISCOVERY_FOOTER.length)
+        : existingContent;
+      const updatedContent = `${body}\n${childSection.trimEnd()}${DISCOVERY_FOOTER}`;
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
       if (hasR2) {
