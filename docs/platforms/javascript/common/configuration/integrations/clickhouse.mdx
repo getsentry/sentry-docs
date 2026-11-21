@@ -1,11 +1,9 @@
 ---
 title: ClickHouse
-description: "Adds instrumentation for the ClickHouse Node.js client. (default)"
+description: "Adds instrumentation for the ClickHouse JavaScript clients. (default)"
 supportedCategories:
   - server
   - serverless
-notSupported:
-  - javascript.cloudflare
 ---
 
 <AvailableSince version="11.17.0" />
@@ -14,7 +12,7 @@ _Import name: `Sentry.clickhouseIntegration`_
 
 This integration is enabled by default when <PlatformLink to="/tracing/">tracing</PlatformLink> is enabled. To customize it, see [Modifying Default Integrations](./../#modifying-default-integrations).
 
-The `clickhouseIntegration` adds instrumentation for [`@clickhouse/client`](https://www.npmjs.com/package/@clickhouse/client), the official ClickHouse client for Node.js. It creates a `db` span for each statement the client sends, so slow or failing ClickHouse queries show up in your traces.
+The `clickhouseIntegration` adds instrumentation for the official ClickHouse clients: [`@clickhouse/client`](https://www.npmjs.com/package/@clickhouse/client) for Node.js and [`@clickhouse/client-web`](https://www.npmjs.com/package/@clickhouse/client-web) for web runtimes such as Cloudflare Workers. It creates a `db` span for each statement the client sends, so slow or failing ClickHouse queries show up in your traces.
 
 ```javascript
 Sentry.init({
@@ -27,6 +25,12 @@ Sentry.init({
 <PlatformSection supported={["javascript.nextjs"]}>
 
 Run ClickHouse calls in the Node.js runtime. This automatic instrumentation isn't available in the Edge runtime.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+On Cloudflare Workers, use `@clickhouse/client-web` and build your Worker with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>. The plugin traces the client automatically, as long as `@clickhouse/client-web` is bundled and not marked as external. If you deploy with `wrangler` directly, ClickHouse calls aren't traced.
 
 </PlatformSection>
 
@@ -89,3 +93,4 @@ When a call fails, the span gets an error status. The integration doesn't captur
 ## Supported Versions
 
 - `@clickhouse/client`: `>=1.1.0 <2`
+- `@clickhouse/client-web`: `>=1.1.0 <2`
