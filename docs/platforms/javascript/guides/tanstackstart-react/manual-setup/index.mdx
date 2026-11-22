@@ -11,13 +11,6 @@ runtime: node
 
 <PlatformContent includePath="sentry-init/manual-setup-callout" />
 
-<Alert level="warning" title="Beta">
-
-This SDK is compatible with TanStack Start 1.0 RC and is currently in **beta**. Beta features are still in progress and may have bugs.
-Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
-
-</Alert>
-
 This guide walks you through setting up Sentry in a [TanStack Start (React)](https://tanstack.com/start/latest/docs/framework/react/overview) app on Node.js.
 For [TanStack Router (React)](https://tanstack.com/router/latest/docs/framework/react/overview), see our [React TanStack Router guide](/platforms/javascript/guides/react/features/tanstack-router/).
 
@@ -190,113 +183,103 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 To capture server-side errors and tracing data, you need to explicitly define a [server entry point](https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point) in your application and wrap your request handler with `wrapFetchWithSentry`.
 
-Follow the section below that matches your deployment setup:
-
-#### With `--import` Flag (e.g. Node.js Server)
-
-Use this setup when you can configure Node.js CLI flags.
-
-Create a `src/server.ts` file in your project:
+Create a `src/server.ts` file in your project. Pass `opts` on to the handler, so the request context that TanStack Start passes to it isn't lost:
 
 ```typescript {filename:src/server.ts}
 import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
-import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
+import handler, {
+  createServerEntry,
+} from "@tanstack/react-start/server-entry";
+import type { ServerEntry } from "@tanstack/react-start/server-entry";
 
-export default createServerEntry(
-  wrapFetchWithSentry({
-    fetch(request: Request) {
-      return handler.fetch(request);
-    },
-  })
-);
+const requestHandler: ServerEntry = wrapFetchWithSentry({
+  fetch(request, opts) {
+    return handler.fetch(request, opts);
+  },
+});
+
+export default createServerEntry(requestHandler);
 ```
 
-##### Move the Sentry Server Config File for Production Usage
+#### Load the Server Config When the Server Starts
 
-For production monitoring, you need to move the Sentry server config file to your build output. The exact location depends on where your build artifacts are deployed (for example, `"/dist"`, `".output/server"` or a platform-specific directory). For example, when using Nitro, copy the instrumentation file to `".output/server"` as shown in the example on the right.
+<AvailableSince version="11.13.0" />
 
-```json {diff}  {filename:package.json}
-{
-  "scripts": {
--     "build": "vite build",
-+     "build": "vite build && cp instrument.server.mjs .output/server",
-  }
-}
-```
+If your app builds with [Nitro](https://nitro.build/) for a Node.js runtime, the `sentryTanstackStart` Vite plugin loads your server config for you in production builds:
 
-##### Load Instrumentation on Startup
+- It looks for `instrument.server.{ts,mts,js,mjs}` in the project root, then in `src/`.
+- It bundles the file into the Nitro server build and loads it when the server starts.
+- It instruments database drivers and other libraries at build time.
 
-To load `instrument.server.mjs`, add the `--import` flag either directly to your run command or to the `NODE_OPTIONS` environment variable.
+You start your production build as usual, without the `--import` flag.
+
+`vite dev` doesn't create a server build, so in development, load the file with the `--import` flag in the `NODE_OPTIONS` environment variable:
 
 ```json {diff} {filename:package.json}
 {
   "scripts": {
-     "build": "vite build && cp instrument.server.mjs .output/server",
--       "dev": "vite dev --port 3000",
--       "start": "node .output/server/index.mjs",
-+       "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' vite dev --port 3000",
-+       "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
+     "build": "vite build",
+-    "dev": "vite dev --port 3000",
++    "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' vite dev --port 3000",
+     "start": "node .output/server/index.mjs",
   }
 }
 ```
 
-#### Without `--import` Flag
+This doesn't apply to Cloudflare. For Cloudflare Workers, follow the [Cloudflare guide](/platforms/javascript/guides/tanstackstart-react/manual-setup/cloudflare/).
 
-Use this setup when you can't configure Node.js CLI flags or environment variables at runtime (for example, when deploying to serverless platforms like Vercel or Netlify).
+##### Without Nitro
 
-<Alert level='warning' title='Restrictions'>
-
-You can only instrument native Node.js APIs (such as `fetch` and the `http` module) with this installation method.
-This means that the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
-Thus, we recommend you follow the [`--import` flag setup instructions](#with---import-flag-eg-nodejs-server) if possible.
-
-This setup doesn't work for Cloudflare deployments.
-
-</Alert>
-
-Create a `src/server.ts` file in your project and import the server instrumentation file directly at the top of your server entry point.
-
-```typescript {filename:src/server.ts}
-import "../instrument.server.mjs";
-import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
-import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
-
-export default createServerEntry(
-  wrapFetchWithSentry({
-    fetch(request: Request) {
-      return handler.fetch(request);
-    },
-  })
-);
-```
+The plugin loads the server config through a Nitro hook. If you deploy to Node.js without Nitro, load `instrument.server.mjs` yourself: add the `--import` flag to your start command, or import the file at the top of `src/server.ts`.
 
 ### Capture TanStack Start React Errors
 
 #### Capture Server-Side Errors
 
-To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file.
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file. Since version 11.15.0, `sentryGlobalFunctionMiddleware` also creates a span for every server function call, including calls from other server functions or from loaders on the server. Without this middleware, Sentry doesn't create server function spans.
 
 The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
 
-<Alert level="info">
-  SSR rendering exceptions are not captured by the middleware. Use
-  `captureException` to manually capture those errors.
-</Alert>
+A custom `src/start.ts` turns off the CSRF protection that TanStack Start adds to server functions by default, so the snippet adds it back with `createCsrfMiddleware`.
 
 ```tsx {filename:src/start.ts}
 import {
   sentryGlobalFunctionMiddleware,
   sentryGlobalRequestMiddleware,
 } from "@sentry/tanstackstart-react";
-import { createStart } from "@tanstack/react-start";
+import { createCsrfMiddleware, createStart } from "@tanstack/react-start";
+
+// Assign the middleware to a variable. Sentry's Vite plugin
+// doesn't instrument a middleware array that contains a function call.
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
+});
 
 export const startInstance = createStart(() => {
   return {
-    requestMiddleware: [sentryGlobalRequestMiddleware],
+    requestMiddleware: [sentryGlobalRequestMiddleware, csrfMiddleware],
     functionMiddleware: [sentryGlobalFunctionMiddleware],
   };
 });
 ```
+
+#### Capture Errors in Route Loaders
+
+If a `loader` or `beforeLoad` throws while a page renders on the server, the router catches the error and shows the route's error component. Sentry doesn't report these errors automatically. To report them, set `onError` on the route:
+
+```tsx {filename:src/routes/posts.tsx}
+import * as Sentry from "@sentry/tanstackstart-react";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/posts")({
+  loader: () => fetchPosts(),
+  onError: (error) => {
+    Sentry.captureException(error);
+  },
+});
+```
+
+TanStack Router has no router-wide `onError`, so set it on each route.
 
 #### Capture Errors in Error Boundaries and Components (Optional)
 
@@ -304,31 +287,16 @@ Sentry automatically captures unhandled client-side errors. Errors caught by you
 
 ##### Custom Error Boundary
 
-Wrap your custom `ErrorBoundary` component with [`withErrorBoundary`](/platforms/javascript/guides/react/features/error-boundary/):
-
-```tsx
-import React from "react";
-import * as Sentry from "@sentry/tanstackstart-react";
-
-class MyErrorBoundary extends React.Component {
-  // ...
-}
-
-export const MySentryWrappedErrorBoundary = Sentry.withErrorBoundary(
-  MyErrorBoundary,
-  {
-    // ... sentry error wrapper options
-  }
-);
-```
+To report the errors that an error boundary catches, use Sentry's `ErrorBoundary` component instead of your own. Learn more in [React Error Boundary](/platforms/javascript/guides/react/features/error-boundary/).
 
 ##### TanStack Router `errorComponent`
 
 Use Sentry's `captureException` function inside a `useEffect` hook within your `errorComponent`:
 
-```tsx {2,6-8}
+```tsx {2-3,7-9}
 import { createRoute } from "@tanstack/react-router";
 import * as Sentry from "@sentry/tanstackstart-react";
+import { useEffect } from "react";
 
 const route = createRoute({
   errorComponent: ({ error }) => {
@@ -418,7 +386,7 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 At this point, you should have integrated Sentry into your TanStack Start React application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
