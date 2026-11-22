@@ -17,7 +17,6 @@ const sharedExcludes = [
   // Heavy build dependencies
   'node_modules/@esbuild/**/*',
   'node_modules/esbuild/**/*',
-  'node_modules/@aws-sdk/**/*',
   'node_modules/@google-cloud/**/*',
   'node_modules/prettier/**/*',
   'node_modules/@prettier/**/*',

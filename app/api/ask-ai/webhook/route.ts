@@ -2,6 +2,11 @@ import {createHmac, timingSafeEqual} from 'node:crypto';
 
 import {normalizeFinEvent} from 'sentry-docs/lib/askAi/fin';
 import {errorResponse, privateHeaders, readBody} from 'sentry-docs/lib/askAi/http';
+import {
+  readWebhookSession,
+  saveWebhookEvent,
+  usesR2Webhooks,
+} from 'sentry-docs/lib/askAi/r2';
 import {AskAiError, key, recordEvent, redis} from 'sentry-docs/lib/askAi/store';
 
 export const runtime = 'nodejs';
@@ -34,6 +39,14 @@ export async function POST(request: Request) {
     )
       return Response.json({ok: true}, {headers: privateHeaders});
     const conversationId = raw.conversation_id;
+    if (usesR2Webhooks()) {
+      if (!(await readWebhookSession(conversationId)))
+        return Response.json({ok: true}, {headers: privateHeaders});
+      const event = normalizeFinEvent(raw, conversationId);
+      if (event?.type === 'answer' || event?.type === 'status')
+        await saveWebhookEvent(conversationId, raw, event);
+      return Response.json({ok: true}, {headers: privateHeaders});
+    }
     if (!(await redis('GET', key(`conversation:${conversationId}`))))
       return Response.json({ok: true}, {headers: privateHeaders});
     const event = normalizeFinEvent(raw, conversationId);

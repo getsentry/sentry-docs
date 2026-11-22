@@ -13,6 +13,7 @@ import {
   isStatelessPreview,
   updatePreviewSession,
 } from 'sentry-docs/lib/askAi/previewSession';
+import {usesR2Webhooks} from 'sentry-docs/lib/askAi/r2';
 import {
   AskAiError,
   createSession,
@@ -29,6 +30,7 @@ import {
   MAX_QUESTION_LENGTH,
   readEventStream,
 } from 'sentry-docs/lib/askAi/types';
+import {webhookChat} from 'sentry-docs/lib/askAi/webhookChat';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
   try {
     requirePilot();
     requireSameOrigin(request);
+    if (usesR2Webhooks()) return await webhookChat(request, await readJson(request));
     const stateless = isStatelessPreview();
     const persist = stateless ? async () => {} : saveSession;
     const record = stateless ? async () => {} : recordEvent;
