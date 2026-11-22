@@ -1,0 +1,127 @@
+---
+title: Solid 2 (Alpha)
+sidebar_order: 2
+description: "Learn how to set up Sentry in a Solid 2 app and capture your first errors."
+---
+
+<Alert level="warning" title="Alpha">
+
+Support for Solid 2 is in alpha. The API can change in any release. It lives under the `@sentry/solid/solid2` subpaths and is separate from the Solid 1 SDK documented on the other pages of this guide. Please [report issues](https://github.com/getsentry/sentry-javascript/issues/new/choose) you run into.
+
+</Alert>
+
+This guide covers Solid 2 apps built with `@solidjs/vite-plugin`. You import the SDK from `@sentry/solid/solid2` in the browser and on the server. The SDK picks the right build for each one.
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Install the SDK. It requires `solid-js` 2.0.0 or later, and `@solidjs/web` and `@solidjs/router` 2.0.0 or later if you use the router.
+
+```bash {tabTitle:npm}
+npm install @sentry/solid
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/solid
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/solid
+```
+
+## Configure the Browser
+
+### Initialize the SDK
+
+Call `init()` in a setup file, and point `start.clientSetup` in your Vite config to it.
+
+Errors caught by an `<Errored>` boundary are reported, and so are errors that no boundary catches. If you pass `onError` to `render()` or `hydrate()`, it replaces Sentry's handler for that root, and errors caught by boundaries under it are not reported.
+
+```ts {filename:src/instrument.client.ts}
+import * as Sentry from "@sentry/solid/solid2";
+import { solidRouterBrowserTracingIntegration } from "@sentry/solid/solid2/solidrouter";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [solidRouterBrowserTracingIntegration()],
+  // Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+});
+```
+
+### Wrap the Router
+
+If you use `@solidjs/router`, add `solidRouterBrowserTracingIntegration()` to `integrations` as shown above, and wrap your router with `withSentryRouterRouting`. Page loads and navigations then get spans named after the route, for example `/user/:id`.
+
+```tsx {filename:src/App.tsx}
+import { withSentryRouterRouting } from "@sentry/solid/solid2/solidrouter";
+import { createRouter } from "@solidjs/router";
+
+const Router = withSentryRouterRouting(
+  createRouter({
+    routes: [
+      { path: "/", component: Home },
+      { path: "/user/:id", component: User },
+    ],
+  })
+);
+
+export default function App() {
+  return <Router />;
+}
+```
+
+## Configure the Server
+
+Call `init()` in a setup file, and point `start.serverSetup` to it. Use the same import path as in the browser.
+
+```ts {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/solid/solid2";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+});
+```
+
+Enable the Node server, server rendering, and server functions in your Vite config, and point the setup options to both files:
+
+```ts {filename:vite.config.ts}
+import solid from "@solidjs/vite-plugin";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    solid({
+      start: {
+        nodeServer: true,
+        serverSetup: "./src/instrument.server.ts",
+        clientSetup: "./src/instrument.client.ts",
+      },
+      ssr: true,
+      serverFunctions: true,
+    }),
+  ],
+});
+```
+
+Errors thrown during server rendering and in server functions are reported. If a boundary rendered a fallback for an error, the error is marked as handled.
+
+With the router wrapped, request spans are named after the route, for example `GET /user/:id`. The browser page load continues the server's trace, so you see the request and the page load in one trace.
+
+## Upload Source Maps
+
+Your app is built with Vite, so follow the <PlatformLink to="/sourcemaps/uploading/vite/">Vite source maps guide</PlatformLink> to get readable stack traces.
+
+## Verify
+
+Start the app, and throw an error from a component and from a server function. Both should show up as issues in your project.
+
+</StepConnector>
+
+## Not Supported Yet
+
+- TanStack Router for Solid 2.
+- SolidStart. It's discontinued for Solid 2, so the [SolidStart guide](/platforms/javascript/guides/solidstart/) covers Solid 1 only.
