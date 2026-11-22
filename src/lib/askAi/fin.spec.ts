@@ -3,10 +3,17 @@ import {describe, expect, it, vi} from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-import {normalizeFinEvent, validateStreamUrl} from './fin';
+import {finTimestamp, normalizeFinEvent, validateStreamUrl} from './fin';
 import {readEventStream, safeSourceUrl} from './types';
 
 describe('Fin event contract', () => {
+  it('uses the same clock for ISO and millisecond request/event timestamps', () => {
+    const at = Date.parse('2026-11-22T12:00:00.123Z');
+    for (const value of [at, String(at), '2026-11-22T12:00:00.123Z'])
+      expect(finTimestamp(value)).toBe(at);
+    for (const value of [undefined, null, '', 'malformed', {}, -1, Infinity, 1.5])
+      expect(finTimestamp(value)).toBeNull();
+  });
   it('keeps cumulative chunks separate from final rich answers and citations', () => {
     expect(
       normalizeFinEvent(

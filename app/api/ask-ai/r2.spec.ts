@@ -88,6 +88,9 @@ function webhookRequest(body: object, signature?: string) {
     },
   });
 }
+function finAccepted(at = Date.now()) {
+  return Response.json({status: 'thinking', created_at_ms: new Date(at).toISOString()});
+}
 function answer(id: string, time: number, body = '<p>Answer</p>') {
   return {
     event_name: 'fin_replied',
@@ -152,6 +155,111 @@ afterEach(() => {
 });
 
 describe('Fin webhook delivery through private R2', () => {
+  it('preserves follow-ups when terminal statuses share the response timestamp', async () => {
+    const time = Date.now();
+    const opened = await session();
+    const {conversationId} = getPreviewSession(opened.token);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted(time));
+    await deliver(conversationId, status('complete', time));
+    await deliver(conversationId, status('awaiting_user_reply', time));
+    const response = await POST(
+      request({action: 'message', question: 'Hello'}, opened.token)
+    );
+    const events = await finish(response);
+    expect(events.at(-1).status).toBe('awaiting_user_reply');
+    expect((await readWebhookSession(conversationId))!.value.session.state).toBe('ready');
+  });
+
+  it.each([undefined, null, 'malformed'])(
+    'fails closed when Fin returns no usable request timestamp (%s)',
+    async timestamp => {
+      const opened = await session();
+      const fetchMock = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(Response.json({status: 'thinking', created_at_ms: timestamp}));
+      const response = await POST(
+        request({action: 'message', question: 'Hello'}, opened.token)
+      );
+      expect(response.status).toBe(502);
+      expect(
+        (await POST(request({action: 'message', question: 'Retry'}, opened.token))).status
+      ).toBe(409);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    }
+  );
+  it.each(['complete', 'resolved', 'escalated'])(
+    'does not let a later %s override awaiting_user_reply during settling',
+    async later => {
+      const time = Date.now();
+      const opened = await session();
+      const {conversationId} = getPreviewSession(opened.token);
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted(time));
+      await deliver(conversationId, answer('a', time + 10));
+      await deliver(conversationId, status('awaiting_user_reply', time + 20));
+      const response = await POST(
+        request({action: 'message', question: 'Hello'}, opened.token)
+      );
+      setTimeout(() => void deliver(conversationId, status(later, time + 30)), 1000);
+      const events = await finish(response);
+      expect(events.filter(e => e.type === 'status')).toEqual([
+        {type: 'status', status: 'awaiting_user_reply'},
+      ]);
+      expect((await readWebhookSession(conversationId))!.value.session.state).toBe(
+        'ready'
+      );
+      const updated = events.find(e => e.type === 'session').token;
+      expect(getPreviewSession(updated).state).toBe('ready');
+    }
+  );
+
+  it('uses event order when complete is delivered before an earlier awaiting_user_reply', async () => {
+    const time = Date.now();
+    const opened = await session();
+    const {conversationId} = getPreviewSession(opened.token);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted(time));
+    await deliver(conversationId, status('complete', time + 30));
+    const response = await POST(
+      request({action: 'message', question: 'Hello'}, opened.token)
+    );
+    setTimeout(
+      () => void deliver(conversationId, status('awaiting_user_reply', time + 20)),
+      1000
+    );
+    const events = await finish(response);
+    expect(events.at(-1).status).toBe('awaiting_user_reply');
+    expect((await readWebhookSession(conversationId))!.value.session.state).toBe('ready');
+  });
+
+  it('does not seal a follow-up when the previous turn completes after its stored cutoff', async () => {
+    // Fin's clock intentionally differs from our server's clock.
+    const time = Date.now() - 60_000;
+    const opened = await session();
+    const {conversationId} = getPreviewSession(opened.token);
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(finAccepted(time))
+      .mockResolvedValueOnce(finAccepted(time + 1000));
+    await deliver(conversationId, answer('first', time + 10));
+    await deliver(conversationId, status('awaiting_user_reply', time + 20));
+    const first = await finish(
+      await POST(request({action: 'message', question: 'Hello'}, opened.token))
+    );
+    const token = first.find(e => e.type === 'session').token;
+    const next = await POST(request({action: 'message', question: 'Follow-up'}, token));
+    // Delayed delivery, with a timestamp later than after=20 but before the
+    // new Fin request's response timestamp=1000.
+    await deliver(conversationId, status('complete', time + 30));
+    await deliver(conversationId, status('escalated', time + 25));
+    await vi.advanceTimersByTimeAsync(4000);
+    expect((await readWebhookSession(conversationId))!.value.session.state).toBe('busy');
+    await deliver(conversationId, answer('follow-up', time + 1010));
+    await deliver(conversationId, status('awaiting_user_reply', time + 1020));
+    const events = await finish(next);
+    expect(events.filter(e => e.type === 'status')).toEqual([
+      {type: 'status', status: 'awaiting_user_reply'},
+    ]);
+    expect(events.some(e => e.id === 'follow-up')).toBe(true);
+    expect((await readWebhookSession(conversationId))!.value.session.state).toBe('ready');
+  });
   it('delivers multiple parts without a Fin SSE URL, survives module reloads, and continues the same conversation', async () => {
     const time = Date.now();
     let turn = 0;
@@ -171,6 +279,7 @@ describe('Fin webhook delivery through private R2', () => {
         );
         return Response.json({
           status: 'thinking',
+          created_at_ms: new Date(time + turn * 100 - 1).toISOString(),
           intercom_conversation_id: 'support-123',
         });
       });
@@ -214,7 +323,7 @@ describe('Fin webhook delivery through private R2', () => {
     const time = Date.now();
     const opened = await session();
     const {conversationId} = getPreviewSession(opened.token);
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({status: 'thinking'}));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted());
     await deliver(conversationId, status('awaiting_user_reply', time + 2));
     const response = await POST(
       request({action: 'message', question: 'Hello'}, opened.token)
@@ -233,9 +342,7 @@ describe('Fin webhook delivery through private R2', () => {
     const time = Date.now();
     const opened = await session();
     const {conversationId} = getPreviewSession(opened.token);
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(Response.json({status: 'thinking'}));
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted());
     const responses = await Promise.all(
       [1, 2].map(() =>
         POST(request({action: 'message', question: 'Hello'}, opened.token))
@@ -292,9 +399,7 @@ describe('Fin webhook delivery through private R2', () => {
 
   it('times out missing webhooks without granting a follow-up token or resending to Fin', async () => {
     const opened = await session();
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(Response.json({status: 'thinking'}));
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted());
     const response = await POST(
       request({action: 'message', question: 'Hello'}, opened.token)
     );
@@ -329,9 +434,7 @@ describe('Fin webhook delivery through private R2', () => {
     const changed = JSON.parse(Buffer.from(payload, 'base64url').toString());
     changed.session.conversationId = firstId;
     const forged = `${Buffer.from(JSON.stringify(changed)).toString('base64url')}.${mac}`;
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(Response.json({status: 'thinking'}));
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted());
     expect(
       (await POST(request({action: 'message', question: 'Read another session'}, forged)))
         .status
@@ -349,9 +452,7 @@ describe('Fin webhook delivery through private R2', () => {
   it('stops polling on disconnect and does not leave the turn reusable', async () => {
     const opened = await session();
     const {conversationId} = getPreviewSession(opened.token);
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(Response.json({status: 'thinking'}));
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(finAccepted());
     const response = await POST(
       request({action: 'message', question: 'Hello'}, opened.token)
     );

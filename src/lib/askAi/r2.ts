@@ -9,6 +9,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 
+import {finTimestamp} from './fin';
 import {AskAiError, Session} from './store';
 import {AskAiEvent} from './types';
 
@@ -137,11 +138,8 @@ export async function saveWebhookEvent(
   raw: Record<string, unknown>,
   event: AskAiEvent
 ) {
-  const at =
-    typeof raw.created_at_ms === 'number' || /^\d+$/.test(String(raw.created_at_ms))
-      ? Number(raw.created_at_ms)
-      : Date.parse(String(raw.created_at_ms));
-  if (!Number.isSafeInteger(at) || at < 0)
+  const at = finTimestamp(raw.created_at_ms);
+  if (at === null)
     throw new AskAiError(400, 'Webhook event timestamp is missing or malformed.');
   // Stable keys make Fin retries idempotent. Never append to a shared JSON array.
   const id = createHash('sha256').update(JSON.stringify(event)).digest('hex');

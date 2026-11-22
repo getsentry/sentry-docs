@@ -1,6 +1,6 @@
 import 'server-only';
 
-import {callFin} from './fin';
+import {callFin, finTimestamp} from './fin';
 import {bearerToken, privateHeaders} from './http';
 import {
   createPreviewSession,
@@ -92,6 +92,7 @@ export async function webhookChat(request: Request, body: Record<string, unknown
   // Conditional object writes serialize turns across Vercel instances. An old
   // token, concurrent submit, or ambiguous upstream failure cannot submit twice.
   let etag = await writeWebhookSession(value, stored.etag);
+  let acceptedAt: number;
   try {
     const result = await callFin(start ? 'start' : 'reply', {
       conversation_id: session.conversationId,
@@ -112,6 +113,13 @@ export async function webhookChat(request: Request, body: Record<string, unknown
           }
         : {}),
     });
+    const responseTime = finTimestamp(result.created_at_ms);
+    if (responseTime === null)
+      throw new AskAiError(
+        502,
+        'Ask AI could not complete this request. Start a new conversation.'
+      );
+    acceptedAt = responseTime;
     session.intercomId = result.intercom_conversation_id || session.intercomId;
     etag = await writeWebhookSession(value, etag);
   } catch (error) {
@@ -138,9 +146,8 @@ export async function webhookChat(request: Request, body: Record<string, unknown
       };
       const seen = new Set<string>();
       const answers = new Set<string>();
-      let terminal: {at: number; status: string} | undefined;
+      const statuses: {at: number; status: string}[] = [];
       let changedAt = Date.now();
-      let closed = false;
       try {
         send({
           type: 'reference',
@@ -162,26 +169,38 @@ export async function webhookChat(request: Request, body: Record<string, unknown
               send(event);
               changedAt = Date.now();
             }
-            if (at <= value.after || event.type !== 'status') continue;
+            // A previous turn can emit complete after awaiting_user_reply.
+            // Its timestamp exceeds `after`, but predates the new Fin request.
+            if (at < acceptedAt || at <= value.after || event.type !== 'status') continue;
             changedAt = Date.now();
-            closed ||= ['resolved', 'escalated', 'complete'].includes(event.status);
-            if (['awaiting_user_reply', 'complete'].includes(event.status)) {
-              if (!terminal || at >= terminal.at) terminal = {at, status: event.status};
-            } else {
-              send(event);
-            }
+            statuses.push({at, status: event.status});
           }
+          // Match SSE: stop the turn at its first terminal event. Delivery order
+          // is not event order, so select the earliest timestamp and buffer state
+          // changes until settling. For tied timestamps, awaiting_user_reply wins
+          // over a potentially trailing complete rather than disabling follow-ups.
+          statuses.sort(
+            (a, b) =>
+              a.at - b.at ||
+              Number(b.status === 'awaiting_user_reply') -
+                Number(a.status === 'awaiting_user_reply')
+          );
+          const terminalIndex = statuses.findIndex(event =>
+            ['awaiting_user_reply', 'complete'].includes(event.status)
+          );
+          const terminal = statuses[terminalIndex];
           // Webhook delivery can be reordered. Give trailing answer parts time
           // to arrive before finishing this connection; later parts are retained
           // for replay on the next turn. This is not token-by-token streaming.
           if (terminal && Date.now() - changedAt >= SETTLE_MS) {
-            if (closed && terminal.status !== 'complete') {
-              await pause(abort.signal);
-              continue;
-            }
+            const preceding = statuses.slice(0, terminalIndex);
+            const closed =
+              terminal.status === 'complete' ||
+              preceding.some(event => ['resolved', 'escalated'].includes(event.status));
             session.state = closed ? 'closed' : 'ready';
             value.after = terminal.at;
             etag = await writeWebhookSession(value, etag);
+            for (const event of preceding) send({type: 'status', status: event.status});
             send({type: 'session', token: updatePreviewSession(token, session)});
             send({type: 'status', status: terminal.status});
             return;

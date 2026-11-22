@@ -36,10 +36,20 @@ export async function callFin(path: 'start' | 'reply' | 'escalate', body: object
       'Ask AI could not complete this request. Start a new conversation.'
     );
   return (await response.json()) as {
+    created_at_ms?: string | number;
     intercom_conversation_id?: string;
     sse_subscription_url?: string;
     errors?: unknown;
   };
+}
+
+// Fin uses ISO timestamps in its examples and millisecond values in some
+// payloads. Compare request and event times on Fin's clock, not our own.
+export function finTimestamp(value: unknown): number | null {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  const at =
+    typeof value === 'number' || /^\d+$/.test(value) ? Number(value) : Date.parse(value);
+  return Number.isSafeInteger(at) && at >= 0 ? at : null;
 }
 
 export function validateStreamUrl(value: unknown): string {
