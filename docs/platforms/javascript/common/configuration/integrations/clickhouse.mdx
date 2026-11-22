@@ -30,13 +30,13 @@ Run ClickHouse calls in the Node.js runtime. This automatic instrumentation isn'
 
 <PlatformSection supported={["javascript.cloudflare"]}>
 
-On Cloudflare Workers, use `@clickhouse/client-web` and build your Worker with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>. The plugin traces the client automatically, as long as `@clickhouse/client-web` is bundled and not marked as external. If you deploy with `wrangler` directly, ClickHouse calls aren't traced.
+On Cloudflare Workers, use `@clickhouse/client-web` and build your Worker with the <PlatformLink to="/install/vite-plugin/">Sentry Cloudflare Vite plugin</PlatformLink>. The plugin traces the client automatically, as long as `@clickhouse/client-web` is bundled and not marked as external. If you deploy with `wrangler` directly, Sentry doesn't trace ClickHouse calls.
 
 </PlatformSection>
 
 <PlatformSection supported={["javascript.deno"]}>
 
-On Deno, preload Sentry's import hook so the ClickHouse client can be instrumented:
+On Deno, preload Sentry's import hook so it can instrument the ClickHouse client:
 
 ```bash
 deno run --allow-net --allow-env --allow-read --allow-sys --allow-write --preload=npm:@sentry/deno/import app.ts
@@ -72,23 +72,24 @@ The integration traces these `ClickHouseClient` methods:
 
 `ping()` and `close()` don't send a statement, so they don't create spans. An `insert()` with an empty `values` array doesn't send a request and doesn't create a span either.
 
-Spans are only created inside an active span, such as a request handler or a span you start with <PlatformLink to="/tracing/instrumentation/">`Sentry.startSpan()`</PlatformLink>.
+The integration only creates spans inside an active span, such as a request handler or a span you start with <PlatformLink to="/tracing/instrumentation/">`Sentry.startSpan()`</PlatformLink>.
 
 ## Spans
 
 Each span is named after the operation and the table it targets, for example `SELECT events` or `INSERT events`. Span attributes follow Sentry's `db.*` conventions, with `db.system.name` set to `clickhouse`. The spans also record the database, the user, and the server address and port of the client.
 
-Query text is sanitized before it's sent to Sentry:
+Before the integration sends query text to Sentry, it:
 
-- String and number literals are replaced with `?`. For example, `SELECT name FROM events WHERE name = 'signup'` is recorded as `SELECT name FROM events WHERE name = ?`.
-- Comments are removed.
-- Inline data sent with a statement, such as the rows after `INSERT INTO events FORMAT CSV`, is removed.
-- ClickHouse query parameters, such as `{id:UInt32}`, are kept as written. Their values, passed in `query_params`, aren't recorded.
-- `insert()` spans record the target table, but not the inserted values or a query text.
+- Replaces string and number literals with `?`. For example, `SELECT name FROM events WHERE name = 'signup'` becomes `SELECT name FROM events WHERE name = ?`.
+- Removes comments.
+- Removes inline data sent with a statement, such as the rows after `INSERT INTO events FORMAT CSV`.
+- Keeps ClickHouse query parameters, such as `{id:UInt32}`, as written, but doesn't record their values from `query_params`.
+
+`insert()` spans record the target table, but not the inserted values or a query text.
 
 ## Errors
 
-When a call fails, the span gets an error status. The integration doesn't capture the error, because the client still rejects to your code, which can handle it. Errors you don't handle are captured like any other unhandled error.
+When a call fails, the span gets an error status. The integration doesn't capture the error, because the client still rejects to your code, which can handle it. Sentry captures errors you don't handle like any other unhandled error.
 
 ## Supported Versions
 
