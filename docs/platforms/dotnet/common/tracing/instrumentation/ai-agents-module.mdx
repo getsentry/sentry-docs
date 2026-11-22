@@ -84,17 +84,17 @@ The `AddSentry()` method accepts an optional configuration delegate to customize
 
 <SdkOption name="Experimental.RecordInputs" type="bool" defaultValue="true" defaultNote="unless GenAI.Inputs is false">
 
-Whether to include AI inputs in spans: request messages, tool definitions, and tool call arguments.
+Whether to include AI inputs in spans: request messages, tool definitions, and tool call arguments. The model's response repeats the tool call arguments, so to keep them out of Sentry, turn off `RecordOutputs` as well.
 
-If you set it, it overrides `GenAI.Inputs` from [`ConfigureDataCollection`](#stop-sending-prompts-and-responses) for this chat client. If you don't, `GenAI.Inputs` decides, and that defaults to `true`.
+Starting with version 7.1.0, setting it overrides `GenAI.Inputs` from [`ConfigureDataCollection`](#stop-sending-prompts-and-responses) for this chat client. If you don't set it, `GenAI.Inputs` decides, and that defaults to `true`.
 
 </SdkOption>
 
 <SdkOption name="Experimental.RecordOutputs" type="bool" defaultValue="true" defaultNote="unless GenAI.Outputs is false">
 
-Whether to include AI outputs in spans: response text, response tool calls, and tool call results.
+Whether to include AI outputs in spans: response text, response tool calls, and tool call results. The next request repeats the tool call results, so to keep them out of Sentry, turn off `RecordInputs` as well.
 
-If you set it, it overrides `GenAI.Outputs` from [`ConfigureDataCollection`](#stop-sending-prompts-and-responses) for this chat client. If you don't, `GenAI.Outputs` decides, and that defaults to `true`.
+Starting with version 7.1.0, setting it overrides `GenAI.Outputs` from [`ConfigureDataCollection`](#stop-sending-prompts-and-responses) for this chat client. If you don't set it, `GenAI.Outputs` decides, and that defaults to `true`.
 
 </SdkOption>
 
@@ -106,7 +106,7 @@ Name of the agent. This name will be used to identify the agent in the Sentry UI
 
 ## Stop Sending Prompts and Responses
 
-To stop sending AI content from every chat client, turn off generative AI inputs and outputs when you initialize the SDK. Sentry still sends metadata, such as model names and token counts. For details, see <Link to="/product/agents/privacy/#sdk-data-collection">AI Agents Privacy</Link>.
+Starting with version 7.1.0, you can stop sending AI content from every chat client by turning off generative AI inputs and outputs when you initialize the SDK. Sentry still sends metadata, such as model names and token counts. For details, see <Link to="/product/agents/privacy/#sdk-data-collection">AI Agents Privacy</Link>.
 
 ```csharp
 SentrySdk.Init(options =>
@@ -122,6 +122,10 @@ SentrySdk.Init(options =>
 ```
 
 `ConfigureDataCollection` is experimental and may change in a future release.
+
+<Alert level="warning">
+Once you call `ConfigureDataCollection`, its options replace `SendDefaultPii` for the data they cover, and any option you don't set defaults to collecting data. If you haven't set `SendDefaultPii` to `true`, the SDK then starts sending data it didn't send before, such as IP addresses and the headers of failed HTTP requests. To stop sending AI content without that change, set `RecordInputs` and `RecordOutputs` to `false` in each chat client's `AddSentry()` call instead.
+</Alert>
 
 To keep sending content from a specific chat client, set `RecordInputs` or `RecordOutputs` to `true` in its `AddSentry()` call.
 
@@ -151,7 +155,7 @@ var chatClient = new ChatClientBuilder(openAiClient)
     .Build();
 
 // Register as a singleton
-builder.Services.AddSingleton<IChatClient>(chatClient)
+builder.Services.AddSingleton<IChatClient>(chatClient);
 
 var app = builder.Build();
 
@@ -165,7 +169,7 @@ app.MapGet("/chat", async (IChatClient client, string message) =>
     }.AddSentryToolInstrumentation();
 
     var response = await client.GetResponseAsync(message, options);
-    return Results.Ok(response.Message.Text);
+    return Results.Ok(response.Text);
 });
 
 app.Run();
