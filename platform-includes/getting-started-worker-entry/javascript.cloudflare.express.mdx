@@ -1,4 +1,4 @@
-Your Express app runs on Workers with `httpServerHandler` from `cloudflare:node`, as in [Cloudflare's Express guide](https://developers.cloudflare.com/workers/tutorials/deploy-an-express-app/). You don't change your Worker entry: the plugin wraps its `httpServerHandler` export and instruments Express. Each request is named after its route, for example `GET /users/:id`, and errors from your routes and middleware are captured.
+Your Express app runs on Workers with `httpServerHandler` from `cloudflare:node`, as in [Cloudflare's Express guide](https://developers.cloudflare.com/workers/tutorials/deploy-an-express-app/). You don't need to change your Worker entry: the plugin wraps its `httpServerHandler` export and instruments Express. Each request is named after its route, for example `GET /users/:id`, and errors from your routes and middleware are captured.
 
 ```typescript {filename:src/index.ts}
 import { httpServerHandler } from "cloudflare:node";
@@ -19,6 +19,6 @@ This needs `@sentry/cloudflare` version `11.15.0` or above. `httpServerHandler` 
 
 <Alert level="warning" title="Known issue">
 
-A request to a route of a mounted router, such as `app.use("/api", router)`, is named without the mount path, for example `GET /posts/:postId` instead of `GET /api/posts/:postId`. When the mount path has parameters, such as `/orgs/:orgId`, the request is named after its method only, for example `GET`. In Express 4, only mount paths with parameters are affected.
+When the mount path of a router has parameters, such as `app.use("/orgs/:orgId", router)`, a request to a route of that router is named after its method only, for example `GET`. This affects Express 4, and Express 5 with `router` older than 2.3.0.
 
 </Alert>
