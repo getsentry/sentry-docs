@@ -18,6 +18,7 @@ import BackboneSVG from 'platformicons/svg/backbone.svg';
 import BlazorSVG from 'platformicons/svg/blazor.svg';
 import BootstrapSVG from 'platformicons/svg/bootstrap.svg';
 import BottleSVG from 'platformicons/svg/bottle.svg';
+import BrefSVG from 'platformicons/svg/bref.svg';
 import BunSVG from 'platformicons/svg/bun.svg';
 import CapacitorSVG from 'platformicons/svg/capacitor.svg';
 import CelerySVG from 'platformicons/svg/celery.svg';
@@ -76,6 +77,7 @@ import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
 import HuggingfaceSVG from 'platformicons/svg/huggingface.svg';
+import HydrogenSVG from 'platformicons/svg/hydrogen.svg';
 import IonicSVG from 'platformicons/svg/ionic.svg';
 import IrisSVG from 'platformicons/svg/iris.svg';
 import JavaSVG from 'platformicons/svg/java.svg';
@@ -177,6 +179,7 @@ import BackboneSVGLarge from 'platformicons/svg_80x80/backbone.svg';
 import BlazorSVGLarge from 'platformicons/svg_80x80/blazor.svg';
 import BootstrapSVGLarge from 'platformicons/svg_80x80/bootstrap.svg';
 import BottleSVGLarge from 'platformicons/svg_80x80/bottle.svg';
+import BrefSVGLarge from 'platformicons/svg_80x80/bref.svg';
 import BunSVGLarge from 'platformicons/svg_80x80/bun.svg';
 import CapacitorSVGLarge from 'platformicons/svg_80x80/capacitor.svg';
 import CelerySVGLarge from 'platformicons/svg_80x80/celery.svg';
@@ -235,6 +238,7 @@ import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
 import HuggingfaceSVGLarge from 'platformicons/svg_80x80/huggingface.svg';
+import HydrogenSVGLarge from 'platformicons/svg_80x80/hydrogen.svg';
 import IonicSVGLarge from 'platformicons/svg_80x80/ionic.svg';
 import IrisSVGLarge from 'platformicons/svg_80x80/iris.svg';
 import JavaSVGLarge from 'platformicons/svg_80x80/java.svg';
@@ -415,6 +419,10 @@ const formatToSVG = {
   bottle: {
     sm: BottleSVG,
     lg: BottleSVGLarge,
+  },
+  bref: {
+    sm: BrefSVG,
+    lg: BrefSVGLarge,
   },
   bun: {
     sm: BunSVG,
@@ -671,6 +679,10 @@ const formatToSVG = {
   hono: {
     sm: HonoSVG,
     lg: HonoSVGLarge,
+  },
+  hydrogen: {
+    sm: HydrogenSVG,
+    lg: HydrogenSVGLarge,
   },
   kotlin: {
     sm: KotlinSVG,
@@ -987,6 +999,7 @@ export const PLATFORM_TO_ICON = {
   android: 'android',
   anthropic: 'anthropic',
   apple: 'apple',
+  aws: 'aws',
   capacitor: 'capacitor',
   clojure: 'clojure',
   cocoa: 'apple',
@@ -1076,6 +1089,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
   'javascript-hono': 'hono',
+  'javascript-hydrogen': 'hydrogen',
   'javascript-eve': 'eve',
   'javascript-firebase': 'firebase',
   'javascript-flue': 'flue',
@@ -1115,6 +1129,7 @@ export const PLATFORM_TO_ICON = {
   openai: 'openai',
   perl: 'perl',
   php: 'php',
+  'php-bref': 'bref',
   'php-laravel': 'laravel',
   'php-monolog': 'php',
   'php-symfony2': 'symfony',
@@ -1132,6 +1147,7 @@ export const PLATFORM_TO_ICON = {
   'python-gcp-functions': 'gcp-functions',
   'python-anthropic': 'anthropic',
   'python-beam': 'apache-beam',
+  'python-bedrock': 'aws',
   'python-boto3': 'aws',
   'python-bottle': 'bottle',
   'python-celery': 'celery',

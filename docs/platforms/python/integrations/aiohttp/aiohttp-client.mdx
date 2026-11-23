@@ -38,8 +38,8 @@ import aiohttp
 async def main():
     sentry_sdk.init(...)  # same as above
 
-    # or sentry_sdk.traces.start_span(name="your_span_name", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         async with aiohttp.ClientSession() as session:
             async with session.get("https://sentry.io/") as response:
                 print("Status:", response.status)
@@ -49,7 +49,7 @@ async def main():
 asyncio.run(main())
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io) and will create spans for the outgoing HTTP requests.
+This will create a service span called `testing_sentry`, visible in the Traces section of [sentry.io](https://sentry.io), with child spans for the outgoing HTTP requests.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
