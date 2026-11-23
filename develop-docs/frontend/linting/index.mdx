@@ -27,21 +27,27 @@ When adding or updating a lint rule, optimize for fast comprehension and low fal
 
 ## Frontend Linting Stack
 
-Frontend checks in `getsentry/sentry` split responsibility across four tools:
+Frontend checks in `getsentry/sentry` split responsibility across five tools:
 
 - **Oxlint (`pnpm run lint:js`)**: Runs JavaScript and TypeScript rules, including type-aware checks, module boundary rules, and custom plugins for Sentry conventions (`static/oxlint/eslintPluginSentry`) and Scraps design-system usage (`static/oxlint/eslintPluginScraps`).
 - **Oxfmt (`pnpm run lint:format`)**: Formats code consistently across the repository so layout and whitespace are never debated in review.
 - **Stylelint (`pnpm run lint:css`)**: Checks Emotion CSS-in-JS styles.
-- **Sheriff (`pnpm run lint:deps`)**: Verifies dependency consistency across `pnpm` workspace packages.
+- **Knip (`pnpm run knip`, `pnpm run knip:prod`, `pnpm run knip:cycles`)**: Detects unused files, unused exports, unlisted or unused dependencies, production dead code (exports only referenced by tests or stories), and circular module imports. This is especially useful after refactors, where orphaned helpers and dead exports are otherwise easy to leave behind.
+- **Dependency linting (`pnpm run lint:deps`)**: Verifies dependency consistency across `pnpm` workspace packages.
 
 Use these commands during local development:
 
 ```bash
-# Run all dependency, formatting, JS/TS, and CSS checks
+# Run dependency, formatting, JS/TS, and CSS checks
 pnpm run lint
 
 # Lint specific JS/TS files in their owning workspace
 pnpm run lint:js static/app/views/example.tsx
+
+# Check for unused files/exports, production dead code, and import cycles
+pnpm run knip
+pnpm run knip:prod
+pnpm run knip:cycles
 
 # Apply formatting and safe Oxlint autofixes
 pnpm run fix
