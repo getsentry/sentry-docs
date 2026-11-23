@@ -40,8 +40,8 @@ An alert action component allows users to specify details specific to your servi
 
 - `title` - (Required) The title shown in the UI component.
 - `uri` - (Required) Sentry will make a POST request to the URI when the User submits the form. If the services fails to process the request (status code >= 400), this component will bubble up the error to the User with the provided response text. Check out our [URI Guidelines](/integrations/integration-platform/ui-components/#uri-guidelines) documentation for formatting help.
-- `required_fields` - (Required) List of [FormField](/integrations/integration-platform/ui-components/formfield/) components the User is required to complete.
-- `optional_fields` - (Optional) List of [FormField](/integrations/integration-platform/ui-components/formfield/) components the User may complete.
+- `required_fields` - List of [form fields](/integrations/integration-platform/ui-components/formfield/) the user must complete.
+- `optional_fields` - List of form fields the user can leave blank. Include at least one of `required_fields` or `optional_fields`. Each list you include must contain at least one field.
 - `description` - (Optional) Text that will be displayed above the form. Limited to 140 characters.
 
 ## Example
@@ -83,6 +83,30 @@ An alert action component allows users to specify details specific to your servi
   ]
 }
 ```
+
+### Use Your Integration's Defaults
+
+To let users save an alert with your integration's default destination, omit `required_fields`. For example, this action lets users override the destination for an individual alert:
+
+```json
+{
+  "elements": [
+    {
+      "type": "alert-rule-action",
+      "title": "Notify a channel",
+      "settings": {
+        "type": "alert-rule-settings",
+        "uri": "/validate-alert",
+        "optional_fields": [
+          { "type": "text", "label": "Destination", "name": "destination" }
+        ]
+      }
+    }
+  ]
+}
+```
+
+When a user saves the alert without a destination, Sentry sends `"fields": []` to `/validate-alert`. Return a successful response to accept the defaults. When the alert fires, use your integration's default destination if the webhook contains an empty `settings` list.
 
 ## Settings Request Format
 
